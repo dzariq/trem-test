@@ -31,6 +31,9 @@ export default function AttendancePage() {
   const [selectedMonth, setSelectedMonth] = useState("December");
   const [currentMonthIndex, setCurrentMonthIndex] = useState(11);
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
+  const [selectedYear, setSelectedYear] = useState("2025");
+
+  const yearOptions = ["2025", "2024", "2023"];
 
   const goToPrevMonth = () => {
     const newIndex = currentMonthIndex > 0 ? currentMonthIndex - 1 : 11;
@@ -150,8 +153,18 @@ export default function AttendancePage() {
       {/* Attendance Chart */}
       <section className="px-4 pt-4">
         <Card className="bg-card border-border shadow-sm">
-          <CardHeader className="pb-2">
+          <CardHeader className="pb-2 flex flex-row items-center justify-between">
             <CardTitle className="text-lg font-semibold">Yearly Overview</CardTitle>
+            <Select value={selectedYear} onValueChange={setSelectedYear}>
+              <SelectTrigger className="w-24 h-8 text-sm">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent className="bg-card">
+                {yearOptions.map((year) => (
+                  <SelectItem key={year} value={year}>{year}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </CardHeader>
           <CardContent>
             <div className="h-64">
