@@ -7,6 +7,7 @@ import { AttendanceSummary } from "@/components/home/AttendanceSummary";
 import { ResultsSummary } from "@/components/home/ResultsSummary";
 import { StudentPillSelector } from "@/components/home/StudentPillSelector";
 import schoolBadge from "@/assets/school-badge.png";
+import heroBanner from "@/assets/hero-banner.png";
 
 export default function HomePage() {
   return (
@@ -22,6 +23,10 @@ export default function HomePage() {
           </div>
         }
       />
+      
+      <div className="w-full">
+        <img src={heroBanner} alt="School banner" className="w-full h-auto" />
+      </div>
       
       <AnnouncementCarousel />
       <UpcomingEvents />
