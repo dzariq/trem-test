@@ -8,10 +8,10 @@ import {
 import { cn } from "@/lib/utils";
 
 const quickLinks = [
-  { icon: FileText, label: "Report Card", path: "/academic", bgColor: "bg-primary/10", iconColor: "text-primary" },
-  { icon: Phone, label: "Contact Us", path: "#", bgColor: "bg-chart-2/10", iconColor: "text-chart-2" },
-  { icon: Trophy, label: "CCA Activities", path: "#", bgColor: "bg-chart-3/10", iconColor: "text-chart-3" },
-  { icon: Star, label: "Praise", path: "/support", bgColor: "bg-chart-4/10", iconColor: "text-chart-4" },
+  { icon: FileText, label: "Report Card", path: "/academic", bgColor: "bg-emerald-100", iconColor: "text-emerald-600" },
+  { icon: Phone, label: "Contact Us", path: "#", bgColor: "bg-blue-100", iconColor: "text-blue-600" },
+  { icon: Trophy, label: "CCA Activities", path: "#", bgColor: "bg-amber-100", iconColor: "text-amber-600" },
+  { icon: Star, label: "Praise", path: "/support", bgColor: "bg-rose-100", iconColor: "text-rose-600" },
 ];
 
 export function QuickLinks() {
@@ -19,14 +19,14 @@ export function QuickLinks() {
 
   return (
     <section className="px-4 py-3">
-      <div className="bg-card rounded-full px-4 py-3 shadow-sm border border-border">
+      <div className="bg-card rounded-2xl px-4 py-4 shadow-sm border border-border">
         <div className="grid grid-cols-4 gap-1">
           {quickLinks.map((link) => (
             <button
               key={link.label}
               onClick={() => link.path !== "#" && navigate(link.path)}
               className={cn(
-                "flex flex-col items-center justify-center py-2 px-1 rounded-2xl",
+                "flex flex-col items-center justify-center py-2 px-1 rounded-xl",
                 "transition-all duration-200 hover:bg-muted/50",
                 "active:scale-95"
               )}
