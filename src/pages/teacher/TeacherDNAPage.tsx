@@ -4,7 +4,8 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/
 import { dnaCoreValues, valueColors, DNAValue } from "@/data/dnaCoreValues";
 import { cn } from "@/lib/utils";
 import dnaBanner from "@/assets/dna-banner.png";
-import { 
+import schoolBadge from "@/assets/school-badge.png";
+import {
   Heart, 
   Flame, 
   MessageCircle, 
@@ -68,7 +69,15 @@ function ValueContent({ value }: { value: DNAValue }) {
 export default function TeacherDNAPage() {
   return (
     <TeacherAppLayout>
-      <AppHeader title="Collinz DNA" showBack />
+      <AppHeader 
+        showBack 
+        leftContent={
+          <div className="flex items-center gap-2">
+            <img src={schoolBadge} alt="Collinz Logo" className="h-8 w-8 object-contain" />
+            <h1 className="text-xl font-semibold text-foreground">Collinz DNA</h1>
+          </div>
+        }
+      />
       
       <div className="px-4 py-4 space-y-4">
         {/* Banner Image */}
