@@ -144,6 +144,13 @@ export default function TeacherHomePage() {
                 {totalPendingGrades}
               </p>
               <p className="text-xs text-amber-600 dark:text-amber-500">Pending Grades</p>
+              <p className="text-[10px] text-amber-500 dark:text-amber-400 mt-1 flex items-center justify-center gap-0.5">
+                {showPendingGrades ? (
+                  <>Hide <ChevronUp className="h-3 w-3" /></>
+                ) : (
+                  <>View <ChevronDown className="h-3 w-3" /></>
+                )}
+              </p>
             </CardContent>
           </Card>
         </div>
