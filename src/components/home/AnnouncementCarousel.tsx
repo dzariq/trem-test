@@ -2,7 +2,7 @@ import { announcements } from "@/data/mockData";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ChevronRight } from "lucide-react";
+import { ChevronRight, Megaphone } from "lucide-react";
 import {
   Carousel,
   CarouselContent,
@@ -37,8 +37,28 @@ export function AnnouncementCarousel() {
           {announcements.slice(0, 3).map((announcement) => (
             <CarouselItem key={announcement.id} className="pl-2 basis-[85%]">
               <Card className="bg-card border-border shadow-sm overflow-hidden">
-                <CardContent className="p-4">
-                  <div className="flex items-center gap-2 mb-2">
+                {/* Image header or default pattern */}
+                <div className="relative h-24 overflow-hidden">
+                  {announcement.image ? (
+                    <img 
+                      src={announcement.image} 
+                      alt={announcement.title}
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <div className="w-full h-full bg-gradient-to-br from-primary/20 via-primary/10 to-secondary/20 flex items-center justify-center">
+                      <div className="absolute inset-0 opacity-10">
+                        <div className="absolute top-2 left-4 w-8 h-8 rounded-full bg-primary/30" />
+                        <div className="absolute top-6 right-8 w-12 h-12 rounded-full bg-secondary/30" />
+                        <div className="absolute bottom-4 left-1/3 w-6 h-6 rounded-full bg-primary/20" />
+                      </div>
+                      <Megaphone className="h-10 w-10 text-primary/40" />
+                    </div>
+                  )}
+                  {/* Overlay gradient for readability */}
+                  <div className="absolute inset-0 bg-gradient-to-t from-card via-card/50 to-transparent" />
+                  {/* Badge positioned on image */}
+                  <div className="absolute bottom-2 left-4 flex items-center gap-2">
                     <Badge variant="secondary" className="text-xs">
                       {announcement.category}
                     </Badge>
@@ -46,6 +66,8 @@ export function AnnouncementCarousel() {
                       {formatDate(announcement.date)}
                     </span>
                   </div>
+                </div>
+                <CardContent className="p-4 pt-2">
                   <h3 className="font-semibold text-foreground mb-1 line-clamp-1">
                     {announcement.title}
                   </h3>
