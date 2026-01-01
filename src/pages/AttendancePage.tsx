@@ -191,41 +191,37 @@ export default function AttendancePage() {
         </Card>
       </section>
 
-      {/* Month Selector */}
+      {/* Monthly Summary with Month Selector */}
       <section className="px-4 py-4">
-        <div className="flex items-center justify-between bg-card rounded-lg p-3 border border-border shadow-sm">
-          <Button variant="ghost" size="icon" onClick={goToPrevMonth}>
-            <ChevronLeft className="h-5 w-5" />
-          </Button>
-          <span className="font-semibold text-foreground">{selectedMonth} 2025</span>
-          <Button variant="ghost" size="icon" onClick={goToNextMonth}>
-            <ChevronRight className="h-5 w-5" />
-          </Button>
-        </div>
-      </section>
-
-      {/* Monthly Summary */}
-      <section className="px-4 pb-2">
         <Card className="bg-card border-border shadow-sm">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-lg font-semibold">Monthly Summary</CardTitle>
-          </CardHeader>
-          <CardContent>
+          <CardContent className="pt-4 space-y-4">
+            {/* Month Selector */}
+            <div className="flex items-center justify-between">
+              <Button variant="ghost" size="icon" onClick={goToPrevMonth}>
+                <ChevronLeft className="h-5 w-5" />
+              </Button>
+              <span className="font-semibold text-foreground">{selectedMonth} 2025</span>
+              <Button variant="ghost" size="icon" onClick={goToNextMonth}>
+                <ChevronRight className="h-5 w-5" />
+              </Button>
+            </div>
+
+            {/* Summary Stats */}
             <div className="grid grid-cols-4 gap-3">
-              <div className="text-center p-3 rounded-lg bg-chart-1/10">
-                <p className="text-2xl font-bold text-chart-1">{monthlySummary.present}</p>
+              <div className="text-center p-3 rounded-xl bg-emerald-50 dark:bg-emerald-950/30">
+                <p className="text-2xl font-bold" style={{ color: "hsl(160, 84%, 39%)" }}>{monthlySummary.present}</p>
                 <p className="text-xs text-muted-foreground">Present</p>
               </div>
-              <div className="text-center p-3 rounded-lg bg-destructive/10">
+              <div className="text-center p-3 rounded-xl bg-destructive/10">
                 <p className="text-2xl font-bold text-destructive">{monthlySummary.absent}</p>
                 <p className="text-xs text-muted-foreground">Absent</p>
               </div>
-              <div className="text-center p-3 rounded-lg bg-chart-4/10">
-                <p className="text-2xl font-bold text-chart-4">{monthlySummary.late}</p>
+              <div className="text-center p-3 rounded-xl bg-amber-50 dark:bg-amber-950/30">
+                <p className="text-2xl font-bold" style={{ color: "hsl(38, 92%, 40%)" }}>{monthlySummary.late}</p>
                 <p className="text-xs text-muted-foreground">Late</p>
               </div>
-              <div className="text-center p-3 rounded-lg bg-chart-5/10">
-                <p className="text-2xl font-bold text-chart-5">{monthlySummary.excused}</p>
+              <div className="text-center p-3 rounded-xl bg-purple-50 dark:bg-purple-950/30">
+                <p className="text-2xl font-bold" style={{ color: "hsl(271, 91%, 55%)" }}>{monthlySummary.excused}</p>
                 <p className="text-xs text-muted-foreground">Excused</p>
               </div>
             </div>
