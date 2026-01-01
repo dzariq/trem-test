@@ -1,14 +1,15 @@
 import { useState } from "react";
 import { students } from "@/data/mockData";
 import { cn } from "@/lib/utils";
-import { Check } from "lucide-react";
+import { ChevronRight, ChevronDown } from "lucide-react";
 import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-  SheetTrigger,
-} from "@/components/ui/sheet";
+  Drawer,
+  DrawerContent,
+  DrawerHeader,
+  DrawerTitle,
+  DrawerTrigger,
+} from "@/components/ui/drawer";
+import { Badge } from "@/components/ui/badge";
 
 interface StudentPillSelectorProps {
   onStudentChange?: (studentId: string) => void;
@@ -23,13 +24,12 @@ const avatarColors = [
 ];
 
 export function StudentPillSelector({ onStudentChange }: StudentPillSelectorProps) {
-  const [selectedId, setSelectedId] = useState(students[0].id);
   const [open, setOpen] = useState(false);
+  const [expandedId, setExpandedId] = useState<string | null>(null);
 
-  const handleSelect = (studentId: string) => {
-    setSelectedId(studentId);
+  const handleToggleExpand = (studentId: string) => {
+    setExpandedId(expandedId === studentId ? null : studentId);
     onStudentChange?.(studentId);
-    setOpen(false);
   };
 
   const getInitials = (name: string) => 
@@ -40,8 +40,8 @@ export function StudentPillSelector({ onStudentChange }: StudentPillSelectorProp
   const overflowCount = students.length - maxVisible;
 
   return (
-    <Sheet open={open} onOpenChange={setOpen}>
-      <SheetTrigger asChild>
+    <Drawer open={open} onOpenChange={setOpen}>
+      <DrawerTrigger asChild>
         <button className="flex items-center -space-x-2 hover:opacity-90 transition-opacity">
           {visibleStudents.map((student, index) => (
             <div
@@ -68,45 +68,72 @@ export function StudentPillSelector({ onStudentChange }: StudentPillSelectorProp
             </div>
           )}
         </button>
-      </SheetTrigger>
-      <SheetContent side="bottom" className="rounded-t-2xl">
-        <SheetHeader className="pb-4">
-          <SheetTitle>Select Child</SheetTitle>
-        </SheetHeader>
-        <div className="space-y-2 pb-4">
+      </DrawerTrigger>
+      <DrawerContent className="max-h-[70vh]">
+        <DrawerHeader className="pb-2">
+          <DrawerTitle>Your Children</DrawerTitle>
+        </DrawerHeader>
+        <div className="px-4 pb-6 space-y-2 overflow-y-auto">
           {students.map((student, index) => {
-            const isSelected = student.id === selectedId;
+            const isExpanded = student.id === expandedId;
             return (
-              <button
+              <div
                 key={student.id}
-                onClick={() => handleSelect(student.id)}
-                className={cn(
-                  "w-full flex items-center gap-3 p-3 rounded-xl transition-colors",
-                  isSelected ? "bg-primary/10" : "hover:bg-muted"
-                )}
+                className="rounded-xl border border-border overflow-hidden"
               >
-                <div
+                <button
+                  onClick={() => handleToggleExpand(student.id)}
                   className={cn(
-                    "w-12 h-12 rounded-full flex items-center justify-center shrink-0",
-                    avatarColors[index % avatarColors.length]
+                    "w-full flex items-center gap-3 p-3 transition-colors",
+                    isExpanded ? "bg-muted/50" : "hover:bg-muted/30"
                   )}
                 >
-                  <span className="text-base font-semibold text-white">
-                    {getInitials(student.name)}
-                  </span>
-                </div>
-                <div className="text-left flex-1 min-w-0">
-                  <p className="font-medium text-foreground">{student.name}</p>
-                  <p className="text-sm text-muted-foreground">{student.class}</p>
-                </div>
-                {isSelected && (
-                  <Check className="w-5 h-5 text-primary shrink-0" />
+                  <div
+                    className={cn(
+                      "w-12 h-12 rounded-full flex items-center justify-center shrink-0",
+                      avatarColors[index % avatarColors.length]
+                    )}
+                  >
+                    <span className="text-base font-semibold text-white">
+                      {getInitials(student.name)}
+                    </span>
+                  </div>
+                  <div className="text-left flex-1 min-w-0">
+                    <p className="font-medium text-foreground">{student.name}</p>
+                    <p className="text-sm text-muted-foreground">{student.class} • {student.grade}</p>
+                  </div>
+                  {isExpanded ? (
+                    <ChevronDown className="w-5 h-5 text-muted-foreground shrink-0" />
+                  ) : (
+                    <ChevronRight className="w-5 h-5 text-muted-foreground shrink-0" />
+                  )}
+                </button>
+                
+                {isExpanded && (
+                  <div className="px-4 pb-4 pt-2 border-t border-border bg-muted/20">
+                    <div className="space-y-3">
+                      <div>
+                        <p className="text-xs font-medium text-muted-foreground mb-2">Subjects</p>
+                        <div className="flex flex-wrap gap-2">
+                          {student.subjects?.map((subject) => (
+                            <Badge 
+                              key={subject} 
+                              variant="secondary"
+                              className="text-xs"
+                            >
+                              {subject}
+                            </Badge>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
                 )}
-              </button>
+              </div>
             );
           })}
         </div>
-      </SheetContent>
-    </Sheet>
+      </DrawerContent>
+    </Drawer>
   );
 }
