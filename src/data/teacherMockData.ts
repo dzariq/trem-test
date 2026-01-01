@@ -243,7 +243,12 @@ export const teacherQuickStats = {
     late: 1,
     total: 27
   },
-  pendingGrades: 15
+  pendingGrades: [
+    { class: "5A", subject: "Mathematics", count: 5 },
+    { class: "5A", subject: "Science", count: 3 },
+    { class: "5B", subject: "Mathematics", count: 4 },
+    { class: "4A", subject: "English", count: 3 },
+  ]
 };
 
 export interface Deadline {
