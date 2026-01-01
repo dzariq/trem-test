@@ -41,21 +41,40 @@ export const upcomingEvents = [
     title: "Sports Day",
     date: "2026-01-15",
     time: "8:00 AM - 4:00 PM",
-    location: "School Field"
+    location: "School Field",
+    category: "sports"
   },
   {
     id: 2,
     title: "Parent-Teacher Conference",
     date: "2026-01-20",
     time: "9:00 AM - 5:00 PM",
-    location: "Main Building"
+    location: "Main Building",
+    category: "meeting"
   },
   {
     id: 3,
     title: "Science Fair",
     date: "2026-01-28",
     time: "10:00 AM - 2:00 PM",
-    location: "Assembly Hall"
+    location: "Assembly Hall",
+    category: "academic"
+  },
+  {
+    id: 4,
+    title: "Art Exhibition",
+    date: "2026-02-05",
+    time: "11:00 AM - 3:00 PM",
+    location: "Art Room",
+    category: "arts"
+  },
+  {
+    id: 5,
+    title: "Mid-Year Exam",
+    date: "2026-02-10",
+    time: "8:00 AM - 12:00 PM",
+    location: "Exam Hall",
+    category: "academic"
   }
 ];
 

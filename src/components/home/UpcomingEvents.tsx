@@ -1,9 +1,15 @@
+import { useState } from "react";
 import { upcomingEvents } from "@/data/mockData";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ChevronRight, MapPin, Clock } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+
+type EventCategory = "all" | "academic" | "sports" | "arts" | "meeting";
 
 export function UpcomingEvents() {
+  const [activeFilter, setActiveFilter] = useState<EventCategory>("all");
+
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
     return {
@@ -11,6 +17,18 @@ export function UpcomingEvents() {
       month: date.toLocaleDateString("en-US", { month: "short" })
     };
   };
+
+  const filters: { value: EventCategory; label: string }[] = [
+    { value: "all", label: "All" },
+    { value: "academic", label: "Academic" },
+    { value: "sports", label: "Sports" },
+    { value: "arts", label: "Arts" },
+    { value: "meeting", label: "Meeting" },
+  ];
+
+  const filteredEvents = activeFilter === "all"
+    ? upcomingEvents
+    : upcomingEvents.filter(e => e.category === activeFilter);
 
   return (
     <section className="px-4 py-4">
@@ -20,9 +38,23 @@ export function UpcomingEvents() {
           See all <ChevronRight className="h-4 w-4 ml-1" />
         </Button>
       </div>
+
+      {/* Filter Tabs */}
+      <div className="flex gap-2 mb-3 overflow-x-auto pb-1">
+        {filters.map((filter) => (
+          <Badge
+            key={filter.value}
+            variant={activeFilter === filter.value ? "default" : "outline"}
+            className="cursor-pointer whitespace-nowrap px-3 py-1"
+            onClick={() => setActiveFilter(filter.value)}
+          >
+            {filter.label}
+          </Badge>
+        ))}
+      </div>
       
       <div className="space-y-3">
-        {upcomingEvents.slice(0, 3).map((event) => {
+        {filteredEvents.slice(0, 3).map((event) => {
           const { day, month } = formatDate(event.date);
           return (
             <Card key={event.id} className="bg-card border-border shadow-sm">
@@ -48,6 +80,11 @@ export function UpcomingEvents() {
             </Card>
           );
         })}
+        {filteredEvents.length === 0 && (
+          <p className="text-sm text-muted-foreground text-center py-4">
+            No events in this category
+          </p>
+        )}
       </div>
     </section>
   );
