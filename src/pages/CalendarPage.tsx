@@ -19,6 +19,9 @@ import {
 export default function CalendarPage() {
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
   const [categoryFilter, setCategoryFilter] = useState("all");
+  const [eventTypeFilter, setEventTypeFilter] = useState("all");
+
+  const eventTypes = ["all", "event", "meeting", "exam", "holiday"];
 
   const getEventTagColor = (tag: string) => {
     switch (tag.toLowerCase()) {
@@ -150,27 +153,48 @@ export default function CalendarPage() {
                 <CardTitle className="text-lg font-semibold">Upcoming Events</CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
-                {calendarEvents.slice(0, 5).map((event) => {
-                  const eventDate = new Date(event.date);
-                  return (
-                    <div 
-                      key={event.id}
-                      className="flex items-center gap-4 p-3 rounded-lg border border-border/50 hover:bg-accent/30 transition-colors"
+                {/* Event Type Filter */}
+                <div className="flex gap-2 overflow-x-auto pb-2">
+                  {eventTypes.map((type) => (
+                    <Badge
+                      key={type}
+                      variant={eventTypeFilter === type ? "default" : "outline"}
+                      className="cursor-pointer whitespace-nowrap capitalize"
+                      onClick={() => setEventTypeFilter(type)}
                     >
-                      <div className="flex flex-col items-center justify-center bg-primary/10 text-primary rounded-lg w-12 h-12 flex-shrink-0">
-                        <span className="text-sm font-bold leading-none">{eventDate.getDate()}</span>
-                        <span className="text-xs uppercase">{eventDate.toLocaleDateString("en-US", { month: "short" })}</span>
+                      {type === "all" ? "All" : type}
+                    </Badge>
+                  ))}
+                </div>
+
+                {calendarEvents
+                  .filter(e => eventTypeFilter === "all" || e.tag.toLowerCase() === eventTypeFilter)
+                  .slice(0, 5)
+                  .map((event) => {
+                    const eventDate = new Date(event.date);
+                    return (
+                      <div 
+                        key={event.id}
+                        className="flex items-center gap-4 p-3 rounded-lg border border-border/50 hover:bg-accent/30 transition-colors"
+                      >
+                        <div className="flex flex-col items-center justify-center bg-primary/10 text-primary rounded-lg w-12 h-12 flex-shrink-0">
+                          <span className="text-sm font-bold leading-none">{eventDate.getDate()}</span>
+                          <span className="text-xs uppercase">{eventDate.toLocaleDateString("en-US", { month: "short" })}</span>
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <h3 className="font-medium text-foreground truncate">{event.title}</h3>
+                          <p className="text-sm text-muted-foreground">{event.time}</p>
+                        </div>
+                        <Badge className={getEventTagColor(event.tag)}>
+                          {event.tag}
+                        </Badge>
                       </div>
-                      <div className="flex-1 min-w-0">
-                        <h3 className="font-medium text-foreground truncate">{event.title}</h3>
-                        <p className="text-sm text-muted-foreground">{event.time}</p>
-                      </div>
-                      <Badge variant="outline" className="flex-shrink-0">
-                        {event.tag}
-                      </Badge>
-                    </div>
-                  );
-                })}
+                    );
+                  })}
+
+                {calendarEvents.filter(e => eventTypeFilter === "all" || e.tag.toLowerCase() === eventTypeFilter).length === 0 && (
+                  <p className="text-sm text-muted-foreground text-center py-4">No events found</p>
+                )}
               </CardContent>
             </Card>
           </TabsContent>
