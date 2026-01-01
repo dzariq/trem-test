@@ -5,7 +5,7 @@ import { attendanceData } from "@/data/mockData";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { ChevronLeft, ChevronRight, Check, X, Clock, CalendarOff, ChevronDown, ChevronUp } from "lucide-react";
+import { ChevronLeft, ChevronRight, Check, X, Clock, CalendarOff } from "lucide-react";
 import {
   BarChart,
   Bar,
@@ -22,11 +22,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from "@/components/ui/collapsible";
 
 const months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
 
@@ -36,7 +31,6 @@ export default function AttendancePage() {
   const [selectedMonth, setSelectedMonth] = useState("December");
   const [currentMonthIndex, setCurrentMonthIndex] = useState(11);
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
-  const [expandedDay, setExpandedDay] = useState<number | null>(null);
 
   const goToPrevMonth = () => {
     const newIndex = currentMonthIndex > 0 ? currentMonthIndex - 1 : 11;
@@ -276,86 +270,46 @@ export default function AttendancePage() {
                   <div className="h-px flex-1 bg-border" />
                 </div>
 
-                {/* Days */}
-                {week.days.map((day, dayIndex) => {
-                  const date = new Date(day.date);
-                  const globalIndex = weekIndex * 7 + dayIndex;
-                  const isExpanded = expandedDay === globalIndex;
-                  const today = isToday(day.date);
+                {/* Days - 2 per row */}
+                <div className="grid grid-cols-2 gap-2">
+                  {week.days.map((day, dayIndex) => {
+                    const date = new Date(day.date);
+                    const today = isToday(day.date);
 
-                  return (
-                    <Collapsible
-                      key={dayIndex}
-                      open={isExpanded}
-                      onOpenChange={() => setExpandedDay(isExpanded ? null : globalIndex)}
-                    >
-                      <CollapsibleTrigger asChild>
-                        <div 
-                          className={`flex items-center justify-between p-3 rounded-lg cursor-pointer transition-all hover:bg-accent/50 ${
-                            today 
-                              ? "bg-primary/10 border-2 border-primary/30" 
-                              : "bg-accent/30 border border-border/50"
-                          }`}
-                        >
-                          <div className="flex items-center gap-3">
-                            <div className={`w-8 h-8 rounded-full flex items-center justify-center ${getStatusColor(day.status)}`}>
-                              {getStatusIcon(day.status)}
-                            </div>
-                            <div>
-                              <div className="flex items-center gap-2">
-                                <p className="font-medium text-foreground">
-                                  {date.toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" })}
-                                </p>
-                                {today && (
-                                  <Badge variant="outline" className="text-[10px] h-4 px-1.5 border-primary text-primary">
-                                    Today
-                                  </Badge>
-                                )}
-                              </div>
-                              {day.reason && (
-                                <p className="text-xs text-muted-foreground mt-0.5">{day.reason}</p>
-                              )}
-                            </div>
+                    return (
+                      <div 
+                        key={dayIndex}
+                        className={`flex flex-col p-3 rounded-lg transition-all ${
+                          today 
+                            ? "bg-primary/10 border-2 border-primary/30" 
+                            : "bg-accent/30 border border-border/50"
+                        }`}
+                      >
+                        <div className="flex items-center justify-between mb-2">
+                          <div className={`w-7 h-7 rounded-full flex items-center justify-center ${getStatusColor(day.status)}`}>
+                            {getStatusIcon(day.status)}
                           </div>
-                          <div className="flex items-center gap-2">
-                            <Badge className={getStatusColor(day.status)}>
-                              {getStatusLabel(day.status)}
+                          {today && (
+                            <Badge variant="outline" className="text-[10px] h-4 px-1.5 border-primary text-primary">
+                              Today
                             </Badge>
-                            {isExpanded ? (
-                              <ChevronUp className="h-4 w-4 text-muted-foreground" />
-                            ) : (
-                              <ChevronDown className="h-4 w-4 text-muted-foreground" />
-                            )}
-                          </div>
-                        </div>
-                      </CollapsibleTrigger>
-                      <CollapsibleContent>
-                        <div className="mt-1 ml-11 p-3 bg-muted/50 rounded-lg border border-border/30 space-y-2">
-                          <div className="grid grid-cols-2 gap-4 text-sm">
-                            <div>
-                              <p className="text-muted-foreground text-xs">Time In</p>
-                              <p className="font-medium">
-                                {day.status === "present" ? "7:45 AM" : 
-                                 day.status === "late" ? "8:15 AM" : "—"}
-                              </p>
-                            </div>
-                            <div>
-                              <p className="text-muted-foreground text-xs">Time Out</p>
-                              <p className="font-medium">
-                                {day.status === "present" || day.status === "late" ? "3:30 PM" : "—"}
-                              </p>
-                            </div>
-                          </div>
-                          {(day.status === "absent" || day.status === "late") && !day.reason?.includes("Holiday") && (
-                            <Button variant="outline" size="sm" className="w-full mt-2 text-xs">
-                              Submit Excuse / MC
-                            </Button>
                           )}
                         </div>
-                      </CollapsibleContent>
-                    </Collapsible>
-                  );
-                })}
+                        <p className="font-medium text-foreground text-sm">
+                          {date.toLocaleDateString("en-US", { weekday: "short", day: "numeric" })}
+                        </p>
+                        <div className="flex items-center justify-between mt-1">
+                          <Badge className={`text-[10px] px-1.5 py-0.5 ${getStatusColor(day.status)}`}>
+                            {getStatusLabel(day.status)}
+                          </Badge>
+                        </div>
+                        {day.reason && (
+                          <p className="text-[10px] text-muted-foreground mt-1 truncate">{day.reason}</p>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
               </div>
             ))}
           </CardContent>
