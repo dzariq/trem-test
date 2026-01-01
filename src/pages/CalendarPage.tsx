@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { MapPin, Clock, User } from "lucide-react";
+import { MapPin, Clock, User, ChevronDown } from "lucide-react";
 import schoolLogo from "@/assets/school-badge.png";
 import {
   Select,
@@ -16,25 +16,38 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { TagCategory, CalendarTag } from "@/types/calendarTags";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { TagCategory, CalendarTag, PARENT_HIDDEN_TAGS } from "@/types/calendarTags";
 import {
   filterEventsByRole,
   filterEventsByCategory,
+  filterEventsByTag,
   getTagColor,
   getTagDisplayName,
   getCategoryDisplayName,
   getCategoryColor,
-  ALL_CATEGORIES,
+  getTagsByCategory,
 } from "@/lib/calendarUtils";
 
 export default function CalendarPage() {
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
   const [categoryFilter, setCategoryFilter] = useState<TagCategory | "all">("all");
+  const [selectedTag, setSelectedTag] = useState<CalendarTag | null>(null);
   const [ccaCategoryFilter, setCcaCategoryFilter] = useState("all");
 
   // Filter events for parent role
   const visibleEvents = filterEventsByRole(calendarEvents, "parent");
-  const filteredEvents = filterEventsByCategory(visibleEvents, categoryFilter);
+  let filteredEvents = filterEventsByCategory(visibleEvents, categoryFilter);
+  
+  // Apply tag filter if a specific tag is selected
+  if (selectedTag) {
+    filteredEvents = filterEventsByTag(filteredEvents, selectedTag);
+  }
 
   // Get CCA category color
   const getCcaCategoryColor = (category: string) => {
@@ -71,6 +84,20 @@ export default function CalendarPage() {
     "parents",
   ];
 
+  // Get visible tags for a category (filter out hidden tags for parents)
+  const getVisibleTagsForCategory = (category: TagCategory): CalendarTag[] => {
+    return getTagsByCategory(category).filter(tag => !PARENT_HIDDEN_TAGS.includes(tag));
+  };
+
+  const handleCategoryClick = (cat: TagCategory | "all") => {
+    setCategoryFilter(cat);
+    setSelectedTag(null);
+  };
+
+  const handleTagSelect = (tag: CalendarTag) => {
+    setSelectedTag(tag);
+  };
+
   return (
     <AppLayout>
       <AppHeader 
@@ -104,20 +131,69 @@ export default function CalendarPage() {
           </TabsList>
 
           <TabsContent value="calendar" className="mt-4 space-y-4">
-            {/* Category Filter */}
+            {/* Category Filter with Dropdowns */}
             <div className="flex gap-2 overflow-x-auto pb-2">
-              {parentVisibleCategories.map((cat) => (
-                <Badge
-                  key={cat}
-                  variant={categoryFilter === cat ? "default" : "outline"}
-                  className={`cursor-pointer whitespace-nowrap ${
-                    categoryFilter === cat ? "" : cat !== "all" ? getCategoryColor(cat as TagCategory) : ""
-                  }`}
-                  onClick={() => setCategoryFilter(cat)}
-                >
-                  {cat === "all" ? "All" : getCategoryDisplayName(cat as TagCategory)}
-                </Badge>
-              ))}
+              {parentVisibleCategories.map((cat) => {
+                const isSelected = categoryFilter === cat;
+                const visibleTags = cat !== "all" ? getVisibleTagsForCategory(cat as TagCategory) : [];
+                const hasSubTags = visibleTags.length > 0;
+
+                if (cat === "all" || !hasSubTags) {
+                  return (
+                    <Badge
+                      key={cat}
+                      variant={isSelected && !selectedTag ? "default" : "outline"}
+                      className={`cursor-pointer whitespace-nowrap ${
+                        isSelected && !selectedTag ? "" : cat !== "all" ? getCategoryColor(cat as TagCategory) : ""
+                      }`}
+                      onClick={() => handleCategoryClick(cat)}
+                    >
+                      {cat === "all" ? "All" : getCategoryDisplayName(cat as TagCategory)}
+                    </Badge>
+                  );
+                }
+
+                return (
+                  <DropdownMenu key={cat}>
+                    <DropdownMenuTrigger asChild>
+                      <Badge
+                        variant={isSelected ? "default" : "outline"}
+                        className={`cursor-pointer whitespace-nowrap flex items-center gap-1 ${
+                          isSelected ? "" : getCategoryColor(cat as TagCategory)
+                        }`}
+                      >
+                        {selectedTag && categoryFilter === cat 
+                          ? getTagDisplayName(selectedTag)
+                          : getCategoryDisplayName(cat as TagCategory)
+                        }
+                        <ChevronDown className="h-3 w-3" />
+                      </Badge>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent className="bg-card z-50" align="start">
+                      <DropdownMenuItem 
+                        onClick={() => handleCategoryClick(cat)}
+                        className="cursor-pointer"
+                      >
+                        All {getCategoryDisplayName(cat as TagCategory)}
+                      </DropdownMenuItem>
+                      {visibleTags.map((tag) => (
+                        <DropdownMenuItem 
+                          key={tag}
+                          onClick={() => {
+                            setCategoryFilter(cat);
+                            handleTagSelect(tag);
+                          }}
+                          className="cursor-pointer"
+                        >
+                          <Badge className={`text-xs mr-2 ${getTagColor(tag)}`}>
+                            {getTagDisplayName(tag)}
+                          </Badge>
+                        </DropdownMenuItem>
+                      ))}
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                );
+              })}
             </div>
 
             {/* Calendar Component */}

@@ -156,3 +156,19 @@ export const ALL_CATEGORIES: TagCategory[] = [
   "students",
   "parents",
 ];
+
+// Get tags by category
+export function getTagsByCategory(category: TagCategory): CalendarTag[] {
+  return (Object.entries(TAG_CATEGORIES) as [CalendarTag, TagCategory][])
+    .filter(([_, cat]) => cat === category)
+    .map(([tag]) => tag);
+}
+
+// Filter events by specific tag
+export function filterEventsByTag(events: CalendarEvent[], tag: CalendarTag | null): CalendarEvent[] {
+  if (!tag) {
+    return events;
+  }
+  
+  return events.filter(event => event.tags.includes(tag));
+}
