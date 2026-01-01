@@ -38,7 +38,7 @@ export default function TeacherHomePage() {
       />
 
       {/* Hero Banner */}
-      <div className="mt-4">
+      <div>
         <img 
           src={heroBanner} 
           alt="School Banner" 
