@@ -4,10 +4,12 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ChevronRight, MapPin, Clock } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { useNavigate } from "react-router-dom";
 
 type EventCategory = "all" | "academic" | "sports" | "arts" | "meeting";
 
 export function UpcomingEvents() {
+  const navigate = useNavigate();
   const [activeFilter, setActiveFilter] = useState<EventCategory>("all");
 
   const formatDate = (dateString: string) => {
@@ -34,7 +36,11 @@ export function UpcomingEvents() {
     <section className="px-4 py-4">
       <div className="flex items-center justify-between mb-3">
         <h2 className="text-lg font-semibold text-foreground">Upcoming Events</h2>
-        <Button variant="link" className="text-primary p-0 h-auto text-sm">
+        <Button 
+          variant="link" 
+          className="text-primary p-0 h-auto text-sm"
+          onClick={() => navigate("/calendar")}
+        >
           See all <ChevronRight className="h-4 w-4 ml-1" />
         </Button>
       </div>
