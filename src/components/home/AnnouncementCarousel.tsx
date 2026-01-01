@@ -3,6 +3,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ChevronRight, Megaphone } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import {
   Carousel,
   CarouselContent,
@@ -12,6 +13,8 @@ import {
 } from "@/components/ui/carousel";
 
 export function AnnouncementCarousel() {
+  const navigate = useNavigate();
+
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
     return date.toLocaleDateString("en-US", { month: "short", day: "numeric" });
@@ -21,7 +24,11 @@ export function AnnouncementCarousel() {
     <section className="px-4 py-4">
       <div className="flex items-center justify-between mb-3">
         <h2 className="text-lg font-semibold text-foreground">Announcements</h2>
-        <Button variant="link" className="text-primary p-0 h-auto text-sm">
+        <Button 
+          variant="link" 
+          className="text-primary p-0 h-auto text-sm"
+          onClick={() => navigate("/announcements")}
+        >
           See all <ChevronRight className="h-4 w-4 ml-1" />
         </Button>
       </div>
