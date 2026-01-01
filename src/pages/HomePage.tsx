@@ -6,6 +6,7 @@ import { QuickLinks } from "@/components/home/QuickLinks";
 import { AttendanceSummary } from "@/components/home/AttendanceSummary";
 import { ResultsSummary } from "@/components/home/ResultsSummary";
 import { StudentPillSelector } from "@/components/home/StudentPillSelector";
+import { WelcomeTypingAnimation } from "@/components/home/WelcomeTypingAnimation";
 import schoolBadge from "@/assets/school-badge.png";
 import heroBanner from "@/assets/hero-banner.png";
 
@@ -24,8 +25,9 @@ export default function HomePage() {
         }
       />
       
-      <div className="w-full">
+      <div className="w-full relative">
         <img src={heroBanner} alt="School banner" className="w-full h-auto" />
+        <WelcomeTypingAnimation />
       </div>
       
       <QuickLinks />
