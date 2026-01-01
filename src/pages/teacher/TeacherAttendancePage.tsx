@@ -174,7 +174,7 @@ export default function TeacherAttendancePage() {
                     "excused",
                     <AlertCircle className="h-4 w-4 text-white" />,
                     "Excused",
-                    "bg-blue-500"
+                    "bg-purple-500"
                   )}
                 </div>
               </div>
