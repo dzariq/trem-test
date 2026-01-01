@@ -3,7 +3,7 @@ import { AppHeader } from "@/components/layout/AppHeader";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
-import { Shield, Lock, Eye, Smartphone, Bell, Key, Fingerprint, ChevronRight, AlertTriangle } from "lucide-react";
+import { Shield, Lock, Eye, Smartphone, Bell, Key, Fingerprint, ChevronRight } from "lucide-react";
 import { useState } from "react";
 import { Separator } from "@/components/ui/separator";
 export default function SecurityPrivacyPage() {
@@ -131,26 +131,6 @@ export default function SecurityPrivacyPage() {
           </CardContent>
         </Card>
 
-        {/* Danger Zone */}
-        <Card className="bg-card border-destructive/30 shadow-sm">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-lg font-semibold flex items-center gap-2 text-destructive">
-              <AlertTriangle className="h-5 w-5" />
-              Danger Zone
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            <p className="text-sm text-muted-foreground">
-              These actions are irreversible. Please proceed with caution.
-            </p>
-            <Button variant="outline" className="w-full border-destructive/50 text-destructive hover:bg-destructive/10">
-              Delete All Data
-            </Button>
-            <Button variant="outline" className="w-full border-destructive/50 text-destructive hover:bg-destructive/10">
-              Deactivate Account
-            </Button>
-          </CardContent>
-        </Card>
       </div>
     </AppLayout>;
 }
