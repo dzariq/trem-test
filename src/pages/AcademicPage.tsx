@@ -418,8 +418,8 @@ export default function AcademicPage() {
               </p>
             </div>
 
-            <Button className="w-full mt-4" variant="outline">
-              <FileText className="h-4 w-4 mr-2" />
+            <Button className="w-full mt-4 gap-2">
+              <FileText className="h-4 w-4" />
               Generate Grade Analysis Report
             </Button>
           </CardContent>
