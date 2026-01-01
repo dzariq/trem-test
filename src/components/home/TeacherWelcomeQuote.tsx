@@ -57,17 +57,8 @@ const TeacherWelcomeQuote = () => {
   if (!isVisible) return null;
 
   return (
-    <div className="absolute bottom-6 left-4 right-4 z-10">
-      <div className="relative bg-background/95 backdrop-blur-sm rounded-2xl p-4 shadow-lg border border-border">
-        {/* Speech bubble tail pointing to top-left teacher */}
-        <div 
-          className="absolute -left-2 top-4 w-0 h-0"
-          style={{
-            borderTop: '8px solid transparent',
-            borderBottom: '8px solid transparent',
-            borderRight: '12px solid hsl(var(--background) / 0.95)',
-          }}
-        />
+    <div className="absolute bottom-4 left-4 right-4 z-10">
+      <div className="bg-background/90 backdrop-blur-sm rounded-lg p-3 shadow-lg border border-border">
         <p className="text-sm text-foreground italic">
           "{displayedText}"
           {!isComplete && <span className="animate-pulse">|</span>}
