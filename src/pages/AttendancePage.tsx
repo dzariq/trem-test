@@ -238,6 +238,33 @@ export default function AttendancePage() {
         <Card className="bg-card border-border shadow-sm">
           <CardHeader className="pb-2">
             <CardTitle className="text-lg font-semibold">Daily Breakdown</CardTitle>
+            {/* Status Legend */}
+            <div className="flex flex-wrap gap-3 mt-2">
+              <div className="flex items-center gap-1.5">
+                <div className="w-5 h-5 rounded-full flex items-center justify-center bg-chart-1 text-card">
+                  <Check className="h-3 w-3" />
+                </div>
+                <span className="text-xs text-muted-foreground">Present</span>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <div className="w-5 h-5 rounded-full flex items-center justify-center bg-destructive text-destructive-foreground">
+                  <X className="h-3 w-3" />
+                </div>
+                <span className="text-xs text-muted-foreground">Absent</span>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <div className="w-5 h-5 rounded-full flex items-center justify-center bg-chart-4 text-card">
+                  <Clock className="h-3 w-3" />
+                </div>
+                <span className="text-xs text-muted-foreground">Late</span>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <div className="w-5 h-5 rounded-full flex items-center justify-center bg-chart-5 text-card">
+                  <CalendarOff className="h-3 w-3" />
+                </div>
+                <span className="text-xs text-muted-foreground">Excused</span>
+              </div>
+            </div>
           </CardHeader>
           <CardContent className="space-y-4">
             {/* Filter Chips */}
