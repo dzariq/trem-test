@@ -372,3 +372,46 @@ export const categoryYearOverYear: Record<string, {
     { year: "2026", attitude: 8.0, homework: 7.6, quiz: 7.3, exam: 54 },
   ],
 };
+
+// Exam-specific data for comparison between different exam periods
+export interface ExamData {
+  average: number;
+  passRate: number;
+  aRate: number;
+  highest: number;
+  lowest: number;
+  attitude: number;
+  homework: number;
+  quiz: number;
+  exam: number;
+}
+
+export const examComparisonData: Record<string, Record<string, ExamData>> = {
+  "5A": {
+    "2026-midYear": { average: 77, passRate: 90, aRate: 40, highest: 97, lowest: 51, attitude: 8.3, homework: 7.7, quiz: 7.5, exam: 53 },
+    "2025-yearEnd": { average: 80, passRate: 92, aRate: 45, highest: 98, lowest: 55, attitude: 8.2, homework: 7.7, quiz: 7.4, exam: 54 },
+    "2025-midYear": { average: 76, passRate: 88, aRate: 38, highest: 96, lowest: 48, attitude: 8.2, homework: 7.7, quiz: 7.4, exam: 54 },
+    "2024-yearEnd": { average: 78, passRate: 90, aRate: 42, highest: 97, lowest: 52, attitude: 8.0, homework: 7.5, quiz: 7.2, exam: 53 },
+    "2024-midYear": { average: 74, passRate: 86, aRate: 35, highest: 95, lowest: 45, attitude: 8.0, homework: 7.5, quiz: 7.2, exam: 53 },
+    "2023-yearEnd": { average: 75, passRate: 87, aRate: 36, highest: 94, lowest: 46, attitude: 7.8, homework: 7.3, quiz: 7.0, exam: 52 },
+    "2023-midYear": { average: 72, passRate: 84, aRate: 32, highest: 93, lowest: 42, attitude: 7.8, homework: 7.3, quiz: 7.0, exam: 52 },
+  },
+  "5B": {
+    "2026-midYear": { average: 82, passRate: 93, aRate: 48, highest: 99, lowest: 59, attitude: 8.6, homework: 8.1, quiz: 7.9, exam: 59 },
+    "2025-yearEnd": { average: 83, passRate: 94, aRate: 50, highest: 99, lowest: 60, attitude: 8.5, homework: 8.0, quiz: 7.8, exam: 58 },
+    "2025-midYear": { average: 80, passRate: 91, aRate: 45, highest: 98, lowest: 56, attitude: 8.5, homework: 8.0, quiz: 7.8, exam: 58 },
+    "2024-yearEnd": { average: 81, passRate: 92, aRate: 47, highest: 98, lowest: 58, attitude: 8.2, homework: 7.8, quiz: 7.5, exam: 56 },
+    "2024-midYear": { average: 78, passRate: 89, aRate: 42, highest: 97, lowest: 54, attitude: 8.2, homework: 7.8, quiz: 7.5, exam: 56 },
+    "2023-yearEnd": { average: 78, passRate: 88, aRate: 40, highest: 96, lowest: 52, attitude: 8.0, homework: 7.5, quiz: 7.2, exam: 54 },
+    "2023-midYear": { average: 75, passRate: 85, aRate: 36, highest: 95, lowest: 48, attitude: 8.0, homework: 7.5, quiz: 7.2, exam: 54 },
+  },
+  "4A": {
+    "2026-midYear": { average: 78, passRate: 88, aRate: 38, highest: 93, lowest: 67, attitude: 8.0, homework: 7.6, quiz: 7.3, exam: 54 },
+    "2025-yearEnd": { average: 78, passRate: 89, aRate: 40, highest: 94, lowest: 65, attitude: 7.8, homework: 7.5, quiz: 7.2, exam: 53 },
+    "2025-midYear": { average: 75, passRate: 85, aRate: 35, highest: 92, lowest: 62, attitude: 7.8, homework: 7.5, quiz: 7.2, exam: 53 },
+    "2024-yearEnd": { average: 76, passRate: 86, aRate: 36, highest: 91, lowest: 60, attitude: 7.5, homework: 7.3, quiz: 7.0, exam: 51 },
+    "2024-midYear": { average: 73, passRate: 83, aRate: 32, highest: 90, lowest: 58, attitude: 7.5, homework: 7.3, quiz: 7.0, exam: 51 },
+    "2023-yearEnd": { average: 73, passRate: 82, aRate: 30, highest: 89, lowest: 55, attitude: 7.3, homework: 7.0, quiz: 6.8, exam: 49 },
+    "2023-midYear": { average: 70, passRate: 80, aRate: 28, highest: 88, lowest: 52, attitude: 7.3, homework: 7.0, quiz: 6.8, exam: 49 },
+  },
+};
