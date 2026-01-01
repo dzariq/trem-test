@@ -24,8 +24,9 @@ export default function HomePage() {
         }
       />
       
-      <div className="w-full">
+      <div className="w-full relative">
         <img src={heroBanner} alt="School banner" className="w-full h-auto" />
+        <div className="absolute bottom-0 left-0 right-0 h-12 bg-gradient-to-b from-transparent to-background" />
       </div>
       
       <AnnouncementCarousel />
