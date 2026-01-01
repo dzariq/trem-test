@@ -15,18 +15,24 @@ import {
   CartesianGrid,
 } from "recharts";
 
+// Helper to get score from new data structure
+const getScore = (subject: typeof academicData.subjects[0], year: string, examType: "midYear" | "yearEnd") => {
+  const yearData = subject.scores[year as keyof typeof subject.scores];
+  return yearData ? yearData[examType] : null;
+};
+
 export function ResultsSummary() {
   const navigate = useNavigate();
   const [subjectFilter, setSubjectFilter] = useState<string>("all");
 
-  // Calculate current average from mid-year current scores
+  // Calculate current average from mid-year 2025 scores
   const currentAverage = Math.round(
-    academicData.subjects.reduce((sum, s) => sum + s.midYearCurrent, 0) / academicData.subjects.length
+    academicData.subjects.reduce((sum, s) => sum + (getScore(s, "2025", "midYear") ?? 0), 0) / academicData.subjects.length
   );
 
-  // Calculate last year's year-end average
+  // Calculate last year's year-end average (2024)
   const lastYearEndAverage = Math.round(
-    academicData.subjects.reduce((sum, s) => sum + s.yearEndLast, 0) / academicData.subjects.length
+    academicData.subjects.reduce((sum, s) => sum + (getScore(s, "2024", "yearEnd") ?? 0), 0) / academicData.subjects.length
   );
 
   // Calculate improvement from last year-end to current mid-year
@@ -34,9 +40,11 @@ export function ResultsSummary() {
   const improvementText = improvementPoints >= 0 ? `+${improvementPoints}%` : `${improvementPoints}%`;
 
   // Find best subject based on current mid-year scores
-  const bestSubject = academicData.subjects.reduce((best, s) => 
-    s.midYearCurrent > best.midYearCurrent ? s : best
-  );
+  const bestSubject = academicData.subjects.reduce((best, s) => {
+    const currentScore = getScore(s, "2025", "midYear") ?? 0;
+    const bestScore = getScore(best, "2025", "midYear") ?? 0;
+    return currentScore > bestScore ? s : best;
+  });
 
   // Performance level based on average
   const getPerformanceLevel = (avg: number) => {
@@ -55,19 +63,19 @@ export function ResultsSummary() {
     "#ef4444", // red
   ];
 
-  // Prepare chart data - always include all subjects for multi-line view
+  // Prepare chart data using new structure
   const multiLineChartData = [
     { 
       period: "Mid 2024", 
-      ...Object.fromEntries(academicData.subjects.map(s => [s.name, s.midYearLast]))
+      ...Object.fromEntries(academicData.subjects.map(s => [s.name, getScore(s, "2024", "midYear")]))
     },
     { 
       period: "End 2024", 
-      ...Object.fromEntries(academicData.subjects.map(s => [s.name, s.yearEndLast]))
+      ...Object.fromEntries(academicData.subjects.map(s => [s.name, getScore(s, "2024", "yearEnd")]))
     },
     { 
       period: "Mid 2025", 
-      ...Object.fromEntries(academicData.subjects.map(s => [s.name, s.midYearCurrent]))
+      ...Object.fromEntries(academicData.subjects.map(s => [s.name, getScore(s, "2025", "midYear")]))
     },
   ];
 
@@ -88,7 +96,7 @@ export function ResultsSummary() {
       icon: Award, 
       label: "Top Subject", 
       value: bestSubject.name,
-      subtext: `${bestSubject.midYearCurrent}%`,
+      subtext: `${getScore(bestSubject, "2025", "midYear")}%`,
       color: "text-chart-2" 
     },
     { 
@@ -158,7 +166,7 @@ export function ResultsSummary() {
                   }}
                   formatter={(value: number, name: string) => [`${value}%`, name]}
                 />
-                {filteredSubjects.map((subject, index) => (
+                {filteredSubjects.map((subject) => (
                   <Line
                     key={subject.name}
                     type="monotone"

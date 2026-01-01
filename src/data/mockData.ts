@@ -117,11 +117,47 @@ export const attendanceData = {
 
 export const academicData = {
   subjects: [
-    { name: "English", midYearLast: 78, yearEndLast: 82, midYearCurrent: 85, yearEndCurrent: null },
-    { name: "Mathematics", midYearLast: 72, yearEndLast: 75, midYearCurrent: 80, yearEndCurrent: null },
-    { name: "Science", midYearLast: 85, yearEndLast: 88, midYearCurrent: 90, yearEndCurrent: null },
-    { name: "History", midYearLast: 70, yearEndLast: 74, midYearCurrent: 78, yearEndCurrent: null },
-    { name: "Geography", midYearLast: 75, yearEndLast: 78, midYearCurrent: 82, yearEndCurrent: null }
+    { 
+      name: "English", 
+      // Historical scores by year and exam type
+      scores: {
+        "2023": { midYear: 74, yearEnd: 78, attitude: 78, homework: 80, quiz: 72, exam: 74 },
+        "2024": { midYear: 78, yearEnd: 82, attitude: 82, homework: 85, quiz: 76, exam: 78 },
+        "2025": { midYear: 85, yearEnd: null, attitude: 88, homework: 90, quiz: 82, exam: 85 }
+      }
+    },
+    { 
+      name: "Mathematics", 
+      scores: {
+        "2023": { midYear: 68, yearEnd: 72, attitude: 75, homework: 70, quiz: 65, exam: 68 },
+        "2024": { midYear: 72, yearEnd: 75, attitude: 78, homework: 75, quiz: 70, exam: 72 },
+        "2025": { midYear: 80, yearEnd: null, attitude: 85, homework: 82, quiz: 78, exam: 80 }
+      }
+    },
+    { 
+      name: "Science", 
+      scores: {
+        "2023": { midYear: 80, yearEnd: 84, attitude: 88, homework: 85, quiz: 78, exam: 80 },
+        "2024": { midYear: 85, yearEnd: 88, attitude: 90, homework: 88, quiz: 84, exam: 85 },
+        "2025": { midYear: 90, yearEnd: null, attitude: 92, homework: 94, quiz: 88, exam: 90 }
+      }
+    },
+    { 
+      name: "History", 
+      scores: {
+        "2023": { midYear: 66, yearEnd: 70, attitude: 72, homework: 68, quiz: 64, exam: 66 },
+        "2024": { midYear: 70, yearEnd: 74, attitude: 75, homework: 72, quiz: 68, exam: 70 },
+        "2025": { midYear: 78, yearEnd: null, attitude: 80, homework: 82, quiz: 76, exam: 78 }
+      }
+    },
+    { 
+      name: "Geography", 
+      scores: {
+        "2023": { midYear: 71, yearEnd: 75, attitude: 76, homework: 74, quiz: 70, exam: 71 },
+        "2024": { midYear: 75, yearEnd: 78, attitude: 80, homework: 78, quiz: 74, exam: 75 },
+        "2025": { midYear: 82, yearEnd: null, attitude: 85, homework: 86, quiz: 80, exam: 82 }
+      }
+    }
   ],
   behavior: [
     { category: "Punctuality", grade: "A", description: "Consistently on time" },
@@ -137,6 +173,13 @@ export const academicData = {
   averageScore: 85,
   bestSubject: "Science",
   improvement: "+5%"
+};
+
+// Class averages for comparison
+export const classAverages = {
+  "2023": { midYear: 72, yearEnd: 75, attitude: 76, homework: 74, quiz: 70, exam: 72 },
+  "2024": { midYear: 74, yearEnd: 77, attitude: 78, homework: 76, quiz: 73, exam: 74 },
+  "2025": { midYear: 76, yearEnd: null, attitude: 80, homework: 78, quiz: 75, exam: 76 }
 };
 
 import type { CalendarEvent } from "@/types/calendarTags";
