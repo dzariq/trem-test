@@ -3,6 +3,7 @@ import { AppHeader } from "@/components/layout/AppHeader";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { dnaCoreValues, valueColors, DNAValue } from "@/data/dnaCoreValues";
 import { cn } from "@/lib/utils";
+import dnaBanner from "@/assets/dna-banner.png";
 import { 
   Heart, 
   Flame, 
@@ -70,6 +71,15 @@ export default function TeacherDNAPage() {
       <AppHeader title="Collinz DNA" showBack />
       
       <div className="px-4 py-4 space-y-4">
+        {/* Banner Image */}
+        <div className="rounded-xl overflow-hidden">
+          <img 
+            src={dnaBanner} 
+            alt="Students collaborating and creating together" 
+            className="w-full h-auto object-cover"
+          />
+        </div>
+
         {/* Header Section */}
         <div className="text-center space-y-2 pb-2">
           <h1 className="text-xl font-bold text-foreground">Our Core Values</h1>
