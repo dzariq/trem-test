@@ -66,7 +66,7 @@ export function BottomNavigation() {
             {({ isActive }) => (
               <>
                 {item.customIcon ? (
-                  <img src={item.customIcon} alt={item.label} className="h-5 w-5 mb-1" />
+                  <img src={item.customIcon} alt={item.label} className="h-6 w-6 mb-1" />
                 ) : item.icon ? (
                   <item.icon className={cn("h-5 w-5 mb-1", isActive && "stroke-[2.5px]")} />
                 ) : null}
