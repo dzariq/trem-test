@@ -115,8 +115,10 @@ export default function TeacherAcademicPage() {
   
   // Comparison tab state
   const [comparisonClass, setComparisonClass] = useState(teacherProfile.classes[0]);
+  const [examAClass, setExamAClass] = useState(teacherProfile.classes[0]);
   const [examAYear, setExamAYear] = useState("2026");
   const [examAPeriod, setExamAPeriod] = useState<"midYear" | "yearEnd">("midYear");
+  const [examBClass, setExamBClass] = useState(teacherProfile.classes[0]);
   const [examBYear, setExamBYear] = useState("2025");
   const [examBPeriod, setExamBPeriod] = useState<"midYear" | "yearEnd">("yearEnd");
 
@@ -1381,18 +1383,6 @@ ${atRiskStudents.length > 0 ? `3. Arrange parent meetings for at-risk students` 
 
               {/* ==================== COMPARISON SUB-TAB ==================== */}
               <TabsContent value="comparison" className="space-y-4">
-                {/* Class Selector */}
-                <Select value={comparisonClass} onValueChange={setComparisonClass}>
-                  <SelectTrigger className="w-full">
-                    <SelectValue placeholder="Select Class" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {teacherProfile.classes.map((cls) => (
-                      <SelectItem key={cls} value={cls}>{cls}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-
                 {/* Exam A and Exam B Selectors */}
                 <div className="grid grid-cols-2 gap-3">
                   {/* Exam A */}
@@ -1401,6 +1391,16 @@ ${atRiskStudents.length > 0 ? `3. Arrange parent meetings for at-risk students` 
                       <CardTitle className="text-xs text-primary">Exam A</CardTitle>
                     </CardHeader>
                     <CardContent className="p-3 pt-0 space-y-2">
+                      <Select value={examAClass} onValueChange={setExamAClass}>
+                        <SelectTrigger className="h-8 text-xs">
+                          <SelectValue placeholder="Class" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {teacherProfile.classes.map((cls) => (
+                            <SelectItem key={cls} value={cls}>{cls}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
                       <Select value={examAYear} onValueChange={setExamAYear}>
                         <SelectTrigger className="h-8 text-xs">
                           <SelectValue placeholder="Year" />
@@ -1430,6 +1430,16 @@ ${atRiskStudents.length > 0 ? `3. Arrange parent meetings for at-risk students` 
                       <CardTitle className="text-xs text-emerald-600">Exam B</CardTitle>
                     </CardHeader>
                     <CardContent className="p-3 pt-0 space-y-2">
+                      <Select value={examBClass} onValueChange={setExamBClass}>
+                        <SelectTrigger className="h-8 text-xs">
+                          <SelectValue placeholder="Class" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {teacherProfile.classes.map((cls) => (
+                            <SelectItem key={cls} value={cls}>{cls}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
                       <Select value={examBYear} onValueChange={setExamBYear}>
                         <SelectTrigger className="h-8 text-xs">
                           <SelectValue placeholder="Year" />
@@ -1458,9 +1468,10 @@ ${atRiskStudents.length > 0 ? `3. Arrange parent meetings for at-risk students` 
                 {(() => {
                   const examAKey = `${examAYear}-${examAPeriod}`;
                   const examBKey = `${examBYear}-${examBPeriod}`;
-                  const classData = examComparisonData[comparisonClass as keyof typeof examComparisonData] || {};
-                  const examA = classData[examAKey];
-                  const examB = classData[examBKey];
+                  const classAData = examComparisonData[examAClass as keyof typeof examComparisonData] || {};
+                  const classBData = examComparisonData[examBClass as keyof typeof examComparisonData] || {};
+                  const examA = classAData[examAKey];
+                  const examB = classBData[examBKey];
                   
                   if (!examA || !examB) {
                     return (
@@ -1493,8 +1504,8 @@ ${atRiskStudents.length > 0 ? `3. Arrange parent meetings for at-risk students` 
                     return `${diff.toFixed(1)}${suffix}`;
                   };
 
-                  const examALabel = `${examAYear} ${examPeriods.find(p => p.value === examAPeriod)?.label}`;
-                  const examBLabel = `${examBYear} ${examPeriods.find(p => p.value === examBPeriod)?.label}`;
+                  const examALabel = `${examAClass} ${examAYear} ${examPeriods.find(p => p.value === examAPeriod)?.label}`;
+                  const examBLabel = `${examBClass} ${examBYear} ${examPeriods.find(p => p.value === examBPeriod)?.label}`;
 
                   // Prepare chart data for category comparison
                   const categoryComparisonData = [
