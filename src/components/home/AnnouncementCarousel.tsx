@@ -62,9 +62,9 @@ export function AnnouncementCarousel() {
                     <Badge variant="secondary" className="text-xs">
                       {announcement.category}
                     </Badge>
-                    <span className="text-xs text-muted-foreground">
+                    <Badge variant="outline" className="text-xs bg-card/80 backdrop-blur-sm">
                       {formatDate(announcement.date)}
-                    </span>
+                    </Badge>
                   </div>
                 </div>
                 <CardContent className="p-4 pt-2">
