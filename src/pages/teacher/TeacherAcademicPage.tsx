@@ -59,6 +59,13 @@ const subjects = [
   "Physical Education",
 ];
 
+// Academic years and exam periods
+const academicYears = ["2025/2026", "2024/2025", "2023/2024"];
+const examPeriods = [
+  { value: "midYear", label: "Mid-Year" },
+  { value: "yearEnd", label: "Year-End" },
+];
+
 interface StudentGrades {
   attitude: string;
   homework: string;
@@ -91,6 +98,8 @@ export default function TeacherAcademicPage() {
   const [selectedStudent, setSelectedStudent] = useState<string | null>(null);
   const [expandedSubjects, setExpandedSubjects] = useState<string[]>([]);
   const [studentGrades, setStudentGrades] = useState<Record<string, Record<string, StudentGrades>>>({});
+  const [selectedYear, setSelectedYear] = useState(academicYears[0]);
+  const [selectedPeriod, setSelectedPeriod] = useState<"midYear" | "yearEnd">("midYear");
 
   const students = classRosters[selectedClass as keyof typeof classRosters] || [];
   const existingGrades = classGrades[selectedClass as keyof typeof classGrades] || {};
@@ -407,16 +416,48 @@ export default function TeacherAcademicPage() {
           </TabsContent>
 
           <TabsContent value="analysis" className="space-y-4">
-            <Select value={selectedClass} onValueChange={setSelectedClass}>
-              <SelectTrigger>
-                <SelectValue placeholder="Select Class" />
-              </SelectTrigger>
-              <SelectContent>
-                {teacherProfile.classes.map((cls) => (
-                  <SelectItem key={cls} value={cls}>Class {cls}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            {/* Filters Row */}
+            <div className="grid grid-cols-3 gap-2">
+              <Select value={selectedClass} onValueChange={setSelectedClass}>
+                <SelectTrigger className="text-xs">
+                  <SelectValue placeholder="Class" />
+                </SelectTrigger>
+                <SelectContent>
+                  {teacherProfile.classes.map((cls) => (
+                    <SelectItem key={cls} value={cls}>{cls}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+
+              <Select value={selectedYear} onValueChange={setSelectedYear}>
+                <SelectTrigger className="text-xs">
+                  <SelectValue placeholder="Year" />
+                </SelectTrigger>
+                <SelectContent>
+                  {academicYears.map((year) => (
+                    <SelectItem key={year} value={year}>{year}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+
+              <Select value={selectedPeriod} onValueChange={(v) => setSelectedPeriod(v as "midYear" | "yearEnd")}>
+                <SelectTrigger className="text-xs">
+                  <SelectValue placeholder="Period" />
+                </SelectTrigger>
+                <SelectContent>
+                  {examPeriods.map((period) => (
+                    <SelectItem key={period.value} value={period.value}>{period.label}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Selected filters badge */}
+            <div className="flex items-center gap-2 text-xs text-muted-foreground">
+              <Badge variant="outline" className="text-xs font-normal">
+                {selectedYear} • {examPeriods.find(p => p.value === selectedPeriod)?.label}
+              </Badge>
+            </div>
 
             {/* Summary Stats - 2x3 Grid */}
             <div className="grid grid-cols-3 gap-2">
