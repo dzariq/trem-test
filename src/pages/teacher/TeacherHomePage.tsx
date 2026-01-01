@@ -1,11 +1,12 @@
 import { TeacherAppLayout } from "@/components/layout/TeacherAppLayout";
 import { AppHeader } from "@/components/layout/AppHeader";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { AnnouncementCarousel } from "@/components/home/AnnouncementCarousel";
 import { UpcomingEvents } from "@/components/home/UpcomingEvents";
-import { UserCheck, BookOpen, Clock, Users } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { TeacherQuickLinks } from "@/components/home/TeacherQuickLinks";
+import { BookOpen, Clock, Users } from "lucide-react";
 import schoolBadge from "@/assets/school-badge.png";
+import heroBanner from "@/assets/hero-banner.png";
 import { teacherProfile, teacherQuickStats } from "@/data/teacherMockData";
 import {
   Select,
@@ -17,23 +18,7 @@ import {
 import { useState } from "react";
 
 export default function TeacherHomePage() {
-  const navigate = useNavigate();
   const [selectedClass, setSelectedClass] = useState(teacherProfile.classes[0]);
-
-  const quickActions = [
-    { 
-      icon: UserCheck, 
-      label: "Take Attendance", 
-      onClick: () => navigate("/teacher/attendance"),
-      color: "text-emerald-600"
-    },
-    { 
-      icon: BookOpen, 
-      label: "Grade Entry", 
-      onClick: () => navigate("/teacher/academic"),
-      color: "text-blue-600"
-    },
-  ];
 
   return (
     <TeacherAppLayout>
@@ -51,6 +36,18 @@ export default function TeacherHomePage() {
           </div>
         }
       />
+
+      {/* Hero Banner */}
+      <div className="px-4 mt-4">
+        <img 
+          src={heroBanner} 
+          alt="School Banner" 
+          className="w-full h-auto rounded-2xl shadow-md"
+        />
+      </div>
+
+      {/* Quick Links */}
+      <TeacherQuickLinks />
 
       <div className="px-4 space-y-4 mt-4">
         {/* Class Selector */}
@@ -95,25 +92,6 @@ export default function TeacherHomePage() {
             </CardContent>
           </Card>
         </div>
-
-        {/* Quick Actions */}
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-base">Quick Actions</CardTitle>
-          </CardHeader>
-          <CardContent className="grid grid-cols-2 gap-3">
-            {quickActions.map((action) => (
-              <button
-                key={action.label}
-                onClick={action.onClick}
-                className="flex flex-col items-center justify-center p-4 rounded-lg bg-accent/50 hover:bg-accent transition-colors"
-              >
-                <action.icon className={`h-6 w-6 mb-2 ${action.color}`} />
-                <span className="text-sm font-medium text-foreground">{action.label}</span>
-              </button>
-            ))}
-          </CardContent>
-        </Card>
       </div>
 
       <AnnouncementCarousel />
