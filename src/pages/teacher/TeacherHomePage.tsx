@@ -51,6 +51,9 @@ export default function TeacherHomePage() {
   const [selectedClass, setSelectedClass] = useState(teacherProfile.classes[0]);
   const [completedDeadlines, setCompletedDeadlines] = useState<string[]>([]);
   const [expandedDeadline, setExpandedDeadline] = useState<string | null>(null);
+  const [showPendingGrades, setShowPendingGrades] = useState(false);
+
+  const totalPendingGrades = teacherQuickStats.pendingGrades.reduce((sum, item) => sum + item.count, 0);
 
   // Filter deadlines within 30 days
   const today = new Date();
@@ -131,16 +134,49 @@ export default function TeacherHomePage() {
               <p className="text-xs text-emerald-600 dark:text-emerald-500">Present Today</p>
             </CardContent>
           </Card>
-          <Card className="bg-amber-50 dark:bg-amber-950/30 border-amber-200 dark:border-amber-800">
+          <Card 
+            className="bg-amber-50 dark:bg-amber-950/30 border-amber-200 dark:border-amber-800 cursor-pointer transition-all hover:shadow-md"
+            onClick={() => setShowPendingGrades(!showPendingGrades)}
+          >
             <CardContent className="p-3 text-center">
               <BookOpen className="h-5 w-5 mx-auto mb-1 text-amber-600" />
               <p className="text-lg font-bold text-amber-700 dark:text-amber-400">
-                {teacherQuickStats.pendingGrades}
+                {totalPendingGrades}
               </p>
               <p className="text-xs text-amber-600 dark:text-amber-500">Pending Grades</p>
             </CardContent>
           </Card>
         </div>
+
+        {/* Pending Grades Details */}
+        {showPendingGrades && (
+          <Card className="border-amber-200 dark:border-amber-800">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm flex items-center gap-2 text-amber-700 dark:text-amber-400">
+                <BookOpen className="h-4 w-4" />
+                Pending Grades by Class
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-2">
+              {teacherQuickStats.pendingGrades.map((item, index) => (
+                <div 
+                  key={index}
+                  className="flex items-center justify-between p-2 rounded-lg bg-amber-50 dark:bg-amber-950/30 border border-amber-100 dark:border-amber-900"
+                >
+                  <div className="flex items-center gap-2">
+                    <Badge variant="outline" className="text-xs">
+                      {item.class}
+                    </Badge>
+                    <span className="text-sm text-foreground">{item.subject}</span>
+                  </div>
+                  <Badge className="bg-amber-500 text-white">
+                    {item.count} students
+                  </Badge>
+                </div>
+              ))}
+            </CardContent>
+          </Card>
+        )}
 
         {/* Upcoming Deadlines Section */}
         <Card>
