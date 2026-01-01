@@ -1,11 +1,19 @@
 import { useState, useEffect } from "react";
 import { parentProfile } from "@/data/mockData";
 
+function getTimeGreeting() {
+  const hour = new Date().getHours();
+  if (hour < 12) return "Good morning";
+  if (hour < 18) return "Good afternoon";
+  return "Good evening";
+}
+
 export function WelcomeTypingAnimation() {
   const [displayText, setDisplayText] = useState("");
   const [isComplete, setIsComplete] = useState(false);
+  const [isVisible, setIsVisible] = useState(true);
   
-  const fullText = `Welcome back, Mr. ${parentProfile.name}`;
+  const fullText = `${getTimeGreeting()}, Mr. ${parentProfile.name}!`;
 
   useEffect(() => {
     let currentIndex = 0;
@@ -21,6 +29,18 @@ export function WelcomeTypingAnimation() {
 
     return () => clearInterval(typingInterval);
   }, [fullText]);
+
+  // Hide the message 3 seconds after typing completes
+  useEffect(() => {
+    if (isComplete) {
+      const hideTimeout = setTimeout(() => {
+        setIsVisible(false);
+      }, 3000);
+      return () => clearTimeout(hideTimeout);
+    }
+  }, [isComplete]);
+
+  if (!isVisible) return null;
 
   return (
     <div className="absolute bottom-8 right-4 z-10">
