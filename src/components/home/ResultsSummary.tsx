@@ -38,8 +38,13 @@ export function ResultsSummary() {
     s.midYearCurrent > best.midYearCurrent ? s : best
   );
 
-  // Calculate class rank simulation (position out of total)
-  const classRank = "5/32";
+  // Performance level based on average
+  const getPerformanceLevel = (avg: number) => {
+    if (avg >= 80) return "Above Average";
+    if (avg >= 65) return "Average";
+    return "Needs Improvement";
+  };
+  const performanceLevel = getPerformanceLevel(currentAverage);
 
   // Line colors for subjects
   const lineColors = [
@@ -76,7 +81,7 @@ export function ResultsSummary() {
       icon: BookOpen, 
       label: "Current Avg", 
       value: `${currentAverage}%`,
-      subtext: `Rank: ${classRank}`,
+      subtext: performanceLevel,
       color: "text-chart-1" 
     },
     { 
