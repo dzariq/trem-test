@@ -243,6 +243,61 @@ export const teacherQuickStats = {
     late: 1,
     total: 27
   },
-  pendingGrades: 15,
-  upcomingDeadlines: 3
+  pendingGrades: 15
 };
+
+export interface Deadline {
+  id: string;
+  title: string;
+  description: string;
+  dueDate: string; // ISO date string
+  type: "grade" | "report" | "meeting" | "submission" | "event";
+  class?: string;
+}
+
+export const teacherDeadlines: Deadline[] = [
+  {
+    id: "DL-001",
+    title: "Mid-Year Grades Submission",
+    description: "Submit all mid-year exam grades for Class 5A",
+    dueDate: "2026-01-10",
+    type: "grade",
+    class: "5A"
+  },
+  {
+    id: "DL-002",
+    title: "Progress Reports Due",
+    description: "Complete progress reports for Class 5B students",
+    dueDate: "2026-01-15",
+    type: "report",
+    class: "5B"
+  },
+  {
+    id: "DL-003",
+    title: "Parent-Teacher Meeting",
+    description: "Prepare student portfolios for PTM",
+    dueDate: "2026-01-20",
+    type: "meeting"
+  },
+  {
+    id: "DL-004",
+    title: "Science Fair Project Review",
+    description: "Review and approve science fair project proposals",
+    dueDate: "2026-01-25",
+    type: "submission"
+  },
+  {
+    id: "DL-005",
+    title: "Term 2 Lesson Plans",
+    description: "Submit Term 2 lesson plans to HOD",
+    dueDate: "2026-01-28",
+    type: "submission"
+  },
+  {
+    id: "DL-006",
+    title: "Sports Day Registration",
+    description: "Finalize student registration for Sports Day events",
+    dueDate: "2026-02-05",
+    type: "event"
+  }
+];
