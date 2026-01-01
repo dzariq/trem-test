@@ -12,6 +12,7 @@ import {
   YAxis,
   ResponsiveContainer,
   Tooltip,
+  CartesianGrid,
 } from "recharts";
 
 export function ResultsSummary() {
@@ -126,6 +127,13 @@ export function ResultsSummary() {
           <div className="h-28 mb-4">
             <ResponsiveContainer width="100%" height="100%">
               <LineChart data={multiLineChartData}>
+                <CartesianGrid 
+                  strokeDasharray="3 3" 
+                  stroke="hsl(var(--border))" 
+                  strokeOpacity={0.3}
+                  horizontal={true}
+                  vertical={false}
+                />
                 <XAxis 
                   dataKey="period" 
                   tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }}
