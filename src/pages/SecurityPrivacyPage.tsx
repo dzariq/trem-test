@@ -2,11 +2,12 @@ import { AppLayout } from "@/components/layout/AppLayout";
 import { AppHeader } from "@/components/layout/AppHeader";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
-import { Button } from "@/components/ui/button";
 import { Shield, Lock, Eye, Smartphone, Bell, Key, Fingerprint, ChevronRight } from "lucide-react";
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Separator } from "@/components/ui/separator";
 export default function SecurityPrivacyPage() {
+  const navigate = useNavigate();
   const [twoFactorEnabled, setTwoFactorEnabled] = useState(false);
   const [biometricEnabled, setBiometricEnabled] = useState(true);
   const [loginAlerts, setLoginAlerts] = useState(true);
@@ -117,7 +118,10 @@ export default function SecurityPrivacyPage() {
             <Separator />
 
             {/* Privacy Policy */}
-            <button className="w-full flex items-center justify-between p-4 hover:bg-accent/30 transition-colors">
+            <button 
+              onClick={() => navigate('/privacy-policy')}
+              className="w-full flex items-center justify-between p-4 hover:bg-accent/30 transition-colors"
+            >
               <p className="font-medium text-foreground text-sm">Privacy Policy</p>
               <ChevronRight className="h-5 w-5 text-muted-foreground" />
             </button>
