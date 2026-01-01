@@ -7,7 +7,8 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Progress } from "@/components/ui/progress";
-import { Download, FileText, Award, Trophy, BookOpen, TrendingUp, TrendingDown, Check, ArrowUp, ArrowDown, Minus, BarChart3, GitCompare, Target, AlertTriangle, Star } from "lucide-react";
+import { Download, FileText, Award, Trophy, BookOpen, TrendingUp, TrendingDown, Check, ArrowUp, ArrowDown, Minus, BarChart3, GitCompare, Target, AlertTriangle, Star, Goal, CheckCircle2, Circle, Edit2 } from "lucide-react";
+import { Input } from "@/components/ui/input";
 import schoolLogo from "@/assets/school-badge.png";
 import {
   Select,
@@ -60,6 +61,19 @@ export default function AcademicPage() {
   
   // Comparison state
   const [compareExamA, setCompareExamA] = useState({ year: "2025" as YearKey, type: "midYear" as ExamType });
+  
+  // Goals state - default targets for each subject
+  const [goals, setGoals] = useState<Record<string, number>>(() => {
+    const initialGoals: Record<string, number> = {};
+    academicData.subjects.forEach(s => {
+      // Set default goal 5% higher than current score, max 100
+      const currentScore = getScore(s, "2025", "midYear") ?? 70;
+      initialGoals[s.name] = Math.min(currentScore + 5, 100);
+    });
+    return initialGoals;
+  });
+  const [editingGoal, setEditingGoal] = useState<string | null>(null);
+  const [tempGoalValue, setTempGoalValue] = useState<string>("");
   const [compareExamB, setCompareExamB] = useState({ year: "2024" as YearKey, type: "yearEnd" as ExamType });
 
   const isActivitiesTab = activeTab === "cocurriculum";
@@ -420,10 +434,11 @@ export default function AcademicPage() {
           <CardContent>
             {/* Analysis Sub-tabs */}
             <Tabs value={analysisTab} onValueChange={setAnalysisTab} className="w-full">
-              <TabsList className="grid w-full grid-cols-3 bg-muted/50 mb-4">
+              <TabsList className="grid w-full grid-cols-4 bg-muted/50 mb-4">
                 <TabsTrigger value="overview" className="text-xs">Overview</TabsTrigger>
                 <TabsTrigger value="trends" className="text-xs">Trends</TabsTrigger>
-                <TabsTrigger value="comparison" className="text-xs">Comparison</TabsTrigger>
+                <TabsTrigger value="comparison" className="text-xs">Compare</TabsTrigger>
+                <TabsTrigger value="goals" className="text-xs">Goals</TabsTrigger>
               </TabsList>
 
               {/* OVERVIEW TAB */}
@@ -803,6 +818,175 @@ export default function AcademicPage() {
                     })()}
                   </p>
                 </div>
+              </TabsContent>
+
+              {/* GOALS TAB */}
+              <TabsContent value="goals" className="space-y-4">
+                {/* Goals Header */}
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Goal className="h-4 w-4 text-primary" />
+                    <h4 className="text-sm font-medium text-foreground">Target Grades</h4>
+                  </div>
+                  <Badge variant="secondary" className="text-xs">
+                    Year-End 2025 Goals
+                  </Badge>
+                </div>
+
+                {/* Goals Progress Summary */}
+                {(() => {
+                  const goalsData = academicData.subjects.map(s => {
+                    const current = getScore(s, "2025", "midYear") ?? 0;
+                    const target = goals[s.name] ?? 80;
+                    const progress = Math.min((current / target) * 100, 100);
+                    const achieved = current >= target;
+                    const gap = target - current;
+                    return { name: s.name, current, target, progress, achieved, gap };
+                  });
+                  const achievedCount = goalsData.filter(g => g.achieved).length;
+                  const onTrackCount = goalsData.filter(g => !g.achieved && g.gap <= 5).length;
+                  const needsWorkCount = goalsData.filter(g => !g.achieved && g.gap > 5).length;
+
+                  return (
+                    <>
+                      {/* Summary Cards */}
+                      <div className="grid grid-cols-3 gap-2">
+                        <div className="p-3 rounded-lg bg-chart-1/10 border border-chart-1/30 text-center">
+                          <div className="flex items-center justify-center gap-1 mb-1">
+                            <CheckCircle2 className="h-4 w-4 text-chart-1" />
+                          </div>
+                          <p className="text-lg font-bold text-foreground">{achievedCount}</p>
+                          <p className="text-[10px] text-muted-foreground">Achieved</p>
+                        </div>
+                        <div className="p-3 rounded-lg bg-chart-2/10 border border-chart-2/30 text-center">
+                          <div className="flex items-center justify-center gap-1 mb-1">
+                            <Target className="h-4 w-4 text-chart-2" />
+                          </div>
+                          <p className="text-lg font-bold text-foreground">{onTrackCount}</p>
+                          <p className="text-[10px] text-muted-foreground">On Track</p>
+                        </div>
+                        <div className="p-3 rounded-lg bg-chart-4/10 border border-chart-4/30 text-center">
+                          <div className="flex items-center justify-center gap-1 mb-1">
+                            <AlertTriangle className="h-4 w-4 text-chart-4" />
+                          </div>
+                          <p className="text-lg font-bold text-foreground">{needsWorkCount}</p>
+                          <p className="text-[10px] text-muted-foreground">Needs Focus</p>
+                        </div>
+                      </div>
+
+                      {/* Individual Subject Goals */}
+                      <div className="space-y-3">
+                        {goalsData.map((item) => (
+                          <div key={item.name} className="p-3 rounded-lg bg-accent/30 border border-border/50">
+                            <div className="flex items-center justify-between mb-2">
+                              <div className="flex items-center gap-2">
+                                {item.achieved ? (
+                                  <CheckCircle2 className="h-4 w-4 text-chart-1" />
+                                ) : item.gap <= 5 ? (
+                                  <Circle className="h-4 w-4 text-chart-2" />
+                                ) : (
+                                  <Circle className="h-4 w-4 text-chart-4" />
+                                )}
+                                <span className="font-medium text-foreground text-sm">{item.name}</span>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                {editingGoal === item.name ? (
+                                  <div className="flex items-center gap-1">
+                                    <Input
+                                      type="number"
+                                      min="0"
+                                      max="100"
+                                      value={tempGoalValue}
+                                      onChange={(e) => setTempGoalValue(e.target.value)}
+                                      className="w-16 h-7 text-xs text-center"
+                                      autoFocus
+                                    />
+                                    <Button
+                                      size="sm"
+                                      variant="ghost"
+                                      className="h-7 w-7 p-0"
+                                      onClick={() => {
+                                        const newValue = parseInt(tempGoalValue);
+                                        if (!isNaN(newValue) && newValue >= 0 && newValue <= 100) {
+                                          setGoals(prev => ({ ...prev, [item.name]: newValue }));
+                                        }
+                                        setEditingGoal(null);
+                                      }}
+                                    >
+                                      <Check className="h-3 w-3" />
+                                    </Button>
+                                  </div>
+                                ) : (
+                                  <>
+                                    <Badge 
+                                      variant={item.achieved ? "default" : "outline"} 
+                                      className="text-xs cursor-pointer"
+                                      onClick={() => {
+                                        setEditingGoal(item.name);
+                                        setTempGoalValue(item.target.toString());
+                                      }}
+                                    >
+                                      Target: {item.target}%
+                                      <Edit2 className="h-2.5 w-2.5 ml-1 opacity-60" />
+                                    </Badge>
+                                  </>
+                                )}
+                              </div>
+                            </div>
+                            
+                            {/* Progress Bar */}
+                            <div className="relative mb-2">
+                              <div className="h-3 bg-muted rounded-full overflow-hidden">
+                                <div 
+                                  className={`h-full rounded-full transition-all ${
+                                    item.achieved ? "bg-chart-1" : item.gap <= 5 ? "bg-chart-2" : "bg-chart-4"
+                                  }`}
+                                  style={{ width: `${item.progress}%` }}
+                                />
+                              </div>
+                              {/* Target marker */}
+                              <div 
+                                className="absolute top-0 h-3 w-0.5 bg-foreground/70 rounded"
+                                style={{ left: `${Math.min(item.target, 100)}%` }}
+                              />
+                            </div>
+
+                            {/* Score Details */}
+                            <div className="flex items-center justify-between text-xs">
+                              <span className="text-muted-foreground">
+                                Current: <span className="font-medium text-foreground">{item.current}%</span>
+                              </span>
+                              {item.achieved ? (
+                                <span className="text-chart-1 font-medium flex items-center gap-1">
+                                  <CheckCircle2 className="h-3 w-3" />
+                                  Goal Achieved!
+                                </span>
+                              ) : (
+                                <span className={item.gap <= 5 ? "text-chart-2" : "text-chart-4"}>
+                                  {item.gap}% to go
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+
+                      {/* Goal Tips */}
+                      <div className="p-3 rounded-lg bg-accent/50 border border-primary/20">
+                        <p className="text-sm text-foreground">
+                          <span className="font-medium">Tip:</span>{" "}
+                          {achievedCount === goalsData.length ? (
+                            "Amazing! You've achieved all your goals. Consider setting higher targets!"
+                          ) : needsWorkCount > achievedCount ? (
+                            `Focus on ${goalsData.filter(g => !g.achieved && g.gap > 5).slice(0, 2).map(g => g.name).join(" and ")} to close the gap. Small consistent improvements lead to big results!`
+                          ) : (
+                            `You're doing great! ${onTrackCount} subjects are almost at target. Keep pushing!`
+                          )}
+                        </p>
+                      </div>
+                    </>
+                  );
+                })()}
               </TabsContent>
             </Tabs>
 
