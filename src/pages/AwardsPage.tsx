@@ -3,7 +3,7 @@ import { AppHeader } from "@/components/layout/AppHeader";
 import { Badge } from "@/components/ui/badge";
 import { Award, Calendar } from "lucide-react";
 import schoolLogo from "@/assets/school-badge.png";
-import awardsBanner from "@/assets/awards-banner.png";
+import dnaBanner from "@/assets/dna-banner.png";
 import { students } from "@/data/mockData";
 import { awardTypes, awardColors, getStudentAwards } from "@/data/awardsData";
 import { useState } from "react";
@@ -55,8 +55,8 @@ export default function AwardsPage() {
         {/* Banner Image */}
         <div className="rounded-xl overflow-hidden">
           <img 
-            src={awardsBanner} 
-            alt="Students receiving awards and celebrating achievements" 
+            src={dnaBanner} 
+            alt="Students collaborating and creating together" 
             className="w-full h-auto object-cover"
           />
         </div>
