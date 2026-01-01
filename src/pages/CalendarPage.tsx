@@ -1,13 +1,13 @@
 import { useState } from "react";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { AppHeader } from "@/components/layout/AppHeader";
-import { calendarEvents, ccaActivities } from "@/data/mockData";
+import { calendarEvents, ccaActivities, students } from "@/data/mockData";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { MapPin, Clock, User, Filter } from "lucide-react";
+import { MapPin, Clock, User, Filter, CalendarDays } from "lucide-react";
 import {
   Select,
   SelectContent,
@@ -59,14 +59,23 @@ export default function CalendarPage() {
   return (
     <AppLayout>
       <AppHeader 
-        title="Calendar" 
+        leftContent={
+          <div className="flex items-center gap-2">
+            <CalendarDays className="h-5 w-5 text-primary" />
+            <h1 className="text-xl font-semibold text-foreground">Calendar</h1>
+          </div>
+        }
         rightContent={
-          <Select defaultValue="emma">
+          <Select defaultValue={students[0]?.id}>
             <SelectTrigger className="w-32 h-8 text-sm">
               <SelectValue placeholder="Student" />
             </SelectTrigger>
             <SelectContent className="bg-card">
-              <SelectItem value="emma">Emma J.</SelectItem>
+              {students.map((student) => (
+                <SelectItem key={student.id} value={student.id}>
+                  {student.name.split(' ')[0]} {student.name.split(' ')[1]?.[0]}.
+                </SelectItem>
+              ))}
             </SelectContent>
           </Select>
         }
