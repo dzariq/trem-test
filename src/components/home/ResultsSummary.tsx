@@ -1,6 +1,8 @@
+import { useState } from "react";
 import { academicData } from "@/data/mockData";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { ChevronRight, TrendingUp, Award, BookOpen } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import {
@@ -14,6 +16,7 @@ import {
 
 export function ResultsSummary() {
   const navigate = useNavigate();
+  const [subjectFilter, setSubjectFilter] = useState<string>("all");
 
   // Calculate current average from mid-year current scores
   const currentAverage = Math.round(
@@ -37,21 +40,35 @@ export function ResultsSummary() {
   // Calculate class rank simulation (position out of total)
   const classRank = "5/32";
 
-  // Prepare mini chart data - averages per exam period
-  const chartData = [
-    { 
-      period: "Mid 2024", 
-      avg: Math.round(academicData.subjects.reduce((sum, s) => sum + s.midYearLast, 0) / academicData.subjects.length)
-    },
-    { 
-      period: "End 2024", 
-      avg: lastYearEndAverage
-    },
-    { 
-      period: "Mid 2025", 
-      avg: currentAverage
-    },
-  ];
+  // Prepare chart data based on filter
+  const getChartData = () => {
+    if (subjectFilter === "all") {
+      return [
+        { 
+          period: "Mid 2024", 
+          value: Math.round(academicData.subjects.reduce((sum, s) => sum + s.midYearLast, 0) / academicData.subjects.length)
+        },
+        { 
+          period: "End 2024", 
+          value: lastYearEndAverage
+        },
+        { 
+          period: "Mid 2025", 
+          value: currentAverage
+        },
+      ];
+    } else {
+      const subject = academicData.subjects.find(s => s.name === subjectFilter);
+      if (!subject) return [];
+      return [
+        { period: "Mid 2024", value: subject.midYearLast },
+        { period: "End 2024", value: subject.yearEndLast },
+        { period: "Mid 2025", value: subject.midYearCurrent },
+      ];
+    }
+  };
+
+  const chartData = getChartData();
 
   const stats = [
     { 
@@ -84,6 +101,27 @@ export function ResultsSummary() {
           <CardTitle className="text-lg font-semibold">Academic Performance</CardTitle>
         </CardHeader>
         <CardContent className="pb-4">
+          {/* Subject Filter Chips */}
+          <div className="flex gap-1.5 mb-3 overflow-x-auto pb-1 scrollbar-hide">
+            <Badge 
+              variant={subjectFilter === "all" ? "default" : "outline"}
+              className="cursor-pointer whitespace-nowrap text-xs px-2 py-0.5"
+              onClick={() => setSubjectFilter("all")}
+            >
+              All
+            </Badge>
+            {academicData.subjects.map((subject) => (
+              <Badge
+                key={subject.name}
+                variant={subjectFilter === subject.name ? "default" : "outline"}
+                className="cursor-pointer whitespace-nowrap text-xs px-2 py-0.5"
+                onClick={() => setSubjectFilter(subject.name)}
+              >
+                {subject.name}
+              </Badge>
+            ))}
+          </div>
+
           {/* Mini Chart */}
           <div className="h-24 mb-4">
             <ResponsiveContainer width="100%" height="100%">
@@ -105,11 +143,11 @@ export function ResultsSummary() {
                     borderRadius: "8px",
                     fontSize: "12px"
                   }}
-                  formatter={(value: number) => [`${value}%`, "Average"]}
+                  formatter={(value: number) => [`${value}%`, subjectFilter === "all" ? "Average" : subjectFilter]}
                 />
                 <Line
                   type="monotone"
-                  dataKey="avg"
+                  dataKey="value"
                   stroke="hsl(var(--chart-1))"
                   strokeWidth={2}
                   dot={{ fill: "hsl(var(--chart-1))", strokeWidth: 0, r: 4 }}
