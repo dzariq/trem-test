@@ -2,10 +2,11 @@ import { TeacherAppLayout } from "@/components/layout/TeacherAppLayout";
 import { AppHeader } from "@/components/layout/AppHeader";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { AnnouncementCarousel } from "@/components/home/AnnouncementCarousel";
 import { UpcomingEvents } from "@/components/home/UpcomingEvents";
 import { TeacherQuickLinks } from "@/components/home/TeacherQuickLinks";
-import { BookOpen, Users, Clock, FileText, Calendar, AlertTriangle, ClipboardList } from "lucide-react";
+import { BookOpen, Users, Clock, FileText, Calendar, AlertTriangle, ClipboardList, Check, ChevronDown, ChevronUp } from "lucide-react";
 import schoolBadge from "@/assets/school-badge.png";
 import heroBanner from "@/assets/teacher-hero-banner.png";
 import { teacherProfile, teacherQuickStats, teacherDeadlines, Deadline } from "@/data/teacherMockData";
@@ -18,6 +19,7 @@ import {
 } from "@/components/ui/select";
 import { useState } from "react";
 import { differenceInDays, format, parseISO } from "date-fns";
+import { cn } from "@/lib/utils";
 
 const getDeadlineIcon = (type: Deadline["type"]) => {
   switch (type) {
@@ -29,32 +31,52 @@ const getDeadlineIcon = (type: Deadline["type"]) => {
   }
 };
 
-const getDeadlineColor = (daysLeft: number) => {
+const getDeadlineColor = (daysLeft: number, isCompleted: boolean) => {
+  if (isCompleted) return "bg-emerald-50 border-emerald-200 text-emerald-700 dark:bg-emerald-950/30 dark:border-emerald-800 dark:text-emerald-400";
   if (daysLeft <= 3) return "bg-destructive/10 border-destructive/30 text-destructive";
   if (daysLeft <= 7) return "bg-amber-50 border-amber-200 text-amber-700 dark:bg-amber-950/30 dark:border-amber-800 dark:text-amber-400";
-  return "bg-blue-50 border-blue-200 text-blue-700 dark:bg-blue-950/30 dark:border-blue-800 dark:text-blue-400";
+  return "bg-muted/50 border-border text-foreground";
 };
 
-const getDaysLeftBadge = (daysLeft: number) => {
+const getDaysLeftBadge = (daysLeft: number, isCompleted: boolean) => {
+  if (isCompleted) return { text: "Done", variant: "default" as const };
   if (daysLeft <= 0) return { text: "Overdue", variant: "destructive" as const };
   if (daysLeft === 1) return { text: "Tomorrow", variant: "destructive" as const };
-  if (daysLeft <= 3) return { text: `${daysLeft} days`, variant: "destructive" as const };
-  if (daysLeft <= 7) return { text: `${daysLeft} days`, variant: "secondary" as const };
-  return { text: `${daysLeft} days`, variant: "outline" as const };
+  if (daysLeft <= 3) return { text: `${daysLeft}d left`, variant: "destructive" as const };
+  if (daysLeft <= 7) return { text: `${daysLeft}d left`, variant: "secondary" as const };
+  return { text: `${daysLeft}d left`, variant: "outline" as const };
 };
 
 export default function TeacherHomePage() {
   const [selectedClass, setSelectedClass] = useState(teacherProfile.classes[0]);
+  const [completedDeadlines, setCompletedDeadlines] = useState<string[]>([]);
+  const [expandedDeadline, setExpandedDeadline] = useState<string | null>(null);
 
   // Filter deadlines within 30 days
   const today = new Date();
   const upcomingDeadlines = teacherDeadlines
     .map(deadline => ({
       ...deadline,
-      daysLeft: differenceInDays(parseISO(deadline.dueDate), today)
+      daysLeft: differenceInDays(parseISO(deadline.dueDate), today),
+      isCompleted: completedDeadlines.includes(deadline.id)
     }))
-    .filter(deadline => deadline.daysLeft <= 30 && deadline.daysLeft >= -7) // Include overdue up to 7 days
-    .sort((a, b) => a.daysLeft - b.daysLeft);
+    .filter(deadline => deadline.daysLeft <= 30 && deadline.daysLeft >= -7)
+    .sort((a, b) => {
+      // Completed items go to the end
+      if (a.isCompleted !== b.isCompleted) return a.isCompleted ? 1 : -1;
+      return a.daysLeft - b.daysLeft;
+    })
+    .slice(0, 3); // Only show 3
+
+  const toggleComplete = (id: string) => {
+    setCompletedDeadlines(prev => 
+      prev.includes(id) ? prev.filter(d => d !== id) : [...prev, id]
+    );
+  };
+
+  const toggleExpand = (id: string) => {
+    setExpandedDeadline(prev => prev === id ? null : id);
+  };
 
   return (
     <TeacherAppLayout>
@@ -126,54 +148,91 @@ export default function TeacherHomePage() {
             <CardTitle className="text-sm flex items-center gap-2">
               <Clock className="h-4 w-4 text-primary" />
               Upcoming Deadlines
-              {upcomingDeadlines.filter(d => d.daysLeft <= 7).length > 0 && (
-                <Badge variant="destructive" className="ml-auto text-xs">
-                  {upcomingDeadlines.filter(d => d.daysLeft <= 7).length} urgent
-                </Badge>
-              )}
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-2">
             {upcomingDeadlines.length === 0 ? (
               <p className="text-sm text-muted-foreground text-center py-4">
-                No upcoming deadlines within 30 days
+                No upcoming deadlines
               </p>
             ) : (
               upcomingDeadlines.map((deadline) => {
                 const Icon = getDeadlineIcon(deadline.type);
-                const badgeInfo = getDaysLeftBadge(deadline.daysLeft);
+                const badgeInfo = getDaysLeftBadge(deadline.daysLeft, deadline.isCompleted);
+                const isExpanded = expandedDeadline === deadline.id;
                 
                 return (
                   <div 
                     key={deadline.id}
-                    className={`flex items-start gap-3 p-3 rounded-lg border ${getDeadlineColor(deadline.daysLeft)}`}
+                    className={cn(
+                      "rounded-lg border transition-all",
+                      getDeadlineColor(deadline.daysLeft, deadline.isCompleted),
+                      deadline.isCompleted && "opacity-60"
+                    )}
                   >
-                    <div className="flex-shrink-0 mt-0.5">
-                      {deadline.daysLeft <= 3 ? (
-                        <AlertTriangle className="h-4 w-4" />
-                      ) : (
-                        <Icon className="h-4 w-4" />
-                      )}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-start justify-between gap-2">
-                        <p className="text-sm font-medium">{deadline.title}</p>
-                        <Badge variant={badgeInfo.variant} className="text-xs flex-shrink-0">
+                    {/* Collapsed View - Always Visible */}
+                    <div 
+                      className="flex items-center gap-3 p-3 cursor-pointer"
+                      onClick={() => toggleExpand(deadline.id)}
+                    >
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className={cn(
+                          "h-6 w-6 rounded-full flex-shrink-0",
+                          deadline.isCompleted 
+                            ? "bg-emerald-500 text-white hover:bg-emerald-600" 
+                            : "border-2 hover:bg-accent"
+                        )}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          toggleComplete(deadline.id);
+                        }}
+                      >
+                        {deadline.isCompleted && <Check className="h-3 w-3" />}
+                      </Button>
+                      
+                      <div className="flex-1 min-w-0">
+                        <p className={cn(
+                          "text-sm font-medium truncate",
+                          deadline.isCompleted && "line-through"
+                        )}>
+                          {deadline.title}
+                        </p>
+                        <p className="text-xs opacity-70">
+                          {format(parseISO(deadline.dueDate), "d MMM yyyy")}
+                        </p>
+                      </div>
+
+                      <div className="flex items-center gap-2 flex-shrink-0">
+                        <Badge variant={badgeInfo.variant} className="text-xs">
                           {badgeInfo.text}
                         </Badge>
-                      </div>
-                      <p className="text-xs opacity-80 mt-0.5">{deadline.description}</p>
-                      <div className="flex items-center gap-2 mt-1">
-                        <span className="text-xs opacity-70">
-                          {format(parseISO(deadline.dueDate), "EEE, d MMM yyyy")}
-                        </span>
-                        {deadline.class && (
-                          <Badge variant="outline" className="text-[10px] px-1.5 py-0">
-                            {deadline.class}
-                          </Badge>
+                        {isExpanded ? (
+                          <ChevronUp className="h-4 w-4 opacity-50" />
+                        ) : (
+                          <ChevronDown className="h-4 w-4 opacity-50" />
                         )}
                       </div>
                     </div>
+
+                    {/* Expanded Details */}
+                    {isExpanded && (
+                      <div className="px-3 pb-3 pt-0 border-t border-current/10">
+                        <div className="pt-2 space-y-2">
+                          <p className="text-xs opacity-80">{deadline.description}</p>
+                          <div className="flex items-center gap-2">
+                            <Icon className="h-3 w-3 opacity-60" />
+                            <span className="text-xs opacity-60 capitalize">{deadline.type}</span>
+                            {deadline.class && (
+                              <Badge variant="outline" className="text-[10px] px-1.5 py-0">
+                                Class {deadline.class}
+                              </Badge>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 );
               })
