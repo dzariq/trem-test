@@ -33,7 +33,7 @@ export function AppHeader({
               variant="ghost" 
               size="icon" 
               className="relative"
-              onClick={() => {}}
+              onClick={() => navigate("/notifications")}
             >
               <Bell className="h-5 w-5" />
               <Badge 

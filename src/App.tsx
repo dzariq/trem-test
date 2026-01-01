@@ -9,6 +9,7 @@ import AcademicPage from "./pages/AcademicPage";
 import CalendarPage from "./pages/CalendarPage";
 import SupportPage from "./pages/SupportPage";
 import ProfilePage from "./pages/ProfilePage";
+import NotificationsPage from "./pages/NotificationsPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -26,6 +27,7 @@ const App = () => (
           <Route path="/calendar" element={<CalendarPage />} />
           <Route path="/support" element={<SupportPage />} />
           <Route path="/profile" element={<ProfilePage />} />
+          <Route path="/notifications" element={<NotificationsPage />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
