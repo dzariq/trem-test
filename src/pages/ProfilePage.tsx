@@ -23,7 +23,8 @@ import {
   LogOut, 
   ChevronRight,
   Shield,
-  Pencil
+  Pencil,
+  MapPin
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
@@ -176,6 +177,22 @@ export default function ProfilePage() {
               </div>
               <Switch defaultChecked />
             </div>
+          </CardContent>
+        </Card>
+
+        {/* Contact Us */}
+        <Card className="bg-card border-border shadow-sm">
+          <CardContent className="p-0">
+            <button 
+              className="w-full flex items-center justify-between p-4 hover:bg-accent/30 transition-colors"
+              onClick={() => navigate("/parent/contact")}
+            >
+              <div className="flex items-center gap-3">
+                <MapPin className="h-5 w-5 text-muted-foreground" />
+                <span className="font-medium text-foreground">Contact Us</span>
+              </div>
+              <ChevronRight className="h-5 w-5 text-muted-foreground" />
+            </button>
           </CardContent>
         </Card>
 
