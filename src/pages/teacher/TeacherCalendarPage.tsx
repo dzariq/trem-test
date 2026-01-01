@@ -5,27 +5,41 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Calendar } from "@/components/ui/calendar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { MapPin, Clock } from "lucide-react";
+import { MapPin, Clock, ChevronDown } from "lucide-react";
 import schoolLogo from "@/assets/school-badge.png";
 import { calendarEvents, ccaActivities } from "@/data/mockData";
 import { format, isSameDay, parseISO } from "date-fns";
-import { TagCategory } from "@/types/calendarTags";
+import { TagCategory, CalendarTag, TEACHER_HIDDEN_TAGS } from "@/types/calendarTags";
 import {
   filterEventsByRole,
   filterEventsByCategory,
+  filterEventsByTag,
   getTagColor,
   getTagDisplayName,
   getCategoryDisplayName,
   getCategoryColor,
+  getTagsByCategory,
 } from "@/lib/calendarUtils";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 export default function TeacherCalendarPage() {
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [categoryFilter, setCategoryFilter] = useState<TagCategory | "all">("all");
+  const [selectedTag, setSelectedTag] = useState<CalendarTag | null>(null);
 
   // Filter events for teacher role
   const visibleEvents = filterEventsByRole(calendarEvents, "teacher");
-  const filteredEvents = filterEventsByCategory(visibleEvents, categoryFilter);
+  let filteredEvents = filterEventsByCategory(visibleEvents, categoryFilter);
+  
+  // Apply tag filter if a specific tag is selected
+  if (selectedTag) {
+    filteredEvents = filterEventsByTag(filteredEvents, selectedTag);
+  }
 
   const eventsOnSelectedDate = filteredEvents.filter(event => 
     isSameDay(parseISO(event.date), selectedDate)
@@ -55,6 +69,20 @@ export default function TeacherCalendarPage() {
     "parents",
   ];
 
+  // Get visible tags for a category (filter out hidden tags for teachers)
+  const getVisibleTagsForCategory = (category: TagCategory): CalendarTag[] => {
+    return getTagsByCategory(category).filter(tag => !TEACHER_HIDDEN_TAGS.includes(tag));
+  };
+
+  const handleCategoryClick = (cat: TagCategory | "all") => {
+    setCategoryFilter(cat);
+    setSelectedTag(null);
+  };
+
+  const handleTagSelect = (tag: CalendarTag) => {
+    setSelectedTag(tag);
+  };
+
   return (
     <TeacherAppLayout>
       <AppHeader 
@@ -75,20 +103,69 @@ export default function TeacherCalendarPage() {
           </TabsList>
 
           <TabsContent value="calendar" className="space-y-4">
-            {/* Category Filter */}
+            {/* Category Filter with Dropdowns */}
             <div className="flex gap-2 overflow-x-auto pb-2">
-              {teacherVisibleCategories.map((cat) => (
-                <Badge
-                  key={cat}
-                  variant={categoryFilter === cat ? "default" : "outline"}
-                  className={`cursor-pointer whitespace-nowrap ${
-                    categoryFilter === cat ? "" : cat !== "all" ? getCategoryColor(cat as TagCategory) : ""
-                  }`}
-                  onClick={() => setCategoryFilter(cat)}
-                >
-                  {cat === "all" ? "All" : getCategoryDisplayName(cat as TagCategory)}
-                </Badge>
-              ))}
+              {teacherVisibleCategories.map((cat) => {
+                const isSelected = categoryFilter === cat;
+                const visibleTags = cat !== "all" ? getVisibleTagsForCategory(cat as TagCategory) : [];
+                const hasSubTags = visibleTags.length > 0;
+
+                if (cat === "all" || !hasSubTags) {
+                  return (
+                    <Badge
+                      key={cat}
+                      variant={isSelected && !selectedTag ? "default" : "outline"}
+                      className={`cursor-pointer whitespace-nowrap ${
+                        isSelected && !selectedTag ? "" : cat !== "all" ? getCategoryColor(cat as TagCategory) : ""
+                      }`}
+                      onClick={() => handleCategoryClick(cat)}
+                    >
+                      {cat === "all" ? "All" : getCategoryDisplayName(cat as TagCategory)}
+                    </Badge>
+                  );
+                }
+
+                return (
+                  <DropdownMenu key={cat}>
+                    <DropdownMenuTrigger asChild>
+                      <Badge
+                        variant={isSelected ? "default" : "outline"}
+                        className={`cursor-pointer whitespace-nowrap flex items-center gap-1 ${
+                          isSelected ? "" : getCategoryColor(cat as TagCategory)
+                        }`}
+                      >
+                        {selectedTag && categoryFilter === cat 
+                          ? getTagDisplayName(selectedTag)
+                          : getCategoryDisplayName(cat as TagCategory)
+                        }
+                        <ChevronDown className="h-3 w-3" />
+                      </Badge>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent className="bg-card z-50" align="start">
+                      <DropdownMenuItem 
+                        onClick={() => handleCategoryClick(cat)}
+                        className="cursor-pointer"
+                      >
+                        All {getCategoryDisplayName(cat as TagCategory)}
+                      </DropdownMenuItem>
+                      {visibleTags.map((tag) => (
+                        <DropdownMenuItem 
+                          key={tag}
+                          onClick={() => {
+                            setCategoryFilter(cat);
+                            handleTagSelect(tag);
+                          }}
+                          className="cursor-pointer"
+                        >
+                          <Badge className={`text-xs mr-2 ${getTagColor(tag)}`}>
+                            {getTagDisplayName(tag)}
+                          </Badge>
+                        </DropdownMenuItem>
+                      ))}
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                );
+              })}
             </div>
 
             <Card>
