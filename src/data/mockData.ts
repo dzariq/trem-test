@@ -185,21 +185,24 @@ export const students = [
     name: "Emma Johnson",
     grade: "Grade 5",
     class: "5A",
-    photo: null
+    photo: null,
+    subjects: ["English", "Mathematics", "Science", "History", "Art"]
   },
   {
     id: "STU-2024-002",
     name: "Lucas Johnson",
     grade: "Grade 3",
     class: "3B",
-    photo: null
+    photo: null,
+    subjects: ["English", "Mathematics", "Science", "Music", "Physical Education"]
   },
   {
     id: "STU-2024-003",
     name: "Sophia Johnson",
     grade: "Grade 1",
     class: "1A",
-    photo: null
+    photo: null,
+    subjects: ["English", "Mathematics", "Art", "Music"]
   }
 ];
 
