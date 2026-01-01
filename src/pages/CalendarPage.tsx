@@ -55,7 +55,19 @@ export default function CalendarPage() {
 
   return (
     <AppLayout>
-      <AppHeader title="Calendar" />
+      <AppHeader 
+        title="Calendar" 
+        rightContent={
+          <Select defaultValue="emma">
+            <SelectTrigger className="w-32 h-8 text-sm">
+              <SelectValue placeholder="Student" />
+            </SelectTrigger>
+            <SelectContent className="bg-card">
+              <SelectItem value="emma">Emma J.</SelectItem>
+            </SelectContent>
+          </Select>
+        }
+      />
 
       <section className="px-4 pt-4">
         <Tabs defaultValue="calendar" className="w-full">

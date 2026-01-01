@@ -99,7 +99,19 @@ export default function AcademicPage() {
 
   return (
     <AppLayout>
-      <AppHeader title="Academic" />
+      <AppHeader 
+        title="Academic" 
+        rightContent={
+          <Select defaultValue="emma">
+            <SelectTrigger className="w-32 h-8 text-sm">
+              <SelectValue placeholder="Student" />
+            </SelectTrigger>
+            <SelectContent className="bg-card">
+              <SelectItem value="emma">Emma J.</SelectItem>
+            </SelectContent>
+          </Select>
+        }
+      />
 
       {/* Unified Report Card Section */}
       <section className="px-4 py-4">
