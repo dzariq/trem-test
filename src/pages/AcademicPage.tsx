@@ -6,7 +6,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Download, FileText, Award, Trophy, BookOpen, TrendingUp, Check, GraduationCap } from "lucide-react";
+import { Download, FileText, Award, Trophy, BookOpen, TrendingUp, Check } from "lucide-react";
+import schoolLogo from "@/assets/school-badge.png";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
   Select,
@@ -116,7 +117,7 @@ export default function AcademicPage() {
       <AppHeader 
         leftContent={
           <div className="flex items-center gap-2">
-            <GraduationCap className="h-5 w-5 text-primary" />
+            <img src={schoolLogo} alt="School Logo" className="h-8 w-8 object-contain" />
             <h1 className="text-xl font-semibold text-foreground">Academic</h1>
           </div>
         }

@@ -7,7 +7,8 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { MapPin, Clock, User, Filter, CalendarDays } from "lucide-react";
+import { MapPin, Clock, User, Filter } from "lucide-react";
+import schoolLogo from "@/assets/school-badge.png";
 import {
   Select,
   SelectContent,
@@ -61,7 +62,7 @@ export default function CalendarPage() {
       <AppHeader 
         leftContent={
           <div className="flex items-center gap-2">
-            <CalendarDays className="h-5 w-5 text-primary" />
+            <img src={schoolLogo} alt="School Logo" className="h-8 w-8 object-contain" />
             <h1 className="text-xl font-semibold text-foreground">Calendar</h1>
           </div>
         }
