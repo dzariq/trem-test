@@ -17,7 +17,7 @@ export default function HomePage() {
         showProfile 
         leftContent={
           <div className="flex items-center gap-3">
-            <img src={schoolBadge} alt="School Badge" className="h-10 w-auto" />
+            <img src={schoolBadge} alt="School Badge" className="h-11 w-auto" />
             <StudentPillSelector />
           </div>
         }
