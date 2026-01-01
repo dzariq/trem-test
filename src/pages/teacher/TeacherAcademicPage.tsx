@@ -7,10 +7,14 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
-import { Save, TrendingUp, TrendingDown, Minus, ChevronDown, ChevronUp } from "lucide-react";
+import { Progress } from "@/components/ui/progress";
+import { 
+  Save, TrendingUp, TrendingDown, Minus, ChevronDown, ChevronUp, 
+  Users, Target, Award, AlertTriangle, BookOpen, BarChart3
+} from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import schoolLogo from "@/assets/school-badge.png";
-import { teacherProfile, classRosters, classGrades } from "@/data/teacherMockData";
+import { teacherProfile, classRosters, classGrades, detailedClassGrades } from "@/data/teacherMockData";
 import {
   Select,
   SelectContent,
@@ -26,6 +30,9 @@ import {
   CartesianGrid,
   Tooltip,
   ResponsiveContainer,
+  PieChart,
+  Pie,
+  Cell,
 } from "recharts";
 import {
   Collapsible,
@@ -155,13 +162,19 @@ export default function TeacherAcademicPage() {
     : 0;
   const highestScore = allGrades.length > 0 ? Math.max(...allGrades) : 0;
   const lowestScore = allGrades.length > 0 ? Math.min(...allGrades) : 0;
+  const passRate = allGrades.length > 0 
+    ? Math.round((allGrades.filter(g => g >= 50).length / allGrades.length) * 100)
+    : 0;
+  const aGradeRate = allGrades.length > 0
+    ? Math.round((allGrades.filter(g => g >= 80).length / allGrades.length) * 100)
+    : 0;
 
   const gradeDistribution = [
-    { range: "A", count: allGrades.filter(g => g >= 90).length },
-    { range: "B", count: allGrades.filter(g => g >= 80 && g < 90).length },
-    { range: "C", count: allGrades.filter(g => g >= 70 && g < 80).length },
-    { range: "D", count: allGrades.filter(g => g >= 60 && g < 70).length },
-    { range: "F", count: allGrades.filter(g => g < 60).length },
+    { range: "A", count: allGrades.filter(g => g >= 80).length },
+    { range: "B", count: allGrades.filter(g => g >= 70 && g < 80).length },
+    { range: "C", count: allGrades.filter(g => g >= 60 && g < 70).length },
+    { range: "D", count: allGrades.filter(g => g >= 50 && g < 60).length },
+    { range: "F", count: allGrades.filter(g => g < 50).length },
   ];
 
   const rankedStudents = students
@@ -171,6 +184,52 @@ export default function TeacherAcademicPage() {
     }))
     .filter(s => s.score !== null)
     .sort((a, b) => (b.score || 0) - (a.score || 0));
+
+  // At-risk students (below 60)
+  const atRiskStudents = rankedStudents.filter(s => s.score !== null && s.score < 60);
+
+  // Calculate category averages from detailed grades
+  const detailedGradesForClass = detailedClassGrades[selectedClass as keyof typeof detailedClassGrades] || {};
+  const categoryTotals = { attitude: { sum: 0, count: 0, max: 10 }, homework: { sum: 0, count: 0, max: 10 }, quiz: { sum: 0, count: 0, max: 10 }, exam: { sum: 0, count: 0, max: 70 } };
+  
+  Object.values(detailedGradesForClass).forEach((studentGrades) => {
+    Object.values(studentGrades).forEach((subjectGrade) => {
+      categoryTotals.attitude.sum += subjectGrade.attitude;
+      categoryTotals.attitude.count++;
+      categoryTotals.homework.sum += subjectGrade.homework;
+      categoryTotals.homework.count++;
+      categoryTotals.quiz.sum += subjectGrade.quiz;
+      categoryTotals.quiz.count++;
+      categoryTotals.exam.sum += subjectGrade.exam;
+      categoryTotals.exam.count++;
+    });
+  });
+
+  const categoryAverages = [
+    { name: "Attitude", average: categoryTotals.attitude.count > 0 ? categoryTotals.attitude.sum / categoryTotals.attitude.count : 0, max: 10, percentage: categoryTotals.attitude.count > 0 ? (categoryTotals.attitude.sum / categoryTotals.attitude.count / 10) * 100 : 0 },
+    { name: "Homework", average: categoryTotals.homework.count > 0 ? categoryTotals.homework.sum / categoryTotals.homework.count : 0, max: 10, percentage: categoryTotals.homework.count > 0 ? (categoryTotals.homework.sum / categoryTotals.homework.count / 10) * 100 : 0 },
+    { name: "Quiz", average: categoryTotals.quiz.count > 0 ? categoryTotals.quiz.sum / categoryTotals.quiz.count : 0, max: 10, percentage: categoryTotals.quiz.count > 0 ? (categoryTotals.quiz.sum / categoryTotals.quiz.count / 10) * 100 : 0 },
+    { name: "Exam", average: categoryTotals.exam.count > 0 ? categoryTotals.exam.sum / categoryTotals.exam.count : 0, max: 70, percentage: categoryTotals.exam.count > 0 ? (categoryTotals.exam.sum / categoryTotals.exam.count / 70) * 100 : 0 },
+  ];
+
+  const weakestCategory = categoryAverages.reduce((min, cat) => cat.percentage < min.percentage ? cat : min, categoryAverages[0]);
+
+  // Calculate subject averages
+  const subjectTotals: Record<string, { sum: number; count: number }> = {};
+  Object.values(detailedGradesForClass).forEach((studentGrades) => {
+    Object.entries(studentGrades).forEach(([subject, grades]) => {
+      const total = grades.attitude + grades.homework + grades.quiz + grades.exam;
+      if (!subjectTotals[subject]) subjectTotals[subject] = { sum: 0, count: 0 };
+      subjectTotals[subject].sum += total;
+      subjectTotals[subject].count++;
+    });
+  });
+
+  const subjectAverages = Object.entries(subjectTotals).map(([name, data]) => ({
+    name: name.length > 10 ? name.substring(0, 10) + "..." : name,
+    fullName: name,
+    average: data.count > 0 ? data.sum / data.count : 0,
+  })).sort((a, b) => b.average - a.average);
 
   const selectedStudentData = students.find(s => s.id === selectedStudent);
 
@@ -359,71 +418,220 @@ export default function TeacherAcademicPage() {
               </SelectContent>
             </Select>
 
-            <div className="grid grid-cols-3 gap-3">
+            {/* Summary Stats - 2x3 Grid */}
+            <div className="grid grid-cols-3 gap-2">
               <Card>
-                <CardContent className="p-3 text-center">
-                  <Minus className="h-5 w-5 mx-auto mb-1 text-primary" />
+                <CardContent className="p-2 text-center">
+                  <Users className="h-4 w-4 mx-auto mb-1 text-primary" />
+                  <p className="text-lg font-bold text-foreground">{students.length}</p>
+                  <p className="text-[10px] text-muted-foreground">Class Size</p>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardContent className="p-2 text-center">
+                  <Minus className="h-4 w-4 mx-auto mb-1 text-primary" />
                   <p className="text-lg font-bold text-foreground">{classAverage}</p>
-                  <p className="text-xs text-muted-foreground">Average</p>
+                  <p className="text-[10px] text-muted-foreground">Average</p>
                 </CardContent>
               </Card>
               <Card>
-                <CardContent className="p-3 text-center">
-                  <TrendingUp className="h-5 w-5 mx-auto mb-1 text-emerald-600" />
+                <CardContent className="p-2 text-center">
+                  <Target className="h-4 w-4 mx-auto mb-1 text-emerald-600" />
+                  <p className="text-lg font-bold text-foreground">{passRate}%</p>
+                  <p className="text-[10px] text-muted-foreground">Pass Rate</p>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardContent className="p-2 text-center">
+                  <Award className="h-4 w-4 mx-auto mb-1 text-amber-500" />
+                  <p className="text-lg font-bold text-foreground">{aGradeRate}%</p>
+                  <p className="text-[10px] text-muted-foreground">A Grade</p>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardContent className="p-2 text-center">
+                  <TrendingUp className="h-4 w-4 mx-auto mb-1 text-emerald-600" />
                   <p className="text-lg font-bold text-foreground">{highestScore}</p>
-                  <p className="text-xs text-muted-foreground">Highest</p>
+                  <p className="text-[10px] text-muted-foreground">Highest</p>
                 </CardContent>
               </Card>
               <Card>
-                <CardContent className="p-3 text-center">
-                  <TrendingDown className="h-5 w-5 mx-auto mb-1 text-red-600" />
+                <CardContent className="p-2 text-center">
+                  <TrendingDown className="h-4 w-4 mx-auto mb-1 text-red-600" />
                   <p className="text-lg font-bold text-foreground">{lowestScore}</p>
-                  <p className="text-xs text-muted-foreground">Lowest</p>
+                  <p className="text-[10px] text-muted-foreground">Lowest</p>
                 </CardContent>
               </Card>
             </div>
 
+            {/* Category Performance */}
             <Card>
               <CardHeader className="pb-2">
-                <CardTitle className="text-base">Grade Distribution</CardTitle>
+                <CardTitle className="text-sm flex items-center gap-2">
+                  <BarChart3 className="h-4 w-4" />
+                  Category Performance
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                {categoryAverages.map((cat) => (
+                  <div key={cat.name} className="space-y-1">
+                    <div className="flex justify-between text-xs">
+                      <span className="text-muted-foreground">{cat.name}</span>
+                      <span className="font-medium">{cat.average.toFixed(1)}/{cat.max}</span>
+                    </div>
+                    <Progress value={cat.percentage} className="h-2" />
+                  </div>
+                ))}
+                {weakestCategory && (
+                  <div className="flex items-center gap-2 p-2 rounded-lg bg-amber-50 border border-amber-200 mt-2">
+                    <AlertTriangle className="h-4 w-4 text-amber-600" />
+                    <p className="text-xs text-amber-700">
+                      <span className="font-medium">{weakestCategory.name}</span> needs improvement ({weakestCategory.percentage.toFixed(0)}%)
+                    </p>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* Subject Performance */}
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm flex items-center gap-2">
+                  <BookOpen className="h-4 w-4" />
+                  Subject Performance
+                </CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="h-48">
                   <ResponsiveContainer width="100%" height="100%">
-                    <BarChart data={gradeDistribution}>
+                    <BarChart data={subjectAverages} layout="vertical">
                       <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
-                      <XAxis dataKey="range" tick={{ fontSize: 12 }} />
-                      <YAxis allowDecimals={false} />
-                      <Tooltip />
-                      <Bar dataKey="count" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
+                      <XAxis type="number" domain={[0, 100]} tick={{ fontSize: 10 }} />
+                      <YAxis dataKey="name" type="category" tick={{ fontSize: 10 }} width={60} />
+                      <Tooltip formatter={(value: number) => [`${value.toFixed(1)}%`, 'Average']} />
+                      <Bar dataKey="average" fill="hsl(var(--primary))" radius={[0, 4, 4, 0]} />
                     </BarChart>
                   </ResponsiveContainer>
                 </div>
               </CardContent>
             </Card>
 
+            {/* Grade Distribution - Bar + Pie */}
+            <div className="grid grid-cols-2 gap-3">
+              <Card>
+                <CardHeader className="pb-1">
+                  <CardTitle className="text-xs">Distribution</CardTitle>
+                </CardHeader>
+                <CardContent className="p-2">
+                  <div className="h-32">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <BarChart data={gradeDistribution}>
+                        <XAxis dataKey="range" tick={{ fontSize: 10 }} />
+                        <YAxis allowDecimals={false} tick={{ fontSize: 10 }} width={20} />
+                        <Bar dataKey="count" radius={[2, 2, 0, 0]}>
+                          {gradeDistribution.map((entry, index) => (
+                            <Cell key={`cell-${index}`} fill={GRADE_COLORS[entry.range as keyof typeof GRADE_COLORS]} />
+                          ))}
+                        </Bar>
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </div>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardHeader className="pb-1">
+                  <CardTitle className="text-xs">Breakdown</CardTitle>
+                </CardHeader>
+                <CardContent className="p-2">
+                  <div className="h-32">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <PieChart>
+                        <Pie
+                          data={gradeDistribution.filter(d => d.count > 0)}
+                          cx="50%"
+                          cy="50%"
+                          innerRadius={20}
+                          outerRadius={45}
+                          dataKey="count"
+                          label={({ range, percent }) => `${range} ${(percent * 100).toFixed(0)}%`}
+                          labelLine={false}
+                        >
+                          {gradeDistribution.filter(d => d.count > 0).map((entry, index) => (
+                            <Cell key={`cell-${index}`} fill={GRADE_COLORS[entry.range as keyof typeof GRADE_COLORS]} />
+                          ))}
+                        </Pie>
+                        <Tooltip formatter={(value: number) => [value, 'Students']} />
+                      </PieChart>
+                    </ResponsiveContainer>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* At-Risk Students */}
+            {atRiskStudents.length > 0 && (
+              <Card className="border-red-200 bg-red-50/30">
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-sm flex items-center gap-2 text-red-700">
+                    <AlertTriangle className="h-4 w-4" />
+                    At-Risk Students ({atRiskStudents.length})
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-2">
+                  {atRiskStudents.map((student) => (
+                    <div 
+                      key={student.id} 
+                      className="flex items-center justify-between p-2 rounded-lg bg-background border border-red-200"
+                    >
+                      <span className="text-sm font-medium">{student.name}</span>
+                      <Badge variant="destructive" className="text-xs">
+                        {student.score}%
+                      </Badge>
+                    </div>
+                  ))}
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Top Students with medals */}
             <Card>
               <CardHeader className="pb-2">
-                <CardTitle className="text-base">Top Students</CardTitle>
+                <CardTitle className="text-sm flex items-center gap-2">
+                  <Award className="h-4 w-4" />
+                  Top Performers
+                </CardTitle>
               </CardHeader>
               <CardContent className="space-y-2">
                 {rankedStudents.slice(0, 5).map((student, index) => (
                   <div 
                     key={student.id} 
-                    className="flex items-center justify-between p-2 rounded-lg bg-accent/30"
+                    className={cn(
+                      "flex items-center justify-between p-2 rounded-lg",
+                      index === 0 ? "bg-amber-50 border border-amber-200" :
+                      index === 1 ? "bg-slate-50 border border-slate-200" :
+                      index === 2 ? "bg-orange-50 border border-orange-200" :
+                      "bg-accent/30"
+                    )}
                   >
                     <div className="flex items-center gap-3">
                       <span className={cn(
-                        "text-sm font-bold w-6",
+                        "text-lg font-bold w-8 text-center",
                         index === 0 ? "text-amber-500" : 
                         index === 1 ? "text-slate-400" : 
-                        index === 2 ? "text-amber-700" : "text-muted-foreground"
+                        index === 2 ? "text-orange-400" : "text-muted-foreground"
                       )}>
-                        #{index + 1}
+                        {index === 0 ? "🥇" : index === 1 ? "🥈" : index === 2 ? "🥉" : `#${index + 1}`}
                       </span>
-                      <span className="font-medium text-foreground text-sm">{student.name}</span>
+                      <span className="text-sm font-medium">{student.name}</span>
                     </div>
-                    <span className="font-bold text-primary">{student.score}</span>
+                    <Badge className={cn(
+                      "text-xs",
+                      student.score && student.score >= 90 ? "bg-emerald-100 text-emerald-700" :
+                      student.score && student.score >= 80 ? "bg-blue-100 text-blue-700" :
+                      "bg-accent"
+                    )}>
+                      {student.score}%
+                    </Badge>
                   </div>
                 ))}
               </CardContent>
@@ -434,3 +642,12 @@ export default function TeacherAcademicPage() {
     </TeacherAppLayout>
   );
 }
+
+// Grade colors for charts
+const GRADE_COLORS = {
+  A: "#10b981",
+  B: "#3b82f6",
+  C: "#f59e0b",
+  D: "#f97316",
+  F: "#ef4444",
+};
