@@ -1,7 +1,7 @@
 import { useNavigate } from "react-router-dom";
 import { 
   FileText, 
-  Phone, 
+  Trophy, 
   Dumbbell,
   BarChart3 
 } from "lucide-react";
@@ -9,7 +9,7 @@ import { cn } from "@/lib/utils";
 
 const quickLinks = [
   { icon: FileText, label: "Report Card", path: "/parent/academic", bgColor: "bg-emerald-100", iconColor: "text-emerald-600" },
-  { icon: Phone, label: "Contact Us", path: "/parent/contact", bgColor: "bg-blue-100", iconColor: "text-blue-600" },
+  { icon: Trophy, label: "Student Awards", path: "/parent/awards", bgColor: "bg-blue-100", iconColor: "text-blue-600" },
   { icon: Dumbbell, label: "CCA Activities", path: "#", bgColor: "bg-amber-100", iconColor: "text-amber-600" },
   { icon: BarChart3, label: "Grade Analysis", path: "/parent/academic", bgColor: "bg-rose-100", iconColor: "text-rose-600" },
 ];
