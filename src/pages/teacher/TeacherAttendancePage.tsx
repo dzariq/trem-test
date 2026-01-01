@@ -137,17 +137,17 @@ export default function TeacherAttendancePage() {
               <span>Class {selectedClass} ({students.length} students)</span>
             </CardTitle>
           </CardHeader>
-          <CardContent className="space-y-3">
+          <CardContent className="space-y-2">
             {students.map((student, index) => (
               <div 
                 key={student.id} 
-                className="flex items-center justify-between p-3 rounded-lg bg-accent/30"
+                className="flex items-center justify-between p-3 rounded-xl border border-border/50 bg-card hover:bg-muted/30 transition-colors"
               >
                 <div className="flex items-center gap-3">
-                  <span className="text-sm text-muted-foreground w-6">{index + 1}.</span>
+                  <span className="flex items-center justify-center h-6 w-6 rounded-full bg-primary/10 text-xs font-medium text-primary">{index + 1}</span>
                   <span className="font-medium text-foreground">{student.name}</span>
                 </div>
-                <div className="flex gap-1">
+                <div className="flex gap-1.5">
                   {getStatusButton(
                     student.id,
                     "present",
