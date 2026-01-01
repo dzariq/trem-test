@@ -678,66 +678,62 @@ export default function AcademicPage() {
               {/* COMPARISON TAB */}
               <TabsContent value="comparison" className="space-y-4">
                 {/* Exam Selectors */}
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <label className="text-xs font-medium text-muted-foreground">Exam A</label>
-                    <div className="flex gap-2">
-                      <Select 
-                        value={compareExamA.year} 
-                        onValueChange={(v) => setCompareExamA(prev => ({ ...prev, year: v as YearKey }))}
-                      >
-                        <SelectTrigger className="flex-1 h-8 text-xs">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent className="bg-card">
-                          <SelectItem value="2025">2025</SelectItem>
-                          <SelectItem value="2024">2024</SelectItem>
-                          <SelectItem value="2023">2023</SelectItem>
-                        </SelectContent>
-                      </Select>
-                      <Select 
-                        value={compareExamA.type} 
-                        onValueChange={(v) => setCompareExamA(prev => ({ ...prev, type: v as ExamType }))}
-                      >
-                        <SelectTrigger className="flex-1 h-8 text-xs">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent className="bg-card">
-                          <SelectItem value="midYear">Mid-Year</SelectItem>
-                          <SelectItem value="yearEnd">Year-End</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
+                    <Select 
+                      value={compareExamA.year} 
+                      onValueChange={(v) => setCompareExamA(prev => ({ ...prev, year: v as YearKey }))}
+                    >
+                      <SelectTrigger className="w-full h-9 text-sm">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent className="bg-card">
+                        <SelectItem value="2025">2025</SelectItem>
+                        <SelectItem value="2024">2024</SelectItem>
+                        <SelectItem value="2023">2023</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <Select 
+                      value={compareExamA.type} 
+                      onValueChange={(v) => setCompareExamA(prev => ({ ...prev, type: v as ExamType }))}
+                    >
+                      <SelectTrigger className="w-full h-9 text-sm">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent className="bg-card">
+                        <SelectItem value="midYear">Mid-Year</SelectItem>
+                        <SelectItem value="yearEnd">Year-End</SelectItem>
+                      </SelectContent>
+                    </Select>
                   </div>
                   <div className="space-y-2">
                     <label className="text-xs font-medium text-muted-foreground">Exam B</label>
-                    <div className="flex gap-2">
-                      <Select 
-                        value={compareExamB.year} 
-                        onValueChange={(v) => setCompareExamB(prev => ({ ...prev, year: v as YearKey }))}
-                      >
-                        <SelectTrigger className="flex-1 h-8 text-xs">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent className="bg-card">
-                          <SelectItem value="2025">2025</SelectItem>
-                          <SelectItem value="2024">2024</SelectItem>
-                          <SelectItem value="2023">2023</SelectItem>
-                        </SelectContent>
-                      </Select>
-                      <Select 
-                        value={compareExamB.type} 
-                        onValueChange={(v) => setCompareExamB(prev => ({ ...prev, type: v as ExamType }))}
-                      >
-                        <SelectTrigger className="flex-1 h-8 text-xs">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent className="bg-card">
-                          <SelectItem value="midYear">Mid-Year</SelectItem>
-                          <SelectItem value="yearEnd">Year-End</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
+                    <Select 
+                      value={compareExamB.year} 
+                      onValueChange={(v) => setCompareExamB(prev => ({ ...prev, year: v as YearKey }))}
+                    >
+                      <SelectTrigger className="w-full h-9 text-sm">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent className="bg-card">
+                        <SelectItem value="2025">2025</SelectItem>
+                        <SelectItem value="2024">2024</SelectItem>
+                        <SelectItem value="2023">2023</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <Select 
+                      value={compareExamB.type} 
+                      onValueChange={(v) => setCompareExamB(prev => ({ ...prev, type: v as ExamType }))}
+                    >
+                      <SelectTrigger className="w-full h-9 text-sm">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent className="bg-card">
+                        <SelectItem value="midYear">Mid-Year</SelectItem>
+                        <SelectItem value="yearEnd">Year-End</SelectItem>
+                      </SelectContent>
+                    </Select>
                   </div>
                 </div>
 
