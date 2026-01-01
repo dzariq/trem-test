@@ -34,9 +34,8 @@ const getDeadlineIcon = (type: Deadline["type"]) => {
 
 const getDeadlineColor = (daysLeft: number, isCompleted: boolean) => {
   if (isCompleted) return "bg-emerald-50 border-emerald-200 text-emerald-700 dark:bg-emerald-950/30 dark:border-emerald-800 dark:text-emerald-400";
-  if (daysLeft <= 3) return "bg-destructive/10 border-destructive/30 text-destructive";
-  if (daysLeft <= 7) return "bg-amber-50 border-amber-200 text-amber-700 dark:bg-amber-950/30 dark:border-amber-800 dark:text-amber-400";
-  return "bg-muted/50 border-border text-foreground";
+  if (daysLeft < 8) return "bg-destructive/10 border-destructive/30 text-destructive";
+  return "bg-amber-50 border-amber-200 text-amber-700 dark:bg-amber-950/30 dark:border-amber-800 dark:text-amber-400";
 };
 
 const getDaysLeftBadge = (daysLeft: number, isCompleted: boolean) => {
