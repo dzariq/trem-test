@@ -279,32 +279,25 @@ export default function AttendancePage() {
                     return (
                       <div 
                         key={dayIndex}
-                        className={`flex flex-col p-3 rounded-lg transition-all ${
+                        className={`flex items-center gap-2 p-2 rounded-md transition-all ${
                           today 
                             ? "bg-primary/10 border-2 border-primary/30" 
                             : "bg-accent/30 border border-border/50"
                         }`}
                       >
-                        <div className="flex items-center justify-between mb-2">
-                          <div className={`w-7 h-7 rounded-full flex items-center justify-center ${getStatusColor(day.status)}`}>
-                            {getStatusIcon(day.status)}
-                          </div>
-                          {today && (
-                            <Badge variant="outline" className="text-[10px] h-4 px-1.5 border-primary text-primary">
-                              Today
-                            </Badge>
+                        <div className={`w-5 h-5 rounded-full flex items-center justify-center shrink-0 ${getStatusColor(day.status)}`}>
+                          {getStatusIcon(day.status)}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="font-medium text-foreground text-xs">
+                            {date.toLocaleDateString("en-US", { weekday: "short", day: "numeric" })}
+                          </p>
+                          {day.reason && (
+                            <p className="text-[9px] text-muted-foreground truncate">{day.reason}</p>
                           )}
                         </div>
-                        <p className="font-medium text-foreground text-sm">
-                          {date.toLocaleDateString("en-US", { weekday: "short", day: "numeric" })}
-                        </p>
-                        <div className="flex items-center justify-between mt-1">
-                          <Badge className={`text-[10px] px-1.5 py-0.5 ${getStatusColor(day.status)}`}>
-                            {getStatusLabel(day.status)}
-                          </Badge>
-                        </div>
-                        {day.reason && (
-                          <p className="text-[10px] text-muted-foreground mt-1 truncate">{day.reason}</p>
+                        {today && (
+                          <span className="text-[8px] font-medium text-primary shrink-0">Today</span>
                         )}
                       </div>
                     );
