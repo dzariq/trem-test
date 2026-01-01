@@ -284,10 +284,10 @@ export default function AttendancePage() {
                             ? "ring-2 ring-primary/50 " 
                             : ""
                         }${
-                          day.status === 'Present' ? "bg-chart-1/20 border-chart-1/40" :
-                          day.status === 'Absent' ? "bg-destructive/20 border-destructive/40" :
-                          day.status === 'Late' ? "bg-chart-4/20 border-chart-4/40" :
-                          day.status === 'Excused' ? "bg-chart-5/20 border-chart-5/40" :
+                          day.status === 'present' ? "bg-chart-1/20 border-chart-1/40" :
+                          day.status === 'absent' ? "bg-destructive/20 border-destructive/40" :
+                          day.status === 'late' ? "bg-chart-4/20 border-chart-4/40" :
+                          day.status === 'excused' ? "bg-chart-5/20 border-chart-5/40" :
                           "bg-muted/30 border-border/50"
                         }`}
                       >
