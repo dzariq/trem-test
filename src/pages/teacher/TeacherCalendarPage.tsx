@@ -3,9 +3,10 @@ import { TeacherAppLayout } from "@/components/layout/TeacherAppLayout";
 import { AppHeader } from "@/components/layout/AppHeader";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { MapPin, Clock, ChevronDown } from "lucide-react";
+import { MapPin, Clock, User, ChevronDown } from "lucide-react";
 import schoolLogo from "@/assets/school-badge.png";
 import { calendarEvents, ccaActivities } from "@/data/mockData";
 import { format, isSameDay, parseISO } from "date-fns";
@@ -31,6 +32,7 @@ export default function TeacherCalendarPage() {
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [categoryFilter, setCategoryFilter] = useState<TagCategory | "all">("all");
   const [selectedTag, setSelectedTag] = useState<CalendarTag | null>(null);
+  const [ccaCategoryFilter, setCcaCategoryFilter] = useState("all");
 
   // Filter events for teacher role
   const visibleEvents = filterEventsByRole(calendarEvents, "teacher");
@@ -55,6 +57,11 @@ export default function TeacherCalendarPage() {
   };
 
   const eventDates = filteredEvents.map(e => parseISO(e.date));
+
+  // Filter CCA activities
+  const filteredCCA = ccaCategoryFilter === "all" 
+    ? ccaActivities 
+    : ccaActivities.filter(a => a.category.toLowerCase() === ccaCategoryFilter.toLowerCase());
 
   // Categories visible to teachers (all except admin-only)
   const teacherVisibleCategories: (TagCategory | "all")[] = [
@@ -282,36 +289,74 @@ export default function TeacherCalendarPage() {
           </TabsContent>
 
           <TabsContent value="cca" className="mt-4 space-y-4">
-            <Card className="bg-card border-border shadow-sm">
-              <CardHeader className="pb-2">
-                <CardTitle className="text-lg font-semibold">CCA Activities</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                {ccaActivities.map((activity) => (
-                  <div 
-                    key={activity.id}
-                    className="p-3 rounded-lg bg-accent/50 border border-border/50"
-                  >
-                    <div className="flex items-start justify-between mb-2">
-                      <h3 className="font-medium text-foreground">{activity.name}</h3>
-                      <Badge className={getCcaCategoryColor(activity.category)}>
-                        {activity.category}
-                      </Badge>
+            {/* Filters */}
+            <div className="flex gap-2 overflow-x-auto pb-2">
+              <Badge 
+                variant={ccaCategoryFilter === "all" ? "default" : "outline"}
+                className="cursor-pointer whitespace-nowrap"
+                onClick={() => setCcaCategoryFilter("all")}
+              >
+                All
+              </Badge>
+              <Badge 
+                variant={ccaCategoryFilter === "sports" ? "default" : "outline"}
+                className="cursor-pointer whitespace-nowrap"
+                onClick={() => setCcaCategoryFilter("sports")}
+              >
+                Sports
+              </Badge>
+              <Badge 
+                variant={ccaCategoryFilter === "arts" ? "default" : "outline"}
+                className="cursor-pointer whitespace-nowrap"
+                onClick={() => setCcaCategoryFilter("arts")}
+              >
+                Arts
+              </Badge>
+              <Badge 
+                variant={ccaCategoryFilter === "academic" ? "default" : "outline"}
+                className="cursor-pointer whitespace-nowrap"
+                onClick={() => setCcaCategoryFilter("academic")}
+              >
+                Academic
+              </Badge>
+            </div>
+
+            {/* CCA List */}
+            <div className="space-y-3">
+              {filteredCCA.map((activity) => (
+                <Card key={activity.id} className="bg-card border-border shadow-sm">
+                  <CardContent className="p-4">
+                    <div className="flex items-start justify-between mb-3">
+                      <div>
+                        <h3 className="font-semibold text-foreground">{activity.name}</h3>
+                        <Badge className={getCcaCategoryColor(activity.category)} variant="secondary">
+                          {activity.category}
+                        </Badge>
+                      </div>
                     </div>
-                    <div className="grid grid-cols-2 gap-2 text-sm text-muted-foreground">
-                      <span className="flex items-center gap-1">
-                        <Clock className="h-3 w-3" />
-                        {activity.day}, {activity.time}
-                      </span>
-                      <span className="flex items-center gap-1">
-                        <MapPin className="h-3 w-3" />
-                        {activity.venue}
-                      </span>
+                    
+                    <div className="space-y-2 text-sm text-muted-foreground">
+                      <div className="flex items-center gap-2">
+                        <Clock className="h-4 w-4" />
+                        <span>{activity.day}, {activity.time}</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <MapPin className="h-4 w-4" />
+                        <span>{activity.venue}</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <User className="h-4 w-4" />
+                        <span>{activity.coach}</span>
+                      </div>
                     </div>
-                  </div>
-                ))}
-              </CardContent>
-            </Card>
+
+                    <Button variant="outline" size="sm" className="w-full mt-4">
+                      View Details
+                    </Button>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
           </TabsContent>
         </Tabs>
       </section>
