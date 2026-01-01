@@ -32,7 +32,7 @@ export function QuickLinks() {
               )}
             >
               <div className={cn(
-                "w-9 h-9 rounded-full flex items-center justify-center mb-1",
+                "w-9 h-9 rounded-lg flex items-center justify-center mb-1",
                 link.bgColor
               )}>
                 <link.icon className={cn("h-4 w-4", link.iconColor)} />
