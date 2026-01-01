@@ -56,10 +56,10 @@ export default function AttendancePage() {
 
   const getStatusIcon = (status: string) => {
     switch (status) {
-      case "present": return <Check className="h-3.5 w-3.5" />;
-      case "absent": return <X className="h-3.5 w-3.5" />;
-      case "late": return <Clock className="h-3.5 w-3.5" />;
-      case "excused": return <CalendarOff className="h-3.5 w-3.5" />;
+      case "present": return <Check className="h-3 w-3" />;
+      case "absent": return <X className="h-3 w-3" />;
+      case "late": return <Clock className="h-3 w-3" />;
+      case "excused": return <CalendarOff className="h-3 w-3" />;
       default: return null;
     }
   };
