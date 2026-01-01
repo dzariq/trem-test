@@ -143,7 +143,10 @@ export default function ProfilePage() {
         {/* Security & Privacy */}
         <Card className="bg-card border-border shadow-sm">
           <CardContent className="p-0">
-            <button className="w-full flex items-center justify-between p-4 hover:bg-accent/30 transition-colors">
+            <button 
+              className="w-full flex items-center justify-between p-4 hover:bg-accent/30 transition-colors"
+              onClick={() => navigate("/security-privacy")}
+            >
               <div className="flex items-center gap-3">
                 <Shield className="h-5 w-5 text-muted-foreground" />
                 <span className="font-medium text-foreground">Security & Privacy</span>
