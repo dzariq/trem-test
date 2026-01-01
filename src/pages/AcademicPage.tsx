@@ -22,6 +22,7 @@ import {
   ResponsiveContainer,
   Tooltip,
   Legend,
+  CartesianGrid,
 } from "recharts";
 
 export default function AcademicPage() {
@@ -57,12 +58,13 @@ export default function AcademicPage() {
     { period: "Year-End 2025", ...Object.fromEntries(academicData.subjects.map(s => [s.name, s.yearEndCurrent ?? 0])) },
   ];
 
+  // Distinct colors for each subject - varied hues
   const lineColors = [
-    "hsl(var(--chart-1))",
-    "hsl(var(--chart-2))",
-    "hsl(var(--chart-3))",
-    "hsl(var(--chart-4))",
-    "hsl(var(--chart-5))",
+    "#3b82f6", // blue
+    "#f59e0b", // amber
+    "#10b981", // emerald
+    "#8b5cf6", // violet
+    "#ef4444", // red
   ];
 
   const filteredSubjects = subjectFilter === "all" 
@@ -227,6 +229,13 @@ export default function AcademicPage() {
             <div className="h-64">
               <ResponsiveContainer width="100%" height="100%">
                 <LineChart data={chartData.slice(0, 3)}>
+                  <CartesianGrid 
+                    strokeDasharray="3 3" 
+                    stroke="hsl(var(--border))" 
+                    strokeOpacity={0.3}
+                    horizontal={true}
+                    vertical={false}
+                  />
                   <XAxis 
                     dataKey="period" 
                     tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }}

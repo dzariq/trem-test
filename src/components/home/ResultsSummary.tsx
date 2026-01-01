@@ -46,13 +46,13 @@ export function ResultsSummary() {
   };
   const performanceLevel = getPerformanceLevel(currentAverage);
 
-  // Line colors for subjects
+  // Distinct colors for each subject - varied hues
   const lineColors = [
-    "hsl(var(--chart-1))",
-    "hsl(var(--chart-2))",
-    "hsl(var(--chart-3))",
-    "hsl(var(--chart-4))",
-    "hsl(var(--chart-5))",
+    "#3b82f6", // blue
+    "#f59e0b", // amber
+    "#10b981", // emerald
+    "#8b5cf6", // violet
+    "#ef4444", // red
   ];
 
   // Prepare chart data - always include all subjects for multi-line view
