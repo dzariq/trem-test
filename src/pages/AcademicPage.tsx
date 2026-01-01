@@ -417,6 +417,11 @@ export default function AcademicPage() {
                 <span className="font-medium">Insight:</span> Overall improvement of {academicData.improvement} compared to last exam period. Strong performance in {academicData.bestSubject}.
               </p>
             </div>
+
+            <Button className="w-full mt-4" variant="outline">
+              <FileText className="h-4 w-4 mr-2" />
+              Generate Grade Analysis Report
+            </Button>
           </CardContent>
         </Card>
       </section>
