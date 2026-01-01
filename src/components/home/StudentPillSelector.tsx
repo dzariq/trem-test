@@ -1,109 +1,65 @@
-import { useState, useRef } from "react";
+import { useState } from "react";
 import { students } from "@/data/mockData";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 interface StudentPillSelectorProps {
   onStudentChange?: (studentId: string) => void;
 }
 
 export function StudentPillSelector({ onStudentChange }: StudentPillSelectorProps) {
-  const [currentIndex, setCurrentIndex] = useState(0);
-  const containerRef = useRef<HTMLDivElement>(null);
-  const touchStartX = useRef(0);
-  const touchEndX = useRef(0);
+  const [selectedId, setSelectedId] = useState(students[0].id);
 
-  const currentStudent = students[currentIndex];
-  const hasMultiple = students.length > 1;
-
-  const goToPrev = () => {
-    const newIndex = currentIndex > 0 ? currentIndex - 1 : students.length - 1;
-    setCurrentIndex(newIndex);
-    onStudentChange?.(students[newIndex].id);
-  };
-
-  const goToNext = () => {
-    const newIndex = currentIndex < students.length - 1 ? currentIndex + 1 : 0;
-    setCurrentIndex(newIndex);
-    onStudentChange?.(students[newIndex].id);
-  };
-
-  const handleTouchStart = (e: React.TouchEvent) => {
-    touchStartX.current = e.touches[0].clientX;
-  };
-
-  const handleTouchMove = (e: React.TouchEvent) => {
-    touchEndX.current = e.touches[0].clientX;
-  };
-
-  const handleTouchEnd = () => {
-    const diff = touchStartX.current - touchEndX.current;
-    const threshold = 50;
-
-    if (Math.abs(diff) > threshold) {
-      if (diff > 0) {
-        goToNext();
-      } else {
-        goToPrev();
-      }
-    }
+  const handleSelect = (studentId: string) => {
+    setSelectedId(studentId);
+    onStudentChange?.(studentId);
   };
 
   return (
-    <div 
-      ref={containerRef}
-      className="flex items-center gap-1"
-      onTouchStart={handleTouchStart}
-      onTouchMove={handleTouchMove}
-      onTouchEnd={handleTouchEnd}
-    >
-      {hasMultiple && (
-        <button
-          onClick={goToPrev}
-          className="p-0.5 rounded-full hover:bg-muted/50 transition-colors"
-          aria-label="Previous student"
-        >
-          <ChevronLeft className="h-4 w-4 text-muted-foreground" />
-        </button>
-      )}
-      
-      <div className="flex items-center gap-2 bg-primary/10 border border-primary/20 rounded-full px-3 py-1.5 min-w-0">
-        <div className="w-6 h-6 rounded-full bg-primary flex items-center justify-center shrink-0">
-          <span className="text-xs font-semibold text-primary-foreground">
-            {currentStudent.name.split(' ').map(n => n[0]).join('')}
-          </span>
-        </div>
-        <div className="min-w-0">
-          <p className="text-sm font-medium text-foreground truncate leading-tight">
-            {currentStudent.name}
-          </p>
-          <p className="text-[10px] text-muted-foreground leading-tight">
-            {currentStudent.class}
-          </p>
-        </div>
-      </div>
-
-      {hasMultiple && (
-        <button
-          onClick={goToNext}
-          className="p-0.5 rounded-full hover:bg-muted/50 transition-colors"
-          aria-label="Next student"
-        >
-          <ChevronRight className="h-4 w-4 text-muted-foreground" />
-        </button>
-      )}
-
-      {hasMultiple && (
-        <div className="flex gap-1 ml-1">
-          {students.map((_, idx) => (
+    <div className="flex items-center gap-2 overflow-x-auto scrollbar-hide py-1 -my-1">
+      {students.map((student) => {
+        const isSelected = student.id === selectedId;
+        return (
+          <button
+            key={student.id}
+            onClick={() => handleSelect(student.id)}
+            className={cn(
+              "flex items-center gap-2 rounded-full px-3 py-1.5 transition-all duration-200 shrink-0",
+              isSelected
+                ? "bg-primary/10 border border-primary/30 shadow-sm"
+                : "bg-muted/50 border border-transparent hover:bg-muted"
+            )}
+          >
             <div
-              key={idx}
-              className={`w-1.5 h-1.5 rounded-full transition-colors ${
-                idx === currentIndex ? "bg-primary" : "bg-muted"
-              }`}
-            />
-          ))}
-        </div>
-      )}
+              className={cn(
+                "w-6 h-6 rounded-full flex items-center justify-center shrink-0 transition-colors",
+                isSelected ? "bg-primary" : "bg-muted-foreground/30"
+              )}
+            >
+              <span
+                className={cn(
+                  "text-xs font-semibold",
+                  isSelected ? "text-primary-foreground" : "text-muted-foreground"
+                )}
+              >
+                {student.name.split(' ').map(n => n[0]).join('')}
+              </span>
+            </div>
+            <div className="text-left min-w-0">
+              <p
+                className={cn(
+                  "text-sm font-medium leading-tight truncate",
+                  isSelected ? "text-foreground" : "text-muted-foreground"
+                )}
+              >
+                {student.name.split(' ')[0]}
+              </p>
+              <p className="text-[10px] text-muted-foreground leading-tight">
+                {student.class}
+              </p>
+            </div>
+          </button>
+        );
+      })}
     </div>
   );
 }
