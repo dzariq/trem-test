@@ -108,7 +108,7 @@ export default function ProfilePage() {
           <CardHeader className="pb-2">
             <CardTitle className="text-base font-semibold">Linked Students</CardTitle>
           </CardHeader>
-          <CardContent>
+          <CardContent className="space-y-3">
             {students.map((student, index) => (
               <div 
                 key={index}
