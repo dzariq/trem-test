@@ -1,65 +1,112 @@
 import { useState } from "react";
 import { students } from "@/data/mockData";
 import { cn } from "@/lib/utils";
+import { Check } from "lucide-react";
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from "@/components/ui/sheet";
 
 interface StudentPillSelectorProps {
   onStudentChange?: (studentId: string) => void;
 }
 
+const avatarColors = [
+  "bg-gradient-to-br from-blue-400 to-blue-600",
+  "bg-gradient-to-br from-teal-400 to-teal-600",
+  "bg-gradient-to-br from-purple-400 to-purple-600",
+  "bg-gradient-to-br from-pink-400 to-pink-600",
+  "bg-gradient-to-br from-orange-400 to-orange-600",
+];
+
 export function StudentPillSelector({ onStudentChange }: StudentPillSelectorProps) {
   const [selectedId, setSelectedId] = useState(students[0].id);
+  const [open, setOpen] = useState(false);
 
   const handleSelect = (studentId: string) => {
     setSelectedId(studentId);
     onStudentChange?.(studentId);
+    setOpen(false);
   };
 
+  const getInitials = (name: string) => 
+    name.split(' ').map(n => n[0]).join('');
+
+  const maxVisible = 4;
+  const visibleStudents = students.slice(0, maxVisible);
+  const overflowCount = students.length - maxVisible;
+
   return (
-    <div className="flex items-center gap-2 overflow-x-auto scrollbar-hide py-1 -my-1">
-      {students.map((student) => {
-        const isSelected = student.id === selectedId;
-        return (
-          <button
-            key={student.id}
-            onClick={() => handleSelect(student.id)}
-            className={cn(
-              "flex items-center gap-2 rounded-full px-3 py-1.5 transition-all duration-200 shrink-0",
-              isSelected
-                ? "bg-primary/10 border border-primary/30 shadow-sm"
-                : "bg-muted/50 border border-transparent hover:bg-muted"
-            )}
-          >
+    <Sheet open={open} onOpenChange={setOpen}>
+      <SheetTrigger asChild>
+        <button className="flex items-center -space-x-2 hover:opacity-90 transition-opacity">
+          {visibleStudents.map((student, index) => (
             <div
+              key={student.id}
               className={cn(
-                "w-6 h-6 rounded-full flex items-center justify-center shrink-0 transition-colors",
-                isSelected ? "bg-primary" : "bg-muted-foreground/30"
+                "w-8 h-8 rounded-full flex items-center justify-center ring-2 ring-background",
+                avatarColors[index % avatarColors.length]
               )}
+              style={{ zIndex: visibleStudents.length - index }}
             >
-              <span
-                className={cn(
-                  "text-xs font-semibold",
-                  isSelected ? "text-primary-foreground" : "text-muted-foreground"
-                )}
-              >
-                {student.name.split(' ').map(n => n[0]).join('')}
+              <span className="text-xs font-semibold text-white">
+                {getInitials(student.name)}
               </span>
             </div>
-            <div className="text-left min-w-0">
-              <p
+          ))}
+          {overflowCount > 0 && (
+            <div
+              className="w-8 h-8 rounded-full flex items-center justify-center ring-2 ring-background bg-muted"
+              style={{ zIndex: 0 }}
+            >
+              <span className="text-xs font-semibold text-muted-foreground">
+                +{overflowCount}
+              </span>
+            </div>
+          )}
+        </button>
+      </SheetTrigger>
+      <SheetContent side="bottom" className="rounded-t-2xl">
+        <SheetHeader className="pb-4">
+          <SheetTitle>Select Child</SheetTitle>
+        </SheetHeader>
+        <div className="space-y-2 pb-4">
+          {students.map((student, index) => {
+            const isSelected = student.id === selectedId;
+            return (
+              <button
+                key={student.id}
+                onClick={() => handleSelect(student.id)}
                 className={cn(
-                  "text-sm font-medium leading-tight truncate",
-                  isSelected ? "text-foreground" : "text-muted-foreground"
+                  "w-full flex items-center gap-3 p-3 rounded-xl transition-colors",
+                  isSelected ? "bg-primary/10" : "hover:bg-muted"
                 )}
               >
-                {student.name.split(' ')[0]}
-              </p>
-              <p className="text-[10px] text-muted-foreground leading-tight">
-                {student.class}
-              </p>
-            </div>
-          </button>
-        );
-      })}
-    </div>
+                <div
+                  className={cn(
+                    "w-12 h-12 rounded-full flex items-center justify-center shrink-0",
+                    avatarColors[index % avatarColors.length]
+                  )}
+                >
+                  <span className="text-base font-semibold text-white">
+                    {getInitials(student.name)}
+                  </span>
+                </div>
+                <div className="text-left flex-1 min-w-0">
+                  <p className="font-medium text-foreground">{student.name}</p>
+                  <p className="text-sm text-muted-foreground">{student.class}</p>
+                </div>
+                {isSelected && (
+                  <Check className="w-5 h-5 text-primary shrink-0" />
+                )}
+              </button>
+            );
+          })}
+        </div>
+      </SheetContent>
+    </Sheet>
   );
 }
