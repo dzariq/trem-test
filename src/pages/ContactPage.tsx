@@ -10,14 +10,26 @@ const campuses = [
     name: "Collinz International School (Glenmarie)",
     address: "Blok 2 & 3 Level G-03A, 05, Level 1, 2, Jln Doktor U1/67, Perniagaan Temasya 8, 40150 Shah Alam, Selangor",
     phones: ["012-902 9664", "012-886 0901"],
+    email: "school.gl@collinz.edu.my",
     mapUrl: "https://maps.google.com/?q=Collinz+International+School+Glenmarie"
   },
   {
     name: "Collinz International School (Klang)",
     address: "No. 35, 37, 39, 41 & 43, Jalan Kasuarina 7, Bandar Botanic, 41200 Klang, Selangor",
     phones: ["012-580 8609", "012-886 0970"],
+    email: "school.bo@collinz.edu.my",
     mapUrl: "https://maps.google.com/?q=Collinz+International+School+Klang"
   }
+];
+
+const officeHours = [
+  { day: "Monday", hours: "7:30 am – 4:30 pm" },
+  { day: "Tuesday", hours: "7:30 am – 4:30 pm" },
+  { day: "Wednesday", hours: "7:30 am – 4:30 pm" },
+  { day: "Thursday", hours: "7:30 am – 4:30 pm" },
+  { day: "Friday", hours: "7:30 am – 4:30 pm" },
+  { day: "Saturday", hours: "9:00 am – 2:00 pm" },
+  { day: "Sunday", hours: "Closed" },
 ];
 
 export default function ContactPage() {
@@ -80,6 +92,17 @@ export default function ContactPage() {
                 ))}
               </div>
 
+              {/* Email */}
+              <div className="pl-11 flex items-center gap-2">
+                <Mail className="h-3.5 w-3.5 text-primary" />
+                <a 
+                  href={`mailto:${campus.email}`}
+                  className="text-sm text-primary hover:underline"
+                >
+                  {campus.email}
+                </a>
+              </div>
+
               {/* Map Link */}
               <div className="pl-11">
                 <Button
@@ -97,7 +120,7 @@ export default function ContactPage() {
         ))}
       </section>
 
-      {/* General Contact Info */}
+      {/* Office Hours */}
       <section className="px-4 pb-6">
         <Card className="bg-accent/30 border-border">
           <CardContent className="p-4 space-y-3">
@@ -105,32 +128,15 @@ export default function ContactPage() {
               <Clock className="h-4 w-4 text-primary" />
               Office Hours
             </h3>
-            <div className="text-sm text-muted-foreground space-y-1 pl-6">
-              <p>Monday - Friday: 8:00 AM - 5:00 PM</p>
-              <p>Saturday: 8:00 AM - 1:00 PM</p>
-              <p>Sunday & Public Holidays: Closed</p>
-            </div>
-          </CardContent>
-        </Card>
-      </section>
-
-      {/* Email Section */}
-      <section className="px-4 pb-8">
-        <Card className="bg-primary/5 border-primary/20">
-          <CardContent className="p-4">
-            <div className="flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-primary/10">
-                <Mail className="h-5 w-5 text-primary" />
-              </div>
-              <div className="flex-1">
-                <p className="text-xs text-muted-foreground">Email Us</p>
-                <a 
-                  href="mailto:info@collinz.edu.my" 
-                  className="text-primary font-medium hover:underline"
-                >
-                  info@collinz.edu.my
-                </a>
-              </div>
+            <div className="text-sm pl-6">
+              {officeHours.map((item) => (
+                <div key={item.day} className="flex justify-between py-1 border-b border-border/50 last:border-0">
+                  <span className="text-muted-foreground">{item.day}</span>
+                  <span className={item.hours === "Closed" ? "text-destructive font-medium" : "text-foreground"}>
+                    {item.hours}
+                  </span>
+                </div>
+              ))}
             </div>
           </CardContent>
         </Card>
