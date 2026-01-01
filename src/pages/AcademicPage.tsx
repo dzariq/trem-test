@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Download, FileText, Award, Trophy } from "lucide-react";
+import { Download, FileText, Award, Trophy, BookOpen, TrendingUp } from "lucide-react";
 import {
   Select,
   SelectContent,
@@ -265,7 +265,44 @@ export default function AcademicPage() {
               </ResponsiveContainer>
             </div>
 
-            <div className="mt-4 p-3 rounded-lg bg-accent/50 border border-primary/20">
+            {/* Stats Grid */}
+            <div className="grid grid-cols-3 gap-3 mt-4 mb-4">
+              <div className="flex flex-col items-center text-center p-3 rounded-lg bg-accent/50">
+                <BookOpen className="h-5 w-5 mb-1 text-chart-1" />
+                <span className="text-base font-bold text-foreground">
+                  {Math.round(academicData.subjects.reduce((sum, s) => sum + s.midYearCurrent, 0) / academicData.subjects.length)}%
+                </span>
+                <span className="text-[10px] text-muted-foreground leading-tight">Current Avg</span>
+                <span className="text-[10px] text-muted-foreground/70">
+                  {Math.round(academicData.subjects.reduce((sum, s) => sum + s.midYearCurrent, 0) / academicData.subjects.length) >= 80 
+                    ? "Above Average" 
+                    : Math.round(academicData.subjects.reduce((sum, s) => sum + s.midYearCurrent, 0) / academicData.subjects.length) >= 65 
+                      ? "Average" 
+                      : "Needs Improvement"}
+                </span>
+              </div>
+              <div className="flex flex-col items-center text-center p-3 rounded-lg bg-accent/50">
+                <Award className="h-5 w-5 mb-1 text-chart-2" />
+                <span className="text-base font-bold text-foreground">
+                  {academicData.subjects.reduce((best, s) => s.midYearCurrent > best.midYearCurrent ? s : best).name}
+                </span>
+                <span className="text-[10px] text-muted-foreground leading-tight">Top Subject</span>
+                <span className="text-[10px] text-muted-foreground/70">
+                  {academicData.subjects.reduce((best, s) => s.midYearCurrent > best.midYearCurrent ? s : best).midYearCurrent}%
+                </span>
+              </div>
+              <div className="flex flex-col items-center text-center p-3 rounded-lg bg-accent/50">
+                <TrendingUp className="h-5 w-5 mb-1 text-chart-3" />
+                <span className="text-base font-bold text-foreground">
+                  +{Math.round(academicData.subjects.reduce((sum, s) => sum + s.midYearCurrent, 0) / academicData.subjects.length) - 
+                     Math.round(academicData.subjects.reduce((sum, s) => sum + s.yearEndLast, 0) / academicData.subjects.length)}%
+                </span>
+                <span className="text-[10px] text-muted-foreground leading-tight">vs Last Exam</span>
+                <span className="text-[10px] text-muted-foreground/70">Improved</span>
+              </div>
+            </div>
+
+            <div className="p-3 rounded-lg bg-accent/50 border border-primary/20">
               <p className="text-sm text-foreground">
                 <span className="font-medium">Insight:</span> Overall improvement of {academicData.improvement} compared to last exam period. Strong performance in {academicData.bestSubject}.
               </p>
