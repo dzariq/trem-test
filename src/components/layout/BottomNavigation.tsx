@@ -1,3 +1,4 @@
+import { useState, useEffect } from "react";
 import { Home, UserCheck, GraduationCap, Calendar, HeadphonesIcon } from "lucide-react";
 import { NavLink } from "react-router-dom";
 import { cn } from "@/lib/utils";
@@ -11,8 +12,34 @@ const navItems = [
 ];
 
 export function BottomNavigation() {
+  const [isVisible, setIsVisible] = useState(true);
+  const [lastScrollY, setLastScrollY] = useState(0);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      const currentScrollY = window.scrollY;
+      
+      // Show nav when scrolling up, hide when scrolling down
+      if (currentScrollY < lastScrollY || currentScrollY < 50) {
+        setIsVisible(true);
+      } else if (currentScrollY > lastScrollY && currentScrollY > 50) {
+        setIsVisible(false);
+      }
+      
+      setLastScrollY(currentScrollY);
+    };
+
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, [lastScrollY]);
+
   return (
-    <nav className="fixed bottom-0 left-0 right-0 bg-card border-t border-border shadow-lg z-50">
+    <nav 
+      className={cn(
+        "fixed bottom-0 left-0 right-0 bg-card border-t border-border shadow-lg z-50 transition-transform duration-300",
+        isVisible ? "translate-y-0" : "translate-y-full"
+      )}
+    >
       <div className="max-w-lg mx-auto flex justify-around items-center py-2 px-1">
         {navItems.map((item) => (
           <NavLink
