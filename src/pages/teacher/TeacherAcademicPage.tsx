@@ -8,6 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
+import { Checkbox } from "@/components/ui/checkbox";
 import { 
   Save, TrendingUp, TrendingDown, Minus, ChevronDown, ChevronUp, 
   Users, Target, Award, AlertTriangle, BookOpen, BarChart3
@@ -22,6 +23,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import {
   BarChart,
   Bar,
@@ -98,8 +104,16 @@ export default function TeacherAcademicPage() {
   const [selectedStudent, setSelectedStudent] = useState<string | null>(null);
   const [expandedSubjects, setExpandedSubjects] = useState<string[]>([]);
   const [studentGrades, setStudentGrades] = useState<Record<string, Record<string, StudentGrades>>>({});
-  const [selectedYear, setSelectedYear] = useState(academicYears[0]);
+  const [selectedYears, setSelectedYears] = useState<string[]>([academicYears[0]]);
   const [selectedPeriod, setSelectedPeriod] = useState<"midYear" | "yearEnd">("midYear");
+
+  const toggleYear = (year: string) => {
+    setSelectedYears(prev => 
+      prev.includes(year) 
+        ? prev.length > 1 ? prev.filter(y => y !== year) : prev // Keep at least one selected
+        : [...prev, year]
+    );
+  };
 
   const students = classRosters[selectedClass as keyof typeof classRosters] || [];
   const existingGrades = classGrades[selectedClass as keyof typeof classGrades] || {};
@@ -429,16 +443,32 @@ export default function TeacherAcademicPage() {
                 </SelectContent>
               </Select>
 
-              <Select value={selectedYear} onValueChange={setSelectedYear}>
-                <SelectTrigger className="text-xs">
-                  <SelectValue placeholder="Year" />
-                </SelectTrigger>
-                <SelectContent>
-                  {academicYears.map((year) => (
-                    <SelectItem key={year} value={year}>{year}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button variant="outline" className="text-xs h-9 justify-between">
+                    {selectedYears.length === 1 
+                      ? selectedYears[0] 
+                      : `${selectedYears.length} Years`}
+                    <ChevronDown className="h-3 w-3 ml-1 opacity-50" />
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-40 p-2 bg-background z-50" align="start">
+                  <div className="space-y-2">
+                    {academicYears.map((year) => (
+                      <label 
+                        key={year} 
+                        className="flex items-center gap-2 cursor-pointer hover:bg-accent/50 p-1 rounded"
+                      >
+                        <Checkbox 
+                          checked={selectedYears.includes(year)}
+                          onCheckedChange={() => toggleYear(year)}
+                        />
+                        <span className="text-xs">{year}</span>
+                      </label>
+                    ))}
+                  </div>
+                </PopoverContent>
+              </Popover>
 
               <Select value={selectedPeriod} onValueChange={(v) => setSelectedPeriod(v as "midYear" | "yearEnd")}>
                 <SelectTrigger className="text-xs">
@@ -453,9 +483,14 @@ export default function TeacherAcademicPage() {
             </div>
 
             {/* Selected filters badge */}
-            <div className="flex items-center gap-2 text-xs text-muted-foreground">
-              <Badge variant="outline" className="text-xs font-normal">
-                {selectedYear} • {examPeriods.find(p => p.value === selectedPeriod)?.label}
+            <div className="flex flex-wrap items-center gap-1 text-xs">
+              {selectedYears.map(year => (
+                <Badge key={year} variant="outline" className="text-[10px] font-normal">
+                  {year}
+                </Badge>
+              ))}
+              <Badge variant="secondary" className="text-[10px] font-normal">
+                {examPeriods.find(p => p.value === selectedPeriod)?.label}
               </Badge>
             </div>
 
