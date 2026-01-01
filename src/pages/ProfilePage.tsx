@@ -53,7 +53,7 @@ export default function ProfilePage() {
 
   return (
     <AppLayout>
-      <AppHeader title="Profile" />
+      <AppHeader title="Profile" showBack />
 
       <section className="px-4 pt-4 space-y-4">
         {/* Parent Info Card */}
