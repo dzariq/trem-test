@@ -8,10 +8,10 @@ import {
 import { cn } from "@/lib/utils";
 
 const quickLinks = [
-  { icon: FileText, label: "Report Card", path: "/academic", bgColor: "bg-emerald-100", iconColor: "text-emerald-600" },
+  { icon: FileText, label: "Report Card", path: "/parent/academic", bgColor: "bg-emerald-100", iconColor: "text-emerald-600" },
   { icon: Phone, label: "Contact Us", path: "#", bgColor: "bg-blue-100", iconColor: "text-blue-600" },
   { icon: Trophy, label: "CCA Activities", path: "#", bgColor: "bg-amber-100", iconColor: "text-amber-600" },
-  { icon: Star, label: "Praise", path: "/support", bgColor: "bg-rose-100", iconColor: "text-rose-600" },
+  { icon: Star, label: "Praise", path: "/parent/support", bgColor: "bg-rose-100", iconColor: "text-rose-600" },
 ];
 
 export function QuickLinks() {
