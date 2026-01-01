@@ -38,11 +38,11 @@ export default function TeacherHomePage() {
       />
 
       {/* Hero Banner */}
-      <div className="px-4 mt-4">
+      <div className="mt-4">
         <img 
           src={heroBanner} 
           alt="School Banner" 
-          className="w-full h-auto rounded-2xl shadow-md"
+          className="w-full h-auto"
         />
       </div>
 
