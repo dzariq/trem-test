@@ -306,3 +306,69 @@ export const teacherDeadlines: Deadline[] = [
     type: "event"
   }
 ];
+
+// Year-over-year exam performance data for trend analysis
+export const yearOverYearData: Record<string, {
+  year: string;
+  midYear: number;
+  yearEnd: number;
+}[]> = {
+  "5A": [
+    { year: "2021", midYear: 68, yearEnd: 71 },
+    { year: "2022", midYear: 70, yearEnd: 73 },
+    { year: "2023", midYear: 72, yearEnd: 75 },
+    { year: "2024", midYear: 74, yearEnd: 78 },
+    { year: "2025", midYear: 76, yearEnd: 80 },
+    { year: "2026", midYear: 77, yearEnd: 0 },
+  ],
+  "5B": [
+    { year: "2021", midYear: 72, yearEnd: 74 },
+    { year: "2022", midYear: 74, yearEnd: 76 },
+    { year: "2023", midYear: 75, yearEnd: 78 },
+    { year: "2024", midYear: 78, yearEnd: 81 },
+    { year: "2025", midYear: 80, yearEnd: 83 },
+    { year: "2026", midYear: 82, yearEnd: 0 },
+  ],
+  "4A": [
+    { year: "2021", midYear: 65, yearEnd: 68 },
+    { year: "2022", midYear: 68, yearEnd: 70 },
+    { year: "2023", midYear: 70, yearEnd: 73 },
+    { year: "2024", midYear: 73, yearEnd: 76 },
+    { year: "2025", midYear: 75, yearEnd: 78 },
+    { year: "2026", midYear: 78, yearEnd: 0 },
+  ],
+};
+
+// Category-wise year-over-year data
+export const categoryYearOverYear: Record<string, {
+  year: string;
+  attitude: number;
+  homework: number;
+  quiz: number;
+  exam: number;
+}[]> = {
+  "5A": [
+    { year: "2021", attitude: 7.2, homework: 6.8, quiz: 6.5, exam: 48 },
+    { year: "2022", attitude: 7.5, homework: 7.0, quiz: 6.8, exam: 50 },
+    { year: "2023", attitude: 7.8, homework: 7.3, quiz: 7.0, exam: 52 },
+    { year: "2024", attitude: 8.0, homework: 7.5, quiz: 7.2, exam: 53 },
+    { year: "2025", attitude: 8.2, homework: 7.7, quiz: 7.4, exam: 54 },
+    { year: "2026", attitude: 8.3, homework: 7.7, quiz: 7.5, exam: 53 },
+  ],
+  "5B": [
+    { year: "2021", attitude: 7.5, homework: 7.0, quiz: 6.8, exam: 50 },
+    { year: "2022", attitude: 7.8, homework: 7.3, quiz: 7.0, exam: 52 },
+    { year: "2023", attitude: 8.0, homework: 7.5, quiz: 7.2, exam: 54 },
+    { year: "2024", attitude: 8.2, homework: 7.8, quiz: 7.5, exam: 56 },
+    { year: "2025", attitude: 8.5, homework: 8.0, quiz: 7.8, exam: 58 },
+    { year: "2026", attitude: 8.6, homework: 8.1, quiz: 7.9, exam: 59 },
+  ],
+  "4A": [
+    { year: "2021", attitude: 6.8, homework: 6.5, quiz: 6.2, exam: 45 },
+    { year: "2022", attitude: 7.0, homework: 6.8, quiz: 6.5, exam: 47 },
+    { year: "2023", attitude: 7.3, homework: 7.0, quiz: 6.8, exam: 49 },
+    { year: "2024", attitude: 7.5, homework: 7.3, quiz: 7.0, exam: 51 },
+    { year: "2025", attitude: 7.8, homework: 7.5, quiz: 7.2, exam: 53 },
+    { year: "2026", attitude: 8.0, homework: 7.6, quiz: 7.3, exam: 54 },
+  ],
+};
