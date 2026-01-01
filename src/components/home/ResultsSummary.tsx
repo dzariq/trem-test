@@ -40,35 +40,35 @@ export function ResultsSummary() {
   // Calculate class rank simulation (position out of total)
   const classRank = "5/32";
 
-  // Prepare chart data based on filter
-  const getChartData = () => {
-    if (subjectFilter === "all") {
-      return [
-        { 
-          period: "Mid 2024", 
-          value: Math.round(academicData.subjects.reduce((sum, s) => sum + s.midYearLast, 0) / academicData.subjects.length)
-        },
-        { 
-          period: "End 2024", 
-          value: lastYearEndAverage
-        },
-        { 
-          period: "Mid 2025", 
-          value: currentAverage
-        },
-      ];
-    } else {
-      const subject = academicData.subjects.find(s => s.name === subjectFilter);
-      if (!subject) return [];
-      return [
-        { period: "Mid 2024", value: subject.midYearLast },
-        { period: "End 2024", value: subject.yearEndLast },
-        { period: "Mid 2025", value: subject.midYearCurrent },
-      ];
-    }
-  };
+  // Line colors for subjects
+  const lineColors = [
+    "hsl(var(--chart-1))",
+    "hsl(var(--chart-2))",
+    "hsl(var(--chart-3))",
+    "hsl(var(--chart-4))",
+    "hsl(var(--chart-5))",
+  ];
 
-  const chartData = getChartData();
+  // Prepare chart data - always include all subjects for multi-line view
+  const multiLineChartData = [
+    { 
+      period: "Mid 2024", 
+      ...Object.fromEntries(academicData.subjects.map(s => [s.name, s.midYearLast]))
+    },
+    { 
+      period: "End 2024", 
+      ...Object.fromEntries(academicData.subjects.map(s => [s.name, s.yearEndLast]))
+    },
+    { 
+      period: "Mid 2025", 
+      ...Object.fromEntries(academicData.subjects.map(s => [s.name, s.midYearCurrent]))
+    },
+  ];
+
+  // Filtered subjects for lines
+  const filteredSubjects = subjectFilter === "all" 
+    ? academicData.subjects 
+    : academicData.subjects.filter(s => s.name === subjectFilter);
 
   const stats = [
     { 
@@ -123,9 +123,9 @@ export function ResultsSummary() {
           </div>
 
           {/* Mini Chart */}
-          <div className="h-24 mb-4">
+          <div className="h-28 mb-4">
             <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={chartData}>
+              <LineChart data={multiLineChartData}>
                 <XAxis 
                   dataKey="period" 
                   tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }}
@@ -141,17 +141,20 @@ export function ResultsSummary() {
                     backgroundColor: "hsl(var(--card))",
                     border: "1px solid hsl(var(--border))",
                     borderRadius: "8px",
-                    fontSize: "12px"
+                    fontSize: "11px"
                   }}
-                  formatter={(value: number) => [`${value}%`, subjectFilter === "all" ? "Average" : subjectFilter]}
+                  formatter={(value: number, name: string) => [`${value}%`, name]}
                 />
-                <Line
-                  type="monotone"
-                  dataKey="value"
-                  stroke="hsl(var(--chart-1))"
-                  strokeWidth={2}
-                  dot={{ fill: "hsl(var(--chart-1))", strokeWidth: 0, r: 4 }}
-                />
+                {filteredSubjects.map((subject, index) => (
+                  <Line
+                    key={subject.name}
+                    type="monotone"
+                    dataKey={subject.name}
+                    stroke={lineColors[academicData.subjects.findIndex(s => s.name === subject.name) % lineColors.length]}
+                    strokeWidth={2}
+                    dot={{ fill: lineColors[academicData.subjects.findIndex(s => s.name === subject.name) % lineColors.length], strokeWidth: 0, r: 3 }}
+                  />
+                ))}
               </LineChart>
             </ResponsiveContainer>
           </div>
