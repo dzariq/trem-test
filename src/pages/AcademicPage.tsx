@@ -50,6 +50,19 @@ export default function AcademicPage() {
     setReportGenerated(true);
   };
 
+  // Helper function to get score based on exam type and year selection
+  const getScoreForSelection = (subject: typeof academicData.subjects[0]) => {
+    if (selectedYear === "2025") {
+      return examType === "mid-year" ? subject.midYearCurrent : subject.yearEndCurrent;
+    } else {
+      return examType === "mid-year" ? subject.midYearLast : subject.yearEndLast;
+    }
+  };
+
+  const getExamLabel = () => {
+    return `${examType === "mid-year" ? "Mid-Year" : "Year-End"} ${selectedYear}`;
+  };
+
   // Prepare chart data
   const chartData = [
     { period: "Mid-Year 2024", ...Object.fromEntries(academicData.subjects.map(s => [s.name, s.midYearLast])) },
@@ -75,16 +88,17 @@ export default function AcademicPage() {
     <AppLayout>
       <AppHeader title="Academic" />
 
-      {/* Report Card Generator */}
+      {/* Unified Report Card Section */}
       <section className="px-4 pt-4">
         <Card className="bg-card border-border shadow-sm">
           <CardHeader className="pb-3">
             <CardTitle className="text-lg font-semibold flex items-center gap-2">
               <FileText className="h-5 w-5 text-primary" />
-              Report Card Generator
+              Report Card
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
+            {/* Exam Selection Row */}
             <div className="flex gap-3">
               <Select value={examType} onValueChange={setExamType}>
                 <SelectTrigger className="flex-1">
@@ -107,94 +121,97 @@ export default function AcademicPage() {
               </Select>
             </div>
 
-            <Button className="w-full" onClick={generateReport}>
-              Generate Report Card
+            {/* Selected Period Badge */}
+            <div className="flex items-center gap-2">
+              <Badge variant="secondary" className="text-xs">
+                Viewing: {getExamLabel()}
+              </Badge>
+            </div>
+
+            {/* Tabs for Grades/Behavior/Activities */}
+            <Tabs defaultValue="grades" className="w-full">
+              <TabsList className="grid w-full grid-cols-3 bg-muted/50">
+                <TabsTrigger value="grades">Grades</TabsTrigger>
+                <TabsTrigger value="behavior">Behavior</TabsTrigger>
+                <TabsTrigger value="cocurriculum">Activities</TabsTrigger>
+              </TabsList>
+
+              <TabsContent value="grades" className="mt-4 space-y-3">
+                {academicData.subjects.map((subject, index) => {
+                  const score = getScoreForSelection(subject);
+                  const isPending = score === null || score === undefined;
+                  
+                  return (
+                    <div key={index} className="flex items-center justify-between p-3 rounded-lg bg-accent/30 border border-border/50">
+                      <div>
+                        <h3 className="font-medium text-foreground">{subject.name}</h3>
+                        <p className="text-sm text-muted-foreground">
+                          {isPending ? "Pending" : `${score}%`}
+                        </p>
+                      </div>
+                      {isPending ? (
+                        <Badge variant="outline" className="text-muted-foreground">
+                          Pending
+                        </Badge>
+                      ) : (
+                        <Badge className={gradeColors[getGradeFromScore(score!)[0]] || gradeColors.C}>
+                          {getGradeFromScore(score!)}
+                        </Badge>
+                      )}
+                    </div>
+                  );
+                })}
+              </TabsContent>
+
+              <TabsContent value="behavior" className="mt-4 space-y-3">
+                {academicData.behavior.map((item, index) => (
+                  <div key={index} className="flex items-center justify-between p-3 rounded-lg bg-accent/30 border border-border/50">
+                    <div>
+                      <h3 className="font-medium text-foreground">{item.category}</h3>
+                      <p className="text-sm text-muted-foreground">{item.description}</p>
+                    </div>
+                    <Badge className={gradeColors[item.grade]}>
+                      Grade {item.grade}
+                    </Badge>
+                  </div>
+                ))}
+              </TabsContent>
+
+              <TabsContent value="cocurriculum" className="mt-4 space-y-3">
+                {academicData.coCurriculum.map((item, index) => (
+                  <div key={index} className="p-3 rounded-lg bg-accent/30 border border-border/50">
+                    <div className="flex items-start gap-3">
+                      <div className="p-2 rounded-full bg-primary/10">
+                        <Trophy className="h-5 w-5 text-primary" />
+                      </div>
+                      <div>
+                        <h3 className="font-medium text-foreground">{item.activity}</h3>
+                        <p className="text-sm text-muted-foreground flex items-center gap-1 mt-1">
+                          <Award className="h-3 w-3" />
+                          {item.achievement}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </TabsContent>
+            </Tabs>
+
+            {/* Download Button */}
+            <Button className="w-full gap-2" onClick={generateReport}>
+              <Download className="h-4 w-4" />
+              Download Report Card
             </Button>
 
             {reportGenerated && (
-              <Card className="bg-accent/50 border-primary/20">
-                <CardContent className="p-4 flex items-center justify-between">
-                  <div>
-                    <p className="font-medium text-foreground">Report Card Ready</p>
-                    <p className="text-sm text-muted-foreground">
-                      {examType === "mid-year" ? "Mid-Year" : "Year-End"} Exam {selectedYear}
-                    </p>
-                  </div>
-                  <Button variant="outline" size="sm" className="gap-2">
-                    <Download className="h-4 w-4" />
-                    PDF
-                  </Button>
-                </CardContent>
-              </Card>
+              <div className="p-3 rounded-lg bg-primary/10 border border-primary/20 text-center">
+                <p className="text-sm text-foreground">
+                  Report Card for {getExamLabel()} downloaded!
+                </p>
+              </div>
             )}
           </CardContent>
         </Card>
-      </section>
-
-      {/* Report Card Tabs */}
-      <section className="px-4 py-4">
-        <Tabs defaultValue="grades" className="w-full">
-          <TabsList className="grid w-full grid-cols-3 bg-muted/50">
-            <TabsTrigger value="grades">Grades</TabsTrigger>
-            <TabsTrigger value="behavior">Behavior</TabsTrigger>
-            <TabsTrigger value="cocurriculum">Activities</TabsTrigger>
-          </TabsList>
-
-          <TabsContent value="grades" className="mt-4 space-y-3">
-            {academicData.subjects.map((subject, index) => (
-              <Card key={index} className="bg-card border-border shadow-sm">
-                <CardContent className="p-4 flex items-center justify-between">
-                  <div>
-                    <h3 className="font-medium text-foreground">{subject.name}</h3>
-                    <p className="text-sm text-muted-foreground">
-                      Mid-Year: {subject.midYearCurrent}%
-                    </p>
-                  </div>
-                  <Badge className={gradeColors[getGradeFromScore(subject.midYearCurrent)[0]] || gradeColors.C}>
-                    {getGradeFromScore(subject.midYearCurrent)}
-                  </Badge>
-                </CardContent>
-              </Card>
-            ))}
-          </TabsContent>
-
-          <TabsContent value="behavior" className="mt-4 space-y-3">
-            {academicData.behavior.map((item, index) => (
-              <Card key={index} className="bg-card border-border shadow-sm">
-                <CardContent className="p-4 flex items-center justify-between">
-                  <div>
-                    <h3 className="font-medium text-foreground">{item.category}</h3>
-                    <p className="text-sm text-muted-foreground">{item.description}</p>
-                  </div>
-                  <Badge className={gradeColors[item.grade]}>
-                    Grade {item.grade}
-                  </Badge>
-                </CardContent>
-              </Card>
-            ))}
-          </TabsContent>
-
-          <TabsContent value="cocurriculum" className="mt-4 space-y-3">
-            {academicData.coCurriculum.map((item, index) => (
-              <Card key={index} className="bg-card border-border shadow-sm">
-                <CardContent className="p-4">
-                  <div className="flex items-start gap-3">
-                    <div className="p-2 rounded-full bg-primary/10">
-                      <Trophy className="h-5 w-5 text-primary" />
-                    </div>
-                    <div>
-                      <h3 className="font-medium text-foreground">{item.activity}</h3>
-                      <p className="text-sm text-muted-foreground flex items-center gap-1 mt-1">
-                        <Award className="h-3 w-3" />
-                        {item.achievement}
-                      </p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </TabsContent>
-        </Tabs>
       </section>
 
       {/* Grade Analysis Chart */}
