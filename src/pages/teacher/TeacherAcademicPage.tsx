@@ -65,8 +65,8 @@ const subjects = [
   "Physical Education",
 ];
 
-// Academic years and exam periods
-const academicYears = ["2025/2026", "2024/2025", "2023/2024"];
+// Academic years (past 6 years) and exam periods
+const academicYears = ["2026", "2025", "2024", "2023", "2022", "2021"];
 const examPeriods = [
   { value: "midYear", label: "Mid-Year" },
   { value: "yearEnd", label: "Year-End" },
