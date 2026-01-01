@@ -106,6 +106,7 @@ export default function TeacherAcademicPage() {
   const [studentGrades, setStudentGrades] = useState<Record<string, Record<string, StudentGrades>>>({});
   const [selectedYears, setSelectedYears] = useState<string[]>([academicYears[0]]);
   const [selectedPeriod, setSelectedPeriod] = useState<"midYear" | "yearEnd">("midYear");
+  const [selectedCategory, setSelectedCategory] = useState<"attitude" | "homework" | "quiz" | "exam">("quiz");
 
   const toggleYear = (year: string) => {
     setSelectedYears(prev => 
@@ -236,6 +237,28 @@ export default function TeacherAcademicPage() {
   ];
 
   const weakestCategory = categoryAverages.reduce((min, cat) => cat.percentage < min.percentage ? cat : min, categoryAverages[0]);
+
+  // Calculate category performance by subject (for the selected category)
+  const categoryBySubject: Record<string, { sum: number; count: number; max: number }> = {};
+  const categoryMax = selectedCategory === "exam" ? 70 : 10;
+  
+  Object.values(detailedGradesForClass).forEach((studentGrades) => {
+    Object.entries(studentGrades).forEach(([subject, grades]) => {
+      if (!categoryBySubject[subject]) categoryBySubject[subject] = { sum: 0, count: 0, max: categoryMax };
+      categoryBySubject[subject].sum += grades[selectedCategory];
+      categoryBySubject[subject].count++;
+    });
+  });
+
+  const categoryBySubjectData = Object.entries(categoryBySubject)
+    .map(([subject, data]) => ({
+      name: subject.length > 8 ? subject.substring(0, 8) + "..." : subject,
+      fullName: subject,
+      average: data.count > 0 ? data.sum / data.count : 0,
+      percentage: data.count > 0 ? (data.sum / data.count / categoryMax) * 100 : 0,
+      max: categoryMax,
+    }))
+    .sort((a, b) => b.percentage - a.percentage);
 
   // Calculate subject averages
   const subjectTotals: Record<string, { sum: number; count: number }> = {};
@@ -566,6 +589,55 @@ export default function TeacherAcademicPage() {
                     </p>
                   </div>
                 )}
+
+                {/* Category by Subject Analysis */}
+                <div className="pt-3 border-t mt-3">
+                  <div className="flex items-center justify-between mb-3">
+                    <span className="text-xs font-medium text-muted-foreground">View by Subject</span>
+                    <Select value={selectedCategory} onValueChange={(v) => setSelectedCategory(v as "attitude" | "homework" | "quiz" | "exam")}>
+                      <SelectTrigger className="w-24 h-7 text-xs">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="attitude">Attitude</SelectItem>
+                        <SelectItem value="homework">Homework</SelectItem>
+                        <SelectItem value="quiz">Quiz</SelectItem>
+                        <SelectItem value="exam">Exam</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  
+                  <div className="h-40">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <BarChart data={categoryBySubjectData} layout="vertical">
+                        <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+                        <XAxis type="number" domain={[0, 100]} tick={{ fontSize: 9 }} tickFormatter={(v) => `${v}%`} />
+                        <YAxis dataKey="name" type="category" tick={{ fontSize: 9 }} width={55} />
+                        <Tooltip 
+                          formatter={(value: number, name: string, props: { payload?: { fullName?: string; average?: number; max?: number } }) => [
+                            `${props.payload?.average?.toFixed(1)}/${props.payload?.max} (${value.toFixed(0)}%)`, 
+                            props.payload?.fullName || 'Score'
+                          ]} 
+                        />
+                        <Bar dataKey="percentage" radius={[0, 4, 4, 0]}>
+                          {categoryBySubjectData.map((entry, index) => (
+                            <Cell 
+                              key={`cell-${index}`} 
+                              fill={index === 0 ? "#10b981" : index === categoryBySubjectData.length - 1 ? "#f59e0b" : "hsl(var(--primary))"} 
+                            />
+                          ))}
+                        </Bar>
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </div>
+                  
+                  {categoryBySubjectData.length > 0 && (
+                    <div className="flex justify-between text-[10px] mt-2">
+                      <span className="text-emerald-600">Best: {categoryBySubjectData[0]?.fullName}</span>
+                      <span className="text-amber-600">Needs work: {categoryBySubjectData[categoryBySubjectData.length - 1]?.fullName}</span>
+                    </div>
+                  )}
+                </div>
               </CardContent>
             </Card>
 
