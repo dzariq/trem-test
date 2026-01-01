@@ -5,7 +5,7 @@ import { attendanceData } from "@/data/mockData";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, Check, X, Clock, CalendarOff, ChevronDown, ChevronUp } from "lucide-react";
 import {
   BarChart,
   Bar,
@@ -22,12 +22,21 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
 
 const months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+
+type StatusFilter = "all" | "present" | "absent" | "late" | "excused";
 
 export default function AttendancePage() {
   const [selectedMonth, setSelectedMonth] = useState("December");
   const [currentMonthIndex, setCurrentMonthIndex] = useState(11);
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
+  const [expandedDay, setExpandedDay] = useState<number | null>(null);
 
   const goToPrevMonth = () => {
     const newIndex = currentMonthIndex > 0 ? currentMonthIndex - 1 : 11;
@@ -51,6 +60,16 @@ export default function AttendancePage() {
     }
   };
 
+  const getStatusIcon = (status: string) => {
+    switch (status) {
+      case "present": return <Check className="h-3.5 w-3.5" />;
+      case "absent": return <X className="h-3.5 w-3.5" />;
+      case "late": return <Clock className="h-3.5 w-3.5" />;
+      case "excused": return <CalendarOff className="h-3.5 w-3.5" />;
+      default: return null;
+    }
+  };
+
   const getStatusLabel = (status: string) => {
     return status.charAt(0).toUpperCase() + status.slice(1);
   };
@@ -67,6 +86,56 @@ export default function AttendancePage() {
     late: attendanceData.dailyBreakdown.filter(d => d.status === "late").length,
     excused: attendanceData.dailyBreakdown.filter(d => d.status === "excused").length,
   };
+
+  // Filter daily breakdown by status
+  const filteredBreakdown = statusFilter === "all" 
+    ? attendanceData.dailyBreakdown 
+    : attendanceData.dailyBreakdown.filter(d => d.status === statusFilter);
+
+  // Group by week
+  const groupByWeek = (days: typeof attendanceData.dailyBreakdown) => {
+    const weeks: { weekStart: string; days: typeof days }[] = [];
+    let currentWeek: typeof days = [];
+    let currentWeekStart = "";
+
+    days.forEach((day, index) => {
+      const date = new Date(day.date);
+      const dayOfWeek = date.getDay();
+      
+      if (dayOfWeek === 1 || index === 0) {
+        if (currentWeek.length > 0) {
+          weeks.push({ weekStart: currentWeekStart, days: currentWeek });
+        }
+        currentWeek = [day];
+        currentWeekStart = date.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+      } else {
+        currentWeek.push(day);
+      }
+    });
+
+    if (currentWeek.length > 0) {
+      weeks.push({ weekStart: currentWeekStart, days: currentWeek });
+    }
+
+    return weeks;
+  };
+
+  const weeklyBreakdown = groupByWeek(filteredBreakdown);
+
+  // Check if date is today
+  const isToday = (dateStr: string) => {
+    const today = new Date();
+    const date = new Date(dateStr);
+    return today.toDateString() === date.toDateString();
+  };
+
+  const filterOptions: { value: StatusFilter; label: string; count: number }[] = [
+    { value: "all", label: "All", count: attendanceData.dailyBreakdown.length },
+    { value: "present", label: "Present", count: monthlySummary.present },
+    { value: "absent", label: "Absent", count: monthlySummary.absent },
+    { value: "late", label: "Late", count: monthlySummary.late },
+    { value: "excused", label: "Excused", count: monthlySummary.excused },
+  ];
 
   return (
     <AppLayout>
@@ -176,28 +245,119 @@ export default function AttendancePage() {
           <CardHeader className="pb-2">
             <CardTitle className="text-lg font-semibold">Daily Breakdown</CardTitle>
           </CardHeader>
-          <CardContent className="space-y-2">
-            {attendanceData.dailyBreakdown.map((day, index) => {
-              const date = new Date(day.date);
-              return (
-                <div 
-                  key={index}
-                  className="flex items-center justify-between p-3 rounded-lg bg-accent/30 border border-border/50"
+          <CardContent className="space-y-4">
+            {/* Filter Chips */}
+            <div className="flex gap-2 overflow-x-auto pb-2 -mx-1 px-1">
+              {filterOptions.map((option) => (
+                <Button
+                  key={option.value}
+                  variant={statusFilter === option.value ? "default" : "outline"}
+                  size="sm"
+                  className="shrink-0 h-8 text-xs"
+                  onClick={() => setStatusFilter(option.value)}
                 >
-                  <div>
-                    <p className="font-medium text-foreground">
-                      {date.toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" })}
-                    </p>
-                    {day.reason && (
-                      <p className="text-xs text-muted-foreground mt-0.5">{day.reason}</p>
-                    )}
-                  </div>
-                  <Badge className={getStatusColor(day.status)}>
-                    {getStatusLabel(day.status)}
-                  </Badge>
+                  {option.label}
+                  <span className="ml-1.5 bg-background/20 px-1.5 py-0.5 rounded-full text-[10px]">
+                    {option.count}
+                  </span>
+                </Button>
+              ))}
+            </div>
+
+            {/* Weekly Groups */}
+            {weeklyBreakdown.map((week, weekIndex) => (
+              <div key={weekIndex} className="space-y-2">
+                {/* Week Separator */}
+                <div className="flex items-center gap-2 pt-2">
+                  <div className="h-px flex-1 bg-border" />
+                  <span className="text-xs font-medium text-muted-foreground px-2">
+                    Week of {week.weekStart}
+                  </span>
+                  <div className="h-px flex-1 bg-border" />
                 </div>
-              );
-            })}
+
+                {/* Days */}
+                {week.days.map((day, dayIndex) => {
+                  const date = new Date(day.date);
+                  const globalIndex = weekIndex * 7 + dayIndex;
+                  const isExpanded = expandedDay === globalIndex;
+                  const today = isToday(day.date);
+
+                  return (
+                    <Collapsible
+                      key={dayIndex}
+                      open={isExpanded}
+                      onOpenChange={() => setExpandedDay(isExpanded ? null : globalIndex)}
+                    >
+                      <CollapsibleTrigger asChild>
+                        <div 
+                          className={`flex items-center justify-between p-3 rounded-lg cursor-pointer transition-all hover:bg-accent/50 ${
+                            today 
+                              ? "bg-primary/10 border-2 border-primary/30" 
+                              : "bg-accent/30 border border-border/50"
+                          }`}
+                        >
+                          <div className="flex items-center gap-3">
+                            <div className={`w-8 h-8 rounded-full flex items-center justify-center ${getStatusColor(day.status)}`}>
+                              {getStatusIcon(day.status)}
+                            </div>
+                            <div>
+                              <div className="flex items-center gap-2">
+                                <p className="font-medium text-foreground">
+                                  {date.toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" })}
+                                </p>
+                                {today && (
+                                  <Badge variant="outline" className="text-[10px] h-4 px-1.5 border-primary text-primary">
+                                    Today
+                                  </Badge>
+                                )}
+                              </div>
+                              {day.reason && (
+                                <p className="text-xs text-muted-foreground mt-0.5">{day.reason}</p>
+                              )}
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <Badge className={getStatusColor(day.status)}>
+                              {getStatusLabel(day.status)}
+                            </Badge>
+                            {isExpanded ? (
+                              <ChevronUp className="h-4 w-4 text-muted-foreground" />
+                            ) : (
+                              <ChevronDown className="h-4 w-4 text-muted-foreground" />
+                            )}
+                          </div>
+                        </div>
+                      </CollapsibleTrigger>
+                      <CollapsibleContent>
+                        <div className="mt-1 ml-11 p-3 bg-muted/50 rounded-lg border border-border/30 space-y-2">
+                          <div className="grid grid-cols-2 gap-4 text-sm">
+                            <div>
+                              <p className="text-muted-foreground text-xs">Time In</p>
+                              <p className="font-medium">
+                                {day.status === "present" ? "7:45 AM" : 
+                                 day.status === "late" ? "8:15 AM" : "—"}
+                              </p>
+                            </div>
+                            <div>
+                              <p className="text-muted-foreground text-xs">Time Out</p>
+                              <p className="font-medium">
+                                {day.status === "present" || day.status === "late" ? "3:30 PM" : "—"}
+                              </p>
+                            </div>
+                          </div>
+                          {(day.status === "absent" || day.status === "late") && !day.reason?.includes("Holiday") && (
+                            <Button variant="outline" size="sm" className="w-full mt-2 text-xs">
+                              Submit Excuse / MC
+                            </Button>
+                          )}
+                        </div>
+                      </CollapsibleContent>
+                    </Collapsible>
+                  );
+                })}
+              </div>
+            ))}
           </CardContent>
         </Card>
       </section>
