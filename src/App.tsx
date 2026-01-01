@@ -12,6 +12,7 @@ import ProfilePage from "./pages/ProfilePage";
 import NotificationsPage from "./pages/NotificationsPage";
 import AnnouncementsPage from "./pages/AnnouncementsPage";
 import SecurityPrivacyPage from "./pages/SecurityPrivacyPage";
+import PrivacyPolicyPage from "./pages/PrivacyPolicyPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -32,6 +33,7 @@ const App = () => (
           <Route path="/notifications" element={<NotificationsPage />} />
           <Route path="/announcements" element={<AnnouncementsPage />} />
           <Route path="/security-privacy" element={<SecurityPrivacyPage />} />
+          <Route path="/privacy-policy" element={<PrivacyPolicyPage />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
