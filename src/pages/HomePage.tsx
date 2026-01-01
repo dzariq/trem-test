@@ -6,6 +6,7 @@ import { QuickLinks } from "@/components/home/QuickLinks";
 import { AttendanceSummary } from "@/components/home/AttendanceSummary";
 import { ResultsSummary } from "@/components/home/ResultsSummary";
 import { StudentPillSelector } from "@/components/home/StudentPillSelector";
+import schoolBadge from "@/assets/school-badge.png";
 
 export default function HomePage() {
   return (
@@ -14,7 +15,12 @@ export default function HomePage() {
         title="" 
         showNotifications 
         showProfile 
-        leftContent={<StudentPillSelector />}
+        leftContent={
+          <div className="flex items-center gap-3">
+            <img src={schoolBadge} alt="School Badge" className="h-10 w-auto" />
+            <StudentPillSelector />
+          </div>
+        }
       />
       
       <AnnouncementCarousel />
