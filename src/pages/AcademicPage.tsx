@@ -89,7 +89,7 @@ export default function AcademicPage() {
       <AppHeader title="Academic" />
 
       {/* Unified Report Card Section */}
-      <section className="px-4 pt-4">
+      <section className="px-4 py-4">
         <Card className="bg-card border-border shadow-sm">
           <CardHeader className="pb-3">
             <CardTitle className="text-lg font-semibold flex items-center gap-2">
