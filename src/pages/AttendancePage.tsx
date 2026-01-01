@@ -285,7 +285,7 @@ export default function AttendancePage() {
                             : "bg-accent/30 border border-border/50"
                         }`}
                       >
-                        <div className={`w-5 h-5 rounded-full flex items-center justify-center shrink-0 ${getStatusColor(day.status)}`}>
+                        <div className={`w-6 h-6 rounded-full flex items-center justify-center shrink-0 ${getStatusColor(day.status)}`}>
                           {getStatusIcon(day.status)}
                         </div>
                         <div className="flex-1 min-w-0">
