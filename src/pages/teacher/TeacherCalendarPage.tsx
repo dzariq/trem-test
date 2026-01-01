@@ -95,14 +95,14 @@ export default function TeacherCalendarPage() {
         }
       />
 
-      <div className="px-4 mt-4">
+      <section className="px-4 pt-4">
         <Tabs defaultValue="calendar" className="w-full">
-          <TabsList className="grid w-full grid-cols-2 mb-4">
+          <TabsList className="grid w-full grid-cols-2 bg-muted/50">
             <TabsTrigger value="calendar">Calendar</TabsTrigger>
             <TabsTrigger value="cca">CCA Schedule</TabsTrigger>
           </TabsList>
 
-          <TabsContent value="calendar" className="space-y-4">
+          <TabsContent value="calendar" className="mt-4 space-y-4">
             {/* Category Filter with Dropdowns */}
             <div className="flex gap-2 overflow-x-auto pb-2">
               {teacherVisibleCategories.map((cat) => {
@@ -168,31 +168,32 @@ export default function TeacherCalendarPage() {
               })}
             </div>
 
-            <Card>
+            {/* Calendar Component */}
+            <Card className="bg-card border-border shadow-sm">
               <CardContent className="p-3">
                 <Calendar
                   mode="single"
                   selected={selectedDate}
                   onSelect={(date) => date && setSelectedDate(date)}
-                  className="rounded-md"
+                  className="rounded-md w-full pointer-events-auto"
                   modifiers={{
                     hasEvent: eventDates
                   }}
                   modifiersStyles={{
-                    hasEvent: {
-                      fontWeight: "bold",
-                      textDecoration: "underline",
-                      textDecorationColor: "hsl(var(--primary))"
+                    hasEvent: { 
+                      backgroundColor: "hsl(var(--primary) / 0.1)",
+                      fontWeight: "bold"
                     }
                   }}
                 />
               </CardContent>
             </Card>
 
-            <Card>
+            {/* Events for Selected Date */}
+            <Card className="bg-card border-border shadow-sm">
               <CardHeader className="pb-2">
-                <CardTitle className="text-base">
-                  Events on {format(selectedDate, "MMMM d, yyyy")}
+                <CardTitle className="text-lg font-semibold">
+                  {format(selectedDate, "EEEE, MMMM d, yyyy")}
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
@@ -200,19 +201,19 @@ export default function TeacherCalendarPage() {
                   eventsOnSelectedDate.map((event) => (
                     <div 
                       key={event.id}
-                      className="p-3 rounded-lg bg-accent/50 space-y-2"
+                      className="p-3 rounded-lg bg-accent/50 border border-border/50"
                     >
-                      <div className="flex items-start justify-between">
-                        <h3 className="font-semibold text-foreground">{event.title}</h3>
+                      <div className="flex items-start justify-between mb-2">
+                        <h3 className="font-medium text-foreground">{event.title}</h3>
                       </div>
-                      <div className="flex flex-wrap gap-1">
+                      <div className="flex flex-wrap gap-1 mb-2">
                         {event.tags.map((tag) => (
                           <Badge key={tag} className={`text-xs ${getTagColor(tag)}`}>
                             {getTagDisplayName(tag)}
                           </Badge>
                         ))}
                       </div>
-                      <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                      <div className="flex flex-wrap gap-3 text-sm text-muted-foreground">
                         <span className="flex items-center gap-1">
                           <Clock className="h-3 w-3" />
                           {event.time}
@@ -227,36 +228,85 @@ export default function TeacherCalendarPage() {
                     </div>
                   ))
                 ) : (
-                  <p className="text-center text-muted-foreground py-4">
-                    No events scheduled for this date
-                  </p>
+                  <div className="text-center py-8 text-muted-foreground">
+                    <p>No events scheduled for this date</p>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* Upcoming Events List */}
+            <Card className="bg-card border-border shadow-sm">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-lg font-semibold">Upcoming Events</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                {filteredEvents
+                  .slice(0, 5)
+                  .map((event) => {
+                    const eventDate = new Date(event.date);
+                    return (
+                      <div 
+                        key={event.id}
+                        className="flex items-start gap-4 p-3 rounded-lg border border-border/50 hover:bg-accent/30 transition-colors"
+                      >
+                        <div className="flex flex-col items-center justify-center bg-primary/10 text-primary rounded-lg w-12 h-12 flex-shrink-0">
+                          <span className="text-sm font-bold leading-none">{eventDate.getDate()}</span>
+                          <span className="text-xs uppercase">{eventDate.toLocaleDateString("en-US", { month: "short" })}</span>
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <h3 className="font-medium text-foreground truncate">{event.title}</h3>
+                          <p className="text-sm text-muted-foreground mb-1">{event.time}</p>
+                          <div className="flex flex-wrap gap-1">
+                            {event.tags.slice(0, 2).map((tag) => (
+                              <Badge key={tag} className={`text-xs ${getTagColor(tag)}`}>
+                                {getTagDisplayName(tag)}
+                              </Badge>
+                            ))}
+                            {event.tags.length > 2 && (
+                              <Badge variant="outline" className="text-xs">
+                                +{event.tags.length - 2}
+                              </Badge>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+
+                {filteredEvents.length === 0 && (
+                  <p className="text-sm text-muted-foreground text-center py-4">No events found</p>
                 )}
               </CardContent>
             </Card>
           </TabsContent>
 
-          <TabsContent value="cca" className="space-y-4">
-            <Card>
+          <TabsContent value="cca" className="mt-4 space-y-4">
+            <Card className="bg-card border-border shadow-sm">
               <CardHeader className="pb-2">
-                <CardTitle className="text-base">CCA Activities</CardTitle>
+                <CardTitle className="text-lg font-semibold">CCA Activities</CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
                 {ccaActivities.map((activity) => (
                   <div 
                     key={activity.id}
-                    className="p-3 rounded-lg bg-accent/50 space-y-2"
+                    className="p-3 rounded-lg bg-accent/50 border border-border/50"
                   >
-                    <div className="flex items-start justify-between">
-                      <h3 className="font-semibold text-foreground">{activity.name}</h3>
+                    <div className="flex items-start justify-between mb-2">
+                      <h3 className="font-medium text-foreground">{activity.name}</h3>
                       <Badge className={getCcaCategoryColor(activity.category)}>
                         {activity.category}
                       </Badge>
                     </div>
                     <div className="grid grid-cols-2 gap-2 text-sm text-muted-foreground">
-                      <span><strong>Day:</strong> {activity.day}</span>
-                      <span><strong>Time:</strong> {activity.time}</span>
-                      <span><strong>Venue:</strong> {activity.venue}</span>
-                      <span><strong>Coach:</strong> {activity.coach}</span>
+                      <span className="flex items-center gap-1">
+                        <Clock className="h-3 w-3" />
+                        {activity.day}, {activity.time}
+                      </span>
+                      <span className="flex items-center gap-1">
+                        <MapPin className="h-3 w-3" />
+                        {activity.venue}
+                      </span>
                     </div>
                   </div>
                 ))}
@@ -264,7 +314,7 @@ export default function TeacherCalendarPage() {
             </Card>
           </TabsContent>
         </Tabs>
-      </div>
+      </section>
     </TeacherAppLayout>
   );
 }
