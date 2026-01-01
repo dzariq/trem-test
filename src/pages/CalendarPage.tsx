@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { MapPin, Clock, User, Filter } from "lucide-react";
+import { MapPin, Clock, User } from "lucide-react";
 import schoolLogo from "@/assets/school-badge.png";
 import {
   Select,
@@ -16,46 +16,60 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { TagCategory, CalendarTag } from "@/types/calendarTags";
+import {
+  filterEventsByRole,
+  filterEventsByCategory,
+  getTagColor,
+  getTagDisplayName,
+  getCategoryDisplayName,
+  getCategoryColor,
+  ALL_CATEGORIES,
+} from "@/lib/calendarUtils";
 
 export default function CalendarPage() {
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
-  const [categoryFilter, setCategoryFilter] = useState("all");
-  const [eventTypeFilter, setEventTypeFilter] = useState("all");
+  const [categoryFilter, setCategoryFilter] = useState<TagCategory | "all">("all");
+  const [ccaCategoryFilter, setCcaCategoryFilter] = useState("all");
 
-  const eventTypes = ["all", "event", "meeting", "exam", "holiday"];
+  // Filter events for parent role
+  const visibleEvents = filterEventsByRole(calendarEvents, "parent");
+  const filteredEvents = filterEventsByCategory(visibleEvents, categoryFilter);
 
-  const getEventTagColor = (tag: string) => {
-    switch (tag.toLowerCase()) {
-      case "exam": return "bg-destructive text-destructive-foreground";
-      case "holiday": return "bg-chart-4 text-card";
-      case "event": return "bg-chart-1 text-card";
-      case "meeting": return "bg-chart-3 text-card";
-      default: return "bg-muted text-muted-foreground";
-    }
-  };
-
-  const getCategoryColor = (category: string) => {
+  // Get CCA category color
+  const getCcaCategoryColor = (category: string) => {
     switch (category.toLowerCase()) {
-      case "sports": return "bg-chart-1 text-card";
-      case "arts": return "bg-chart-2 text-card";
-      case "academic": return "bg-chart-3 text-card";
+      case "sports": return "bg-orange-100 text-orange-800 dark:bg-orange-900/50 dark:text-orange-300";
+      case "arts": return "bg-pink-100 text-pink-800 dark:bg-pink-900/50 dark:text-pink-300";
+      case "academic": return "bg-indigo-100 text-indigo-800 dark:bg-indigo-900/50 dark:text-indigo-300";
       default: return "bg-muted text-muted-foreground";
     }
   };
 
   // Get events for selected date
   const selectedDateStr = selectedDate?.toISOString().split('T')[0];
-  const eventsForSelectedDate = calendarEvents.filter(
+  const eventsForSelectedDate = filteredEvents.filter(
     event => event.date === selectedDateStr
   );
 
   // Get dates with events for calendar highlighting
-  const datesWithEvents = calendarEvents.map(e => new Date(e.date));
+  const datesWithEvents = filteredEvents.map(e => new Date(e.date));
 
   // Filter CCA activities
-  const filteredCCA = categoryFilter === "all" 
+  const filteredCCA = ccaCategoryFilter === "all" 
     ? ccaActivities 
-    : ccaActivities.filter(a => a.category.toLowerCase() === categoryFilter.toLowerCase());
+    : ccaActivities.filter(a => a.category.toLowerCase() === ccaCategoryFilter.toLowerCase());
+
+  // Categories visible to parents (exclude staff-admin and due-dates)
+  const parentVisibleCategories: (TagCategory | "all")[] = [
+    "all",
+    "school-level",
+    "exams",
+    "holidays",
+    "events",
+    "students",
+    "parents",
+  ];
 
   return (
     <AppLayout>
@@ -90,6 +104,22 @@ export default function CalendarPage() {
           </TabsList>
 
           <TabsContent value="calendar" className="mt-4 space-y-4">
+            {/* Category Filter */}
+            <div className="flex gap-2 overflow-x-auto pb-2">
+              {parentVisibleCategories.map((cat) => (
+                <Badge
+                  key={cat}
+                  variant={categoryFilter === cat ? "default" : "outline"}
+                  className={`cursor-pointer whitespace-nowrap ${
+                    categoryFilter === cat ? "" : cat !== "all" ? getCategoryColor(cat as TagCategory) : ""
+                  }`}
+                  onClick={() => setCategoryFilter(cat)}
+                >
+                  {cat === "all" ? "All" : getCategoryDisplayName(cat as TagCategory)}
+                </Badge>
+              ))}
+            </div>
+
             {/* Calendar Component */}
             <Card className="bg-card border-border shadow-sm">
               <CardContent className="p-3">
@@ -131,9 +161,13 @@ export default function CalendarPage() {
                     >
                       <div className="flex items-start justify-between mb-2">
                         <h3 className="font-medium text-foreground">{event.title}</h3>
-                        <Badge className={getEventTagColor(event.tag)}>
-                          {event.tag}
-                        </Badge>
+                      </div>
+                      <div className="flex flex-wrap gap-1 mb-2">
+                        {event.tags.map((tag) => (
+                          <Badge key={tag} className={`text-xs ${getTagColor(tag)}`}>
+                            {getTagDisplayName(tag)}
+                          </Badge>
+                        ))}
                       </div>
                       <div className="flex flex-wrap gap-3 text-sm text-muted-foreground">
                         <span className="flex items-center gap-1">
@@ -163,29 +197,14 @@ export default function CalendarPage() {
                 <CardTitle className="text-lg font-semibold">Upcoming Events</CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
-                {/* Event Type Filter */}
-                <div className="flex gap-2 overflow-x-auto pb-2">
-                  {eventTypes.map((type) => (
-                    <Badge
-                      key={type}
-                      variant={eventTypeFilter === type ? "default" : "outline"}
-                      className="cursor-pointer whitespace-nowrap capitalize"
-                      onClick={() => setEventTypeFilter(type)}
-                    >
-                      {type === "all" ? "All" : type}
-                    </Badge>
-                  ))}
-                </div>
-
-                {calendarEvents
-                  .filter(e => eventTypeFilter === "all" || e.tag.toLowerCase() === eventTypeFilter)
+                {filteredEvents
                   .slice(0, 5)
                   .map((event) => {
                     const eventDate = new Date(event.date);
                     return (
                       <div 
                         key={event.id}
-                        className="flex items-center gap-4 p-3 rounded-lg border border-border/50 hover:bg-accent/30 transition-colors"
+                        className="flex items-start gap-4 p-3 rounded-lg border border-border/50 hover:bg-accent/30 transition-colors"
                       >
                         <div className="flex flex-col items-center justify-center bg-primary/10 text-primary rounded-lg w-12 h-12 flex-shrink-0">
                           <span className="text-sm font-bold leading-none">{eventDate.getDate()}</span>
@@ -193,16 +212,25 @@ export default function CalendarPage() {
                         </div>
                         <div className="flex-1 min-w-0">
                           <h3 className="font-medium text-foreground truncate">{event.title}</h3>
-                          <p className="text-sm text-muted-foreground">{event.time}</p>
+                          <p className="text-sm text-muted-foreground mb-1">{event.time}</p>
+                          <div className="flex flex-wrap gap-1">
+                            {event.tags.slice(0, 2).map((tag) => (
+                              <Badge key={tag} className={`text-xs ${getTagColor(tag)}`}>
+                                {getTagDisplayName(tag)}
+                              </Badge>
+                            ))}
+                            {event.tags.length > 2 && (
+                              <Badge variant="outline" className="text-xs">
+                                +{event.tags.length - 2}
+                              </Badge>
+                            )}
+                          </div>
                         </div>
-                        <Badge className={getEventTagColor(event.tag)}>
-                          {event.tag}
-                        </Badge>
                       </div>
                     );
                   })}
 
-                {calendarEvents.filter(e => eventTypeFilter === "all" || e.tag.toLowerCase() === eventTypeFilter).length === 0 && (
+                {filteredEvents.length === 0 && (
                   <p className="text-sm text-muted-foreground text-center py-4">No events found</p>
                 )}
               </CardContent>
@@ -213,30 +241,30 @@ export default function CalendarPage() {
             {/* Filters */}
             <div className="flex gap-2 overflow-x-auto pb-2">
               <Badge 
-                variant={categoryFilter === "all" ? "default" : "outline"}
+                variant={ccaCategoryFilter === "all" ? "default" : "outline"}
                 className="cursor-pointer whitespace-nowrap"
-                onClick={() => setCategoryFilter("all")}
+                onClick={() => setCcaCategoryFilter("all")}
               >
                 All
               </Badge>
               <Badge 
-                variant={categoryFilter === "sports" ? "default" : "outline"}
+                variant={ccaCategoryFilter === "sports" ? "default" : "outline"}
                 className="cursor-pointer whitespace-nowrap"
-                onClick={() => setCategoryFilter("sports")}
+                onClick={() => setCcaCategoryFilter("sports")}
               >
                 Sports
               </Badge>
               <Badge 
-                variant={categoryFilter === "arts" ? "default" : "outline"}
+                variant={ccaCategoryFilter === "arts" ? "default" : "outline"}
                 className="cursor-pointer whitespace-nowrap"
-                onClick={() => setCategoryFilter("arts")}
+                onClick={() => setCcaCategoryFilter("arts")}
               >
                 Arts
               </Badge>
               <Badge 
-                variant={categoryFilter === "academic" ? "default" : "outline"}
+                variant={ccaCategoryFilter === "academic" ? "default" : "outline"}
                 className="cursor-pointer whitespace-nowrap"
-                onClick={() => setCategoryFilter("academic")}
+                onClick={() => setCcaCategoryFilter("academic")}
               >
                 Academic
               </Badge>
@@ -250,7 +278,7 @@ export default function CalendarPage() {
                     <div className="flex items-start justify-between mb-3">
                       <div>
                         <h3 className="font-semibold text-foreground">{activity.name}</h3>
-                        <Badge className={getCategoryColor(activity.category)} variant="secondary">
+                        <Badge className={getCcaCategoryColor(activity.category)} variant="secondary">
                           {activity.category}
                         </Badge>
                       </div>

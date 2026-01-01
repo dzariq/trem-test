@@ -9,34 +9,51 @@ import { MapPin, Clock } from "lucide-react";
 import schoolLogo from "@/assets/school-badge.png";
 import { calendarEvents, ccaActivities } from "@/data/mockData";
 import { format, isSameDay, parseISO } from "date-fns";
+import { TagCategory } from "@/types/calendarTags";
+import {
+  filterEventsByRole,
+  filterEventsByCategory,
+  getTagColor,
+  getTagDisplayName,
+  getCategoryDisplayName,
+  getCategoryColor,
+} from "@/lib/calendarUtils";
 
 export default function TeacherCalendarPage() {
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
+  const [categoryFilter, setCategoryFilter] = useState<TagCategory | "all">("all");
 
-  const eventsOnSelectedDate = calendarEvents.filter(event => 
+  // Filter events for teacher role
+  const visibleEvents = filterEventsByRole(calendarEvents, "teacher");
+  const filteredEvents = filterEventsByCategory(visibleEvents, categoryFilter);
+
+  const eventsOnSelectedDate = filteredEvents.filter(event => 
     isSameDay(parseISO(event.date), selectedDate)
   );
 
-  const getTagColor = (tag: string) => {
-    const colors: Record<string, string> = {
-      Event: "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300",
-      Meeting: "bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-300",
-      Exam: "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300",
-      Holiday: "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300",
-    };
-    return colors[tag] || "bg-muted text-muted-foreground";
+  const getCcaCategoryColor = (category: string) => {
+    switch (category.toLowerCase()) {
+      case "sports": return "bg-orange-100 text-orange-800 dark:bg-orange-900/50 dark:text-orange-300";
+      case "arts": return "bg-pink-100 text-pink-800 dark:bg-pink-900/50 dark:text-pink-300";
+      case "academic": return "bg-indigo-100 text-indigo-800 dark:bg-indigo-900/50 dark:text-indigo-300";
+      default: return "bg-muted text-muted-foreground";
+    }
   };
 
-  const getCategoryColor = (category: string) => {
-    const colors: Record<string, string> = {
-      Sports: "bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-300",
-      Arts: "bg-pink-100 text-pink-800 dark:bg-pink-900 dark:text-pink-300",
-      Academic: "bg-indigo-100 text-indigo-800 dark:bg-indigo-900 dark:text-indigo-300",
-    };
-    return colors[category] || "bg-muted text-muted-foreground";
-  };
+  const eventDates = filteredEvents.map(e => parseISO(e.date));
 
-  const eventDates = calendarEvents.map(e => parseISO(e.date));
+  // Categories visible to teachers (all except admin-only)
+  const teacherVisibleCategories: (TagCategory | "all")[] = [
+    "all",
+    "school-level",
+    "exams",
+    "holidays",
+    "events",
+    "staff-admin",
+    "due-dates",
+    "students",
+    "parents",
+  ];
 
   return (
     <TeacherAppLayout>
@@ -58,6 +75,22 @@ export default function TeacherCalendarPage() {
           </TabsList>
 
           <TabsContent value="calendar" className="space-y-4">
+            {/* Category Filter */}
+            <div className="flex gap-2 overflow-x-auto pb-2">
+              {teacherVisibleCategories.map((cat) => (
+                <Badge
+                  key={cat}
+                  variant={categoryFilter === cat ? "default" : "outline"}
+                  className={`cursor-pointer whitespace-nowrap ${
+                    categoryFilter === cat ? "" : cat !== "all" ? getCategoryColor(cat as TagCategory) : ""
+                  }`}
+                  onClick={() => setCategoryFilter(cat)}
+                >
+                  {cat === "all" ? "All" : getCategoryDisplayName(cat as TagCategory)}
+                </Badge>
+              ))}
+            </div>
+
             <Card>
               <CardContent className="p-3">
                 <Calendar
@@ -94,7 +127,13 @@ export default function TeacherCalendarPage() {
                     >
                       <div className="flex items-start justify-between">
                         <h3 className="font-semibold text-foreground">{event.title}</h3>
-                        <Badge className={getTagColor(event.tag)}>{event.tag}</Badge>
+                      </div>
+                      <div className="flex flex-wrap gap-1">
+                        {event.tags.map((tag) => (
+                          <Badge key={tag} className={`text-xs ${getTagColor(tag)}`}>
+                            {getTagDisplayName(tag)}
+                          </Badge>
+                        ))}
                       </div>
                       <div className="flex items-center gap-4 text-sm text-muted-foreground">
                         <span className="flex items-center gap-1">
@@ -132,7 +171,7 @@ export default function TeacherCalendarPage() {
                   >
                     <div className="flex items-start justify-between">
                       <h3 className="font-semibold text-foreground">{activity.name}</h3>
-                      <Badge className={getCategoryColor(activity.category)}>
+                      <Badge className={getCcaCategoryColor(activity.category)}>
                         {activity.category}
                       </Badge>
                     </div>
