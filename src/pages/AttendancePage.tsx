@@ -238,33 +238,6 @@ export default function AttendancePage() {
         <Card className="bg-card border-border shadow-sm">
           <CardHeader className="pb-2">
             <CardTitle className="text-lg font-semibold">Daily Breakdown</CardTitle>
-            {/* Status Legend */}
-            <div className="flex flex-wrap gap-3 mt-2">
-              <div className="flex items-center gap-1.5">
-                <div className="w-5 h-5 rounded-full flex items-center justify-center bg-chart-1 text-card">
-                  <Check className="h-3 w-3" />
-                </div>
-                <span className="text-xs text-muted-foreground">Present</span>
-              </div>
-              <div className="flex items-center gap-1.5">
-                <div className="w-5 h-5 rounded-full flex items-center justify-center bg-destructive text-destructive-foreground">
-                  <X className="h-3 w-3" />
-                </div>
-                <span className="text-xs text-muted-foreground">Absent</span>
-              </div>
-              <div className="flex items-center gap-1.5">
-                <div className="w-5 h-5 rounded-full flex items-center justify-center bg-chart-4 text-card">
-                  <Clock className="h-3 w-3" />
-                </div>
-                <span className="text-xs text-muted-foreground">Late</span>
-              </div>
-              <div className="flex items-center gap-1.5">
-                <div className="w-5 h-5 rounded-full flex items-center justify-center bg-chart-5 text-card">
-                  <CalendarOff className="h-3 w-3" />
-                </div>
-                <span className="text-xs text-muted-foreground">Excused</span>
-              </div>
-            </div>
           </CardHeader>
           <CardContent className="space-y-4">
             {/* Filter Chips */}
@@ -306,10 +279,16 @@ export default function AttendancePage() {
                     return (
                       <div 
                         key={dayIndex}
-                        className={`flex items-center gap-2 p-2 rounded-md transition-all ${
+                        className={`flex items-center gap-2 p-2 rounded-md transition-all border ${
                           today 
-                            ? "bg-primary/10 border-2 border-primary/30" 
-                            : "bg-accent/30 border border-border/50"
+                            ? "ring-2 ring-primary/50 " 
+                            : ""
+                        }${
+                          day.status === 'Present' ? "bg-chart-1/20 border-chart-1/40" :
+                          day.status === 'Absent' ? "bg-destructive/20 border-destructive/40" :
+                          day.status === 'Late' ? "bg-chart-4/20 border-chart-4/40" :
+                          day.status === 'Excused' ? "bg-chart-5/20 border-chart-5/40" :
+                          "bg-muted/30 border-border/50"
                         }`}
                       >
                         <div className={`w-6 h-6 rounded-full flex items-center justify-center shrink-0 ${getStatusColor(day.status)}`}>
