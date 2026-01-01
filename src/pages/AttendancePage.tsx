@@ -147,21 +147,8 @@ export default function AttendancePage() {
         }
       />
       
-      {/* Month Selector */}
-      <section className="px-4 pt-4">
-        <div className="flex items-center justify-between bg-card rounded-lg p-3 border border-border shadow-sm">
-          <Button variant="ghost" size="icon" onClick={goToPrevMonth}>
-            <ChevronLeft className="h-5 w-5" />
-          </Button>
-          <span className="font-semibold text-foreground">{selectedMonth} 2025</span>
-          <Button variant="ghost" size="icon" onClick={goToNextMonth}>
-            <ChevronRight className="h-5 w-5" />
-          </Button>
-        </div>
-      </section>
-
       {/* Attendance Chart */}
-      <section className="px-4 py-4">
+      <section className="px-4 pt-4">
         <Card className="bg-card border-border shadow-sm">
           <CardHeader className="pb-2">
             <CardTitle className="text-lg font-semibold">Yearly Overview</CardTitle>
@@ -202,6 +189,19 @@ export default function AttendancePage() {
             </div>
           </CardContent>
         </Card>
+      </section>
+
+      {/* Month Selector */}
+      <section className="px-4 py-4">
+        <div className="flex items-center justify-between bg-card rounded-lg p-3 border border-border shadow-sm">
+          <Button variant="ghost" size="icon" onClick={goToPrevMonth}>
+            <ChevronLeft className="h-5 w-5" />
+          </Button>
+          <span className="font-semibold text-foreground">{selectedMonth} 2025</span>
+          <Button variant="ghost" size="icon" onClick={goToNextMonth}>
+            <ChevronRight className="h-5 w-5" />
+          </Button>
+        </div>
       </section>
 
       {/* Monthly Summary */}
