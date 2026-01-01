@@ -1,48 +1,42 @@
 import { useNavigate } from "react-router-dom";
 import { 
-  UserCheck, 
   FileText, 
-  Calendar, 
-  CreditCard, 
   Phone, 
-  HeadphonesIcon 
+  Trophy,
+  Star 
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const quickLinks = [
-  { icon: UserCheck, label: "Attendance", path: "/attendance", color: "bg-chart-1" },
-  { icon: FileText, label: "Report Card", path: "/academic", color: "bg-chart-2" },
-  { icon: Calendar, label: "Calendar", path: "/calendar", color: "bg-chart-3" },
-  { icon: CreditCard, label: "Fees", path: "#", color: "bg-chart-4" },
-  { icon: Phone, label: "Contact", path: "#", color: "bg-chart-5" },
-  { icon: HeadphonesIcon, label: "Support", path: "/support", color: "bg-primary" },
+  { icon: FileText, label: "Report Card", path: "/academic", bgColor: "bg-primary/10", iconColor: "text-primary" },
+  { icon: Phone, label: "Contact Us", path: "#", bgColor: "bg-chart-2/10", iconColor: "text-chart-2" },
+  { icon: Trophy, label: "CCA Activities", path: "#", bgColor: "bg-chart-3/10", iconColor: "text-chart-3" },
+  { icon: Star, label: "Praise", path: "/support", bgColor: "bg-chart-4/10", iconColor: "text-chart-4" },
 ];
 
 export function QuickLinks() {
   const navigate = useNavigate();
 
   return (
-    <section className="px-4 py-4">
-      <h2 className="text-lg font-semibold text-foreground mb-3">Quick Links</h2>
-      
-      <div className="grid grid-cols-3 gap-3">
+    <section className="px-4 py-3">
+      <div className="grid grid-cols-4 gap-2">
         {quickLinks.map((link) => (
           <button
             key={link.label}
             onClick={() => link.path !== "#" && navigate(link.path)}
             className={cn(
-              "flex flex-col items-center justify-center p-4 rounded-xl bg-card border border-border",
-              "shadow-sm transition-all duration-200 hover:shadow-md hover:border-primary/30",
+              "flex flex-col items-center justify-center p-3 rounded-xl",
+              "transition-all duration-200 hover:scale-105",
               "active:scale-95"
             )}
           >
             <div className={cn(
-              "w-12 h-12 rounded-full flex items-center justify-center mb-2",
-              link.color
+              "w-12 h-12 rounded-full flex items-center justify-center mb-1.5",
+              link.bgColor
             )}>
-              <link.icon className="h-6 w-6 text-card" />
+              <link.icon className={cn("h-5 w-5", link.iconColor)} />
             </div>
-            <span className="text-xs font-medium text-foreground">{link.label}</span>
+            <span className="text-[10px] font-medium text-foreground text-center leading-tight">{link.label}</span>
           </button>
         ))}
       </div>

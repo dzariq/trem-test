@@ -28,9 +28,9 @@ export default function HomePage() {
         <img src={heroBanner} alt="School banner" className="w-full h-auto" />
       </div>
       
+      <QuickLinks />
       <AnnouncementCarousel />
       <UpcomingEvents />
-      <QuickLinks />
       <AttendanceSummary />
       <ResultsSummary />
     </AppLayout>
