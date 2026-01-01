@@ -6,7 +6,7 @@ import { UpcomingEvents } from "@/components/home/UpcomingEvents";
 import { TeacherQuickLinks } from "@/components/home/TeacherQuickLinks";
 import { BookOpen, Clock, Users } from "lucide-react";
 import schoolBadge from "@/assets/school-badge.png";
-import heroBanner from "@/assets/hero-banner.png";
+import heroBanner from "@/assets/teacher-hero-banner.png";
 import { teacherProfile, teacherQuickStats } from "@/data/teacherMockData";
 import {
   Select,
