@@ -20,9 +20,13 @@ export function AnnouncementCarousel() {
     return date.toLocaleDateString("en-US", { month: "short", day: "numeric" });
   };
 
+  const mainAnnouncement = announcements[0];
+  const otherAnnouncements = announcements.slice(1, 4);
+
   return (
-    <section className="px-4 py-4">
-      <div className="flex items-center justify-between mb-3">
+    <section className="py-4">
+      {/* Header */}
+      <div className="flex items-center justify-between mb-3 px-4">
         <h2 className="text-lg font-semibold text-foreground">Announcements</h2>
         <Button 
           variant="link" 
@@ -32,66 +36,110 @@ export function AnnouncementCarousel() {
           See all <ChevronRight className="h-4 w-4 ml-1" />
         </Button>
       </div>
-      
-      <Carousel
-        opts={{
-          align: "start",
-          loop: true,
-        }}
-        className="w-full"
-      >
-        <CarouselContent className="-ml-2">
-          {announcements.slice(0, 3).map((announcement) => (
-            <CarouselItem key={announcement.id} className="pl-2 basis-[85%]">
-              <Card className="bg-card border-border shadow-sm overflow-hidden">
-                {/* Image header or default pattern */}
-                <div className="relative h-24 overflow-hidden">
-                  {announcement.image ? (
-                    <img 
-                      src={announcement.image} 
-                      alt={announcement.title}
-                      className="w-full h-full object-cover"
-                    />
-                  ) : (
-                    <div className="w-full h-full bg-gradient-to-br from-primary/20 via-primary/10 to-secondary/20 flex items-center justify-center">
-                      <div className="absolute inset-0 opacity-10">
-                        <div className="absolute top-2 left-4 w-8 h-8 rounded-full bg-primary/30" />
-                        <div className="absolute top-6 right-8 w-12 h-12 rounded-full bg-secondary/30" />
-                        <div className="absolute bottom-4 left-1/3 w-6 h-6 rounded-full bg-primary/20" />
-                      </div>
-                      <Megaphone className="h-10 w-10 text-primary/40" />
-                    </div>
-                  )}
-                  {/* Overlay gradient for readability */}
-                  <div className="absolute inset-0 bg-gradient-to-t from-card via-card/50 to-transparent" />
-                  {/* Badge positioned on image */}
-                  <div className="absolute bottom-2 left-4 flex items-center gap-2">
-                    <Badge variant="secondary" className="text-xs">
-                      {announcement.category}
-                    </Badge>
-                    <Badge variant="outline" className="text-xs bg-card/80 backdrop-blur-sm">
-                      {formatDate(announcement.date)}
-                    </Badge>
-                  </div>
+
+      {/* Featured Main Announcement */}
+      <div className="px-4 mb-4">
+        <Card className="bg-card border-border shadow-md overflow-hidden">
+          {/* Large Image Header */}
+          <div className="relative h-48 overflow-hidden">
+            {mainAnnouncement.image ? (
+              <img 
+                src={mainAnnouncement.image} 
+                alt={mainAnnouncement.title}
+                className="w-full h-full object-cover"
+              />
+            ) : (
+              <div className="w-full h-full bg-gradient-to-br from-primary/30 via-primary/20 to-secondary/30 flex items-center justify-center">
+                <div className="absolute inset-0 opacity-20">
+                  <div className="absolute top-4 left-8 w-16 h-16 rounded-full bg-primary/30" />
+                  <div className="absolute top-12 right-12 w-24 h-24 rounded-full bg-secondary/30" />
+                  <div className="absolute bottom-8 left-1/4 w-12 h-12 rounded-full bg-primary/20" />
                 </div>
-                <CardContent className="p-4 pt-2">
-                  <h3 className="font-semibold text-foreground mb-1 line-clamp-1">
-                    {announcement.title}
-                  </h3>
-                  <p className="text-sm text-muted-foreground line-clamp-2 mb-3">
-                    {announcement.snippet}
-                  </p>
-                  <Button variant="outline" size="sm" className="w-full">
-                    View Details
-                  </Button>
-                </CardContent>
-              </Card>
-            </CarouselItem>
-          ))}
-        </CarouselContent>
-        <CarouselPrevious className="hidden sm:flex -left-2" />
-        <CarouselNext className="hidden sm:flex -right-2" />
-      </Carousel>
+                <Megaphone className="h-16 w-16 text-primary/50" />
+              </div>
+            )}
+            {/* Overlay gradient */}
+            <div className="absolute inset-0 bg-gradient-to-t from-card via-card/60 to-transparent" />
+            {/* Featured Badge */}
+            <div className="absolute top-3 left-3">
+              <Badge className="bg-primary text-primary-foreground text-xs">
+                Featured
+              </Badge>
+            </div>
+            {/* Category and Date */}
+            <div className="absolute bottom-3 left-4 flex items-center gap-2">
+              <Badge variant="secondary" className="text-xs">
+                {mainAnnouncement.category}
+              </Badge>
+              <Badge variant="outline" className="text-xs bg-card/80 backdrop-blur-sm">
+                {formatDate(mainAnnouncement.date)}
+              </Badge>
+            </div>
+          </div>
+          <CardContent className="p-4">
+            <h3 className="font-bold text-foreground text-lg mb-2">
+              {mainAnnouncement.title}
+            </h3>
+            <p className="text-sm text-muted-foreground mb-4">
+              {mainAnnouncement.snippet}
+            </p>
+            <Button className="w-full">
+              Read More
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+      
+      {/* Other Announcements Carousel */}
+      {otherAnnouncements.length > 0 && (
+        <div className="px-4">
+          <Carousel
+            opts={{
+              align: "start",
+              loop: true,
+            }}
+            className="w-full"
+          >
+            <CarouselContent className="-ml-2">
+              {otherAnnouncements.map((announcement) => (
+                <CarouselItem key={announcement.id} className="pl-2 basis-[75%]">
+                  <Card className="bg-card border-border shadow-sm overflow-hidden">
+                    <div className="relative h-20 overflow-hidden">
+                      {announcement.image ? (
+                        <img 
+                          src={announcement.image} 
+                          alt={announcement.title}
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <div className="w-full h-full bg-gradient-to-br from-primary/20 via-primary/10 to-secondary/20 flex items-center justify-center">
+                          <Megaphone className="h-8 w-8 text-primary/40" />
+                        </div>
+                      )}
+                      <div className="absolute inset-0 bg-gradient-to-t from-card via-card/50 to-transparent" />
+                      <div className="absolute bottom-2 left-3">
+                        <Badge variant="secondary" className="text-[10px]">
+                          {announcement.category}
+                        </Badge>
+                      </div>
+                    </div>
+                    <CardContent className="p-3 pt-2">
+                      <h3 className="font-medium text-foreground text-sm line-clamp-1 mb-1">
+                        {announcement.title}
+                      </h3>
+                      <p className="text-xs text-muted-foreground line-clamp-1">
+                        {announcement.snippet}
+                      </p>
+                    </CardContent>
+                  </Card>
+                </CarouselItem>
+              ))}
+            </CarouselContent>
+            <CarouselPrevious className="hidden sm:flex -left-2" />
+            <CarouselNext className="hidden sm:flex -right-2" />
+          </Carousel>
+        </div>
+      )}
     </section>
   );
 }
