@@ -58,8 +58,10 @@ const TeacherWelcomeQuote = () => {
 
   return (
     <div className="absolute bottom-4 left-4 right-4 z-10">
-      <div className="bg-background/90 backdrop-blur-sm rounded-lg p-3 shadow-lg border border-border">
-        <p className="text-sm text-foreground italic">
+      <div className="relative bg-background/90 backdrop-blur-sm rounded-lg p-3 shadow-lg border border-border">
+        {/* Speech bubble tail pointing to top-left (towards the teacher character) */}
+        <div className="absolute -top-2 left-8 w-4 h-4 bg-background/90 border-l border-t border-border rotate-45" />
+        <p className="text-sm text-foreground italic relative z-10">
           "{displayedText}"
           {!isComplete && <span className="animate-pulse">|</span>}
         </p>
