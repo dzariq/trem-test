@@ -46,10 +46,10 @@ export default function AttendancePage() {
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case "present": return "bg-chart-1 text-card";
+      case "present": return "bg-emerald-500 text-white";
       case "absent": return "bg-destructive text-destructive-foreground";
-      case "late": return "bg-chart-4 text-card";
-      case "excused": return "bg-chart-5 text-card";
+      case "late": return "bg-amber-400 text-white";
+      case "excused": return "bg-purple-500 text-white";
       default: return "bg-muted text-muted-foreground";
     }
   };
@@ -284,10 +284,10 @@ export default function AttendancePage() {
                             ? "ring-2 ring-primary/50 " 
                             : ""
                         }${
-                          day.status === 'present' ? "bg-chart-1/20 border-chart-1/40" :
+                          day.status === 'present' ? "bg-emerald-100 border-emerald-300" :
                           day.status === 'absent' ? "bg-destructive/20 border-destructive/40" :
-                          day.status === 'late' ? "bg-chart-4/20 border-chart-4/40" :
-                          day.status === 'excused' ? "bg-chart-5/20 border-chart-5/40" :
+                          day.status === 'late' ? "bg-amber-100 border-amber-300" :
+                          day.status === 'excused' ? "bg-purple-100 border-purple-300" :
                           "bg-muted/30 border-border/50"
                         }`}
                       >
