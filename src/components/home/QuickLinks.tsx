@@ -19,26 +19,28 @@ export function QuickLinks() {
 
   return (
     <section className="px-4 py-3">
-      <div className="grid grid-cols-4 gap-2">
-        {quickLinks.map((link) => (
-          <button
-            key={link.label}
-            onClick={() => link.path !== "#" && navigate(link.path)}
-            className={cn(
-              "flex flex-col items-center justify-center p-3 rounded-xl",
-              "transition-all duration-200 hover:scale-105",
-              "active:scale-95"
-            )}
-          >
-            <div className={cn(
-              "w-12 h-12 rounded-full flex items-center justify-center mb-1.5",
-              link.bgColor
-            )}>
-              <link.icon className={cn("h-5 w-5", link.iconColor)} />
-            </div>
-            <span className="text-[10px] font-medium text-foreground text-center leading-tight">{link.label}</span>
-          </button>
-        ))}
+      <div className="bg-card rounded-full px-4 py-3 shadow-sm border border-border">
+        <div className="grid grid-cols-4 gap-1">
+          {quickLinks.map((link) => (
+            <button
+              key={link.label}
+              onClick={() => link.path !== "#" && navigate(link.path)}
+              className={cn(
+                "flex flex-col items-center justify-center py-2 px-1 rounded-2xl",
+                "transition-all duration-200 hover:bg-muted/50",
+                "active:scale-95"
+              )}
+            >
+              <div className={cn(
+                "w-11 h-11 rounded-full flex items-center justify-center mb-1",
+                link.bgColor
+              )}>
+                <link.icon className={cn("h-5 w-5", link.iconColor)} />
+              </div>
+              <span className="text-[10px] font-medium text-foreground text-center leading-tight">{link.label}</span>
+            </button>
+          ))}
+        </div>
       </div>
     </section>
   );
