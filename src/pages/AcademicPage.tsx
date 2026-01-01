@@ -136,31 +136,33 @@ export default function AcademicPage() {
                 <TabsTrigger value="cocurriculum">Activities</TabsTrigger>
               </TabsList>
 
-              <TabsContent value="grades" className="mt-4 space-y-3">
-                {academicData.subjects.map((subject, index) => {
-                  const score = getScoreForSelection(subject);
-                  const isPending = score === null || score === undefined;
-                  
-                  return (
-                    <div key={index} className="flex items-center justify-between p-3 rounded-lg bg-accent/30 border border-border/50">
-                      <div>
-                        <h3 className="font-medium text-foreground">{subject.name}</h3>
-                        <p className="text-sm text-muted-foreground">
+              <TabsContent value="grades" className="mt-4">
+                <div className="grid grid-cols-2 gap-2">
+                  {academicData.subjects.map((subject, index) => {
+                    const score = getScoreForSelection(subject);
+                    const isPending = score === null || score === undefined;
+                    
+                    return (
+                      <div key={index} className="flex flex-col p-3 rounded-lg bg-accent/30 border border-border/50">
+                        <div className="flex items-center justify-between mb-1">
+                          <h3 className="font-medium text-foreground text-sm">{subject.name}</h3>
+                          {isPending ? (
+                            <Badge variant="outline" className="text-muted-foreground text-xs">
+                              --
+                            </Badge>
+                          ) : (
+                            <Badge className={`${gradeColors[getGradeFromScore(score!)[0]] || gradeColors.C} text-xs`}>
+                              {getGradeFromScore(score!)}
+                            </Badge>
+                          )}
+                        </div>
+                        <p className="text-lg font-semibold text-foreground">
                           {isPending ? "Pending" : `${score}%`}
                         </p>
                       </div>
-                      {isPending ? (
-                        <Badge variant="outline" className="text-muted-foreground">
-                          Pending
-                        </Badge>
-                      ) : (
-                        <Badge className={gradeColors[getGradeFromScore(score!)[0]] || gradeColors.C}>
-                          {getGradeFromScore(score!)}
-                        </Badge>
-                      )}
-                    </div>
-                  );
-                })}
+                    );
+                  })}
+                </div>
               </TabsContent>
 
               <TabsContent value="behavior" className="mt-4 space-y-3">
