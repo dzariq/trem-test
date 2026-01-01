@@ -23,17 +23,18 @@ export function WelcomeTypingAnimation() {
   }, [fullText]);
 
   return (
-    <div className="absolute bottom-4 left-4 right-4 z-10">
-      <div className="bg-background/90 backdrop-blur-sm rounded-lg border border-border shadow-lg p-3 max-w-xs">
-        <div className="flex items-start gap-2">
-          <div className="flex-shrink-0 w-2 h-2 mt-2 rounded-full bg-primary animate-pulse" />
-          <p className="text-sm font-medium text-foreground">
-            {displayText}
-            {!isComplete && (
-              <span className="inline-block w-0.5 h-4 ml-0.5 bg-primary animate-pulse" />
-            )}
-          </p>
-        </div>
+    <div className="absolute bottom-8 right-4 z-10">
+      <div className="relative bg-background/95 backdrop-blur-sm rounded-xl border border-border shadow-lg p-3 max-w-[200px]">
+        {/* Speech bubble tail pointing to teacher */}
+        <div className="absolute -top-2 right-6 w-0 h-0 border-l-[8px] border-l-transparent border-r-[8px] border-r-transparent border-b-[8px] border-b-background/95" />
+        <div className="absolute -top-[9px] right-6 w-0 h-0 border-l-[8px] border-l-transparent border-r-[8px] border-r-transparent border-b-[8px] border-b-border" style={{ zIndex: -1 }} />
+        
+        <p className="text-sm font-medium text-foreground">
+          {displayText}
+          {!isComplete && (
+            <span className="inline-block w-0.5 h-4 ml-0.5 bg-primary animate-pulse" />
+          )}
+        </p>
       </div>
     </div>
   );
