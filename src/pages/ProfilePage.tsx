@@ -112,7 +112,7 @@ export default function ProfilePage() {
             {students.map((student, index) => (
               <div 
                 key={index}
-                className="flex items-center gap-3 p-3 rounded-lg bg-accent/50 border border-border/50"
+                className="flex items-center gap-3 p-3 rounded-lg bg-primary/10 border border-primary/20"
               >
                 <Avatar className="h-12 w-12 border border-primary/20">
                   <AvatarFallback className="bg-primary text-primary-foreground font-semibold">
