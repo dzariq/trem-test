@@ -179,9 +179,33 @@ export const studentProfile = {
   photo: null
 };
 
+export const students = [
+  {
+    id: "STU-2024-001",
+    name: "Emma Johnson",
+    grade: "Grade 5",
+    class: "5A",
+    photo: null
+  },
+  {
+    id: "STU-2024-002",
+    name: "Lucas Johnson",
+    grade: "Grade 3",
+    class: "3B",
+    photo: null
+  },
+  {
+    id: "STU-2024-003",
+    name: "Sophia Johnson",
+    grade: "Grade 1",
+    class: "1A",
+    photo: null
+  }
+];
+
 export const parentProfile = {
   name: "Michael Johnson",
   email: "michael.johnson@email.com",
   phone: "+1 234 567 8900",
-  students: [studentProfile]
+  students: students
 };
