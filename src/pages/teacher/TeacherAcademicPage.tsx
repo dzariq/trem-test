@@ -11,7 +11,8 @@ import { Progress } from "@/components/ui/progress";
 import { Checkbox } from "@/components/ui/checkbox";
 import { 
   Save, TrendingUp, TrendingDown, Minus, ChevronDown, ChevronUp, 
-  Users, Target, Award, AlertTriangle, BookOpen, BarChart3
+  Users, Target, Award, AlertTriangle, BookOpen, BarChart3,
+  FileText, CheckCircle, XCircle, Lightbulb, Copy, Printer
 } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import schoolLogo from "@/assets/school-badge.png";
@@ -782,6 +783,239 @@ export default function TeacherAcademicPage() {
                     </Badge>
                   </div>
                 ))}
+              </CardContent>
+            </Card>
+
+            {/* Class Report Generation */}
+            <Card className="border-primary/30 bg-gradient-to-br from-primary/5 to-transparent">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm flex items-center gap-2">
+                  <FileText className="h-4 w-4 text-primary" />
+                  Class Performance Report
+                </CardTitle>
+                <p className="text-xs text-muted-foreground">
+                  Auto-generated insights for {selectedClass} • {selectedYears.join(", ")} • {examPeriods.find(p => p.value === selectedPeriod)?.label}
+                </p>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {/* Summary */}
+                <div className="p-3 rounded-lg bg-background border">
+                  <h4 className="text-xs font-semibold text-muted-foreground uppercase mb-2">Summary</h4>
+                  <p className="text-sm text-foreground">
+                    Class {selectedClass} has <span className="font-semibold">{students.length} students</span> with 
+                    an average score of <span className="font-semibold">{classAverage}%</span>. 
+                    The pass rate is <span className="font-semibold text-emerald-600">{passRate}%</span> with 
+                    <span className="font-semibold text-amber-600"> {aGradeRate}%</span> achieving A grades.
+                  </p>
+                </div>
+
+                {/* Strengths */}
+                <div className="p-3 rounded-lg bg-emerald-50 border border-emerald-200">
+                  <h4 className="text-xs font-semibold text-emerald-700 uppercase mb-2 flex items-center gap-1">
+                    <TrendingUp className="h-3 w-3" /> Strengths
+                  </h4>
+                  <ul className="space-y-1.5 text-sm text-emerald-800">
+                    {(() => {
+                      const bestSubject = subjectAverages.length > 0 
+                        ? subjectAverages.reduce((a, b) => a.average > b.average ? a : b)
+                        : null;
+                      const bestCategory = categoryAverages.length > 0
+                        ? categoryAverages.reduce((a, b) => a.percentage > b.percentage ? a : b)
+                        : null;
+                      const topCount = rankedStudents.filter(s => s.score && s.score >= 80).length;
+                      
+                      return (
+                        <>
+                          {bestSubject && (
+                            <li className="flex items-start gap-2">
+                              <CheckCircle className="h-3.5 w-3.5 mt-0.5 text-emerald-600" />
+                              <span><span className="font-medium">{bestSubject.name}</span> is the strongest subject with {bestSubject.average.toFixed(0)}% average</span>
+                            </li>
+                          )}
+                          {bestCategory && (
+                            <li className="flex items-start gap-2">
+                              <CheckCircle className="h-3.5 w-3.5 mt-0.5 text-emerald-600" />
+                              <span><span className="font-medium">{bestCategory.name}</span> scores are consistently high at {bestCategory.percentage.toFixed(0)}%</span>
+                            </li>
+                          )}
+                          {topCount > 0 && (
+                            <li className="flex items-start gap-2">
+                              <CheckCircle className="h-3.5 w-3.5 mt-0.5 text-emerald-600" />
+                              <span><span className="font-medium">{topCount} students</span> achieved B grade or higher</span>
+                            </li>
+                          )}
+                        </>
+                      );
+                    })()}
+                  </ul>
+                </div>
+
+                {/* Weaknesses */}
+                <div className="p-3 rounded-lg bg-amber-50 border border-amber-200">
+                  <h4 className="text-xs font-semibold text-amber-700 uppercase mb-2 flex items-center gap-1">
+                    <AlertTriangle className="h-3 w-3" /> Areas for Improvement
+                  </h4>
+                  <ul className="space-y-1.5 text-sm text-amber-800">
+                    {(() => {
+                      const worstSubject = subjectAverages.length > 0 
+                        ? subjectAverages.reduce((a, b) => a.average < b.average ? a : b)
+                        : null;
+                      const worstCategory = categoryAverages.length > 0
+                        ? categoryAverages.reduce((a, b) => a.percentage < b.percentage ? a : b)
+                        : null;
+                      
+                      return (
+                        <>
+                          {worstSubject && (
+                            <li className="flex items-start gap-2">
+                              <XCircle className="h-3.5 w-3.5 mt-0.5 text-amber-600" />
+                              <span><span className="font-medium">{worstSubject.name}</span> needs attention with {worstSubject.average.toFixed(0)}% average</span>
+                            </li>
+                          )}
+                          {worstCategory && (
+                            <li className="flex items-start gap-2">
+                              <XCircle className="h-3.5 w-3.5 mt-0.5 text-amber-600" />
+                              <span><span className="font-medium">{worstCategory.name}</span> is the weakest category at {worstCategory.percentage.toFixed(0)}%</span>
+                            </li>
+                          )}
+                          {atRiskStudents.length > 0 && (
+                            <li className="flex items-start gap-2">
+                              <XCircle className="h-3.5 w-3.5 mt-0.5 text-amber-600" />
+                              <span><span className="font-medium">{atRiskStudents.length} students</span> are at risk of failing (below 50%)</span>
+                            </li>
+                          )}
+                        </>
+                      );
+                    })()}
+                  </ul>
+                </div>
+
+                {/* Recommendations */}
+                <div className="p-3 rounded-lg bg-blue-50 border border-blue-200">
+                  <h4 className="text-xs font-semibold text-blue-700 uppercase mb-2 flex items-center gap-1">
+                    <Lightbulb className="h-3 w-3" /> Recommendations
+                  </h4>
+                  <ul className="space-y-1.5 text-sm text-blue-800">
+                    {(() => {
+                      const worstSubject = subjectAverages.length > 0 
+                        ? subjectAverages.reduce((a, b) => a.average < b.average ? a : b)
+                        : null;
+                      const worstCategory = categoryAverages.length > 0
+                        ? categoryAverages.reduce((a, b) => a.percentage < b.percentage ? a : b)
+                        : null;
+                      
+                      return (
+                        <>
+                          {worstSubject && (
+                            <li className="flex items-start gap-2">
+                              <span className="font-medium text-blue-600">1.</span>
+                              <span>Schedule additional tutoring sessions for <span className="font-medium">{worstSubject.name}</span></span>
+                            </li>
+                          )}
+                          {worstCategory && (
+                            <li className="flex items-start gap-2">
+                              <span className="font-medium text-blue-600">2.</span>
+                              <span>Implement weekly <span className="font-medium">{worstCategory.name.toLowerCase()}</span> practice across all subjects</span>
+                            </li>
+                          )}
+                          {atRiskStudents.length > 0 && (
+                            <li className="flex items-start gap-2">
+                              <span className="font-medium text-blue-600">3.</span>
+                              <span>Arrange parent meetings for the {atRiskStudents.length} at-risk students</span>
+                            </li>
+                          )}
+                          <li className="flex items-start gap-2">
+                            <span className="font-medium text-blue-600">{atRiskStudents.length > 0 ? "4" : "3"}.</span>
+                            <span>Celebrate class achievements to boost morale and motivation</span>
+                          </li>
+                        </>
+                      );
+                    })()}
+                  </ul>
+                </div>
+
+                {/* Teacher Notes */}
+                <div className="space-y-2">
+                  <label className="text-xs font-medium text-muted-foreground">Teacher Notes (Optional)</label>
+                  <Textarea 
+                    placeholder="Add your own observations or notes to include in the report..."
+                    className="min-h-[80px] text-sm resize-none"
+                  />
+                </div>
+
+                {/* Action Buttons */}
+                <div className="flex gap-2">
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    className="flex-1"
+                    onClick={() => {
+                      const bestSubject = subjectAverages.length > 0 
+                        ? subjectAverages.reduce((a, b) => a.average > b.average ? a : b)
+                        : null;
+                      const worstSubject = subjectAverages.length > 0 
+                        ? subjectAverages.reduce((a, b) => a.average < b.average ? a : b)
+                        : null;
+                      const bestCategory = categoryAverages.length > 0
+                        ? categoryAverages.reduce((a, b) => a.percentage > b.percentage ? a : b)
+                        : null;
+                      const worstCategory = categoryAverages.length > 0
+                        ? categoryAverages.reduce((a, b) => a.percentage < b.percentage ? a : b)
+                        : null;
+                        
+                      const report = `CLASS PERFORMANCE REPORT
+========================
+Class: ${selectedClass} | Year: ${selectedYears.join(", ")} | Period: ${examPeriods.find(p => p.value === selectedPeriod)?.label}
+Generated: ${new Date().toLocaleDateString()}
+
+SUMMARY
+-------
+• Total Students: ${students.length}
+• Class Average: ${classAverage}%
+• Pass Rate: ${passRate}%
+• A-Grade Rate: ${aGradeRate}%
+• Highest Score: ${highestScore}%
+• Lowest Score: ${lowestScore}%
+
+STRENGTHS
+---------
+${bestSubject ? `• ${bestSubject.name} is the strongest subject (avg: ${bestSubject.average.toFixed(0)}%)` : ""}
+${bestCategory ? `• ${bestCategory.name} scores are consistently high (${bestCategory.percentage.toFixed(0)}%)` : ""}
+• ${rankedStudents.filter(s => s.score && s.score >= 80).length} students achieved B grade or higher
+
+AREAS FOR IMPROVEMENT
+---------------------
+${worstSubject ? `• ${worstSubject.name} needs attention (avg: ${worstSubject.average.toFixed(0)}%)` : ""}
+${worstCategory ? `• ${worstCategory.name} is the weakest category (${worstCategory.percentage.toFixed(0)}%)` : ""}
+${atRiskStudents.length > 0 ? `• ${atRiskStudents.length} students are at risk of failing` : ""}
+
+RECOMMENDATIONS
+---------------
+${worstSubject ? `1. Schedule additional tutoring sessions for ${worstSubject.name}` : ""}
+${worstCategory ? `2. Implement weekly ${worstCategory.name.toLowerCase()} practice across all subjects` : ""}
+${atRiskStudents.length > 0 ? `3. Arrange parent meetings for at-risk students` : ""}
+4. Celebrate class achievements to boost morale`;
+
+                      navigator.clipboard.writeText(report);
+                      toast({
+                        title: "Report Copied",
+                        description: "Class report has been copied to clipboard",
+                      });
+                    }}
+                  >
+                    <Copy className="h-3.5 w-3.5 mr-1" />
+                    Copy Report
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    className="flex-1"
+                    onClick={() => window.print()}
+                  >
+                    <Printer className="h-3.5 w-3.5 mr-1" />
+                    Print
+                  </Button>
+                </div>
               </CardContent>
             </Card>
           </TabsContent>
