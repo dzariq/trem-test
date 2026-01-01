@@ -139,14 +139,169 @@ export const academicData = {
   improvement: "+5%"
 };
 
-export const calendarEvents = [
-  { id: 1, title: "Sports Day", date: "2026-01-15", time: "8:00 AM", tag: "Event", location: "School Field" },
-  { id: 2, title: "Parent-Teacher Meeting", date: "2026-01-20", time: "9:00 AM", tag: "Meeting", location: "Classroom" },
-  { id: 3, title: "Mid-Year Exam Starts", date: "2026-01-25", time: "8:30 AM", tag: "Exam", location: "Exam Hall" },
-  { id: 4, title: "Chinese New Year", date: "2026-01-29", time: "All Day", tag: "Holiday", location: "" },
-  { id: 5, title: "Science Fair", date: "2026-01-28", time: "10:00 AM", tag: "Event", location: "Assembly Hall" },
-  { id: 6, title: "Art Exhibition", date: "2026-02-05", time: "2:00 PM", tag: "Event", location: "Art Room" },
-  { id: 7, title: "Swimming Carnival", date: "2026-02-12", time: "9:00 AM", tag: "Event", location: "Swimming Pool" }
+import type { CalendarEvent } from "@/types/calendarTags";
+
+export const calendarEvents: CalendarEvent[] = [
+  { 
+    id: 1, 
+    title: "Sports Day", 
+    date: "2026-01-15", 
+    time: "8:00 AM", 
+    tags: ["external-event", "family-event", "preschool", "primary-school", "secondary-school"], 
+    location: "School Field" 
+  },
+  { 
+    id: 2, 
+    title: "Parent-Teacher Conference", 
+    date: "2026-01-20", 
+    time: "9:00 AM", 
+    tags: ["parent-teacher-conference", "primary-school"], 
+    location: "Classroom" 
+  },
+  { 
+    id: 3, 
+    title: "Mid-Year Exam Starts", 
+    date: "2026-01-25", 
+    time: "8:30 AM", 
+    tags: ["mid-year-exam", "primary-school", "secondary-school"], 
+    location: "Exam Hall" 
+  },
+  { 
+    id: 4, 
+    title: "Chinese New Year", 
+    date: "2026-01-29", 
+    time: "All Day", 
+    tags: ["public-holiday"], 
+    location: "" 
+  },
+  { 
+    id: 5, 
+    title: "Science Fair", 
+    date: "2026-01-28", 
+    time: "10:00 AM", 
+    tags: ["special-event-major", "family-event", "primary-school", "secondary-school"], 
+    location: "Assembly Hall" 
+  },
+  { 
+    id: 6, 
+    title: "Art Exhibition", 
+    date: "2026-02-05", 
+    time: "2:00 PM", 
+    tags: ["internal-event", "preschool", "primary-school"], 
+    location: "Art Room" 
+  },
+  { 
+    id: 7, 
+    title: "Swimming Carnival", 
+    date: "2026-02-12", 
+    time: "9:00 AM", 
+    tags: ["external-event", "family-event", "primary-school", "secondary-school"], 
+    location: "Swimming Pool" 
+  },
+  { 
+    id: 8, 
+    title: "Teacher Meeting", 
+    date: "2026-01-22", 
+    time: "2:00 PM", 
+    tags: ["teacher-meeting"], 
+    location: "Staff Room" 
+  },
+  { 
+    id: 9, 
+    title: "Admin Meeting", 
+    date: "2026-01-23", 
+    time: "10:00 AM", 
+    tags: ["admin-meeting"], 
+    location: "Conference Room" 
+  },
+  { 
+    id: 10, 
+    title: "Staff Team Building", 
+    date: "2026-02-15", 
+    time: "9:00 AM", 
+    tags: ["staff-team-building"], 
+    location: "Outdoor Camp" 
+  },
+  { 
+    id: 11, 
+    title: "Grades Due (Primary)", 
+    date: "2026-02-01", 
+    time: "5:00 PM", 
+    tags: ["teacher-due-date-primary", "primary-school"], 
+    location: "" 
+  },
+  { 
+    id: 12, 
+    title: "Term Break", 
+    date: "2026-03-15", 
+    time: "All Day", 
+    tags: ["school-holiday-term-break", "preschool", "primary-school", "secondary-school"], 
+    location: "" 
+  },
+  { 
+    id: 13, 
+    title: "Open Day", 
+    date: "2026-02-20", 
+    time: "9:00 AM", 
+    tags: ["open-day", "family-event", "preschool", "primary-school", "secondary-school"], 
+    location: "Main Campus" 
+  },
+  { 
+    id: 14, 
+    title: "Cambridge IGCSE Exam", 
+    date: "2026-05-01", 
+    time: "8:00 AM", 
+    tags: ["cambridge-igcse", "secondary-school"], 
+    location: "Exam Hall" 
+  },
+  { 
+    id: 15, 
+    title: "Back to School Day", 
+    date: "2026-01-06", 
+    time: "7:30 AM", 
+    tags: ["back-to-school", "preschool", "primary-school", "secondary-school"], 
+    location: "School Campus" 
+  },
+  { 
+    id: 16, 
+    title: "Parent Workshop: Digital Safety", 
+    date: "2026-02-25", 
+    time: "6:00 PM", 
+    tags: ["parent-enrichment-workshop", "family-event"], 
+    location: "Auditorium" 
+  },
+  { 
+    id: 17, 
+    title: "Student Extra Math Classes", 
+    date: "2026-01-18", 
+    time: "3:30 PM", 
+    tags: ["student-extra-classes", "secondary-school"], 
+    location: "Room 201" 
+  },
+  { 
+    id: 18, 
+    title: "Board of Governors Meeting", 
+    date: "2026-02-10", 
+    time: "10:00 AM", 
+    tags: ["bog-meeting"], 
+    location: "Boardroom" 
+  },
+  { 
+    id: 19, 
+    title: "Field Trip: Science Museum", 
+    date: "2026-03-01", 
+    time: "8:00 AM", 
+    tags: ["field-trip", "primary-school"], 
+    location: "Science Museum" 
+  },
+  { 
+    id: 20, 
+    title: "Student Enrichment: Coding Workshop", 
+    date: "2026-03-05", 
+    time: "2:00 PM", 
+    tags: ["student-enrichment-workshop", "primary-school", "secondary-school"], 
+    location: "Computer Lab" 
+  }
 ];
 
 export const ccaActivities = [
