@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { AnnouncementCarousel } from "@/components/home/AnnouncementCarousel";
 import { UpcomingEvents } from "@/components/home/UpcomingEvents";
 import { TeacherQuickLinks } from "@/components/home/TeacherQuickLinks";
+import TeacherWelcomeQuote from "@/components/home/TeacherWelcomeQuote";
 import { BookOpen, Users, Clock, FileText, Calendar, AlertTriangle, ClipboardList, Check, ChevronDown, ChevronUp } from "lucide-react";
 import schoolBadge from "@/assets/school-badge.png";
 import heroBanner from "@/assets/teacher-hero-banner.png";
@@ -99,12 +100,13 @@ export default function TeacherHomePage() {
       />
 
       {/* Hero Banner */}
-      <div>
+      <div className="relative">
         <img 
           src={heroBanner} 
           alt="School Banner" 
           className="w-full h-auto"
         />
+        <TeacherWelcomeQuote />
       </div>
 
       {/* Quick Links */}
