@@ -32,6 +32,7 @@ export default function AcademicPage() {
   const [selectedYear, setSelectedYear] = useState("2025");
   const [selectedYears, setSelectedYears] = useState<string[]>(["2025"]);
   const [subjectFilter, setSubjectFilter] = useState("all");
+  const [chartYearFilter, setChartYearFilter] = useState<string[]>(["2025", "2024", "2023"]);
   const [reportGenerated, setReportGenerated] = useState(false);
 
   const isActivitiesTab = activeTab === "cocurriculum";
@@ -76,13 +77,26 @@ export default function AcademicPage() {
     return `${examType === "mid-year" ? "Mid-Year" : "Year-End"} ${selectedYear}`;
   };
 
-  // Prepare chart data
-  const chartData = [
-    { period: "Mid-Year 2024", ...Object.fromEntries(academicData.subjects.map(s => [s.name, s.midYearLast])) },
-    { period: "Year-End 2024", ...Object.fromEntries(academicData.subjects.map(s => [s.name, s.yearEndLast])) },
-    { period: "Mid-Year 2025", ...Object.fromEntries(academicData.subjects.map(s => [s.name, s.midYearCurrent])) },
-    { period: "Year-End 2025", ...Object.fromEntries(academicData.subjects.map(s => [s.name, s.yearEndCurrent ?? 0])) },
+  // Prepare chart data - all available exam periods
+  const allChartData = [
+    { period: "Mid-Year 2023", year: "2023", ...Object.fromEntries(academicData.subjects.map(s => [s.name, Math.round(s.midYearLast * 0.95)])) },
+    { period: "Year-End 2023", year: "2023", ...Object.fromEntries(academicData.subjects.map(s => [s.name, Math.round(s.yearEndLast * 0.97)])) },
+    { period: "Mid-Year 2024", year: "2024", ...Object.fromEntries(academicData.subjects.map(s => [s.name, s.midYearLast])) },
+    { period: "Year-End 2024", year: "2024", ...Object.fromEntries(academicData.subjects.map(s => [s.name, s.yearEndLast])) },
+    { period: "Mid-Year 2025", year: "2025", ...Object.fromEntries(academicData.subjects.map(s => [s.name, s.midYearCurrent])) },
+    { period: "Year-End 2025", year: "2025", ...Object.fromEntries(academicData.subjects.map(s => [s.name, s.yearEndCurrent ?? 0])) },
   ];
+
+  // Filter chart data by selected years
+  const chartData = allChartData.filter(d => chartYearFilter.includes(d.year));
+
+  const toggleChartYear = (year: string) => {
+    setChartYearFilter(prev => 
+      prev.includes(year) 
+        ? prev.length > 1 ? prev.filter(y => y !== year) : prev // Keep at least one year selected
+        : [...prev, year].sort().reverse()
+    );
+  };
 
   // Distinct colors for each subject - varied hues
   const lineColors = [
@@ -277,6 +291,22 @@ export default function AcademicPage() {
             </div>
           </CardHeader>
           <CardContent>
+            {/* Year Filter */}
+            <div className="flex items-center gap-2 mb-3">
+              <span className="text-sm text-muted-foreground">Years:</span>
+              {["2025", "2024", "2023"].map((year) => (
+                <Badge
+                  key={year}
+                  variant={chartYearFilter.includes(year) ? "default" : "outline"}
+                  className="cursor-pointer"
+                  onClick={() => toggleChartYear(year)}
+                >
+                  {year}
+                </Badge>
+              ))}
+            </div>
+
+            {/* Subject Filter */}
             <div className="flex gap-2 mb-4 overflow-x-auto pb-2">
               <Badge 
                 variant={subjectFilter === "all" ? "default" : "outline"}
@@ -299,7 +329,7 @@ export default function AcademicPage() {
 
             <div className="h-64">
               <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={chartData.slice(0, 3)}>
+                <LineChart data={chartData}>
                   <CartesianGrid 
                     strokeDasharray="3 3" 
                     stroke="hsl(var(--border))" 
