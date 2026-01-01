@@ -115,25 +115,19 @@ export default function SupportPage() {
       <AppHeader title="Parent Support" />
 
       <section className="px-4 pt-4">
-        {/* Quick Action Buttons */}
-        <div className="grid grid-cols-2 gap-3 mb-4">
-          <Button 
-            variant={activeTab === "new" ? "default" : "outline"}
-            className="h-auto py-4 flex flex-col items-center gap-2"
-            onClick={() => setActiveTab("new")}
-          >
-            <Plus className="h-6 w-6" />
-            <span className="font-medium">New Ticket</span>
-          </Button>
-          <Button 
-            variant={activeTab === "tickets" ? "default" : "outline"}
-            className="h-auto py-4 flex flex-col items-center gap-2"
-            onClick={() => setActiveTab("tickets")}
-          >
-            <List className="h-6 w-6" />
-            <span className="font-medium">My Tickets</span>
-          </Button>
-        </div>
+        {/* Tabs */}
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+          <TabsList className="grid w-full grid-cols-2 bg-muted/50 mb-4">
+            <TabsTrigger value="new" className="gap-2">
+              <Plus className="h-4 w-4" />
+              New Ticket
+            </TabsTrigger>
+            <TabsTrigger value="tickets" className="gap-2">
+              <List className="h-4 w-4" />
+              My Tickets
+            </TabsTrigger>
+          </TabsList>
+        </Tabs>
 
         {activeTab === "new" && (
           <Card className="bg-card border-border shadow-sm">
