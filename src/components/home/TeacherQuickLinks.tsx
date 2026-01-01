@@ -3,7 +3,7 @@ import {
   UserCheck, 
   BookOpen, 
   Calendar,
-  Trophy 
+  Heart 
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -11,7 +11,7 @@ const quickLinks = [
   { icon: UserCheck, label: "Attendance", path: "/teacher/attendance", bgColor: "bg-emerald-100", iconColor: "text-emerald-600" },
   { icon: BookOpen, label: "Grade Entry", path: "/teacher/academic", bgColor: "bg-blue-100", iconColor: "text-blue-600" },
   { icon: Calendar, label: "Calendar", path: "/teacher/calendar", bgColor: "bg-amber-100", iconColor: "text-amber-600" },
-  { icon: Trophy, label: "CCA Activities", path: "#", bgColor: "bg-rose-100", iconColor: "text-rose-600" },
+  { icon: Heart, label: "DNA", path: "/teacher/dna", bgColor: "bg-rose-100", iconColor: "text-rose-600" },
 ];
 
 export function TeacherQuickLinks() {
