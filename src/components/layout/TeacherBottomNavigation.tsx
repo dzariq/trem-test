@@ -1,11 +1,12 @@
 import { useState, useEffect } from "react";
-import { Home, UserCheck, GraduationCap, Calendar } from "lucide-react";
+import { Home, UserCheck, Heart, GraduationCap, Calendar } from "lucide-react";
 import { NavLink } from "react-router-dom";
 import { cn } from "@/lib/utils";
 
 const navItems = [
   { to: "/teacher", icon: Home, label: "Home" },
   { to: "/teacher/attendance", icon: UserCheck, label: "Attendance" },
+  { to: "/teacher/dna", icon: Heart, label: "DNA", alwaysRed: true },
   { to: "/teacher/academic", icon: GraduationCap, label: "Academic" },
   { to: "/teacher/calendar", icon: Calendar, label: "Calendar" },
 ];
@@ -55,7 +56,11 @@ export function TeacherBottomNavigation() {
           >
             {({ isActive }) => (
               <>
-                <item.icon className={cn("h-5 w-5 mb-1", isActive && "stroke-[2.5px]")} />
+                <item.icon className={cn(
+                  "h-5 w-5 mb-1", 
+                  isActive && "stroke-[2.5px]",
+                  item.alwaysRed && "text-rose-500"
+                )} />
                 <span className="text-xs font-medium">{item.label}</span>
               </>
             )}
