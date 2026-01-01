@@ -42,7 +42,7 @@ export function AppHeader({
               variant="ghost" 
               size="icon" 
               className="relative"
-              onClick={() => navigate("/notifications")}
+              onClick={() => navigate("/parent/notifications")}
             >
               <Bell className="h-5 w-5" />
               <Badge 
@@ -57,7 +57,7 @@ export function AppHeader({
             <Button 
               variant="ghost" 
               size="icon"
-              onClick={() => navigate("/profile")}
+              onClick={() => navigate("/parent/profile")}
             >
               <User className="h-5 w-5" />
             </Button>

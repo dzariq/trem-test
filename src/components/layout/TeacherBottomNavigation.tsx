@@ -1,17 +1,16 @@
 import { useState, useEffect } from "react";
-import { Home, UserCheck, GraduationCap, Calendar, HeadphonesIcon } from "lucide-react";
+import { Home, UserCheck, GraduationCap, Calendar } from "lucide-react";
 import { NavLink } from "react-router-dom";
 import { cn } from "@/lib/utils";
 
 const navItems = [
-  { to: "/parent", icon: Home, label: "Home" },
-  { to: "/parent/attendance", icon: UserCheck, label: "Attendance" },
-  { to: "/parent/academic", icon: GraduationCap, label: "Academic" },
-  { to: "/parent/calendar", icon: Calendar, label: "Calendar" },
-  { to: "/parent/support", icon: HeadphonesIcon, label: "Support" },
+  { to: "/teacher", icon: Home, label: "Home" },
+  { to: "/teacher/attendance", icon: UserCheck, label: "Attendance" },
+  { to: "/teacher/academic", icon: GraduationCap, label: "Academic" },
+  { to: "/teacher/calendar", icon: Calendar, label: "Calendar" },
 ];
 
-export function BottomNavigation() {
+export function TeacherBottomNavigation() {
   const [isVisible, setIsVisible] = useState(true);
   const [lastScrollY, setLastScrollY] = useState(0);
 
@@ -19,7 +18,6 @@ export function BottomNavigation() {
     const handleScroll = () => {
       const currentScrollY = window.scrollY;
       
-      // Show nav when scrolling up, hide when scrolling down
       if (currentScrollY < lastScrollY || currentScrollY < 50) {
         setIsVisible(true);
       } else if (currentScrollY > lastScrollY && currentScrollY > 50) {
@@ -45,7 +43,7 @@ export function BottomNavigation() {
           <NavLink
             key={item.to}
             to={item.to}
-            end={item.to === "/parent"}
+            end={item.to === "/teacher"}
             className={({ isActive }) =>
               cn(
                 "flex flex-col items-center justify-center py-2 px-3 rounded-lg transition-all duration-200 min-w-[60px]",
