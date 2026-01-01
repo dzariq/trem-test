@@ -1,19 +1,47 @@
+import { useState } from "react";
 import { attendanceData } from "@/data/mockData";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ChevronRight } from "lucide-react";
+import { ChevronRight, ChevronDown } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { PieChart, Pie, Cell, ResponsiveContainer, Legend } from "recharts";
+import { PieChart, Pie, Cell, ResponsiveContainer } from "recharts";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+
+const monthOptions = [
+  { label: "January", value: "Jan" },
+  { label: "December", value: "Dec" },
+  { label: "November", value: "Nov" },
+  { label: "October", value: "Oct" },
+  { label: "September", value: "Sep" },
+  { label: "August", value: "Aug" },
+];
 
 export function AttendanceSummary() {
   const navigate = useNavigate();
-  const { currentMonth } = attendanceData;
+  const [selectedMonth, setSelectedMonth] = useState(monthOptions[0]);
   
-  const chartData = [
-    { name: "Present", value: currentMonth.present, color: "hsl(var(--chart-1))" },
-    { name: "Absent", value: currentMonth.absent, color: "hsl(var(--destructive))" },
-    { name: "Late", value: currentMonth.late, color: "hsl(var(--chart-4))" },
-    { name: "Excused", value: currentMonth.excused, color: "hsl(var(--chart-5))" },
+  // Find the data for the selected month
+  const monthData = attendanceData.monthly.find(m => m.month === selectedMonth.value);
+  
+  const total = monthData 
+    ? monthData.present + monthData.absent + monthData.late + monthData.excused 
+    : 100;
+  
+  const chartData = monthData ? [
+    { name: "Present", value: Math.round((monthData.present / total) * 100), color: "hsl(var(--chart-1))" },
+    { name: "Absent", value: Math.round((monthData.absent / total) * 100), color: "hsl(var(--destructive))" },
+    { name: "Late", value: Math.round((monthData.late / total) * 100), color: "hsl(var(--chart-4))" },
+    { name: "Excused", value: Math.round((monthData.excused / total) * 100), color: "hsl(var(--chart-5))" },
+  ] : [
+    { name: "Present", value: 89, color: "hsl(var(--chart-1))" },
+    { name: "Absent", value: 7, color: "hsl(var(--destructive))" },
+    { name: "Late", value: 3, color: "hsl(var(--chart-4))" },
+    { name: "Excused", value: 1, color: "hsl(var(--chart-5))" },
   ];
 
   return (
@@ -22,7 +50,25 @@ export function AttendanceSummary() {
         <CardHeader className="pb-2">
           <CardTitle className="text-lg font-semibold flex items-center justify-between">
             Attendance Overview
-            <span className="text-sm font-normal text-muted-foreground">This Month</span>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="sm" className="text-sm font-normal text-muted-foreground h-auto py-1 px-2">
+                  {selectedMonth.label}
+                  <ChevronDown className="h-3 w-3 ml-1" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="bg-card border-border">
+                {monthOptions.map((month) => (
+                  <DropdownMenuItem 
+                    key={month.value}
+                    onClick={() => setSelectedMonth(month)}
+                    className={selectedMonth.value === month.value ? "bg-muted" : ""}
+                  >
+                    {month.label}
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
           </CardTitle>
         </CardHeader>
         <CardContent className="pb-4">
