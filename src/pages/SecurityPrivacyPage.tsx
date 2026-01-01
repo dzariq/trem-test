@@ -3,29 +3,16 @@ import { AppHeader } from "@/components/layout/AppHeader";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
-import { 
-  Shield, 
-  Lock, 
-  Eye, 
-  Smartphone, 
-  Bell, 
-  Key,
-  Fingerprint,
-  ChevronRight,
-  AlertTriangle
-} from "lucide-react";
+import { Shield, Lock, Eye, Smartphone, Bell, Key, Fingerprint, ChevronRight, AlertTriangle } from "lucide-react";
 import { useState } from "react";
 import { Separator } from "@/components/ui/separator";
-
 export default function SecurityPrivacyPage() {
   const [twoFactorEnabled, setTwoFactorEnabled] = useState(false);
   const [biometricEnabled, setBiometricEnabled] = useState(true);
   const [loginAlerts, setLoginAlerts] = useState(true);
   const [dataSharing, setDataSharing] = useState(false);
   const [activityVisible, setActivityVisible] = useState(true);
-
-  return (
-    <AppLayout>
+  return <AppLayout>
       <AppHeader title="Security & Privacy" showBack />
 
       <div className="px-4 py-4 space-y-4">
@@ -47,10 +34,7 @@ export default function SecurityPrivacyPage() {
                   <p className="text-xs text-muted-foreground">Add an extra layer of security</p>
                 </div>
               </div>
-              <Switch 
-                checked={twoFactorEnabled} 
-                onCheckedChange={setTwoFactorEnabled}
-              />
+              <Switch checked={twoFactorEnabled} onCheckedChange={setTwoFactorEnabled} />
             </div>
             <Separator />
 
@@ -63,10 +47,7 @@ export default function SecurityPrivacyPage() {
                   <p className="text-xs text-muted-foreground">Use fingerprint or face ID</p>
                 </div>
               </div>
-              <Switch 
-                checked={biometricEnabled} 
-                onCheckedChange={setBiometricEnabled}
-              />
+              <Switch checked={biometricEnabled} onCheckedChange={setBiometricEnabled} />
             </div>
             <Separator />
 
@@ -79,10 +60,7 @@ export default function SecurityPrivacyPage() {
                   <p className="text-xs text-muted-foreground">Get notified of new logins</p>
                 </div>
               </div>
-              <Switch 
-                checked={loginAlerts} 
-                onCheckedChange={setLoginAlerts}
-              />
+              <Switch checked={loginAlerts} onCheckedChange={setLoginAlerts} />
             </div>
             <Separator />
 
@@ -123,18 +101,7 @@ export default function SecurityPrivacyPage() {
           </CardHeader>
           <CardContent className="space-y-1 p-0">
             {/* Data Sharing */}
-            <div className="flex items-center justify-between p-4">
-              <div className="flex items-center gap-3">
-                <div>
-                  <p className="font-medium text-foreground text-sm">Data Sharing</p>
-                  <p className="text-xs text-muted-foreground">Share usage data to improve services</p>
-                </div>
-              </div>
-              <Switch 
-                checked={dataSharing} 
-                onCheckedChange={setDataSharing}
-              />
-            </div>
+            
             <Separator />
 
             {/* Activity Visibility */}
@@ -145,10 +112,7 @@ export default function SecurityPrivacyPage() {
                   <p className="text-xs text-muted-foreground">Let teachers see your activity status</p>
                 </div>
               </div>
-              <Switch 
-                checked={activityVisible} 
-                onCheckedChange={setActivityVisible}
-              />
+              <Switch checked={activityVisible} onCheckedChange={setActivityVisible} />
             </div>
             <Separator />
 
@@ -188,6 +152,5 @@ export default function SecurityPrivacyPage() {
           </CardContent>
         </Card>
       </div>
-    </AppLayout>
-  );
+    </AppLayout>;
 }
