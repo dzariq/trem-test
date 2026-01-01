@@ -48,11 +48,11 @@ export function AttendanceSummary() {
     <section className="px-4 py-4">
       <Card className="bg-card border-border shadow-sm">
         <CardHeader className="pb-2">
-          <div className="flex items-center justify-between gap-2">
-            <CardTitle className="text-base font-semibold">Attendance</CardTitle>
+          <CardTitle className="text-lg font-semibold flex items-center justify-between">
+            Attendance Overview
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="outline" size="sm" className="text-xs font-normal h-7 px-2">
+                <Button variant="ghost" size="sm" className="text-sm font-normal text-muted-foreground h-auto py-1 px-2">
                   {selectedMonth.label}
                   <ChevronDown className="h-3 w-3 ml-1" />
                 </Button>
@@ -69,7 +69,7 @@ export function AttendanceSummary() {
                 ))}
               </DropdownMenuContent>
             </DropdownMenu>
-          </div>
+          </CardTitle>
         </CardHeader>
         <CardContent className="pb-4">
           <div className="flex items-center gap-4">
