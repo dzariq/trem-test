@@ -13,7 +13,7 @@ import {
   Save, TrendingUp, TrendingDown, Minus, ChevronDown, ChevronUp, 
   Users, Target, Award, AlertTriangle, BookOpen, BarChart3,
   FileText, CheckCircle, XCircle, Lightbulb, Copy, Printer,
-  ArrowRight, ArrowUpRight, ArrowDownRight, Scale
+  ArrowRight, ArrowUpRight, ArrowDownRight, Scale, Download, FileSpreadsheet
 } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import schoolLogo from "@/assets/school-badge.png";
@@ -965,11 +965,10 @@ export default function TeacherAcademicPage() {
                     </div>
 
                     {/* Action Buttons */}
-                    <div className="flex gap-2">
+                    <div className="grid grid-cols-2 gap-2">
                       <Button 
                         variant="outline" 
-                        size="sm" 
-                        className="flex-1"
+                        size="sm"
                         onClick={() => {
                           const bestSubject = subjectAverages.length > 0 
                             ? subjectAverages.reduce((a, b) => a.average > b.average ? a : b)
@@ -1025,16 +1024,230 @@ ${atRiskStudents.length > 0 ? `3. Arrange parent meetings for at-risk students` 
                         }}
                       >
                         <Copy className="h-3.5 w-3.5 mr-1" />
-                        Copy Report
+                        Copy
                       </Button>
                       <Button 
                         variant="outline" 
-                        size="sm" 
-                        className="flex-1"
+                        size="sm"
                         onClick={() => window.print()}
                       >
                         <Printer className="h-3.5 w-3.5 mr-1" />
                         Print
+                      </Button>
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        onClick={() => {
+                          // Generate CSV content
+                          const csvRows = [
+                            ["Class Performance Report"],
+                            [`Class: ${selectedClass}`, `Year: ${selectedYears.join(", ")}`, `Period: ${examPeriods.find(p => p.value === selectedPeriod)?.label}`],
+                            [`Generated: ${new Date().toLocaleDateString()}`],
+                            [],
+                            ["Summary Statistics"],
+                            ["Metric", "Value"],
+                            ["Total Students", students.length.toString()],
+                            ["Class Average", `${classAverage}%`],
+                            ["Pass Rate", `${passRate}%`],
+                            ["A-Grade Rate", `${aGradeRate}%`],
+                            ["Highest Score", `${highestScore}%`],
+                            ["Lowest Score", `${lowestScore}%`],
+                            [],
+                            ["Category Performance"],
+                            ["Category", "Average", "Max", "Percentage"],
+                            ...categoryAverages.map(cat => [cat.name, cat.average.toFixed(1), cat.max.toString(), `${cat.percentage.toFixed(0)}%`]),
+                            [],
+                            ["Subject Performance"],
+                            ["Subject", "Average"],
+                            ...subjectAverages.map(sub => [sub.fullName, sub.average.toFixed(1)]),
+                            [],
+                            ["Grade Distribution"],
+                            ["Grade", "Count"],
+                            ...gradeDistribution.map(g => [g.range, g.count.toString()]),
+                            [],
+                            ["Student Rankings"],
+                            ["Rank", "Name", "Score"],
+                            ...rankedStudents.map((s, i) => [(i + 1).toString(), s.name, s.score ? `${s.score}%` : "N/A"]),
+                          ];
+                          
+                          if (atRiskStudents.length > 0) {
+                            csvRows.push([]);
+                            csvRows.push(["At-Risk Students"]);
+                            csvRows.push(["Name", "Score"]);
+                            atRiskStudents.forEach(s => csvRows.push([s.name, s.score ? `${s.score}%` : "N/A"]));
+                          }
+                          
+                          const csvContent = csvRows.map(row => row.map(cell => `"${cell}"`).join(",")).join("\n");
+                          const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+                          const url = URL.createObjectURL(blob);
+                          const link = document.createElement("a");
+                          link.href = url;
+                          link.download = `class_report_${selectedClass}_${selectedYears.join("-")}_${selectedPeriod}.csv`;
+                          document.body.appendChild(link);
+                          link.click();
+                          document.body.removeChild(link);
+                          URL.revokeObjectURL(url);
+                          
+                          toast({
+                            title: "CSV Downloaded",
+                            description: "Class report has been downloaded as CSV",
+                          });
+                        }}
+                      >
+                        <FileSpreadsheet className="h-3.5 w-3.5 mr-1" />
+                        CSV
+                      </Button>
+                      <Button 
+                        variant="default" 
+                        size="sm"
+                        onClick={() => {
+                          // Generate PDF using browser print
+                          const bestSubject = subjectAverages.length > 0 
+                            ? subjectAverages.reduce((a, b) => a.average > b.average ? a : b)
+                            : null;
+                          const worstSubject = subjectAverages.length > 0 
+                            ? subjectAverages.reduce((a, b) => a.average < b.average ? a : b)
+                            : null;
+                          const bestCategory = categoryAverages.length > 0
+                            ? categoryAverages.reduce((a, b) => a.percentage > b.percentage ? a : b)
+                            : null;
+                          const worstCategory = categoryAverages.length > 0
+                            ? categoryAverages.reduce((a, b) => a.percentage < b.percentage ? a : b)
+                            : null;
+                          
+                          const printWindow = window.open('', '_blank');
+                          if (!printWindow) {
+                            toast({
+                              title: "Pop-up Blocked",
+                              description: "Please allow pop-ups to download PDF",
+                              variant: "destructive",
+                            });
+                            return;
+                          }
+                          
+                          const htmlContent = `
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Class Report - ${selectedClass}</title>
+  <style>
+    body { font-family: Arial, sans-serif; padding: 20px; max-width: 800px; margin: 0 auto; }
+    h1 { color: #1a1a1a; border-bottom: 2px solid #10b981; padding-bottom: 10px; }
+    h2 { color: #374151; margin-top: 24px; }
+    .meta { color: #6b7280; font-size: 14px; margin-bottom: 20px; }
+    .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin: 16px 0; }
+    .stat-card { background: #f3f4f6; padding: 12px; border-radius: 8px; text-align: center; }
+    .stat-value { font-size: 24px; font-weight: bold; color: #111827; }
+    .stat-label { font-size: 12px; color: #6b7280; }
+    table { width: 100%; border-collapse: collapse; margin: 16px 0; }
+    th, td { padding: 8px 12px; text-align: left; border-bottom: 1px solid #e5e7eb; }
+    th { background: #f9fafb; font-weight: 600; color: #374151; }
+    .section { background: #f9fafb; padding: 16px; border-radius: 8px; margin: 16px 0; }
+    .section.strength { background: #ecfdf5; border-left: 4px solid #10b981; }
+    .section.weakness { background: #fffbeb; border-left: 4px solid #f59e0b; }
+    .section.recommendation { background: #eff6ff; border-left: 4px solid #3b82f6; }
+    ul { margin: 8px 0; padding-left: 20px; }
+    li { margin: 4px 0; }
+    @media print { body { print-color-adjust: exact; -webkit-print-color-adjust: exact; } }
+  </style>
+</head>
+<body>
+  <h1>📊 Class Performance Report</h1>
+  <div class="meta">
+    <strong>Class:</strong> ${selectedClass} | 
+    <strong>Year:</strong> ${selectedYears.join(", ")} | 
+    <strong>Period:</strong> ${examPeriods.find(p => p.value === selectedPeriod)?.label}<br/>
+    <strong>Generated:</strong> ${new Date().toLocaleDateString()}
+  </div>
+  
+  <h2>Summary Statistics</h2>
+  <div class="stats-grid">
+    <div class="stat-card"><div class="stat-value">${students.length}</div><div class="stat-label">Students</div></div>
+    <div class="stat-card"><div class="stat-value">${classAverage}%</div><div class="stat-label">Average</div></div>
+    <div class="stat-card"><div class="stat-value">${passRate}%</div><div class="stat-label">Pass Rate</div></div>
+    <div class="stat-card"><div class="stat-value">${aGradeRate}%</div><div class="stat-label">A-Grade</div></div>
+    <div class="stat-card"><div class="stat-value">${highestScore}%</div><div class="stat-label">Highest</div></div>
+    <div class="stat-card"><div class="stat-value">${lowestScore}%</div><div class="stat-label">Lowest</div></div>
+  </div>
+  
+  <h2>Category Performance</h2>
+  <table>
+    <tr><th>Category</th><th>Average</th><th>Max</th><th>Percentage</th></tr>
+    ${categoryAverages.map(cat => `<tr><td>${cat.name}</td><td>${cat.average.toFixed(1)}</td><td>${cat.max}</td><td>${cat.percentage.toFixed(0)}%</td></tr>`).join('')}
+  </table>
+  
+  <h2>Subject Performance</h2>
+  <table>
+    <tr><th>Subject</th><th>Average</th></tr>
+    ${subjectAverages.map(sub => `<tr><td>${sub.fullName}</td><td>${sub.average.toFixed(1)}%</td></tr>`).join('')}
+  </table>
+  
+  <h2>Grade Distribution</h2>
+  <table>
+    <tr><th>Grade</th><th>Count</th></tr>
+    ${gradeDistribution.map(g => `<tr><td>${g.range}</td><td>${g.count}</td></tr>`).join('')}
+  </table>
+  
+  <div class="section strength">
+    <h3>✅ Strengths</h3>
+    <ul>
+      ${bestSubject ? `<li><strong>${bestSubject.fullName}</strong> is the strongest subject (avg: ${bestSubject.average.toFixed(0)}%)</li>` : ''}
+      ${bestCategory ? `<li><strong>${bestCategory.name}</strong> scores are consistently high (${bestCategory.percentage.toFixed(0)}%)</li>` : ''}
+      <li><strong>${rankedStudents.filter(s => s.score && s.score >= 80).length} students</strong> achieved B grade or higher</li>
+    </ul>
+  </div>
+  
+  <div class="section weakness">
+    <h3>⚠️ Areas for Improvement</h3>
+    <ul>
+      ${worstSubject ? `<li><strong>${worstSubject.fullName}</strong> needs attention (avg: ${worstSubject.average.toFixed(0)}%)</li>` : ''}
+      ${worstCategory ? `<li><strong>${worstCategory.name}</strong> is the weakest category (${worstCategory.percentage.toFixed(0)}%)</li>` : ''}
+      ${atRiskStudents.length > 0 ? `<li><strong>${atRiskStudents.length} students</strong> are at risk of failing</li>` : ''}
+    </ul>
+  </div>
+  
+  <div class="section recommendation">
+    <h3>💡 Recommendations</h3>
+    <ul>
+      ${worstSubject ? `<li>Schedule additional tutoring sessions for <strong>${worstSubject.fullName}</strong></li>` : ''}
+      ${worstCategory ? `<li>Implement weekly <strong>${worstCategory.name.toLowerCase()}</strong> practice across all subjects</li>` : ''}
+      ${atRiskStudents.length > 0 ? `<li>Arrange parent meetings for the ${atRiskStudents.length} at-risk students</li>` : ''}
+      <li>Celebrate class achievements to boost morale and motivation</li>
+    </ul>
+  </div>
+  
+  <h2>Top Performers</h2>
+  <table>
+    <tr><th>Rank</th><th>Name</th><th>Score</th></tr>
+    ${rankedStudents.slice(0, 5).map((s, i) => `<tr><td>${i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : `#${i + 1}`}</td><td>${s.name}</td><td>${s.score}%</td></tr>`).join('')}
+  </table>
+  
+  ${atRiskStudents.length > 0 ? `
+  <h2>At-Risk Students</h2>
+  <table>
+    <tr><th>Name</th><th>Score</th></tr>
+    ${atRiskStudents.map(s => `<tr><td>${s.name}</td><td>${s.score}%</td></tr>`).join('')}
+  </table>
+  ` : ''}
+</body>
+</html>
+                          `;
+                          
+                          printWindow.document.write(htmlContent);
+                          printWindow.document.close();
+                          printWindow.focus();
+                          setTimeout(() => {
+                            printWindow.print();
+                          }, 250);
+                          
+                          toast({
+                            title: "PDF Ready",
+                            description: "Use 'Save as PDF' in the print dialog",
+                          });
+                        }}
+                      >
+                        <Download className="h-3.5 w-3.5 mr-1" />
+                        PDF
                       </Button>
                     </div>
                   </CardContent>
