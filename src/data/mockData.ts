@@ -6,28 +6,32 @@ export const announcements = [
     title: "School Sports Day 2026",
     snippet: "Join us for our annual Sports Day event on January 15th. Students will participate in various athletic activities.",
     date: "2026-01-05",
-    category: "Event"
+    category: "Event",
+    image: "https://images.unsplash.com/photo-1571019614242-c5c5dee9f50b?w=400&h=200&fit=crop"
   },
   {
     id: 2,
     title: "Parent-Teacher Conference",
     snippet: "Schedule your one-on-one meeting with teachers. Available slots from Jan 20-22.",
     date: "2026-01-03",
-    category: "Academic"
+    category: "Academic",
+    image: null
   },
   {
     id: 3,
     title: "New Canteen Menu",
     snippet: "We've updated our canteen menu with healthier options. Check out the new selections!",
     date: "2026-01-02",
-    category: "General"
+    category: "General",
+    image: "https://images.unsplash.com/photo-1567521464027-f127ff144326?w=400&h=200&fit=crop"
   },
   {
     id: 4,
     title: "Science Fair Registration",
     snippet: "Register your child for the upcoming Science Fair. Deadline: January 25th.",
     date: "2025-12-28",
-    category: "Academic"
+    category: "Academic",
+    image: null
   }
 ];
 
