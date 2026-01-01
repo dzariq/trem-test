@@ -16,7 +16,7 @@ import {
 } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import schoolLogo from "@/assets/school-badge.png";
-import { teacherProfile, classRosters, classGrades, detailedClassGrades } from "@/data/teacherMockData";
+import { teacherProfile, classRosters, classGrades, detailedClassGrades, yearOverYearData, categoryYearOverYear } from "@/data/teacherMockData";
 import {
   Select,
   SelectContent,
@@ -40,6 +40,9 @@ import {
   PieChart,
   Pie,
   Cell,
+  LineChart,
+  Line,
+  Legend,
 } from "recharts";
 import {
   Collapsible,
@@ -638,6 +641,116 @@ export default function TeacherAcademicPage() {
                       <span className="text-amber-600">Needs work: {categoryBySubjectData[categoryBySubjectData.length - 1]?.fullName}</span>
                     </div>
                   )}
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Year-Over-Year Trend Comparison */}
+            <Card>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-sm flex items-center gap-2">
+                  <TrendingUp className="h-4 w-4" />
+                  Year-Over-Year Trend
+                </CardTitle>
+                <p className="text-xs text-muted-foreground">Class average performance across years</p>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {/* Overall Score Trend */}
+                <div>
+                  <p className="text-xs font-medium text-muted-foreground mb-2">Overall Score</p>
+                  <div className="h-40">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <LineChart data={yearOverYearData[selectedClass as keyof typeof yearOverYearData] || []}>
+                        <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+                        <XAxis dataKey="year" tick={{ fontSize: 10 }} />
+                        <YAxis domain={[0, 100]} tick={{ fontSize: 10 }} width={30} />
+                        <Tooltip />
+                        <Legend wrapperStyle={{ fontSize: '10px' }} />
+                        <Line 
+                          type="monotone" 
+                          dataKey="midYear" 
+                          stroke="hsl(var(--primary))" 
+                          strokeWidth={2}
+                          dot={{ fill: "hsl(var(--primary))", r: 4 }}
+                          name="Mid-Year"
+                        />
+                        <Line 
+                          type="monotone" 
+                          dataKey="yearEnd" 
+                          stroke="#10b981" 
+                          strokeWidth={2}
+                          dot={{ fill: "#10b981", r: 4 }}
+                          name="Year-End"
+                          connectNulls={false}
+                        />
+                      </LineChart>
+                    </ResponsiveContainer>
+                  </div>
+                </div>
+
+                {/* Category Trend */}
+                <div className="pt-3 border-t">
+                  <p className="text-xs font-medium text-muted-foreground mb-2">Category Breakdown</p>
+                  <div className="h-48">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <LineChart data={categoryYearOverYear[selectedClass as keyof typeof categoryYearOverYear] || []}>
+                        <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+                        <XAxis dataKey="year" tick={{ fontSize: 10 }} />
+                        <YAxis tick={{ fontSize: 10 }} width={30} />
+                        <Tooltip />
+                        <Legend wrapperStyle={{ fontSize: '10px' }} />
+                        <Line 
+                          type="monotone" 
+                          dataKey="attitude" 
+                          stroke="hsl(var(--primary))" 
+                          strokeWidth={2}
+                          dot={{ r: 3 }}
+                          name="Attitude (/10)"
+                        />
+                        <Line 
+                          type="monotone" 
+                          dataKey="homework" 
+                          stroke="#f59e0b" 
+                          strokeWidth={2}
+                          dot={{ r: 3 }}
+                          name="Homework (/10)"
+                        />
+                        <Line 
+                          type="monotone" 
+                          dataKey="quiz" 
+                          stroke="#10b981" 
+                          strokeWidth={2}
+                          dot={{ r: 3 }}
+                          name="Quiz (/10)"
+                        />
+                      </LineChart>
+                    </ResponsiveContainer>
+                  </div>
+                  
+                  {/* Trend insight */}
+                  {(() => {
+                    const data = categoryYearOverYear[selectedClass as keyof typeof categoryYearOverYear] || [];
+                    if (data.length < 2) return null;
+                    const latest = data[data.length - 1];
+                    const previous = data[data.length - 2];
+                    const attitudeChange = latest.attitude - previous.attitude;
+                    const homeworkChange = latest.homework - previous.homework;
+                    const quizChange = latest.quiz - previous.quiz;
+                    
+                    const improvements = [];
+                    if (attitudeChange > 0) improvements.push(`Attitude +${attitudeChange.toFixed(1)}`);
+                    if (homeworkChange > 0) improvements.push(`Homework +${homeworkChange.toFixed(1)}`);
+                    if (quizChange > 0) improvements.push(`Quiz +${quizChange.toFixed(1)}`);
+                    
+                    return improvements.length > 0 ? (
+                      <div className="flex items-center gap-2 p-2 rounded-lg bg-emerald-50 border border-emerald-200 mt-3">
+                        <TrendingUp className="h-4 w-4 text-emerald-600" />
+                        <p className="text-xs text-emerald-700">
+                          <span className="font-medium">Improvements:</span> {improvements.join(", ")}
+                        </p>
+                      </div>
+                    ) : null;
+                  })()}
                 </div>
               </CardContent>
             </Card>
