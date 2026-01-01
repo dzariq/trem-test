@@ -118,20 +118,14 @@ export default function SecurityPrivacyPage() {
             <Separator />
 
             {/* Privacy Policy */}
-            <button 
-              onClick={() => navigate('/privacy-policy')}
-              className="w-full flex items-center justify-between p-4 hover:bg-accent/30 transition-colors"
-            >
+            <button onClick={() => navigate('/privacy-policy')} className="w-full flex items-center justify-between p-4 hover:bg-accent/30 transition-colors">
               <p className="font-medium text-foreground text-sm">Privacy Policy</p>
               <ChevronRight className="h-5 w-5 text-muted-foreground" />
             </button>
             <Separator />
 
             {/* Terms of Service */}
-            <button className="w-full flex items-center justify-between p-4 hover:bg-accent/30 transition-colors">
-              <p className="font-medium text-foreground text-sm">Terms of Service</p>
-              <ChevronRight className="h-5 w-5 text-muted-foreground" />
-            </button>
+            
           </CardContent>
         </Card>
 
