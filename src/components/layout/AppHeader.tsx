@@ -1,6 +1,6 @@
 import { Bell, User, ChevronLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { Badge } from "@/components/ui/badge";
 
 interface AppHeaderProps {
@@ -21,6 +21,10 @@ export function AppHeader({
   leftContent
 }: AppHeaderProps) {
   const navigate = useNavigate();
+  const location = useLocation();
+  
+  const isTeacherPortal = location.pathname.startsWith("/teacher");
+  const basePath = isTeacherPortal ? "/teacher" : "/parent";
 
   return (
     <header className="sticky top-0 z-40 bg-card/95 backdrop-blur-sm border-b border-border">
@@ -42,7 +46,7 @@ export function AppHeader({
               variant="ghost" 
               size="icon" 
               className="relative"
-              onClick={() => navigate("/parent/notifications")}
+              onClick={() => navigate(`${basePath}/notifications`)}
             >
               <Bell className="h-5 w-5" />
               <Badge 
@@ -57,7 +61,7 @@ export function AppHeader({
             <Button 
               variant="ghost" 
               size="icon"
-              onClick={() => navigate("/parent/profile")}
+              onClick={() => navigate(`${basePath}/profile`)}
             >
               <User className="h-5 w-5" />
             </Button>

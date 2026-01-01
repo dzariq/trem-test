@@ -24,6 +24,7 @@ import TeacherHomePage from "./pages/teacher/TeacherHomePage";
 import TeacherAttendancePage from "./pages/teacher/TeacherAttendancePage";
 import TeacherAcademicPage from "./pages/teacher/TeacherAcademicPage";
 import TeacherCalendarPage from "./pages/teacher/TeacherCalendarPage";
+import TeacherProfilePage from "./pages/teacher/TeacherProfilePage";
 
 import NotFound from "./pages/NotFound";
 
@@ -56,6 +57,8 @@ const App = () => (
           <Route path="/teacher/attendance" element={<TeacherAttendancePage />} />
           <Route path="/teacher/academic" element={<TeacherAcademicPage />} />
           <Route path="/teacher/calendar" element={<TeacherCalendarPage />} />
+          <Route path="/teacher/profile" element={<TeacherProfilePage />} />
+          <Route path="/teacher/security-privacy" element={<SecurityPrivacyPage />} />
 
           <Route path="*" element={<NotFound />} />
         </Routes>
