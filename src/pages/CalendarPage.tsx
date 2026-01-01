@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { AppHeader } from "@/components/layout/AppHeader";
 import { calendarEvents, ccaActivities, students } from "@/data/mockData";
@@ -35,6 +36,9 @@ import {
 } from "@/lib/calendarUtils";
 
 export default function CalendarPage() {
+  const [searchParams] = useSearchParams();
+  const initialTab = searchParams.get("tab") || "calendar";
+  
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
   const [categoryFilter, setCategoryFilter] = useState<TagCategory | "all">("all");
   const [selectedTag, setSelectedTag] = useState<CalendarTag | null>(null);
@@ -124,7 +128,7 @@ export default function CalendarPage() {
       />
 
       <section className="px-4 pt-4">
-        <Tabs defaultValue="calendar" className="w-full">
+        <Tabs defaultValue={initialTab} className="w-full">
           <TabsList className="grid w-full grid-cols-2 bg-muted/50">
             <TabsTrigger value="calendar">Main Calendar</TabsTrigger>
             <TabsTrigger value="cca">CCA Activities</TabsTrigger>
