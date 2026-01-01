@@ -17,13 +17,11 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { 
-  User, 
   Mail, 
   Phone, 
   Bell, 
   LogOut, 
   ChevronRight,
-  GraduationCap,
   Shield,
   Pencil
 } from "lucide-react";
@@ -108,24 +106,33 @@ export default function ProfilePage() {
           <CardHeader className="pb-2">
             <CardTitle className="text-base font-semibold">Linked Students</CardTitle>
           </CardHeader>
-          <CardContent className="space-y-3">
-            {students.map((student, index) => (
-              <div 
-                key={index}
-                className="flex items-center gap-3 p-3 rounded-lg bg-primary/10 border border-primary/20"
-              >
-                <Avatar className="h-12 w-12 border border-primary/20">
-                  <AvatarFallback className="bg-primary text-primary-foreground font-semibold">
-                    {student.name.split(' ').map(n => n[0]).join('')}
-                  </AvatarFallback>
-                </Avatar>
-                <div className="flex-1">
-                  <h3 className="font-medium text-foreground">{student.name}</h3>
-                  <p className="text-sm text-muted-foreground">{student.grade} • Class {student.class}</p>
+          <CardContent className="space-y-2">
+            {students.map((student, index) => {
+              const avatarColors = [
+                "bg-gradient-to-br from-blue-400 to-blue-600",
+                "bg-gradient-to-br from-teal-400 to-teal-600",
+                "bg-gradient-to-br from-purple-400 to-purple-600",
+                "bg-gradient-to-br from-pink-400 to-pink-600",
+                "bg-gradient-to-br from-orange-400 to-orange-600",
+              ];
+              return (
+                <div 
+                  key={index}
+                  className="flex items-center gap-3 p-3 rounded-xl border border-border"
+                >
+                  <div className={`h-12 w-12 rounded-full flex items-center justify-center shrink-0 ${avatarColors[index % avatarColors.length]}`}>
+                    <span className="text-base font-semibold text-white">
+                      {student.name.split(' ').map(n => n[0]).join('')}
+                    </span>
+                  </div>
+                  <div className="flex-1">
+                    <h3 className="font-medium text-foreground">{student.name}</h3>
+                    <p className="text-sm text-muted-foreground">{student.class} • {student.grade}</p>
+                  </div>
+                  <ChevronRight className="h-5 w-5 text-muted-foreground" />
                 </div>
-                <GraduationCap className="h-5 w-5 text-primary" />
-              </div>
-            ))}
+              );
+            })}
           </CardContent>
         </Card>
 
