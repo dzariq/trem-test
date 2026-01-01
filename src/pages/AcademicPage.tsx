@@ -6,7 +6,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Download, FileText, Award, Trophy, BookOpen, TrendingUp } from "lucide-react";
+import { Download, FileText, Award, Trophy, BookOpen, TrendingUp, Check } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Select,
   SelectContent,
@@ -26,10 +27,22 @@ import {
 } from "recharts";
 
 export default function AcademicPage() {
+  const [activeTab, setActiveTab] = useState("grades");
   const [examType, setExamType] = useState("mid-year");
   const [selectedYear, setSelectedYear] = useState("2025");
+  const [selectedYears, setSelectedYears] = useState<string[]>(["2025"]);
   const [subjectFilter, setSubjectFilter] = useState("all");
   const [reportGenerated, setReportGenerated] = useState(false);
+
+  const isActivitiesTab = activeTab === "cocurriculum";
+
+  const toggleYear = (year: string) => {
+    setSelectedYears(prev => 
+      prev.includes(year) 
+        ? prev.filter(y => y !== year)
+        : [...prev, year]
+    );
+  };
 
   const gradeColors: Record<string, string> = {
     A: "bg-chart-1 text-card",
@@ -98,38 +111,65 @@ export default function AcademicPage() {
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            {/* Exam Selection Row */}
+            {/* Exam Selection Row - conditional based on active tab */}
             <div className="flex gap-3">
-              <Select value={examType} onValueChange={setExamType}>
-                <SelectTrigger className="flex-1">
-                  <SelectValue placeholder="Exam Type" />
-                </SelectTrigger>
-                <SelectContent className="bg-card">
-                  <SelectItem value="mid-year">Mid-Year Exam</SelectItem>
-                  <SelectItem value="year-end">Year-End Exam</SelectItem>
-                </SelectContent>
-              </Select>
+              {!isActivitiesTab && (
+                <Select value={examType} onValueChange={setExamType}>
+                  <SelectTrigger className="flex-1">
+                    <SelectValue placeholder="Exam Type" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-card">
+                    <SelectItem value="mid-year">Mid-Year Exam</SelectItem>
+                    <SelectItem value="year-end">Year-End Exam</SelectItem>
+                  </SelectContent>
+                </Select>
+              )}
               
-              <Select value={selectedYear} onValueChange={setSelectedYear}>
-                <SelectTrigger className="w-28">
-                  <SelectValue placeholder="Year" />
-                </SelectTrigger>
-                <SelectContent className="bg-card">
-                  <SelectItem value="2025">2025</SelectItem>
-                  <SelectItem value="2024">2024</SelectItem>
-                </SelectContent>
-              </Select>
+              {isActivitiesTab ? (
+                <div className="flex-1 flex gap-2">
+                  {["2025", "2024", "2023"].map((year) => (
+                    <button
+                      key={year}
+                      onClick={() => toggleYear(year)}
+                      className={`flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-md border text-sm font-medium transition-colors ${
+                        selectedYears.includes(year)
+                          ? "bg-primary text-primary-foreground border-primary"
+                          : "bg-card border-border text-foreground hover:bg-accent"
+                      }`}
+                    >
+                      {selectedYears.includes(year) && <Check className="h-3.5 w-3.5" />}
+                      {year}
+                    </button>
+                  ))}
+                </div>
+              ) : (
+                <Select value={selectedYear} onValueChange={setSelectedYear}>
+                  <SelectTrigger className="w-28">
+                    <SelectValue placeholder="Year" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-card">
+                    <SelectItem value="2025">2025</SelectItem>
+                    <SelectItem value="2024">2024</SelectItem>
+                  </SelectContent>
+                </Select>
+              )}
             </div>
 
             {/* Selected Period Badge */}
-            <div className="flex items-center gap-2">
-              <Badge variant="secondary" className="text-xs">
-                Viewing: {getExamLabel()}
-              </Badge>
+            <div className="flex items-center gap-2 flex-wrap">
+              {isActivitiesTab ? (
+                <Badge variant="secondary" className="text-xs">
+                  Viewing: {selectedYears.sort().reverse().join(", ")}
+                </Badge>
+              ) : (
+                <Badge variant="secondary" className="text-xs">
+                  Viewing: {getExamLabel()}
+                </Badge>
+              )}
             </div>
 
             {/* Tabs for Grades/Behavior/Activities */}
-            <Tabs defaultValue="grades" className="w-full">
+            <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
               <TabsList className="grid w-full grid-cols-3 bg-muted/50">
                 <TabsTrigger value="grades">Grades</TabsTrigger>
                 <TabsTrigger value="behavior">Behavior</TabsTrigger>
