@@ -85,7 +85,7 @@ export default function TeacherDNAPage() {
           <img 
             src={dnaBanner} 
             alt="Students collaborating and creating together" 
-            className="w-full h-auto object-cover"
+            className="w-[115%] h-auto object-cover -ml-[7.5%]"
           />
         </div>
 
