@@ -180,10 +180,10 @@ export default function AttendancePage() {
                     iconType="circle"
                     iconSize={8}
                   />
-                  <Bar dataKey="present" stackId="a" fill="hsl(var(--chart-1))" name="Present" radius={[0, 0, 0, 0]} />
+                  <Bar dataKey="present" stackId="a" fill="hsl(160, 84%, 39%)" name="Present" radius={[0, 0, 0, 0]} />
                   <Bar dataKey="absent" stackId="a" fill="hsl(var(--destructive))" name="Absent" radius={[0, 0, 0, 0]} />
-                  <Bar dataKey="late" stackId="a" fill="hsl(var(--chart-4))" name="Late" radius={[0, 0, 0, 0]} />
-                  <Bar dataKey="excused" stackId="a" fill="hsl(var(--chart-5))" name="Excused" radius={[4, 4, 0, 0]} />
+                  <Bar dataKey="late" stackId="a" fill="hsl(38, 92%, 50%)" name="Late" radius={[0, 0, 0, 0]} />
+                  <Bar dataKey="excused" stackId="a" fill="hsl(271, 91%, 65%)" name="Excused" radius={[4, 4, 0, 0]} />
                 </BarChart>
               </ResponsiveContainer>
             </div>
