@@ -1,12 +1,21 @@
+import { useState } from "react";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { AppHeader } from "@/components/layout/AppHeader";
-import { parentProfile, studentProfile } from "@/data/mockData";
+import { parentProfile, students } from "@/data/mockData";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Input } from "@/components/ui/input";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
 import { 
   User, 
   Mail, 
@@ -15,12 +24,32 @@ import {
   LogOut, 
   ChevronRight,
   GraduationCap,
-  Shield
+  Shield,
+  Pencil
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { toast } from "sonner";
 
 export default function ProfilePage() {
   const navigate = useNavigate();
+  const [isEditOpen, setIsEditOpen] = useState(false);
+  const [profile, setProfile] = useState({
+    name: parentProfile.name,
+    email: parentProfile.email,
+    phone: parentProfile.phone,
+  });
+  const [editForm, setEditForm] = useState(profile);
+
+  const handleSave = () => {
+    setProfile(editForm);
+    setIsEditOpen(false);
+    toast.success("Profile updated successfully");
+  };
+
+  const handleOpenEdit = () => {
+    setEditForm(profile);
+    setIsEditOpen(true);
+  };
 
   return (
     <AppLayout>
@@ -33,11 +62,11 @@ export default function ProfilePage() {
             <div className="flex items-center gap-4">
               <Avatar className="h-20 w-20 border-2 border-primary/20">
                 <AvatarFallback className="bg-primary/10 text-primary text-2xl font-semibold">
-                  {parentProfile.name.split(' ').map(n => n[0]).join('')}
+                  {profile.name.split(' ').map(n => n[0]).join('')}
                 </AvatarFallback>
               </Avatar>
               <div>
-                <h2 className="text-xl font-semibold text-foreground">{parentProfile.name}</h2>
+                <h2 className="text-xl font-semibold text-foreground">{profile.name}</h2>
                 <p className="text-sm text-muted-foreground">Parent / Guardian</p>
               </div>
             </div>
@@ -46,8 +75,11 @@ export default function ProfilePage() {
 
         {/* Contact Information */}
         <Card className="bg-card border-border shadow-sm">
-          <CardHeader className="pb-2">
+          <CardHeader className="pb-2 flex flex-row items-center justify-between">
             <CardTitle className="text-base font-semibold">Contact Information</CardTitle>
+            <Button variant="ghost" size="icon" onClick={handleOpenEdit}>
+              <Pencil className="h-4 w-4" />
+            </Button>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="flex items-center gap-3">
@@ -56,7 +88,7 @@ export default function ProfilePage() {
               </div>
               <div>
                 <p className="text-xs text-muted-foreground">Email</p>
-                <p className="text-sm font-medium text-foreground">{parentProfile.email}</p>
+                <p className="text-sm font-medium text-foreground">{profile.email}</p>
               </div>
             </div>
             <div className="flex items-center gap-3">
@@ -65,7 +97,7 @@ export default function ProfilePage() {
               </div>
               <div>
                 <p className="text-xs text-muted-foreground">Phone</p>
-                <p className="text-sm font-medium text-foreground">{parentProfile.phone}</p>
+                <p className="text-sm font-medium text-foreground">{profile.phone}</p>
               </div>
             </div>
           </CardContent>
@@ -77,7 +109,7 @@ export default function ProfilePage() {
             <CardTitle className="text-base font-semibold">Linked Students</CardTitle>
           </CardHeader>
           <CardContent>
-            {parentProfile.students.map((student, index) => (
+            {students.map((student, index) => (
               <div 
                 key={index}
                 className="flex items-center gap-3 p-3 rounded-lg bg-accent/50 border border-border/50"
@@ -171,6 +203,51 @@ export default function ProfilePage() {
           EduConnect Parent Portal v1.0.0
         </p>
       </section>
+
+      {/* Edit Profile Dialog */}
+      <Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Edit Contact Information</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="name">Full Name</Label>
+              <Input
+                id="name"
+                value={editForm.name}
+                onChange={(e) => setEditForm({ ...editForm, name: e.target.value })}
+                placeholder="Enter your full name"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="email">Email</Label>
+              <Input
+                id="email"
+                type="email"
+                value={editForm.email}
+                onChange={(e) => setEditForm({ ...editForm, email: e.target.value })}
+                placeholder="Enter your email"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="phone">Phone Number</Label>
+              <Input
+                id="phone"
+                value={editForm.phone}
+                onChange={(e) => setEditForm({ ...editForm, phone: e.target.value })}
+                placeholder="Enter your phone number"
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsEditOpen(false)}>
+              Cancel
+            </Button>
+            <Button onClick={handleSave}>Save Changes</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </AppLayout>
   );
 }
