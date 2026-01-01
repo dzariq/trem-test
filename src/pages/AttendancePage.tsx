@@ -5,7 +5,8 @@ import { attendanceData, students } from "@/data/mockData";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { ChevronLeft, ChevronRight, Check, X, Clock, CalendarOff, ClipboardCheck } from "lucide-react";
+import { ChevronLeft, ChevronRight, Check, X, Clock, CalendarOff } from "lucide-react";
+import schoolLogo from "@/assets/school-badge.png";
 import {
   BarChart,
   Bar,
@@ -139,7 +140,7 @@ export default function AttendancePage() {
       <AppHeader 
         leftContent={
           <div className="flex items-center gap-2">
-            <ClipboardCheck className="h-5 w-5 text-primary" />
+            <img src={schoolLogo} alt="School Logo" className="h-8 w-8 object-contain" />
             <h1 className="text-xl font-semibold text-foreground">Attendance</h1>
           </div>
         }
