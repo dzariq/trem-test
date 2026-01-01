@@ -5,7 +5,13 @@ export interface AwardType {
   title: string;
   criteria: string[];
   icon: LucideIcon;
-  color: string;
+}
+
+export interface AwardColors {
+  bg: string;
+  text: string;
+  border: string;
+  dot: string;
 }
 
 export interface StudentAward {
@@ -14,6 +20,17 @@ export interface StudentAward {
   term: string;
   date: string;
 }
+
+export const awardColors: Record<string, AwardColors> = {
+  outstanding_academic_achievement_award: { bg: "bg-amber-100", text: "text-amber-700", border: "border-amber-200", dot: "bg-amber-500" },
+  remarkable_growth_award: { bg: "bg-emerald-100", text: "text-emerald-700", border: "border-emerald-200", dot: "bg-emerald-500" },
+  top_scorer_award: { bg: "bg-yellow-100", text: "text-yellow-700", border: "border-yellow-200", dot: "bg-yellow-500" },
+  rising_star_award: { bg: "bg-purple-100", text: "text-purple-700", border: "border-purple-200", dot: "bg-purple-500" },
+  role_model_of_the_class_award: { bg: "bg-rose-100", text: "text-rose-700", border: "border-rose-200", dot: "bg-rose-500" },
+  leadership_award: { bg: "bg-indigo-100", text: "text-indigo-700", border: "border-indigo-200", dot: "bg-indigo-500" },
+  teachers_helper_excellence_award: { bg: "bg-teal-100", text: "text-teal-700", border: "border-teal-200", dot: "bg-teal-500" },
+  best_attendance_award: { bg: "bg-blue-100", text: "text-blue-700", border: "border-blue-200", dot: "bg-blue-500" }
+};
 
 export const awardTypes: AwardType[] = [
   {
@@ -24,8 +41,7 @@ export const awardTypes: AwardType[] = [
       "Demonstrates deep understanding of key concepts.",
       "Displays exceptional effort and dedication throughout the year."
     ],
-    icon: GraduationCap,
-    color: "bg-chart-1"
+    icon: GraduationCap
   },
   {
     key: "remarkable_growth_award",
@@ -35,8 +51,7 @@ export const awardTypes: AwardType[] = [
       "Shows strong perseverance and commitment to learning.",
       "Actively seeks feedback and applies it to enhance understanding."
     ],
-    icon: TrendingUp,
-    color: "bg-chart-2"
+    icon: TrendingUp
   },
   {
     key: "top_scorer_award",
@@ -46,8 +61,7 @@ export const awardTypes: AwardType[] = [
       "Demonstrate exceptional understanding and mastery of the subject matter.",
       "Display consistent effort and dedication to studies."
     ],
-    icon: Trophy,
-    color: "bg-chart-3"
+    icon: Trophy
   },
   {
     key: "rising_star_award",
@@ -57,8 +71,7 @@ export const awardTypes: AwardType[] = [
       "Demonstrates strong self-motivation and commitment to progress.",
       "Participates actively and meaningfully during lessons."
     ],
-    icon: Sparkles,
-    color: "bg-chart-4"
+    icon: Sparkles
   },
   {
     key: "role_model_of_the_class_award",
@@ -69,8 +82,7 @@ export const awardTypes: AwardType[] = [
       "Consistently sets a positive example and inspires peers.",
       "Displays exceptional diligence and work ethic."
     ],
-    icon: Heart,
-    color: "bg-chart-5"
+    icon: Heart
   },
   {
     key: "leadership_award",
@@ -80,8 +92,7 @@ export const awardTypes: AwardType[] = [
       "Encourage teamwork and collaboration among peers.",
       "Demonstrate reliability and responsibility in leadership roles."
     ],
-    icon: Crown,
-    color: "bg-chart-1"
+    icon: Crown
   },
   {
     key: "teachers_helper_excellence_award",
@@ -92,8 +103,7 @@ export const awardTypes: AwardType[] = [
       "Consistently supports both teachers and classmates.",
       "Maintains a positive, encouraging, and helpful attitude."
     ],
-    icon: HandHeart,
-    color: "bg-chart-2"
+    icon: HandHeart
   },
   {
     key: "best_attendance_award",
@@ -103,8 +113,7 @@ export const awardTypes: AwardType[] = [
       "Always arrives punctually for class.",
       "Demonstrates strong commitment to consistent participation."
     ],
-    icon: CalendarCheck,
-    color: "bg-chart-3"
+    icon: CalendarCheck
   }
 ];
 
