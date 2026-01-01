@@ -39,11 +39,9 @@ const getDeadlineColor = (daysLeft: number, isCompleted: boolean) => {
 };
 
 const getDaysLeftBadge = (daysLeft: number, isCompleted: boolean) => {
-  if (isCompleted) return { text: "Done", variant: "default" as const };
-  if (daysLeft <= 0) return { text: "Overdue", variant: "destructive" as const };
-  if (daysLeft === 1) return { text: "Tomorrow", variant: "destructive" as const };
-  if (daysLeft <= 3) return { text: `${daysLeft}d left`, variant: "destructive" as const };
-  if (daysLeft <= 7) return { text: `${daysLeft}d left`, variant: "secondary" as const };
+  if (isCompleted) return { text: "Done", variant: "outline" as const };
+  if (daysLeft <= 0) return { text: "Overdue", variant: "outline" as const };
+  if (daysLeft === 1) return { text: "Tomorrow", variant: "outline" as const };
   return { text: `${daysLeft}d left`, variant: "outline" as const };
 };
 
