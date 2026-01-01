@@ -30,12 +30,12 @@ export function WelcomeTypingAnimation() {
     return () => clearInterval(typingInterval);
   }, [fullText]);
 
-  // Hide the message 3 seconds after typing completes
+  // Hide the message 10 seconds after typing completes
   useEffect(() => {
     if (isComplete) {
       const hideTimeout = setTimeout(() => {
         setIsVisible(false);
-      }, 3000);
+      }, 10000);
       return () => clearTimeout(hideTimeout);
     }
   }, [isComplete]);
