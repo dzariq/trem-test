@@ -42,9 +42,9 @@ type TicketType = "Complaint" | "Suggestion" | "Question" | "Praise" | null;
 
 const ticketTypes = [
   { type: "Complaint" as const, icon: AlertCircle, color: "bg-destructive text-destructive-foreground", description: "Report an issue or concern" },
-  { type: "Suggestion" as const, icon: Lightbulb, color: "bg-chart-4 text-card", description: "Share ideas for improvement" },
-  { type: "Question" as const, icon: CircleHelp, color: "bg-chart-3 text-card", description: "Ask about school matters" },
-  { type: "Praise" as const, icon: Star, color: "bg-chart-1 text-card", description: "Appreciate staff or services" },
+  { type: "Suggestion" as const, icon: Lightbulb, color: "bg-amber-500 text-white", description: "Share ideas for improvement" },
+  { type: "Question" as const, icon: CircleHelp, color: "bg-primary text-primary-foreground", description: "Ask about school matters" },
+  { type: "Praise" as const, icon: Star, color: "bg-blue-500 text-white", description: "Appreciate staff or services" },
 ];
 
 export default function SupportPage() {
