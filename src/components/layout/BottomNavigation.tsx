@@ -1,12 +1,20 @@
 import { useState, useEffect } from "react";
-import { Home, UserCheck, GraduationCap, Calendar, HeadphonesIcon } from "lucide-react";
+import { Home, UserCheck, Calendar, HeadphonesIcon, LucideIcon } from "lucide-react";
 import { NavLink } from "react-router-dom";
 import { cn } from "@/lib/utils";
+import academicOwlIcon from "@/assets/academic-owl-icon.png";
 
-const navItems = [
+type NavItem = {
+  to: string;
+  icon?: LucideIcon;
+  customIcon?: string;
+  label: string;
+};
+
+const navItems: NavItem[] = [
   { to: "/parent", icon: Home, label: "Home" },
   { to: "/parent/attendance", icon: UserCheck, label: "Attendance" },
-  { to: "/parent/academic", icon: GraduationCap, label: "Academic" },
+  { to: "/parent/academic", customIcon: academicOwlIcon, label: "Academic" },
   { to: "/parent/calendar", icon: Calendar, label: "Calendar" },
   { to: "/parent/support", icon: HeadphonesIcon, label: "Support" },
 ];
@@ -57,7 +65,11 @@ export function BottomNavigation() {
           >
             {({ isActive }) => (
               <>
-                <item.icon className={cn("h-5 w-5 mb-1", isActive && "stroke-[2.5px]")} />
+                {item.customIcon ? (
+                  <img src={item.customIcon} alt={item.label} className="h-5 w-5 mb-1" />
+                ) : item.icon ? (
+                  <item.icon className={cn("h-5 w-5 mb-1", isActive && "stroke-[2.5px]")} />
+                ) : null}
                 <span className="text-xs font-medium">{item.label}</span>
               </>
             )}
