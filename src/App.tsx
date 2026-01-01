@@ -18,6 +18,7 @@ import NotificationsPage from "./pages/NotificationsPage";
 import AnnouncementsPage from "./pages/AnnouncementsPage";
 import SecurityPrivacyPage from "./pages/SecurityPrivacyPage";
 import PrivacyPolicyPage from "./pages/PrivacyPolicyPage";
+import ContactPage from "./pages/ContactPage";
 
 // Teacher Pages
 import TeacherHomePage from "./pages/teacher/TeacherHomePage";
@@ -53,6 +54,7 @@ const App = () => (
           <Route path="/parent/announcements" element={<AnnouncementsPage />} />
           <Route path="/parent/security-privacy" element={<SecurityPrivacyPage />} />
           <Route path="/parent/privacy-policy" element={<PrivacyPolicyPage />} />
+          <Route path="/parent/contact" element={<ContactPage />} />
 
           {/* Teacher Routes */}
           <Route path="/teacher" element={<TeacherHomePage />} />
