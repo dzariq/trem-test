@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { TeacherAppLayout } from "@/components/layout/TeacherAppLayout";
 import { AppHeader } from "@/components/layout/AppHeader";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -7,6 +8,7 @@ import { AnnouncementCarousel } from "@/components/home/AnnouncementCarousel";
 import { UpcomingEvents } from "@/components/home/UpcomingEvents";
 import { TeacherQuickLinks } from "@/components/home/TeacherQuickLinks";
 import TeacherWelcomeQuote from "@/components/home/TeacherWelcomeQuote";
+import { PDFViewerDialog } from "@/components/PDFViewerDialog";
 import { BookOpen, Users, Clock, FileText, Calendar, AlertTriangle, ClipboardList, Check, ChevronDown, ChevronUp } from "lucide-react";
 import schoolBadge from "@/assets/school-badge.png";
 import heroBanner from "@/assets/teacher-hero-banner.png";
@@ -18,7 +20,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { useState } from "react";
 import { differenceInDays, format, parseISO } from "date-fns";
 import { cn } from "@/lib/utils";
 
@@ -50,6 +51,7 @@ export default function TeacherHomePage() {
   const [completedDeadlines, setCompletedDeadlines] = useState<string[]>([]);
   const [expandedDeadline, setExpandedDeadline] = useState<string | null>(null);
   const [showPendingGrades, setShowPendingGrades] = useState(false);
+  const [timetablePdfOpen, setTimetablePdfOpen] = useState(false);
 
   const totalPendingGrades = teacherQuickStats.pendingGrades.reduce((sum, item) => sum + item.count, 0);
 
@@ -107,7 +109,7 @@ export default function TeacherHomePage() {
       </div>
 
       {/* Quick Links */}
-      <TeacherQuickLinks />
+      <TeacherQuickLinks onTimetableClick={() => setTimetablePdfOpen(true)} />
 
       <div className="px-4 space-y-4 mt-4">
         {/* Class Selector */}
@@ -285,6 +287,14 @@ export default function TeacherHomePage() {
 
       <AnnouncementCarousel />
       <UpcomingEvents />
+
+      <PDFViewerDialog
+        open={timetablePdfOpen}
+        onOpenChange={setTimetablePdfOpen}
+        pdfUrl="/documents/teacher-timetable.pdf"
+        title="Teacher Timetable"
+        downloadFileName="Teacher_Timetable_2026.pdf"
+      />
     </TeacherAppLayout>
   );
 }
