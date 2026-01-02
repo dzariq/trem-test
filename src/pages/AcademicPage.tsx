@@ -899,7 +899,7 @@ export default function AcademicPage() {
                             <Cell key={index} fill={lineColors[index % lineColors.length]} />
                           ))}
                         </Bar>
-                        {/* Goal dot markers */}
+                        {/* Goal vertical line markers */}
                         <Bar 
                           dataKey="goal" 
                           fill="#000000" 
@@ -910,10 +910,11 @@ export default function AcademicPage() {
                             const chartWidth = 230; // approximate usable chart width
                             const xPos = 70 + (payload.goal / 100) * chartWidth;
                             return (
-                              <circle 
-                                cx={xPos} 
-                                cy={(y ?? 0) + (height ?? 0) / 2} 
-                                r={5} 
+                              <rect 
+                                x={xPos - 1.5} 
+                                y={y} 
+                                width={3} 
+                                height={height} 
                                 fill="#000000" 
                               />
                             );
