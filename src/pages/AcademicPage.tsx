@@ -1001,47 +1001,57 @@ export default function AcademicPage() {
                       label: "Average", 
                       value: `${currentAverage}%`,
                       subtext: currentAverage >= 70 ? "Above Average" : currentAverage >= 50 ? "Average" : "Below Average",
-                      color: "text-chart-1" 
+                      iconColor: "#3b82f6",
+                      bgColor: "rgba(59, 130, 246, 0.08)"
                     },
                     { 
                       icon: Award, 
                       label: "Best Subject", 
                       value: shortenSubjectName(bestSubjectInfo.name),
                       subtext: `${bestSubjectInfo.score}%`,
-                      color: "text-chart-2" 
+                      iconColor: "#f59e0b",
+                      bgColor: "rgba(245, 158, 11, 0.08)"
                     },
                     { 
                       icon: TrendingUp, 
                       label: "Improvement", 
                       value: improvementStats.text,
                       subtext: improvementStats.points >= 0 ? "Improved" : "Declined",
-                      color: improvementStats.points >= 0 ? "text-chart-3" : "text-destructive" 
+                      iconColor: improvementStats.points >= 0 ? "#10b981" : "#ef4444",
+                      bgColor: improvementStats.points >= 0 ? "rgba(16, 185, 129, 0.08)" : "rgba(239, 68, 68, 0.08)"
                     },
                     { 
                       icon: Calendar, 
                       label: "Attendance", 
                       value: `${attendanceStats.attendanceRate}%`,
                       subtext: "This Term",
-                      color: "text-chart-4" 
+                      iconColor: "#8b5cf6",
+                      bgColor: "rgba(139, 92, 246, 0.08)"
                     },
                     { 
                       icon: Target, 
                       label: "Passing", 
                       value: `${passingStats.passingCount}/${passingStats.totalSubjects}`,
                       subtext: `${passingStats.passingPercentage}%`,
-                      color: "text-chart-5" 
+                      iconColor: "#06b6d4",
+                      bgColor: "rgba(6, 182, 212, 0.08)"
                     },
                     { 
                       icon: AlertTriangle, 
                       label: "Needs Focus", 
                       value: shortenSubjectName(weakestSubjectInfo.name),
                       subtext: `${weakestSubjectInfo.score}%`,
-                      color: "text-destructive" 
+                      iconColor: "#ef4444",
+                      bgColor: "rgba(239, 68, 68, 0.08)"
                     },
                   ].map((stat, index) => (
-                    <div key={index} className="flex flex-col items-center p-3 rounded-xl bg-accent/30 border border-border/50">
-                      <stat.icon className={`h-5 w-5 ${stat.color} mb-1`} />
-                      <span className={`text-lg font-bold ${stat.color}`}>{stat.value}</span>
+                    <div 
+                      key={index} 
+                      className="flex flex-col items-center p-3 rounded-xl border"
+                      style={{ backgroundColor: stat.bgColor, borderColor: 'transparent' }}
+                    >
+                      <stat.icon className="h-5 w-5 mb-1" style={{ color: stat.iconColor }} />
+                      <span className="text-lg font-bold text-foreground">{stat.value}</span>
                       <span className="text-[10px] text-muted-foreground">{stat.label}</span>
                       <span className="text-[9px] text-muted-foreground/70">{stat.subtext}</span>
                     </div>
