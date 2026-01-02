@@ -420,7 +420,7 @@ export default function CalendarPage() {
                 <p className="text-sm text-muted-foreground">{selectedCCA.description}</p>
 
                 {/* Schedule Info */}
-                <Card className="bg-muted/30 border-0">
+                <Card className="bg-gradient-to-br from-green-100/60 to-yellow-100/60 dark:from-green-900/20 dark:to-yellow-900/20 border-0">
                   <CardContent className="p-4 space-y-3">
                     <div className="flex items-center gap-3">
                       <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
