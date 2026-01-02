@@ -451,18 +451,18 @@ export default function TeacherAttendancePage() {
                               </div>
                               
                               {/* Inline Stats */}
-                              <div className="flex items-center gap-3 text-xs mb-2">
-                                <span className="flex items-center gap-1 text-emerald-600 dark:text-emerald-400 font-medium">
-                                  <Check className="h-3 w-3" /> {item.present}
+                              <div className="flex items-center justify-between text-[11px] mb-2">
+                                <span className="flex items-center gap-0.5 text-emerald-600 dark:text-emerald-400 font-medium">
+                                  <Check className="h-3 w-3" />{item.present}
                                 </span>
-                                <span className="flex items-center gap-1 text-red-600 dark:text-red-400 font-medium">
-                                  <X className="h-3 w-3" /> {item.absent}
+                                <span className="flex items-center gap-0.5 text-red-600 dark:text-red-400 font-medium">
+                                  <X className="h-3 w-3" />{item.absent}
                                 </span>
-                                <span className="flex items-center gap-1 text-amber-600 dark:text-amber-400 font-medium">
-                                  <Clock className="h-3 w-3" /> {item.late}
+                                <span className="flex items-center gap-0.5 text-amber-600 dark:text-amber-400 font-medium">
+                                  <Clock className="h-3 w-3" />{item.late}
                                 </span>
-                                <span className="flex items-center gap-1 text-purple-600 dark:text-purple-400 font-medium">
-                                  <AlertCircle className="h-3 w-3" /> {item.excused}
+                                <span className="flex items-center gap-0.5 text-purple-600 dark:text-purple-400 font-medium">
+                                  <AlertCircle className="h-3 w-3" />{item.excused}
                                 </span>
                               </div>
                               
