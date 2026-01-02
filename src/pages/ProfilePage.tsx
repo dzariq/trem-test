@@ -321,7 +321,7 @@ export default function ProfilePage() {
           <CardContent className="p-0">
             <button 
               className="w-full flex items-center justify-between p-4 hover:bg-accent/30 transition-colors"
-              onClick={() => navigate("/security-privacy")}
+              onClick={() => navigate("/parent/security-privacy")}
             >
               <div className="flex items-center gap-3">
                 <Shield className="h-5 w-5 text-muted-foreground" />

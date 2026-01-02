@@ -198,7 +198,7 @@ export function ResultsSummary() {
           <Button 
             variant="outline" 
             className="w-full"
-            onClick={() => navigate("/academic")}
+            onClick={() => navigate("/parent/academic")}
           >
             View Analysis <ChevronRight className="h-4 w-4 ml-1" />
           </Button>

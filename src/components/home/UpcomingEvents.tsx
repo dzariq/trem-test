@@ -39,7 +39,7 @@ export function UpcomingEvents() {
         <Button 
           variant="link" 
           className="text-primary p-0 h-auto text-sm"
-          onClick={() => navigate("/calendar")}
+          onClick={() => navigate("/parent/calendar")}
         >
           See all <ChevronRight className="h-4 w-4 ml-1" />
         </Button>
