@@ -902,18 +902,20 @@ export default function AcademicPage() {
                         {/* Goal dot markers - centered in bar */}
                         <Bar 
                           dataKey="goal" 
-                          fill="#000000" 
+                          fill="transparent"
                           shape={(props: { x?: number; y?: number; width?: number; height?: number; payload?: { goal: number } }) => {
                             const { y, height, payload } = props;
                             if (y === undefined || height === undefined || !payload) return null;
                             // Calculate x position based on goal value (0-100 scale)
-                            const chartWidth = 230; // approximate usable chart width
+                            const chartWidth = 230;
                             const xPos = 70 + (payload.goal / 100) * chartWidth;
+                            // Center vertically on the bar row
+                            const centerY = y + height / 2;
                             return (
                               <circle 
                                 cx={xPos} 
-                                cy={y + height / 2} 
-                                r={7} 
+                                cy={centerY} 
+                                r={5} 
                                 fill="#000000" 
                               />
                             );
