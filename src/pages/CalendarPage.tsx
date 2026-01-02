@@ -8,8 +8,11 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { MapPin, Clock, User, ChevronDown } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Progress } from "@/components/ui/progress";
+import { MapPin, Clock, User, ChevronDown, Users, CalendarDays, ClipboardList } from "lucide-react";
 import schoolLogo from "@/assets/school-badge.png";
+import { format, parseISO } from "date-fns";
 import {
   Select,
   SelectContent,
@@ -35,6 +38,8 @@ import {
   getTagsByCategory,
 } from "@/lib/calendarUtils";
 
+type CCAActivity = typeof ccaActivities[0];
+
 export default function CalendarPage() {
   const [searchParams] = useSearchParams();
   const initialTab = searchParams.get("tab") || "calendar";
@@ -43,6 +48,7 @@ export default function CalendarPage() {
   const [categoryFilter, setCategoryFilter] = useState<TagCategory | "all">("all");
   const [selectedTag, setSelectedTag] = useState<CalendarTag | null>(null);
   const [ccaCategoryFilter, setCcaCategoryFilter] = useState("all");
+  const [selectedCCA, setSelectedCCA] = useState<CCAActivity | null>(null);
 
   // Filter events for parent role
   const visibleEvents = filterEventsByRole(calendarEvents, "parent");
@@ -379,7 +385,12 @@ export default function CalendarPage() {
                       </div>
                     </div>
 
-                    <Button variant="outline" size="sm" className="w-full mt-4">
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      className="w-full mt-4"
+                      onClick={() => setSelectedCCA(activity)}
+                    >
                       View Details
                     </Button>
                   </CardContent>
@@ -389,6 +400,101 @@ export default function CalendarPage() {
           </TabsContent>
         </Tabs>
       </section>
+
+      {/* CCA Details Dialog */}
+      <Dialog open={!!selectedCCA} onOpenChange={(open) => !open && setSelectedCCA(null)}>
+        <DialogContent className="max-w-md max-h-[85vh] overflow-y-auto">
+          {selectedCCA && (
+            <>
+              <DialogHeader>
+                <div className="flex items-center gap-2">
+                  <DialogTitle className="text-xl">{selectedCCA.name}</DialogTitle>
+                  <Badge className={getCcaCategoryColor(selectedCCA.category)} variant="secondary">
+                    {selectedCCA.category}
+                  </Badge>
+                </div>
+              </DialogHeader>
+
+              <div className="space-y-4 pt-2">
+                {/* Description */}
+                <p className="text-sm text-muted-foreground">{selectedCCA.description}</p>
+
+                {/* Schedule Info */}
+                <Card className="bg-muted/30 border-0">
+                  <CardContent className="p-4 space-y-3">
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
+                        <CalendarDays className="h-4 w-4 text-primary" />
+                      </div>
+                      <div>
+                        <p className="text-xs text-muted-foreground">Schedule</p>
+                        <p className="text-sm font-medium">{selectedCCA.day}, {selectedCCA.time}</p>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
+                        <MapPin className="h-4 w-4 text-primary" />
+                      </div>
+                      <div>
+                        <p className="text-xs text-muted-foreground">Venue</p>
+                        <p className="text-sm font-medium">{selectedCCA.venue}</p>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
+                        <User className="h-4 w-4 text-primary" />
+                      </div>
+                      <div>
+                        <p className="text-xs text-muted-foreground">Coach</p>
+                        <p className="text-sm font-medium">{selectedCCA.coach}</p>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Enrollment */}
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <Users className="h-4 w-4 text-muted-foreground" />
+                      <span className="text-sm font-medium">Enrollment</span>
+                    </div>
+                    <span className="text-sm text-muted-foreground">
+                      {selectedCCA.currentEnrollment} / {selectedCCA.maxCapacity} students
+                    </span>
+                  </div>
+                  <Progress 
+                    value={(selectedCCA.currentEnrollment / selectedCCA.maxCapacity) * 100} 
+                    className="h-2"
+                  />
+                  {selectedCCA.currentEnrollment >= selectedCCA.maxCapacity && (
+                    <p className="text-xs text-destructive">This activity is at full capacity</p>
+                  )}
+                </div>
+
+                {/* Requirements */}
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2">
+                    <ClipboardList className="h-4 w-4 text-muted-foreground" />
+                    <span className="text-sm font-medium">Requirements</span>
+                  </div>
+                  <p className="text-sm text-muted-foreground pl-6">{selectedCCA.requirements}</p>
+                </div>
+
+                {/* Next Session */}
+                <div className="p-3 rounded-lg bg-primary/10 border border-primary/20">
+                  <p className="text-xs text-primary/80">Next Session</p>
+                  <p className="text-sm font-medium text-primary">
+                    {format(parseISO(selectedCCA.upcomingSession), "EEEE, MMMM d, yyyy")}
+                  </p>
+                </div>
+              </div>
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
     </AppLayout>
   );
 }
