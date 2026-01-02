@@ -2401,97 +2401,121 @@ export default function AcademicPage() {
                       {/* Individual Subject Goals */}
                       <div className="space-y-3">
                         {goalsData.map((item) => (
-                          <div key={item.name} className="p-3 rounded-lg bg-accent/30 border border-border/50">
-                            <div className="flex items-center justify-between mb-2">
-                              <div className="flex items-center gap-2">
+                          <div 
+                            key={item.name} 
+                            className="p-4 rounded-xl bg-accent/30 border border-border/50 transition-all"
+                          >
+                            {/* Card Header - Tappable */}
+                            <div 
+                              className="flex items-center justify-between cursor-pointer active:opacity-70 min-h-[44px]"
+                              onClick={() => {
+                                if (editingGoal === item.name) {
+                                  setEditingGoal(null);
+                                } else {
+                                  setEditingGoal(item.name);
+                                  setTempGoalValue(item.target.toString());
+                                }
+                              }}
+                            >
+                              <div className="flex items-center gap-3">
                                 {item.achieved ? (
-                                  <CheckCircle2 className="h-4 w-4" style={{ color: '#22c55e' }} />
+                                  <CheckCircle2 className="h-5 w-5" style={{ color: '#22c55e' }} />
                                 ) : item.gap <= 5 ? (
-                                  <Circle className="h-4 w-4 text-chart-2" />
+                                  <Circle className="h-5 w-5 text-chart-2" />
                                 ) : (
-                                  <Circle className="h-4 w-4 text-chart-4" />
+                                  <Circle className="h-5 w-5 text-chart-4" />
                                 )}
-                                <span className="font-medium text-foreground text-sm">{item.name}</span>
+                                <span className="font-medium text-foreground">{item.name}</span>
                               </div>
                               <div className="flex items-center gap-2">
-                                {editingGoal === item.name ? (
-                                  <div className="flex items-center gap-1">
-                                    <Input
-                                      type="number"
-                                      min="0"
-                                      max="100"
-                                      value={tempGoalValue}
-                                      onChange={(e) => setTempGoalValue(e.target.value)}
-                                      className="w-16 h-7 text-xs text-center"
-                                      autoFocus
-                                    />
-                                    <Button
-                                      size="sm"
-                                      variant="ghost"
-                                      className="h-7 w-7 p-0"
-                                      onClick={() => {
-                                        const newValue = parseInt(tempGoalValue);
-                                        if (!isNaN(newValue) && newValue >= 0 && newValue <= 100) {
-                                          setGoals(prev => ({ ...prev, [item.name]: newValue }));
-                                        }
-                                        setEditingGoal(null);
-                                      }}
-                                    >
-                                      <Check className="h-3 w-3" />
-                                    </Button>
-                                  </div>
-                                ) : (
-                                  <>
-                                    <Badge 
-                                      variant={item.achieved ? "default" : "outline"} 
-                                      className="text-xs cursor-pointer"
-                                      onClick={() => {
-                                        setEditingGoal(item.name);
-                                        setTempGoalValue(item.target.toString());
-                                      }}
-                                    >
-                                      Target: {item.target}%
-                                      <Edit2 className="h-2.5 w-2.5 ml-1 opacity-60" />
-                                    </Badge>
-                                  </>
-                                )}
+                                <Badge 
+                                  variant={item.achieved ? "default" : "outline"} 
+                                  className="text-sm px-3 py-1"
+                                >
+                                  {item.target}%
+                                </Badge>
+                                <Edit2 className={`h-4 w-4 transition-transform ${editingGoal === item.name ? 'rotate-45 text-primary' : 'text-muted-foreground'}`} />
                               </div>
-                            </div>
-                            
-                            {/* Progress Bar */}
-                            <div className="relative mb-2">
-                              <div className="h-3 bg-transparent border border-border rounded-full overflow-hidden">
-                                <div 
-                                  className="h-full rounded-full transition-all"
-                                  style={{ 
-                                    width: `${item.current}%`,
-                                    backgroundColor: item.achieved ? '#22c55e' : 'hsl(var(--muted-foreground) / 0.4)'
-                                  }}
-                                />
-                              </div>
-                              {/* Target marker */}
-                              <div 
-                                className="absolute top-0 h-3 w-0.5 bg-foreground/70 rounded"
-                                style={{ left: `${Math.min(item.target, 100)}%` }}
-                              />
                             </div>
 
-                            {/* Score Details */}
-                            <div className="flex items-center justify-between text-xs">
-                              <span className="text-muted-foreground">
-                                Current: <span className="font-medium text-foreground">{item.current}%</span>
-                              </span>
-                              {item.achieved ? (
-                                <span className="text-chart-1 font-medium flex items-center gap-1">
-                                  <CheckCircle2 className="h-3 w-3" />
-                                  Goal Achieved!
-                                </span>
-                              ) : (
-                                <span className={item.gap <= 5 ? "text-chart-2" : "text-chart-4"}>
-                                  {item.gap}% to go
-                                </span>
-                              )}
-                            </div>
+                            {/* Expanded Slider Section */}
+                            {editingGoal === item.name && (
+                              <div className="mt-4 pt-4 border-t border-border/50 space-y-4 animate-in slide-in-from-top-2 duration-200">
+                                <div className="flex items-center justify-between">
+                                  <span className="text-sm text-muted-foreground">Set Target Goal</span>
+                                  <span className="text-lg font-bold text-primary">{tempGoalValue}%</span>
+                                </div>
+                                <input
+                                  type="range"
+                                  min="0"
+                                  max="100"
+                                  value={tempGoalValue}
+                                  onChange={(e) => setTempGoalValue(e.target.value)}
+                                  className="w-full h-10 appearance-none bg-transparent cursor-pointer touch-pan-x [&::-webkit-slider-runnable-track]:h-3 [&::-webkit-slider-runnable-track]:rounded-full [&::-webkit-slider-runnable-track]:bg-muted [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-7 [&::-webkit-slider-thumb]:h-7 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-primary [&::-webkit-slider-thumb]:shadow-lg [&::-webkit-slider-thumb]:-mt-2 [&::-webkit-slider-thumb]:border-4 [&::-webkit-slider-thumb]:border-background [&::-moz-range-track]:h-3 [&::-moz-range-track]:rounded-full [&::-moz-range-track]:bg-muted [&::-moz-range-thumb]:w-7 [&::-moz-range-thumb]:h-7 [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:bg-primary [&::-moz-range-thumb]:border-4 [&::-moz-range-thumb]:border-background"
+                                />
+                                <div className="flex gap-2">
+                                  <Button
+                                    variant="outline"
+                                    className="flex-1 h-12 text-base"
+                                    onClick={() => setEditingGoal(null)}
+                                  >
+                                    Cancel
+                                  </Button>
+                                  <Button
+                                    className="flex-1 h-12 text-base"
+                                    onClick={() => {
+                                      const newValue = parseInt(tempGoalValue);
+                                      if (!isNaN(newValue) && newValue >= 0 && newValue <= 100) {
+                                        setGoals(prev => ({ ...prev, [item.name]: newValue }));
+                                      }
+                                      setEditingGoal(null);
+                                    }}
+                                  >
+                                    <Check className="h-5 w-5 mr-2" />
+                                    Save
+                                  </Button>
+                                </div>
+                              </div>
+                            )}
+                            
+                            {/* Progress Bar - Only show when not editing */}
+                            {editingGoal !== item.name && (
+                              <>
+                                <div className="relative mt-3 mb-2">
+                                  <div className="h-3 bg-transparent border border-border rounded-full overflow-hidden">
+                                    <div 
+                                      className="h-full rounded-full transition-all"
+                                      style={{ 
+                                        width: `${item.current}%`,
+                                        backgroundColor: item.achieved ? '#22c55e' : 'hsl(var(--muted-foreground) / 0.4)'
+                                      }}
+                                    />
+                                  </div>
+                                  {/* Target marker */}
+                                  <div 
+                                    className="absolute top-0 h-3 w-0.5 bg-foreground/70 rounded"
+                                    style={{ left: `${Math.min(item.target, 100)}%` }}
+                                  />
+                                </div>
+
+                                {/* Score Details */}
+                                <div className="flex items-center justify-between text-sm">
+                                  <span className="text-muted-foreground">
+                                    Current: <span className="font-medium text-foreground">{item.current}%</span>
+                                  </span>
+                                  {item.achieved ? (
+                                    <span className="text-chart-1 font-medium flex items-center gap-1">
+                                      <CheckCircle2 className="h-4 w-4" />
+                                      Goal Achieved!
+                                    </span>
+                                  ) : (
+                                    <span className={item.gap <= 5 ? "text-chart-2" : "text-chart-4"}>
+                                      {item.gap}% to go
+                                    </span>
+                                  )}
+                                </div>
+                              </>
+                            )}
                           </div>
                         ))}
                       </div>
