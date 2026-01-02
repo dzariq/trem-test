@@ -2368,8 +2368,8 @@ export default function AcademicPage() {
                     return { name: s.name, current, target, progress, achieved, gap };
                   });
                   const achievedCount = goalsData.filter(g => g.achieved).length;
-                  const onTrackCount = goalsData.filter(g => !g.achieved && g.gap <= 5).length;
-                  const needsWorkCount = goalsData.filter(g => !g.achieved && g.gap > 5).length;
+                  const onTrackCount = goalsData.filter(g => !g.achieved && g.gap <= 30).length;
+                  const needsWorkCount = goalsData.filter(g => !g.achieved && g.gap > 30).length;
 
                   return (
                     <>
@@ -2377,24 +2377,27 @@ export default function AcademicPage() {
                       <div className="grid grid-cols-3 gap-2">
                         <div className="p-3 rounded-lg bg-chart-1/10 border border-chart-1/30 text-center">
                           <div className="flex items-center justify-center gap-1 mb-1">
-                            <CheckCircle2 className="h-4 w-4 text-chart-1" />
+                            <CheckCircle2 className="h-5 w-5 text-chart-1" />
                           </div>
-                          <p className="text-lg font-bold text-foreground">{achievedCount}</p>
-                          <p className="text-[10px] text-muted-foreground">Achieved</p>
+                          <p className="text-xl font-bold text-foreground">{achievedCount}</p>
+                          <p className="text-xs text-muted-foreground">Achieved</p>
+                          <p className="text-[9px] text-chart-1 mt-0.5">Met target</p>
                         </div>
                         <div className="p-3 rounded-lg bg-chart-2/10 border border-chart-2/30 text-center">
                           <div className="flex items-center justify-center gap-1 mb-1">
-                            <Target className="h-4 w-4 text-chart-2" />
+                            <Target className="h-5 w-5 text-chart-2" />
                           </div>
-                          <p className="text-lg font-bold text-foreground">{onTrackCount}</p>
-                          <p className="text-[10px] text-muted-foreground">On Track</p>
+                          <p className="text-xl font-bold text-foreground">{onTrackCount}</p>
+                          <p className="text-xs text-muted-foreground">On Track</p>
+                          <p className="text-[9px] text-chart-2 mt-0.5">≤30% to target</p>
                         </div>
                         <div className="p-3 rounded-lg bg-chart-4/10 border border-chart-4/30 text-center">
                           <div className="flex items-center justify-center gap-1 mb-1">
-                            <AlertTriangle className="h-4 w-4 text-chart-4" />
+                            <AlertTriangle className="h-5 w-5 text-chart-4" />
                           </div>
-                          <p className="text-lg font-bold text-foreground">{needsWorkCount}</p>
-                          <p className="text-[10px] text-muted-foreground">Needs Focus</p>
+                          <p className="text-xl font-bold text-foreground">{needsWorkCount}</p>
+                          <p className="text-xs text-muted-foreground">Needs Focus</p>
+                          <p className="text-[9px] text-chart-4 mt-0.5">&gt;30% to target</p>
                         </div>
                       </div>
 
@@ -2420,7 +2423,7 @@ export default function AcademicPage() {
                               <div className="flex items-center gap-3">
                                 {item.achieved ? (
                                   <CheckCircle2 className="h-5 w-5" style={{ color: '#22c55e' }} />
-                                ) : item.gap <= 5 ? (
+                                ) : item.gap <= 30 ? (
                                   <Circle className="h-5 w-5 text-chart-2" />
                                 ) : (
                                   <Circle className="h-5 w-5 text-chart-4" />
@@ -2509,7 +2512,7 @@ export default function AcademicPage() {
                                       Goal Achieved!
                                     </span>
                                   ) : (
-                                    <span className={item.gap <= 5 ? "text-chart-2" : "text-chart-4"}>
+                                    <span className={item.gap <= 30 ? "text-chart-2" : "text-chart-4"}>
                                       {item.gap}% to go
                                     </span>
                                   )}
