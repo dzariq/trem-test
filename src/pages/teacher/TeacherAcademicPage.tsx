@@ -114,6 +114,7 @@ const getLetterGrade = (total: number): { grade: string; color: string } => {
 
 export default function TeacherAcademicPage() {
   const [selectedClass, setSelectedClass] = useState(teacherProfile.classes[0]);
+  const [selectedClasses, setSelectedClasses] = useState<string[]>([teacherProfile.classes[0]]);
   const [selectedStudent, setSelectedStudent] = useState<string | null>(null);
   const [expandedSubjects, setExpandedSubjects] = useState<string[]>([]);
   const [studentGrades, setStudentGrades] = useState<Record<string, Record<string, StudentGrades>>>({});
@@ -178,6 +179,14 @@ export default function TeacherAcademicPage() {
       prev.includes(year) 
         ? prev.length > 1 ? prev.filter(y => y !== year) : prev // Keep at least one selected
         : [...prev, year]
+    );
+  };
+
+  const toggleClass = (cls: string) => {
+    setSelectedClasses(prev => 
+      prev.includes(cls) 
+        ? prev.length > 1 ? prev.filter(c => c !== cls) : prev // Keep at least one selected
+        : [...prev, cls]
     );
   };
 
@@ -706,16 +715,32 @@ export default function TeacherAcademicPage() {
               <TabsContent value="overview" className="space-y-4">
                 {/* Filters Row - Class and Year selectors */}
                 <div className="flex gap-2">
-                  <Select value={selectedClass} onValueChange={setSelectedClass}>
-                    <SelectTrigger className="text-xs flex-1">
-                      <SelectValue placeholder="Class" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {teacherProfile.classes.map((cls) => (
-                        <SelectItem key={cls} value={cls}>{cls}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button variant="outline" className="text-xs h-9 justify-between flex-1">
+                        {selectedClasses.length === 1 
+                          ? selectedClasses[0] 
+                          : `${selectedClasses.length} Classes`}
+                        <ChevronDown className="h-3 w-3 ml-1 opacity-50" />
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-40 p-2 bg-background z-50" align="start">
+                      <div className="space-y-2">
+                        {teacherProfile.classes.map((cls) => (
+                          <label 
+                            key={cls} 
+                            className="flex items-center gap-2 cursor-pointer hover:bg-accent/50 p-1 rounded"
+                          >
+                            <Checkbox 
+                              checked={selectedClasses.includes(cls)}
+                              onCheckedChange={() => toggleClass(cls)}
+                            />
+                            <span className="text-xs">{cls}</span>
+                          </label>
+                        ))}
+                      </div>
+                    </PopoverContent>
+                  </Popover>
 
                   <Popover>
                     <PopoverTrigger asChild>
@@ -758,9 +783,11 @@ export default function TeacherAcademicPage() {
 
                 {/* Selected filters badge */}
                 <div className="flex flex-wrap items-center gap-1 text-xs">
-                  <Badge variant="secondary" className="text-[10px] font-medium">
-                    {selectedClass}
-                  </Badge>
+                  {selectedClasses.map(cls => (
+                    <Badge key={cls} variant="secondary" className="text-[10px] font-medium">
+                      {cls}
+                    </Badge>
+                  ))}
                   {selectedYears.map(year => (
                     <Badge key={year} variant="outline" className="text-[10px] font-normal">
                       {year}
