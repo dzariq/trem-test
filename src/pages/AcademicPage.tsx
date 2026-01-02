@@ -872,7 +872,7 @@ export default function AcademicPage() {
                   </div>
                 </div>
 
-                {/* Subject Performance Bar Chart with Goal Markers */}
+                {/* Subject Performance Bar Chart with Goal Dot Markers */}
                 <div className="space-y-2">
                   <h4 className="text-sm font-medium text-foreground flex items-center gap-2">
                     Subject Performance
@@ -899,7 +899,26 @@ export default function AcademicPage() {
                             <Cell key={index} fill={lineColors[index % lineColors.length]} />
                           ))}
                         </Bar>
-                        <Bar dataKey="goal" fill="#000000" radius={[0, 4, 4, 0]} barSize={4} />
+                        {/* Goal dot markers */}
+                        <Bar 
+                          dataKey="goal" 
+                          fill="#000000" 
+                          shape={(props: { x?: number; y?: number; width?: number; height?: number; payload?: { goal: number } }) => {
+                            const { y, height, payload } = props;
+                            if (y === undefined || height === undefined || !payload) return null;
+                            // Calculate x position based on goal value (0-100 scale)
+                            const chartWidth = 230; // approximate usable chart width
+                            const xPos = 70 + (payload.goal / 100) * chartWidth;
+                            return (
+                              <circle 
+                                cx={xPos} 
+                                cy={(y ?? 0) + (height ?? 0) / 2} 
+                                r={5} 
+                                fill="#000000" 
+                              />
+                            );
+                          }}
+                        />
                       </BarChart>
                     </ResponsiveContainer>
                   </div>
