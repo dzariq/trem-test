@@ -13,7 +13,7 @@ interface CertificateDialogProps {
   year?: string;
 }
 
-// Geometric Chevron Background Layer
+// Geometric Chevron Background Layer - Now Green
 const ChevronLayer = ({ 
   className, 
   color, 
@@ -66,8 +66,48 @@ const VRibbon = ({ className }: { className?: string }) => (
   </svg>
 );
 
-// Decorative Stars
-const Star = ({ className, size = 12 }: { className?: string; size?: number }) => (
+// Star Seal Component
+const StarSeal = ({ className }: { className?: string }) => (
+  <div className={`relative ${className}`}>
+    {/* Multi-pointed star seal */}
+    <svg 
+      viewBox="0 0 100 100" 
+      className="w-28 h-28 sm:w-32 sm:h-32"
+    >
+      <defs>
+        <linearGradient id="sealGold" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stopColor="#e8c967"/>
+          <stop offset="50%" stopColor="#d4a537"/>
+          <stop offset="100%" stopColor="#c9942a"/>
+        </linearGradient>
+        <linearGradient id="sealInner" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stopColor="#1a3d2e"/>
+          <stop offset="100%" stopColor="#0f2318"/>
+        </linearGradient>
+      </defs>
+      {/* Outer star burst - 16 points */}
+      <polygon 
+        points="50,0 54,20 62,4 58,24 74,10 66,28 86,18 74,32 96,28 80,38 100,50 80,62 96,72 74,68 86,82 66,72 74,90 58,76 62,96 54,80 50,100 46,80 38,96 42,76 26,90 34,72 14,82 26,68 4,72 20,62 0,50 20,38 4,28 26,32 14,18 34,28 26,10 42,24 38,4 46,20"
+        fill="url(#sealGold)"
+      />
+      {/* Inner circle */}
+      <circle cx="50" cy="50" r="28" fill="url(#sealInner)" stroke="#d4a537" strokeWidth="2"/>
+      {/* Inner gold ring */}
+      <circle cx="50" cy="50" r="22" fill="none" stroke="rgba(212, 165, 55, 0.4)" strokeWidth="1"/>
+    </svg>
+    {/* School Logo in center */}
+    <div className="absolute inset-0 flex items-center justify-center">
+      <img 
+        src={schoolLogo} 
+        alt="School Logo" 
+        className="w-12 h-12 sm:w-14 sm:h-14 object-contain"
+      />
+    </div>
+  </div>
+);
+
+// Small decorative star
+const SmallStar = ({ className, size = 12 }: { className?: string; size?: number }) => (
   <svg 
     viewBox="0 0 24 24" 
     className={className}
@@ -77,47 +117,6 @@ const Star = ({ className, size = 12 }: { className?: string; size?: number }) =
   >
     <polygon points="12,2 15,9 22,9 16,14 18,22 12,17 6,22 8,14 2,9 9,9"/>
   </svg>
-);
-
-// Award Badge Component with Logo
-const AwardBadge = ({ className }: { className?: string }) => (
-  <div className={`relative ${className}`}>
-    {/* Outer decorative ring with stars */}
-    <div className="absolute inset-0 flex items-center justify-center">
-      <div className="relative w-full h-full">
-        {/* Stars around the badge */}
-        <Star className="absolute -top-1 left-1/2 -translate-x-1/2 text-[#d4a537]" size={10} />
-        <Star className="absolute top-2 -left-1 text-[#d4a537]" size={8} />
-        <Star className="absolute top-2 -right-1 text-[#d4a537]" size={8} />
-        <Star className="absolute bottom-2 -left-1 text-[#d4a537]" size={8} />
-        <Star className="absolute bottom-2 -right-1 text-[#d4a537]" size={8} />
-        <Star className="absolute -bottom-1 left-1/2 -translate-x-1/2 text-[#d4a537]" size={10} />
-      </div>
-    </div>
-    
-    {/* Main badge circle */}
-    <div 
-      className="relative w-24 h-24 sm:w-28 sm:h-28 rounded-full flex items-center justify-center"
-      style={{ 
-        background: 'linear-gradient(145deg, #1a2942 0%, #0f1729 100%)',
-        border: '3px solid #d4a537',
-        boxShadow: '0 8px 24px rgba(0,0,0,0.4), inset 0 0 20px rgba(212, 165, 55, 0.1)'
-      }}
-    >
-      {/* Inner gold ring */}
-      <div 
-        className="absolute inset-2 rounded-full"
-        style={{ border: '1px solid rgba(212, 165, 55, 0.4)' }}
-      />
-      
-      {/* School Logo inside badge */}
-      <img 
-        src={schoolLogo} 
-        alt="School Logo" 
-        className="w-14 h-14 sm:w-16 sm:h-16 object-contain"
-      />
-    </div>
-  </div>
 );
 
 export function CertificateDialog({
@@ -147,48 +146,48 @@ export function CertificateDialog({
           <X className="h-5 w-5" />
         </button>
 
-        {/* Certificate Container - Portrait */}
+        {/* Certificate Container - Portrait - Dark Green */}
         <div 
           className="relative w-full overflow-hidden print:p-8"
           style={{
             aspectRatio: '3/4',
-            background: 'linear-gradient(180deg, #1a2942 0%, #0f1729 100%)',
+            background: 'linear-gradient(180deg, #1a3d2e 0%, #0f2318 100%)',
             boxShadow: '0 25px 60px -12px rgba(0, 0, 0, 0.6)',
           }}
         >
-          {/* Top Geometric Layers */}
+          {/* Top Geometric Layers - Green tones */}
           <div className="absolute top-0 left-0 right-0">
             <ChevronLayer 
               className="w-full h-24 sm:h-28" 
-              color="#3b5998" 
+              color="#2d5a47" 
               opacity={0.3}
               position="top"
             />
             <ChevronLayer 
               className="w-full h-20 sm:h-24 -mt-16 sm:-mt-20" 
-              color="#2c4a7d" 
+              color="#24503e" 
               opacity={0.5}
               position="top"
             />
             <ChevronLayer 
               className="w-full h-16 sm:h-20 -mt-12 sm:-mt-16" 
-              color="#1a3a6e" 
+              color="#1a4535" 
               opacity={0.7}
               position="top"
             />
           </div>
 
-          {/* Bottom Geometric Layers */}
+          {/* Bottom Geometric Layers - Green tones */}
           <div className="absolute bottom-0 left-0 right-0">
             <ChevronLayer 
               className="w-full h-16 sm:h-20" 
-              color="#1a3a6e" 
+              color="#1a4535" 
               opacity={0.7}
               position="bottom"
             />
             <ChevronLayer 
               className="w-full h-20 sm:h-24 -mb-12 sm:-mb-16 absolute bottom-0" 
-              color="#2c4a7d" 
+              color="#24503e" 
               opacity={0.5}
               position="bottom"
             />
@@ -225,16 +224,16 @@ export function CertificateDialog({
               </p>
             </div>
 
-            {/* V-Shaped Gold Ribbon - Full Width */}
-            <div className="w-[120%] -mx-[10%] -my-2">
-              <VRibbon className="w-full h-14 sm:h-18" />
+            {/* V-Shaped Gold Ribbon - Full Width Edge to Edge */}
+            <div className="w-[140%] -mx-[20%] -my-1">
+              <VRibbon className="w-full h-14 sm:h-16" />
             </div>
 
-            {/* Award Badge with Logo */}
-            <AwardBadge className="z-10 -my-2" />
+            {/* Star Seal */}
+            <StarSeal className="z-10 -my-4" />
 
-            {/* Main Content */}
-            <div className="flex flex-col items-center gap-2 sm:gap-3">
+            {/* Main Content - Moved up with proper spacing */}
+            <div className="flex flex-col items-center gap-1 sm:gap-2 mt-2">
               <p 
                 className="text-xs sm:text-sm uppercase tracking-[0.2em] font-medium"
                 style={{ color: '#d4a537' }}
@@ -256,13 +255,13 @@ export function CertificateDialog({
               {/* Decorative line under name */}
               <div className="flex items-center gap-3">
                 <div className="w-12 sm:w-16 h-[1px]" style={{ background: 'linear-gradient(to right, transparent, #d4a537)' }} />
-                <Star className="text-[#d4a537]" size={8} />
+                <SmallStar className="text-[#d4a537]" size={8} />
                 <div className="w-12 sm:w-16 h-[1px]" style={{ background: 'linear-gradient(to left, transparent, #d4a537)' }} />
               </div>
 
               {/* Role - Big and Prominent */}
               <h4 
-                className="text-2xl sm:text-3xl font-bold font-certificate-title uppercase tracking-wide"
+                className="text-2xl sm:text-3xl font-bold font-certificate-title uppercase tracking-wide mt-1"
                 style={{ 
                   color: '#e8c967',
                   textShadow: '0 2px 4px rgba(0,0,0,0.3)'
@@ -280,54 +279,56 @@ export function CertificateDialog({
               </h5>
             </div>
 
-            {/* Footer Section */}
-            <div className="w-full flex items-end justify-between px-2 sm:px-4 mt-auto">
-              {/* Date */}
-              <div className="text-center flex-1">
-                <div 
-                  className="w-16 sm:w-20 h-[1px] mb-2 mx-auto" 
-                  style={{ backgroundColor: 'rgba(212, 165, 55, 0.5)' }} 
-                />
-                <p 
-                  className="text-[10px] sm:text-xs uppercase tracking-wider"
-                  style={{ color: 'rgba(212, 165, 55, 0.7)' }}
-                >
-                  Date
-                </p>
-              </div>
-
-              {/* School Logo */}
-              <div className="flex flex-col items-center px-4">
-                <img 
-                  src={schoolLogo} 
-                  alt="School Logo" 
-                  className="h-10 w-auto sm:h-12 opacity-80"
-                />
-              </div>
+            {/* Footer Section - Two Signatures + Date */}
+            <div className="w-full flex flex-col items-center gap-3 mt-auto">
+              {/* Date centered above signatures */}
+              <p 
+                className="text-xs sm:text-sm font-certificate-body"
+                style={{ color: 'rgba(212, 165, 55, 0.8)' }}
+              >
+                {year}
+              </p>
               
-              {/* Signature */}
-              <div className="text-center flex-1">
-                <div 
-                  className="w-16 sm:w-20 h-[1px] mb-2 mx-auto" 
-                  style={{ backgroundColor: 'rgba(212, 165, 55, 0.5)' }} 
-                />
-                <p 
-                  className="text-[10px] sm:text-xs uppercase tracking-wider"
-                  style={{ color: 'rgba(212, 165, 55, 0.7)' }}
-                >
-                  Director
-                </p>
+              {/* Two Signatures */}
+              <div className="w-full flex items-end justify-between px-4 sm:px-8">
+                {/* Signature 1 */}
+                <div className="text-center flex-1">
+                  <div 
+                    className="w-20 sm:w-24 h-[1px] mb-2 mx-auto" 
+                    style={{ backgroundColor: 'rgba(212, 165, 55, 0.5)' }} 
+                  />
+                  <p 
+                    className="text-[10px] sm:text-xs uppercase tracking-wider"
+                    style={{ color: 'rgba(212, 165, 55, 0.7)' }}
+                  >
+                    Principal
+                  </p>
+                </div>
+                
+                {/* Signature 2 */}
+                <div className="text-center flex-1">
+                  <div 
+                    className="w-20 sm:w-24 h-[1px] mb-2 mx-auto" 
+                    style={{ backgroundColor: 'rgba(212, 165, 55, 0.5)' }} 
+                  />
+                  <p 
+                    className="text-[10px] sm:text-xs uppercase tracking-wider"
+                    style={{ color: 'rgba(212, 165, 55, 0.7)' }}
+                  >
+                    Director
+                  </p>
+                </div>
               </div>
             </div>
           </div>
         </div>
 
-        {/* Download Button - Dark Navy Theme */}
+        {/* Download Button - Dark Green Theme */}
         <Button 
           onClick={handleDownload}
           className="gap-2 shadow-xl print:hidden px-8 py-6 text-base hover:scale-105 transition-all duration-300 rounded-full font-medium"
           style={{ 
-            background: 'linear-gradient(135deg, #1a2942 0%, #0f1729 100%)',
+            background: 'linear-gradient(135deg, #1a3d2e 0%, #0f2318 100%)',
             color: '#e8c967',
             border: '1px solid #d4a537',
             boxShadow: '0 10px 30px -10px rgba(0, 0, 0, 0.5)'
