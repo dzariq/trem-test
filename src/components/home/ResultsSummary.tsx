@@ -221,17 +221,27 @@ export function ResultsSummary() {
                   <div 
                     key={item.name} 
                     className="relative flex flex-col items-center p-2.5 rounded-lg border overflow-hidden"
-                    style={{ backgroundColor: 'rgba(251, 191, 36, 0.1)', borderColor: 'rgba(251, 191, 36, 0.3)' }}
+                    style={{ 
+                      background: 'linear-gradient(135deg, #fef3c7 0%, #fcd34d 50%, #f59e0b 100%)', 
+                      borderColor: 'rgba(251, 191, 36, 0.5)' 
+                    }}
                   >
+                    {/* Inner shine effect */}
+                    <div 
+                      className="absolute inset-0 pointer-events-none"
+                      style={{
+                        background: 'radial-gradient(ellipse at 30% 20%, rgba(255, 255, 255, 0.6) 0%, transparent 50%)',
+                      }}
+                    />
                     {/* Star pattern background */}
                     <div className="absolute inset-0 pointer-events-none">
-                      <svg className="absolute -top-1 -left-1 w-8 h-8 opacity-30" fill="none" stroke="#f59e0b" strokeWidth="1" viewBox="0 0 24 24">
+                      <svg className="absolute -top-1 -left-1 w-8 h-8 opacity-40" fill="#fbbf24" stroke="#f59e0b" strokeWidth="0.5" viewBox="0 0 24 24">
                         <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
                       </svg>
-                      <svg className="absolute top-0 right-0 w-6 h-6 opacity-25" fill="none" stroke="#fbbf24" strokeWidth="1" viewBox="0 0 24 24">
+                      <svg className="absolute top-0 right-0 w-6 h-6 opacity-35" fill="#fde68a" stroke="#fbbf24" strokeWidth="0.5" viewBox="0 0 24 24">
                         <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
                       </svg>
-                      <svg className="absolute -bottom-2 -right-1 w-7 h-7 opacity-35" fill="none" stroke="#f59e0b" strokeWidth="1" viewBox="0 0 24 24">
+                      <svg className="absolute -bottom-2 -right-1 w-7 h-7 opacity-45" fill="#fbbf24" stroke="#f59e0b" strokeWidth="0.5" viewBox="0 0 24 24">
                         <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
                       </svg>
                     </div>
