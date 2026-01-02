@@ -482,14 +482,6 @@ export default function CalendarPage() {
                   </div>
                   <p className="text-sm text-muted-foreground pl-6">{selectedCCA.requirements}</p>
                 </div>
-
-                {/* Next Session */}
-                <div className="p-3 rounded-lg bg-primary/10 border border-primary/20">
-                  <p className="text-xs text-primary/80">Next Session</p>
-                  <p className="text-sm font-medium text-primary">
-                    {format(parseISO(selectedCCA.upcomingSession), "EEEE, MMMM d, yyyy")}
-                  </p>
-                </div>
               </div>
             </>
           )}
