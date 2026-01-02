@@ -804,7 +804,7 @@ export default function TeacherAcademicPage() {
             <Tabs defaultValue="overview" className="w-full">
               <TabsList className="grid w-full grid-cols-4 mb-4 bg-muted/50">
                 <TabsTrigger value="overview" className="text-xs">Overview</TabsTrigger>
-                <TabsTrigger value="distribution" className="text-xs">Distribution</TabsTrigger>
+                <TabsTrigger value="distribution" className="text-xs">Bands</TabsTrigger>
                 <TabsTrigger value="trends" className="text-xs">Trends</TabsTrigger>
                 <TabsTrigger value="comparison" className="text-xs">Comparison</TabsTrigger>
               </TabsList>
