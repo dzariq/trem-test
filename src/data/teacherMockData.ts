@@ -63,6 +63,79 @@ export const classAttendanceRecords: Record<string, Record<string, Record<string
   }
 };
 
+// Teacher Attendance Statistics Data
+export const teacherAttendanceStats: Record<string, {
+  monthly: { month: string; present: number; absent: number; late: number; excused: number }[];
+  dailyBreakdown: { date: string; status: "present" | "absent" | "late" | "excused"; studentName: string; reason?: string }[];
+}> = {
+  "5A": {
+    monthly: [
+      { month: "Aug", present: 185, absent: 12, late: 8, excused: 5 },
+      { month: "Sep", present: 178, absent: 15, late: 10, excused: 7 },
+      { month: "Oct", present: 190, absent: 8, late: 6, excused: 6 },
+      { month: "Nov", present: 175, absent: 18, late: 12, excused: 5 },
+      { month: "Dec", present: 165, absent: 10, late: 8, excused: 7 },
+      { month: "Jan", present: 58, absent: 4, late: 3, excused: 2 },
+    ],
+    dailyBreakdown: [
+      { date: "2026-01-02", status: "present", studentName: "Emma Johnson" },
+      { date: "2026-01-02", status: "absent", studentName: "Liam Smith", reason: "Sick leave" },
+      { date: "2026-01-02", status: "late", studentName: "Ava Wilson", reason: "Traffic" },
+      { date: "2026-01-01", status: "present", studentName: "Emma Johnson" },
+      { date: "2026-01-01", status: "absent", studentName: "Olivia Brown", reason: "Medical appointment" },
+      { date: "2026-01-01", status: "excused", studentName: "Benjamin Martinez", reason: "Family event" },
+      { date: "2025-12-20", status: "present", studentName: "Sophia Anderson" },
+      { date: "2025-12-20", status: "late", studentName: "Lucas Taylor", reason: "Bus delay" },
+      { date: "2025-12-19", status: "present", studentName: "James Miller" },
+      { date: "2025-12-19", status: "absent", studentName: "Noah Davis", reason: "Fever" },
+      { date: "2025-12-18", status: "excused", studentName: "Isabella Garcia", reason: "Competition" },
+      { date: "2025-12-18", status: "present", studentName: "Emma Johnson" },
+      { date: "2025-12-17", status: "late", studentName: "Liam Smith", reason: "Overslept" },
+      { date: "2025-12-17", status: "present", studentName: "Ava Wilson" },
+      { date: "2025-12-16", status: "absent", studentName: "Sophia Anderson", reason: "Sick" },
+    ],
+  },
+  "5B": {
+    monthly: [
+      { month: "Aug", present: 192, absent: 10, late: 5, excused: 3 },
+      { month: "Sep", present: 185, absent: 12, late: 8, excused: 5 },
+      { month: "Oct", present: 188, absent: 9, late: 7, excused: 6 },
+      { month: "Nov", present: 180, absent: 14, late: 10, excused: 6 },
+      { month: "Dec", present: 170, absent: 8, late: 6, excused: 6 },
+      { month: "Jan", present: 62, absent: 3, late: 2, excused: 1 },
+    ],
+    dailyBreakdown: [
+      { date: "2026-01-02", status: "present", studentName: "Mia Thomas" },
+      { date: "2026-01-02", status: "late", studentName: "Ethan Jackson", reason: "Traffic jam" },
+      { date: "2026-01-01", status: "absent", studentName: "Charlotte White", reason: "Doctor visit" },
+      { date: "2026-01-01", status: "present", studentName: "Alexander Harris" },
+      { date: "2025-12-20", status: "excused", studentName: "Amelia Martin", reason: "School event" },
+      { date: "2025-12-19", status: "present", studentName: "Daniel Thompson" },
+      { date: "2025-12-18", status: "late", studentName: "Harper Robinson", reason: "Late pickup" },
+      { date: "2025-12-17", status: "absent", studentName: "Matthew Clark", reason: "Flu" },
+    ],
+  },
+  "4A": {
+    monthly: [
+      { month: "Aug", present: 152, absent: 8, late: 4, excused: 4 },
+      { month: "Sep", present: 148, absent: 10, late: 6, excused: 4 },
+      { month: "Oct", present: 155, absent: 6, late: 5, excused: 2 },
+      { month: "Nov", present: 145, absent: 12, late: 8, excused: 3 },
+      { month: "Dec", present: 138, absent: 7, late: 5, excused: 2 },
+      { month: "Jan", present: 48, absent: 2, late: 2, excused: 0 },
+    ],
+    dailyBreakdown: [
+      { date: "2026-01-02", status: "present", studentName: "Abigail Walker" },
+      { date: "2026-01-02", status: "present", studentName: "Sebastian Hall" },
+      { date: "2026-01-01", status: "late", studentName: "Emily Young", reason: "Car trouble" },
+      { date: "2026-01-01", status: "present", studentName: "Jack Allen" },
+      { date: "2025-12-20", status: "absent", studentName: "Elizabeth King", reason: "Cold" },
+      { date: "2025-12-19", status: "present", studentName: "Henry Wright" },
+      { date: "2025-12-18", status: "excused", studentName: "Sofia Scott", reason: "Family trip" },
+    ],
+  },
+};
+
 // Detailed class grades with category breakdown per subject
 export const detailedClassGrades: Record<string, Record<string, Record<string, {
   attitude: number;
