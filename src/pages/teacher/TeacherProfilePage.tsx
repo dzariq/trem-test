@@ -29,14 +29,50 @@ import {
   Users,
   GraduationCap,
   FileText,
-  Download
+  Download,
+  KeyRound
 } from "lucide-react";
+import { ScrollArea } from "@/components/ui/scroll-area";
+
+const schoolAccounts = [
+  {
+    title: "Student Information System (SIS)",
+    email: "teacher@sis.edu.sg",
+    password: "SIS2025Teacher!",
+    description: "Access student records, grades, and attendance data"
+  },
+  {
+    title: "Learning Management System (LMS)",
+    email: "teacher@lms.edu.sg",
+    password: "LMS@Teacher2025",
+    description: "Upload assignments, course materials, and track student progress"
+  },
+  {
+    title: "Email & Calendar",
+    email: "teacher@school.edu.sg",
+    password: "School2025!",
+    description: "School email, calendar, and meeting scheduling"
+  },
+  {
+    title: "Library Portal",
+    email: "teacher@library.edu.sg",
+    password: "LibAccess2025",
+    description: "Reserve books, access digital resources, and manage loans"
+  },
+  {
+    title: "IT Helpdesk Portal",
+    email: "teacher@support.edu.sg",
+    password: "ITSupport25!",
+    description: "Submit IT support tickets and track resolution status"
+  }
+];
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 
 export default function TeacherProfilePage() {
   const navigate = useNavigate();
   const [isEditOpen, setIsEditOpen] = useState(false);
+  const [isAccountsOpen, setIsAccountsOpen] = useState(false);
   const [profile, setProfile] = useState({
     name: teacherProfile.name,
     email: teacherProfile.email,
@@ -226,7 +262,7 @@ export default function TeacherProfilePage() {
               Resources
             </CardTitle>
           </CardHeader>
-          <CardContent className="p-0">
+          <CardContent className="p-0 divide-y divide-border">
             <button 
               className="w-full flex items-center justify-between p-4 hover:bg-accent/30 transition-colors"
               onClick={() => {
@@ -248,6 +284,21 @@ export default function TeacherProfilePage() {
                 </div>
               </div>
               <Download className="h-5 w-5 text-muted-foreground" />
+            </button>
+            <button 
+              className="w-full flex items-center justify-between p-4 hover:bg-accent/30 transition-colors"
+              onClick={() => setIsAccountsOpen(true)}
+            >
+              <div className="flex items-center gap-3">
+                <div className="p-2 rounded-full bg-primary/10">
+                  <KeyRound className="h-4 w-4 text-primary" />
+                </div>
+                <div className="text-left">
+                  <span className="font-medium text-foreground block">School Accounts</span>
+                  <span className="text-xs text-muted-foreground">View login credentials</span>
+                </div>
+              </div>
+              <ChevronRight className="h-5 w-5 text-muted-foreground" />
             </button>
           </CardContent>
         </Card>
@@ -325,6 +376,46 @@ export default function TeacherProfilePage() {
               Cancel
             </Button>
             <Button onClick={handleSave}>Save Changes</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* School Accounts Dialog */}
+      <Dialog open={isAccountsOpen} onOpenChange={setIsAccountsOpen}>
+        <DialogContent className="sm:max-w-md max-h-[80vh]">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <KeyRound className="h-5 w-5" />
+              School Accounts
+            </DialogTitle>
+          </DialogHeader>
+          <ScrollArea className="max-h-[60vh] pr-4">
+            <div className="space-y-4 py-2">
+              {schoolAccounts.map((account, index) => (
+                <div 
+                  key={index}
+                  className="p-4 rounded-xl border border-border bg-muted/30 space-y-2"
+                >
+                  <h3 className="font-semibold text-foreground">{account.title}</h3>
+                  <p className="text-xs text-muted-foreground">{account.description}</p>
+                  <div className="space-y-1 pt-2">
+                    <div className="flex items-center gap-2">
+                      <Mail className="h-3 w-3 text-muted-foreground" />
+                      <span className="text-sm text-foreground font-mono">{account.email}</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <KeyRound className="h-3 w-3 text-muted-foreground" />
+                      <span className="text-sm text-foreground font-mono">{account.password}</span>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </ScrollArea>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsAccountsOpen(false)}>
+              Close
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
