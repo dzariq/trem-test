@@ -112,7 +112,7 @@ export function AttendanceSummary() {
           <Button 
             variant="outline" 
             className="w-full mt-4"
-            onClick={() => navigate("/attendance")}
+            onClick={() => navigate("/parent/attendance")}
           >
             View Details <ChevronRight className="h-4 w-4 ml-1" />
           </Button>
