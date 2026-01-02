@@ -106,12 +106,12 @@ export default function AcademicPage() {
     D: "bg-chart-5 text-card",
   };
 
-  // Background colors for subject cards (lighter versions)
-  const gradeCardBgColors: Record<string, string> = {
-    A: "bg-chart-1/10 border-chart-1/30",
-    B: "bg-chart-2/10 border-chart-2/30",
-    C: "bg-chart-4/10 border-chart-4/30",
-    D: "bg-chart-5/10 border-chart-5/30",
+  // Background colors for subject cards (using direct color values)
+  const gradeCardBgStyles: Record<string, { bg: string; border: string }> = {
+    A: { bg: 'rgba(34, 197, 94, 0.1)', border: 'rgba(34, 197, 94, 0.3)' },
+    B: { bg: 'rgba(234, 179, 8, 0.1)', border: 'rgba(234, 179, 8, 0.3)' },
+    C: { bg: 'rgba(249, 115, 22, 0.1)', border: 'rgba(249, 115, 22, 0.3)' },
+    D: { bg: 'rgba(239, 68, 68, 0.1)', border: 'rgba(239, 68, 68, 0.3)' },
   };
 
   const getGradeFromScore = (score: number) => {
@@ -438,19 +438,22 @@ export default function AcademicPage() {
                             const isPending = score === null || score === undefined;
                             const isExpanded = expandedSubject === subject.name;
                             const gradeKey = isPending ? 'C' : getGradeFromScore(score!)[0];
-                            const cardBgClass = gradeCardBgColors[gradeKey] || gradeCardBgColors.C;
+                            const cardStyle = gradeCardBgStyles[gradeKey] || gradeCardBgStyles.C;
                             
                             return (
                               <div
                                 key={index}
                                 onClick={() => setExpandedSubject(isExpanded ? null : subject.name)}
                                 className={`
-                                  flex flex-col p-4 rounded-xl cursor-pointer
+                                  flex flex-col p-4 rounded-xl cursor-pointer border
                                   transition-all duration-200 ease-out min-h-[80px]
                                   hover:shadow-md
-                                  ${cardBgClass}
                                   ${isExpanded ? 'ring-2 ring-primary/40 shadow-md' : ''}
                                 `}
+                                style={{
+                                  backgroundColor: cardStyle.bg,
+                                  borderColor: cardStyle.border
+                                }}
                               >
                                 <div className="flex items-start justify-between mb-1">
                                   <h3 className="font-medium text-foreground text-sm leading-tight">{subject.name}</h3>
@@ -481,24 +484,22 @@ export default function AcademicPage() {
                         {expandedInRow && (
                           <div className="animate-fade-in">
                             <div className="bg-primary/5 border border-primary/20 rounded-xl p-4 relative mt-1">
-                              {/* Arrow pointer - SVG for clean combined shape */}
-                              <svg 
-                                className="absolute -top-[10px] w-5 h-[10px]"
+                              {/* Arrow pointer - clean triangle without bottom line */}
+                              <div 
+                                className="absolute -top-[10px] w-5 h-[10px] overflow-hidden"
                                 style={{
                                   left: expandedInRow === rowSubjects[0] ? 'calc(25% - 10px)' : 'calc(75% - 10px)'
                                 }}
-                                viewBox="0 0 20 10"
-                                fill="none"
                               >
-                                <path 
-                                  d="M0 10 L10 0 L20 10" 
-                                  fill="hsl(var(--primary) / 0.05)"
-                                  stroke="hsl(var(--primary) / 0.2)"
-                                  strokeWidth="1"
+                                <div 
+                                  className="w-[14px] h-[14px] rotate-45 bg-primary/5 border-l border-t border-primary/20"
+                                  style={{ 
+                                    position: 'absolute',
+                                    top: '5px',
+                                    left: '3px'
+                                  }}
                                 />
-                                {/* Cover bottom border line */}
-                                <path d="M1 10 L19 10" stroke="hsl(var(--primary) / 0.05)" strokeWidth="2" />
-                              </svg>
+                              </div>
                               
                               <div className="flex items-start gap-3">
                                 <div className="flex-shrink-0 w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
