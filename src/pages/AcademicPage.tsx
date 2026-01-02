@@ -10,6 +10,7 @@ import { Progress } from "@/components/ui/progress";
 import { Download, FileText, Award, Trophy, BookOpen, TrendingUp, TrendingDown, Check, ArrowUp, ArrowDown, Minus, BarChart3, GitCompare, Target, AlertTriangle, Star, Goal, CheckCircle2, Circle, Edit2, ChevronDown, MessageSquare, Calendar, Sparkles } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import schoolLogo from "@/assets/school-badge.png";
+import { CertificateDialog } from "@/components/CertificateDialog";
 import {
   Select,
   SelectContent,
@@ -143,6 +144,14 @@ export default function AcademicPage() {
   const [tempGoalValue, setTempGoalValue] = useState<string>("");
   const [compareExamB, setCompareExamB] = useState({ year: "2024" as YearKey, type: "yearEnd" as ExamType });
   const [compareSubjects, setCompareSubjects] = useState<string[]>(academicData.subjects.map(s => s.name));
+
+  // Certificate dialog state
+  const [certificateOpen, setCertificateOpen] = useState(false);
+  const [selectedAward, setSelectedAward] = useState<{
+    category: string;
+    organization: string;
+    role: string;
+  } | null>(null);
 
   const isActivitiesTab = activeTab === "cocurriculum";
 
@@ -876,11 +885,19 @@ export default function AcademicPage() {
                     {/* Sports House */}
                     {academicData.awards.sportsHouse.organization !== "None" && academicData.awards.sportsHouse.organization && (
                       <div 
-                        className="relative p-4 rounded-xl border overflow-hidden"
+                        className="relative p-4 rounded-xl border overflow-hidden cursor-pointer transition-transform active:scale-[0.98] hover:shadow-lg"
                         style={{ 
                           background: 'linear-gradient(145deg, #fef3c7 0%, #fde68a 25%, #fbbf24 60%, #f59e0b 100%)', 
                           borderColor: 'rgba(217, 119, 6, 0.4)',
                           boxShadow: '0 2px 8px rgba(217, 119, 6, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.4)'
+                        }}
+                        onClick={() => {
+                          setSelectedAward({
+                            category: "Sports House",
+                            organization: academicData.awards.sportsHouse.organization,
+                            role: academicData.awards.sportsHouse.role
+                          });
+                          setCertificateOpen(true);
                         }}
                       >
                         <div className="absolute inset-0 pointer-events-none" style={{ background: 'radial-gradient(ellipse at 20% 10%, rgba(255, 255, 255, 0.35) 0%, transparent 35%)' }} />
@@ -911,11 +928,19 @@ export default function AcademicPage() {
                     {/* Club */}
                     {academicData.awards.club.organization !== "None" && academicData.awards.club.organization && (
                       <div 
-                        className="relative p-4 rounded-xl border overflow-hidden"
+                        className="relative p-4 rounded-xl border overflow-hidden cursor-pointer transition-transform active:scale-[0.98] hover:shadow-lg"
                         style={{ 
                           background: 'linear-gradient(145deg, #fef3c7 0%, #fde68a 25%, #fbbf24 60%, #f59e0b 100%)', 
                           borderColor: 'rgba(217, 119, 6, 0.4)',
                           boxShadow: '0 2px 8px rgba(217, 119, 6, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.4)'
+                        }}
+                        onClick={() => {
+                          setSelectedAward({
+                            category: "Club",
+                            organization: academicData.awards.club.organization,
+                            role: academicData.awards.club.role
+                          });
+                          setCertificateOpen(true);
                         }}
                       >
                         <div className="absolute inset-0 pointer-events-none" style={{ background: 'radial-gradient(ellipse at 20% 10%, rgba(255, 255, 255, 0.35) 0%, transparent 35%)' }} />
@@ -946,11 +971,19 @@ export default function AcademicPage() {
                     {/* Student Leadership */}
                     {academicData.awards.studentLeadership.organization !== "None" && academicData.awards.studentLeadership.organization && (
                       <div 
-                        className="relative p-4 rounded-xl border overflow-hidden"
+                        className="relative p-4 rounded-xl border overflow-hidden cursor-pointer transition-transform active:scale-[0.98] hover:shadow-lg"
                         style={{ 
                           background: 'linear-gradient(145deg, #fef3c7 0%, #fde68a 25%, #fbbf24 60%, #f59e0b 100%)', 
                           borderColor: 'rgba(217, 119, 6, 0.4)',
                           boxShadow: '0 2px 8px rgba(217, 119, 6, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.4)'
+                        }}
+                        onClick={() => {
+                          setSelectedAward({
+                            category: "Leadership",
+                            organization: academicData.awards.studentLeadership.organization,
+                            role: academicData.awards.studentLeadership.role
+                          });
+                          setCertificateOpen(true);
                         }}
                       >
                         <div className="absolute inset-0 pointer-events-none" style={{ background: 'radial-gradient(ellipse at 20% 10%, rgba(255, 255, 255, 0.35) 0%, transparent 35%)' }} />
@@ -981,11 +1014,19 @@ export default function AcademicPage() {
                     {/* Events */}
                     {academicData.awards.events.organization !== "None" && academicData.awards.events.organization && (
                       <div 
-                        className="relative p-4 rounded-xl border overflow-hidden"
+                        className="relative p-4 rounded-xl border overflow-hidden cursor-pointer transition-transform active:scale-[0.98] hover:shadow-lg"
                         style={{ 
                           background: 'linear-gradient(145deg, #fef3c7 0%, #fde68a 25%, #fbbf24 60%, #f59e0b 100%)', 
                           borderColor: 'rgba(217, 119, 6, 0.4)',
                           boxShadow: '0 2px 8px rgba(217, 119, 6, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.4)'
+                        }}
+                        onClick={() => {
+                          setSelectedAward({
+                            category: "Events",
+                            organization: academicData.awards.events.organization,
+                            role: academicData.awards.events.role
+                          });
+                          setCertificateOpen(true);
                         }}
                       >
                         <div className="absolute inset-0 pointer-events-none" style={{ background: 'radial-gradient(ellipse at 20% 10%, rgba(255, 255, 255, 0.35) 0%, transparent 35%)' }} />
@@ -1016,11 +1057,19 @@ export default function AcademicPage() {
                     {/* Achievements */}
                     {academicData.awards.achievements.event !== "None" && academicData.awards.achievements.event && (
                       <div 
-                        className="relative p-4 rounded-xl border overflow-hidden"
+                        className="relative p-4 rounded-xl border overflow-hidden cursor-pointer transition-transform active:scale-[0.98] hover:shadow-lg"
                         style={{ 
                           background: 'linear-gradient(145deg, #fef3c7 0%, #fde68a 25%, #fbbf24 60%, #f59e0b 100%)', 
                           borderColor: 'rgba(217, 119, 6, 0.4)',
                           boxShadow: '0 2px 8px rgba(217, 119, 6, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.4)'
+                        }}
+                        onClick={() => {
+                          setSelectedAward({
+                            category: "Achievement",
+                            organization: academicData.awards.achievements.event,
+                            role: academicData.awards.achievements.award
+                          });
+                          setCertificateOpen(true);
                         }}
                       >
                         <div className="absolute inset-0 pointer-events-none" style={{ background: 'radial-gradient(ellipse at 20% 10%, rgba(255, 255, 255, 0.35) 0%, transparent 35%)' }} />
@@ -1048,6 +1097,18 @@ export default function AcademicPage() {
                       </div>
                     )}
                   </>
+                )}
+
+                {/* Certificate Dialog */}
+                {selectedAward && (
+                  <CertificateDialog
+                    open={certificateOpen}
+                    onOpenChange={setCertificateOpen}
+                    category={selectedAward.category}
+                    organization={selectedAward.organization}
+                    role={selectedAward.role}
+                    studentName={students[0]?.name || "Student Name"}
+                  />
                 )}
               </TabsContent>
             </Tabs>
