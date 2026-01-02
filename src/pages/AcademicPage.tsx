@@ -706,15 +706,46 @@ export default function AcademicPage() {
               </TabsContent>
 
               <TabsContent value="behavior" className="mt-4 space-y-3">
-                {academicData.behavior.map((item, index) => (
-                  <div key={index} className="flex items-center justify-between p-3 rounded-lg bg-accent/30 border border-border/50">
-                    <div>
-                      <h3 className="font-medium text-foreground">{item.category}</h3>
-                      <p className="text-sm text-muted-foreground">{item.description}</p>
+                {academicData.behavior.map((item, index) => {
+                  // Color-coded rank based on grade
+                  const rankConfig = {
+                    A: { label: "Good", bg: "bg-emerald-500/10", border: "border-emerald-500/30", text: "text-emerald-600", badgeBg: "bg-emerald-500", badgeText: "text-white" },
+                    B: { label: "Avg", bg: "bg-amber-500/10", border: "border-amber-500/30", text: "text-amber-600", badgeBg: "bg-amber-500", badgeText: "text-white" },
+                    C: { label: "Bad", bg: "bg-red-500/10", border: "border-red-500/30", text: "text-red-600", badgeBg: "bg-red-500", badgeText: "text-white" }
+                  };
+                  const rank = rankConfig[item.grade as keyof typeof rankConfig] || rankConfig.C;
+                  
+                  // Generate comment based on grade
+                  const getComment = (category: string, grade: string) => {
+                    const comments: Record<string, Record<string, string>> = {
+                      Punctuality: { A: "Consistently on time", B: "Occasionally late", C: "Frequently late" },
+                      Participation: { A: "Actively participates in class", B: "Participates when prompted", C: "Rarely participates" },
+                      Teamwork: { A: "Works excellently with peers", B: "Works well with peers", C: "Needs improvement in teamwork" },
+                      Discipline: { A: "Follows school rules", B: "Mostly follows rules", C: "Needs to improve discipline" }
+                    };
+                    return comments[category]?.[grade] || item.description;
+                  };
+                  
+                  return (
+                    <div 
+                      key={index} 
+                      className={`flex items-center justify-between p-3 rounded-lg ${rank.bg} border ${rank.border}`}
+                    >
+                      <div className="flex-1">
+                        <h3 className="font-medium text-foreground">{item.category}</h3>
+                        <p className="text-sm text-muted-foreground">{getComment(item.category, item.grade)}</p>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className={`text-xs font-semibold px-2 py-1 rounded-full ${rank.badgeBg} ${rank.badgeText}`}>
+                          {rank.label}
+                        </span>
+                        <span className={`text-xs font-medium ${rank.text}`}>
+                          {item.grade}
+                        </span>
+                      </div>
                     </div>
-                    <Badge className={gradeColors[item.grade]}>Grade {item.grade}</Badge>
-                  </div>
-                ))}
+                  );
+                })}
               </TabsContent>
 
               <TabsContent value="cocurriculum" className="mt-4 space-y-3">
