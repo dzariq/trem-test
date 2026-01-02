@@ -1165,8 +1165,8 @@ export default function TeacherAcademicPage() {
                         <Award className="h-4 w-4" />
                         Top Performers ({topPerformers.length})
                         <span className="ml-auto flex gap-1">
-                          <span className="px-1.5 py-0.5 text-[10px] font-semibold rounded-full bg-emerald-600 text-white">A*</span>
-                          <span className="px-1.5 py-0.5 text-[10px] font-semibold rounded-full bg-emerald-400 text-white">A</span>
+                          <span className="px-1.5 py-0.5 text-[10px] font-semibold rounded-full bg-amber-500 text-white">A*</span>
+                          <span className="px-1.5 py-0.5 text-[10px] font-semibold rounded-full bg-amber-500 text-white">A</span>
                         </span>
                       </CardTitle>
                     </CardHeader>
@@ -1214,7 +1214,7 @@ export default function TeacherAcademicPage() {
                         Middle Performers ({middlePerformers.length})
                         <span className="ml-auto flex gap-1">
                           <span className="px-1.5 py-0.5 text-[10px] font-semibold rounded-full bg-blue-500 text-white">B</span>
-                          <span className="px-1.5 py-0.5 text-[10px] font-semibold rounded-full bg-orange-500 text-white">C</span>
+                          <span className="px-1.5 py-0.5 text-[10px] font-semibold rounded-full bg-blue-500 text-white">C</span>
                         </span>
                       </CardTitle>
                     </CardHeader>
@@ -1253,7 +1253,7 @@ export default function TeacherAcademicPage() {
                         <AlertTriangle className="h-4 w-4" />
                         At-Risk Students ({atRiskStudents.length})
                         <span className="ml-auto flex gap-1">
-                          <span className="px-1.5 py-0.5 text-[10px] font-semibold rounded-full bg-orange-400 text-white">D</span>
+                          <span className="px-1.5 py-0.5 text-[10px] font-semibold rounded-full bg-red-500 text-white">D</span>
                           <span className="px-1.5 py-0.5 text-[10px] font-semibold rounded-full bg-red-500 text-white">E</span>
                         </span>
                       </CardTitle>
