@@ -48,6 +48,18 @@ const getCategoryScore = (subject: typeof academicData.subjects[0], year: YearKe
   return yearData ? yearData[category] : null;
 };
 
+// Helper to shorten long subject names
+const shortenSubjectName = (name: string): string => {
+  const abbreviations: Record<string, string> = {
+    "Mathematics": "Math",
+    "Physical Education": "PE",
+    "Social Studies": "Social St.",
+    "Information Technology": "IT",
+    "Computer Science": "Comp Sci",
+  };
+  return abbreviations[name] || name;
+};
+
 export default function AcademicPage() {
   const [activeTab, setActiveTab] = useState("grades");
   const [examType, setExamType] = useState<ExamType>("midYear");
@@ -512,7 +524,7 @@ export default function AcademicPage() {
                               {index + 1}
                             </span>
                             <div className="flex flex-col min-w-0">
-                              <span className="text-sm font-medium text-foreground">{s.name}</span>
+                              <span className="text-sm font-medium text-foreground">{shortenSubjectName(s.name)}</span>
                               <Badge variant="secondary" className="text-xs font-semibold w-fit mt-0.5">{score}%</Badge>
                             </div>
                           </div>
@@ -535,7 +547,7 @@ export default function AcademicPage() {
                               {index + 1}
                             </span>
                             <div className="flex flex-col min-w-0">
-                              <span className="text-sm font-medium text-foreground">{s.name}</span>
+                              <span className="text-sm font-medium text-foreground">{shortenSubjectName(s.name)}</span>
                               <Badge variant="outline" className="text-xs font-semibold border-chart-4/30 w-fit mt-0.5">{score}%</Badge>
                             </div>
                           </div>
@@ -555,7 +567,7 @@ export default function AcademicPage() {
                     <div className="grid grid-cols-3 gap-2">
                       {risingStars.map((item) => (
                         <div key={item.subject.name} className="flex flex-col items-center p-2.5 rounded-lg bg-chart-2/10 border border-chart-2/20">
-                          <span className="text-xs font-medium text-foreground text-center">{item.subject.name}</span>
+                          <span className="text-xs font-medium text-foreground text-center">{shortenSubjectName(item.subject.name)}</span>
                           <div className="flex items-center gap-1 mt-1">
                             <ArrowUp className="h-3 w-3 text-chart-2" />
                             <span className="text-sm font-bold text-chart-2">+{item.improvement}%</span>
