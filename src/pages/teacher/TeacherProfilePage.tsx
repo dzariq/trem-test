@@ -29,13 +29,12 @@ import {
   Users,
   GraduationCap,
   FileText,
-  Eye,
   KeyRound
 } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
-import { PDFViewerDialog } from "@/components/PDFViewerDialog";
+
 
 const schoolAccounts = [
   {
@@ -74,7 +73,7 @@ export default function TeacherProfilePage() {
   const navigate = useNavigate();
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [isAccountsOpen, setIsAccountsOpen] = useState(false);
-  const [isPdfOpen, setIsPdfOpen] = useState(false);
+  
   const [profile, setProfile] = useState({
     name: teacherProfile.name,
     email: teacherProfile.email,
@@ -267,7 +266,7 @@ export default function TeacherProfilePage() {
           <CardContent className="p-0 divide-y divide-border">
             <button 
               className="w-full flex items-center justify-between p-4 hover:bg-accent/30 transition-colors"
-              onClick={() => setIsPdfOpen(true)}
+              onClick={() => navigate("/teacher/handbook")}
             >
               <div className="flex items-center gap-3">
                 <div className="p-2 rounded-full bg-primary/10">
@@ -275,10 +274,10 @@ export default function TeacherProfilePage() {
                 </div>
                 <div className="text-left">
                   <span className="font-medium text-foreground block">Teacher Handbook</span>
-                  <span className="text-xs text-muted-foreground">PDF • 2026 Edition</span>
+                  <span className="text-xs text-muted-foreground">Summary & PDF • 2026 Edition</span>
                 </div>
               </div>
-              <Eye className="h-5 w-5 text-muted-foreground" />
+              <ChevronRight className="h-5 w-5 text-muted-foreground" />
             </button>
             <button 
               className="w-full flex items-center justify-between p-4 hover:bg-accent/30 transition-colors"
@@ -415,14 +414,6 @@ export default function TeacherProfilePage() {
         </DialogContent>
       </Dialog>
 
-      {/* PDF Viewer Dialog */}
-      <PDFViewerDialog
-        open={isPdfOpen}
-        onOpenChange={setIsPdfOpen}
-        pdfUrl="/documents/teacher-handbook.pdf"
-        title="Teacher Handbook"
-        downloadFileName="Teacher_Handbook_2026.pdf"
-      />
     </TeacherAppLayout>
   );
 }
