@@ -507,14 +507,14 @@ export default function AcademicPage() {
                       {top3.map((s, index) => {
                         const score = getScore(s, selectedYear, examType);
                         return (
-                          <div key={s.name} className="flex items-center justify-between p-2 rounded-lg bg-chart-1/10 border border-chart-1/20">
-                            <div className="flex items-center gap-2">
-                              <span className="w-5 h-5 rounded-full bg-chart-1/20 flex items-center justify-center text-xs font-bold text-chart-1">
+                          <div key={s.name} className="flex items-center justify-between gap-2 p-2 rounded-lg bg-chart-1/10 border border-chart-1/20 min-w-0">
+                            <div className="flex items-center gap-2 min-w-0 flex-1">
+                              <span className="w-5 h-5 shrink-0 rounded-full bg-chart-1/20 flex items-center justify-center text-xs font-bold text-chart-1">
                                 {index + 1}
                               </span>
-                              <span className="text-sm font-medium text-foreground">{s.name}</span>
+                              <span className="text-sm font-medium text-foreground truncate">{s.name}</span>
                             </div>
-                            <Badge variant="secondary" className="text-xs font-semibold">{score}%</Badge>
+                            <Badge variant="secondary" className="text-xs font-semibold shrink-0">{score}%</Badge>
                           </div>
                         );
                       })}
@@ -530,14 +530,14 @@ export default function AcademicPage() {
                       {bottom3.map((s, index) => {
                         const score = getScore(s, selectedYear, examType);
                         return (
-                          <div key={s.name} className="flex items-center justify-between p-2 rounded-lg bg-chart-4/10 border border-chart-4/20">
-                            <div className="flex items-center gap-2">
-                              <span className="w-5 h-5 rounded-full bg-chart-4/20 flex items-center justify-center text-xs font-bold text-chart-4">
+                          <div key={s.name} className="flex items-center justify-between gap-2 p-2 rounded-lg bg-chart-4/10 border border-chart-4/20 min-w-0">
+                            <div className="flex items-center gap-2 min-w-0 flex-1">
+                              <span className="w-5 h-5 shrink-0 rounded-full bg-chart-4/20 flex items-center justify-center text-xs font-bold text-chart-4">
                                 {index + 1}
                               </span>
-                              <span className="text-sm font-medium text-foreground">{s.name}</span>
+                              <span className="text-sm font-medium text-foreground truncate">{s.name}</span>
                             </div>
-                            <Badge variant="outline" className="text-xs font-semibold border-chart-4/30">{score}%</Badge>
+                            <Badge variant="outline" className="text-xs font-semibold border-chart-4/30 shrink-0">{score}%</Badge>
                           </div>
                         );
                       })}
