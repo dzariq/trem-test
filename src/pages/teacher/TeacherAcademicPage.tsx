@@ -121,6 +121,7 @@ export default function TeacherAcademicPage() {
   const [selectedYears, setSelectedYears] = useState<string[]>([academicYears[0]]);
   const [selectedPeriod, setSelectedPeriod] = useState<"midYear" | "yearEnd">("midYear");
   const [selectedPeriods, setSelectedPeriods] = useState<string[]>(["midYear"]);
+  const [selectedSubjects, setSelectedSubjects] = useState<string[]>([...subjects]);
   const [selectedCategory, setSelectedCategory] = useState<"attitude" | "homework" | "quiz" | "exam">("quiz");
   
   // Comparison tab state
@@ -200,6 +201,14 @@ export default function TeacherAcademicPage() {
       prev.includes(period) 
         ? prev.length > 1 ? prev.filter(p => p !== period) : prev // Keep at least one selected
         : [...prev, period]
+    );
+  };
+
+  const toggleSubjectFilter = (subject: string) => {
+    setSelectedSubjects(prev => 
+      prev.includes(subject) 
+        ? prev.length > 1 ? prev.filter(s => s !== subject) : prev // Keep at least one selected
+        : [...prev, subject]
     );
   };
 
@@ -827,6 +836,35 @@ export default function TeacherAcademicPage() {
                       {examPeriods.find(p => p.value === period)?.label}
                     </Badge>
                   ))}
+                </div>
+
+                {/* Subject Selector - Toggle Chips */}
+                <div className="space-y-2">
+                  <h4 className="text-sm font-medium text-foreground">Subjects</h4>
+                  <div className="flex flex-wrap gap-2 p-3 rounded-lg border border-border bg-accent/20">
+                    {subjects.map((subject) => {
+                      const isSelected = selectedSubjects.includes(subject);
+                      return (
+                        <button
+                          key={subject}
+                          onClick={() => toggleSubjectFilter(subject)}
+                          className={cn(
+                            "px-3 py-1.5 rounded-full text-xs font-medium transition-all flex items-center gap-1.5",
+                            isSelected 
+                              ? "bg-primary text-primary-foreground" 
+                              : "bg-muted text-muted-foreground hover:bg-muted/80"
+                          )}
+                        >
+                          {subject.length > 12 ? subject.substring(0, 12) + "..." : subject}
+                          {isSelected && (
+                            <svg className="w-3 h-3" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                            </svg>
+                          )}
+                        </button>
+                      );
+                    })}
+                  </div>
                 </div>
 
                 {/* Subject Performance Bar Chart */}
