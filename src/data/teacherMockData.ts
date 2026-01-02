@@ -63,10 +63,19 @@ export const classAttendanceRecords: Record<string, Record<string, Record<string
   }
 };
 
-// Teacher Attendance Statistics Data
+// Teacher Attendance Statistics Data with student details
+export interface DailyAttendanceDetail {
+  date: string;
+  present: number;
+  absent: number;
+  late: number;
+  excused: number;
+  students: { id: string; name: string; status: "present" | "absent" | "late" | "excused" }[];
+}
+
 export const teacherAttendanceStats: Record<string, {
   monthly: { month: string; present: number; absent: number; late: number; excused: number }[];
-  dailyBreakdown: { date: string; present: number; absent: number; late: number; excused: number }[];
+  dailyBreakdown: DailyAttendanceDetail[];
 }> = {
   "5A": {
     monthly: [
@@ -78,16 +87,144 @@ export const teacherAttendanceStats: Record<string, {
       { month: "Jan", present: 58, absent: 4, late: 3, excused: 2 },
     ],
     dailyBreakdown: [
-      { date: "2026-01-02", present: 18, absent: 2, late: 1, excused: 1 },
-      { date: "2026-01-01", present: 19, absent: 1, late: 1, excused: 1 },
-      { date: "2025-12-20", present: 20, absent: 0, late: 2, excused: 0 },
-      { date: "2025-12-19", present: 17, absent: 3, late: 1, excused: 1 },
-      { date: "2025-12-18", present: 19, absent: 1, late: 0, excused: 2 },
-      { date: "2025-12-17", present: 18, absent: 2, late: 2, excused: 0 },
-      { date: "2025-12-16", present: 16, absent: 4, late: 1, excused: 1 },
-      { date: "2025-12-13", present: 21, absent: 0, late: 1, excused: 0 },
-      { date: "2025-12-12", present: 19, absent: 2, late: 0, excused: 1 },
-      { date: "2025-12-11", present: 18, absent: 1, late: 2, excused: 1 },
+      { 
+        date: "2026-01-02", present: 18, absent: 2, late: 1, excused: 1,
+        students: [
+          { id: "STU-001", name: "Emma Johnson", status: "present" },
+          { id: "STU-002", name: "Liam Smith", status: "present" },
+          { id: "STU-003", name: "Olivia Brown", status: "absent" },
+          { id: "STU-004", name: "Noah Davis", status: "present" },
+          { id: "STU-005", name: "Ava Wilson", status: "late" },
+          { id: "STU-006", name: "James Miller", status: "present" },
+          { id: "STU-007", name: "Isabella Garcia", status: "present" },
+          { id: "STU-008", name: "Benjamin Martinez", status: "excused" },
+          { id: "STU-009", name: "Sophia Anderson", status: "present" },
+          { id: "STU-010", name: "Lucas Taylor", status: "present" },
+          { id: "STU-011", name: "Mia Thomas", status: "present" },
+          { id: "STU-012", name: "Ethan Jackson", status: "present" },
+          { id: "STU-013", name: "Charlotte White", status: "present" },
+          { id: "STU-014", name: "Alexander Harris", status: "present" },
+          { id: "STU-015", name: "Amelia Martin", status: "present" },
+          { id: "STU-016", name: "Daniel Thompson", status: "present" },
+          { id: "STU-017", name: "Harper Robinson", status: "present" },
+          { id: "STU-018", name: "Matthew Clark", status: "present" },
+          { id: "STU-019", name: "Evelyn Lewis", status: "present" },
+          { id: "STU-020", name: "Michael Lee", status: "present" },
+          { id: "STU-021", name: "Abigail Walker", status: "absent" },
+          { id: "STU-022", name: "Sebastian Hall", status: "present" },
+        ]
+      },
+      { 
+        date: "2026-01-01", present: 19, absent: 1, late: 1, excused: 1,
+        students: [
+          { id: "STU-001", name: "Emma Johnson", status: "present" },
+          { id: "STU-002", name: "Liam Smith", status: "present" },
+          { id: "STU-003", name: "Olivia Brown", status: "present" },
+          { id: "STU-004", name: "Noah Davis", status: "absent" },
+          { id: "STU-005", name: "Ava Wilson", status: "present" },
+          { id: "STU-006", name: "James Miller", status: "late" },
+          { id: "STU-007", name: "Isabella Garcia", status: "present" },
+          { id: "STU-008", name: "Benjamin Martinez", status: "excused" },
+          { id: "STU-009", name: "Sophia Anderson", status: "present" },
+          { id: "STU-010", name: "Lucas Taylor", status: "present" },
+          { id: "STU-011", name: "Mia Thomas", status: "present" },
+          { id: "STU-012", name: "Ethan Jackson", status: "present" },
+          { id: "STU-013", name: "Charlotte White", status: "present" },
+          { id: "STU-014", name: "Alexander Harris", status: "present" },
+          { id: "STU-015", name: "Amelia Martin", status: "present" },
+          { id: "STU-016", name: "Daniel Thompson", status: "present" },
+          { id: "STU-017", name: "Harper Robinson", status: "present" },
+          { id: "STU-018", name: "Matthew Clark", status: "present" },
+          { id: "STU-019", name: "Evelyn Lewis", status: "present" },
+          { id: "STU-020", name: "Michael Lee", status: "present" },
+          { id: "STU-021", name: "Abigail Walker", status: "present" },
+          { id: "STU-022", name: "Sebastian Hall", status: "present" },
+        ]
+      },
+      { 
+        date: "2025-12-20", present: 20, absent: 0, late: 2, excused: 0,
+        students: [
+          { id: "STU-001", name: "Emma Johnson", status: "present" },
+          { id: "STU-002", name: "Liam Smith", status: "late" },
+          { id: "STU-003", name: "Olivia Brown", status: "present" },
+          { id: "STU-004", name: "Noah Davis", status: "present" },
+          { id: "STU-005", name: "Ava Wilson", status: "late" },
+          { id: "STU-006", name: "James Miller", status: "present" },
+          { id: "STU-007", name: "Isabella Garcia", status: "present" },
+          { id: "STU-008", name: "Benjamin Martinez", status: "present" },
+          { id: "STU-009", name: "Sophia Anderson", status: "present" },
+          { id: "STU-010", name: "Lucas Taylor", status: "present" },
+        ]
+      },
+      { 
+        date: "2025-12-19", present: 17, absent: 3, late: 1, excused: 1,
+        students: [
+          { id: "STU-001", name: "Emma Johnson", status: "present" },
+          { id: "STU-002", name: "Liam Smith", status: "absent" },
+          { id: "STU-003", name: "Olivia Brown", status: "present" },
+          { id: "STU-004", name: "Noah Davis", status: "absent" },
+          { id: "STU-005", name: "Ava Wilson", status: "present" },
+          { id: "STU-006", name: "James Miller", status: "present" },
+          { id: "STU-007", name: "Isabella Garcia", status: "late" },
+          { id: "STU-008", name: "Benjamin Martinez", status: "excused" },
+          { id: "STU-009", name: "Sophia Anderson", status: "present" },
+          { id: "STU-010", name: "Lucas Taylor", status: "present" },
+          { id: "STU-012", name: "Ethan Jackson", status: "absent" },
+        ]
+      },
+      { 
+        date: "2025-12-18", present: 19, absent: 1, late: 0, excused: 2,
+        students: [
+          { id: "STU-001", name: "Emma Johnson", status: "present" },
+          { id: "STU-002", name: "Liam Smith", status: "present" },
+          { id: "STU-003", name: "Olivia Brown", status: "absent" },
+          { id: "STU-008", name: "Benjamin Martinez", status: "excused" },
+          { id: "STU-009", name: "Sophia Anderson", status: "excused" },
+        ]
+      },
+      { 
+        date: "2025-12-17", present: 18, absent: 2, late: 2, excused: 0,
+        students: [
+          { id: "STU-001", name: "Emma Johnson", status: "late" },
+          { id: "STU-004", name: "Noah Davis", status: "absent" },
+          { id: "STU-010", name: "Lucas Taylor", status: "late" },
+          { id: "STU-014", name: "Alexander Harris", status: "absent" },
+        ]
+      },
+      { 
+        date: "2025-12-16", present: 16, absent: 4, late: 1, excused: 1,
+        students: [
+          { id: "STU-002", name: "Liam Smith", status: "absent" },
+          { id: "STU-003", name: "Olivia Brown", status: "absent" },
+          { id: "STU-008", name: "Benjamin Martinez", status: "excused" },
+          { id: "STU-010", name: "Lucas Taylor", status: "absent" },
+          { id: "STU-012", name: "Ethan Jackson", status: "late" },
+          { id: "STU-014", name: "Alexander Harris", status: "absent" },
+        ]
+      },
+      { 
+        date: "2025-12-13", present: 21, absent: 0, late: 1, excused: 0,
+        students: [
+          { id: "STU-011", name: "Mia Thomas", status: "late" },
+        ]
+      },
+      { 
+        date: "2025-12-12", present: 19, absent: 2, late: 0, excused: 1,
+        students: [
+          { id: "STU-003", name: "Olivia Brown", status: "absent" },
+          { id: "STU-008", name: "Benjamin Martinez", status: "excused" },
+          { id: "STU-014", name: "Alexander Harris", status: "absent" },
+        ]
+      },
+      { 
+        date: "2025-12-11", present: 18, absent: 1, late: 2, excused: 1,
+        students: [
+          { id: "STU-002", name: "Liam Smith", status: "late" },
+          { id: "STU-005", name: "Ava Wilson", status: "late" },
+          { id: "STU-007", name: "Isabella Garcia", status: "absent" },
+          { id: "STU-008", name: "Benjamin Martinez", status: "excused" },
+        ]
+      },
     ],
   },
   "5B": {
@@ -100,14 +237,14 @@ export const teacherAttendanceStats: Record<string, {
       { month: "Jan", present: 62, absent: 3, late: 2, excused: 1 },
     ],
     dailyBreakdown: [
-      { date: "2026-01-02", present: 20, absent: 1, late: 1, excused: 0 },
-      { date: "2026-01-01", present: 19, absent: 2, late: 0, excused: 1 },
-      { date: "2025-12-20", present: 21, absent: 0, late: 1, excused: 0 },
-      { date: "2025-12-19", present: 18, absent: 2, late: 1, excused: 1 },
-      { date: "2025-12-18", present: 20, absent: 0, late: 2, excused: 0 },
-      { date: "2025-12-17", present: 17, absent: 3, late: 1, excused: 1 },
-      { date: "2025-12-16", present: 19, absent: 1, late: 1, excused: 1 },
-      { date: "2025-12-13", present: 22, absent: 0, late: 0, excused: 0 },
+      { date: "2026-01-02", present: 20, absent: 1, late: 1, excused: 0, students: [] },
+      { date: "2026-01-01", present: 19, absent: 2, late: 0, excused: 1, students: [] },
+      { date: "2025-12-20", present: 21, absent: 0, late: 1, excused: 0, students: [] },
+      { date: "2025-12-19", present: 18, absent: 2, late: 1, excused: 1, students: [] },
+      { date: "2025-12-18", present: 20, absent: 0, late: 2, excused: 0, students: [] },
+      { date: "2025-12-17", present: 17, absent: 3, late: 1, excused: 1, students: [] },
+      { date: "2025-12-16", present: 19, absent: 1, late: 1, excused: 1, students: [] },
+      { date: "2025-12-13", present: 22, absent: 0, late: 0, excused: 0, students: [] },
     ],
   },
   "4A": {
@@ -120,12 +257,12 @@ export const teacherAttendanceStats: Record<string, {
       { month: "Jan", present: 48, absent: 2, late: 2, excused: 0 },
     ],
     dailyBreakdown: [
-      { date: "2026-01-02", present: 16, absent: 0, late: 2, excused: 0 },
-      { date: "2026-01-01", present: 15, absent: 1, late: 1, excused: 1 },
-      { date: "2025-12-20", present: 17, absent: 1, late: 0, excused: 0 },
-      { date: "2025-12-19", present: 16, absent: 0, late: 1, excused: 1 },
-      { date: "2025-12-18", present: 14, absent: 2, late: 1, excused: 1 },
-      { date: "2025-12-17", present: 15, absent: 1, late: 2, excused: 0 },
+      { date: "2026-01-02", present: 16, absent: 0, late: 2, excused: 0, students: [] },
+      { date: "2026-01-01", present: 15, absent: 1, late: 1, excused: 1, students: [] },
+      { date: "2025-12-20", present: 17, absent: 1, late: 0, excused: 0, students: [] },
+      { date: "2025-12-19", present: 16, absent: 0, late: 1, excused: 1, students: [] },
+      { date: "2025-12-18", present: 14, absent: 2, late: 1, excused: 1, students: [] },
+      { date: "2025-12-17", present: 15, absent: 1, late: 2, excused: 0, students: [] },
     ],
   },
 };
