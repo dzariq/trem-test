@@ -451,7 +451,8 @@ export const ccaActivities = [
     maxCapacity: 25,
     currentEnrollment: 22,
     requirements: "Sports attire, basketball shoes, water bottle",
-    upcomingSession: "2026-01-06"
+    upcomingSession: "2026-01-06",
+    operationalNotes: "Equipment check needed before session. 3 basketballs need replacement. Contact Mr. Ahmad for gym key if arriving early."
   },
   { 
     id: 2, 
@@ -465,7 +466,8 @@ export const ccaActivities = [
     maxCapacity: 20,
     currentEnrollment: 18,
     requirements: "Apron or old clothes",
-    upcomingSession: "2026-01-07"
+    upcomingSession: "2026-01-07",
+    operationalNotes: "New paint supplies arriving Jan 5. Parent volunteer Mrs. Lim helping next 2 sessions. Display boards needed for Feb exhibition."
   },
   { 
     id: 3, 
@@ -479,7 +481,8 @@ export const ccaActivities = [
     maxCapacity: 15,
     currentEnrollment: 15,
     requirements: "Laptop (optional), notebook",
-    upcomingSession: "2026-01-08"
+    upcomingSession: "2026-01-08",
+    operationalNotes: "Competition registration deadline Jan 15. Need to order 2 more Arduino kits. Lab AC scheduled for maintenance Jan 10."
   },
   { 
     id: 4, 
@@ -493,7 +496,8 @@ export const ccaActivities = [
     maxCapacity: 20,
     currentEnrollment: 16,
     requirements: "Swimsuit, goggles, towel, swim cap",
-    upcomingSession: "2026-01-09"
+    upcomingSession: "2026-01-09",
+    operationalNotes: "Pool cleaning scheduled Jan 8 - session moved to 4PM. Lifeguard Mr. Ravi on leave Jan 9, backup is Mr. Samy."
   },
   { 
     id: 5, 
@@ -507,7 +511,8 @@ export const ccaActivities = [
     maxCapacity: 30,
     currentEnrollment: 24,
     requirements: "Comfortable clothing",
-    upcomingSession: "2026-01-10"
+    upcomingSession: "2026-01-10",
+    operationalNotes: "Script printing in progress. Costume fitting Jan 12. Stage lighting needs repair - reported to maintenance."
   },
   { 
     id: 6, 
@@ -521,7 +526,8 @@ export const ccaActivities = [
     maxCapacity: 16,
     currentEnrollment: 12,
     requirements: "Notebook, pen",
-    upcomingSession: "2026-01-06"
+    upcomingSession: "2026-01-06",
+    operationalNotes: "Inter-school competition prep starts Jan 13. Reserve library meeting room for practice sessions."
   },
   { 
     id: 7, 
@@ -535,7 +541,8 @@ export const ccaActivities = [
     maxCapacity: 24,
     currentEnrollment: 20,
     requirements: "Sports attire, badminton racket (available for loan)",
-    upcomingSession: "2026-01-08"
+    upcomingSession: "2026-01-08",
+    operationalNotes: "6 new shuttlecocks ordered. Net on court 2 needs tightening. Sports hall shared with volleyball on alternate weeks."
   }
 ];
 
