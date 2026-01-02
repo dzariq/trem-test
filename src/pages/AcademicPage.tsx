@@ -2040,7 +2040,7 @@ export default function AcademicPage() {
                             <div className="flex items-center justify-between mb-2">
                               <div className="flex items-center gap-2">
                                 {item.achieved ? (
-                                  <CheckCircle2 className="h-4 w-4 text-chart-1" />
+                                  <CheckCircle2 className="h-4 w-4" style={{ color: '#22c55e' }} />
                                 ) : item.gap <= 5 ? (
                                   <Circle className="h-4 w-4 text-chart-2" />
                                 ) : (
