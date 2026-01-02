@@ -163,42 +163,48 @@ export function ResultsSummary() {
       label: "Current Avg", 
       value: `${currentAverage}%`,
       subtext: performanceLevel,
-      color: "text-chart-1" 
+      iconColor: "#3b82f6", // blue
+      bgColor: "rgba(59, 130, 246, 0.08)"
     },
     { 
       icon: Award, 
       label: "Top Subject", 
       value: bestSubject.name,
       subtext: `${getScore(bestSubject, "2025", "midYear")}%`,
-      color: "text-chart-2" 
+      iconColor: "#f59e0b", // amber
+      bgColor: "rgba(245, 158, 11, 0.08)"
     },
     { 
       icon: TrendingUp, 
       label: "vs Last Exam", 
       value: improvementText,
       subtext: improvementPoints >= 0 ? "Improved" : "Declined",
-      color: improvementPoints >= 0 ? "text-chart-3" : "text-destructive" 
+      iconColor: improvementPoints >= 0 ? "#10b981" : "#ef4444", // emerald or red
+      bgColor: improvementPoints >= 0 ? "rgba(16, 185, 129, 0.08)" : "rgba(239, 68, 68, 0.08)"
     },
     { 
       icon: Calendar, 
       label: "Attendance", 
       value: `${attendanceRate}%`,
       subtext: "This Term",
-      color: "text-chart-4" 
+      iconColor: "#8b5cf6", // violet
+      bgColor: "rgba(139, 92, 246, 0.08)"
     },
     { 
       icon: Target, 
       label: "Passing", 
       value: `${passingCount}/${totalSubjects}`,
       subtext: `${passingPercentage}%`,
-      color: "text-chart-5" 
+      iconColor: "#06b6d4", // cyan
+      bgColor: "rgba(6, 182, 212, 0.08)"
     },
     { 
       icon: AlertTriangle, 
       label: "Needs Focus", 
       value: shortenSubjectName(weakestSubject.name),
       subtext: `${weakestScore}%`,
-      color: "text-destructive" 
+      iconColor: "#ef4444", // red
+      bgColor: "rgba(239, 68, 68, 0.08)"
     },
   ];
 
@@ -363,9 +369,10 @@ export function ResultsSummary() {
             {stats.map((stat) => (
               <div 
                 key={stat.label} 
-                className="flex flex-col items-center text-center p-3 rounded-lg bg-accent/50"
+                className="flex flex-col items-center text-center p-3 rounded-lg border"
+                style={{ backgroundColor: stat.bgColor, borderColor: 'transparent' }}
               >
-                <stat.icon className={`h-5 w-5 mb-1 ${stat.color}`} />
+                <stat.icon className="h-5 w-5 mb-1" style={{ color: stat.iconColor }} />
                 <span className="text-base font-bold text-foreground">{stat.value}</span>
                 <span className="text-[10px] text-muted-foreground leading-tight">{stat.label}</span>
                 <span className="text-[10px] text-muted-foreground/70">{stat.subtext}</span>
