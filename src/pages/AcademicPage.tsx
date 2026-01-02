@@ -114,6 +114,14 @@ export default function AcademicPage() {
     D: { bg: 'rgba(239, 68, 68, 0.1)', border: 'rgba(239, 68, 68, 0.3)' },
   };
 
+  // Pill colors for grades
+  const gradePillStyles: Record<string, { bg: string; text: string }> = {
+    A: { bg: '#22c55e', text: '#ffffff' },
+    B: { bg: '#eab308', text: '#ffffff' },
+    C: { bg: '#f97316', text: '#ffffff' },
+    D: { bg: '#ef4444', text: '#ffffff' },
+  };
+
   const getGradeFromScore = (score: number) => {
     if (score >= 90) return "A+";
     if (score >= 80) return "A";
@@ -462,8 +470,14 @@ export default function AcademicPage() {
                                       {isPending ? "Pending" : `${score}%`}
                                     </p>
                                     {!isPending && (
-                                      <span className="text-xs font-medium text-muted-foreground">
-                                        ({getGradeFromScore(score!)})
+                                      <span 
+                                        className="text-xs font-semibold px-2 py-0.5 rounded-full"
+                                        style={{
+                                          backgroundColor: (gradePillStyles[getGradeFromScore(score!)[0]] || gradePillStyles.C).bg,
+                                          color: (gradePillStyles[getGradeFromScore(score!)[0]] || gradePillStyles.C).text
+                                        }}
+                                      >
+                                        {getGradeFromScore(score!)}
                                       </span>
                                     )}
                                   </div>
