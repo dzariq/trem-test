@@ -1603,7 +1603,9 @@ export default function AcademicPage() {
                                 dataKey="name" 
                                 axisLine={false}
                                 tickLine={false}
-                                tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }}
+                                tick={{ fontSize: 9, fill: 'hsl(var(--muted-foreground))' }}
+                                interval={0}
+                                height={30}
                               />
                               <YAxis hide />
                               <Area
