@@ -187,13 +187,16 @@ export function CertificateDialog({
           <X className="h-5 w-5" />
         </button>
 
-        {/* Certificate Container - Portrait - Dark Green */}
+        {/* Certificate Container - Portrait - Dark Green with Gold Frame */}
         <div 
           className="relative w-full overflow-hidden print:p-8"
           style={{
             aspectRatio: '3/4',
             background: 'linear-gradient(180deg, #1a3d2e 0%, #0f2318 100%)',
             boxShadow: '0 25px 60px -12px rgba(0, 0, 0, 0.6)',
+            border: '3px solid #d4a537',
+            outline: '1px solid rgba(212, 165, 55, 0.3)',
+            outlineOffset: '4px',
           }}
         >
             {/* Single Large Logo Background */}
