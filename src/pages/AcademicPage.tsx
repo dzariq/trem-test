@@ -1266,7 +1266,42 @@ export default function AcademicPage() {
                             stroke="hsl(var(--foreground))" 
                             strokeDasharray="4 4" 
                             strokeWidth={2}
-                            label={{ value: "Goal", fontSize: 9, fill: "hsl(var(--foreground))" }}
+                            label={(labelProps: any) => {
+                              const vb = labelProps?.viewBox;
+                              if (!vb) return null;
+                              const text = "Goal";
+                              const fontSize = 9;
+                              const x = (vb.x ?? 0) + 6;
+                              const y = vb.y ?? 0;
+                              const textWidth = text.length * (fontSize * 0.6);
+                              const padX = 4;
+                              const rectW = textWidth + padX * 2;
+                              const rectH = fontSize + 4;
+                              const rectX = x - padX;
+                              const rectY = y - rectH / 2;
+
+                              return (
+                                <g>
+                                  <rect
+                                    x={rectX}
+                                    y={rectY}
+                                    width={rectW}
+                                    height={rectH}
+                                    rx={3}
+                                    fill="hsl(var(--card))"
+                                  />
+                                  <text
+                                    x={x}
+                                    y={y}
+                                    fontSize={fontSize}
+                                    fill="hsl(var(--foreground))"
+                                    dominantBaseline="middle"
+                                  >
+                                    {text}
+                                  </text>
+                                </g>
+                              );
+                            }}
                           />
                           {subjectFilter === "all" ? (
                             <Area
