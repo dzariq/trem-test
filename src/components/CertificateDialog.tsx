@@ -134,58 +134,17 @@ const SmallStar = ({ className, size = 12 }: { className?: string; size?: number
   </svg>
 );
 
-// Vintage Wallpaper Logo Pattern with decorative elements
-const VintageLogoPattern = ({ className }: { className?: string }) => (
-  <div className={`absolute inset-0 pointer-events-none overflow-hidden ${className}`}>
-    <svg 
-      className="w-full h-full" 
-      style={{ opacity: 0.04 }}
-    >
-      <defs>
-        {/* Pattern definition */}
-        <pattern id="vintageLogoPattern" x="0" y="0" width="100" height="100" patternUnits="userSpaceOnUse">
-          {/* Corner ornaments */}
-          <path d="M5,5 Q15,5 15,15 Q15,5 25,5" fill="none" stroke="#d4a537" strokeWidth="0.5"/>
-          <path d="M75,5 Q85,5 85,15 Q85,5 95,5" fill="none" stroke="#d4a537" strokeWidth="0.5"/>
-          <path d="M5,95 Q15,95 15,85 Q15,95 25,95" fill="none" stroke="#d4a537" strokeWidth="0.5"/>
-          <path d="M75,95 Q85,95 85,85 Q85,95 95,95" fill="none" stroke="#d4a537" strokeWidth="0.5"/>
-          
-          {/* Small diamonds at corners */}
-          <polygon points="10,10 12,8 14,10 12,12" fill="#d4a537"/>
-          <polygon points="86,10 88,8 90,10 88,12" fill="#d4a537"/>
-          <polygon points="10,86 12,84 14,86 12,88" fill="#d4a537"/>
-          <polygon points="86,86 88,84 90,86 88,88" fill="#d4a537"/>
-          
-          {/* Center decorative frame */}
-          <rect x="30" y="30" width="40" height="40" fill="none" stroke="#d4a537" strokeWidth="0.5" rx="2"/>
-          <rect x="33" y="33" width="34" height="34" fill="none" stroke="#d4a537" strokeWidth="0.3" rx="1"/>
-          
-          {/* Decorative dots around center */}
-          <circle cx="50" cy="25" r="1.5" fill="#d4a537"/>
-          <circle cx="50" cy="75" r="1.5" fill="#d4a537"/>
-          <circle cx="25" cy="50" r="1.5" fill="#d4a537"/>
-          <circle cx="75" cy="50" r="1.5" fill="#d4a537"/>
-          
-          {/* Small flourishes */}
-          <path d="M40,28 Q45,30 50,28 Q55,30 60,28" fill="none" stroke="#d4a537" strokeWidth="0.4"/>
-          <path d="M40,72 Q45,70 50,72 Q55,70 60,72" fill="none" stroke="#d4a537" strokeWidth="0.4"/>
-        </pattern>
-      </defs>
-      <rect width="100%" height="100%" fill="url(#vintageLogoPattern)"/>
-    </svg>
-    
-    {/* Actual logo images in grid */}
-    <div 
-      className="absolute inset-0"
-      style={{
-        backgroundImage: `url(${schoolLogo})`,
-        backgroundSize: '50px 50px',
-        backgroundRepeat: 'repeat',
-        backgroundPosition: '25px 25px',
-        opacity: 0.5,
-      }}
-    />
-  </div>
+// Logo Pattern Background
+const LogoPattern = ({ className }: { className?: string }) => (
+  <div 
+    className={`absolute inset-0 pointer-events-none ${className}`}
+    style={{
+      backgroundImage: `url(${schoolLogo})`,
+      backgroundSize: '60px 60px',
+      backgroundRepeat: 'repeat',
+      opacity: 0.03,
+    }}
+  />
 );
 
 export function CertificateDialog({
@@ -227,8 +186,8 @@ export function CertificateDialog({
             boxShadow: '0 25px 60px -12px rgba(0, 0, 0, 0.6)',
           }}
         >
-          {/* Vintage Wallpaper Logo Pattern */}
-          <VintageLogoPattern />
+          {/* Logo Pattern Background */}
+          <LogoPattern />
 
           {/* Top Geometric Layers - Green tones */}
           <div className="absolute top-0 left-0 right-0 z-[1]">
@@ -269,7 +228,7 @@ export function CertificateDialog({
           </div>
 
           {/* Certificate Content */}
-          <div className="relative h-full flex flex-col items-center py-5 sm:py-6 px-6 sm:px-10 text-center z-10">
+          <div className="relative h-full flex flex-col items-center py-6 sm:py-8 px-6 sm:px-10 text-center z-10">
             
             {/* Header Section */}
             <div className="flex flex-col items-center gap-1">
@@ -299,18 +258,20 @@ export function CertificateDialog({
               </p>
             </div>
 
-            {/* V-Shaped Gold Ribbon */}
-            <div className="relative w-[140%] -mx-[20%] mt-3">
-              <VRibbon className="w-full h-12 sm:h-14" />
+            {/* V-Shaped Gold Ribbon with Star Seal on top */}
+            <div className="relative w-[140%] -mx-[20%] mt-4">
+              <VRibbon className="w-full h-14 sm:h-16" />
+              {/* Star Seal centered on the ribbon */}
+              <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
+                <StarSeal />
+              </div>
             </div>
 
-            {/* Star Seal - Moved down below ribbon */}
-            <div className="mt-2">
-              <StarSeal />
-            </div>
+            {/* Spacer for the seal */}
+            <div className="h-12 sm:h-14" />
 
-            {/* Main Content - Reduced gap */}
-            <div className="flex flex-col items-center gap-1 mt-1">
+            {/* Main Content */}
+            <div className="flex flex-col items-center gap-1 sm:gap-2 flex-1 justify-center">
               <p 
                 className="text-xs sm:text-sm uppercase tracking-[0.2em] font-medium"
                 style={{ color: '#d4a537' }}
@@ -357,7 +318,7 @@ export function CertificateDialog({
             </div>
 
             {/* Footer Section - Two Signatures + Full Date */}
-            <div className="w-full flex flex-col items-center gap-2 mt-auto">
+            <div className="w-full flex flex-col items-center gap-3 mt-auto">
               {/* Full Date centered above signatures */}
               <p 
                 className="text-xs sm:text-sm font-certificate-body"
