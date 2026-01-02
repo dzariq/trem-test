@@ -1005,30 +1005,33 @@ export default function TeacherAcademicPage() {
                       {risingSubjects.map((item) => (
                         <div 
                           key={item.name} 
-                          className="relative flex flex-col items-center p-2.5 rounded-lg border overflow-hidden"
-                          style={{ backgroundColor: 'rgba(251, 191, 36, 0.1)', borderColor: 'rgba(251, 191, 36, 0.3)' }}
+                          className="relative flex flex-col items-center p-2.5 rounded-xl overflow-hidden shadow-sm"
+                          style={{ 
+                            background: 'linear-gradient(145deg, #fef3c7 0%, #fde68a 25%, #fbbf24 60%, #f59e0b 100%)',
+                            boxShadow: 'inset 0 1px 2px rgba(255,255,255,0.4), 0 2px 4px rgba(245,158,11,0.2)'
+                          }}
                         >
                           {/* Star pattern background */}
                           <div className="absolute inset-0 pointer-events-none">
-                            <svg className="absolute -top-1 -left-1 w-8 h-8 opacity-30" fill="none" stroke="#f59e0b" strokeWidth="1" viewBox="0 0 24 24">
+                            <svg className="absolute -top-1 -left-1 w-10 h-10 opacity-[0.18]" fill="none" stroke="#92400e" strokeWidth="0.8" viewBox="0 0 24 24">
                               <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
                             </svg>
-                            <svg className="absolute top-0 right-0 w-6 h-6 opacity-25" fill="none" stroke="#fbbf24" strokeWidth="1" viewBox="0 0 24 24">
+                            <svg className="absolute top-1 right-1 w-7 h-7 opacity-[0.15]" fill="none" stroke="#92400e" strokeWidth="0.8" viewBox="0 0 24 24">
                               <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
                             </svg>
-                            <svg className="absolute -bottom-2 -right-1 w-7 h-7 opacity-35" fill="none" stroke="#f59e0b" strokeWidth="1" viewBox="0 0 24 24">
+                            <svg className="absolute -bottom-2 -right-2 w-12 h-12 opacity-[0.20]" fill="none" stroke="#92400e" strokeWidth="0.8" viewBox="0 0 24 24">
                               <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
                             </svg>
-                            <svg className="absolute bottom-2 left-0 w-5 h-5 opacity-20" fill="none" stroke="#fcd34d" strokeWidth="1" viewBox="0 0 24 24">
+                            <svg className="absolute bottom-1 -left-1 w-8 h-8 opacity-[0.12]" fill="none" stroke="#92400e" strokeWidth="0.8" viewBox="0 0 24 24">
                               <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
                             </svg>
                           </div>
-                          <span className="text-xs font-medium text-foreground text-center relative z-10">{item.name.length > 10 ? item.name.substring(0, 10) + "..." : item.name}</span>
+                          <span className="text-xs font-medium text-amber-900 text-center relative z-10">{item.name.length > 10 ? item.name.substring(0, 10) + "..." : item.name}</span>
                           <div className="flex items-center gap-1 mt-1 relative z-10">
-                            <ArrowUpRight className="h-3 w-3" style={{ color: '#d97706' }} />
-                            <span className="text-sm font-bold" style={{ color: '#d97706' }}>+{item.improvement}%</span>
+                            <ArrowUpRight className="h-3 w-3 text-red-600" />
+                            <span className="text-sm font-bold text-red-600">+{item.improvement}%</span>
                           </div>
-                          <span className="text-[10px] text-muted-foreground relative z-10">{item.first}% → {item.last}%</span>
+                          <span className="text-[10px] text-amber-800/80 relative z-10">{item.first}% → {item.last}%</span>
                         </div>
                       ))}
                     </div>
