@@ -1251,7 +1251,7 @@ export default function AcademicPage() {
                             stroke="#000000" 
                             strokeDasharray="4 4" 
                             strokeWidth={2}
-                            label={{ value: `Goal ${trendGoalValue}%`, fontSize: 9, fill: "#000000", position: "right" }}
+                            label={{ value: "Goal", fontSize: 9, fill: "#000000", position: "right" }}
                           />
                           {subjectFilter === "all" ? (
                             <Area
