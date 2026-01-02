@@ -266,12 +266,13 @@ export default function TeacherProfilePage() {
             <button 
               className="w-full flex items-center justify-between p-4 hover:bg-accent/30 transition-colors"
               onClick={() => {
-                toast.success("Downloading Teacher Handbook...");
-                // Simulate PDF download
                 const link = document.createElement('a');
-                link.href = '#';
-                link.download = 'Teacher_Handbook_2025.pdf';
-                toast.info("Teacher Handbook PDF ready for download");
+                link.href = '/documents/teacher-handbook.pdf';
+                link.download = 'Teacher_Handbook_2026.pdf';
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                toast.success("Downloading Teacher Handbook...");
               }}
             >
               <div className="flex items-center gap-3">
@@ -280,7 +281,7 @@ export default function TeacherProfilePage() {
                 </div>
                 <div className="text-left">
                   <span className="font-medium text-foreground block">Teacher Handbook</span>
-                  <span className="text-xs text-muted-foreground">PDF • 2025 Edition</span>
+                  <span className="text-xs text-muted-foreground">PDF • 2026 Edition</span>
                 </div>
               </div>
               <Download className="h-5 w-5 text-muted-foreground" />
