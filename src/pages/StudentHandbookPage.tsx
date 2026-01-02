@@ -21,7 +21,7 @@ import belongingsImg from "@/assets/handbook/key-sops.png";
 import attendanceImg from "@/assets/handbook/working-hours.png";
 import attireImg from "@/assets/handbook/sec-guy.png";
 import behaviourImg from "@/assets/handbook/classroom-discipline.png";
-import mealsImg from "@/assets/handbook/facilities-care.png";
+import mealsImg from "@/assets/handbook/school-meal.png";
 import examImg from "@/assets/handbook/duty-cca.png";
 import disciplineImg from "@/assets/handbook/teacher-conduct.png";
 import contractImg from "@/assets/handbook/leave-salary.png";
