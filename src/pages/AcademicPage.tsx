@@ -155,34 +155,41 @@ export default function AcademicPage() {
   };
 
   const gradeColors: Record<string, string> = {
+    "A*": "bg-chart-1 text-card",
     A: "bg-chart-1 text-card",
     B: "bg-chart-2 text-card",
     C: "bg-chart-4 text-card",
     D: "bg-chart-5 text-card",
+    E: "bg-destructive text-destructive-foreground",
   };
 
   // Background colors for subject cards (using direct color values)
   const gradeCardBgStyles: Record<string, { bg: string; border: string }> = {
+    "A*": { bg: 'rgba(5, 150, 105, 0.1)', border: 'rgba(5, 150, 105, 0.3)' },
     A: { bg: 'rgba(34, 197, 94, 0.1)', border: 'rgba(34, 197, 94, 0.3)' },
     B: { bg: 'rgba(234, 179, 8, 0.1)', border: 'rgba(234, 179, 8, 0.3)' },
     C: { bg: 'rgba(249, 115, 22, 0.1)', border: 'rgba(249, 115, 22, 0.3)' },
     D: { bg: 'rgba(239, 68, 68, 0.1)', border: 'rgba(239, 68, 68, 0.3)' },
+    E: { bg: 'rgba(220, 38, 38, 0.1)', border: 'rgba(220, 38, 38, 0.3)' },
   };
 
   // Pill colors for grades
   const gradePillStyles: Record<string, { bg: string; text: string }> = {
+    "A*": { bg: '#059669', text: '#ffffff' },
     A: { bg: '#22c55e', text: '#ffffff' },
     B: { bg: '#eab308', text: '#ffffff' },
     C: { bg: '#f97316', text: '#ffffff' },
     D: { bg: '#ef4444', text: '#ffffff' },
+    E: { bg: '#dc2626', text: '#ffffff' },
   };
 
   const getGradeFromScore = (score: number) => {
-    if (score >= 90) return "A+";
+    if (score >= 90) return "A*";
     if (score >= 80) return "A";
     if (score >= 70) return "B";
     if (score >= 60) return "C";
-    return "D";
+    if (score >= 50) return "D";
+    return "E";
   };
 
   const generateReport = () => {
@@ -227,7 +234,7 @@ export default function AcademicPage() {
 
   // Grade distribution
   const gradeDistribution = useMemo(() => {
-    const grades = { "A+": 0, "A": 0, "B": 0, "C": 0, "D": 0 };
+    const grades = { "A*": 0, "A": 0, "B": 0, "C": 0, "D": 0, "E": 0 };
     academicData.subjects.forEach(s => {
       const score = getScore(s, selectedYear, examType);
       if (score !== null) {
@@ -573,11 +580,12 @@ export default function AcademicPage() {
   
   // Grade-specific colors for distribution chart
   const gradeChartColors: Record<string, string> = {
-    "A+": "#16a34a", // green
-    "A": "#22c55e",  // green
-    "B": "#84cc16",  // light green
+    "A*": "#059669", // dark green
+    "A": "#16a34a",  // green
+    "B": "#22c55e",  // light green
     "C": "#eab308",  // yellow
-    "D": "#ef4444",  // red
+    "D": "#f97316",  // orange
+    "E": "#ef4444",  // red
   };
 
   const filteredSubjects = subjectFilter === "all" 
