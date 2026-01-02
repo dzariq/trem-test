@@ -79,8 +79,8 @@ const Star = ({ className, size = 12 }: { className?: string; size?: number }) =
   </svg>
 );
 
-// Award Badge Component
-const AwardBadge = ({ category, className }: { category: string; className?: string }) => (
+// Award Badge Component with Logo
+const AwardBadge = ({ className }: { className?: string }) => (
   <div className={`relative ${className}`}>
     {/* Outer decorative ring with stars */}
     <div className="absolute inset-0 flex items-center justify-center">
@@ -97,7 +97,7 @@ const AwardBadge = ({ category, className }: { category: string; className?: str
     
     {/* Main badge circle */}
     <div 
-      className="relative w-24 h-24 sm:w-28 sm:h-28 rounded-full flex flex-col items-center justify-center"
+      className="relative w-24 h-24 sm:w-28 sm:h-28 rounded-full flex items-center justify-center"
       style={{ 
         background: 'linear-gradient(145deg, #1a2942 0%, #0f1729 100%)',
         border: '3px solid #d4a537',
@@ -110,19 +110,12 @@ const AwardBadge = ({ category, className }: { category: string; className?: str
         style={{ border: '1px solid rgba(212, 165, 55, 0.4)' }}
       />
       
-      {/* Badge content */}
-      <span 
-        className="text-[10px] sm:text-xs uppercase tracking-wider font-medium"
-        style={{ color: '#d4a537' }}
-      >
-        Award
-      </span>
-      <span 
-        className="text-xs sm:text-sm font-bold text-center px-2 leading-tight mt-0.5"
-        style={{ color: '#e8c967' }}
-      >
-        {category}
-      </span>
+      {/* School Logo inside badge */}
+      <img 
+        src={schoolLogo} 
+        alt="School Logo" 
+        className="w-14 h-14 sm:w-16 sm:h-16 object-contain"
+      />
     </div>
   </div>
 );
@@ -232,13 +225,13 @@ export function CertificateDialog({
               </p>
             </div>
 
-            {/* V-Shaped Gold Ribbon */}
-            <div className="w-full -my-2">
-              <VRibbon className="w-full h-12 sm:h-16" />
+            {/* V-Shaped Gold Ribbon - Full Width */}
+            <div className="w-[120%] -mx-[10%] -my-2">
+              <VRibbon className="w-full h-14 sm:h-18" />
             </div>
 
-            {/* Award Badge */}
-            <AwardBadge category={category} className="z-10 -my-2" />
+            {/* Award Badge with Logo */}
+            <AwardBadge className="z-10 -my-2" />
 
             {/* Main Content */}
             <div className="flex flex-col items-center gap-2 sm:gap-3">
@@ -267,13 +260,24 @@ export function CertificateDialog({
                 <div className="w-12 sm:w-16 h-[1px]" style={{ background: 'linear-gradient(to left, transparent, #d4a537)' }} />
               </div>
 
-              {/* Achievement Description */}
-              <p 
-                className="text-xs sm:text-sm leading-relaxed max-w-xs font-certificate-body"
-                style={{ color: 'rgba(255,255,255,0.8)' }}
+              {/* Role - Big and Prominent */}
+              <h4 
+                className="text-2xl sm:text-3xl font-bold font-certificate-title uppercase tracking-wide"
+                style={{ 
+                  color: '#e8c967',
+                  textShadow: '0 2px 4px rgba(0,0,0,0.3)'
+                }}
               >
-                For outstanding contribution as <span style={{ color: '#e8c967' }}>{role}</span> of {organization}
-              </p>
+                {role}
+              </h4>
+              
+              {/* Organization - Big and Prominent */}
+              <h5 
+                className="text-xl sm:text-2xl font-semibold font-certificate-title"
+                style={{ color: '#d4a537' }}
+              >
+                {organization}
+              </h5>
             </div>
 
             {/* Footer Section */}
