@@ -2097,10 +2097,11 @@ export default function AcademicPage() {
                             <div className="relative mb-2">
                               <div className="h-3 bg-transparent border border-border rounded-full overflow-hidden">
                                 <div 
-                                  className={`h-full rounded-full transition-all ${
-                                    item.achieved ? "bg-chart-1" : "bg-muted-foreground/40"
-                                  }`}
-                                  style={{ width: `${item.current}%` }}
+                                  className="h-full rounded-full transition-all"
+                                  style={{ 
+                                    width: `${item.current}%`,
+                                    backgroundColor: item.achieved ? '#22c55e' : 'hsl(var(--muted-foreground) / 0.4)'
+                                  }}
                                 />
                               </div>
                               {/* Target marker */}
