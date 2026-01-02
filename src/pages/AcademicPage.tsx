@@ -774,116 +774,267 @@ export default function AcademicPage() {
                 </div>
               </TabsContent>
 
-              <TabsContent value="behavior" className="mt-4 space-y-3">
-                {academicData.behavior.map((item, index) => {
-                  // Color-coded rank based on grade
-                  const rankConfig = {
-                    A: { label: "Good", bg: "bg-emerald-500/10", border: "border-emerald-500/30", text: "text-emerald-600", badgeBg: "bg-emerald-500", badgeText: "text-white" },
-                    B: { label: "Avg", bg: "bg-amber-500/10", border: "border-amber-500/30", text: "text-amber-600", badgeBg: "bg-amber-500", badgeText: "text-white" },
-                    C: { label: "Bad", bg: "bg-red-500/10", border: "border-red-500/30", text: "text-red-600", badgeBg: "bg-red-500", badgeText: "text-white" }
-                  };
-                  const rank = rankConfig[item.grade as keyof typeof rankConfig] || rankConfig.C;
-                  
-                  // Generate comment based on grade
-                  const getComment = (category: string, grade: string) => {
-                    const comments: Record<string, Record<string, string>> = {
-                      Punctuality: { A: "Consistently on time", B: "Occasionally late", C: "Frequently late" },
-                      Participation: { A: "Actively participates in class", B: "Participates when prompted", C: "Rarely participates" },
-                      Teamwork: { A: "Works excellently with peers", B: "Works well with peers", C: "Needs improvement in teamwork" },
-                      Discipline: { A: "Follows school rules", B: "Mostly follows rules", C: "Needs to improve discipline" }
-                    };
-                    return comments[category]?.[grade] || item.description;
-                  };
-                  
-                  return (
-                    <div 
-                      key={index} 
-                      className={`flex items-center justify-between p-3 rounded-lg ${rank.bg} border ${rank.border}`}
-                    >
-                      <div className="flex-1">
-                        <h3 className="font-medium text-foreground">{item.category}</h3>
-                        <p className="text-sm text-muted-foreground">{getComment(item.category, item.grade)}</p>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <span className={`text-xs font-semibold px-2 py-1 rounded-full ${rank.badgeBg} ${rank.badgeText}`}>
-                          {rank.label}
-                        </span>
-                        <span className={`text-xs font-medium ${rank.text}`}>
-                          {item.grade}
-                        </span>
-                      </div>
-                    </div>
-                  );
-                })}
-              </TabsContent>
-
-              <TabsContent value="cocurriculum" className="mt-4 space-y-3">
-                {academicData.coCurriculum.map((item, index) => (
-                  <div 
-                    key={index} 
-                    className="relative p-4 rounded-xl border overflow-hidden"
-                    style={{ 
-                      background: 'linear-gradient(145deg, #fef3c7 0%, #fde68a 25%, #fbbf24 60%, #f59e0b 100%)', 
-                      borderColor: 'rgba(217, 119, 6, 0.4)',
-                      boxShadow: '0 2px 8px rgba(217, 119, 6, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.4)'
-                    }}
-                  >
-                    {/* Primary shine effect */}
-                    <div 
-                      className="absolute inset-0 pointer-events-none"
-                      style={{
-                        background: 'radial-gradient(ellipse at 20% 10%, rgba(255, 255, 255, 0.35) 0%, transparent 35%)',
-                      }}
-                    />
-                    {/* Secondary subtle shimmer */}
-                    <div 
-                      className="absolute inset-0 pointer-events-none"
-                      style={{
-                        background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.08) 0%, transparent 50%, rgba(255, 255, 255, 0.03) 100%)',
-                      }}
-                    />
-                    {/* Trophy decorations - different sizes, non-overlapping positions */}
-                    {/* Top-right large trophy */}
-                    <div className="absolute -top-1 right-2 opacity-[0.15] pointer-events-none rotate-[-8deg]">
-                      <Trophy className="h-14 w-14 text-amber-700" strokeWidth={1} />
-                    </div>
-                    {/* Bottom-right medium trophy */}
-                    <div className="absolute -bottom-2 right-16 opacity-[0.12] pointer-events-none rotate-[10deg]">
-                      <Trophy className="h-11 w-11 text-amber-700" strokeWidth={1} />
-                    </div>
-                    {/* Middle-right small trophy */}
-                    <div className="absolute top-1/2 right-32 -translate-y-1/2 opacity-[0.10] pointer-events-none">
-                      <Trophy className="h-8 w-8 text-amber-700" strokeWidth={1} />
-                    </div>
-                    {/* Top-left sparkles */}
-                    <div className="absolute -top-1 left-1 opacity-[0.12] pointer-events-none">
-                      <Sparkles className="h-5 w-5 text-amber-700" strokeWidth={1} />
-                    </div>
-                    {/* Bottom-left sparkles */}
-                    <div className="absolute bottom-2 left-12 opacity-[0.08] pointer-events-none">
-                      <Sparkles className="h-4 w-4 text-amber-700" strokeWidth={1} />
-                    </div>
-                    
-                    <div className="relative flex items-start gap-3 pr-14">
-                      <div 
-                        className="p-2.5 rounded-full flex-shrink-0 shadow-sm"
-                        style={{ 
-                          backgroundColor: 'rgba(251, 191, 36, 0.25)',
-                          border: '1px solid rgba(251, 191, 36, 0.3)'
-                        }}
-                      >
-                        <Trophy className="h-5 w-5" style={{ color: '#b45309' }} />
+              <TabsContent value="behavior" className="mt-4 space-y-4">
+                {/* Smart Summary Card */}
+                <Card className="bg-primary/5 border-primary/20">
+                  <CardContent className="p-4">
+                    <div className="flex items-start gap-3">
+                      <div className="p-2 rounded-full bg-primary/10">
+                        <Sparkles className="h-5 w-5 text-primary" />
                       </div>
                       <div>
-                        <h3 className="font-semibold" style={{ color: '#78350f' }}>{item.activity}</h3>
-                        <p className="text-sm flex items-center gap-1.5 mt-1" style={{ color: '#92400e' }}>
-                          <Award className="h-3.5 w-3.5" />
-                          {item.achievement}
+                        <p className="text-sm font-medium text-primary mb-1">Smart Summary</p>
+                        <p className="text-sm text-muted-foreground leading-relaxed">
+                          {(() => {
+                            const grades = academicData.behavior.map(b => b.grade);
+                            const aCount = grades.filter(g => g === "A").length;
+                            const bCount = grades.filter(g => g === "B").length;
+                            const cCount = grades.filter(g => g === "C").length;
+                            const total = grades.length;
+                            
+                            if (aCount >= total * 0.7) {
+                              return "Excellent conduct! The student demonstrates outstanding behavior across all categories, showing strong character and positive attitude.";
+                            } else if (aCount + bCount >= total * 0.7) {
+                              return "Good overall conduct with some areas showing room for improvement. The student generally displays positive behavior and attitude.";
+                            } else if (cCount >= total * 0.5) {
+                              return "Needs improvement in behavioral areas. We recommend working with the student to develop better habits and attitudes.";
+                            } else {
+                              return "Average conduct with mixed performance. The student shows potential and should focus on consistency across all behavioral areas.";
+                            }
+                          })()}
                         </p>
                       </div>
                     </div>
+                  </CardContent>
+                </Card>
+
+                {/* Behavioral Traits Grid */}
+                <div className="grid grid-cols-2 gap-3">
+                  {academicData.behavior.map((item, index) => {
+                    const gradeConfig = {
+                      A: { label: "Excellent", bg: "bg-emerald-50", border: "border-emerald-200", text: "text-emerald-700", badgeBg: "bg-emerald-500" },
+                      B: { label: "Good", bg: "bg-blue-50", border: "border-blue-200", text: "text-blue-700", badgeBg: "bg-blue-500" },
+                      C: { label: "Average", bg: "bg-amber-50", border: "border-amber-200", text: "text-amber-700", badgeBg: "bg-amber-500" },
+                      D: { label: "Needs Work", bg: "bg-orange-50", border: "border-orange-200", text: "text-orange-700", badgeBg: "bg-orange-500" },
+                      E: { label: "Poor", bg: "bg-red-50", border: "border-red-200", text: "text-red-700", badgeBg: "bg-red-500" }
+                    };
+                    const config = gradeConfig[item.grade as keyof typeof gradeConfig] || gradeConfig.C;
+                    
+                    // Smart description based on grade
+                    const getSmartDescription = (category: string, grade: string) => {
+                      const descriptions: Record<string, Record<string, string>> = {
+                        Attendance: { A: "Excellent attendance record", B: "Good attendance", C: "Some absences noted", D: "Frequent absences", E: "Poor attendance" },
+                        Punctuality: { A: "Always on time", B: "Usually punctual", C: "Occasionally late", D: "Frequently late", E: "Chronically late" },
+                        Cooperation: { A: "Works excellently with others", B: "Cooperates well", C: "Cooperates when prompted", D: "Struggles to cooperate", E: "Needs improvement" },
+                        "Self Control": { A: "Excellent self-discipline", B: "Good self-control", C: "Sometimes impulsive", D: "Needs guidance", E: "Lacks self-control" },
+                        Responsibility: { A: "Highly responsible", B: "Generally responsible", C: "Moderately responsible", D: "Needs reminders", E: "Irresponsible" },
+                        Initiative: { A: "Takes excellent initiative", B: "Shows good initiative", C: "Some initiative shown", D: "Rarely takes initiative", E: "Lacks initiative" },
+                        Leadership: { A: "Strong leader", B: "Good leadership skills", C: "Developing leadership", D: "Emerging leader", E: "Needs leadership development" }
+                      };
+                      return descriptions[category]?.[grade] || "No description available";
+                    };
+                    
+                    return (
+                      <Card key={index} className={`${config.bg} ${config.border}`}>
+                        <CardContent className="p-3">
+                          <div className="flex items-center justify-between mb-2">
+                            <span className={`text-xs font-semibold uppercase ${config.text}`}>{item.category}</span>
+                            <Badge className={`${config.badgeBg} text-white text-xs`}>{item.grade}</Badge>
+                          </div>
+                          <p className="text-xs text-muted-foreground">{getSmartDescription(item.category, item.grade)}</p>
+                        </CardContent>
+                      </Card>
+                    );
+                  })}
+                </div>
+
+                {/* Comments Section */}
+                {academicData.behaviorComments && (
+                  <div className="space-y-3">
+                    <Card className="bg-rose-50 border-rose-200">
+                      <CardContent className="p-3">
+                        <p className="text-xs font-semibold uppercase text-rose-700 mb-2">Homeroom Teacher Comment</p>
+                        <p className="text-sm text-muted-foreground">{academicData.behaviorComments.homeroomComment}</p>
+                      </CardContent>
+                    </Card>
+                    
+                    <Card className="bg-purple-50 border-purple-200">
+                      <CardContent className="p-3">
+                        <p className="text-xs font-semibold uppercase text-purple-700 mb-2">Responsibility Comment</p>
+                        <p className="text-sm text-muted-foreground">{academicData.behaviorComments.responsibilityComment}</p>
+                      </CardContent>
+                    </Card>
                   </div>
-                ))}
+                )}
+              </TabsContent>
+
+              <TabsContent value="cocurriculum" className="mt-4 space-y-4">
+                {/* Awards Section */}
+                {academicData.awards && (
+                  <div className="space-y-3">
+                    {/* Sports House */}
+                    {academicData.awards.sportsHouse.organization !== "None" && academicData.awards.sportsHouse.organization && (
+                      <Card className="bg-amber-50 border-amber-200 overflow-hidden">
+                        <CardHeader className="p-3 pb-2" style={{ background: 'linear-gradient(135deg, #fef3c7 0%, #fcd34d 50%, #f59e0b 100%)' }}>
+                          <CardTitle className="text-sm font-semibold text-amber-800">Sports House</CardTitle>
+                        </CardHeader>
+                        <CardContent className="p-3">
+                          <div className="grid grid-cols-2 gap-3">
+                            <div>
+                              <p className="text-xs text-amber-700 font-medium mb-1">Organization</p>
+                              <Badge className="bg-amber-100 text-amber-800 border-amber-300">{academicData.awards.sportsHouse.organization}</Badge>
+                            </div>
+                            <div>
+                              <p className="text-xs text-amber-700 font-medium mb-1">Role</p>
+                              <Badge className="bg-amber-100 text-amber-800 border-amber-300">{academicData.awards.sportsHouse.role}</Badge>
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    )}
+
+                    {/* Club */}
+                    {academicData.awards.club.organization !== "None" && academicData.awards.club.organization && (
+                      <Card className="bg-amber-50 border-amber-200 overflow-hidden">
+                        <CardHeader className="p-3 pb-2" style={{ background: 'linear-gradient(135deg, #fef3c7 0%, #fcd34d 50%, #f59e0b 100%)' }}>
+                          <CardTitle className="text-sm font-semibold text-amber-800">Club</CardTitle>
+                        </CardHeader>
+                        <CardContent className="p-3">
+                          <div className="grid grid-cols-2 gap-3">
+                            <div>
+                              <p className="text-xs text-amber-700 font-medium mb-1">Organization</p>
+                              <Badge className="bg-amber-100 text-amber-800 border-amber-300">{academicData.awards.club.organization}</Badge>
+                            </div>
+                            <div>
+                              <p className="text-xs text-amber-700 font-medium mb-1">Role</p>
+                              <Badge className="bg-amber-100 text-amber-800 border-amber-300">{academicData.awards.club.role}</Badge>
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    )}
+
+                    {/* Student Leadership */}
+                    {academicData.awards.studentLeadership.organization !== "None" && academicData.awards.studentLeadership.organization && (
+                      <Card className="bg-amber-50 border-amber-200 overflow-hidden">
+                        <CardHeader className="p-3 pb-2" style={{ background: 'linear-gradient(135deg, #fef3c7 0%, #fcd34d 50%, #f59e0b 100%)' }}>
+                          <CardTitle className="text-sm font-semibold text-amber-800">Student Leadership</CardTitle>
+                        </CardHeader>
+                        <CardContent className="p-3">
+                          <div className="grid grid-cols-2 gap-3">
+                            <div>
+                              <p className="text-xs text-amber-700 font-medium mb-1">Organization</p>
+                              <Badge className="bg-amber-100 text-amber-800 border-amber-300">{academicData.awards.studentLeadership.organization}</Badge>
+                            </div>
+                            <div>
+                              <p className="text-xs text-amber-700 font-medium mb-1">Role</p>
+                              <Badge className="bg-amber-100 text-amber-800 border-amber-300">{academicData.awards.studentLeadership.role}</Badge>
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    )}
+
+                    {/* Events */}
+                    {academicData.awards.events.organization !== "None" && academicData.awards.events.organization && (
+                      <Card className="bg-amber-50 border-amber-200 overflow-hidden">
+                        <CardHeader className="p-3 pb-2" style={{ background: 'linear-gradient(135deg, #fef3c7 0%, #fcd34d 50%, #f59e0b 100%)' }}>
+                          <CardTitle className="text-sm font-semibold text-amber-800">Events</CardTitle>
+                        </CardHeader>
+                        <CardContent className="p-3">
+                          <div className="grid grid-cols-2 gap-3">
+                            <div>
+                              <p className="text-xs text-amber-700 font-medium mb-1">Organization</p>
+                              <Badge className="bg-amber-100 text-amber-800 border-amber-300">{academicData.awards.events.organization}</Badge>
+                            </div>
+                            <div>
+                              <p className="text-xs text-amber-700 font-medium mb-1">Role</p>
+                              <Badge className="bg-amber-100 text-amber-800 border-amber-300">{academicData.awards.events.role}</Badge>
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    )}
+
+                    {/* Achievements */}
+                    {academicData.awards.achievements.event !== "None" && academicData.awards.achievements.event && (
+                      <Card className="bg-amber-50 border-amber-200 overflow-hidden">
+                        <CardHeader className="p-3 pb-2" style={{ background: 'linear-gradient(135deg, #fef3c7 0%, #fcd34d 50%, #f59e0b 100%)' }}>
+                          <CardTitle className="text-sm font-semibold text-amber-800">Achievements</CardTitle>
+                        </CardHeader>
+                        <CardContent className="p-3">
+                          <div className="grid grid-cols-2 gap-3">
+                            <div>
+                              <p className="text-xs text-amber-700 font-medium mb-1">Event</p>
+                              <Badge className="bg-amber-100 text-amber-800 border-amber-300">{academicData.awards.achievements.event}</Badge>
+                            </div>
+                            <div>
+                              <p className="text-xs text-amber-700 font-medium mb-1">Award</p>
+                              <Badge className="bg-amber-100 text-amber-800 border-amber-300">{academicData.awards.achievements.award}</Badge>
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    )}
+                  </div>
+                )}
+
+                {/* Co-Curriculum Activities - Trophy Cards */}
+                <div className="space-y-3">
+                  <h4 className="text-sm font-medium text-foreground">Activities & Achievements</h4>
+                  {academicData.coCurriculum.map((item, index) => (
+                    <div 
+                      key={index} 
+                      className="relative p-4 rounded-xl border overflow-hidden"
+                      style={{ 
+                        background: 'linear-gradient(145deg, #fef3c7 0%, #fde68a 25%, #fbbf24 60%, #f59e0b 100%)', 
+                        borderColor: 'rgba(217, 119, 6, 0.4)',
+                        boxShadow: '0 2px 8px rgba(217, 119, 6, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.4)'
+                      }}
+                    >
+                      {/* Primary shine effect */}
+                      <div 
+                        className="absolute inset-0 pointer-events-none"
+                        style={{
+                          background: 'radial-gradient(ellipse at 20% 10%, rgba(255, 255, 255, 0.35) 0%, transparent 35%)',
+                        }}
+                      />
+                      {/* Secondary subtle shimmer */}
+                      <div 
+                        className="absolute inset-0 pointer-events-none"
+                        style={{
+                          background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.08) 0%, transparent 50%, rgba(255, 255, 255, 0.03) 100%)',
+                        }}
+                      />
+                      {/* Trophy decorations */}
+                      <div className="absolute -top-1 right-2 opacity-[0.15] pointer-events-none rotate-[-8deg]">
+                        <Trophy className="h-14 w-14 text-amber-700" strokeWidth={1} />
+                      </div>
+                      <div className="absolute -bottom-2 right-16 opacity-[0.12] pointer-events-none rotate-[10deg]">
+                        <Trophy className="h-11 w-11 text-amber-700" strokeWidth={1} />
+                      </div>
+                      
+                      <div className="relative flex items-start gap-3 pr-14">
+                        <div 
+                          className="p-2.5 rounded-full flex-shrink-0 shadow-sm"
+                          style={{ 
+                            backgroundColor: 'rgba(251, 191, 36, 0.25)',
+                            border: '1px solid rgba(251, 191, 36, 0.3)'
+                          }}
+                        >
+                          <Trophy className="h-5 w-5" style={{ color: '#b45309' }} />
+                        </div>
+                        <div>
+                          <h3 className="font-semibold" style={{ color: '#78350f' }}>{item.activity}</h3>
+                          <p className="text-sm flex items-center gap-1.5 mt-1" style={{ color: '#92400e' }}>
+                            <Award className="h-3.5 w-3.5" />
+                            {item.achievement}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
               </TabsContent>
             </Tabs>
 
