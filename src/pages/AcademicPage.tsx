@@ -513,14 +513,14 @@ export default function AcademicPage() {
                   {/* Top 3 */}
                   <div className="space-y-2">
                     <h4 className="text-sm font-medium text-foreground flex items-center gap-1.5">
-                      <Trophy className="h-4 w-4 text-chart-1" /> Top Performers
+                      <Trophy className="h-4 w-4 text-chart-2" /> Top Performers
                     </h4>
                     <div className="space-y-2">
                       {top3.map((s, index) => {
                         const score = getScore(s, selectedYear, examType);
                         return (
-                          <div key={s.name} className="flex items-center gap-2 p-2.5 rounded-lg bg-chart-1/10 border border-chart-1/20">
-                            <span className="w-6 h-6 shrink-0 rounded-full bg-chart-1/20 flex items-center justify-center text-xs font-bold text-chart-1">
+                          <div key={s.name} className="flex items-center gap-2 p-2.5 rounded-lg bg-chart-2/10 border border-chart-2/20">
+                            <span className="w-6 h-6 shrink-0 rounded-full bg-chart-2/20 flex items-center justify-center text-xs font-bold text-chart-2">
                               {index + 1}
                             </span>
                             <div className="flex flex-col min-w-0">
@@ -536,19 +536,19 @@ export default function AcademicPage() {
                   {/* Bottom 3 */}
                   <div className="space-y-2">
                     <h4 className="text-sm font-medium text-foreground flex items-center gap-1.5">
-                      <AlertTriangle className="h-4 w-4 text-chart-4" /> Needs Attention
+                      <AlertTriangle className="h-4 w-4 text-chart-3" /> Needs Attention
                     </h4>
                     <div className="space-y-2">
                       {bottom3.map((s, index) => {
                         const score = getScore(s, selectedYear, examType);
                         return (
-                          <div key={s.name} className="flex items-center gap-2 p-2.5 rounded-lg bg-chart-4/10 border border-chart-4/20">
-                            <span className="w-6 h-6 shrink-0 rounded-full bg-chart-4/20 flex items-center justify-center text-xs font-bold text-chart-4">
+                          <div key={s.name} className="flex items-center gap-2 p-2.5 rounded-lg bg-chart-3/10 border border-chart-3/20">
+                            <span className="w-6 h-6 shrink-0 rounded-full bg-chart-3/20 flex items-center justify-center text-xs font-bold text-chart-3">
                               {index + 1}
                             </span>
                             <div className="flex flex-col min-w-0">
                               <span className="text-sm font-medium text-foreground">{shortenSubjectName(s.name)}</span>
-                              <Badge variant="outline" className="text-xs font-semibold border-chart-4/30 w-fit mt-0.5">{score}%</Badge>
+                              <Badge variant="outline" className="text-xs font-semibold border-chart-3/30 w-fit mt-0.5">{score}%</Badge>
                             </div>
                           </div>
                         );
