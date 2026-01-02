@@ -110,7 +110,11 @@ export default function AnnouncementsPage() {
                     <Calendar className="h-3 w-3" />
                     {formatDate(announcement.date)}
                   </span>
-                  <Button variant="outline" size="sm">
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => navigate(`/parent/announcements/${announcement.id}`)}
+                  >
                     Read More
                   </Button>
                 </div>

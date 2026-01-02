@@ -5,33 +5,156 @@ export const announcements = [
     id: 1,
     title: "School Sports Day 2026",
     snippet: "Join us for our annual Sports Day event on January 15th. Students will participate in various athletic activities.",
+    content: `We are excited to announce our annual School Sports Day 2026! This is one of the most anticipated events of the year where students showcase their athletic abilities and team spirit.
+
+**Event Details:**
+- Date: January 15th, 2026
+- Time: 8:00 AM - 4:00 PM
+- Venue: School Field
+
+**Activities Include:**
+- Track and Field Events (100m, 200m, 400m, Relay)
+- Team Sports (Football, Basketball, Volleyball)
+- Fun Games for all age groups
+- House Competition
+
+**What to Bring:**
+- Sports attire and comfortable shoes
+- Water bottle
+- Sunscreen and hat
+- Packed lunch (optional - canteen will be open)
+
+Parents are warmly invited to attend and cheer for their children. Please ensure your child arrives by 7:30 AM for the opening ceremony.
+
+For any queries, please contact the PE Department.`,
     date: "2026-01-05",
     category: "Event",
-    image: "https://images.unsplash.com/photo-1571019614242-c5c5dee9f50b?w=400&h=200&fit=crop"
+    image: "https://images.unsplash.com/photo-1571019614242-c5c5dee9f50b?w=400&h=200&fit=crop",
+    attachments: [
+      { name: "Sports Day Schedule.pdf", url: "/documents/student-handbook.pdf" },
+      { name: "Participation Form.pdf", url: "/documents/student-handbook.pdf" }
+    ]
   },
   {
     id: 2,
     title: "Parent-Teacher Conference",
     snippet: "Schedule your one-on-one meeting with teachers. Available slots from Jan 20-22.",
+    content: `Dear Parents/Guardians,
+
+We cordially invite you to our upcoming Parent-Teacher Conference. This is an excellent opportunity to discuss your child's academic progress, behavior, and overall development with their teachers.
+
+**Conference Schedule:**
+- Dates: January 20-22, 2026
+- Time: 9:00 AM - 5:00 PM (by appointment)
+- Location: Respective classrooms
+
+**How to Book Your Slot:**
+1. Log in to the parent portal
+2. Navigate to Calendar > Appointments
+3. Select your preferred date and time
+4. Confirm your booking
+
+Each session will be approximately 15 minutes. If you require more time, please inform the class teacher in advance.
+
+**What to Expect:**
+- Review of academic performance
+- Discussion on homework and assignments
+- Social and emotional development updates
+- Recommendations for improvement
+- Goal setting for the next semester
+
+We look forward to meeting you and working together for your child's success.
+
+Best regards,
+The School Administration`,
     date: "2026-01-03",
     category: "Academic",
-    image: null
+    image: null,
+    attachments: [
+      { name: "Conference Guidelines.pdf", url: "/documents/student-handbook.pdf" }
+    ]
   },
   {
     id: 3,
     title: "New Canteen Menu",
     snippet: "We've updated our canteen menu with healthier options. Check out the new selections!",
+    content: `Good news! Our school canteen has undergone a menu revamp to provide healthier and more nutritious meal options for our students.
+
+**New Menu Highlights:**
+
+**Breakfast (7:00 AM - 9:00 AM)**
+- Whole grain sandwiches
+- Fresh fruit cups
+- Low-sugar cereals with milk
+- Freshly squeezed juices
+
+**Lunch (11:30 AM - 1:30 PM)**
+- Grilled chicken/fish with vegetables
+- Brown rice and whole wheat options
+- Fresh salad bar
+- Soup of the day
+
+**Snacks**
+- Fresh fruits
+- Yogurt parfaits
+- Nuts and dried fruits
+- Whole grain crackers
+
+**Important Notes:**
+- All meals are prepared fresh daily
+- Vegetarian and halal options available
+- Allergy information available at the counter
+- Meal pre-ordering available through the app
+
+We encourage parents to review the attached menu and discuss healthy eating choices with your children.`,
     date: "2026-01-02",
     category: "General",
-    image: "https://images.unsplash.com/photo-1567521464027-f127ff144326?w=400&h=200&fit=crop"
+    image: "https://images.unsplash.com/photo-1567521464027-f127ff144326?w=400&h=200&fit=crop",
+    attachments: [
+      { name: "Full Menu & Prices.pdf", url: "/documents/student-handbook.pdf" }
+    ]
   },
   {
     id: 4,
     title: "Science Fair Registration",
     snippet: "Register your child for the upcoming Science Fair. Deadline: January 25th.",
+    content: `Calling all young scientists! The annual Science Fair is back, and we're looking for innovative projects from our talented students.
+
+**Event Information:**
+- Registration Deadline: January 25th, 2026
+- Fair Date: January 28th, 2026
+- Time: 10:00 AM - 2:00 PM
+- Venue: Assembly Hall
+
+**Categories:**
+1. Life Sciences
+2. Physical Sciences
+3. Engineering & Technology
+4. Environmental Science
+5. Mathematics & Computer Science
+
+**Project Requirements:**
+- Original work by the student
+- Display board (maximum 120cm x 90cm)
+- Written report (500-1000 words)
+- 5-minute presentation
+
+**Prizes:**
+- Gold, Silver, and Bronze medals for each category
+- Special awards for innovation and presentation
+- Top projects will represent the school at the Regional Science Fair
+
+Parents are encouraged to guide but not complete projects for their children. This is an opportunity for students to explore and learn.
+
+Register now to secure your spot!`,
     date: "2025-12-28",
     category: "Academic",
-    image: null
+    image: null,
+    attachments: [
+      { name: "Registration Form.pdf", url: "/documents/student-handbook.pdf" },
+      { name: "Project Guidelines.pdf", url: "/documents/student-handbook.pdf" },
+      { name: "Judging Criteria.pdf", url: "/documents/student-handbook.pdf" }
+    ]
   }
 ];
 
