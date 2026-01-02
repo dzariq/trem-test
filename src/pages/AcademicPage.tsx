@@ -362,6 +362,37 @@ export default function AcademicPage() {
     return scores.reduce((a, b) => a + b, 0) / scores.length;
   }, [radarData]);
 
+  // Performance Heatmap data - subjects x exam periods
+  const heatmapData = useMemo(() => {
+    const periods = [
+      { year: "2023" as YearKey, type: "midYear" as ExamType, label: "Mid '23" },
+      { year: "2023" as YearKey, type: "yearEnd" as ExamType, label: "End '23" },
+      { year: "2024" as YearKey, type: "midYear" as ExamType, label: "Mid '24" },
+      { year: "2024" as YearKey, type: "yearEnd" as ExamType, label: "End '24" },
+      { year: "2025" as YearKey, type: "midYear" as ExamType, label: "Mid '25" },
+    ];
+    
+    return academicData.subjects.map(s => ({
+      subject: shortenSubjectName(s.name),
+      fullName: s.name,
+      scores: periods.map(p => ({
+        period: p.label,
+        score: getScore(s, p.year, p.type)
+      }))
+    }));
+  }, []);
+
+  // Helper function to get heatmap cell color based on score
+  const getHeatmapColor = (score: number | null): string => {
+    if (score === null) return "hsl(var(--muted))";
+    if (score >= 85) return "#16a34a"; // dark green
+    if (score >= 75) return "#22c55e"; // green
+    if (score >= 65) return "#84cc16"; // lime
+    if (score >= 55) return "#eab308"; // yellow
+    if (score >= 45) return "#f97316"; // orange
+    return "#ef4444"; // red
+  };
+
   // Comparison data
   const comparisonData = useMemo(() => {
     return academicData.subjects.map(s => {
@@ -967,6 +998,66 @@ export default function AcademicPage() {
                         {item.name}: {item.delta >= 0 ? "+" : ""}{item.delta}%
                       </Badge>
                     ))}
+                  </div>
+                </div>
+
+                {/* Performance Heatmap */}
+                <div className="space-y-2">
+                  <h4 className="text-sm font-medium text-foreground flex items-center gap-1.5">
+                    <BarChart3 className="h-4 w-4 text-primary" />
+                    Performance Heatmap
+                  </h4>
+                  <p className="text-[10px] text-muted-foreground -mt-1">
+                    Scores across all exam periods
+                  </p>
+                  <div className="overflow-x-auto">
+                    <div className="min-w-[320px]">
+                      {/* Header row with periods */}
+                      <div className="flex gap-1 mb-1">
+                        <div className="w-16 shrink-0" />
+                        {heatmapData[0]?.scores.map((s) => (
+                          <div 
+                            key={s.period} 
+                            className="flex-1 text-center text-[9px] font-medium text-muted-foreground px-1"
+                          >
+                            {s.period}
+                          </div>
+                        ))}
+                      </div>
+                      {/* Subject rows */}
+                      {heatmapData.map((row) => (
+                        <div key={row.subject} className="flex gap-1 mb-1">
+                          <div className="w-16 shrink-0 text-[10px] font-medium text-foreground truncate pr-1 flex items-center">
+                            {row.subject}
+                          </div>
+                          {row.scores.map((cell, idx) => (
+                            <div
+                              key={idx}
+                              className="flex-1 h-7 rounded flex items-center justify-center text-[10px] font-semibold text-white transition-all hover:scale-105 cursor-default"
+                              style={{ 
+                                backgroundColor: getHeatmapColor(cell.score),
+                                opacity: cell.score === null ? 0.3 : 1
+                              }}
+                              title={`${row.fullName} - ${cell.period}: ${cell.score ?? 'N/A'}%`}
+                            >
+                              {cell.score ?? "–"}
+                            </div>
+                          ))}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                  {/* Legend */}
+                  <div className="flex items-center justify-center gap-1 mt-2">
+                    <span className="text-[9px] text-muted-foreground mr-1">Low</span>
+                    {["#ef4444", "#f97316", "#eab308", "#84cc16", "#22c55e", "#16a34a"].map((color, i) => (
+                      <div 
+                        key={i} 
+                        className="w-4 h-3 rounded-sm" 
+                        style={{ backgroundColor: color }} 
+                      />
+                    ))}
+                    <span className="text-[9px] text-muted-foreground ml-1">High</span>
                   </div>
                 </div>
               </TabsContent>
