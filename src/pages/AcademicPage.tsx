@@ -1266,7 +1266,7 @@ export default function AcademicPage() {
                             stroke="hsl(var(--foreground))" 
                             strokeDasharray="4 4" 
                             strokeWidth={2}
-                            label={{ value: "Goal", fontSize: 9, fill: "hsl(var(--foreground))", position: "insideTopRight" }}
+                            label={{ value: "Goal", fontSize: 9, fill: "hsl(var(--foreground))" }}
                           />
                           {subjectFilter === "all" ? (
                             <Area
