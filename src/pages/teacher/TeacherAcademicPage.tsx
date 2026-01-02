@@ -9,7 +9,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Save, TrendingUp, TrendingDown, Minus, ChevronDown, ChevronUp, Users, Target, Award, AlertTriangle, BookOpen, BarChart3, FileText, CheckCircle, XCircle, Lightbulb, Copy, Printer, ArrowRight, ArrowUpRight, ArrowDownRight, Scale, Download, FileSpreadsheet, Check, Calendar } from "lucide-react";
+import { Save, TrendingUp, TrendingDown, Minus, ChevronDown, ChevronUp, Users, Target, Award, AlertTriangle, BookOpen, BarChart3, FileText, CheckCircle, XCircle, Lightbulb, Copy, Printer, ArrowRight, ArrowUpRight, ArrowDownRight, Scale, Download, FileSpreadsheet, Check, Calendar, UserCheck } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { toast } from "@/hooks/use-toast";
 import schoolLogo from "@/assets/school-badge.png";
 import { teacherProfile, classRosters, classGrades, detailedClassGrades, yearOverYearData, categoryYearOverYear, examComparisonData, ExamData, subjectYearlyData, multiClassTrendData, subjectExamData } from "@/data/teacherMockData";
@@ -137,6 +138,10 @@ export default function TeacherAcademicPage() {
   // View more state for lists
   const [showAllTopPerformers, setShowAllTopPerformers] = useState(false);
   const [showAllAtRisk, setShowAllAtRisk] = useState(false);
+  
+  // Student performance dialog state
+  const [performanceDialogOpen, setPerformanceDialogOpen] = useState(false);
+  const [performanceDialogTab, setPerformanceDialogTab] = useState<"top" | "middle" | "atRisk">("top");
   const handleTouchStart = useCallback((e: React.TouchEvent) => {
     if (e.touches.length === 2) {
       const touch1 = e.touches[0];
@@ -296,6 +301,12 @@ export default function TeacherAcademicPage() {
 
   // At-risk students (below 50%)
   const atRiskStudents = rankedStudents.filter(s => s.score !== null && s.score < 50);
+  
+  // Middle performing students (50-79%)
+  const middlePerformers = rankedStudents.filter(s => s.score !== null && s.score >= 50 && s.score < 80);
+  
+  // Top performers (80%+)
+  const topPerformers = rankedStudents.filter(s => s.score !== null && s.score >= 80);
 
   // Calculate category averages from detailed grades
   const categoryTotals = {
@@ -1138,34 +1149,90 @@ export default function TeacherAcademicPage() {
                   </div>
                 </div>
 
-                {/* Top Students with medals - Moved up */}
-                <Card>
-                  <CardHeader className="pb-2">
-                    <CardTitle className="text-sm flex items-center gap-2">
-                      <Award className="h-4 w-4 text-amber-500" />
-                      Top Performers ({rankedStudents.length})
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-2">
-                    {rankedStudents.slice(0, showAllTopPerformers ? rankedStudents.length : 7).map((student, index) => <div key={student.id} className={cn("flex items-center justify-between p-2 rounded-lg", index === 0 ? "bg-amber-50 border border-amber-200" : index === 1 ? "bg-slate-50 border border-slate-200" : index === 2 ? "bg-orange-50 border border-orange-200" : "bg-accent/30")}>
-                        <div className="flex items-center gap-3">
-                          <span className={cn("text-lg font-bold w-8 text-center", index === 0 ? "text-amber-500" : index === 1 ? "text-slate-400" : index === 2 ? "text-orange-400" : "text-muted-foreground")}>
-                            {index === 0 ? "🥇" : index === 1 ? "🥈" : index === 2 ? "🥉" : `#${index + 1}`}
-                          </span>
-                          <span className="text-sm font-medium">{student.name}</span>
+                {/* Student Performance Cards - 3 categories side by side */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                  {/* Top Performers */}
+                  <Card className="border-amber-200 bg-amber-50/30">
+                    <CardHeader className="pb-2">
+                      <CardTitle className="text-sm flex items-center gap-2 text-amber-700">
+                        <Award className="h-4 w-4" />
+                        Top Performers ({topPerformers.length})
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-2">
+                      {topPerformers.slice(0, 3).map((student, index) => (
+                        <div key={student.id} className={cn(
+                          "flex items-center justify-between p-2 rounded-lg bg-background",
+                          index === 0 ? "border border-amber-300" : index === 1 ? "border border-slate-300" : "border border-orange-300"
+                        )}>
+                          <div className="flex items-center gap-2">
+                            <span className="text-base">
+                              {index === 0 ? "🥇" : index === 1 ? "🥈" : "🥉"}
+                            </span>
+                            <span className="text-sm font-medium truncate">{student.name}</span>
+                          </div>
+                          <Badge className="text-xs bg-emerald-100 text-emerald-700 shrink-0">
+                            {student.score}%
+                          </Badge>
                         </div>
-                        <Badge className={cn("text-xs", student.score && student.score >= 90 ? "bg-emerald-100 text-emerald-700" : student.score && student.score >= 80 ? "bg-blue-100 text-blue-700" : "bg-accent")}>
-                          {student.score}%
-                        </Badge>
-                      </div>)}
-                    {rankedStudents.length > 7 && <Button variant="ghost" size="sm" className="w-full text-xs text-muted-foreground hover:text-foreground" onClick={() => setShowAllTopPerformers(!showAllTopPerformers)}>
-                        {showAllTopPerformers ? "Show Less" : `View More (${rankedStudents.length - 7} more)`}
-                      </Button>}
-                  </CardContent>
-                </Card>
+                      ))}
+                      {topPerformers.length > 3 && (
+                        <Button 
+                          variant="ghost" 
+                          size="sm" 
+                          className="w-full text-xs text-amber-600 hover:text-amber-700 hover:bg-amber-50" 
+                          onClick={() => {
+                            setPerformanceDialogTab("top");
+                            setPerformanceDialogOpen(true);
+                          }}
+                        >
+                          View More ({topPerformers.length - 3} more)
+                        </Button>
+                      )}
+                      {topPerformers.length === 0 && (
+                        <p className="text-xs text-muted-foreground text-center py-2">No students</p>
+                      )}
+                    </CardContent>
+                  </Card>
 
-                {/* At-Risk Students - below 50% */}
-                {atRiskStudents.length > 0 && <Card className="border-red-200 bg-red-50/30">
+                  {/* Middle Performers */}
+                  <Card className="border-blue-200 bg-blue-50/30">
+                    <CardHeader className="pb-2">
+                      <CardTitle className="text-sm flex items-center gap-2 text-blue-700">
+                        <UserCheck className="h-4 w-4" />
+                        Middle Performers ({middlePerformers.length})
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-2">
+                      {middlePerformers.slice(0, 3).map((student) => (
+                        <div key={student.id} className="flex items-center justify-between p-2 rounded-lg bg-background border border-blue-200">
+                          <span className="text-sm font-medium truncate">{student.name}</span>
+                          <Badge className="text-xs bg-blue-100 text-blue-700 shrink-0">
+                            {student.score}%
+                          </Badge>
+                        </div>
+                      ))}
+                      {middlePerformers.length > 3 && (
+                        <Button 
+                          variant="ghost" 
+                          size="sm" 
+                          className="w-full text-xs text-blue-600 hover:text-blue-700 hover:bg-blue-50" 
+                          onClick={() => {
+                            setPerformanceDialogTab("middle");
+                            setPerformanceDialogOpen(true);
+                          }}
+                        >
+                          View More ({middlePerformers.length - 3} more)
+                        </Button>
+                      )}
+                      {middlePerformers.length === 0 && (
+                        <p className="text-xs text-muted-foreground text-center py-2">No students</p>
+                      )}
+                    </CardContent>
+                  </Card>
+
+                  {/* At-Risk Students */}
+                  <Card className="border-red-200 bg-red-50/30">
                     <CardHeader className="pb-2">
                       <CardTitle className="text-sm flex items-center gap-2 text-red-700">
                         <AlertTriangle className="h-4 w-4" />
@@ -1173,17 +1240,147 @@ export default function TeacherAcademicPage() {
                       </CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-2">
-                      {atRiskStudents.slice(0, showAllAtRisk ? atRiskStudents.length : 7).map(student => <div key={student.id} className="flex items-center justify-between p-2 rounded-lg bg-background border border-red-200">
-                          <span className="text-sm font-medium">{student.name}</span>
+                      {atRiskStudents.slice(0, 3).map((student) => (
+                        <div key={student.id} className="flex items-center justify-between p-2 rounded-lg bg-background border border-red-200">
+                          <span className="text-sm font-medium truncate">{student.name}</span>
+                          <Badge variant="destructive" className="text-xs shrink-0">
+                            {student.score}%
+                          </Badge>
+                        </div>
+                      ))}
+                      {atRiskStudents.length > 3 && (
+                        <Button 
+                          variant="ghost" 
+                          size="sm" 
+                          className="w-full text-xs text-red-600 hover:text-red-700 hover:bg-red-50" 
+                          onClick={() => {
+                            setPerformanceDialogTab("atRisk");
+                            setPerformanceDialogOpen(true);
+                          }}
+                        >
+                          View More ({atRiskStudents.length - 3} more)
+                        </Button>
+                      )}
+                      {atRiskStudents.length === 0 && (
+                        <p className="text-xs text-muted-foreground text-center py-2">No students</p>
+                      )}
+                    </CardContent>
+                  </Card>
+                </div>
+
+                {/* Performance Dialog */}
+                <Dialog open={performanceDialogOpen} onOpenChange={setPerformanceDialogOpen}>
+                  <DialogContent className="max-w-md max-h-[80vh] overflow-hidden flex flex-col">
+                    <DialogHeader>
+                      <DialogTitle>Student Performance</DialogTitle>
+                    </DialogHeader>
+                    
+                    {/* Tab switcher */}
+                    <div className="flex gap-1 bg-muted p-1 rounded-lg">
+                      <button
+                        onClick={() => setPerformanceDialogTab("top")}
+                        className={cn(
+                          "flex-1 px-3 py-2 text-xs font-medium rounded-md transition-all flex items-center justify-center gap-1",
+                          performanceDialogTab === "top" 
+                            ? "bg-amber-500 text-white shadow-sm" 
+                            : "text-muted-foreground hover:text-foreground"
+                        )}
+                      >
+                        <Award className="h-3 w-3" />
+                        Top ({topPerformers.length})
+                      </button>
+                      <button
+                        onClick={() => setPerformanceDialogTab("middle")}
+                        className={cn(
+                          "flex-1 px-3 py-2 text-xs font-medium rounded-md transition-all flex items-center justify-center gap-1",
+                          performanceDialogTab === "middle" 
+                            ? "bg-blue-500 text-white shadow-sm" 
+                            : "text-muted-foreground hover:text-foreground"
+                        )}
+                      >
+                        <UserCheck className="h-3 w-3" />
+                        Middle ({middlePerformers.length})
+                      </button>
+                      <button
+                        onClick={() => setPerformanceDialogTab("atRisk")}
+                        className={cn(
+                          "flex-1 px-3 py-2 text-xs font-medium rounded-md transition-all flex items-center justify-center gap-1",
+                          performanceDialogTab === "atRisk" 
+                            ? "bg-red-500 text-white shadow-sm" 
+                            : "text-muted-foreground hover:text-foreground"
+                        )}
+                      >
+                        <AlertTriangle className="h-3 w-3" />
+                        At-Risk ({atRiskStudents.length})
+                      </button>
+                    </div>
+
+                    {/* Student list */}
+                    <div className="flex-1 overflow-y-auto space-y-2 pr-1">
+                      {performanceDialogTab === "top" && topPerformers.map((student, index) => (
+                        <div key={student.id} className={cn(
+                          "flex items-center justify-between p-3 rounded-lg",
+                          index === 0 ? "bg-amber-50 border border-amber-200" 
+                            : index === 1 ? "bg-slate-50 border border-slate-200" 
+                            : index === 2 ? "bg-orange-50 border border-orange-200" 
+                            : "bg-accent/30 border border-border"
+                        )}>
+                          <div className="flex items-center gap-3">
+                            <span className={cn(
+                              "text-lg font-bold w-8 text-center",
+                              index === 0 ? "text-amber-500" : index === 1 ? "text-slate-400" : index === 2 ? "text-orange-400" : "text-muted-foreground"
+                            )}>
+                              {index === 0 ? "🥇" : index === 1 ? "🥈" : index === 2 ? "🥉" : `#${index + 1}`}
+                            </span>
+                            <span className="text-sm font-medium">{student.name}</span>
+                          </div>
+                          <Badge className="text-xs bg-emerald-100 text-emerald-700">
+                            {student.score}%
+                          </Badge>
+                        </div>
+                      ))}
+
+                      {performanceDialogTab === "middle" && middlePerformers.map((student, index) => (
+                        <div key={student.id} className="flex items-center justify-between p-3 rounded-lg bg-blue-50/50 border border-blue-200">
+                          <div className="flex items-center gap-3">
+                            <span className="text-sm font-bold w-8 text-center text-muted-foreground">
+                              #{index + 1}
+                            </span>
+                            <span className="text-sm font-medium">{student.name}</span>
+                          </div>
+                          <Badge className="text-xs bg-blue-100 text-blue-700">
+                            {student.score}%
+                          </Badge>
+                        </div>
+                      ))}
+
+                      {performanceDialogTab === "atRisk" && atRiskStudents.map((student, index) => (
+                        <div key={student.id} className="flex items-center justify-between p-3 rounded-lg bg-red-50/50 border border-red-200">
+                          <div className="flex items-center gap-3">
+                            <span className="text-sm font-bold w-8 text-center text-muted-foreground">
+                              #{index + 1}
+                            </span>
+                            <span className="text-sm font-medium">{student.name}</span>
+                          </div>
                           <Badge variant="destructive" className="text-xs">
                             {student.score}%
                           </Badge>
-                        </div>)}
-                      {atRiskStudents.length > 7 && <Button variant="ghost" size="sm" className="w-full text-xs text-red-600 hover:text-red-700 hover:bg-red-50" onClick={() => setShowAllAtRisk(!showAllAtRisk)}>
-                          {showAllAtRisk ? "Show Less" : `View More (${atRiskStudents.length - 7} more)`}
-                        </Button>}
-                    </CardContent>
-                  </Card>}
+                        </div>
+                      ))}
+
+                      {/* Empty state */}
+                      {performanceDialogTab === "top" && topPerformers.length === 0 && (
+                        <p className="text-sm text-muted-foreground text-center py-8">No top performers</p>
+                      )}
+                      {performanceDialogTab === "middle" && middlePerformers.length === 0 && (
+                        <p className="text-sm text-muted-foreground text-center py-8">No middle performers</p>
+                      )}
+                      {performanceDialogTab === "atRisk" && atRiskStudents.length === 0 && (
+                        <p className="text-sm text-muted-foreground text-center py-8">No at-risk students</p>
+                      )}
+                    </div>
+                  </DialogContent>
+                </Dialog>
               </TabsContent>
 
               {/* ==================== TRENDS SUB-TAB ==================== */}
