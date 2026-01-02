@@ -141,13 +141,15 @@ export default function AcademicPage() {
     });
   }, [selectedYear]);
 
-  // Subject performance data for bar chart
+  // Subject performance data for bar chart (sorted best to worst)
   const subjectPerformance = useMemo(() => {
-    return academicData.subjects.map(s => ({
-      name: s.name,
-      score: getScore(s, selectedYear, examType) ?? 0,
-      classAvg: classAverages[selectedYear]?.[examType] ?? 0
-    }));
+    return academicData.subjects
+      .map(s => ({
+        name: s.name,
+        score: getScore(s, selectedYear, examType) ?? 0,
+        classAvg: classAverages[selectedYear]?.[examType] ?? 0
+      }))
+      .sort((a, b) => b.score - a.score);
   }, [selectedYear, examType]);
 
   // Grade distribution
