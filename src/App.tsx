@@ -29,6 +29,7 @@ import TeacherCalendarPage from "./pages/teacher/TeacherCalendarPage";
 import TeacherProfilePage from "./pages/teacher/TeacherProfilePage";
 import TeacherNotificationsPage from "./pages/teacher/TeacherNotificationsPage";
 import TeacherDNAPage from "./pages/teacher/TeacherDNAPage";
+import TeacherTimetablePage from "./pages/teacher/TeacherTimetablePage";
 
 import NotFound from "./pages/NotFound";
 
@@ -66,6 +67,7 @@ const App = () => (
           <Route path="/teacher/profile" element={<TeacherProfilePage />} />
           <Route path="/teacher/notifications" element={<TeacherNotificationsPage />} />
           <Route path="/teacher/dna" element={<TeacherDNAPage />} />
+          <Route path="/teacher/timetable" element={<TeacherTimetablePage />} />
           <Route path="/teacher/security-privacy" element={<SecurityPrivacyPage />} />
 
           <Route path="*" element={<NotFound />} />
