@@ -626,7 +626,7 @@ export default function TeacherAcademicPage() {
 
       <div className="px-4 mt-4 pb-4">
         <Tabs defaultValue="entry" className="w-full">
-          <TabsList className="grid w-full grid-cols-2 mb-4">
+          <TabsList className="grid w-full grid-cols-2 mb-4 bg-muted/50">
             <TabsTrigger value="entry">Grade Entry</TabsTrigger>
             <TabsTrigger value="analysis">Class Analysis</TabsTrigger>
           </TabsList>
@@ -788,7 +788,7 @@ export default function TeacherAcademicPage() {
           <TabsContent value="analysis" className="space-y-4">
             {/* Sub-tabs for Class Analysis */}
             <Tabs defaultValue="overview" className="w-full">
-              <TabsList className="grid w-full grid-cols-3 mb-4">
+              <TabsList className="grid w-full grid-cols-3 mb-4 bg-muted/50">
                 <TabsTrigger value="overview" className="text-xs">Overview</TabsTrigger>
                 <TabsTrigger value="trends" className="text-xs">Trends</TabsTrigger>
                 <TabsTrigger value="comparison" className="text-xs">Comparison</TabsTrigger>
