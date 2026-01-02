@@ -1,0 +1,156 @@
+import { useState } from "react";
+import { AppLayout } from "@/components/layout/AppLayout";
+import { AppHeader } from "@/components/layout/AppHeader";
+import { Button } from "@/components/ui/button";
+import { FileText, ChevronDown, ChevronUp, Target, BookOpen, HandHeart, Backpack, Clock, Shirt, Users, Utensils, ClipboardList, Scale, FileSignature } from "lucide-react";
+import { PDFViewerDialog } from "@/components/PDFViewerDialog";
+import { studentHandbookData } from "@/data/studentHandbookData";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
+import { cn } from "@/lib/utils";
+
+// Import handbook images
+import missionVisionImg from "@/assets/handbook/school-direction.png";
+import learnerSkillsImg from "@/assets/handbook/teacher-responsibilities.png";
+import studentPledgeImg from "@/assets/handbook/acknowledgement.png";
+import belongingsImg from "@/assets/handbook/key-sops.png";
+import attendanceImg from "@/assets/handbook/working-hours.png";
+import attireImg from "@/assets/handbook/dress-code.png";
+import behaviourImg from "@/assets/handbook/classroom-discipline.png";
+import mealsImg from "@/assets/handbook/facilities-care.png";
+import examImg from "@/assets/handbook/duty-cca.png";
+import disciplineImg from "@/assets/handbook/teacher-conduct.png";
+import contractImg from "@/assets/handbook/leave-salary.png";
+
+const sectionIcons: Record<string, React.ComponentType<{ className?: string }>> = {
+  mission_vision: Target,
+  learner_skills: BookOpen,
+  student_pledge: HandHeart,
+  rules_belongings: Backpack,
+  rules_attendance: Clock,
+  rules_attire: Shirt,
+  rules_behaviour: Users,
+  rules_meals: Utensils,
+  exam_rules: ClipboardList,
+  discipline: Scale,
+  behaviour_contract: FileSignature,
+};
+
+const sectionImages: Record<string, string> = {
+  mission_vision: missionVisionImg,
+  learner_skills: learnerSkillsImg,
+  student_pledge: studentPledgeImg,
+  rules_belongings: belongingsImg,
+  rules_attendance: attendanceImg,
+  rules_attire: attireImg,
+  rules_behaviour: behaviourImg,
+  rules_meals: mealsImg,
+  exam_rules: examImg,
+  discipline: disciplineImg,
+  behaviour_contract: contractImg,
+};
+
+export default function StudentHandbookPage() {
+  const [pdfOpen, setPdfOpen] = useState(false);
+
+  return (
+    <AppLayout>
+      <AppHeader title="Student Handbook" showBack />
+
+      <section className="px-4 pt-4 pb-8 space-y-4">
+        {/* PDF View Button */}
+        <Button 
+          onClick={() => setPdfOpen(true)} 
+          className="w-full gap-2"
+          variant="outline"
+        >
+          <FileText className="h-4 w-4" />
+          View Full Handbook PDF
+        </Button>
+
+        {/* Summary Card */}
+        <div className="bg-primary/5 rounded-xl p-4 border border-primary/20">
+          <h3 className="font-semibold text-foreground mb-2">📚 Handbook Summary</h3>
+          <p className="text-sm text-muted-foreground">
+            This handbook outlines the school's vision, mission, core values, and all rules and regulations 
+            that students must follow. It covers attendance, attire, behaviour, exams, and discipline policies.
+          </p>
+        </div>
+
+        {/* Sections Accordion */}
+        <Accordion type="single" collapsible className="space-y-3">
+          {studentHandbookData.sections.map((section) => {
+            const Icon = sectionIcons[section.key] || FileText;
+            const sectionImage = sectionImages[section.key];
+            
+            return (
+              <AccordionItem 
+                key={section.key} 
+                value={section.key}
+                className="border rounded-xl overflow-hidden bg-card"
+              >
+                <AccordionTrigger className="px-4 py-3 hover:no-underline hover:bg-muted/50 [&[data-state=open]>svg]:rotate-180">
+                  <div className="flex items-center gap-3 text-left">
+                    <div className={cn("p-2 rounded-lg", section.lightBg)}>
+                      <Icon className={cn("h-5 w-5", section.color)} />
+                    </div>
+                    <span className="font-medium text-sm">{section.title}</span>
+                  </div>
+                </AccordionTrigger>
+                <AccordionContent className="px-4 pb-4">
+                  {/* Section Image */}
+                  {sectionImage && (
+                    <div className="mb-4 flex justify-center">
+                      <img 
+                        src={sectionImage} 
+                        alt={section.title}
+                        className="h-24 w-auto object-contain"
+                      />
+                    </div>
+                  )}
+
+                  {/* Subsections */}
+                  <Accordion type="single" collapsible className="space-y-2">
+                    {section.subsections.map((subsection, subIdx) => (
+                      <AccordionItem 
+                        key={subIdx} 
+                        value={`${section.key}-${subIdx}`}
+                        className={cn("border rounded-lg overflow-hidden", section.lightBg)}
+                      >
+                        <AccordionTrigger className="px-3 py-2 hover:no-underline text-sm font-medium">
+                          <span className={section.color}>{subsection.subtitle}</span>
+                        </AccordionTrigger>
+                        <AccordionContent className="px-3 pb-3">
+                          <ul className="space-y-1.5">
+                            {subsection.points.map((point, pointIdx) => (
+                              <li key={pointIdx} className="flex items-start gap-2 text-xs text-muted-foreground">
+                                <span className={cn("mt-1.5 h-1.5 w-1.5 rounded-full flex-shrink-0", section.color.replace('text-', 'bg-'))} />
+                                <span>{point}</span>
+                              </li>
+                            ))}
+                          </ul>
+                        </AccordionContent>
+                      </AccordionItem>
+                    ))}
+                  </Accordion>
+                </AccordionContent>
+              </AccordionItem>
+            );
+          })}
+        </Accordion>
+      </section>
+
+      <PDFViewerDialog
+        open={pdfOpen}
+        onOpenChange={setPdfOpen}
+        pdfUrl="/documents/student-handbook.pdf"
+        title="Student Handbook"
+        downloadFileName="Student_Handbook_2026.pdf"
+      />
+    </AppLayout>
+  );
+}
