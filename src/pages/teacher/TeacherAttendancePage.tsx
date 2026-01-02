@@ -12,7 +12,9 @@ import { format, startOfWeek, endOfWeek, isToday, parseISO } from "date-fns";
 import { cn } from "@/lib/utils";
 import { toast } from "@/hooks/use-toast";
 import schoolLogo from "@/assets/school-badge.png";
-import { teacherProfile, classRosters, teacherAttendanceStats } from "@/data/teacherMockData";
+import { teacherProfile, classRosters, teacherAttendanceStats, DailyAttendanceDetail } from "@/data/teacherMockData";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Select,
   SelectContent,
@@ -54,13 +56,7 @@ export default function TeacherAttendancePage() {
   // Statistics state
   const [selectedYear, setSelectedYear] = useState("2026");
   const [selectedMonth, setSelectedMonth] = useState(0); // January
-  const [selectedDayStats, setSelectedDayStats] = useState<{
-    date: string;
-    present: number;
-    absent: number;
-    late: number;
-    excused: number;
-  } | null>(null);
+  const [selectedDayStats, setSelectedDayStats] = useState<DailyAttendanceDetail | null>(null);
   
 
   const students = classRosters[selectedClass as keyof typeof classRosters] || [];
@@ -485,7 +481,7 @@ export default function TeacherAttendancePage() {
 
       {/* Day Details Dialog */}
       <Dialog open={!!selectedDayStats} onOpenChange={(open) => !open && setSelectedDayStats(null)}>
-        <DialogContent className="max-w-sm mx-auto">
+        <DialogContent className="max-w-sm mx-auto max-h-[90vh] flex flex-col">
           {selectedDayStats && (() => {
             const dayDate = parseISO(selectedDayStats.date);
             const total = selectedDayStats.present + selectedDayStats.absent + selectedDayStats.late + selectedDayStats.excused;
@@ -494,6 +490,14 @@ export default function TeacherAttendancePage() {
             const absentPct = total > 0 ? (selectedDayStats.absent / total) * 100 : 0;
             const latePct = total > 0 ? (selectedDayStats.late / total) * 100 : 0;
             const excusedPct = total > 0 ? (selectedDayStats.excused / total) * 100 : 0;
+
+            // Group students by status
+            const studentsByStatus = {
+              present: selectedDayStats.students?.filter(s => s.status === "present") || [],
+              absent: selectedDayStats.students?.filter(s => s.status === "absent") || [],
+              late: selectedDayStats.students?.filter(s => s.status === "late") || [],
+              excused: selectedDayStats.students?.filter(s => s.status === "excused") || [],
+            };
             
             return (
               <>
@@ -503,62 +507,140 @@ export default function TeacherAttendancePage() {
                   </DialogTitle>
                 </DialogHeader>
                 
-                <div className="space-y-4">
-                  {/* Attendance Rate Highlight */}
-                  <div className="text-center py-4 rounded-xl bg-muted/50">
-                    <span className="text-4xl font-bold text-foreground">{attendanceRate}%</span>
-                    <p className="text-sm text-muted-foreground mt-1">Attendance Rate</p>
-                  </div>
-                  
-                  {/* Large Progress Bar */}
-                  <div className="h-4 rounded-full bg-muted overflow-hidden flex">
-                    <div style={{ width: `${presentPct}%` }} className="bg-emerald-500 transition-all" />
-                    <div style={{ width: `${absentPct}%` }} className="bg-red-500 transition-all" />
-                    <div style={{ width: `${latePct}%` }} className="bg-amber-500 transition-all" />
-                    <div style={{ width: `${excusedPct}%` }} className="bg-purple-500 transition-all" />
-                  </div>
-                  
-                  {/* Stats Grid */}
-                  <div className="grid grid-cols-2 gap-3">
-                    <div className="p-4 rounded-xl bg-emerald-50 dark:bg-emerald-950/30 text-center">
-                      <div className="flex items-center justify-center gap-2 mb-1">
-                        <Check className="h-5 w-5 text-emerald-600" />
-                        <span className="text-2xl font-bold text-emerald-600">{selectedDayStats.present}</span>
-                      </div>
-                      <p className="text-xs text-emerald-600/80">Present</p>
-                      <p className="text-xs text-emerald-600/60 mt-0.5">{Math.round(presentPct)}%</p>
+                <ScrollArea className="flex-1 -mx-6 px-6">
+                  <div className="space-y-4 pb-4">
+                    {/* Attendance Rate Highlight */}
+                    <div className="text-center py-3 rounded-xl bg-muted/50">
+                      <span className="text-3xl font-bold text-foreground">{attendanceRate}%</span>
+                      <p className="text-xs text-muted-foreground mt-1">Attendance Rate</p>
                     </div>
-                    <div className="p-4 rounded-xl bg-red-50 dark:bg-red-950/30 text-center">
-                      <div className="flex items-center justify-center gap-2 mb-1">
-                        <X className="h-5 w-5 text-red-600" />
-                        <span className="text-2xl font-bold text-red-600">{selectedDayStats.absent}</span>
-                      </div>
-                      <p className="text-xs text-red-600/80">Absent</p>
-                      <p className="text-xs text-red-600/60 mt-0.5">{Math.round(absentPct)}%</p>
+                    
+                    {/* Large Progress Bar */}
+                    <div className="h-3 rounded-full bg-muted overflow-hidden flex">
+                      <div style={{ width: `${presentPct}%` }} className="bg-emerald-500 transition-all" />
+                      <div style={{ width: `${absentPct}%` }} className="bg-red-500 transition-all" />
+                      <div style={{ width: `${latePct}%` }} className="bg-amber-500 transition-all" />
+                      <div style={{ width: `${excusedPct}%` }} className="bg-purple-500 transition-all" />
                     </div>
-                    <div className="p-4 rounded-xl bg-amber-50 dark:bg-amber-950/30 text-center">
-                      <div className="flex items-center justify-center gap-2 mb-1">
-                        <Clock className="h-5 w-5 text-amber-600" />
-                        <span className="text-2xl font-bold text-amber-600">{selectedDayStats.late}</span>
+                    
+                    {/* Stats Summary */}
+                    <div className="grid grid-cols-4 gap-2 text-center">
+                      <div className="p-2 rounded-lg bg-emerald-50 dark:bg-emerald-950/30">
+                        <Check className="h-4 w-4 text-emerald-600 mx-auto mb-1" />
+                        <span className="text-lg font-bold text-emerald-600">{selectedDayStats.present}</span>
+                        <p className="text-[10px] text-emerald-600/80">Present</p>
                       </div>
-                      <p className="text-xs text-amber-600/80">Late</p>
-                      <p className="text-xs text-amber-600/60 mt-0.5">{Math.round(latePct)}%</p>
+                      <div className="p-2 rounded-lg bg-red-50 dark:bg-red-950/30">
+                        <X className="h-4 w-4 text-red-600 mx-auto mb-1" />
+                        <span className="text-lg font-bold text-red-600">{selectedDayStats.absent}</span>
+                        <p className="text-[10px] text-red-600/80">Absent</p>
+                      </div>
+                      <div className="p-2 rounded-lg bg-amber-50 dark:bg-amber-950/30">
+                        <Clock className="h-4 w-4 text-amber-600 mx-auto mb-1" />
+                        <span className="text-lg font-bold text-amber-600">{selectedDayStats.late}</span>
+                        <p className="text-[10px] text-amber-600/80">Late</p>
+                      </div>
+                      <div className="p-2 rounded-lg bg-purple-50 dark:bg-purple-950/30">
+                        <AlertCircle className="h-4 w-4 text-purple-600 mx-auto mb-1" />
+                        <span className="text-lg font-bold text-purple-600">{selectedDayStats.excused}</span>
+                        <p className="text-[10px] text-purple-600/80">Excused</p>
+                      </div>
                     </div>
-                    <div className="p-4 rounded-xl bg-purple-50 dark:bg-purple-950/30 text-center">
-                      <div className="flex items-center justify-center gap-2 mb-1">
-                        <AlertCircle className="h-5 w-5 text-purple-600" />
-                        <span className="text-2xl font-bold text-purple-600">{selectedDayStats.excused}</span>
-                      </div>
-                      <p className="text-xs text-purple-600/80">Excused</p>
-                      <p className="text-xs text-purple-600/60 mt-0.5">{Math.round(excusedPct)}%</p>
+                    
+                    {/* Student List by Status */}
+                    {selectedDayStats.students && selectedDayStats.students.length > 0 && (
+                      <Tabs defaultValue="absent" className="w-full">
+                        <TabsList className="w-full grid grid-cols-4 h-9">
+                          <TabsTrigger value="present" className="text-xs px-1">
+                            <Check className="h-3 w-3 mr-1" />{studentsByStatus.present.length}
+                          </TabsTrigger>
+                          <TabsTrigger value="absent" className="text-xs px-1">
+                            <X className="h-3 w-3 mr-1" />{studentsByStatus.absent.length}
+                          </TabsTrigger>
+                          <TabsTrigger value="late" className="text-xs px-1">
+                            <Clock className="h-3 w-3 mr-1" />{studentsByStatus.late.length}
+                          </TabsTrigger>
+                          <TabsTrigger value="excused" className="text-xs px-1">
+                            <AlertCircle className="h-3 w-3 mr-1" />{studentsByStatus.excused.length}
+                          </TabsTrigger>
+                        </TabsList>
+                        
+                        <TabsContent value="present" className="mt-3">
+                          <div className="space-y-1.5">
+                            {studentsByStatus.present.length === 0 ? (
+                              <p className="text-xs text-muted-foreground text-center py-4">No students</p>
+                            ) : (
+                              studentsByStatus.present.map(student => (
+                                <div key={student.id} className="flex items-center gap-2 p-2 rounded-lg bg-emerald-50/50 dark:bg-emerald-950/20">
+                                  <div className="h-6 w-6 rounded-full bg-emerald-100 dark:bg-emerald-900/50 flex items-center justify-center">
+                                    <Check className="h-3 w-3 text-emerald-600" />
+                                  </div>
+                                  <span className="text-sm text-foreground">{student.name}</span>
+                                </div>
+                              ))
+                            )}
+                          </div>
+                        </TabsContent>
+                        
+                        <TabsContent value="absent" className="mt-3">
+                          <div className="space-y-1.5">
+                            {studentsByStatus.absent.length === 0 ? (
+                              <p className="text-xs text-muted-foreground text-center py-4">No absent students</p>
+                            ) : (
+                              studentsByStatus.absent.map(student => (
+                                <div key={student.id} className="flex items-center gap-2 p-2 rounded-lg bg-red-50/50 dark:bg-red-950/20">
+                                  <div className="h-6 w-6 rounded-full bg-red-100 dark:bg-red-900/50 flex items-center justify-center">
+                                    <X className="h-3 w-3 text-red-600" />
+                                  </div>
+                                  <span className="text-sm text-foreground">{student.name}</span>
+                                </div>
+                              ))
+                            )}
+                          </div>
+                        </TabsContent>
+                        
+                        <TabsContent value="late" className="mt-3">
+                          <div className="space-y-1.5">
+                            {studentsByStatus.late.length === 0 ? (
+                              <p className="text-xs text-muted-foreground text-center py-4">No late students</p>
+                            ) : (
+                              studentsByStatus.late.map(student => (
+                                <div key={student.id} className="flex items-center gap-2 p-2 rounded-lg bg-amber-50/50 dark:bg-amber-950/20">
+                                  <div className="h-6 w-6 rounded-full bg-amber-100 dark:bg-amber-900/50 flex items-center justify-center">
+                                    <Clock className="h-3 w-3 text-amber-600" />
+                                  </div>
+                                  <span className="text-sm text-foreground">{student.name}</span>
+                                </div>
+                              ))
+                            )}
+                          </div>
+                        </TabsContent>
+                        
+                        <TabsContent value="excused" className="mt-3">
+                          <div className="space-y-1.5">
+                            {studentsByStatus.excused.length === 0 ? (
+                              <p className="text-xs text-muted-foreground text-center py-4">No excused students</p>
+                            ) : (
+                              studentsByStatus.excused.map(student => (
+                                <div key={student.id} className="flex items-center gap-2 p-2 rounded-lg bg-purple-50/50 dark:bg-purple-950/20">
+                                  <div className="h-6 w-6 rounded-full bg-purple-100 dark:bg-purple-900/50 flex items-center justify-center">
+                                    <AlertCircle className="h-3 w-3 text-purple-600" />
+                                  </div>
+                                  <span className="text-sm text-foreground">{student.name}</span>
+                                </div>
+                              ))
+                            )}
+                          </div>
+                        </TabsContent>
+                      </Tabs>
+                    )}
+                    
+                    {/* Total */}
+                    <div className="text-center pt-2 border-t border-border">
+                      <span className="text-sm text-muted-foreground">Total Students: <span className="font-semibold text-foreground">{total}</span></span>
                     </div>
                   </div>
-                  
-                  {/* Total */}
-                  <div className="text-center pt-2 border-t border-border">
-                    <span className="text-sm text-muted-foreground">Total Students: <span className="font-semibold text-foreground">{total}</span></span>
-                  </div>
-                </div>
+                </ScrollArea>
               </>
             );
           })()}
