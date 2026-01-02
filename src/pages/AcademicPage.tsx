@@ -1263,10 +1263,10 @@ export default function AcademicPage() {
                           />
                           <ReferenceLine 
                             y={trendGoalValue} 
-                            stroke="#000000" 
+                            stroke="hsl(var(--foreground))" 
                             strokeDasharray="4 4" 
                             strokeWidth={2}
-                            label={{ value: "Goal", fontSize: 9, fill: "#000000", position: "right" }}
+                            label={{ value: "Goal", fontSize: 9, fill: "hsl(var(--foreground))", position: "insideTopRight" }}
                           />
                           {subjectFilter === "all" ? (
                             <Area
