@@ -1,7 +1,7 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { AppHeader } from "@/components/layout/AppHeader";
-import { parentProfile, students } from "@/data/mockData";
+import { parentProfile, students as initialStudents } from "@/data/mockData";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
@@ -31,6 +31,7 @@ import {
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { PDFViewerDialog } from "@/components/PDFViewerDialog";
+import { StudentAvatarUpload } from "@/components/StudentAvatarUpload";
 
 export default function ProfilePage() {
   const navigate = useNavigate();
@@ -42,6 +43,28 @@ export default function ProfilePage() {
     phone: parentProfile.phone,
   });
   const [editForm, setEditForm] = useState(profile);
+  
+  // State for student photos
+  const [studentPhotos, setStudentPhotos] = useState<Record<string, string | null>>({});
+
+  // Load saved photos from localStorage on mount
+  useEffect(() => {
+    const loadedPhotos: Record<string, string | null> = {};
+    initialStudents.forEach((student) => {
+      const savedPhoto = localStorage.getItem(`student_photo_${student.id}`);
+      if (savedPhoto) {
+        loadedPhotos[student.id] = savedPhoto;
+      }
+    });
+    setStudentPhotos(loadedPhotos);
+  }, []);
+
+  const handlePhotoChange = (studentId: string, photoUrl: string | null) => {
+    setStudentPhotos((prev) => ({
+      ...prev,
+      [studentId]: photoUrl,
+    }));
+  };
 
   const handleSave = () => {
     setProfile(editForm);
@@ -53,6 +76,14 @@ export default function ProfilePage() {
     setEditForm(profile);
     setIsEditOpen(true);
   };
+
+  const avatarColors = [
+    "bg-gradient-to-br from-blue-400 to-blue-600",
+    "bg-gradient-to-br from-teal-400 to-teal-600",
+    "bg-gradient-to-br from-purple-400 to-purple-600",
+    "bg-gradient-to-br from-pink-400 to-pink-600",
+    "bg-gradient-to-br from-orange-400 to-orange-600",
+  ];
 
   return (
     <AppLayout>
@@ -108,36 +139,32 @@ export default function ProfilePage() {
 
         {/* Linked Students */}
         <Card className="bg-card border-border shadow-sm">
-          <CardHeader className="pb-2">
+          <CardHeader className="pb-2 flex flex-row items-center justify-between">
             <CardTitle className="text-base font-semibold">Linked Students</CardTitle>
+            <span className="text-xs text-muted-foreground">Tap photo to edit</span>
           </CardHeader>
           <CardContent className="space-y-2">
-            {students.map((student, index) => {
-              const avatarColors = [
-                "bg-gradient-to-br from-blue-400 to-blue-600",
-                "bg-gradient-to-br from-teal-400 to-teal-600",
-                "bg-gradient-to-br from-purple-400 to-purple-600",
-                "bg-gradient-to-br from-pink-400 to-pink-600",
-                "bg-gradient-to-br from-orange-400 to-orange-600",
-              ];
-              return (
-                <div 
-                  key={index}
-                  className="flex items-center gap-3 p-3 rounded-xl border border-border"
-                >
-                  <div className={`h-12 w-12 rounded-full flex items-center justify-center shrink-0 ${avatarColors[index % avatarColors.length]}`}>
-                    <span className="text-base font-semibold text-white">
-                      {student.name.split(' ').map(n => n[0]).join('')}
-                    </span>
-                  </div>
-                  <div className="flex-1">
-                    <h3 className="font-medium text-foreground">{student.name}</h3>
-                    <p className="text-sm text-muted-foreground">{student.class} • {student.grade}</p>
-                  </div>
-                  <ChevronRight className="h-5 w-5 text-muted-foreground" />
+            {initialStudents.map((student, index) => (
+              <div 
+                key={student.id}
+                className="flex items-center gap-3 p-3 rounded-xl border border-border"
+              >
+                <StudentAvatarUpload
+                  studentId={student.id}
+                  studentName={student.name}
+                  currentPhoto={studentPhotos[student.id] || null}
+                  onPhotoChange={handlePhotoChange}
+                  size="md"
+                  editable={true}
+                  colorClass={avatarColors[index % avatarColors.length]}
+                />
+                <div className="flex-1">
+                  <h3 className="font-medium text-foreground">{student.name}</h3>
+                  <p className="text-sm text-muted-foreground">{student.class} • {student.grade}</p>
                 </div>
-              );
-            })}
+                <ChevronRight className="h-5 w-5 text-muted-foreground" />
+              </div>
+            ))}
           </CardContent>
         </Card>
 
