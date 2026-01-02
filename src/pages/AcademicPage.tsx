@@ -284,6 +284,15 @@ export default function AcademicPage() {
   // Distinct colors for subjects
   const lineColors = ["#3b82f6", "#f59e0b", "#10b981", "#8b5cf6", "#ef4444"];
   const pieColors = ["hsl(var(--chart-1))", "hsl(var(--chart-2))", "hsl(var(--chart-3))", "hsl(var(--chart-4))", "hsl(var(--chart-5))"];
+  
+  // Grade-specific colors for distribution chart
+  const gradeChartColors: Record<string, string> = {
+    "A+": "#16a34a", // green
+    "A": "#22c55e",  // green
+    "B": "#84cc16",  // light green
+    "C": "#eab308",  // yellow
+    "D": "#ef4444",  // red
+  };
 
   const filteredSubjects = subjectFilter === "all" 
     ? academicData.subjects 
@@ -596,8 +605,8 @@ export default function AcademicPage() {
                             outerRadius={45}
                             paddingAngle={2}
                           >
-                            {gradeDistribution.map((entry, index) => (
-                              <Cell key={index} fill={pieColors[index % pieColors.length]} />
+                            {gradeDistribution.map((entry) => (
+                              <Cell key={entry.grade} fill={gradeChartColors[entry.grade] || pieColors[0]} />
                             ))}
                           </Pie>
                           <Tooltip />
@@ -605,9 +614,9 @@ export default function AcademicPage() {
                       </ResponsiveContainer>
                     </div>
                     <div className="flex flex-wrap gap-1 justify-center">
-                      {gradeDistribution.map((g, i) => (
+                      {gradeDistribution.map((g) => (
                         <Badge key={g.grade} variant="outline" className="text-[10px] px-1.5 py-0">
-                          <span className="w-2 h-2 rounded-full mr-1" style={{ backgroundColor: pieColors[i % pieColors.length] }} />
+                          <span className="w-2 h-2 rounded-full mr-1" style={{ backgroundColor: gradeChartColors[g.grade] || pieColors[0] }} />
                           {g.grade}: {g.count}
                         </Badge>
                       ))}
