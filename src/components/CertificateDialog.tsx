@@ -83,7 +83,12 @@ const StarSeal = ({ className }: { className?: string }) => {
   };
 
   return (
-    <div className={`relative ${className}`}>
+    <div 
+      className={`relative ${className}`}
+      style={{
+        filter: 'drop-shadow(0 8px 20px rgba(212, 165, 55, 0.4)) drop-shadow(0 4px 10px rgba(0, 0, 0, 0.3))'
+      }}
+    >
       <svg 
         viewBox="0 0 100 100" 
         className="w-28 h-28 sm:w-32 sm:h-32"
@@ -144,7 +149,7 @@ const LargeLogoBackground = ({ className }: { className?: string }) => (
       alt="" 
       className="absolute -right-24 -bottom-24 w-[400px] h-[400px] sm:w-[480px] sm:h-[480px] object-contain"
       style={{
-        opacity: 0.055,
+        opacity: 0.10,
         maskImage: 'linear-gradient(135deg, transparent 0%, rgba(0,0,0,0.3) 30%, rgba(0,0,0,1) 100%)',
         WebkitMaskImage: 'linear-gradient(135deg, transparent 0%, rgba(0,0,0,0.3) 30%, rgba(0,0,0,1) 100%)',
       }}
