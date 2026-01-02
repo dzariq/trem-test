@@ -3,7 +3,7 @@ import {
   CalendarClock, 
   BookOpen, 
   Calendar,
-  BarChart3 
+  BookMarked 
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -11,7 +11,7 @@ const quickLinks = [
   { icon: CalendarClock, label: "Timetable", path: "/teacher/timetable", bgColor: "bg-emerald-100", iconColor: "text-emerald-600" },
   { icon: BookOpen, label: "Grade Entry", path: "/teacher/academic", bgColor: "bg-blue-100", iconColor: "text-blue-600" },
   { icon: Calendar, label: "Calendar", path: "/teacher/calendar", bgColor: "bg-amber-100", iconColor: "text-amber-600" },
-  { icon: BarChart3, label: "Class Analysis", path: "/teacher/academic", bgColor: "bg-purple-100", iconColor: "text-purple-600" },
+  { icon: BookMarked, label: "Handbook", path: "/teacher/handbook", bgColor: "bg-purple-100", iconColor: "text-purple-600" },
 ];
 
 export function TeacherQuickLinks() {
