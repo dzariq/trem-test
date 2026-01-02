@@ -649,7 +649,7 @@ export default function AcademicPage() {
               <TabsList className="grid w-full grid-cols-3 bg-muted/50">
                 <TabsTrigger value="grades">Grades</TabsTrigger>
                 <TabsTrigger value="behavior">Behavior</TabsTrigger>
-                <TabsTrigger value="cocurriculum">Activities</TabsTrigger>
+                <TabsTrigger value="cocurriculum">Achievements</TabsTrigger>
               </TabsList>
 
               <TabsContent value="grades" className="mt-4">
@@ -811,15 +811,43 @@ export default function AcademicPage() {
 
               <TabsContent value="cocurriculum" className="mt-4 space-y-3">
                 {academicData.coCurriculum.map((item, index) => (
-                  <div key={index} className="p-3 rounded-lg bg-accent/30 border border-border/50">
-                    <div className="flex items-start gap-3">
-                      <div className="p-2 rounded-full bg-primary/10">
-                        <Trophy className="h-5 w-5 text-primary" />
+                  <div 
+                    key={index} 
+                    className="relative p-4 rounded-xl border overflow-hidden"
+                    style={{ 
+                      background: 'linear-gradient(135deg, #fef3c7 0%, #fcd34d 50%, #f59e0b 100%)', 
+                      borderColor: 'rgba(251, 191, 36, 0.5)'
+                    }}
+                  >
+                    {/* Inner shine effect */}
+                    <div 
+                      className="absolute inset-0 pointer-events-none"
+                      style={{
+                        background: 'radial-gradient(ellipse at 30% 20%, rgba(255, 255, 255, 0.25) 0%, transparent 40%)',
+                      }}
+                    />
+                    {/* Trophy pattern decorations */}
+                    <div className="absolute top-2 right-2 opacity-15 pointer-events-none">
+                      <Trophy className="h-6 w-6 text-amber-800" />
+                    </div>
+                    <div className="absolute bottom-2 right-8 opacity-10 pointer-events-none">
+                      <Trophy className="h-4 w-4 text-amber-800" />
+                    </div>
+                    <div className="absolute top-1/2 right-4 -translate-y-1/2 opacity-8 pointer-events-none">
+                      <Trophy className="h-8 w-8 text-amber-800" />
+                    </div>
+                    
+                    <div className="relative flex items-start gap-3">
+                      <div 
+                        className="p-2.5 rounded-full flex-shrink-0"
+                        style={{ backgroundColor: 'rgba(180, 83, 9, 0.2)' }}
+                      >
+                        <Trophy className="h-5 w-5" style={{ color: '#92400e' }} />
                       </div>
                       <div>
-                        <h3 className="font-medium text-foreground">{item.activity}</h3>
-                        <p className="text-sm text-muted-foreground flex items-center gap-1 mt-1">
-                          <Award className="h-3 w-3" />
+                        <h3 className="font-semibold" style={{ color: '#78350f' }}>{item.activity}</h3>
+                        <p className="text-sm flex items-center gap-1.5 mt-1" style={{ color: '#92400e' }}>
+                          <Award className="h-3.5 w-3.5" />
                           {item.achievement}
                         </p>
                       </div>
