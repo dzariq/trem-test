@@ -2375,29 +2375,29 @@ export default function AcademicPage() {
                     <>
                       {/* Summary Cards */}
                       <div className="grid grid-cols-3 gap-2">
-                        <div className="p-3 rounded-lg bg-chart-1/10 border border-chart-1/30 text-center">
+                        <div className="p-3 rounded-xl text-center" style={{ backgroundColor: 'rgba(34, 197, 94, 0.15)', border: '1px solid rgba(34, 197, 94, 0.3)' }}>
                           <div className="flex items-center justify-center gap-1 mb-1">
-                            <CheckCircle2 className="h-5 w-5 text-chart-1" />
+                            <CheckCircle2 className="h-5 w-5" style={{ color: '#22c55e' }} />
                           </div>
                           <p className="text-xl font-bold text-foreground">{achievedCount}</p>
                           <p className="text-xs text-muted-foreground">Achieved</p>
-                          <p className="text-[9px] text-chart-1 mt-0.5">Met target</p>
+                          <p className="text-[9px] mt-0.5" style={{ color: '#16a34a' }}>Met target</p>
                         </div>
-                        <div className="p-3 rounded-lg bg-chart-2/10 border border-chart-2/30 text-center">
+                        <div className="p-3 rounded-xl text-center" style={{ backgroundColor: 'rgba(59, 130, 246, 0.15)', border: '1px solid rgba(59, 130, 246, 0.3)' }}>
                           <div className="flex items-center justify-center gap-1 mb-1">
-                            <Target className="h-5 w-5 text-chart-2" />
+                            <Target className="h-5 w-5" style={{ color: '#3b82f6' }} />
                           </div>
                           <p className="text-xl font-bold text-foreground">{onTrackCount}</p>
                           <p className="text-xs text-muted-foreground">On Track</p>
-                          <p className="text-[9px] text-chart-2 mt-0.5">≤30% to target</p>
+                          <p className="text-[9px] mt-0.5" style={{ color: '#2563eb' }}>≤30% to target</p>
                         </div>
-                        <div className="p-3 rounded-lg bg-chart-4/10 border border-chart-4/30 text-center">
+                        <div className="p-3 rounded-xl text-center" style={{ backgroundColor: 'rgba(249, 115, 22, 0.15)', border: '1px solid rgba(249, 115, 22, 0.3)' }}>
                           <div className="flex items-center justify-center gap-1 mb-1">
-                            <AlertTriangle className="h-5 w-5 text-chart-4" />
+                            <AlertTriangle className="h-5 w-5" style={{ color: '#f97316' }} />
                           </div>
                           <p className="text-xl font-bold text-foreground">{needsWorkCount}</p>
                           <p className="text-xs text-muted-foreground">Needs Focus</p>
-                          <p className="text-[9px] text-chart-4 mt-0.5">&gt;30% to target</p>
+                          <p className="text-[9px] mt-0.5" style={{ color: '#ea580c' }}>&gt;30% to target</p>
                         </div>
                       </div>
 
