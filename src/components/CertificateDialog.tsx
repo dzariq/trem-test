@@ -134,17 +134,17 @@ const SmallStar = ({ className, size = 12 }: { className?: string; size?: number
   </svg>
 );
 
-// Logo Pattern Background
-const LogoPattern = ({ className }: { className?: string }) => (
+// Single Large Logo Background
+const LargeLogoBackground = ({ className }: { className?: string }) => (
   <div 
-    className={`absolute inset-0 pointer-events-none ${className}`}
-    style={{
-      backgroundImage: `url(${schoolLogo})`,
-      backgroundSize: '60px 60px',
-      backgroundRepeat: 'repeat',
-      opacity: 0.03,
-    }}
-  />
+    className={`absolute inset-0 pointer-events-none flex items-center justify-center ${className}`}
+  >
+    <img 
+      src={schoolLogo} 
+      alt="" 
+      className="w-48 h-48 sm:w-64 sm:h-64 object-contain opacity-[0.06]"
+    />
+  </div>
 );
 
 export function CertificateDialog({
@@ -186,8 +186,8 @@ export function CertificateDialog({
             boxShadow: '0 25px 60px -12px rgba(0, 0, 0, 0.6)',
           }}
         >
-          {/* Logo Pattern Background */}
-          <LogoPattern />
+            {/* Single Large Logo Background */}
+            <LargeLogoBackground />
 
           {/* Top Geometric Layers - Green tones */}
           <div className="absolute top-0 left-0 right-0 z-[1]">
@@ -258,26 +258,26 @@ export function CertificateDialog({
               </p>
             </div>
 
-            {/* V-Shaped Gold Ribbon with Star Seal on top */}
+            {/* V-Shaped Gold Ribbon */}
             <div className="relative w-[140%] -mx-[20%] mt-4">
               <VRibbon className="w-full h-14 sm:h-16" />
-              {/* Star Seal centered on the ribbon */}
-              <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
-                <StarSeal />
-              </div>
             </div>
 
-            {/* Spacer for the seal */}
-            <div className="h-12 sm:h-14" />
+            {/* Star Seal - positioned between Achievement and Proudly Presented */}
+            <div className="mt-3 sm:mt-4">
+              <StarSeal />
+            </div>
+
+            {/* Proudly Presented - closer to the seal */}
+            <p 
+              className="text-xs sm:text-sm uppercase tracking-[0.2em] font-medium mt-2"
+              style={{ color: '#d4a537' }}
+            >
+              Proudly Presented To
+            </p>
 
             {/* Main Content */}
             <div className="flex flex-col items-center gap-1 sm:gap-2 flex-1 justify-center">
-              <p 
-                className="text-xs sm:text-sm uppercase tracking-[0.2em] font-medium"
-                style={{ color: '#d4a537' }}
-              >
-                Proudly Presented To
-              </p>
               
               {/* Student Name */}
               <h3 
