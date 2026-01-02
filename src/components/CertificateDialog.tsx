@@ -142,7 +142,7 @@ const LargeLogoBackground = ({ className }: { className?: string }) => (
     <img 
       src={schoolLogo} 
       alt="" 
-      className="absolute -right-16 -bottom-16 w-[280px] h-[280px] sm:w-[360px] sm:h-[360px] object-contain opacity-[0.06]"
+      className="absolute -right-24 -bottom-24 w-[400px] h-[400px] sm:w-[480px] sm:h-[480px] object-contain opacity-[0.10]"
     />
   </div>
 );
@@ -262,7 +262,7 @@ export function CertificateDialog({
             <div className="relative w-[140%] -mx-[20%] mt-4">
               <VRibbon className="w-full h-14 sm:h-16" />
               {/* Star Seal positioned at the V-point of the ribbon */}
-              <div className="absolute left-1/2 -translate-x-1/2 top-[85%]">
+              <div className="absolute left-1/2 -translate-x-1/2 top-[65%]">
                 <StarSeal />
               </div>
             </div>
