@@ -218,10 +218,11 @@ export default function AcademicPage() {
       .map(s => ({
         name: s.name,
         score: getScore(s, selectedYear, examType) ?? 0,
-        classAvg: classAverages[selectedYear]?.[examType] ?? 0
+        classAvg: classAverages[selectedYear]?.[examType] ?? 0,
+        goal: goals[s.name] ?? 80
       }))
       .sort((a, b) => b.score - a.score);
-  }, [selectedYear, examType]);
+  }, [selectedYear, examType, goals]);
 
   // Grade distribution
   const gradeDistribution = useMemo(() => {
@@ -363,6 +364,16 @@ export default function AcademicPage() {
     };
   }, [trendData, subjectFilter]);
 
+  // Calculate goal reference line value for trends chart
+  const trendGoalValue = useMemo(() => {
+    if (subjectFilter === "all") {
+      // Average of all goals
+      const goalValues = Object.values(goals);
+      return goalValues.length > 0 ? Math.round(goalValues.reduce((a, b) => a + b, 0) / goalValues.length) : 80;
+    }
+    return goals[subjectFilter] ?? 80;
+  }, [subjectFilter, goals]);
+
   // Category trend data
   const categoryTrendData = useMemo(() => {
     const years: YearKey[] = ["2023", "2024", "2025"];
@@ -454,10 +465,11 @@ export default function AcademicPage() {
           examA: scoreA,
           examB: scoreB,
           delta,
-          improved: delta > 0
+          improved: delta > 0,
+          goal: goals[s.name] ?? 80
         };
       });
-  }, [compareExamA, compareExamB, compareSubjects]);
+  }, [compareExamA, compareExamB, compareSubjects, goals]);
 
   // Category comparison - filtered by selected subjects
   const categoryComparison = useMemo(() => {
@@ -860,10 +872,16 @@ export default function AcademicPage() {
                   </div>
                 </div>
 
-                {/* Subject Performance Bar Chart */}
+                {/* Subject Performance Bar Chart with Goal Markers */}
                 <div className="space-y-2">
-                  <h4 className="text-sm font-medium text-foreground">Subject Performance</h4>
-                  <div className="h-44">
+                  <h4 className="text-sm font-medium text-foreground flex items-center gap-2">
+                    Subject Performance
+                    <Badge variant="outline" className="text-[10px] px-1.5 py-0">
+                      <span className="w-2 h-2 rounded-full mr-1" style={{ backgroundColor: '#000000' }} />
+                      Goal
+                    </Badge>
+                  </h4>
+                  <div className="h-52">
                     <ResponsiveContainer width="100%" height="100%">
                       <BarChart data={subjectPerformance} layout="vertical">
                         <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" strokeOpacity={0.3} />
@@ -871,13 +889,17 @@ export default function AcademicPage() {
                         <YAxis type="category" dataKey="name" tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }} width={70} />
                         <Tooltip 
                           contentStyle={{ backgroundColor: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: "8px" }}
-                          formatter={(value: number) => [`${value}%`, "Score"]}
+                          formatter={(value: number, name: string) => [
+                            `${value}%`, 
+                            name === "score" ? "Score" : name === "goal" ? "Goal" : name
+                          ]}
                         />
                         <Bar dataKey="score" radius={[0, 4, 4, 0]}>
                           {subjectPerformance.map((entry, index) => (
                             <Cell key={index} fill={lineColors[index % lineColors.length]} />
                           ))}
                         </Bar>
+                        <Bar dataKey="goal" fill="#000000" radius={[0, 4, 4, 0]} barSize={4} />
                       </BarChart>
                     </ResponsiveContainer>
                   </div>
@@ -1223,6 +1245,13 @@ export default function AcademicPage() {
                             strokeDasharray="5 5" 
                             strokeOpacity={0.6}
                             label={{ value: "A", fontSize: 9, fill: "#22c55e" }}
+                          />
+                          <ReferenceLine 
+                            y={trendGoalValue} 
+                            stroke="#000000" 
+                            strokeDasharray="4 4" 
+                            strokeWidth={2}
+                            label={{ value: `Goal ${trendGoalValue}%`, fontSize: 9, fill: "#000000", position: "right" }}
                           />
                           {subjectFilter === "all" ? (
                             <Area
@@ -1816,6 +1845,11 @@ export default function AcademicPage() {
                                   className="h-full bg-blue-500 rounded-full transition-all duration-500"
                                   style={{ width: `${(item.examB / 100) * 100}%` }}
                                 />
+                                {/* Goal marker line */}
+                                <div 
+                                  className="absolute top-0 h-full w-0.5 bg-black"
+                                  style={{ left: `${item.goal}%` }}
+                                />
                                 <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] font-bold text-foreground">
                                   {item.examB}
                                 </span>
@@ -1830,8 +1864,27 @@ export default function AcademicPage() {
                                   className="h-full bg-orange-500 rounded-full transition-all duration-500"
                                   style={{ width: `${(item.examA / 100) * 100}%` }}
                                 />
+                                {/* Goal marker line */}
+                                <div 
+                                  className="absolute top-0 h-full w-0.5 bg-black"
+                                  style={{ left: `${item.goal}%` }}
+                                />
                                 <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] font-bold text-foreground">
                                   {item.examA}
+                                </span>
+                              </div>
+                            </div>
+
+                            {/* Goal Row - Black */}
+                            <div className="flex items-center gap-2">
+                              <span className="text-[10px] text-muted-foreground w-16 truncate font-medium">Goal</span>
+                              <div className="flex-1 h-3 bg-muted/30 rounded-full overflow-hidden relative">
+                                <div 
+                                  className="h-full bg-black rounded-full transition-all duration-500"
+                                  style={{ width: `${(item.goal / 100) * 100}%` }}
+                                />
+                                <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[9px] font-bold text-foreground">
+                                  {item.goal}
                                 </span>
                               </div>
                             </div>
