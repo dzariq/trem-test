@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useRef, useCallback } from "react";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { AppHeader } from "@/components/layout/AppHeader";
 import { academicData, classAverages, students } from "@/data/mockData";
@@ -77,6 +77,45 @@ export default function AcademicPage() {
   const [trendPeriod, setTrendPeriod] = useState<"1year" | "2years" | "3years" | "all">("all");
   const [reportGenerated, setReportGenerated] = useState(false);
   const [expandedSubject, setExpandedSubject] = useState<string | null>(null);
+  
+  // Pinch-to-zoom state for chart
+  const [chartZoom, setChartZoom] = useState(1);
+  const chartContainerRef = useRef<HTMLDivElement>(null);
+  const lastTouchDistance = useRef<number | null>(null);
+
+  const handleTouchStart = useCallback((e: React.TouchEvent) => {
+    if (e.touches.length === 2) {
+      const touch1 = e.touches[0];
+      const touch2 = e.touches[1];
+      lastTouchDistance.current = Math.hypot(
+        touch2.clientX - touch1.clientX,
+        touch2.clientY - touch1.clientY
+      );
+    }
+  }, []);
+
+  const handleTouchMove = useCallback((e: React.TouchEvent) => {
+    if (e.touches.length === 2 && lastTouchDistance.current !== null) {
+      const touch1 = e.touches[0];
+      const touch2 = e.touches[1];
+      const currentDistance = Math.hypot(
+        touch2.clientX - touch1.clientX,
+        touch2.clientY - touch1.clientY
+      );
+      
+      const scale = currentDistance / lastTouchDistance.current;
+      setChartZoom(prev => Math.min(3, Math.max(0.5, prev * scale)));
+      lastTouchDistance.current = currentDistance;
+    }
+  }, []);
+
+  const handleTouchEnd = useCallback(() => {
+    lastTouchDistance.current = null;
+  }, []);
+
+  const resetZoom = useCallback(() => {
+    setChartZoom(1);
+  }, []);
   
   // Grade Analysis sub-tabs
   const [analysisTab, setAnalysisTab] = useState("overview");
@@ -973,20 +1012,42 @@ export default function AcademicPage() {
                   ))}
                 </div>
 
-                {/* Moomoo-Style Gradient Area Chart - Scrollable with Touch Gestures */}
+                {/* Moomoo-Style Gradient Area Chart - Scrollable with Pinch-to-Zoom */}
                 <div className="space-y-2">
                   <div className="flex items-center justify-between">
-                    <p className="text-[10px] text-muted-foreground">← Swipe to see more data →</p>
-                    <p className="text-[10px] text-muted-foreground">{trendData.length} periods</p>
+                    <p className="text-[10px] text-muted-foreground">← Swipe • Pinch to zoom →</p>
+                    <div className="flex items-center gap-2">
+                      {chartZoom !== 1 && (
+                        <button 
+                          onClick={resetZoom}
+                          className="text-[10px] text-primary underline"
+                        >
+                          Reset zoom
+                        </button>
+                      )}
+                      <p className="text-[10px] text-muted-foreground">
+                        {chartZoom !== 1 ? `${Math.round(chartZoom * 100)}%` : `${trendData.length} periods`}
+                      </p>
+                    </div>
                   </div>
                   <div 
-                    className="h-64 overflow-x-auto overflow-y-hidden scrollbar-thin scrollbar-thumb-muted scrollbar-track-transparent touch-pan-x"
+                    ref={chartContainerRef}
+                    className="h-64 overflow-x-auto overflow-y-hidden scrollbar-thin scrollbar-thumb-muted scrollbar-track-transparent"
                     style={{
                       WebkitOverflowScrolling: 'touch',
                       scrollBehavior: 'smooth',
+                      touchAction: 'pan-x pinch-zoom',
                     }}
+                    onTouchStart={handleTouchStart}
+                    onTouchMove={handleTouchMove}
+                    onTouchEnd={handleTouchEnd}
                   >
-                    <div style={{ width: Math.max(100, (trendData.length / 4) * 100) + '%', minWidth: '100%', height: '100%' }}>
+                    <div style={{ 
+                      width: Math.max(100, (trendData.length / 4) * 100 * chartZoom) + '%', 
+                      minWidth: '100%', 
+                      height: '100%',
+                      transition: 'width 0.1s ease-out'
+                    }}>
                       <ResponsiveContainer width="100%" height="100%">
                         <AreaChart data={trendData} margin={{ top: 10, right: 20, left: 0, bottom: 20 }}>
                           <defs>
