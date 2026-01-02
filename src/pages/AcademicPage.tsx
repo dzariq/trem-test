@@ -812,11 +812,11 @@ export default function AcademicPage() {
                 <div className="grid grid-cols-2 gap-3">
                   {academicData.behavior.map((item, index) => {
                     const gradeConfig = {
-                      A: { label: "Excellent", bg: "bg-emerald-50", border: "border-emerald-200", text: "text-emerald-700", badgeBg: "bg-emerald-500" },
-                      B: { label: "Good", bg: "bg-blue-50", border: "border-blue-200", text: "text-blue-700", badgeBg: "bg-blue-500" },
-                      C: { label: "Average", bg: "bg-amber-50", border: "border-amber-200", text: "text-amber-700", badgeBg: "bg-amber-500" },
-                      D: { label: "Needs Work", bg: "bg-orange-50", border: "border-orange-200", text: "text-orange-700", badgeBg: "bg-orange-500" },
-                      E: { label: "Poor", bg: "bg-red-50", border: "border-red-200", text: "text-red-700", badgeBg: "bg-red-500" }
+                      A: { label: "Excellent", bg: "bg-emerald-50", border: "border-emerald-200", text: "text-emerald-700", watermark: "text-emerald-200" },
+                      B: { label: "Good", bg: "bg-blue-50", border: "border-blue-200", text: "text-blue-700", watermark: "text-blue-200" },
+                      C: { label: "Average", bg: "bg-amber-50", border: "border-amber-200", text: "text-amber-700", watermark: "text-amber-200" },
+                      D: { label: "Needs Work", bg: "bg-orange-50", border: "border-orange-200", text: "text-orange-700", watermark: "text-orange-200" },
+                      E: { label: "Poor", bg: "bg-red-50", border: "border-red-200", text: "text-red-700", watermark: "text-red-200" }
                     };
                     const config = gradeConfig[item.grade as keyof typeof gradeConfig] || gradeConfig.C;
                     
@@ -835,13 +835,14 @@ export default function AcademicPage() {
                     };
                     
                     return (
-                      <Card key={index} className={`${config.bg} ${config.border}`}>
-                        <CardContent className="p-3">
-                          <div className="flex items-center justify-between mb-2">
-                            <span className={`text-xs font-semibold uppercase ${config.text}`}>{item.category}</span>
-                            <Badge className={`${config.badgeBg} text-white text-xs`}>{item.grade}</Badge>
-                          </div>
-                          <p className="text-xs text-muted-foreground">{getSmartDescription(item.category, item.grade)}</p>
+                      <Card key={index} className={`${config.bg} ${config.border} overflow-hidden relative`}>
+                        {/* Oversized watermark grade letter */}
+                        <div className={`absolute -right-3 -bottom-4 text-[5rem] font-black leading-none ${config.watermark} select-none pointer-events-none`}>
+                          {item.grade}
+                        </div>
+                        <CardContent className="p-3 relative z-10">
+                          <span className={`text-xs font-semibold uppercase ${config.text}`}>{item.category}</span>
+                          <p className="text-xs text-muted-foreground mt-2">{getSmartDescription(item.category, item.grade)}</p>
                         </CardContent>
                       </Card>
                     );
