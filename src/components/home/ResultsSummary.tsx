@@ -1,9 +1,9 @@
 import { useState, useMemo } from "react";
-import { academicData } from "@/data/mockData";
+import { academicData, attendanceData } from "@/data/mockData";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ChevronRight, TrendingUp, Award, BookOpen } from "lucide-react";
+import { ChevronRight, TrendingUp, Award, BookOpen, Calendar, Target, AlertTriangle } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import {
   BarChart,
@@ -90,6 +90,33 @@ export function ResultsSummary() {
     return currentScore > bestScore ? s : best;
   });
 
+  // Find weakest subject based on current mid-year scores
+  const weakestSubject = academicData.subjects.reduce((worst, s) => {
+    const currentScore = getScore(s, "2025", "midYear") ?? 100;
+    const worstScore = getScore(worst, "2025", "midYear") ?? 100;
+    return currentScore < worstScore ? s : worst;
+  });
+  const weakestScore = getScore(weakestSubject, "2025", "midYear") ?? 0;
+
+  // Calculate attendance rate from all months
+  const totalAttendance = attendanceData.monthly.reduce(
+    (acc, month) => ({
+      present: acc.present + month.present,
+      absent: acc.absent + month.absent,
+      late: acc.late + month.late,
+      excused: acc.excused + month.excused,
+    }),
+    { present: 0, absent: 0, late: 0, excused: 0 }
+  );
+  const totalDays = totalAttendance.present + totalAttendance.absent + totalAttendance.late + totalAttendance.excused;
+  const attendanceRate = totalDays > 0 ? Math.round((totalAttendance.present / totalDays) * 100) : 0;
+
+  // Calculate subjects passing (score >= 50)
+  const passingSubjects = academicData.subjects.filter(s => (getScore(s, "2025", "midYear") ?? 0) >= 50);
+  const passingCount = passingSubjects.length;
+  const totalSubjects = academicData.subjects.length;
+  const passingPercentage = Math.round((passingCount / totalSubjects) * 100);
+
   // Performance level based on average
   const getPerformanceLevel = (avg: number) => {
     if (avg >= 80) return "Above Average";
@@ -135,6 +162,27 @@ export function ResultsSummary() {
       value: improvementText,
       subtext: improvementPoints >= 0 ? "Improved" : "Declined",
       color: improvementPoints >= 0 ? "text-chart-3" : "text-destructive" 
+    },
+    { 
+      icon: Calendar, 
+      label: "Attendance", 
+      value: `${attendanceRate}%`,
+      subtext: "This Term",
+      color: "text-chart-4" 
+    },
+    { 
+      icon: Target, 
+      label: "Passing", 
+      value: `${passingCount}/${totalSubjects}`,
+      subtext: `${passingPercentage}%`,
+      color: "text-chart-5" 
+    },
+    { 
+      icon: AlertTriangle, 
+      label: "Needs Focus", 
+      value: shortenSubjectName(weakestSubject.name),
+      subtext: `${weakestScore}%`,
+      color: "text-destructive" 
     },
   ];
 
