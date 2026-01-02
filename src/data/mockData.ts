@@ -591,7 +591,7 @@ export const studentProfile = {
 
 export const students = [
   {
-    id: "STU-2024-001",
+    id: "GL-2025-001",
     name: "Emma Johnson",
     grade: "Grade 5",
     class: "5A",
@@ -599,7 +599,7 @@ export const students = [
     subjects: ["English", "Mathematics", "Science", "History", "Art"]
   },
   {
-    id: "STU-2024-002",
+    id: "GL-2025-002",
     name: "Lucas Johnson",
     grade: "Grade 3",
     class: "3B",
@@ -607,7 +607,7 @@ export const students = [
     subjects: ["English", "Mathematics", "Science", "Music", "Physical Education"]
   },
   {
-    id: "STU-2024-003",
+    id: "GL-2025-003",
     name: "Sophia Johnson",
     grade: "Grade 1",
     class: "1A",
@@ -615,7 +615,7 @@ export const students = [
     subjects: ["English", "Mathematics", "Art", "Music"]
   },
   {
-    id: "STU-2024-004",
+    id: "GL-2025-004",
     name: "Oliver Johnson",
     grade: "Grade 4",
     class: "4B",
@@ -623,7 +623,7 @@ export const students = [
     subjects: ["English", "Mathematics", "Science", "Geography", "Music"]
   },
   {
-    id: "STU-2024-005",
+    id: "GL-2025-005",
     name: "Mia Johnson",
     grade: "Grade 2",
     class: "2A",
