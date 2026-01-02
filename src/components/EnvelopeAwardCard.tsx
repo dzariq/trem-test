@@ -5,6 +5,7 @@ interface EnvelopeAwardCardProps {
   categoryColor: { bg: string; text: string };
   organization: string;
   role: string;
+  year?: string;
   onClick: () => void;
 }
 
@@ -13,6 +14,7 @@ export function EnvelopeAwardCard({
   categoryColor,
   organization,
   role,
+  year = "2025",
   onClick,
 }: EnvelopeAwardCardProps) {
   return (
@@ -63,12 +65,21 @@ export function EnvelopeAwardCard({
         {/* Shine effect */}
         <div className="absolute inset-0 pointer-events-none rounded-xl" style={{ background: 'radial-gradient(ellipse at 20% 30%, rgba(255, 255, 255, 0.3) 0%, transparent 40%)' }} />
         
-        {/* Decorative trophy watermarks */}
+        {/* Decorative trophy watermark */}
         <div className="absolute top-8 right-2 opacity-[0.15] pointer-events-none rotate-[-8deg]">
           <Trophy className="h-14 w-14 text-amber-700" strokeWidth={1} />
         </div>
-        <div className="absolute -bottom-2 right-16 opacity-[0.12] pointer-events-none rotate-[10deg]">
-          <Trophy className="h-11 w-11 text-amber-700" strokeWidth={1} />
+
+        {/* Year display on right side */}
+        <div 
+          className="absolute bottom-3 right-3 text-2xl font-bold pointer-events-none"
+          style={{ 
+            color: 'rgba(120, 53, 15, 0.25)',
+            fontFamily: 'Georgia, serif',
+            letterSpacing: '0.05em'
+          }}
+        >
+          {year}
         </div>
 
         {/* Content */}
