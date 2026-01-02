@@ -7,7 +7,8 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Progress } from "@/components/ui/progress";
-import { Download, FileText, Award, Trophy, BookOpen, TrendingUp, TrendingDown, Check, ArrowUp, ArrowDown, Minus, BarChart3, GitCompare, Target, AlertTriangle, Star, Goal, CheckCircle2, Circle, Edit2 } from "lucide-react";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { Download, FileText, Award, Trophy, BookOpen, TrendingUp, TrendingDown, Check, ArrowUp, ArrowDown, Minus, BarChart3, GitCompare, Target, AlertTriangle, Star, Goal, CheckCircle2, Circle, Edit2, ChevronDown, MessageSquare } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import schoolLogo from "@/assets/school-badge.png";
 import {
@@ -413,21 +414,39 @@ export default function AcademicPage() {
                     const isPending = score === null || score === undefined;
                     
                     return (
-                      <div key={index} className="flex flex-col p-3 rounded-lg bg-accent/30 border border-border/50">
-                        <div className="flex items-center justify-between mb-1">
-                          <h3 className="font-medium text-foreground text-sm">{subject.name}</h3>
-                          {isPending ? (
-                            <Badge variant="outline" className="text-muted-foreground text-xs">--</Badge>
-                          ) : (
-                            <Badge className={`${gradeColors[getGradeFromScore(score!)[0]] || gradeColors.C} text-xs`}>
-                              {getGradeFromScore(score!)}
-                            </Badge>
-                          )}
-                        </div>
-                        <p className="text-lg font-semibold text-foreground">
-                          {isPending ? "Pending" : `${score}%`}
-                        </p>
-                      </div>
+                      <Collapsible key={index}>
+                        <CollapsibleTrigger className="w-full text-left">
+                          <div className="flex flex-col p-3 rounded-lg bg-accent/30 border border-border/50 hover:bg-accent/50 transition-colors cursor-pointer">
+                            <div className="flex items-center justify-between mb-1">
+                              <h3 className="font-medium text-foreground text-sm">{subject.name}</h3>
+                              <div className="flex items-center gap-1">
+                                {isPending ? (
+                                  <Badge variant="outline" className="text-muted-foreground text-xs">--</Badge>
+                                ) : (
+                                  <Badge className={`${gradeColors[getGradeFromScore(score!)[0]] || gradeColors.C} text-xs`}>
+                                    {getGradeFromScore(score!)}
+                                  </Badge>
+                                )}
+                                <ChevronDown className="h-3 w-3 text-muted-foreground transition-transform duration-200 group-data-[state=open]:rotate-180" />
+                              </div>
+                            </div>
+                            <p className="text-lg font-semibold text-foreground">
+                              {isPending ? "Pending" : `${score}%`}
+                            </p>
+                          </div>
+                        </CollapsibleTrigger>
+                        <CollapsibleContent>
+                          <div className="px-3 py-2 mt-1 rounded-lg bg-muted/50 border border-border/30">
+                            <div className="flex items-start gap-2">
+                              <MessageSquare className="h-4 w-4 text-primary mt-0.5 shrink-0" />
+                              <div>
+                                <p className="text-xs font-medium text-muted-foreground mb-1">Teacher's Comment</p>
+                                <p className="text-sm text-foreground">{subject.teacherComment}</p>
+                              </div>
+                            </div>
+                          </div>
+                        </CollapsibleContent>
+                      </Collapsible>
                     );
                   })}
                 </div>
