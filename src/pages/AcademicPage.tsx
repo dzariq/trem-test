@@ -163,16 +163,21 @@ export default function AcademicPage() {
     return Object.entries(grades).map(([grade, count]) => ({ grade, count })).filter(g => g.count > 0);
   }, [selectedYear, examType]);
 
-  // Top 3 and Bottom 3 subjects
-  const { top3, bottom3 } = useMemo(() => {
+  // Top 3 and Bottom 3 subjects (bottom only includes scores below 50%)
+  const { top3, needsAttention } = useMemo(() => {
     const sorted = [...academicData.subjects].sort((a, b) => {
       const scoreA = getScore(a, selectedYear, examType) ?? 0;
       const scoreB = getScore(b, selectedYear, examType) ?? 0;
       return scoreB - scoreA;
     });
+    // Filter subjects below 50% and take lowest 3
+    const below50 = sorted
+      .filter((s) => (getScore(s, selectedYear, examType) ?? 0) < 50)
+      .reverse()
+      .slice(0, 3);
     return {
       top3: sorted.slice(0, 3),
-      bottom3: sorted.slice(-3).reverse()
+      needsAttention: below50
     };
   }, [selectedYear, examType]);
 
@@ -542,28 +547,30 @@ export default function AcademicPage() {
                     </div>
                   </div>
 
-                  {/* Bottom 3 */}
-                  <div className="space-y-2">
-                    <h4 className="text-sm font-medium text-foreground flex items-center gap-1.5">
-                      <AlertTriangle className="h-4 w-4" style={{ color: '#ef4444' }} /> Needs Attention
-                    </h4>
+                  {/* Needs Attention - only subjects below 50% */}
+                  {needsAttention.length > 0 && (
                     <div className="space-y-2">
-                      {bottom3.map((s, index) => {
-                        const score = getScore(s, selectedYear, examType);
-                        return (
-                          <div key={s.name} className="flex items-center gap-2 p-2.5 rounded-lg border" style={{ backgroundColor: 'rgba(254, 202, 202, 0.3)', borderColor: 'rgba(248, 113, 113, 0.3)' }}>
-                            <span className="w-6 h-6 shrink-0 rounded-full flex items-center justify-center text-xs font-bold" style={{ backgroundColor: 'rgba(254, 202, 202, 0.5)', color: '#dc2626' }}>
-                              {index + 1}
-                            </span>
-                            <div className="flex flex-col min-w-0">
-                              <span className="text-sm font-medium text-foreground">{shortenSubjectName(s.name)}</span>
-                              <Badge className="text-xs font-semibold w-fit mt-0.5 text-white" style={{ backgroundColor: '#f87171' }}>{score}%</Badge>
+                      <h4 className="text-sm font-medium text-foreground flex items-center gap-1.5">
+                        <AlertTriangle className="h-4 w-4" style={{ color: '#ef4444' }} /> Needs Attention
+                      </h4>
+                      <div className="space-y-2">
+                        {needsAttention.map((s, index) => {
+                          const score = getScore(s, selectedYear, examType);
+                          return (
+                            <div key={s.name} className="flex items-center gap-2 p-2.5 rounded-lg border" style={{ backgroundColor: 'rgba(254, 202, 202, 0.3)', borderColor: 'rgba(248, 113, 113, 0.3)' }}>
+                              <span className="w-6 h-6 shrink-0 rounded-full flex items-center justify-center text-xs font-bold" style={{ backgroundColor: 'rgba(254, 202, 202, 0.5)', color: '#dc2626' }}>
+                                {index + 1}
+                              </span>
+                              <div className="flex flex-col min-w-0">
+                                <span className="text-sm font-medium text-foreground">{shortenSubjectName(s.name)}</span>
+                                <Badge className="text-xs font-semibold w-fit mt-0.5 text-white" style={{ backgroundColor: '#f87171' }}>{score}%</Badge>
+                              </div>
                             </div>
-                          </div>
-                        );
-                      })}
+                          );
+                        })}
+                      </div>
                     </div>
-                  </div>
+                  )}
                 </div>
 
                 {/* Rising Stars */}
