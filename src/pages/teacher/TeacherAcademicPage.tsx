@@ -1120,38 +1120,31 @@ export default function TeacherAcademicPage() {
                   </div>
                 )}
 
-                {/* Grade Distribution Pie + Stats Grid */}
+                {/* Grade Distribution Cards + Stats Grid */}
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <h4 className="text-sm font-medium text-foreground">Grade Distribution</h4>
-                    <div className="h-28">
-                      <ResponsiveContainer width="100%" height="100%">
-                        <PieChart>
-                          <Pie
-                            data={gradeDistribution.filter(d => d.count > 0)}
-                            dataKey="count"
-                            nameKey="range"
-                            cx="50%"
-                            cy="50%"
-                            innerRadius={25}
-                            outerRadius={45}
-                            paddingAngle={2}
+                    <div className="grid grid-cols-5 gap-1.5">
+                      {gradeDistribution.map((g) => {
+                        const total = gradeDistribution.reduce((sum, d) => sum + d.count, 0);
+                        const percentage = total > 0 ? Math.round((g.count / total) * 100) : 0;
+                        return (
+                          <div 
+                            key={g.range} 
+                            className="flex flex-col items-center p-2 rounded-lg border border-border/50"
+                            style={{ backgroundColor: `${GRADE_COLORS[g.range as keyof typeof GRADE_COLORS]}15` }}
                           >
-                            {gradeDistribution.filter(d => d.count > 0).map((entry) => (
-                              <Cell key={entry.range} fill={GRADE_COLORS[entry.range as keyof typeof GRADE_COLORS]} />
-                            ))}
-                          </Pie>
-                          <Tooltip formatter={(value: number) => [value, 'Students']} />
-                        </PieChart>
-                      </ResponsiveContainer>
-                    </div>
-                    <div className="flex flex-wrap gap-1 justify-center">
-                      {gradeDistribution.filter(d => d.count > 0).map((g) => (
-                        <Badge key={g.range} variant="outline" className="text-[10px] px-1.5 py-0">
-                          <span className="w-2 h-2 rounded-full mr-1" style={{ backgroundColor: GRADE_COLORS[g.range as keyof typeof GRADE_COLORS] }} />
-                          {g.range}: {g.count}
-                        </Badge>
-                      ))}
+                            <span 
+                              className="text-sm font-bold"
+                              style={{ color: GRADE_COLORS[g.range as keyof typeof GRADE_COLORS] }}
+                            >
+                              {g.range}
+                            </span>
+                            <span className="text-lg font-semibold text-foreground">{g.count}</span>
+                            <span className="text-[10px] text-muted-foreground">{percentage}%</span>
+                          </div>
+                        );
+                      })}
                     </div>
                   </div>
 
