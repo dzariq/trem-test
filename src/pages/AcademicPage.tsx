@@ -1459,35 +1459,29 @@ export default function AcademicPage() {
                           
                           {/* Visual Bars */}
                           <div className="space-y-1.5">
-                            {/* Exam B (Previous) */}
+                            {/* Exam B (Previous) - Blue */}
                             <div className="flex items-center gap-2">
                               <span className="text-[10px] text-muted-foreground w-16 truncate">{getExamLabelForComparison(compareExamB).split(' ')[0]}</span>
-                              <div className="flex-1 h-4 bg-muted/30 rounded-full overflow-hidden relative">
+                              <div className="flex-1 h-5 bg-muted/30 rounded-full overflow-hidden relative">
                                 <div 
-                                  className="h-full bg-chart-2/60 rounded-full transition-all duration-500"
+                                  className="h-full bg-blue-500 rounded-full transition-all duration-500"
                                   style={{ width: `${(item.examB / 100) * 100}%` }}
                                 />
-                                <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] font-medium text-foreground">
+                                <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] font-bold text-foreground">
                                   {item.examB}
                                 </span>
                               </div>
                             </div>
                             
-                            {/* Exam A (Current) */}
+                            {/* Exam A (Current) - Orange */}
                             <div className="flex items-center gap-2">
                               <span className="text-[10px] text-muted-foreground w-16 truncate">{getExamLabelForComparison(compareExamA).split(' ')[0]}</span>
-                              <div className="flex-1 h-4 bg-muted/30 rounded-full overflow-hidden relative">
+                              <div className="flex-1 h-5 bg-muted/30 rounded-full overflow-hidden relative">
                                 <div 
-                                  className={`h-full rounded-full transition-all duration-500 ${
-                                    item.delta > 0 
-                                      ? "bg-emerald-500/70" 
-                                      : item.delta < 0 
-                                      ? "bg-red-500/70" 
-                                      : "bg-chart-1/60"
-                                  }`}
+                                  className="h-full bg-orange-500 rounded-full transition-all duration-500"
                                   style={{ width: `${(item.examA / 100) * 100}%` }}
                                 />
-                                <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] font-medium text-foreground">
+                                <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] font-bold text-foreground">
                                   {item.examA}
                                 </span>
                               </div>
