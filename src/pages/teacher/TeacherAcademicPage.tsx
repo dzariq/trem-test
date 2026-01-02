@@ -13,7 +13,8 @@ import {
   Save, TrendingUp, TrendingDown, Minus, ChevronDown, ChevronUp, 
   Users, Target, Award, AlertTriangle, BookOpen, BarChart3,
   FileText, CheckCircle, XCircle, Lightbulb, Copy, Printer,
-  ArrowRight, ArrowUpRight, ArrowDownRight, Scale, Download, FileSpreadsheet, Check
+  ArrowRight, ArrowUpRight, ArrowDownRight, Scale, Download, FileSpreadsheet, Check,
+  Calendar
 } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import schoolLogo from "@/assets/school-badge.png";
@@ -951,7 +952,67 @@ export default function TeacherAcademicPage() {
                   </div>
                 </div>
 
-                {/* Top 3 Performers & Subjects Needing Focus */}
+                {/* Stats Cards Grid */}
+                <div className="grid grid-cols-3 gap-2">
+                  {/* Average */}
+                  <div className="flex flex-col items-center text-center p-3 rounded-xl" style={{ backgroundColor: 'rgba(59, 130, 246, 0.1)' }}>
+                    <BookOpen className="h-5 w-5 mb-1.5" style={{ color: '#3b82f6' }} />
+                    <span className="text-lg font-bold text-foreground">
+                      {classAverage}%
+                    </span>
+                    <span className="text-[10px] text-muted-foreground leading-tight">Average</span>
+                    <span className="text-[9px] text-muted-foreground/70">Class Average</span>
+                  </div>
+                  
+                  {/* Best Subject */}
+                  <div className="flex flex-col items-center text-center p-3 rounded-xl" style={{ backgroundColor: 'rgba(251, 191, 36, 0.1)' }}>
+                    <Award className="h-5 w-5 mb-1.5" style={{ color: '#f59e0b' }} />
+                    <span className="text-lg font-bold text-foreground">
+                      {subjectAverages[0]?.name || 'N/A'}
+                    </span>
+                    <span className="text-[10px] text-muted-foreground leading-tight">Best Subject</span>
+                    <span className="text-[9px] text-muted-foreground/70">{subjectAverages[0]?.average.toFixed(0) || 0}%</span>
+                  </div>
+                  
+                  {/* Improvement */}
+                  <div className="flex flex-col items-center text-center p-3 rounded-xl" style={{ backgroundColor: 'rgba(34, 197, 94, 0.1)' }}>
+                    <TrendingUp className="h-5 w-5 mb-1.5" style={{ color: '#22c55e' }} />
+                    <span className="text-lg font-bold text-foreground">
+                      {risingSubjects[0]?.improvement ? `+${risingSubjects[0].improvement}%` : '+0%'}
+                    </span>
+                    <span className="text-[10px] text-muted-foreground leading-tight">Improvement</span>
+                    <span className="text-[9px] text-muted-foreground/70">Top Growth</span>
+                  </div>
+                  
+                  {/* Students */}
+                  <div className="flex flex-col items-center text-center p-3 rounded-xl" style={{ backgroundColor: 'rgba(168, 85, 247, 0.1)' }}>
+                    <Users className="h-5 w-5 mb-1.5" style={{ color: '#a855f7' }} />
+                    <span className="text-lg font-bold text-foreground">{students.length}</span>
+                    <span className="text-[10px] text-muted-foreground leading-tight">Students</span>
+                    <span className="text-[9px] text-muted-foreground/70">In Class</span>
+                  </div>
+                  
+                  {/* Passing */}
+                  <div className="flex flex-col items-center text-center p-3 rounded-xl" style={{ backgroundColor: 'rgba(20, 184, 166, 0.1)' }}>
+                    <Target className="h-5 w-5 mb-1.5" style={{ color: '#14b8a6' }} />
+                    <span className="text-lg font-bold text-foreground">
+                      {Math.round(passRate * students.length / 100)}/{students.length}
+                    </span>
+                    <span className="text-[10px] text-muted-foreground leading-tight">Passing</span>
+                    <span className="text-[9px] text-muted-foreground/70">{passRate}%</span>
+                  </div>
+                  
+                  {/* Needs Focus */}
+                  <div className="flex flex-col items-center text-center p-3 rounded-xl" style={{ backgroundColor: 'rgba(239, 68, 68, 0.1)' }}>
+                    <AlertTriangle className="h-5 w-5 mb-1.5" style={{ color: '#ef4444' }} />
+                    <span className="text-lg font-bold text-foreground">
+                      {subjectAverages[subjectAverages.length - 1]?.name || 'N/A'}
+                    </span>
+                    <span className="text-[10px] text-muted-foreground leading-tight">Needs Focus</span>
+                    <span className="text-[9px] text-muted-foreground/70">{subjectAverages[subjectAverages.length - 1]?.average.toFixed(0) || 0}%</span>
+                  </div>
+                </div>
+
                 <div className="grid grid-cols-2 gap-3">
                   {/* Top Subjects */}
                   <div className="space-y-2">
