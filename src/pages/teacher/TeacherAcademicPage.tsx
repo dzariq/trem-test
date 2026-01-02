@@ -272,44 +272,79 @@ export default function TeacherAcademicPage() {
     });
   };
 
-  // Calculate class statistics for analysis
-  const allGrades = Object.values(existingGrades)
-    .map(g => g.midYear)
-    .filter((g): g is number => g !== null);
-  
-  const classAverage = allGrades.length > 0 
-    ? Math.round(allGrades.reduce((a, b) => a + b, 0) / allGrades.length) 
+  // Get detailed grades for class first (needed for filtered calculations)
+  const detailedGradesForClass = detailedClassGrades[selectedClass as keyof typeof detailedClassGrades] || {};
+
+  // Calculate class statistics for analysis (filtered by selectedSubjects)
+  const filteredStudentScores = useMemo(() => {
+    const scores: number[] = [];
+    Object.values(detailedGradesForClass).forEach((studentGrades) => {
+      let studentTotal = 0;
+      let subjectCount = 0;
+      Object.entries(studentGrades).forEach(([subject, grades]) => {
+        if (selectedSubjects.includes(subject)) {
+          const total = grades.attitude + grades.homework + grades.quiz + grades.exam;
+          studentTotal += total;
+          subjectCount++;
+        }
+      });
+      if (subjectCount > 0) {
+        scores.push(studentTotal / subjectCount);
+      }
+    });
+    return scores;
+  }, [detailedGradesForClass, selectedSubjects]);
+
+  const classAverage = filteredStudentScores.length > 0 
+    ? Math.round(filteredStudentScores.reduce((a, b) => a + b, 0) / filteredStudentScores.length) 
     : 0;
-  const highestScore = allGrades.length > 0 ? Math.max(...allGrades) : 0;
-  const lowestScore = allGrades.length > 0 ? Math.min(...allGrades) : 0;
-  const passRate = allGrades.length > 0 
-    ? Math.round((allGrades.filter(g => g >= 50).length / allGrades.length) * 100)
+  const highestScore = filteredStudentScores.length > 0 ? Math.round(Math.max(...filteredStudentScores)) : 0;
+  const lowestScore = filteredStudentScores.length > 0 ? Math.round(Math.min(...filteredStudentScores)) : 0;
+  const passRate = filteredStudentScores.length > 0 
+    ? Math.round((filteredStudentScores.filter(g => g >= 50).length / filteredStudentScores.length) * 100)
     : 0;
-  const aGradeRate = allGrades.length > 0
-    ? Math.round((allGrades.filter(g => g >= 80).length / allGrades.length) * 100)
+  const aGradeRate = filteredStudentScores.length > 0
+    ? Math.round((filteredStudentScores.filter(g => g >= 80).length / filteredStudentScores.length) * 100)
     : 0;
 
   const gradeDistribution = [
-    { range: "A", count: allGrades.filter(g => g >= 80).length },
-    { range: "B", count: allGrades.filter(g => g >= 70 && g < 80).length },
-    { range: "C", count: allGrades.filter(g => g >= 60 && g < 70).length },
-    { range: "D", count: allGrades.filter(g => g >= 50 && g < 60).length },
-    { range: "F", count: allGrades.filter(g => g < 50).length },
+    { range: "A", count: filteredStudentScores.filter(g => g >= 80).length },
+    { range: "B", count: filteredStudentScores.filter(g => g >= 70 && g < 80).length },
+    { range: "C", count: filteredStudentScores.filter(g => g >= 60 && g < 70).length },
+    { range: "D", count: filteredStudentScores.filter(g => g >= 50 && g < 60).length },
+    { range: "F", count: filteredStudentScores.filter(g => g < 50).length },
   ];
 
-  const rankedStudents = students
-    .map(s => ({
-      ...s,
-      score: existingGrades[s.id]?.midYear || null
-    }))
-    .filter(s => s.score !== null)
-    .sort((a, b) => (b.score || 0) - (a.score || 0));
+  // Ranked students with filtered subject scores
+  const rankedStudents = useMemo(() => {
+    return students
+      .map(s => {
+        const studentGrades = detailedGradesForClass[s.id];
+        if (!studentGrades) return { ...s, score: null };
+        
+        let studentTotal = 0;
+        let subjectCount = 0;
+        Object.entries(studentGrades).forEach(([subject, grades]) => {
+          if (selectedSubjects.includes(subject)) {
+            const total = grades.attitude + grades.homework + grades.quiz + grades.exam;
+            studentTotal += total;
+            subjectCount++;
+          }
+        });
+        
+        return {
+          ...s,
+          score: subjectCount > 0 ? Math.round(studentTotal / subjectCount) : null
+        };
+      })
+      .filter(s => s.score !== null)
+      .sort((a, b) => (b.score || 0) - (a.score || 0));
+  }, [students, detailedGradesForClass, selectedSubjects]);
 
-  // At-risk students (below 60)
-  const atRiskStudents = rankedStudents.filter(s => s.score !== null && s.score < 60);
+  // At-risk students (below 50%)
+  const atRiskStudents = rankedStudents.filter(s => s.score !== null && s.score < 50);
 
   // Calculate category averages from detailed grades
-  const detailedGradesForClass = detailedClassGrades[selectedClass as keyof typeof detailedClassGrades] || {};
   const categoryTotals = { attitude: { sum: 0, count: 0, max: 10 }, homework: { sum: 0, count: 0, max: 10 }, quiz: { sum: 0, count: 0, max: 10 }, exam: { sum: 0, count: 0, max: 70 } };
   
   Object.values(detailedGradesForClass).forEach((studentGrades) => {
