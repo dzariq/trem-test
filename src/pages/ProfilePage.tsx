@@ -7,7 +7,8 @@ import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import {
   Dialog,
@@ -26,17 +27,25 @@ import {
   Pencil,
   MapPin,
   FileText,
-  Eye
+  Eye,
+  Camera,
+  Upload,
+  Trash2,
+  BookOpen
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { PDFViewerDialog } from "@/components/PDFViewerDialog";
-import { StudentAvatarUpload } from "@/components/StudentAvatarUpload";
+
+type Student = typeof initialStudents[0];
 
 export default function ProfilePage() {
   const navigate = useNavigate();
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [isPdfOpen, setIsPdfOpen] = useState(false);
+  const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
+  const [isPhotoEditOpen, setIsPhotoEditOpen] = useState(false);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [profile, setProfile] = useState({
     name: parentProfile.name,
     email: parentProfile.email,
@@ -60,10 +69,59 @@ export default function ProfilePage() {
   }, []);
 
   const handlePhotoChange = (studentId: string, photoUrl: string | null) => {
+    if (photoUrl) {
+      localStorage.setItem(`student_photo_${studentId}`, photoUrl);
+    } else {
+      localStorage.removeItem(`student_photo_${studentId}`);
+    }
     setStudentPhotos((prev) => ({
       ...prev,
       [studentId]: photoUrl,
     }));
+  };
+
+  const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith("image/")) {
+      toast.error("Please select an image file");
+      return;
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error("Image size should be less than 5MB");
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setPreviewUrl(reader.result as string);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleSavePhoto = () => {
+    if (!selectedStudent || !previewUrl) return;
+    handlePhotoChange(selectedStudent.id, previewUrl);
+    toast.success("Photo updated successfully");
+    setIsPhotoEditOpen(false);
+    setPreviewUrl(null);
+  };
+
+  const handleRemovePhoto = () => {
+    if (!selectedStudent) return;
+    handlePhotoChange(selectedStudent.id, null);
+    setPreviewUrl(null);
+    toast.success("Photo removed");
+    setIsPhotoEditOpen(false);
+  };
+
+  const handleOpenPhotoEdit = () => {
+    if (selectedStudent) {
+      setPreviewUrl(studentPhotos[selectedStudent.id] || null);
+      setIsPhotoEditOpen(true);
+    }
   };
 
   const handleSave = () => {
@@ -84,6 +142,11 @@ export default function ProfilePage() {
     "bg-gradient-to-br from-pink-400 to-pink-600",
     "bg-gradient-to-br from-orange-400 to-orange-600",
   ];
+
+  const getStudentColorClass = (studentId: string) => {
+    const index = initialStudents.findIndex(s => s.id === studentId);
+    return avatarColors[index % avatarColors.length];
+  };
 
   return (
     <AppLayout>
@@ -139,31 +202,30 @@ export default function ProfilePage() {
 
         {/* Linked Students */}
         <Card className="bg-card border-border shadow-sm">
-          <CardHeader className="pb-2 flex flex-row items-center justify-between">
+          <CardHeader className="pb-2">
             <CardTitle className="text-base font-semibold">Linked Students</CardTitle>
-            <span className="text-xs text-muted-foreground">Tap photo to edit</span>
           </CardHeader>
           <CardContent className="space-y-2">
             {initialStudents.map((student, index) => (
-              <div 
+              <button 
                 key={student.id}
-                className="flex items-center gap-3 p-3 rounded-xl border border-border"
+                onClick={() => setSelectedStudent(student)}
+                className="w-full flex items-center gap-3 p-3 rounded-xl border border-border hover:bg-accent/30 transition-colors text-left"
               >
-                <StudentAvatarUpload
-                  studentId={student.id}
-                  studentName={student.name}
-                  currentPhoto={studentPhotos[student.id] || null}
-                  onPhotoChange={handlePhotoChange}
-                  size="md"
-                  editable={true}
-                  colorClass={avatarColors[index % avatarColors.length]}
-                />
+                <Avatar className="h-12 w-12 border-2 border-background shadow-sm shrink-0">
+                  {studentPhotos[student.id] ? (
+                    <AvatarImage src={studentPhotos[student.id]!} alt={student.name} className="object-cover" />
+                  ) : null}
+                  <AvatarFallback className={`${avatarColors[index % avatarColors.length]} text-white text-base font-semibold`}>
+                    {student.name.split(' ').map(n => n[0]).join('')}
+                  </AvatarFallback>
+                </Avatar>
                 <div className="flex-1">
                   <h3 className="font-medium text-foreground">{student.name}</h3>
                   <p className="text-sm text-muted-foreground">{student.class} • {student.grade}</p>
                 </div>
                 <ChevronRight className="h-5 w-5 text-muted-foreground" />
-              </div>
+              </button>
             ))}
           </CardContent>
         </Card>
@@ -339,6 +401,151 @@ export default function ProfilePage() {
         title="Student Handbook"
         downloadFileName="Student_Handbook_2026.pdf"
       />
+
+      {/* Student Details Dialog */}
+      <Dialog open={!!selectedStudent && !isPhotoEditOpen} onOpenChange={(open) => !open && setSelectedStudent(null)}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Student Details</DialogTitle>
+          </DialogHeader>
+          
+          {selectedStudent && (
+            <div className="space-y-6 py-4">
+              {/* Student Avatar & Info */}
+              <div className="flex flex-col items-center gap-4">
+                <Avatar className="h-24 w-24 border-4 border-primary/20">
+                  {studentPhotos[selectedStudent.id] ? (
+                    <AvatarImage 
+                      src={studentPhotos[selectedStudent.id]!} 
+                      alt={selectedStudent.name} 
+                      className="object-cover" 
+                    />
+                  ) : null}
+                  <AvatarFallback className={`${getStudentColorClass(selectedStudent.id)} text-white text-3xl font-semibold`}>
+                    {selectedStudent.name.split(' ').map(n => n[0]).join('')}
+                  </AvatarFallback>
+                </Avatar>
+                
+                <div className="text-center">
+                  <h3 className="text-xl font-semibold text-foreground">{selectedStudent.name}</h3>
+                  <p className="text-sm text-muted-foreground">{selectedStudent.class} • {selectedStudent.grade}</p>
+                </div>
+
+                <Button
+                  variant="outline"
+                  onClick={handleOpenPhotoEdit}
+                  className="gap-2"
+                >
+                  <Camera className="h-4 w-4" />
+                  Edit Photo
+                </Button>
+              </div>
+
+              <Separator />
+
+              {/* Subjects */}
+              <div className="space-y-3">
+                <div className="flex items-center gap-2">
+                  <BookOpen className="h-4 w-4 text-muted-foreground" />
+                  <span className="font-medium text-foreground">Subjects</span>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {selectedStudent.subjects.map((subject) => (
+                    <Badge key={subject} variant="secondary" className="text-sm">
+                      {subject}
+                    </Badge>
+                  ))}
+                </div>
+              </div>
+
+              {/* Student ID */}
+              <div className="p-3 rounded-lg bg-muted/50">
+                <p className="text-xs text-muted-foreground">Student ID</p>
+                <p className="text-sm font-medium text-foreground">{selectedStudent.id}</p>
+              </div>
+            </div>
+          )}
+
+          <DialogFooter>
+            <Button onClick={() => setSelectedStudent(null)}>Close</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Photo Edit Dialog */}
+      <Dialog open={isPhotoEditOpen} onOpenChange={setIsPhotoEditOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Edit Student Photo</DialogTitle>
+          </DialogHeader>
+          
+          {selectedStudent && (
+            <div className="flex flex-col items-center gap-6 py-6">
+              {/* Preview Avatar */}
+              <Avatar className="h-32 w-32 border-4 border-primary/20">
+                {previewUrl ? (
+                  <AvatarImage src={previewUrl} alt={selectedStudent.name} className="object-cover" />
+                ) : null}
+                <AvatarFallback className={`${getStudentColorClass(selectedStudent.id)} text-white text-4xl font-semibold`}>
+                  {selectedStudent.name.split(' ').map(n => n[0]).join('')}
+                </AvatarFallback>
+              </Avatar>
+
+              <div className="text-center">
+                <h3 className="font-semibold text-lg">{selectedStudent.name}</h3>
+                <p className="text-sm text-muted-foreground">Upload a photo for your child</p>
+              </div>
+
+              {/* Upload Button */}
+              <input
+                type="file"
+                accept="image/*"
+                onChange={handleFileSelect}
+                className="hidden"
+                id="photo-upload"
+              />
+              
+              <div className="flex gap-3">
+                <Button
+                  variant="outline"
+                  onClick={() => document.getElementById('photo-upload')?.click()}
+                  className="gap-2"
+                >
+                  <Upload className="h-4 w-4" />
+                  {previewUrl ? "Change Photo" : "Upload Photo"}
+                </Button>
+                
+                {(previewUrl || studentPhotos[selectedStudent.id]) && (
+                  <Button
+                    variant="outline"
+                    onClick={handleRemovePhoto}
+                    className="gap-2 text-destructive hover:text-destructive"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                    Remove
+                  </Button>
+                )}
+              </div>
+
+              <p className="text-xs text-muted-foreground text-center">
+                Accepted formats: JPG, PNG, GIF. Max size: 5MB
+              </p>
+            </div>
+          )}
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsPhotoEditOpen(false)}>
+              Cancel
+            </Button>
+            <Button 
+              onClick={handleSavePhoto} 
+              disabled={!previewUrl}
+            >
+              Save Photo
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </AppLayout>
   );
 }
