@@ -97,6 +97,7 @@ export default function AcademicPage() {
   const [editingGoal, setEditingGoal] = useState<string | null>(null);
   const [tempGoalValue, setTempGoalValue] = useState<string>("");
   const [compareExamB, setCompareExamB] = useState({ year: "2024" as YearKey, type: "yearEnd" as ExamType });
+  const [compareSubjects, setCompareSubjects] = useState<string[]>(academicData.subjects.map(s => s.name));
 
   const isActivitiesTab = activeTab === "cocurriculum";
 
@@ -393,28 +394,31 @@ export default function AcademicPage() {
     return "#ef4444"; // red
   };
 
-  // Comparison data
+  // Comparison data - filtered by selected subjects
   const comparisonData = useMemo(() => {
-    return academicData.subjects.map(s => {
-      const scoreA = getScore(s, compareExamA.year, compareExamA.type) ?? 0;
-      const scoreB = getScore(s, compareExamB.year, compareExamB.type) ?? 0;
-      const delta = scoreA - scoreB;
-      return {
-        name: s.name,
-        examA: scoreA,
-        examB: scoreB,
-        delta,
-        improved: delta > 0
-      };
-    });
-  }, [compareExamA, compareExamB]);
+    return academicData.subjects
+      .filter(s => compareSubjects.includes(s.name))
+      .map(s => {
+        const scoreA = getScore(s, compareExamA.year, compareExamA.type) ?? 0;
+        const scoreB = getScore(s, compareExamB.year, compareExamB.type) ?? 0;
+        const delta = scoreA - scoreB;
+        return {
+          name: s.name,
+          examA: scoreA,
+          examB: scoreB,
+          delta,
+          improved: delta > 0
+        };
+      });
+  }, [compareExamA, compareExamB, compareSubjects]);
 
-  // Category comparison
+  // Category comparison - filtered by selected subjects
   const categoryComparison = useMemo(() => {
     const categories = ["attitude", "homework", "quiz", "exam"] as const;
+    const filteredSubjects = academicData.subjects.filter(s => compareSubjects.includes(s.name));
     return categories.map(cat => {
-      const scoresA = academicData.subjects.map(s => getCategoryScore(s, compareExamA.year, cat)).filter(s => s !== null) as number[];
-      const scoresB = academicData.subjects.map(s => getCategoryScore(s, compareExamB.year, cat)).filter(s => s !== null) as number[];
+      const scoresA = filteredSubjects.map(s => getCategoryScore(s, compareExamA.year, cat)).filter(s => s !== null) as number[];
+      const scoresB = filteredSubjects.map(s => getCategoryScore(s, compareExamB.year, cat)).filter(s => s !== null) as number[];
       const avgA = scoresA.length > 0 ? Math.round(scoresA.reduce((a, b) => a + b, 0) / scoresA.length) : 0;
       const avgB = scoresB.length > 0 ? Math.round(scoresB.reduce((a, b) => a + b, 0) / scoresB.length) : 0;
       return {
@@ -424,7 +428,7 @@ export default function AcademicPage() {
         delta: avgA - avgB
       };
     });
-  }, [compareExamA, compareExamB]);
+  }, [compareExamA, compareExamB, compareSubjects]);
 
   const getExamLabelForComparison = (exam: { year: YearKey; type: ExamType }) => {
     return `${exam.type === "midYear" ? "Mid-Year" : "Year-End"} ${exam.year}`;
@@ -1352,6 +1356,58 @@ export default function AcademicPage() {
                         <SelectItem value="yearEnd">Year-End</SelectItem>
                       </SelectContent>
                     </Select>
+                  </div>
+                </div>
+
+                {/* Subject Multi-Select */}
+                <div className="space-y-2">
+                  <label className="text-xs font-medium text-muted-foreground">Subjects</label>
+                  <div className="flex flex-wrap gap-1.5 p-2 rounded-lg border border-input bg-background min-h-[38px]">
+                    {academicData.subjects.map(s => {
+                      const isSelected = compareSubjects.includes(s.name);
+                      return (
+                        <Badge
+                          key={s.name}
+                          variant={isSelected ? "default" : "outline"}
+                          className={`cursor-pointer text-xs transition-colors ${
+                            isSelected 
+                              ? "bg-primary text-primary-foreground hover:bg-primary/80" 
+                              : "hover:bg-accent"
+                          }`}
+                          onClick={() => {
+                            if (isSelected) {
+                              // Don't allow deselecting all subjects
+                              if (compareSubjects.length > 1) {
+                                setCompareSubjects(prev => prev.filter(name => name !== s.name));
+                              }
+                            } else {
+                              setCompareSubjects(prev => [...prev, s.name]);
+                            }
+                          }}
+                        >
+                          {shortenSubjectName(s.name)}
+                          {isSelected && <Check className="h-3 w-3 ml-1" />}
+                        </Badge>
+                      );
+                    })}
+                  </div>
+                  <div className="flex gap-2">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="text-xs h-7 px-2"
+                      onClick={() => setCompareSubjects(academicData.subjects.map(s => s.name))}
+                    >
+                      Select All
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="text-xs h-7 px-2"
+                      onClick={() => setCompareSubjects([academicData.subjects[0].name])}
+                    >
+                      Clear
+                    </Button>
                   </div>
                 </div>
 
