@@ -455,20 +455,18 @@ export default function AcademicPage() {
                                   borderColor: cardStyle.border
                                 }}
                               >
-                                <div className="flex items-start justify-between mb-1">
-                                  <h3 className="font-medium text-foreground text-sm leading-tight">{subject.name}</h3>
-                                  {isPending ? (
-                                    <Badge variant="outline" className="text-muted-foreground text-xs flex-shrink-0">--</Badge>
-                                  ) : (
-                                    <Badge className={`${gradeColors[getGradeFromScore(score!)[0]] || gradeColors.C} text-xs flex-shrink-0`}>
-                                      {getGradeFromScore(score!)}
-                                    </Badge>
-                                  )}
-                                </div>
+                                <h3 className="font-medium text-foreground text-sm leading-tight mb-2">{subject.name}</h3>
                                 <div className="flex items-center justify-between mt-auto">
-                                  <p className="text-lg font-semibold text-foreground">
-                                    {isPending ? "Pending" : `${score}%`}
-                                  </p>
+                                  <div className="flex items-center gap-2">
+                                    <p className="text-lg font-semibold text-foreground">
+                                      {isPending ? "Pending" : `${score}%`}
+                                    </p>
+                                    {!isPending && (
+                                      <span className="text-xs font-medium text-muted-foreground">
+                                        ({getGradeFromScore(score!)})
+                                      </span>
+                                    )}
+                                  </div>
                                   <ChevronDown 
                                     className={`h-4 w-4 text-muted-foreground transition-transform duration-200 ${
                                       isExpanded ? 'rotate-180' : ''
