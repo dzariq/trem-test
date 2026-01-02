@@ -262,7 +262,7 @@ export function CertificateDialog({
             <div className="relative w-[140%] -mx-[20%] mt-4">
               <VRibbon className="w-full h-14 sm:h-16" />
               {/* Star Seal positioned at the V-point of the ribbon */}
-              <div className="absolute left-1/2 -translate-x-1/2 top-[65%]">
+              <div className="absolute left-1/2 -translate-x-1/2 top-[-35%]">
                 <StarSeal />
               </div>
             </div>
