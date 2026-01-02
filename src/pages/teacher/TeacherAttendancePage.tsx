@@ -53,7 +53,7 @@ export default function TeacherAttendancePage() {
   // Statistics state
   const [selectedYear, setSelectedYear] = useState("2026");
   const [selectedMonth, setSelectedMonth] = useState(0); // January
-  const [statusFilter, setStatusFilter] = useState<AttendanceStatus | "all">("all");
+  
 
   const students = classRosters[selectedClass as keyof typeof classRosters] || [];
   const statsData = teacherAttendanceStats[selectedClass as keyof typeof teacherAttendanceStats];
@@ -110,14 +110,12 @@ export default function TeacherAttendancePage() {
     return monthData;
   }, [statsData, selectedMonth]);
 
-  const filteredBreakdown = useMemo(() => {
+  const dailyBreakdown = useMemo(() => {
     if (!statsData) return [];
-    return statsData.dailyBreakdown.filter(item => 
-      statusFilter === "all" || item.status === statusFilter
-    );
-  }, [statsData, statusFilter]);
+    return statsData.dailyBreakdown;
+  }, [statsData]);
 
-  const groupByWeek = (items: typeof filteredBreakdown) => {
+  const groupByWeek = (items: typeof dailyBreakdown) => {
     const groups: Record<string, typeof items> = {};
     items.forEach(item => {
       const date = parseISO(item.date);
@@ -132,40 +130,10 @@ export default function TeacherAttendancePage() {
     }));
   };
 
-  const weeklyGroups = groupByWeek(filteredBreakdown);
+  const weeklyGroups = groupByWeek(dailyBreakdown);
 
   const goToPrevMonth = () => setSelectedMonth(m => (m === 0 ? 11 : m - 1));
   const goToNextMonth = () => setSelectedMonth(m => (m === 11 ? 0 : m + 1));
-
-  const getStatusColor = (status: AttendanceStatus) => {
-    switch (status) {
-      case "present": return "bg-emerald-500 text-white";
-      case "absent": return "bg-destructive text-destructive-foreground";
-      case "late": return "bg-amber-400 text-white";
-      case "excused": return "bg-purple-500 text-white";
-    }
-  };
-
-  const getStatusIcon = (status: AttendanceStatus) => {
-    switch (status) {
-      case "present": return <Check className="h-3 w-3" />;
-      case "absent": return <X className="h-3 w-3" />;
-      case "late": return <Clock className="h-3 w-3" />;
-      case "excused": return <AlertCircle className="h-3 w-3" />;
-    }
-  };
-
-  const getStatusLabel = (status: AttendanceStatus) => {
-    return status.charAt(0).toUpperCase() + status.slice(1);
-  };
-
-  const statusCounts = useMemo(() => {
-    if (!statsData) return { present: 0, absent: 0, late: 0, excused: 0 };
-    return statsData.dailyBreakdown.reduce((acc, item) => {
-      acc[item.status]++;
-      return acc;
-    }, { present: 0, absent: 0, late: 0, excused: 0 });
-  }, [statsData]);
 
   return (
     <TeacherAppLayout>
@@ -412,34 +380,6 @@ export default function TeacherAttendancePage() {
               <CardTitle className="text-base">Daily Breakdown</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              {/* Filter Chips */}
-              <div className="flex gap-2 flex-wrap">
-                {(["all", "present", "absent", "late", "excused"] as const).map((status) => (
-                  <button
-                    key={status}
-                    onClick={() => setStatusFilter(status)}
-                    className={cn(
-                      "px-3 py-1.5 rounded-full text-xs font-medium transition-all",
-                      statusFilter === status
-                        ? status === "all"
-                          ? "bg-primary text-primary-foreground"
-                          : status === "present"
-                          ? "bg-emerald-500 text-white"
-                          : status === "absent"
-                          ? "bg-red-500 text-white"
-                          : status === "late"
-                          ? "bg-amber-500 text-white"
-                          : "bg-purple-500 text-white"
-                        : "bg-muted text-muted-foreground hover:bg-muted/80"
-                    )}
-                  >
-                    {status === "all" ? "All" : getStatusLabel(status)} ({status === "all" 
-                      ? filteredBreakdown.length 
-                      : statusCounts[status as AttendanceStatus]})
-                  </button>
-                ))}
-              </div>
-
               {/* Weekly Groups */}
               {weeklyGroups.length === 0 ? (
                 <p className="text-sm text-muted-foreground text-center py-8">No attendance records found</p>
@@ -461,38 +401,50 @@ export default function TeacherAttendancePage() {
                         {week.items.map((item, itemIdx) => {
                           const itemDate = parseISO(item.date);
                           const isTodayItem = isToday(itemDate);
+                          const total = item.present + item.absent + item.late + item.excused;
                           return (
                             <div
                               key={itemIdx}
-                              className={`flex items-center gap-2 p-2 rounded-md transition-all border ${
+                              className={`p-3 rounded-lg border transition-all ${
                                 isTodayItem 
-                                  ? "ring-2 ring-primary/50 " 
-                                  : ""
-                              }${
-                                item.status === 'present' ? "bg-emerald-100 border-emerald-300" :
-                                item.status === 'absent' ? "bg-destructive/20 border-destructive/40" :
-                                item.status === 'late' ? "bg-amber-100 border-amber-300" :
-                                item.status === 'excused' ? "bg-purple-100 border-purple-300" :
-                                "bg-muted/30 border-border/50"
+                                  ? "ring-2 ring-primary/50 border-primary/30 bg-primary/5" 
+                                  : "bg-card border-border/50"
                               }`}
                             >
-                              <div className={`w-6 h-6 rounded-full flex items-center justify-center shrink-0 ${getStatusColor(item.status)}`}>
-                                {getStatusIcon(item.status)}
-                              </div>
-                              <div className="flex-1 min-w-0">
-                                <p className="font-medium text-foreground text-xs truncate">
-                                  {item.studentName}
-                                </p>
-                                <p className="text-[9px] text-muted-foreground">
+                              {/* Date Header */}
+                              <div className="flex items-center justify-between mb-2">
+                                <span className="font-medium text-sm text-foreground">
                                   {format(itemDate, "EEE, d")}
-                                </p>
-                                {item.reason && (
-                                  <p className="text-[9px] text-muted-foreground truncate">{item.reason}</p>
+                                </span>
+                                {isTodayItem && (
+                                  <span className="text-[10px] font-medium text-primary bg-primary/10 px-1.5 py-0.5 rounded">Today</span>
                                 )}
                               </div>
-                              {isTodayItem && (
-                                <span className="text-[8px] font-medium text-primary shrink-0">Today</span>
-                              )}
+                              
+                              {/* Status Grid */}
+                              <div className="grid grid-cols-4 gap-1">
+                                <div className="flex flex-col items-center p-1.5 rounded bg-emerald-100 dark:bg-emerald-950/40">
+                                  <Check className="h-3 w-3 text-emerald-600 mb-0.5" />
+                                  <span className="text-xs font-bold text-emerald-700 dark:text-emerald-400">{item.present}</span>
+                                </div>
+                                <div className="flex flex-col items-center p-1.5 rounded bg-red-100 dark:bg-red-950/40">
+                                  <X className="h-3 w-3 text-red-600 mb-0.5" />
+                                  <span className="text-xs font-bold text-red-700 dark:text-red-400">{item.absent}</span>
+                                </div>
+                                <div className="flex flex-col items-center p-1.5 rounded bg-amber-100 dark:bg-amber-950/40">
+                                  <Clock className="h-3 w-3 text-amber-600 mb-0.5" />
+                                  <span className="text-xs font-bold text-amber-700 dark:text-amber-400">{item.late}</span>
+                                </div>
+                                <div className="flex flex-col items-center p-1.5 rounded bg-purple-100 dark:bg-purple-950/40">
+                                  <AlertCircle className="h-3 w-3 text-purple-600 mb-0.5" />
+                                  <span className="text-xs font-bold text-purple-700 dark:text-purple-400">{item.excused}</span>
+                                </div>
+                              </div>
+                              
+                              {/* Total */}
+                              <div className="mt-2 text-center">
+                                <span className="text-[10px] text-muted-foreground">Total: {total}</span>
+                              </div>
                             </div>
                           );
                         })}
