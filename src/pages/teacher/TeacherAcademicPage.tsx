@@ -802,8 +802,9 @@ export default function TeacherAcademicPage() {
           <TabsContent value="analysis" className="space-y-4">
             {/* Sub-tabs for Class Analysis */}
             <Tabs defaultValue="overview" className="w-full">
-              <TabsList className="grid w-full grid-cols-3 mb-4 bg-muted/50">
+              <TabsList className="grid w-full grid-cols-4 mb-4 bg-muted/50">
                 <TabsTrigger value="overview" className="text-xs">Overview</TabsTrigger>
+                <TabsTrigger value="distribution" className="text-xs">Distribution</TabsTrigger>
                 <TabsTrigger value="trends" className="text-xs">Trends</TabsTrigger>
                 <TabsTrigger value="comparison" className="text-xs">Comparison</TabsTrigger>
               </TabsList>
@@ -1123,7 +1124,10 @@ export default function TeacherAcademicPage() {
                         </div>)}
                     </div>
                   </div>}
+              </TabsContent>
 
+              {/* ==================== DISTRIBUTION SUB-TAB ==================== */}
+              <TabsContent value="distribution" className="space-y-4">
                 {/* Grade Distribution Cards */}
                 <div className="space-y-2">
                   <h4 className="text-sm font-medium text-foreground">Grade Distribution</h4>
