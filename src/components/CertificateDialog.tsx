@@ -13,7 +13,7 @@ interface CertificateDialogProps {
   year?: string;
 }
 
-// Geometric Chevron Background Layer - Now Green
+// Geometric Chevron Background Layer - Green
 const ChevronLayer = ({ 
   className, 
   color, 
@@ -66,45 +66,60 @@ const VRibbon = ({ className }: { className?: string }) => (
   </svg>
 );
 
-// Star Seal Component
-const StarSeal = ({ className }: { className?: string }) => (
-  <div className={`relative ${className}`}>
-    {/* Multi-pointed star seal */}
-    <svg 
-      viewBox="0 0 100 100" 
-      className="w-28 h-28 sm:w-32 sm:h-32"
-    >
-      <defs>
-        <linearGradient id="sealGold" x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" stopColor="#e8c967"/>
-          <stop offset="50%" stopColor="#d4a537"/>
-          <stop offset="100%" stopColor="#c9942a"/>
-        </linearGradient>
-        <linearGradient id="sealInner" x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" stopColor="#1a3d2e"/>
-          <stop offset="100%" stopColor="#0f2318"/>
-        </linearGradient>
-      </defs>
-      {/* Outer star burst - 16 points */}
-      <polygon 
-        points="50,0 54,20 62,4 58,24 74,10 66,28 86,18 74,32 96,28 80,38 100,50 80,62 96,72 74,68 86,82 66,72 74,90 58,76 62,96 54,80 50,100 46,80 38,96 42,76 26,90 34,72 14,82 26,68 4,72 20,62 0,50 20,38 4,28 26,32 14,18 34,28 26,10 42,24 38,4 46,20"
-        fill="url(#sealGold)"
-      />
-      {/* Inner circle */}
-      <circle cx="50" cy="50" r="28" fill="url(#sealInner)" stroke="#d4a537" strokeWidth="2"/>
-      {/* Inner gold ring */}
-      <circle cx="50" cy="50" r="22" fill="none" stroke="rgba(212, 165, 55, 0.4)" strokeWidth="1"/>
-    </svg>
-    {/* School Logo in center */}
-    <div className="absolute inset-0 flex items-center justify-center">
-      <img 
-        src={schoolLogo} 
-        alt="School Logo" 
-        className="w-12 h-12 sm:w-14 sm:h-14 object-contain"
-      />
+// Consistent Star Seal with uniform sharp points
+const StarSeal = ({ className }: { className?: string }) => {
+  // Generate 16-point star with consistent sharp points
+  const generateStarPoints = (cx: number, cy: number, outerR: number, innerR: number, points: number) => {
+    const step = Math.PI / points;
+    const path = [];
+    for (let i = 0; i < 2 * points; i++) {
+      const r = i % 2 === 0 ? outerR : innerR;
+      const angle = i * step - Math.PI / 2;
+      const x = cx + r * Math.cos(angle);
+      const y = cy + r * Math.sin(angle);
+      path.push(`${x},${y}`);
+    }
+    return path.join(' ');
+  };
+
+  return (
+    <div className={`relative ${className}`}>
+      <svg 
+        viewBox="0 0 100 100" 
+        className="w-28 h-28 sm:w-32 sm:h-32"
+      >
+        <defs>
+          <linearGradient id="sealGold" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#f0d878"/>
+            <stop offset="50%" stopColor="#d4a537"/>
+            <stop offset="100%" stopColor="#c9942a"/>
+          </linearGradient>
+          <linearGradient id="sealInner" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#1a3d2e"/>
+            <stop offset="100%" stopColor="#0f2318"/>
+          </linearGradient>
+        </defs>
+        {/* Outer star burst - 16 consistent sharp points */}
+        <polygon 
+          points={generateStarPoints(50, 50, 50, 35, 16)}
+          fill="url(#sealGold)"
+        />
+        {/* Inner circle */}
+        <circle cx="50" cy="50" r="26" fill="url(#sealInner)" stroke="#d4a537" strokeWidth="2"/>
+        {/* Inner gold ring */}
+        <circle cx="50" cy="50" r="20" fill="none" stroke="rgba(212, 165, 55, 0.5)" strokeWidth="1"/>
+      </svg>
+      {/* School Logo in center */}
+      <div className="absolute inset-0 flex items-center justify-center">
+        <img 
+          src={schoolLogo} 
+          alt="School Logo" 
+          className="w-10 h-10 sm:w-12 sm:h-12 object-contain"
+        />
+      </div>
     </div>
-  </div>
-);
+  );
+};
 
 // Small decorative star
 const SmallStar = ({ className, size = 12 }: { className?: string; size?: number }) => (
@@ -119,6 +134,19 @@ const SmallStar = ({ className, size = 12 }: { className?: string; size?: number
   </svg>
 );
 
+// Logo Pattern Background
+const LogoPattern = ({ className }: { className?: string }) => (
+  <div 
+    className={`absolute inset-0 pointer-events-none ${className}`}
+    style={{
+      backgroundImage: `url(${schoolLogo})`,
+      backgroundSize: '60px 60px',
+      backgroundRepeat: 'repeat',
+      opacity: 0.03,
+    }}
+  />
+);
+
 export function CertificateDialog({
   open,
   onOpenChange,
@@ -131,6 +159,9 @@ export function CertificateDialog({
   const handleDownload = () => {
     window.print();
   };
+
+  // Format full date
+  const fullDate = `January 15, ${year}`;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -155,8 +186,11 @@ export function CertificateDialog({
             boxShadow: '0 25px 60px -12px rgba(0, 0, 0, 0.6)',
           }}
         >
+          {/* Logo Pattern Background */}
+          <LogoPattern />
+
           {/* Top Geometric Layers - Green tones */}
-          <div className="absolute top-0 left-0 right-0">
+          <div className="absolute top-0 left-0 right-0 z-[1]">
             <ChevronLayer 
               className="w-full h-24 sm:h-28" 
               color="#2d5a47" 
@@ -178,7 +212,7 @@ export function CertificateDialog({
           </div>
 
           {/* Bottom Geometric Layers - Green tones */}
-          <div className="absolute bottom-0 left-0 right-0">
+          <div className="absolute bottom-0 left-0 right-0 z-[1]">
             <ChevronLayer 
               className="w-full h-16 sm:h-20" 
               color="#1a4535" 
@@ -194,7 +228,7 @@ export function CertificateDialog({
           </div>
 
           {/* Certificate Content */}
-          <div className="relative h-full flex flex-col items-center justify-between py-6 sm:py-8 px-6 sm:px-10 text-center z-10">
+          <div className="relative h-full flex flex-col items-center py-6 sm:py-8 px-6 sm:px-10 text-center z-10">
             
             {/* Header Section */}
             <div className="flex flex-col items-center gap-1">
@@ -224,16 +258,20 @@ export function CertificateDialog({
               </p>
             </div>
 
-            {/* V-Shaped Gold Ribbon - Full Width Edge to Edge */}
-            <div className="w-[140%] -mx-[20%] -my-1">
+            {/* V-Shaped Gold Ribbon with Star Seal on top */}
+            <div className="relative w-[140%] -mx-[20%] mt-4">
               <VRibbon className="w-full h-14 sm:h-16" />
+              {/* Star Seal centered on the ribbon */}
+              <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
+                <StarSeal />
+              </div>
             </div>
 
-            {/* Star Seal */}
-            <StarSeal className="z-10 -my-4" />
+            {/* Spacer for the seal */}
+            <div className="h-12 sm:h-14" />
 
-            {/* Main Content - Moved up with proper spacing */}
-            <div className="flex flex-col items-center gap-1 sm:gap-2 mt-2">
+            {/* Main Content */}
+            <div className="flex flex-col items-center gap-1 sm:gap-2 flex-1 justify-center">
               <p 
                 className="text-xs sm:text-sm uppercase tracking-[0.2em] font-medium"
                 style={{ color: '#d4a537' }}
@@ -279,14 +317,14 @@ export function CertificateDialog({
               </h5>
             </div>
 
-            {/* Footer Section - Two Signatures + Date */}
+            {/* Footer Section - Two Signatures + Full Date */}
             <div className="w-full flex flex-col items-center gap-3 mt-auto">
-              {/* Date centered above signatures */}
+              {/* Full Date centered above signatures */}
               <p 
                 className="text-xs sm:text-sm font-certificate-body"
                 style={{ color: 'rgba(212, 165, 55, 0.8)' }}
               >
-                {year}
+                {fullDate}
               </p>
               
               {/* Two Signatures */}
