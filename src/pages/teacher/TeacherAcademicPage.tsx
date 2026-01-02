@@ -302,13 +302,13 @@ export default function TeacherAcademicPage() {
     }).filter(s => s.score !== null).sort((a, b) => (b.score || 0) - (a.score || 0));
   }, [students, detailedGradesForClass, selectedSubjects]);
 
-  // At-risk students (below 50%)
-  const atRiskStudents = rankedStudents.filter(s => s.score !== null && s.score < 50);
+  // At-risk students (D, E grades: below 60%)
+  const atRiskStudents = rankedStudents.filter(s => s.score !== null && s.score < 60);
   
-  // Middle performing students (50-79%)
-  const middlePerformers = rankedStudents.filter(s => s.score !== null && s.score >= 50 && s.score < 80);
+  // Middle performing students (B, C grades: 60-79%)
+  const middlePerformers = rankedStudents.filter(s => s.score !== null && s.score >= 60 && s.score < 80);
   
-  // Top performers (80%+)
+  // Top performers (A*, A grades: 80%+)
   const topPerformers = rankedStudents.filter(s => s.score !== null && s.score >= 80);
 
   // Calculate category averages from detailed grades
