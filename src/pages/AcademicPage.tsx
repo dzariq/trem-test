@@ -545,19 +545,19 @@ export default function AcademicPage() {
                   {/* Bottom 3 */}
                   <div className="space-y-2">
                     <h4 className="text-sm font-medium text-foreground flex items-center gap-1.5">
-                      <AlertTriangle className="h-4 w-4" style={{ color: '#eab308' }} /> Needs Attention
+                      <AlertTriangle className="h-4 w-4" style={{ color: '#ef4444' }} /> Needs Attention
                     </h4>
                     <div className="space-y-2">
                       {bottom3.map((s, index) => {
                         const score = getScore(s, selectedYear, examType);
                         return (
-                          <div key={s.name} className="flex items-center gap-2 p-2.5 rounded-lg border" style={{ backgroundColor: 'rgba(234, 179, 8, 0.1)', borderColor: 'rgba(234, 179, 8, 0.2)' }}>
-                            <span className="w-6 h-6 shrink-0 rounded-full flex items-center justify-center text-xs font-bold" style={{ backgroundColor: 'rgba(234, 179, 8, 0.2)', color: '#ca8a04' }}>
+                          <div key={s.name} className="flex items-center gap-2 p-2.5 rounded-lg border" style={{ backgroundColor: 'rgba(254, 202, 202, 0.3)', borderColor: 'rgba(248, 113, 113, 0.3)' }}>
+                            <span className="w-6 h-6 shrink-0 rounded-full flex items-center justify-center text-xs font-bold" style={{ backgroundColor: 'rgba(254, 202, 202, 0.5)', color: '#dc2626' }}>
                               {index + 1}
                             </span>
                             <div className="flex flex-col min-w-0">
                               <span className="text-sm font-medium text-foreground">{shortenSubjectName(s.name)}</span>
-                              <Badge className="text-xs font-semibold w-fit mt-0.5 text-white" style={{ backgroundColor: '#eab308' }}>{score}%</Badge>
+                              <Badge className="text-xs font-semibold w-fit mt-0.5 text-white" style={{ backgroundColor: '#f87171' }}>{score}%</Badge>
                             </div>
                           </div>
                         );
