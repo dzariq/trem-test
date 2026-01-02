@@ -15,7 +15,7 @@ import { cn } from "@/lib/utils";
 
 // Import handbook images
 import missionVisionImg from "@/assets/handbook/primary-girl.png";
-import learnerSkillsImg from "@/assets/handbook/teacher-responsibilities.png";
+import learnerSkillsImg from "@/assets/handbook/pre-girl.png";
 import studentPledgeImg from "@/assets/handbook/acknowledgement.png";
 import belongingsImg from "@/assets/handbook/key-sops.png";
 import attendanceImg from "@/assets/handbook/working-hours.png";
