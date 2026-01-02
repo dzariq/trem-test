@@ -896,7 +896,7 @@ export default function AcademicPage() {
                           </div>
                           <div>
                             <div className="flex items-center gap-2 mb-1">
-                              <span className="text-[10px] font-semibold uppercase px-2 py-0.5 rounded-full" style={{ backgroundColor: 'rgba(120, 53, 15, 0.15)', color: '#78350f' }}>Sports House</span>
+                              <span className="text-[10px] font-semibold uppercase px-2 py-0.5 rounded-full" style={{ backgroundColor: 'rgba(239, 68, 68, 0.15)', color: '#dc2626' }}>Sports House</span>
                             </div>
                             <h3 className="font-semibold" style={{ color: '#78350f' }}>{academicData.awards.sportsHouse.organization}</h3>
                             <p className="text-sm flex items-center gap-1.5 mt-1" style={{ color: '#92400e' }}>
@@ -931,7 +931,7 @@ export default function AcademicPage() {
                           </div>
                           <div>
                             <div className="flex items-center gap-2 mb-1">
-                              <span className="text-[10px] font-semibold uppercase px-2 py-0.5 rounded-full" style={{ backgroundColor: 'rgba(120, 53, 15, 0.15)', color: '#78350f' }}>Club</span>
+                              <span className="text-[10px] font-semibold uppercase px-2 py-0.5 rounded-full" style={{ backgroundColor: 'rgba(59, 130, 246, 0.15)', color: '#2563eb' }}>Club</span>
                             </div>
                             <h3 className="font-semibold" style={{ color: '#78350f' }}>{academicData.awards.club.organization}</h3>
                             <p className="text-sm flex items-center gap-1.5 mt-1" style={{ color: '#92400e' }}>
@@ -966,7 +966,7 @@ export default function AcademicPage() {
                           </div>
                           <div>
                             <div className="flex items-center gap-2 mb-1">
-                              <span className="text-[10px] font-semibold uppercase px-2 py-0.5 rounded-full" style={{ backgroundColor: 'rgba(120, 53, 15, 0.15)', color: '#78350f' }}>Leadership</span>
+                              <span className="text-[10px] font-semibold uppercase px-2 py-0.5 rounded-full" style={{ backgroundColor: 'rgba(168, 85, 247, 0.15)', color: '#9333ea' }}>Leadership</span>
                             </div>
                             <h3 className="font-semibold" style={{ color: '#78350f' }}>{academicData.awards.studentLeadership.organization}</h3>
                             <p className="text-sm flex items-center gap-1.5 mt-1" style={{ color: '#92400e' }}>
@@ -1001,7 +1001,7 @@ export default function AcademicPage() {
                           </div>
                           <div>
                             <div className="flex items-center gap-2 mb-1">
-                              <span className="text-[10px] font-semibold uppercase px-2 py-0.5 rounded-full" style={{ backgroundColor: 'rgba(120, 53, 15, 0.15)', color: '#78350f' }}>Events</span>
+                              <span className="text-[10px] font-semibold uppercase px-2 py-0.5 rounded-full" style={{ backgroundColor: 'rgba(34, 197, 94, 0.15)', color: '#16a34a' }}>Events</span>
                             </div>
                             <h3 className="font-semibold" style={{ color: '#78350f' }}>{academicData.awards.events.organization}</h3>
                             <p className="text-sm flex items-center gap-1.5 mt-1" style={{ color: '#92400e' }}>
@@ -1036,7 +1036,7 @@ export default function AcademicPage() {
                           </div>
                           <div>
                             <div className="flex items-center gap-2 mb-1">
-                              <span className="text-[10px] font-semibold uppercase px-2 py-0.5 rounded-full" style={{ backgroundColor: 'rgba(120, 53, 15, 0.15)', color: '#78350f' }}>Achievement</span>
+                              <span className="text-[10px] font-semibold uppercase px-2 py-0.5 rounded-full" style={{ backgroundColor: 'rgba(236, 72, 153, 0.15)', color: '#db2777' }}>Achievement</span>
                             </div>
                             <h3 className="font-semibold" style={{ color: '#78350f' }}>{academicData.awards.achievements.event}</h3>
                             <p className="text-sm flex items-center gap-1.5 mt-1" style={{ color: '#92400e' }}>
