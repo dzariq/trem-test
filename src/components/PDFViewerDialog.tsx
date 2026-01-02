@@ -56,6 +56,7 @@ export function PDFViewerDialog({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent 
+        hideClose
         className={`${isFullscreen ? 'max-w-[95vw] h-[95vh]' : 'max-w-3xl h-[80vh]'} flex flex-col p-0 gap-0`}
       >
         <DialogHeader className="px-4 py-3 border-b border-border flex flex-row items-center justify-between space-y-0 bg-background">
