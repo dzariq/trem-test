@@ -1429,45 +1429,88 @@ export default function AcademicPage() {
                   </div>
                 </div>
 
-                {/* Subject-wise Comparison */}
-                <div className="space-y-2">
-                  <h4 className="text-sm font-medium text-foreground">Subject Comparison</h4>
-                  <div className="space-y-2">
-                    {comparisonData.map((item) => (
-                      <div key={item.name} className="flex items-center justify-between p-2 rounded-lg bg-accent/30">
-                        <span className="text-sm font-medium text-foreground">{item.name}</span>
-                        <div className="flex items-center gap-3">
-                          <span className="text-xs text-muted-foreground">{item.examB}%</span>
-                          <span className="text-sm font-medium">→</span>
-                          <span className="text-xs text-foreground">{item.examA}%</span>
-                          <Badge 
-                            variant={item.delta > 0 ? "default" : item.delta < 0 ? "destructive" : "secondary"}
-                            className="text-xs px-1.5 py-0"
-                          >
-                            {item.delta > 0 ? <ArrowUp className="h-3 w-3 mr-0.5" /> : item.delta < 0 ? <ArrowDown className="h-3 w-3 mr-0.5" /> : <Minus className="h-3 w-3 mr-0.5" />}
-                            {Math.abs(item.delta)}%
-                          </Badge>
+                {/* Subject Comparison - Moomoo Style */}
+                <div className="space-y-3">
+                  <h4 className="text-sm font-medium text-foreground">Subject Performance</h4>
+                  <div className="space-y-3">
+                    {comparisonData.map((item) => {
+                      const maxScore = Math.max(item.examA, item.examB, 1);
+                      const percentChange = item.examB > 0 ? ((item.delta / item.examB) * 100).toFixed(1) : '0.0';
+                      return (
+                        <div key={item.name} className="p-3 rounded-xl bg-accent/30 border border-border/50">
+                          <div className="flex items-center justify-between mb-2">
+                            <span className="text-sm font-semibold text-foreground">{shortenSubjectName(item.name)}</span>
+                            <div className="flex items-center gap-2">
+                              <Badge 
+                                variant={item.delta > 0 ? "default" : item.delta < 0 ? "destructive" : "secondary"}
+                                className={`text-xs px-2 py-0.5 ${
+                                  item.delta > 0 
+                                    ? "bg-emerald-500/20 text-emerald-600 border-emerald-500/30" 
+                                    : item.delta < 0 
+                                    ? "bg-red-500/20 text-red-600 border-red-500/30" 
+                                    : ""
+                                }`}
+                              >
+                                {item.delta > 0 ? <TrendingUp className="h-3 w-3 mr-1" /> : item.delta < 0 ? <TrendingDown className="h-3 w-3 mr-1" /> : <Minus className="h-3 w-3 mr-1" />}
+                                {item.delta > 0 ? "+" : ""}{item.delta}pts ({item.delta >= 0 ? "+" : ""}{percentChange}%)
+                              </Badge>
+                            </div>
+                          </div>
+                          
+                          {/* Visual Bars */}
+                          <div className="space-y-1.5">
+                            {/* Exam B (Previous) */}
+                            <div className="flex items-center gap-2">
+                              <span className="text-[10px] text-muted-foreground w-16 truncate">{getExamLabelForComparison(compareExamB).split(' ')[0]}</span>
+                              <div className="flex-1 h-4 bg-muted/30 rounded-full overflow-hidden relative">
+                                <div 
+                                  className="h-full bg-chart-2/60 rounded-full transition-all duration-500"
+                                  style={{ width: `${(item.examB / 100) * 100}%` }}
+                                />
+                                <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] font-medium text-foreground">
+                                  {item.examB}
+                                </span>
+                              </div>
+                            </div>
+                            
+                            {/* Exam A (Current) */}
+                            <div className="flex items-center gap-2">
+                              <span className="text-[10px] text-muted-foreground w-16 truncate">{getExamLabelForComparison(compareExamA).split(' ')[0]}</span>
+                              <div className="flex-1 h-4 bg-muted/30 rounded-full overflow-hidden relative">
+                                <div 
+                                  className={`h-full rounded-full transition-all duration-500 ${
+                                    item.delta > 0 
+                                      ? "bg-emerald-500/70" 
+                                      : item.delta < 0 
+                                      ? "bg-red-500/70" 
+                                      : "bg-chart-1/60"
+                                  }`}
+                                  style={{ width: `${(item.examA / 100) * 100}%` }}
+                                />
+                                <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] font-medium text-foreground">
+                                  {item.examA}
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+                          
+                          {/* Delta Line */}
+                          {item.delta !== 0 && (
+                            <div className="mt-2 pt-2 border-t border-border/30 flex items-center justify-between">
+                              <span className="text-[10px] text-muted-foreground">Change</span>
+                              <div className="flex items-center gap-1">
+                                <span className={`text-xs font-bold ${item.delta > 0 ? "text-emerald-600" : "text-red-600"}`}>
+                                  {item.examB} → {item.examA}
+                                </span>
+                                <span className={`text-[10px] ${item.delta > 0 ? "text-emerald-600" : "text-red-600"}`}>
+                                  ({item.delta > 0 ? "↑" : "↓"} {Math.abs(item.delta)} points)
+                                </span>
+                              </div>
+                            </div>
+                          )}
                         </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Subject Comparison Bar Chart */}
-                <div className="space-y-2">
-                  <h4 className="text-sm font-medium text-foreground">Subject Comparison</h4>
-                  <div className="h-48">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <BarChart data={comparisonData.map(d => ({ ...d, name: shortenSubjectName(d.name) }))} layout="vertical">
-                        <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" strokeOpacity={0.3} />
-                        <XAxis type="number" domain={[0, 100]} tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }} />
-                        <YAxis dataKey="name" type="category" tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }} width={60} />
-                        <Tooltip contentStyle={{ backgroundColor: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: "8px" }} />
-                        <Legend wrapperStyle={{ fontSize: 10 }} />
-                        <Bar dataKey="examA" name={getExamLabelForComparison(compareExamA)} fill="hsl(var(--chart-1))" barSize={8} />
-                        <Bar dataKey="examB" name={getExamLabelForComparison(compareExamB)} fill="hsl(var(--chart-2))" barSize={8} />
-                      </BarChart>
-                    </ResponsiveContainer>
+                      );
+                    })}
                   </div>
                 </div>
 
