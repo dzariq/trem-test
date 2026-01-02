@@ -148,7 +148,7 @@ export default function TeacherHandbookPage() {
                         <AccordionItem 
                           key={idx} 
                           value={`${section.key}-${idx}`}
-                          className="border rounded-lg px-3 bg-muted/30"
+                          className={cn("border rounded-lg px-3", colors.lightBg)}
                         >
                           <AccordionTrigger className="hover:no-underline py-2.5 text-sm">
                             <span className="font-medium text-foreground text-left">
