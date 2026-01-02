@@ -80,7 +80,7 @@ const getLetterGrade = (total: number): {
   color: string;
 } => {
   if (total >= 90) return {
-    grade: "A+",
+    grade: "A*",
     color: "bg-emerald-100 text-emerald-700 border-emerald-300"
   };
   if (total >= 80) return {
@@ -100,7 +100,7 @@ const getLetterGrade = (total: number): {
     color: "bg-orange-100 text-orange-700 border-orange-300"
   };
   return {
-    grade: "F",
+    grade: "E",
     color: "bg-red-100 text-red-700 border-red-300"
   };
 };
@@ -259,8 +259,11 @@ export default function TeacherAcademicPage() {
   const passRate = filteredStudentScores.length > 0 ? Math.round(filteredStudentScores.filter(g => g >= 50).length / filteredStudentScores.length * 100) : 0;
   const aGradeRate = filteredStudentScores.length > 0 ? Math.round(filteredStudentScores.filter(g => g >= 80).length / filteredStudentScores.length * 100) : 0;
   const gradeDistribution = [{
+    range: "A*",
+    count: filteredStudentScores.filter(g => g >= 90).length
+  }, {
     range: "A",
-    count: filteredStudentScores.filter(g => g >= 80).length
+    count: filteredStudentScores.filter(g => g >= 80 && g < 90).length
   }, {
     range: "B",
     count: filteredStudentScores.filter(g => g >= 70 && g < 80).length
@@ -271,7 +274,7 @@ export default function TeacherAcademicPage() {
     range: "D",
     count: filteredStudentScores.filter(g => g >= 50 && g < 60).length
   }, {
-    range: "F",
+    range: "E",
     count: filteredStudentScores.filter(g => g < 50).length
   }];
 
@@ -2114,10 +2117,11 @@ const SUBJECT_COLORS = ["#8b5cf6",
 ];
 
 // Grade colors for charts
-const GRADE_COLORS = {
+const GRADE_COLORS: Record<string, string> = {
+  "A*": "#059669",
   A: "#10b981",
   B: "#3b82f6",
   C: "#f59e0b",
   D: "#f97316",
-  F: "#ef4444"
+  E: "#ef4444"
 };
