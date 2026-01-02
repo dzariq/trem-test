@@ -533,22 +533,10 @@ export default function AcademicPage() {
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            {/* Exam Selection Row */}
-            <div className="flex gap-3">
-              {!isActivitiesTab && (
-                <Select value={examType} onValueChange={(v) => setExamType(v as ExamType)}>
-                  <SelectTrigger className="flex-1">
-                    <SelectValue placeholder="Exam Type" />
-                  </SelectTrigger>
-                  <SelectContent className="bg-card">
-                    <SelectItem value="midYear">Mid-Year Exam</SelectItem>
-                    <SelectItem value="yearEnd">Year-End Exam</SelectItem>
-                  </SelectContent>
-                </Select>
-              )}
-              
-              {isActivitiesTab ? (
-                <div className="flex-1 flex gap-2">
+            {/* Year Selection for Activities Tab Only */}
+            {isActivitiesTab && (
+              <div className="space-y-2">
+                <div className="flex gap-2">
                   {(["2025", "2024", "2023"] as const).map((year) => (
                     <button
                       key={year}
@@ -564,32 +552,11 @@ export default function AcademicPage() {
                     </button>
                   ))}
                 </div>
-              ) : (
-                <Select value={selectedYear} onValueChange={(v) => setSelectedYear(v as YearKey)}>
-                  <SelectTrigger className="w-28">
-                    <SelectValue placeholder="Year" />
-                  </SelectTrigger>
-                  <SelectContent className="bg-card">
-                    <SelectItem value="2025">2025</SelectItem>
-                    <SelectItem value="2024">2024</SelectItem>
-                    <SelectItem value="2023">2023</SelectItem>
-                  </SelectContent>
-                </Select>
-              )}
-            </div>
-
-            {/* Selected Period Badge */}
-            <div className="flex items-center gap-2 flex-wrap">
-              {isActivitiesTab ? (
                 <Badge variant="secondary" className="text-xs">
                   Viewing: {selectedYears.sort().reverse().join(", ")}
                 </Badge>
-              ) : (
-                <Badge variant="secondary" className="text-xs">
-                  Viewing: {getExamLabel()}
-                </Badge>
-              )}
-            </div>
+              </div>
+            )}
 
             {/* Tabs for Grades/Behavior/Activities */}
             <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
@@ -602,13 +569,13 @@ export default function AcademicPage() {
               <TabsContent value="grades" className="mt-4">
                 <div className="space-y-4">
                   {/* Exam & Subject Filter Section */}
-                  <div className="space-y-3">
+                  <div className="space-y-3 pb-2">
                     {/* Exam Selector Row */}
-                    <div className="flex items-center gap-2">
-                      <span className="text-xs font-medium text-muted-foreground shrink-0">Exam:</span>
+                    <div className="flex items-center gap-3">
+                      <span className="text-sm font-medium text-muted-foreground shrink-0">Exam:</span>
                       <div className="flex gap-2 flex-1">
                         <Select value={selectedYear} onValueChange={(v) => setSelectedYear(v as YearKey)}>
-                          <SelectTrigger className="w-24 h-8 text-xs">
+                          <SelectTrigger className="w-[100px]">
                             <SelectValue placeholder="Year" />
                           </SelectTrigger>
                           <SelectContent className="bg-card">
@@ -619,7 +586,7 @@ export default function AcademicPage() {
                           </SelectContent>
                         </Select>
                         <Select value={examType} onValueChange={(v) => setExamType(v as ExamType)}>
-                          <SelectTrigger className="flex-1 h-8 text-xs">
+                          <SelectTrigger className="flex-1">
                             <SelectValue placeholder="Period" />
                           </SelectTrigger>
                           <SelectContent className="bg-card">
@@ -633,12 +600,12 @@ export default function AcademicPage() {
                     {/* Multi-Select Subject Filter */}
                     <div className="space-y-2">
                       <div className="flex items-center justify-between">
-                        <span className="text-xs font-medium text-muted-foreground">Subjects:</span>
-                        <div className="flex gap-1">
+                        <span className="text-sm font-medium text-muted-foreground">Subjects:</span>
+                        <div className="flex gap-2">
                           <Button
                             variant="ghost"
                             size="sm"
-                            className="h-6 px-2 text-xs"
+                            className="h-7 px-3 text-sm font-medium"
                             onClick={() => setGradesSelectedSubjects(academicData.subjects.map(s => s.name))}
                           >
                             Select All
@@ -646,21 +613,21 @@ export default function AcademicPage() {
                           <Button
                             variant="ghost"
                             size="sm"
-                            className="h-6 px-2 text-xs"
+                            className="h-7 px-3 text-sm font-medium"
                             onClick={() => setGradesSelectedSubjects([])}
                           >
                             Clear
                           </Button>
                         </div>
                       </div>
-                      <div className="flex flex-wrap gap-1.5">
+                      <div className="flex flex-wrap gap-2">
                         {academicData.subjects.map((subject) => {
                           const isSelected = gradesSelectedSubjects.includes(subject.name);
                           return (
                             <Badge
                               key={subject.name}
                               variant={isSelected ? "default" : "outline"}
-                              className={`cursor-pointer text-xs px-2 py-0.5 transition-colors ${
+                              className={`cursor-pointer text-sm px-3 py-1.5 rounded-full transition-colors ${
                                 isSelected 
                                   ? "bg-primary text-primary-foreground hover:bg-primary/90" 
                                   : "hover:bg-accent"
