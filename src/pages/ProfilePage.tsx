@@ -26,14 +26,16 @@ import {
   Pencil,
   MapPin,
   FileText,
-  Download
+  Eye
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
+import { PDFViewerDialog } from "@/components/PDFViewerDialog";
 
 export default function ProfilePage() {
   const navigate = useNavigate();
   const [isEditOpen, setIsEditOpen] = useState(false);
+  const [isPdfOpen, setIsPdfOpen] = useState(false);
   const [profile, setProfile] = useState({
     name: parentProfile.name,
     email: parentProfile.email,
@@ -193,15 +195,7 @@ export default function ProfilePage() {
           <CardContent className="p-0">
             <button 
               className="w-full flex items-center justify-between p-4 hover:bg-accent/30 transition-colors"
-              onClick={() => {
-                const link = document.createElement('a');
-                link.href = '/documents/student-handbook.pdf';
-                link.download = 'Student_Handbook_2026.pdf';
-                document.body.appendChild(link);
-                link.click();
-                document.body.removeChild(link);
-                toast.success("Downloading Student Handbook...");
-              }}
+              onClick={() => setIsPdfOpen(true)}
             >
               <div className="flex items-center gap-3">
                 <div className="p-2 rounded-full bg-primary/10">
@@ -212,7 +206,7 @@ export default function ProfilePage() {
                   <span className="text-xs text-muted-foreground">PDF • 2026 Edition</span>
                 </div>
               </div>
-              <Download className="h-5 w-5 text-muted-foreground" />
+              <Eye className="h-5 w-5 text-muted-foreground" />
             </button>
           </CardContent>
         </Card>
@@ -309,6 +303,15 @@ export default function ProfilePage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* PDF Viewer Dialog */}
+      <PDFViewerDialog
+        open={isPdfOpen}
+        onOpenChange={setIsPdfOpen}
+        pdfUrl="/documents/student-handbook.pdf"
+        title="Student Handbook"
+        downloadFileName="Student_Handbook_2026.pdf"
+      />
     </AppLayout>
   );
 }

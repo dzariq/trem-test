@@ -29,10 +29,13 @@ import {
   Users,
   GraduationCap,
   FileText,
-  Download,
+  Eye,
   KeyRound
 } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { useNavigate } from "react-router-dom";
+import { toast } from "sonner";
+import { PDFViewerDialog } from "@/components/PDFViewerDialog";
 
 const schoolAccounts = [
   {
@@ -66,13 +69,12 @@ const schoolAccounts = [
     description: "Submit IT support tickets and track resolution status"
   }
 ];
-import { useNavigate } from "react-router-dom";
-import { toast } from "sonner";
 
 export default function TeacherProfilePage() {
   const navigate = useNavigate();
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [isAccountsOpen, setIsAccountsOpen] = useState(false);
+  const [isPdfOpen, setIsPdfOpen] = useState(false);
   const [profile, setProfile] = useState({
     name: teacherProfile.name,
     email: teacherProfile.email,
@@ -265,15 +267,7 @@ export default function TeacherProfilePage() {
           <CardContent className="p-0 divide-y divide-border">
             <button 
               className="w-full flex items-center justify-between p-4 hover:bg-accent/30 transition-colors"
-              onClick={() => {
-                const link = document.createElement('a');
-                link.href = '/documents/teacher-handbook.pdf';
-                link.download = 'Teacher_Handbook_2026.pdf';
-                document.body.appendChild(link);
-                link.click();
-                document.body.removeChild(link);
-                toast.success("Downloading Teacher Handbook...");
-              }}
+              onClick={() => setIsPdfOpen(true)}
             >
               <div className="flex items-center gap-3">
                 <div className="p-2 rounded-full bg-primary/10">
@@ -284,7 +278,7 @@ export default function TeacherProfilePage() {
                   <span className="text-xs text-muted-foreground">PDF • 2026 Edition</span>
                 </div>
               </div>
-              <Download className="h-5 w-5 text-muted-foreground" />
+              <Eye className="h-5 w-5 text-muted-foreground" />
             </button>
             <button 
               className="w-full flex items-center justify-between p-4 hover:bg-accent/30 transition-colors"
@@ -420,6 +414,15 @@ export default function TeacherProfilePage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* PDF Viewer Dialog */}
+      <PDFViewerDialog
+        open={isPdfOpen}
+        onOpenChange={setIsPdfOpen}
+        pdfUrl="/documents/teacher-handbook.pdf"
+        title="Teacher Handbook"
+        downloadFileName="Teacher_Handbook_2026.pdf"
+      />
     </TeacherAppLayout>
   );
 }
