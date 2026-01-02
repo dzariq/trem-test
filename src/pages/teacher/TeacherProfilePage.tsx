@@ -27,7 +27,9 @@ import {
   Pencil,
   BookOpen,
   Users,
-  GraduationCap
+  GraduationCap,
+  FileText,
+  Download
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
@@ -213,6 +215,40 @@ export default function TeacherProfilePage() {
               </div>
               <Switch defaultChecked />
             </div>
+          </CardContent>
+        </Card>
+
+        {/* Teacher Handbook */}
+        <Card className="bg-card border-border shadow-sm">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-base font-semibold flex items-center gap-2">
+              <FileText className="h-4 w-4" />
+              Resources
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="p-0">
+            <button 
+              className="w-full flex items-center justify-between p-4 hover:bg-accent/30 transition-colors"
+              onClick={() => {
+                toast.success("Downloading Teacher Handbook...");
+                // Simulate PDF download
+                const link = document.createElement('a');
+                link.href = '#';
+                link.download = 'Teacher_Handbook_2025.pdf';
+                toast.info("Teacher Handbook PDF ready for download");
+              }}
+            >
+              <div className="flex items-center gap-3">
+                <div className="p-2 rounded-full bg-primary/10">
+                  <FileText className="h-4 w-4 text-primary" />
+                </div>
+                <div className="text-left">
+                  <span className="font-medium text-foreground block">Teacher Handbook</span>
+                  <span className="text-xs text-muted-foreground">PDF • 2025 Edition</span>
+                </div>
+              </div>
+              <Download className="h-5 w-5 text-muted-foreground" />
+            </button>
           </CardContent>
         </Card>
 
