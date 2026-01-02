@@ -134,7 +134,7 @@ const SmallStar = ({ className, size = 12 }: { className?: string; size?: number
   </svg>
 );
 
-// Single Large Logo Background - Right Bottom Corner
+// Single Large Logo Background - Right Bottom Corner with gradient transparency
 const LargeLogoBackground = ({ className }: { className?: string }) => (
   <div 
     className={`absolute inset-0 pointer-events-none overflow-hidden ${className}`}
@@ -142,7 +142,12 @@ const LargeLogoBackground = ({ className }: { className?: string }) => (
     <img 
       src={schoolLogo} 
       alt="" 
-      className="absolute -right-24 -bottom-24 w-[400px] h-[400px] sm:w-[480px] sm:h-[480px] object-contain opacity-[0.07]"
+      className="absolute -right-24 -bottom-24 w-[400px] h-[400px] sm:w-[480px] sm:h-[480px] object-contain"
+      style={{
+        opacity: 0.055,
+        maskImage: 'linear-gradient(135deg, transparent 0%, rgba(0,0,0,0.3) 30%, rgba(0,0,0,1) 100%)',
+        WebkitMaskImage: 'linear-gradient(135deg, transparent 0%, rgba(0,0,0,0.3) 30%, rgba(0,0,0,1) 100%)',
+      }}
     />
   </div>
 );
