@@ -54,14 +54,17 @@ export function ResultsSummary() {
   };
   const performanceLevel = getPerformanceLevel(currentAverage);
 
-  // Distinct colors for each subject - varied hues
-  const lineColors = [
-    "#3b82f6", // blue
-    "#f59e0b", // amber
-    "#10b981", // emerald
-    "#8b5cf6", // violet
-    "#ef4444", // red
-  ];
+  // Subject colors matching AcademicPage chart colors (per subject)
+  const subjectColors: Record<string, string> = {
+    "English": "#3b82f6",       // blue
+    "Mathematics": "#f59e0b",   // amber/orange
+    "Science": "#10b981",       // emerald/green
+    "History": "#8b5cf6",       // violet/purple
+    "Geography": "#ef4444",     // red
+    "Art": "#06b6d4",           // cyan
+    "Music": "#ec4899",         // pink
+    "Physical Education": "#84cc16", // lime
+  };
 
   // Prepare chart data using new structure
   const multiLineChartData = [
@@ -166,16 +169,19 @@ export function ResultsSummary() {
                   }}
                   formatter={(value: number, name: string) => [`${value}%`, name]}
                 />
-                {filteredSubjects.map((subject) => (
-                  <Line
-                    key={subject.name}
-                    type="monotone"
-                    dataKey={subject.name}
-                    stroke={lineColors[academicData.subjects.findIndex(s => s.name === subject.name) % lineColors.length]}
-                    strokeWidth={2}
-                    dot={{ fill: lineColors[academicData.subjects.findIndex(s => s.name === subject.name) % lineColors.length], strokeWidth: 0, r: 3 }}
-                  />
-                ))}
+                {filteredSubjects.map((subject) => {
+                  const color = subjectColors[subject.name] || "#3b82f6";
+                  return (
+                    <Line
+                      key={subject.name}
+                      type="monotone"
+                      dataKey={subject.name}
+                      stroke={color}
+                      strokeWidth={2}
+                      dot={{ fill: color, strokeWidth: 0, r: 3 }}
+                    />
+                  );
+                })}
               </LineChart>
             </ResponsiveContainer>
           </div>

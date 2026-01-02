@@ -32,16 +32,17 @@ export function AttendanceSummary() {
     ? monthData.present + monthData.absent + monthData.late + monthData.excused 
     : 100;
   
+  // Colors matching AttendancePage: Present=emerald, Absent=red, Late=amber, Excused=purple
   const chartData = monthData ? [
-    { name: "Present", value: Math.round((monthData.present / total) * 100), color: "hsl(var(--chart-1))" },
+    { name: "Present", value: Math.round((monthData.present / total) * 100), color: "hsl(160, 84%, 39%)" },
     { name: "Absent", value: Math.round((monthData.absent / total) * 100), color: "hsl(var(--destructive))" },
-    { name: "Late", value: Math.round((monthData.late / total) * 100), color: "hsl(var(--chart-4))" },
-    { name: "Excused", value: Math.round((monthData.excused / total) * 100), color: "hsl(var(--chart-5))" },
+    { name: "Late", value: Math.round((monthData.late / total) * 100), color: "hsl(38, 92%, 50%)" },
+    { name: "Excused", value: Math.round((monthData.excused / total) * 100), color: "hsl(271, 91%, 65%)" },
   ] : [
-    { name: "Present", value: 89, color: "hsl(var(--chart-1))" },
+    { name: "Present", value: 89, color: "hsl(160, 84%, 39%)" },
     { name: "Absent", value: 7, color: "hsl(var(--destructive))" },
-    { name: "Late", value: 3, color: "hsl(var(--chart-4))" },
-    { name: "Excused", value: 1, color: "hsl(var(--chart-5))" },
+    { name: "Late", value: 3, color: "hsl(38, 92%, 50%)" },
+    { name: "Excused", value: 1, color: "hsl(271, 91%, 65%)" },
   ];
 
   return (
