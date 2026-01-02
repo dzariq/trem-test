@@ -134,15 +134,15 @@ const SmallStar = ({ className, size = 12 }: { className?: string; size?: number
   </svg>
 );
 
-// Single Large Logo Background
+// Single Large Logo Background - Right Bottom Corner
 const LargeLogoBackground = ({ className }: { className?: string }) => (
   <div 
-    className={`absolute inset-0 pointer-events-none flex items-center justify-center ${className}`}
+    className={`absolute inset-0 pointer-events-none overflow-hidden ${className}`}
   >
     <img 
       src={schoolLogo} 
       alt="" 
-      className="w-48 h-48 sm:w-64 sm:h-64 object-contain opacity-[0.06]"
+      className="absolute -right-16 -bottom-16 w-[280px] h-[280px] sm:w-[360px] sm:h-[360px] object-contain opacity-[0.06]"
     />
   </div>
 );
@@ -258,19 +258,21 @@ export function CertificateDialog({
               </p>
             </div>
 
-            {/* V-Shaped Gold Ribbon */}
+            {/* V-Shaped Gold Ribbon with Star Seal at the V-point */}
             <div className="relative w-[140%] -mx-[20%] mt-4">
               <VRibbon className="w-full h-14 sm:h-16" />
+              {/* Star Seal positioned at the V-point of the ribbon */}
+              <div className="absolute left-1/2 -translate-x-1/2 top-[85%]">
+                <StarSeal />
+              </div>
             </div>
 
-            {/* Star Seal - positioned between Achievement and Proudly Presented */}
-            <div className="mt-3 sm:mt-4">
-              <StarSeal />
-            </div>
+            {/* Spacer for the seal */}
+            <div className="h-16 sm:h-20" />
 
-            {/* Proudly Presented - closer to the seal */}
+            {/* Proudly Presented - right after the seal */}
             <p 
-              className="text-xs sm:text-sm uppercase tracking-[0.2em] font-medium mt-2"
+              className="text-xs sm:text-sm uppercase tracking-[0.2em] font-medium -mt-2"
               style={{ color: '#d4a537' }}
             >
               Proudly Presented To
