@@ -8,7 +8,7 @@ import { Calendar } from "@/components/ui/calendar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Progress } from "@/components/ui/progress";
-import { MapPin, Clock, User, ChevronDown, Users, CalendarDays, ClipboardList } from "lucide-react";
+import { MapPin, Clock, User, ChevronDown, Users, CalendarDays, ClipboardList, FileText } from "lucide-react";
 import schoolLogo from "@/assets/school-badge.png";
 import { calendarEvents, ccaActivities } from "@/data/mockData";
 import { format, isSameDay, parseISO } from "date-fns";
@@ -390,7 +390,7 @@ export default function TeacherCalendarPage() {
                 <p className="text-sm text-muted-foreground">{selectedCCA.description}</p>
 
                 {/* Schedule Info */}
-                <Card className="bg-muted/50">
+                <Card className="bg-muted/30 border-0">
                   <CardContent className="p-4 space-y-3">
                     <div className="flex items-center gap-3">
                       <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
@@ -452,6 +452,17 @@ export default function TeacherCalendarPage() {
                   </div>
                   <p className="text-sm text-muted-foreground pl-6">{selectedCCA.requirements}</p>
                 </div>
+
+                {/* Operational Notes (Internal) - Teacher Only */}
+                {selectedCCA.operationalNotes && (
+                  <div className="space-y-2 p-3 rounded-lg bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800">
+                    <div className="flex items-center gap-2">
+                      <FileText className="h-4 w-4 text-amber-600 dark:text-amber-400" />
+                      <span className="text-sm font-medium text-amber-800 dark:text-amber-300">Operational Notes (Internal)</span>
+                    </div>
+                    <p className="text-sm text-amber-700 dark:text-amber-400 pl-6">{selectedCCA.operationalNotes}</p>
+                  </div>
+                )}
 
                 {/* Next Session */}
                 <div className="p-3 rounded-lg bg-primary/10 border border-primary/20">
