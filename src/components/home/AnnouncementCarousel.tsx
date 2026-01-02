@@ -83,12 +83,18 @@ export function AnnouncementCarousel() {
             <p className="text-sm text-muted-foreground mb-4">
               {mainAnnouncement.snippet}
             </p>
-            <Button 
-              className="w-full"
+            <button 
+              className="relative w-full py-2.5 rounded-md text-white font-medium text-sm overflow-hidden"
+              style={{
+                background: 'linear-gradient(145deg, #f97316 0%, #ea580c 50%, #c2410c 100%)',
+              }}
               onClick={() => navigate(`/parent/announcements/${mainAnnouncement.id}`)}
             >
-              Read More
-            </Button>
+              {/* Megaphone icon pattern - non-overlapping */}
+              <Megaphone className="absolute -top-1 -right-1 h-6 w-6 opacity-[0.15]" strokeWidth={1} />
+              <Megaphone className="absolute -bottom-1 left-1 h-5 w-5 opacity-[0.12]" strokeWidth={1} />
+              <span className="relative">Read More</span>
+            </button>
           </CardContent>
         </Card>
       </div>
