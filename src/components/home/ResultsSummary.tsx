@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { academicData } from "@/data/mockData";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -6,13 +6,15 @@ import { Badge } from "@/components/ui/badge";
 import { ChevronRight, TrendingUp, Award, BookOpen } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import {
-  LineChart,
-  Line,
+  BarChart,
+  Bar,
   XAxis,
   YAxis,
   ResponsiveContainer,
   Tooltip,
   CartesianGrid,
+  Cell,
+  ReferenceDot,
 } from "recharts";
 
 // Helper to get score from new data structure
@@ -21,9 +23,51 @@ const getScore = (subject: typeof academicData.subjects[0], year: string, examTy
   return yearData ? yearData[examType] : null;
 };
 
+// Helper to shorten long subject names
+const shortenSubjectName = (name: string): string => {
+  const abbreviations: Record<string, string> = {
+    "Mathematics": "Math",
+    "Physical Education": "PE",
+    "Social Studies": "Social St.",
+    "Information Technology": "IT",
+    "Computer Science": "Comp Sci",
+    "Computer Studies": "Comp St.",
+  };
+  return abbreviations[name] || name;
+};
+
 export function ResultsSummary() {
   const navigate = useNavigate();
   const [subjectFilter, setSubjectFilter] = useState<string>("all");
+
+  // Subject colors matching AcademicPage chart colors (per subject)
+  const subjectColors: Record<string, string> = {
+    "English": "#3b82f6",       // blue
+    "Mathematics": "#f59e0b",   // amber/orange
+    "Science": "#10b981",       // emerald/green
+    "History": "#8b5cf6",       // violet/purple
+    "Geography": "#ef4444",     // red
+    "Art": "#06b6d4",           // cyan
+    "Music": "#ec4899",         // pink
+    "Physical Education": "#84cc16", // lime
+    "Mandarin": "#f59e0b",      // amber
+    "Computer Studies": "#3b82f6", // blue
+    "French": "#8b5cf6",        // violet
+    "Chemistry": "#ef4444",     // red
+    "Physics": "#10b981",       // green
+  };
+
+  // Line colors array for indexed access
+  const lineColors = [
+    "#3b82f6", // blue
+    "#f59e0b", // amber
+    "#10b981", // emerald
+    "#8b5cf6", // violet
+    "#ef4444", // red
+    "#06b6d4", // cyan
+    "#ec4899", // pink
+    "#84cc16", // lime
+  ];
 
   // Calculate current average from mid-year 2025 scores
   const currentAverage = Math.round(
@@ -54,38 +98,21 @@ export function ResultsSummary() {
   };
   const performanceLevel = getPerformanceLevel(currentAverage);
 
-  // Subject colors matching AcademicPage chart colors (per subject)
-  const subjectColors: Record<string, string> = {
-    "English": "#3b82f6",       // blue
-    "Mathematics": "#f59e0b",   // amber/orange
-    "Science": "#10b981",       // emerald/green
-    "History": "#8b5cf6",       // violet/purple
-    "Geography": "#ef4444",     // red
-    "Art": "#06b6d4",           // cyan
-    "Music": "#ec4899",         // pink
-    "Physical Education": "#84cc16", // lime
-  };
-
-  // Prepare chart data using new structure
-  const multiLineChartData = [
-    { 
-      period: "Mid 2024", 
-      ...Object.fromEntries(academicData.subjects.map(s => [s.name, getScore(s, "2024", "midYear")]))
-    },
-    { 
-      period: "End 2024", 
-      ...Object.fromEntries(academicData.subjects.map(s => [s.name, getScore(s, "2024", "yearEnd")]))
-    },
-    { 
-      period: "Mid 2025", 
-      ...Object.fromEntries(academicData.subjects.map(s => [s.name, getScore(s, "2025", "midYear")]))
-    },
-  ];
-
-  // Filtered subjects for lines
-  const filteredSubjects = subjectFilter === "all" 
-    ? academicData.subjects 
-    : academicData.subjects.filter(s => s.name === subjectFilter);
+  // Subject performance data for bar chart (sorted best to worst), filtered by selection
+  const subjectPerformance = useMemo(() => {
+    const subjects = subjectFilter === "all" 
+      ? academicData.subjects 
+      : academicData.subjects.filter(s => s.name === subjectFilter);
+    
+    return subjects
+      .map(s => ({
+        name: shortenSubjectName(s.name),
+        fullName: s.name,
+        score: getScore(s, "2025", "midYear") ?? 0,
+        goal: Math.min((getScore(s, "2025", "midYear") ?? 70) + 5, 100)
+      }))
+      .sort((a, b) => b.score - a.score);
+  }, [subjectFilter]);
 
   const stats = [
     { 
@@ -134,56 +161,75 @@ export function ResultsSummary() {
                 className="cursor-pointer whitespace-nowrap text-xs px-2 py-0.5"
                 onClick={() => setSubjectFilter(subject.name)}
               >
-                {subject.name}
+                {shortenSubjectName(subject.name)}
               </Badge>
             ))}
           </div>
 
-          {/* Mini Chart */}
-          <div className="h-28 mb-4">
-            <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={multiLineChartData}>
-                <CartesianGrid 
-                  strokeDasharray="3 3" 
-                  stroke="hsl(var(--border))" 
-                  strokeOpacity={0.3}
-                  horizontal={true}
-                  vertical={false}
+          {/* Subject Performance Bar Chart */}
+          <div className="mb-3">
+            <h4 className="text-sm font-medium text-foreground flex items-center gap-2 mb-2">
+              Subject Performance
+              <Badge variant="outline" className="text-[10px] px-1.5 py-0">
+                <span
+                  className="w-2 h-2 rounded-full mr-1"
+                  style={{ backgroundColor: "hsl(var(--foreground))" }}
                 />
-                <XAxis 
-                  dataKey="period" 
-                  tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }}
-                  axisLine={false}
-                  tickLine={false}
-                />
-                <YAxis 
-                  domain={[60, 100]}
-                  hide
-                />
-                <Tooltip 
-                  contentStyle={{ 
-                    backgroundColor: "hsl(var(--card))",
-                    border: "1px solid hsl(var(--border))",
-                    borderRadius: "8px",
-                    fontSize: "11px"
-                  }}
-                  formatter={(value: number, name: string) => [`${value}%`, name]}
-                />
-                {filteredSubjects.map((subject) => {
-                  const color = subjectColors[subject.name] || "#3b82f6";
-                  return (
-                    <Line
-                      key={subject.name}
-                      type="monotone"
-                      dataKey={subject.name}
-                      stroke={color}
-                      strokeWidth={2}
-                      dot={{ fill: color, strokeWidth: 0, r: 3 }}
+                Goal
+              </Badge>
+            </h4>
+            <div className="h-44">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={subjectPerformance} layout="vertical">
+                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" strokeOpacity={0.3} />
+                  <XAxis 
+                    type="number" 
+                    domain={[0, 100]} 
+                    tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }}
+                    axisLine={false}
+                    tickLine={false}
+                  />
+                  <YAxis 
+                    type="category" 
+                    dataKey="name" 
+                    tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }} 
+                    width={70}
+                    axisLine={false}
+                    tickLine={false}
+                  />
+                  <Tooltip 
+                    contentStyle={{ 
+                      backgroundColor: "hsl(var(--card))", 
+                      border: "1px solid hsl(var(--border))", 
+                      borderRadius: "8px",
+                      fontSize: "11px"
+                    }}
+                    formatter={(value: number, name: string) => [
+                      `${value}%`, 
+                      name === "score" ? "Score" : name === "goal" ? "Goal" : name
+                    ]}
+                  />
+                  <Bar dataKey="score" radius={[0, 4, 4, 0]}>
+                    {subjectPerformance.map((entry, index) => {
+                      const color = subjectColors[entry.fullName] || lineColors[index % lineColors.length];
+                      return <Cell key={index} fill={color} />;
+                    })}
+                  </Bar>
+
+                  {subjectPerformance.map((entry) => (
+                    <ReferenceDot
+                      key={`goal-${entry.name}`}
+                      x={entry.goal}
+                      y={entry.name}
+                      r={4}
+                      fill="hsl(var(--foreground))"
+                      stroke="hsl(var(--background))"
+                      strokeWidth={1}
                     />
-                  );
-                })}
-              </LineChart>
-            </ResponsiveContainer>
+                  ))}
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
           </div>
 
           {/* Stats Grid */}
