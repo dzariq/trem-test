@@ -1429,6 +1429,149 @@ export default function AcademicPage() {
                   </div>
                 </div>
 
+                {/* Top 5 Growth Leaders - Moomoo Style */}
+                <div className="p-4 rounded-xl bg-gradient-to-br from-emerald-500/10 to-emerald-600/5 border border-emerald-500/20">
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="flex items-center gap-2">
+                      <div className="w-8 h-8 rounded-lg bg-emerald-500/20 flex items-center justify-center">
+                        <TrendingUp className="h-4 w-4 text-emerald-500" />
+                      </div>
+                      <div>
+                        <h4 className="text-sm font-semibold text-foreground">Top Growth Leaders</h4>
+                        <p className="text-[10px] text-muted-foreground">Best performing subjects</p>
+                      </div>
+                    </div>
+                    <Badge className="bg-emerald-500/20 text-emerald-600 border-emerald-500/30 text-xs">
+                      Top 5
+                    </Badge>
+                  </div>
+                  
+                  {/* Top 5 Growth Chart */}
+                  {(() => {
+                    const top5Growth = [...comparisonData]
+                      .sort((a, b) => b.delta - a.delta)
+                      .slice(0, 5)
+                      .filter(item => item.delta > 0);
+                    
+                    if (top5Growth.length === 0) {
+                      return (
+                        <div className="text-center py-4 text-muted-foreground text-sm">
+                          No subjects showed improvement in this period
+                        </div>
+                      );
+                    }
+                    
+                    const maxDelta = Math.max(...top5Growth.map(t => t.delta));
+                    
+                    return (
+                      <div className="space-y-3">
+                        {/* Mini Area Chart */}
+                        <div className="h-32 -mx-2">
+                          <ResponsiveContainer width="100%" height="100%">
+                            <AreaChart 
+                              data={top5Growth.map(item => ({
+                                name: shortenSubjectName(item.name),
+                                growth: item.delta,
+                                percentChange: item.examB > 0 ? ((item.delta / item.examB) * 100) : 0,
+                                from: item.examB,
+                                to: item.examA
+                              }))}
+                              margin={{ top: 10, right: 10, left: 10, bottom: 0 }}
+                            >
+                              <defs>
+                                <linearGradient id="growthGradient" x1="0" y1="0" x2="0" y2="1">
+                                  <stop offset="5%" stopColor="hsl(142, 76%, 46%)" stopOpacity={0.4}/>
+                                  <stop offset="95%" stopColor="hsl(142, 76%, 46%)" stopOpacity={0.05}/>
+                                </linearGradient>
+                              </defs>
+                              <XAxis 
+                                dataKey="name" 
+                                axisLine={false}
+                                tickLine={false}
+                                tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }}
+                              />
+                              <YAxis hide />
+                              <Area
+                                type="monotone"
+                                dataKey="growth"
+                                stroke="hsl(142, 76%, 46%)"
+                                strokeWidth={2}
+                                fill="url(#growthGradient)"
+                              />
+                              <Tooltip
+                                content={({ active, payload }) => {
+                                  if (active && payload && payload.length) {
+                                    const data = payload[0].payload;
+                                    return (
+                                      <div className="bg-popover border border-border rounded-lg shadow-lg p-2">
+                                        <p className="text-xs font-medium text-foreground">{data.name}</p>
+                                        <p className="text-xs text-emerald-500 font-bold">+{data.growth} pts</p>
+                                        <p className="text-[10px] text-muted-foreground">{data.from} → {data.to}</p>
+                                      </div>
+                                    );
+                                  }
+                                  return null;
+                                }}
+                              />
+                            </AreaChart>
+                          </ResponsiveContainer>
+                        </div>
+                        
+                        {/* Top 5 Rankings */}
+                        <div className="space-y-2">
+                          {top5Growth.map((item, index) => {
+                            const percentChange = item.examB > 0 ? ((item.delta / item.examB) * 100).toFixed(1) : '0.0';
+                            const barWidth = (item.delta / maxDelta) * 100;
+                            
+                            return (
+                              <div key={item.name} className="flex items-center gap-2">
+                                {/* Rank Badge */}
+                                <div className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold ${
+                                  index === 0 ? 'bg-yellow-500/20 text-yellow-600' :
+                                  index === 1 ? 'bg-gray-400/20 text-gray-500' :
+                                  index === 2 ? 'bg-amber-600/20 text-amber-600' :
+                                  'bg-muted text-muted-foreground'
+                                }`}>
+                                  {index + 1}
+                                </div>
+                                
+                                {/* Subject Name */}
+                                <span className="text-xs font-medium text-foreground w-16 truncate">
+                                  {shortenSubjectName(item.name)}
+                                </span>
+                                
+                                {/* Growth Bar */}
+                                <div className="flex-1 h-4 bg-muted/30 rounded-full overflow-hidden relative">
+                                  <div 
+                                    className="h-full bg-gradient-to-r from-emerald-500 to-emerald-400 rounded-full transition-all duration-700"
+                                    style={{ width: `${barWidth}%` }}
+                                  />
+                                </div>
+                                
+                                {/* Growth Stats */}
+                                <div className="flex items-center gap-1 min-w-[60px] justify-end">
+                                  <span className="text-xs font-bold text-emerald-500">+{item.delta}</span>
+                                  <span className="text-[9px] text-muted-foreground">({percentChange}%)</span>
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                        
+                        {/* Summary Footer */}
+                        <div className="pt-2 border-t border-emerald-500/20 flex items-center justify-between">
+                          <span className="text-[10px] text-muted-foreground">
+                            Average growth: +{(top5Growth.reduce((sum, t) => sum + t.delta, 0) / top5Growth.length).toFixed(1)} pts
+                          </span>
+                          <span className="text-[10px] text-emerald-500 font-medium">
+                            🏆 {shortenSubjectName(top5Growth[0].name)} leads with +{top5Growth[0].delta} pts
+                          </span>
+                        </div>
+                      </div>
+                    );
+                  })()}
+                </div>
+
                 {/* Subject Comparison - Moomoo Style */}
                 <div className="space-y-3">
                   <h4 className="text-sm font-medium text-foreground">Subject Performance</h4>
