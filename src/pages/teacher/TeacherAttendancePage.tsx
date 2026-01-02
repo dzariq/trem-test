@@ -145,7 +145,7 @@ export default function TeacherAttendancePage() {
         showBack
         leftContent={
           <div className="flex items-center gap-2">
-            <img src={schoolLogo} alt="School Logo" className="h-8 w-8 object-contain" />
+            <img src={schoolLogo} alt="School Logo" className="h-12 w-auto -my-2 drop-shadow-md" />
             <h1 className="text-xl font-semibold text-foreground">Attendance</h1>
           </div>
         }

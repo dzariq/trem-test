@@ -77,7 +77,7 @@ export default function TeacherHandbookPage() {
         showBack 
         leftContent={
           <div className="flex items-center gap-2">
-            <img src={schoolBadge} alt="Collinz Logo" className="h-8 w-8 object-contain" />
+            <img src={schoolBadge} alt="Collinz Logo" className="h-12 w-auto -my-2 drop-shadow-md" />
             <h1 className="text-xl font-semibold text-foreground">Teacher Handbook</h1>
           </div>
         }
