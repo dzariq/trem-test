@@ -3,7 +3,7 @@ import { academicData, attendanceData } from "@/data/mockData";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ChevronRight, TrendingUp, Award, BookOpen, Calendar, Target, AlertTriangle } from "lucide-react";
+import { ChevronRight, TrendingUp, Award, BookOpen, Calendar, Target, AlertTriangle, ArrowUp } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import {
   BarChart,
@@ -141,8 +141,24 @@ export function ResultsSummary() {
       .sort((a, b) => b.score - a.score);
   }, [subjectFilter]);
 
+  // Rising stars - subjects with biggest improvement from previous exam (2024 year-end to 2025 mid-year)
+  const risingStars = useMemo(() => {
+    const improvements = academicData.subjects.map(s => {
+      const current = getScore(s, "2025", "midYear") ?? 0;
+      const prev = getScore(s, "2024", "yearEnd") ?? 0;
+      return {
+        name: s.name,
+        current,
+        prev,
+        improvement: current - prev
+      };
+    }).filter(item => item.improvement > 0 && item.current > 0 && item.prev > 0);
+
+    return improvements.sort((a, b) => b.improvement - a.improvement).slice(0, 3);
+  }, []);
+
   const stats = [
-    { 
+    {
       icon: BookOpen, 
       label: "Current Avg", 
       value: `${currentAverage}%`,
@@ -294,6 +310,44 @@ export function ResultsSummary() {
               </div>
             ))}
           </div>
+
+          {/* Rising Stars */}
+          {risingStars.length > 0 && (
+            <div className="mb-4">
+              <h4 className="text-sm font-medium text-foreground flex items-center gap-1.5 mb-1">
+                <TrendingUp className="h-4 w-4" style={{ color: '#d97706' }} /> Rising Stars
+              </h4>
+              <p className="text-[10px] text-muted-foreground mb-2">Biggest improvements from previous exam</p>
+              <div className="grid grid-cols-3 gap-2">
+                {risingStars.map((item) => (
+                  <div 
+                    key={item.name} 
+                    className="relative flex flex-col items-center p-2.5 rounded-lg border overflow-hidden"
+                    style={{ backgroundColor: 'rgba(251, 191, 36, 0.1)', borderColor: 'rgba(251, 191, 36, 0.3)' }}
+                  >
+                    {/* Star pattern background */}
+                    <div className="absolute inset-0 pointer-events-none">
+                      <svg className="absolute -top-1 -left-1 w-8 h-8 opacity-30" fill="none" stroke="#f59e0b" strokeWidth="1" viewBox="0 0 24 24">
+                        <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
+                      </svg>
+                      <svg className="absolute top-0 right-0 w-6 h-6 opacity-25" fill="none" stroke="#fbbf24" strokeWidth="1" viewBox="0 0 24 24">
+                        <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
+                      </svg>
+                      <svg className="absolute -bottom-2 -right-1 w-7 h-7 opacity-35" fill="none" stroke="#f59e0b" strokeWidth="1" viewBox="0 0 24 24">
+                        <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
+                      </svg>
+                    </div>
+                    <span className="text-xs font-medium text-foreground text-center relative z-10">{shortenSubjectName(item.name)}</span>
+                    <div className="flex items-center gap-1 mt-1 relative z-10">
+                      <ArrowUp className="h-3 w-3" style={{ color: '#d97706' }} />
+                      <span className="text-sm font-bold" style={{ color: '#d97706' }}>+{item.improvement}%</span>
+                    </div>
+                    <span className="text-[10px] text-muted-foreground relative z-10">{item.prev}% → {item.current}%</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
           
           <Button 
             variant="outline" 
