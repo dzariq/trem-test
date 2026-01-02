@@ -71,9 +71,9 @@ export function UpcomingEvents() {
                     background: 'linear-gradient(145deg, hsl(var(--primary)) 0%, hsl(var(--primary) / 0.8) 100%)',
                   }}
                 >
-                  <Calendar className="absolute top-1 right-1 h-3 w-3 opacity-40" strokeWidth={1.5} />
-                  <span className="text-lg font-bold leading-none">{day}</span>
-                  <span className="text-xs uppercase">{month}</span>
+                  <Calendar className="absolute inset-0 m-auto h-10 w-10 opacity-[0.15]" strokeWidth={1} />
+                  <span className="relative text-lg font-bold leading-none">{day}</span>
+                  <span className="relative text-xs uppercase">{month}</span>
                 </div>
                 <div className="flex-1 min-w-0">
                   <h3 className="font-medium text-foreground truncate">{event.title}</h3>
