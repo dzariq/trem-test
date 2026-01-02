@@ -15,13 +15,17 @@ const timetableData = [
 
 const periodTimes = ["8:00-8:45", "8:50-9:35", "9:35-10:00", "10:00-10:45", "10:50-11:35"];
 
+const PDF_URL = "/documents/teacher-timetable.pdf";
+
 export default function TeacherTimetablePage() {
   const handleDownload = () => {
+    const link = document.createElement('a');
+    link.href = PDF_URL;
+    link.download = 'Teacher_Timetable_2026.pdf';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
     toast.success("Downloading Timetable PDF...");
-    // Simulate PDF download
-    setTimeout(() => {
-      toast.info("Timetable PDF ready for download");
-    }, 1000);
   };
 
   return (
