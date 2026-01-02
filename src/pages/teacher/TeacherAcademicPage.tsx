@@ -116,6 +116,27 @@ export default function TeacherAcademicPage() {
   const [selectedSubjects, setSelectedSubjects] = useState<string[]>([...subjects]);
   const [selectedCategory, setSelectedCategory] = useState<"attitude" | "homework" | "quiz" | "exam">("quiz");
 
+  // Grade Entry category state (Grades, Behavior, Awards)
+  const [entryCategory, setEntryCategory] = useState<"grades" | "behavior" | "awards">("grades");
+  
+  // Behavior grades state
+  const [behaviorGrades, setBehaviorGrades] = useState<Record<string, {
+    attendance: string;
+    punctuality: string;
+    cooperation: string;
+    selfControl: string;
+    responsibility: string;
+    initiative: string;
+    leadership: string;
+    homeroomComment: string;
+    responsibilityComment: string;
+  }>>({});
+  
+  // Awards state
+  const [awardsData, setAwardsData] = useState<Record<string, {
+    achievement: string;
+  }>>({});
+
   // Comparison tab state
   const [comparisonClass, setComparisonClass] = useState(teacherProfile.classes[0]);
   const [examAClass, setExamAClass] = useState(teacherProfile.classes[0]);
@@ -216,18 +237,82 @@ export default function TeacherAcademicPage() {
       }
     }));
   };
+  
+  // Behavior traits configuration
+  const behaviorTraits = [
+    { key: "attendance", label: "Attendance", bgColor: "bg-rose-50", borderColor: "border-rose-200", textColor: "text-rose-700" },
+    { key: "punctuality", label: "Punctuality", bgColor: "bg-blue-50", borderColor: "border-blue-200", textColor: "text-blue-700" },
+    { key: "cooperation", label: "Cooperation", bgColor: "bg-amber-50", borderColor: "border-amber-200", textColor: "text-amber-700" },
+    { key: "selfControl", label: "Self Control", bgColor: "bg-rose-50", borderColor: "border-rose-200", textColor: "text-rose-700" },
+    { key: "responsibility", label: "Responsibility", bgColor: "bg-purple-50", borderColor: "border-purple-200", textColor: "text-purple-700" },
+    { key: "initiative", label: "Initiative", bgColor: "bg-sky-50", borderColor: "border-sky-200", textColor: "text-sky-700" },
+    { key: "leadership", label: "Leadership", bgColor: "bg-emerald-50", borderColor: "border-emerald-200", textColor: "text-emerald-700" },
+  ];
+  
+  const gradeOptions = ["A", "B", "C", "D", "E"];
+  
+  const getGradeColor = (grade: string) => {
+    switch (grade) {
+      case "A": return "bg-emerald-100 text-emerald-700 border-emerald-300";
+      case "B": return "bg-blue-100 text-blue-700 border-blue-300";
+      case "C": return "bg-amber-100 text-amber-700 border-amber-300";
+      case "D": return "bg-orange-100 text-orange-700 border-orange-300";
+      case "E": return "bg-red-100 text-red-700 border-red-300";
+      default: return "bg-muted text-muted-foreground border-border";
+    }
+  };
+  
+  const getStudentBehavior = (studentId: string) => {
+    return behaviorGrades[studentId] || {
+      attendance: "",
+      punctuality: "",
+      cooperation: "",
+      selfControl: "",
+      responsibility: "",
+      initiative: "",
+      leadership: "",
+      homeroomComment: "",
+      responsibilityComment: ""
+    };
+  };
+  
+  const updateBehavior = (studentId: string, field: string, value: string) => {
+    setBehaviorGrades(prev => ({
+      ...prev,
+      [studentId]: {
+        ...getStudentBehavior(studentId),
+        [field]: value
+      }
+    }));
+  };
+  
+  const getStudentAwards = (studentId: string) => {
+    return awardsData[studentId] || { achievement: "" };
+  };
+  
+  const updateAwards = (studentId: string, field: string, value: string) => {
+    setAwardsData(prev => ({
+      ...prev,
+      [studentId]: {
+        ...getStudentAwards(studentId),
+        [field]: value
+      }
+    }));
+  };
+  
   const handleSaveGrades = () => {
     if (!selectedStudent) {
       toast({
         title: "No Student Selected",
-        description: "Please select a student to save grades.",
+        description: "Please select a student to save.",
         variant: "destructive"
       });
       return;
     }
+    const categoryLabels = { grades: "Grades", behavior: "Behavior", awards: "Awards" };
     toast({
-      title: "Grades Saved",
-      description: `Grades saved for ${students.find(s => s.id === selectedStudent)?.name} in Class ${selectedClass}.`
+      title: `${categoryLabels[entryCategory]} Saved`,
+      description: `${categoryLabels[entryCategory]} saved for ${students.find(s => s.id === selectedStudent)?.name} in Class ${selectedClass}.`
     });
   };
 
@@ -717,84 +802,234 @@ export default function TeacherAcademicPage() {
                   </CardContent>
                 </Card>
 
-                {/* Subject Grade Cards */}
-                <div className="space-y-3">
-                  {subjects.map(subject => {
-                const isExpanded = expandedSubjects.includes(subject);
-                const grades = getStudentSubjectGrades(selectedStudent, subject);
-                const total = calculateTotal(grades);
-                const {
-                  grade: letterGrade,
-                  color: gradeColor
-                } = getLetterGrade(total);
-                const hasData = Object.values(grades).some(v => v !== "");
-                return <Collapsible key={subject} open={isExpanded} onOpenChange={() => toggleSubject(subject)}>
-                        <Card className={cn("overflow-hidden transition-colors", isExpanded ? "border-primary/50" : "")}>
-                          <CollapsibleTrigger asChild>
-                            <CardHeader className="p-3 cursor-pointer hover:bg-accent/30 transition-colors">
-                              <div className="flex items-center justify-between">
-                                <div className="flex-1">
-                                  <CardTitle className="text-sm font-semibold text-primary">
-                                    {subject}
-                                  </CardTitle>
-                                  {hasData && !isExpanded && <div className="flex items-center gap-2 mt-1">
-                                      <span className="text-xs text-muted-foreground">
-                                        Total: {total}
-                                      </span>
-                                      <Badge className={cn("text-xs px-2 py-0", gradeColor)}>
-                                        {letterGrade}
-                                      </Badge>
-                                    </div>}
-                                </div>
-                                {isExpanded ? <ChevronUp className="h-5 w-5 text-muted-foreground" /> : <ChevronDown className="h-5 w-5 text-muted-foreground" />}
-                              </div>
-                            </CardHeader>
-                          </CollapsibleTrigger>
-                          
-                          <CollapsibleContent>
-                            <CardContent className="p-3 pt-0 space-y-3">
-                              {/* Score Inputs - 2x2 Grid for Mobile */}
-                              <div className="grid grid-cols-2 gap-2">
-                                {gradeCategories.map(cat => <div key={cat.key} className="space-y-1">
-                                    <label className="text-xs font-medium text-muted-foreground uppercase">
-                                      {cat.label} ({cat.max})
-                                    </label>
-                                    <Input type="number" min="0" max={cat.max} placeholder="0" value={grades[cat.key as keyof StudentGrades] || ""} onChange={e => updateGrade(selectedStudent, subject, cat.key as keyof StudentGrades, e.target.value)} className="text-center h-10" />
-                                  </div>)}
-                              </div>
-
-                              {/* Total & Grade Display */}
-                              <div className="flex items-center justify-between p-2 rounded-lg bg-accent/50">
-                                <div className="flex items-center gap-3">
-                                  <div>
-                                    <p className="text-xs text-muted-foreground">Total</p>
-                                    <p className="text-xl font-bold text-foreground">{total}</p>
-                                  </div>
-                                </div>
-                                <Badge className={cn("text-lg px-4 py-1 font-bold", gradeColor)}>
-                                  {letterGrade}
-                                </Badge>
-                              </div>
-
-                              {/* Comments */}
-                              <div className="space-y-2">
-                                <Textarea placeholder="Performance comment (e.g., Outstanding performance in Arts)" value={grades.comment} onChange={e => updateGrade(selectedStudent, subject, "comment", e.target.value)} className={cn("min-h-[60px] text-sm resize-none", total >= 80 ? "border-emerald-200 bg-emerald-50/50" : total < 50 ? "border-red-200 bg-red-50/50" : "")} />
-                                <Textarea placeholder="Report card comments..." value={grades.reportComment} onChange={e => updateGrade(selectedStudent, subject, "reportComment", e.target.value)} className="min-h-[60px] text-sm resize-none" />
-                              </div>
-                            </CardContent>
-                          </CollapsibleContent>
-                        </Card>
-                      </Collapsible>;
-              })}
+                {/* Category Selector */}
+                <div className="flex gap-1 p-1 rounded-lg bg-muted/50 border border-border">
+                  {[
+                    { key: "grades", label: "Grades", icon: BookOpen },
+                    { key: "behavior", label: "Behavior", icon: UserCheck },
+                    { key: "awards", label: "Awards", icon: Award }
+                  ].map(({ key, label, icon: Icon }) => (
+                    <button
+                      key={key}
+                      onClick={() => setEntryCategory(key as "grades" | "behavior" | "awards")}
+                      className={cn(
+                        "flex-1 flex items-center justify-center gap-1.5 py-2 px-3 rounded-md text-sm font-medium transition-all",
+                        entryCategory === key
+                          ? "bg-primary text-primary-foreground shadow-sm"
+                          : "text-muted-foreground hover:bg-accent/50"
+                      )}
+                    >
+                      <Icon className="h-4 w-4" />
+                      {label}
+                    </button>
+                  ))}
                 </div>
+
+                {/* Grades Entry */}
+                {entryCategory === "grades" && (
+                  <div className="space-y-3">
+                    {subjects.map(subject => {
+                      const isExpanded = expandedSubjects.includes(subject);
+                      const grades = getStudentSubjectGrades(selectedStudent, subject);
+                      const total = calculateTotal(grades);
+                      const { grade: letterGrade, color: gradeColor } = getLetterGrade(total);
+                      const hasData = Object.values(grades).some(v => v !== "");
+                      return (
+                        <Collapsible key={subject} open={isExpanded} onOpenChange={() => toggleSubject(subject)}>
+                          <Card className={cn("overflow-hidden transition-colors", isExpanded ? "border-primary/50" : "")}>
+                            <CollapsibleTrigger asChild>
+                              <CardHeader className="p-3 cursor-pointer hover:bg-accent/30 transition-colors">
+                                <div className="flex items-center justify-between">
+                                  <div className="flex-1">
+                                    <CardTitle className="text-sm font-semibold text-primary">
+                                      {subject}
+                                    </CardTitle>
+                                    {hasData && !isExpanded && (
+                                      <div className="flex items-center gap-2 mt-1">
+                                        <span className="text-xs text-muted-foreground">
+                                          Total: {total}
+                                        </span>
+                                        <Badge className={cn("text-xs px-2 py-0", gradeColor)}>
+                                          {letterGrade}
+                                        </Badge>
+                                      </div>
+                                    )}
+                                  </div>
+                                  {isExpanded ? <ChevronUp className="h-5 w-5 text-muted-foreground" /> : <ChevronDown className="h-5 w-5 text-muted-foreground" />}
+                                </div>
+                              </CardHeader>
+                            </CollapsibleTrigger>
+                            
+                            <CollapsibleContent>
+                              <CardContent className="p-3 pt-0 space-y-3">
+                                <div className="grid grid-cols-2 gap-2">
+                                  {gradeCategories.map(cat => (
+                                    <div key={cat.key} className="space-y-1">
+                                      <label className="text-xs font-medium text-muted-foreground uppercase">
+                                        {cat.label} ({cat.max})
+                                      </label>
+                                      <Input 
+                                        type="number" 
+                                        min="0" 
+                                        max={cat.max} 
+                                        placeholder="0" 
+                                        value={grades[cat.key as keyof StudentGrades] || ""} 
+                                        onChange={e => updateGrade(selectedStudent, subject, cat.key as keyof StudentGrades, e.target.value)} 
+                                        className="text-center h-10" 
+                                      />
+                                    </div>
+                                  ))}
+                                </div>
+
+                                <div className="flex items-center justify-between p-2 rounded-lg bg-accent/50">
+                                  <div className="flex items-center gap-3">
+                                    <div>
+                                      <p className="text-xs text-muted-foreground">Total</p>
+                                      <p className="text-xl font-bold text-foreground">{total}</p>
+                                    </div>
+                                  </div>
+                                  <Badge className={cn("text-lg px-4 py-1 font-bold", gradeColor)}>
+                                    {letterGrade}
+                                  </Badge>
+                                </div>
+
+                                <div className="space-y-2">
+                                  <Textarea 
+                                    placeholder="Performance comment (e.g., Outstanding performance in Arts)" 
+                                    value={grades.comment} 
+                                    onChange={e => updateGrade(selectedStudent, subject, "comment", e.target.value)} 
+                                    className={cn("min-h-[60px] text-sm resize-none", total >= 80 ? "border-emerald-200 bg-emerald-50/50" : total < 50 ? "border-red-200 bg-red-50/50" : "")} 
+                                  />
+                                  <Textarea 
+                                    placeholder="Report card comments..." 
+                                    value={grades.reportComment} 
+                                    onChange={e => updateGrade(selectedStudent, subject, "reportComment", e.target.value)} 
+                                    className="min-h-[60px] text-sm resize-none" 
+                                  />
+                                </div>
+                              </CardContent>
+                            </CollapsibleContent>
+                          </Card>
+                        </Collapsible>
+                      );
+                    })}
+                  </div>
+                )}
+
+                {/* Behavior Entry */}
+                {entryCategory === "behavior" && (
+                  <div className="space-y-4">
+                    {/* Behavioral Traits Grid */}
+                    <div className="grid grid-cols-2 gap-3">
+                      {behaviorTraits.map(trait => {
+                        const behavior = getStudentBehavior(selectedStudent);
+                        const currentGrade = behavior[trait.key as keyof typeof behavior] as string || "";
+                        return (
+                          <Card key={trait.key} className={cn("overflow-hidden", trait.bgColor, trait.borderColor)}>
+                            <CardContent className="p-3">
+                              <label className={cn("text-xs font-semibold uppercase block mb-2", trait.textColor)}>
+                                {trait.label}
+                              </label>
+                              <Select 
+                                value={currentGrade} 
+                                onValueChange={(v) => updateBehavior(selectedStudent, trait.key, v)}
+                              >
+                                <SelectTrigger className={cn("h-10 bg-background/80", trait.borderColor)}>
+                                  <SelectValue placeholder="Grade">
+                                    {currentGrade && (
+                                      <Badge className={cn("font-bold", getGradeColor(currentGrade))}>
+                                        {currentGrade}
+                                      </Badge>
+                                    )}
+                                  </SelectValue>
+                                </SelectTrigger>
+                                <SelectContent>
+                                  {gradeOptions.map(grade => (
+                                    <SelectItem key={grade} value={grade}>
+                                      <div className="flex items-center gap-2">
+                                        <Badge className={cn("font-bold", getGradeColor(grade))}>
+                                          {grade}
+                                        </Badge>
+                                      </div>
+                                    </SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                            </CardContent>
+                          </Card>
+                        );
+                      })}
+                    </div>
+
+                    {/* Comment Sections */}
+                    <Card className="bg-rose-50 border-rose-200">
+                      <CardContent className="p-3">
+                        <label className="text-xs font-semibold uppercase block mb-2 text-rose-700">
+                          Homeroom Teacher Comment
+                        </label>
+                        <Textarea
+                          placeholder="Enter homeroom teacher comment..."
+                          value={getStudentBehavior(selectedStudent).homeroomComment}
+                          onChange={(e) => updateBehavior(selectedStudent, "homeroomComment", e.target.value)}
+                          className="min-h-[80px] text-sm resize-none bg-background/80 border-rose-200"
+                        />
+                      </CardContent>
+                    </Card>
+
+                    <Card className="bg-purple-50 border-purple-200">
+                      <CardContent className="p-3">
+                        <label className="text-xs font-semibold uppercase block mb-2 text-purple-700">
+                          Responsibility Comment
+                        </label>
+                        <Textarea
+                          placeholder="Enter responsibility comment..."
+                          value={getStudentBehavior(selectedStudent).responsibilityComment}
+                          onChange={(e) => updateBehavior(selectedStudent, "responsibilityComment", e.target.value)}
+                          className="min-h-[80px] text-sm resize-none bg-background/80 border-purple-200"
+                        />
+                      </CardContent>
+                    </Card>
+                  </div>
+                )}
+
+                {/* Awards Entry */}
+                {entryCategory === "awards" && (
+                  <div className="space-y-4">
+                    <Card className="bg-amber-50 border-amber-200 overflow-hidden">
+                      <CardHeader className="p-3 pb-2" style={{ background: 'linear-gradient(135deg, #fef3c7 0%, #fcd34d 50%, #f59e0b 100%)' }}>
+                        <div className="flex items-center gap-2">
+                          <Award className="h-5 w-5 text-amber-700" />
+                          <CardTitle className="text-sm font-semibold text-amber-800">Achievement & Awards</CardTitle>
+                        </div>
+                      </CardHeader>
+                      <CardContent className="p-3">
+                        <Textarea
+                          placeholder="Enter student achievements and awards (e.g., 'First place in Science Fair', 'Perfect Attendance Award')..."
+                          value={getStudentAwards(selectedStudent).achievement}
+                          onChange={(e) => updateAwards(selectedStudent, "achievement", e.target.value)}
+                          className="min-h-[120px] text-sm resize-none bg-background/80 border-amber-200"
+                        />
+                      </CardContent>
+                    </Card>
+
+                    <div className="flex items-center gap-2 p-3 rounded-lg bg-amber-100/50 border border-amber-200">
+                      <Lightbulb className="h-4 w-4 text-amber-600 shrink-0" />
+                      <p className="text-xs text-amber-700">
+                        Include academic achievements, extracurricular accomplishments, and character awards.
+                      </p>
+                    </div>
+                  </div>
+                )}
 
                 <Button className="w-full" size="lg" onClick={handleSaveGrades}>
                   <Save className="h-4 w-4 mr-2" />
-                  Save All Grades
+                  {entryCategory === "grades" && "Save All Grades"}
+                  {entryCategory === "behavior" && "Save Behavior"}
+                  {entryCategory === "awards" && "Save Awards"}
                 </Button>
               </> : <Card className="bg-muted/30">
                 <CardContent className="p-8 text-center">
-                  <p className="text-muted-foreground">Select a student to enter grades</p>
+                  <p className="text-muted-foreground">Select a student to enter data</p>
                 </CardContent>
               </Card>}
           </TabsContent>
