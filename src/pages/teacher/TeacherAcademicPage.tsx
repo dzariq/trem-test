@@ -356,10 +356,12 @@ export default function TeacherAcademicPage() {
     }))
     .sort((a, b) => b.percentage - a.percentage);
 
-  // Calculate subject averages
+  // Calculate subject averages - filtered by selectedSubjects
   const subjectTotals: Record<string, { sum: number; count: number }> = {};
   Object.values(detailedGradesForClass).forEach((studentGrades) => {
     Object.entries(studentGrades).forEach(([subject, grades]) => {
+      // Only include selected subjects
+      if (!selectedSubjects.includes(subject)) return;
       const total = grades.attitude + grades.homework + grades.quiz + grades.exam;
       if (!subjectTotals[subject]) subjectTotals[subject] = { sum: 0, count: 0 };
       subjectTotals[subject].sum += total;
@@ -436,37 +438,41 @@ export default function TeacherAcademicPage() {
     };
   }, [trendData, subjectFilter]);
 
-  // Rising subjects - biggest improvement from first to last period
+  // Rising subjects - biggest improvement from first to last period (filtered by selectedSubjects)
   const risingSubjects = useMemo(() => {
     if (trendData.length < 2) return [];
     const subjectNames = ["Mathematics", "Science", "English", "Arts", "Physical Education", "Chinese as a Second Language"];
     
-    return subjectNames.map(name => {
-      const first = trendData[0]?.[name] as number ?? 0;
-      const last = trendData[trendData.length - 1]?.[name] as number ?? 0;
-      return { name, first, last, improvement: last - first };
-    })
-    .filter(s => s.improvement > 0)
-    .sort((a, b) => b.improvement - a.improvement)
-    .slice(0, 3);
-  }, [trendData]);
+    return subjectNames
+      .filter(name => selectedSubjects.includes(name))
+      .map(name => {
+        const first = trendData[0]?.[name] as number ?? 0;
+        const last = trendData[trendData.length - 1]?.[name] as number ?? 0;
+        return { name, first, last, improvement: last - first };
+      })
+      .filter(s => s.improvement > 0)
+      .sort((a, b) => b.improvement - a.improvement)
+      .slice(0, 3);
+  }, [trendData, selectedSubjects]);
 
-  // Falling subjects - biggest decline
+  // Falling subjects - biggest decline (filtered by selectedSubjects)
   const fallingSubjects = useMemo(() => {
     if (trendData.length < 2) return [];
     const subjectNames = ["Mathematics", "Science", "English", "Arts", "Physical Education", "Chinese as a Second Language"];
     
-    return subjectNames.map(name => {
-      const first = trendData[0]?.[name] as number ?? 0;
-      const last = trendData[trendData.length - 1]?.[name] as number ?? 0;
-      return { name, first, last, decline: first - last };
-    })
-    .filter(s => s.decline > 0)
-    .sort((a, b) => b.decline - a.decline)
-    .slice(0, 3);
-  }, [trendData]);
+    return subjectNames
+      .filter(name => selectedSubjects.includes(name))
+      .map(name => {
+        const first = trendData[0]?.[name] as number ?? 0;
+        const last = trendData[trendData.length - 1]?.[name] as number ?? 0;
+        return { name, first, last, decline: first - last };
+      })
+      .filter(s => s.decline > 0)
+      .sort((a, b) => b.decline - a.decline)
+      .slice(0, 3);
+  }, [trendData, selectedSubjects]);
 
-  // Radar chart data for subject strengths
+  // Radar chart data for subject strengths (filtered by selectedSubjects)
   const radarData = useMemo(() => {
     const data = subjectYearlyData[selectedClass as keyof typeof subjectYearlyData] || subjectYearlyData["5A"];
     const latest = data[data.length - 1];
@@ -478,15 +484,16 @@ export default function TeacherAcademicPage() {
       "Physical Education": "PE",
       "Chinese as a Second Language": "Chinese",
     };
-    return [
-      { subject: shortNames["Mathematics"], score: latest.Mathematics, fullMark: 100 },
-      { subject: shortNames["Science"], score: latest.Science, fullMark: 100 },
-      { subject: shortNames["English"], score: latest.English, fullMark: 100 },
-      { subject: shortNames["Arts"], score: latest.Arts, fullMark: 100 },
-      { subject: shortNames["Physical Education"], score: latest["Physical Education"], fullMark: 100 },
-      { subject: shortNames["Chinese as a Second Language"], score: latest["Chinese as a Second Language"], fullMark: 100 },
+    const allSubjects = [
+      { name: "Mathematics", subject: shortNames["Mathematics"], score: latest.Mathematics, fullMark: 100 },
+      { name: "Science", subject: shortNames["Science"], score: latest.Science, fullMark: 100 },
+      { name: "English", subject: shortNames["English"], score: latest.English, fullMark: 100 },
+      { name: "Arts", subject: shortNames["Arts"], score: latest.Arts, fullMark: 100 },
+      { name: "Physical Education", subject: shortNames["Physical Education"], score: latest["Physical Education"], fullMark: 100 },
+      { name: "Chinese as a Second Language", subject: shortNames["Chinese as a Second Language"], score: latest["Chinese as a Second Language"], fullMark: 100 },
     ];
-  }, [selectedClass]);
+    return allSubjects.filter(s => selectedSubjects.includes(s.name));
+  }, [selectedClass, selectedSubjects]);
 
   // Radar average for color coding
   const radarAverage = useMemo(() => {
@@ -507,17 +514,20 @@ export default function TeacherAcademicPage() {
       "Physical Education": "PE",
       "Chinese as a Second Language": "Chinese",
     };
-    return [
+    const allSubjects = [
       { name: shortNames["Mathematics"], fullName: "Mathematics", classScore: latest.Mathematics, schoolAvg, delta: latest.Mathematics - schoolAvg },
       { name: shortNames["Science"], fullName: "Science", classScore: latest.Science, schoolAvg, delta: latest.Science - schoolAvg },
       { name: shortNames["English"], fullName: "English", classScore: latest.English, schoolAvg, delta: latest.English - schoolAvg },
       { name: shortNames["Arts"], fullName: "Arts", classScore: latest.Arts, schoolAvg, delta: latest.Arts - schoolAvg },
       { name: shortNames["Physical Education"], fullName: "Physical Education", classScore: latest["Physical Education"], schoolAvg, delta: latest["Physical Education"] - schoolAvg },
       { name: shortNames["Chinese as a Second Language"], fullName: "Chinese as a Second Language", classScore: latest["Chinese as a Second Language"], schoolAvg, delta: latest["Chinese as a Second Language"] - schoolAvg },
-    ].sort((a, b) => b.delta - a.delta);
-  }, [selectedClass]);
+    ];
+    return allSubjects
+      .filter(s => selectedSubjects.includes(s.fullName))
+      .sort((a, b) => b.delta - a.delta);
+  }, [selectedClass, selectedSubjects]);
 
-  // Performance Heatmap data
+  // Performance Heatmap data (filtered by selectedSubjects)
   const heatmapData = useMemo(() => {
     const data = subjectYearlyData[selectedClass as keyof typeof subjectYearlyData] || subjectYearlyData["5A"];
     const subjectKeys = ["Mathematics", "Science", "English", "Arts", "Physical Education", "Chinese as a Second Language"] as const;
@@ -530,15 +540,17 @@ export default function TeacherAcademicPage() {
       "Chinese as a Second Language": "Chi",
     };
     
-    return subjectKeys.map(subject => ({
-      subject: shortNames[subject],
-      fullName: subject,
-      scores: data.map(yearData => ({
-        period: yearData.year,
-        score: yearData[subject]
-      }))
-    }));
-  }, [selectedClass]);
+    return subjectKeys
+      .filter(subject => selectedSubjects.includes(subject))
+      .map(subject => ({
+        subject: shortNames[subject],
+        fullName: subject,
+        scores: data.map(yearData => ({
+          period: yearData.year,
+          score: yearData[subject]
+        }))
+      }));
+  }, [selectedClass, selectedSubjects]);
 
   // Helper function to get heatmap cell color based on score
   const getHeatmapColor = (score: number | null): string => {
