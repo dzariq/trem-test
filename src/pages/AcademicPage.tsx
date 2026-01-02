@@ -75,6 +75,11 @@ export default function AcademicPage() {
   const [selectedYears, setSelectedYears] = useState<string[]>(["2025"]);
   const [subjectFilter, setSubjectFilter] = useState("all");
   const [trendPeriod, setTrendPeriod] = useState<"1year" | "2years" | "3years" | "all">("all");
+  
+  // Grades tab filters - exam selector and multi-select subjects
+  const [gradesSelectedSubjects, setGradesSelectedSubjects] = useState<string[]>(
+    academicData.subjects.map(s => s.name)
+  );
   const [reportGenerated, setReportGenerated] = useState(false);
   const [expandedSubject, setExpandedSubject] = useState<string | null>(null);
   
@@ -595,10 +600,95 @@ export default function AcademicPage() {
               </TabsList>
 
               <TabsContent value="grades" className="mt-4">
-                <div className="space-y-3">
+                <div className="space-y-4">
+                  {/* Exam & Subject Filter Section */}
+                  <div className="space-y-3">
+                    {/* Exam Selector Row */}
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs font-medium text-muted-foreground shrink-0">Exam:</span>
+                      <div className="flex gap-2 flex-1">
+                        <Select value={selectedYear} onValueChange={(v) => setSelectedYear(v as YearKey)}>
+                          <SelectTrigger className="w-24 h-8 text-xs">
+                            <SelectValue placeholder="Year" />
+                          </SelectTrigger>
+                          <SelectContent className="bg-card">
+                            <SelectItem value="2025">2025</SelectItem>
+                            <SelectItem value="2024">2024</SelectItem>
+                            <SelectItem value="2023">2023</SelectItem>
+                            <SelectItem value="2022">2022</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <Select value={examType} onValueChange={(v) => setExamType(v as ExamType)}>
+                          <SelectTrigger className="flex-1 h-8 text-xs">
+                            <SelectValue placeholder="Period" />
+                          </SelectTrigger>
+                          <SelectContent className="bg-card">
+                            <SelectItem value="midYear">Mid-Year</SelectItem>
+                            <SelectItem value="yearEnd">Year-End</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+
+                    {/* Multi-Select Subject Filter */}
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-medium text-muted-foreground">Subjects:</span>
+                        <div className="flex gap-1">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-6 px-2 text-xs"
+                            onClick={() => setGradesSelectedSubjects(academicData.subjects.map(s => s.name))}
+                          >
+                            Select All
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-6 px-2 text-xs"
+                            onClick={() => setGradesSelectedSubjects([])}
+                          >
+                            Clear
+                          </Button>
+                        </div>
+                      </div>
+                      <div className="flex flex-wrap gap-1.5">
+                        {academicData.subjects.map((subject) => {
+                          const isSelected = gradesSelectedSubjects.includes(subject.name);
+                          return (
+                            <Badge
+                              key={subject.name}
+                              variant={isSelected ? "default" : "outline"}
+                              className={`cursor-pointer text-xs px-2 py-0.5 transition-colors ${
+                                isSelected 
+                                  ? "bg-primary text-primary-foreground hover:bg-primary/90" 
+                                  : "hover:bg-accent"
+                              }`}
+                              onClick={() => {
+                                if (isSelected) {
+                                  setGradesSelectedSubjects(prev => prev.filter(s => s !== subject.name));
+                                } else {
+                                  setGradesSelectedSubjects(prev => [...prev, subject.name]);
+                                }
+                              }}
+                            >
+                              {isSelected && <Check className="h-3 w-3 mr-1" />}
+                              {shortenSubjectName(subject.name)}
+                            </Badge>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Subject Cards */}
                   {/* Sort subjects by score (highest to lowest), then group into rows of 2 */}
                   {(() => {
-                    const sortedSubjects = [...academicData.subjects].sort((a, b) => {
+                    const filteredSubjects = academicData.subjects.filter(s => 
+                      gradesSelectedSubjects.includes(s.name)
+                    );
+                    const sortedSubjects = [...filteredSubjects].sort((a, b) => {
                       const scoreA = getScore(a, selectedYear, examType) ?? 0;
                       const scoreB = getScore(b, selectedYear, examType) ?? 0;
                       return scoreB - scoreA;
