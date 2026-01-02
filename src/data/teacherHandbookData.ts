@@ -608,77 +608,89 @@ export const teacherHandbookData: HandbookData = {
   ]
 };
 
-export const sectionColors: Record<string, { bg: string; text: string; border: string; dot: string }> = {
+export const sectionColors: Record<string, { bg: string; text: string; border: string; dot: string; lightBg: string }> = {
   school_direction: {
     bg: "bg-blue-100 dark:bg-blue-900/30",
     text: "text-blue-600 dark:text-blue-400",
     border: "border-blue-200 dark:border-blue-800",
-    dot: "bg-blue-500"
+    dot: "bg-blue-500",
+    lightBg: "bg-blue-50 dark:bg-blue-900/20"
   },
   teacher_conduct: {
     bg: "bg-rose-100 dark:bg-rose-900/30",
     text: "text-rose-600 dark:text-rose-400",
     border: "border-rose-200 dark:border-rose-800",
-    dot: "bg-rose-500"
+    dot: "bg-rose-500",
+    lightBg: "bg-rose-50 dark:bg-rose-900/20"
   },
   teacher_responsibilities: {
     bg: "bg-amber-100 dark:bg-amber-900/30",
     text: "text-amber-600 dark:text-amber-400",
     border: "border-amber-200 dark:border-amber-800",
-    dot: "bg-amber-500"
+    dot: "bg-amber-500",
+    lightBg: "bg-amber-50 dark:bg-amber-900/20"
   },
   homeroom_responsibilities: {
     bg: "bg-emerald-100 dark:bg-emerald-900/30",
     text: "text-emerald-600 dark:text-emerald-400",
     border: "border-emerald-200 dark:border-emerald-800",
-    dot: "bg-emerald-500"
+    dot: "bg-emerald-500",
+    lightBg: "bg-emerald-50 dark:bg-emerald-900/20"
   },
   classroom_discipline: {
     bg: "bg-purple-100 dark:bg-purple-900/30",
     text: "text-purple-600 dark:text-purple-400",
     border: "border-purple-200 dark:border-purple-800",
-    dot: "bg-purple-500"
+    dot: "bg-purple-500",
+    lightBg: "bg-purple-50 dark:bg-purple-900/20"
   },
   facilities_care: {
     bg: "bg-teal-100 dark:bg-teal-900/30",
     text: "text-teal-600 dark:text-teal-400",
     border: "border-teal-200 dark:border-teal-800",
-    dot: "bg-teal-500"
+    dot: "bg-teal-500",
+    lightBg: "bg-teal-50 dark:bg-teal-900/20"
   },
   working_hours: {
     bg: "bg-orange-100 dark:bg-orange-900/30",
     text: "text-orange-600 dark:text-orange-400",
     border: "border-orange-200 dark:border-orange-800",
-    dot: "bg-orange-500"
+    dot: "bg-orange-500",
+    lightBg: "bg-orange-50 dark:bg-orange-900/20"
   },
   leave_salary: {
     bg: "bg-indigo-100 dark:bg-indigo-900/30",
     text: "text-indigo-600 dark:text-indigo-400",
     border: "border-indigo-200 dark:border-indigo-800",
-    dot: "bg-indigo-500"
+    dot: "bg-indigo-500",
+    lightBg: "bg-indigo-50 dark:bg-indigo-900/20"
   },
   duty_cca: {
     bg: "bg-cyan-100 dark:bg-cyan-900/30",
     text: "text-cyan-600 dark:text-cyan-400",
     border: "border-cyan-200 dark:border-cyan-800",
-    dot: "bg-cyan-500"
+    dot: "bg-cyan-500",
+    lightBg: "bg-cyan-50 dark:bg-cyan-900/20"
   },
   dress_code: {
     bg: "bg-pink-100 dark:bg-pink-900/30",
     text: "text-pink-600 dark:text-pink-400",
     border: "border-pink-200 dark:border-pink-800",
-    dot: "bg-pink-500"
+    dot: "bg-pink-500",
+    lightBg: "bg-pink-50 dark:bg-pink-900/20"
   },
   key_sops: {
     bg: "bg-slate-100 dark:bg-slate-900/30",
     text: "text-slate-600 dark:text-slate-400",
     border: "border-slate-200 dark:border-slate-800",
-    dot: "bg-slate-500"
+    dot: "bg-slate-500",
+    lightBg: "bg-slate-50 dark:bg-slate-900/20"
   },
   acknowledgement: {
     bg: "bg-green-100 dark:bg-green-900/30",
     text: "text-green-600 dark:text-green-400",
     border: "border-green-200 dark:border-green-800",
-    dot: "bg-green-500"
+    dot: "bg-green-500",
+    lightBg: "bg-green-50 dark:bg-green-900/20"
   }
 };
