@@ -503,18 +503,18 @@ export default function AcademicPage() {
                     <h4 className="text-sm font-medium text-foreground flex items-center gap-1.5">
                       <Trophy className="h-4 w-4 text-chart-1" /> Top Performers
                     </h4>
-                    <div className="space-y-1.5">
+                    <div className="space-y-2">
                       {top3.map((s, index) => {
                         const score = getScore(s, selectedYear, examType);
                         return (
-                          <div key={s.name} className="flex items-center justify-between gap-2 p-2 rounded-lg bg-chart-1/10 border border-chart-1/20 min-w-0">
-                            <div className="flex items-center gap-2 min-w-0 flex-1">
-                              <span className="w-5 h-5 shrink-0 rounded-full bg-chart-1/20 flex items-center justify-center text-xs font-bold text-chart-1">
-                                {index + 1}
-                              </span>
-                              <span className="text-sm font-medium text-foreground truncate">{s.name}</span>
+                          <div key={s.name} className="flex items-center gap-2 p-2.5 rounded-lg bg-chart-1/10 border border-chart-1/20">
+                            <span className="w-6 h-6 shrink-0 rounded-full bg-chart-1/20 flex items-center justify-center text-xs font-bold text-chart-1">
+                              {index + 1}
+                            </span>
+                            <div className="flex flex-col min-w-0">
+                              <span className="text-sm font-medium text-foreground">{s.name}</span>
+                              <Badge variant="secondary" className="text-xs font-semibold w-fit mt-0.5">{score}%</Badge>
                             </div>
-                            <Badge variant="secondary" className="text-xs font-semibold shrink-0">{score}%</Badge>
                           </div>
                         );
                       })}
@@ -526,18 +526,18 @@ export default function AcademicPage() {
                     <h4 className="text-sm font-medium text-foreground flex items-center gap-1.5">
                       <AlertTriangle className="h-4 w-4 text-chart-4" /> Needs Attention
                     </h4>
-                    <div className="space-y-1.5">
+                    <div className="space-y-2">
                       {bottom3.map((s, index) => {
                         const score = getScore(s, selectedYear, examType);
                         return (
-                          <div key={s.name} className="flex items-center justify-between gap-2 p-2 rounded-lg bg-chart-4/10 border border-chart-4/20 min-w-0">
-                            <div className="flex items-center gap-2 min-w-0 flex-1">
-                              <span className="w-5 h-5 shrink-0 rounded-full bg-chart-4/20 flex items-center justify-center text-xs font-bold text-chart-4">
-                                {index + 1}
-                              </span>
-                              <span className="text-sm font-medium text-foreground truncate">{s.name}</span>
+                          <div key={s.name} className="flex items-center gap-2 p-2.5 rounded-lg bg-chart-4/10 border border-chart-4/20">
+                            <span className="w-6 h-6 shrink-0 rounded-full bg-chart-4/20 flex items-center justify-center text-xs font-bold text-chart-4">
+                              {index + 1}
+                            </span>
+                            <div className="flex flex-col min-w-0">
+                              <span className="text-sm font-medium text-foreground">{s.name}</span>
+                              <Badge variant="outline" className="text-xs font-semibold border-chart-4/30 w-fit mt-0.5">{score}%</Badge>
                             </div>
-                            <Badge variant="outline" className="text-xs font-semibold border-chart-4/30 shrink-0">{score}%</Badge>
                           </div>
                         );
                       })}
