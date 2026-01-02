@@ -240,7 +240,21 @@ export function ResultsSummary() {
                       <ArrowUp className="h-3 w-3" style={{ color: '#d97706' }} />
                       <span className="text-sm font-bold" style={{ color: '#d97706' }}>+{item.improvement}%</span>
                     </div>
-                    <span className="text-[10px] text-muted-foreground relative z-10">{item.prev}% → {item.current}%</span>
+                    <div className="flex items-center gap-1 mt-1 relative z-10">
+                      <span 
+                        className="text-[10px] font-medium px-2 py-0.5 rounded-full"
+                        style={{ backgroundColor: '#bbf7d0', color: '#166534' }}
+                      >
+                        {item.prev}%
+                      </span>
+                      <span className="text-[10px] text-muted-foreground">→</span>
+                      <span 
+                        className="text-[10px] font-semibold px-2 py-0.5 rounded-full"
+                        style={{ backgroundColor: '#22c55e', color: '#ffffff' }}
+                      >
+                        {item.current}%
+                      </span>
+                    </div>
                   </div>
                 ))}
               </div>
