@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { CalendarIcon, Check, X, Clock, AlertCircle, Save, ChevronLeft, ChevronRight, CheckCircle2, XCircle, Timer, FileCheck } from "lucide-react";
+import { CalendarIcon, Check, X, Clock, AlertCircle, Save, ChevronLeft, ChevronRight } from "lucide-react";
 import { format, startOfWeek, endOfWeek, isToday, parseISO } from "date-fns";
 import { cn } from "@/lib/utils";
 import { toast } from "@/hooks/use-toast";
@@ -139,19 +139,19 @@ export default function TeacherAttendancePage() {
 
   const getStatusColor = (status: AttendanceStatus) => {
     switch (status) {
-      case "present": return "bg-emerald-500";
-      case "absent": return "bg-red-500";
-      case "late": return "bg-amber-500";
-      case "excused": return "bg-purple-500";
+      case "present": return "bg-emerald-500 text-white";
+      case "absent": return "bg-destructive text-destructive-foreground";
+      case "late": return "bg-amber-400 text-white";
+      case "excused": return "bg-purple-500 text-white";
     }
   };
 
   const getStatusIcon = (status: AttendanceStatus) => {
     switch (status) {
-      case "present": return <CheckCircle2 className="h-4 w-4 text-emerald-600" />;
-      case "absent": return <XCircle className="h-4 w-4 text-red-600" />;
-      case "late": return <Timer className="h-4 w-4 text-amber-600" />;
-      case "excused": return <FileCheck className="h-4 w-4 text-purple-600" />;
+      case "present": return <Check className="h-3 w-3" />;
+      case "absent": return <X className="h-3 w-3" />;
+      case "late": return <Clock className="h-3 w-3" />;
+      case "excused": return <AlertCircle className="h-3 w-3" />;
     }
   };
 
@@ -447,46 +447,52 @@ export default function TeacherAttendancePage() {
                 <div className="space-y-4">
                   {weeklyGroups.map((week, idx) => (
                     <div key={idx} className="space-y-2">
-                      <h4 className="text-xs font-medium text-muted-foreground">
-                        {format(week.weekStart, "MMM d")} - {format(week.weekEnd, "MMM d, yyyy")}
-                      </h4>
-                      <div className="space-y-2">
+                      {/* Week Separator */}
+                      <div className="flex items-center gap-2 pt-2">
+                        <div className="h-px flex-1 bg-border" />
+                        <span className="text-xs font-medium text-muted-foreground px-2">
+                          Week of {format(week.weekStart, "MMM d")}
+                        </span>
+                        <div className="h-px flex-1 bg-border" />
+                      </div>
+
+                      {/* Days - 2 per row */}
+                      <div className="grid grid-cols-2 gap-2">
                         {week.items.map((item, itemIdx) => {
                           const itemDate = parseISO(item.date);
                           const isTodayItem = isToday(itemDate);
                           return (
                             <div
                               key={itemIdx}
-                              className={cn(
-                                "flex items-center gap-3 p-3 rounded-xl border border-border/50 bg-card",
-                                isTodayItem && "ring-2 ring-primary/20"
-                              )}
+                              className={`flex items-center gap-2 p-2 rounded-md transition-all border ${
+                                isTodayItem 
+                                  ? "ring-2 ring-primary/50 " 
+                                  : ""
+                              }${
+                                item.status === 'present' ? "bg-emerald-100 border-emerald-300" :
+                                item.status === 'absent' ? "bg-destructive/20 border-destructive/40" :
+                                item.status === 'late' ? "bg-amber-100 border-amber-300" :
+                                item.status === 'excused' ? "bg-purple-100 border-purple-300" :
+                                "bg-muted/30 border-border/50"
+                              }`}
                             >
-                              <div className={cn("w-1 h-10 rounded-full", getStatusColor(item.status))} />
-                              <div className="flex-1 min-w-0">
-                                <div className="flex items-center gap-2">
-                                  <span className="font-medium text-sm text-foreground truncate">{item.studentName}</span>
-                                  {isTodayItem && (
-                                    <Badge variant="outline" className="text-xs px-1.5 py-0">Today</Badge>
-                                  )}
-                                </div>
-                                <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                                  <span>{format(itemDate, "EEE, MMM d")}</span>
-                                  {item.reason && <span>• {item.reason}</span>}
-                                </div>
-                              </div>
-                              <div className="flex items-center gap-2">
+                              <div className={`w-6 h-6 rounded-full flex items-center justify-center shrink-0 ${getStatusColor(item.status)}`}>
                                 {getStatusIcon(item.status)}
-                                <span className={cn(
-                                  "text-xs font-medium",
-                                  item.status === "present" && "text-emerald-600",
-                                  item.status === "absent" && "text-red-600",
-                                  item.status === "late" && "text-amber-600",
-                                  item.status === "excused" && "text-purple-600",
-                                )}>
-                                  {getStatusLabel(item.status)}
-                                </span>
                               </div>
+                              <div className="flex-1 min-w-0">
+                                <p className="font-medium text-foreground text-xs truncate">
+                                  {item.studentName}
+                                </p>
+                                <p className="text-[9px] text-muted-foreground">
+                                  {format(itemDate, "EEE, d")}
+                                </p>
+                                {item.reason && (
+                                  <p className="text-[9px] text-muted-foreground truncate">{item.reason}</p>
+                                )}
+                              </div>
+                              {isTodayItem && (
+                                <span className="text-[8px] font-medium text-primary shrink-0">Today</span>
+                              )}
                             </div>
                           );
                         })}
