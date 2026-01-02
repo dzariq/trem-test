@@ -1025,19 +1025,19 @@ export default function TeacherAcademicPage() {
                 {entryCategory === "awards" && (
                   <div className="space-y-3">
                     {/* Sports House */}
-                    <Card className="bg-muted/30">
-                      <CardHeader className="p-3 pb-2 bg-muted/50">
-                        <CardTitle className="text-sm font-semibold text-foreground">Sports House</CardTitle>
+                    <Card className="bg-amber-50 border-amber-200 overflow-hidden">
+                      <CardHeader className="p-3 pb-2" style={{ background: 'linear-gradient(135deg, #fef3c7 0%, #fcd34d 50%, #f59e0b 100%)' }}>
+                        <CardTitle className="text-sm font-semibold text-amber-800">Sports House</CardTitle>
                       </CardHeader>
                       <CardContent className="p-3">
                         <div className="grid grid-cols-2 gap-3">
                           <div className="space-y-1">
-                            <label className="text-xs text-muted-foreground">Organization</label>
+                            <label className="text-xs text-amber-700 font-medium">Organization</label>
                             <Select 
                               value={getStudentAwards(selectedStudent).sportsHouseOrg || "None"} 
                               onValueChange={(v) => updateAwards(selectedStudent, "sportsHouseOrg", v)}
                             >
-                              <SelectTrigger className="bg-background">
+                              <SelectTrigger className="bg-background/80 border-amber-200">
                                 <SelectValue />
                               </SelectTrigger>
                               <SelectContent className="bg-background z-50">
@@ -1048,12 +1048,12 @@ export default function TeacherAcademicPage() {
                             </Select>
                           </div>
                           <div className="space-y-1">
-                            <label className="text-xs text-muted-foreground">Role & Responsibility</label>
+                            <label className="text-xs text-amber-700 font-medium">Role & Responsibility</label>
                             <Select 
                               value={getStudentAwards(selectedStudent).sportsHouseRole || "None"} 
                               onValueChange={(v) => updateAwards(selectedStudent, "sportsHouseRole", v)}
                             >
-                              <SelectTrigger className="bg-background">
+                              <SelectTrigger className="bg-background/80 border-amber-200">
                                 <SelectValue />
                               </SelectTrigger>
                               <SelectContent className="bg-background z-50">
@@ -1068,19 +1068,19 @@ export default function TeacherAcademicPage() {
                     </Card>
 
                     {/* Club */}
-                    <Card className="bg-muted/30">
-                      <CardHeader className="p-3 pb-2 bg-muted/50">
-                        <CardTitle className="text-sm font-semibold text-foreground">Club</CardTitle>
+                    <Card className="bg-amber-50 border-amber-200 overflow-hidden">
+                      <CardHeader className="p-3 pb-2" style={{ background: 'linear-gradient(135deg, #fef3c7 0%, #fcd34d 50%, #f59e0b 100%)' }}>
+                        <CardTitle className="text-sm font-semibold text-amber-800">Club</CardTitle>
                       </CardHeader>
                       <CardContent className="p-3">
                         <div className="grid grid-cols-2 gap-3">
                           <div className="space-y-1">
-                            <label className="text-xs text-muted-foreground">Organization</label>
+                            <label className="text-xs text-amber-700 font-medium">Organization</label>
                             <Select 
                               value={getStudentAwards(selectedStudent).clubOrg || "None"} 
                               onValueChange={(v) => updateAwards(selectedStudent, "clubOrg", v)}
                             >
-                              <SelectTrigger className="bg-background">
+                              <SelectTrigger className="bg-background/80 border-amber-200">
                                 <SelectValue />
                               </SelectTrigger>
                               <SelectContent className="bg-background z-50">
@@ -1091,12 +1091,12 @@ export default function TeacherAcademicPage() {
                             </Select>
                           </div>
                           <div className="space-y-1">
-                            <label className="text-xs text-muted-foreground">Role & Responsibility</label>
+                            <label className="text-xs text-amber-700 font-medium">Role & Responsibility</label>
                             <Select 
                               value={getStudentAwards(selectedStudent).clubRole || "None"} 
                               onValueChange={(v) => updateAwards(selectedStudent, "clubRole", v)}
                             >
-                              <SelectTrigger className="bg-background">
+                              <SelectTrigger className="bg-background/80 border-amber-200">
                                 <SelectValue />
                               </SelectTrigger>
                               <SelectContent className="bg-background z-50">
@@ -1111,19 +1111,19 @@ export default function TeacherAcademicPage() {
                     </Card>
 
                     {/* Student Leadership */}
-                    <Card className="bg-muted/30">
-                      <CardHeader className="p-3 pb-2 bg-muted/50">
-                        <CardTitle className="text-sm font-semibold text-foreground">Student Leadership</CardTitle>
+                    <Card className="bg-amber-50 border-amber-200 overflow-hidden">
+                      <CardHeader className="p-3 pb-2" style={{ background: 'linear-gradient(135deg, #fef3c7 0%, #fcd34d 50%, #f59e0b 100%)' }}>
+                        <CardTitle className="text-sm font-semibold text-amber-800">Student Leadership</CardTitle>
                       </CardHeader>
                       <CardContent className="p-3">
                         <div className="grid grid-cols-2 gap-3">
                           <div className="space-y-1">
-                            <label className="text-xs text-muted-foreground">Organization</label>
+                            <label className="text-xs text-amber-700 font-medium">Organization</label>
                             <Select 
                               value={getStudentAwards(selectedStudent).leadershipOrg || "None"} 
                               onValueChange={(v) => updateAwards(selectedStudent, "leadershipOrg", v)}
                             >
-                              <SelectTrigger className="bg-background">
+                              <SelectTrigger className="bg-background/80 border-amber-200">
                                 <SelectValue />
                               </SelectTrigger>
                               <SelectContent className="bg-background z-50">
@@ -1134,12 +1134,12 @@ export default function TeacherAcademicPage() {
                             </Select>
                           </div>
                           <div className="space-y-1">
-                            <label className="text-xs text-muted-foreground">Role & Responsibility</label>
+                            <label className="text-xs text-amber-700 font-medium">Role & Responsibility</label>
                             <Select 
                               value={getStudentAwards(selectedStudent).leadershipRole || "None"} 
                               onValueChange={(v) => updateAwards(selectedStudent, "leadershipRole", v)}
                             >
-                              <SelectTrigger className="bg-background">
+                              <SelectTrigger className="bg-background/80 border-amber-200">
                                 <SelectValue />
                               </SelectTrigger>
                               <SelectContent className="bg-background z-50">
@@ -1154,19 +1154,19 @@ export default function TeacherAcademicPage() {
                     </Card>
 
                     {/* Events */}
-                    <Card className="bg-muted/30">
-                      <CardHeader className="p-3 pb-2 bg-muted/50">
-                        <CardTitle className="text-sm font-semibold text-foreground">Events</CardTitle>
+                    <Card className="bg-amber-50 border-amber-200 overflow-hidden">
+                      <CardHeader className="p-3 pb-2" style={{ background: 'linear-gradient(135deg, #fef3c7 0%, #fcd34d 50%, #f59e0b 100%)' }}>
+                        <CardTitle className="text-sm font-semibold text-amber-800">Events</CardTitle>
                       </CardHeader>
                       <CardContent className="p-3">
                         <div className="grid grid-cols-2 gap-3">
                           <div className="space-y-1">
-                            <label className="text-xs text-muted-foreground">Organization</label>
+                            <label className="text-xs text-amber-700 font-medium">Organization</label>
                             <Select 
                               value={getStudentAwards(selectedStudent).eventsOrg || "None"} 
                               onValueChange={(v) => updateAwards(selectedStudent, "eventsOrg", v)}
                             >
-                              <SelectTrigger className="bg-background">
+                              <SelectTrigger className="bg-background/80 border-amber-200">
                                 <SelectValue />
                               </SelectTrigger>
                               <SelectContent className="bg-background z-50">
@@ -1177,12 +1177,12 @@ export default function TeacherAcademicPage() {
                             </Select>
                           </div>
                           <div className="space-y-1">
-                            <label className="text-xs text-muted-foreground">Role & Responsibility</label>
+                            <label className="text-xs text-amber-700 font-medium">Role & Responsibility</label>
                             <Select 
                               value={getStudentAwards(selectedStudent).eventsRole || "None"} 
                               onValueChange={(v) => updateAwards(selectedStudent, "eventsRole", v)}
                             >
-                              <SelectTrigger className="bg-background">
+                              <SelectTrigger className="bg-background/80 border-amber-200">
                                 <SelectValue />
                               </SelectTrigger>
                               <SelectContent className="bg-background z-50">
@@ -1197,19 +1197,19 @@ export default function TeacherAcademicPage() {
                     </Card>
 
                     {/* Achievements */}
-                    <Card className="bg-muted/30">
-                      <CardHeader className="p-3 pb-2 bg-muted/50">
-                        <CardTitle className="text-sm font-semibold text-foreground">Achievements</CardTitle>
+                    <Card className="bg-amber-50 border-amber-200 overflow-hidden">
+                      <CardHeader className="p-3 pb-2" style={{ background: 'linear-gradient(135deg, #fef3c7 0%, #fcd34d 50%, #f59e0b 100%)' }}>
+                        <CardTitle className="text-sm font-semibold text-amber-800">Achievements</CardTitle>
                       </CardHeader>
                       <CardContent className="p-3">
                         <div className="grid grid-cols-2 gap-3">
                           <div className="space-y-1">
-                            <label className="text-xs text-muted-foreground">Event</label>
+                            <label className="text-xs text-amber-700 font-medium">Event</label>
                             <Select 
                               value={getStudentAwards(selectedStudent).achievementEvent || "None"} 
                               onValueChange={(v) => updateAwards(selectedStudent, "achievementEvent", v)}
                             >
-                              <SelectTrigger className="bg-background">
+                              <SelectTrigger className="bg-background/80 border-amber-200">
                                 <SelectValue />
                               </SelectTrigger>
                               <SelectContent className="bg-background z-50">
@@ -1220,12 +1220,12 @@ export default function TeacherAcademicPage() {
                             </Select>
                           </div>
                           <div className="space-y-1">
-                            <label className="text-xs text-muted-foreground">Award</label>
+                            <label className="text-xs text-amber-700 font-medium">Award</label>
                             <Select 
                               value={getStudentAwards(selectedStudent).achievementAward || "None"} 
                               onValueChange={(v) => updateAwards(selectedStudent, "achievementAward", v)}
                             >
-                              <SelectTrigger className="bg-background">
+                              <SelectTrigger className="bg-background/80 border-amber-200">
                                 <SelectValue />
                               </SelectTrigger>
                               <SelectContent className="bg-background z-50">
