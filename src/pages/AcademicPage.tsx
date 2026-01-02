@@ -894,172 +894,6 @@ export default function AcademicPage() {
                     </div>
                   </div>
                 </div>
-
-                {/* Radar Chart - Subject Strengths Profile */}
-                <div className="space-y-2">
-                  <h4 className="text-sm font-medium text-foreground flex items-center gap-1.5">
-                    <Target className="h-4 w-4 text-primary" />
-                    Strengths Profile
-                  </h4>
-                  <div className="h-56">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <RadarChart data={radarData} cx="50%" cy="50%" outerRadius="70%">
-                        <PolarGrid stroke="hsl(var(--border))" strokeOpacity={0.5} />
-                        <PolarAngleAxis 
-                          dataKey="subject" 
-                          tick={{ fontSize: 9, fill: "hsl(var(--muted-foreground))" }}
-                          tickLine={false}
-                        />
-                        <PolarRadiusAxis 
-                          angle={30} 
-                          domain={[0, 100]} 
-                          tick={{ fontSize: 8, fill: "hsl(var(--muted-foreground))" }}
-                          tickCount={5}
-                          axisLine={false}
-                        />
-                        <Radar
-                          name="Score"
-                          dataKey="score"
-                          stroke={radarAverage >= 70 ? "#22c55e" : radarAverage >= 50 ? "#f59e0b" : "#ef4444"}
-                          fill={radarAverage >= 70 ? "#22c55e" : radarAverage >= 50 ? "#f59e0b" : "#ef4444"}
-                          fillOpacity={0.3}
-                          strokeWidth={2}
-                        />
-                        <Tooltip 
-                          contentStyle={{ 
-                            backgroundColor: "hsl(var(--card))", 
-                            border: "1px solid hsl(var(--border))", 
-                            borderRadius: "8px",
-                            fontSize: 12
-                          }}
-                          formatter={(value: number) => [`${value}%`, "Score"]}
-                        />
-                      </RadarChart>
-                    </ResponsiveContainer>
-                  </div>
-                  <p className="text-[10px] text-muted-foreground text-center">
-                    Visual snapshot of performance across all subjects
-                  </p>
-                </div>
-
-                {/* Subject vs Class Average Horizontal Bar Chart */}
-                <div className="space-y-2">
-                  <h4 className="text-sm font-medium text-foreground flex items-center gap-1.5">
-                    <GitCompare className="h-4 w-4 text-primary" />
-                    vs Class Average
-                  </h4>
-                  <div className="h-64">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <BarChart data={subjectVsClassData} layout="vertical" barGap={2}>
-                        <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" strokeOpacity={0.3} horizontal={false} />
-                        <XAxis 
-                          type="number" 
-                          domain={[0, 100]} 
-                          tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }}
-                          axisLine={false}
-                          tickLine={false}
-                        />
-                        <YAxis 
-                          type="category" 
-                          dataKey="name" 
-                          tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }} 
-                          width={60}
-                          axisLine={false}
-                          tickLine={false}
-                        />
-                        <Tooltip 
-                          contentStyle={{ 
-                            backgroundColor: "hsl(var(--card))", 
-                            border: "1px solid hsl(var(--border))", 
-                            borderRadius: "8px" 
-                          }}
-                          formatter={(value: number, name: string) => [
-                            `${value}%`, 
-                            name === "student" ? "Your Score" : "Class Average"
-                          ]}
-                        />
-                        <Legend 
-                          wrapperStyle={{ fontSize: 10 }} 
-                          formatter={(value) => value === "student" ? "Your Score" : "Class Avg"}
-                        />
-                        <Bar dataKey="student" fill="#3b82f6" radius={[0, 4, 4, 0]} barSize={10} />
-                        <Bar dataKey="classAvg" fill="hsl(var(--muted-foreground))" radius={[0, 4, 4, 0]} barSize={10} opacity={0.5} />
-                      </BarChart>
-                    </ResponsiveContainer>
-                  </div>
-                  {/* Delta badges */}
-                  <div className="flex flex-wrap gap-1.5 justify-center">
-                    {subjectVsClassData.slice(0, 4).map((item) => (
-                      <Badge 
-                        key={item.name} 
-                        variant={item.delta >= 0 ? "default" : "destructive"}
-                        className="text-[10px] px-2 py-0.5"
-                      >
-                        {item.name}: {item.delta >= 0 ? "+" : ""}{item.delta}%
-                      </Badge>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Performance Heatmap */}
-                <div className="space-y-2">
-                  <h4 className="text-sm font-medium text-foreground flex items-center gap-1.5">
-                    <BarChart3 className="h-4 w-4 text-primary" />
-                    Performance Heatmap
-                  </h4>
-                  <p className="text-[10px] text-muted-foreground -mt-1">
-                    Scores across all exam periods
-                  </p>
-                  <div className="overflow-x-auto">
-                    <div className="min-w-[320px]">
-                      {/* Header row with periods */}
-                      <div className="flex gap-1 mb-1">
-                        <div className="w-16 shrink-0" />
-                        {heatmapData[0]?.scores.map((s) => (
-                          <div 
-                            key={s.period} 
-                            className="flex-1 text-center text-[9px] font-medium text-muted-foreground px-1"
-                          >
-                            {s.period}
-                          </div>
-                        ))}
-                      </div>
-                      {/* Subject rows */}
-                      {heatmapData.map((row) => (
-                        <div key={row.subject} className="flex gap-1 mb-1">
-                          <div className="w-16 shrink-0 text-[10px] font-medium text-foreground truncate pr-1 flex items-center">
-                            {row.subject}
-                          </div>
-                          {row.scores.map((cell, idx) => (
-                            <div
-                              key={idx}
-                              className="flex-1 h-7 rounded flex items-center justify-center text-[10px] font-semibold text-white transition-all hover:scale-105 cursor-default"
-                              style={{ 
-                                backgroundColor: getHeatmapColor(cell.score),
-                                opacity: cell.score === null ? 0.3 : 1
-                              }}
-                              title={`${row.fullName} - ${cell.period}: ${cell.score ?? 'N/A'}%`}
-                            >
-                              {cell.score ?? "–"}
-                            </div>
-                          ))}
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                  {/* Legend */}
-                  <div className="flex items-center justify-center gap-1 mt-2">
-                    <span className="text-[9px] text-muted-foreground mr-1">Low</span>
-                    {["#ef4444", "#f97316", "#eab308", "#84cc16", "#22c55e", "#16a34a"].map((color, i) => (
-                      <div 
-                        key={i} 
-                        className="w-4 h-3 rounded-sm" 
-                        style={{ backgroundColor: color }} 
-                      />
-                    ))}
-                    <span className="text-[9px] text-muted-foreground ml-1">High</span>
-                  </div>
-                </div>
               </TabsContent>
 
               {/* TRENDS TAB */}
@@ -1290,6 +1124,172 @@ export default function AcademicPage() {
                       <>Performance is stable across all subjects.</>
                     )}
                   </p>
+                </div>
+
+                {/* Radar Chart - Subject Strengths Profile */}
+                <div className="space-y-2">
+                  <h4 className="text-sm font-medium text-foreground flex items-center gap-1.5">
+                    <Target className="h-4 w-4 text-primary" />
+                    Strengths Profile
+                  </h4>
+                  <div className="h-56">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <RadarChart data={radarData} cx="50%" cy="50%" outerRadius="70%">
+                        <PolarGrid stroke="hsl(var(--border))" strokeOpacity={0.5} />
+                        <PolarAngleAxis 
+                          dataKey="subject" 
+                          tick={{ fontSize: 9, fill: "hsl(var(--muted-foreground))" }}
+                          tickLine={false}
+                        />
+                        <PolarRadiusAxis 
+                          angle={30} 
+                          domain={[0, 100]} 
+                          tick={{ fontSize: 8, fill: "hsl(var(--muted-foreground))" }}
+                          tickCount={5}
+                          axisLine={false}
+                        />
+                        <Radar
+                          name="Score"
+                          dataKey="score"
+                          stroke={radarAverage >= 70 ? "#22c55e" : radarAverage >= 50 ? "#f59e0b" : "#ef4444"}
+                          fill={radarAverage >= 70 ? "#22c55e" : radarAverage >= 50 ? "#f59e0b" : "#ef4444"}
+                          fillOpacity={0.3}
+                          strokeWidth={2}
+                        />
+                        <Tooltip 
+                          contentStyle={{ 
+                            backgroundColor: "hsl(var(--card))", 
+                            border: "1px solid hsl(var(--border))", 
+                            borderRadius: "8px",
+                            fontSize: 12
+                          }}
+                          formatter={(value: number) => [`${value}%`, "Score"]}
+                        />
+                      </RadarChart>
+                    </ResponsiveContainer>
+                  </div>
+                  <p className="text-[10px] text-muted-foreground text-center">
+                    Visual snapshot of performance across all subjects
+                  </p>
+                </div>
+
+                {/* Subject vs Class Average Horizontal Bar Chart */}
+                <div className="space-y-2">
+                  <h4 className="text-sm font-medium text-foreground flex items-center gap-1.5">
+                    <GitCompare className="h-4 w-4 text-primary" />
+                    vs Class Average
+                  </h4>
+                  <div className="h-64">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <BarChart data={subjectVsClassData} layout="vertical" barGap={2}>
+                        <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" strokeOpacity={0.3} horizontal={false} />
+                        <XAxis 
+                          type="number" 
+                          domain={[0, 100]} 
+                          tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }}
+                          axisLine={false}
+                          tickLine={false}
+                        />
+                        <YAxis 
+                          type="category" 
+                          dataKey="name" 
+                          tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }} 
+                          width={60}
+                          axisLine={false}
+                          tickLine={false}
+                        />
+                        <Tooltip 
+                          contentStyle={{ 
+                            backgroundColor: "hsl(var(--card))", 
+                            border: "1px solid hsl(var(--border))", 
+                            borderRadius: "8px" 
+                          }}
+                          formatter={(value: number, name: string) => [
+                            `${value}%`, 
+                            name === "student" ? "Your Score" : "Class Average"
+                          ]}
+                        />
+                        <Legend 
+                          wrapperStyle={{ fontSize: 10 }} 
+                          formatter={(value) => value === "student" ? "Your Score" : "Class Avg"}
+                        />
+                        <Bar dataKey="student" fill="#3b82f6" radius={[0, 4, 4, 0]} barSize={10} />
+                        <Bar dataKey="classAvg" fill="hsl(var(--muted-foreground))" radius={[0, 4, 4, 0]} barSize={10} opacity={0.5} />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </div>
+                  {/* Delta badges */}
+                  <div className="flex flex-wrap gap-1.5 justify-center">
+                    {subjectVsClassData.slice(0, 4).map((item) => (
+                      <Badge 
+                        key={item.name} 
+                        variant={item.delta >= 0 ? "default" : "destructive"}
+                        className="text-[10px] px-2 py-0.5"
+                      >
+                        {item.name}: {item.delta >= 0 ? "+" : ""}{item.delta}%
+                      </Badge>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Performance Heatmap */}
+                <div className="space-y-2">
+                  <h4 className="text-sm font-medium text-foreground flex items-center gap-1.5">
+                    <BarChart3 className="h-4 w-4 text-primary" />
+                    Performance Heatmap
+                  </h4>
+                  <p className="text-[10px] text-muted-foreground -mt-1">
+                    Scores across all exam periods
+                  </p>
+                  <div className="overflow-x-auto">
+                    <div className="min-w-[320px]">
+                      {/* Header row with periods */}
+                      <div className="flex gap-1 mb-1">
+                        <div className="w-16 shrink-0" />
+                        {heatmapData[0]?.scores.map((s) => (
+                          <div 
+                            key={s.period} 
+                            className="flex-1 text-center text-[9px] font-medium text-muted-foreground px-1"
+                          >
+                            {s.period}
+                          </div>
+                        ))}
+                      </div>
+                      {/* Subject rows */}
+                      {heatmapData.map((row) => (
+                        <div key={row.subject} className="flex gap-1 mb-1">
+                          <div className="w-16 shrink-0 text-[10px] font-medium text-foreground truncate pr-1 flex items-center">
+                            {row.subject}
+                          </div>
+                          {row.scores.map((cell, idx) => (
+                            <div
+                              key={idx}
+                              className="flex-1 h-7 rounded flex items-center justify-center text-[10px] font-semibold text-white transition-all hover:scale-105 cursor-default"
+                              style={{ 
+                                backgroundColor: getHeatmapColor(cell.score),
+                                opacity: cell.score === null ? 0.3 : 1
+                              }}
+                              title={`${row.fullName} - ${cell.period}: ${cell.score ?? 'N/A'}%`}
+                            >
+                              {cell.score ?? "–"}
+                            </div>
+                          ))}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                  {/* Legend */}
+                  <div className="flex items-center justify-center gap-1 mt-2">
+                    <span className="text-[9px] text-muted-foreground mr-1">Low</span>
+                    {["#ef4444", "#f97316", "#eab308", "#84cc16", "#22c55e", "#16a34a"].map((color, i) => (
+                      <div 
+                        key={i} 
+                        className="w-4 h-3 rounded-sm" 
+                        style={{ backgroundColor: color }} 
+                      />
+                    ))}
+                    <span className="text-[9px] text-muted-foreground ml-1">High</span>
+                  </div>
                 </div>
               </TabsContent>
 
