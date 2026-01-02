@@ -434,26 +434,26 @@ export default function AcademicPage() {
                                   ${isExpanded ? 'border-primary shadow-md ring-1 ring-primary/20' : 'border-border'}
                                 `}
                               >
-                                <div className="flex items-center justify-between mb-1">
-                                  <h3 className="font-medium text-foreground text-sm truncate flex-1 mr-2">{subject.name}</h3>
-                                  <div className="flex items-center gap-1.5 flex-shrink-0">
-                                    {isPending ? (
-                                      <Badge variant="outline" className="text-muted-foreground text-xs">--</Badge>
-                                    ) : (
-                                      <Badge className={`${gradeColors[getGradeFromScore(score!)[0]] || gradeColors.C} text-xs`}>
-                                        {getGradeFromScore(score!)}
-                                      </Badge>
-                                    )}
-                                    <ChevronDown 
-                                      className={`h-4 w-4 text-muted-foreground transition-transform duration-200 ${
-                                        isExpanded ? 'rotate-180' : ''
-                                      }`} 
-                                    />
-                                  </div>
+                                <div className="flex items-start justify-between mb-1">
+                                  <h3 className="font-medium text-foreground text-sm leading-tight">{subject.name}</h3>
+                                  {isPending ? (
+                                    <Badge variant="outline" className="text-muted-foreground text-xs flex-shrink-0">--</Badge>
+                                  ) : (
+                                    <Badge className={`${gradeColors[getGradeFromScore(score!)[0]] || gradeColors.C} text-xs flex-shrink-0`}>
+                                      {getGradeFromScore(score!)}
+                                    </Badge>
+                                  )}
                                 </div>
-                                <p className="text-lg font-semibold text-foreground">
-                                  {isPending ? "Pending" : `${score}%`}
-                                </p>
+                                <div className="flex items-center justify-between mt-auto">
+                                  <p className="text-lg font-semibold text-foreground">
+                                    {isPending ? "Pending" : `${score}%`}
+                                  </p>
+                                  <ChevronDown 
+                                    className={`h-4 w-4 text-muted-foreground transition-transform duration-200 ${
+                                      isExpanded ? 'rotate-180' : ''
+                                    }`} 
+                                  />
+                                </div>
                               </div>
                             );
                           })}
@@ -462,16 +462,25 @@ export default function AcademicPage() {
                         {/* Expanded Comment Box - Full Width */}
                         {expandedInRow && (
                           <div className="animate-fade-in">
-                            <div className="bg-primary/5 border border-primary/20 rounded-xl p-4 relative">
-                              {/* Pointer arrow */}
-                              <div 
-                                className="absolute -top-2"
+                            <div className="bg-primary/5 border border-primary/20 rounded-xl p-4 relative mt-1">
+                              {/* Arrow pointer - SVG for clean combined shape */}
+                              <svg 
+                                className="absolute -top-[10px] w-5 h-[10px]"
                                 style={{
-                                  left: expandedInRow === rowSubjects[0] ? 'calc(25% - 8px)' : 'calc(75% - 8px)'
+                                  left: expandedInRow === rowSubjects[0] ? 'calc(25% - 10px)' : 'calc(75% - 10px)'
                                 }}
+                                viewBox="0 0 20 10"
+                                fill="none"
                               >
-                                <div className="w-4 h-4 bg-primary/5 border-l border-t border-primary/20 rotate-45" />
-                              </div>
+                                <path 
+                                  d="M0 10 L10 0 L20 10" 
+                                  fill="hsl(var(--primary) / 0.05)"
+                                  stroke="hsl(var(--primary) / 0.2)"
+                                  strokeWidth="1"
+                                />
+                                {/* Cover bottom border line */}
+                                <path d="M1 10 L19 10" stroke="hsl(var(--primary) / 0.05)" strokeWidth="2" />
+                              </svg>
                               
                               <div className="flex items-start gap-3">
                                 <div className="flex-shrink-0 w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
