@@ -121,6 +121,7 @@ export const academicData = {
       name: "English", 
       teacherComment: "Emma shows excellent reading comprehension and creative writing skills. Keep up the great work!",
       scores: {
+        "2022": { midYear: 70, yearEnd: 72, attitude: 74, homework: 76, quiz: 68, exam: 70 },
         "2023": { midYear: 74, yearEnd: 78, attitude: 78, homework: 80, quiz: 72, exam: 74 },
         "2024": { midYear: 78, yearEnd: 82, attitude: 82, homework: 85, quiz: 76, exam: 78 },
         "2025": { midYear: 85, yearEnd: null, attitude: 88, homework: 90, quiz: 82, exam: 85 }
@@ -130,6 +131,7 @@ export const academicData = {
       name: "Mathematics", 
       teacherComment: "Good progress in problem-solving. Would benefit from more practice with algebraic expressions.",
       scores: {
+        "2022": { midYear: 62, yearEnd: 66, attitude: 70, homework: 65, quiz: 60, exam: 62 },
         "2023": { midYear: 68, yearEnd: 72, attitude: 75, homework: 70, quiz: 65, exam: 68 },
         "2024": { midYear: 72, yearEnd: 75, attitude: 78, homework: 75, quiz: 70, exam: 72 },
         "2025": { midYear: 80, yearEnd: null, attitude: 85, homework: 82, quiz: 78, exam: 80 }
@@ -139,6 +141,7 @@ export const academicData = {
       name: "Science", 
       teacherComment: "Outstanding performance! Emma demonstrates strong analytical skills and enthusiasm for experiments.",
       scores: {
+        "2022": { midYear: 76, yearEnd: 78, attitude: 82, homework: 80, quiz: 74, exam: 76 },
         "2023": { midYear: 80, yearEnd: 84, attitude: 88, homework: 85, quiz: 78, exam: 80 },
         "2024": { midYear: 85, yearEnd: 88, attitude: 90, homework: 88, quiz: 84, exam: 85 },
         "2025": { midYear: 90, yearEnd: null, attitude: 92, homework: 94, quiz: 88, exam: 90 }
@@ -148,6 +151,7 @@ export const academicData = {
       name: "History", 
       teacherComment: "Shows good understanding of historical events. Could improve on essay structure and analysis.",
       scores: {
+        "2022": { midYear: 60, yearEnd: 64, attitude: 66, homework: 62, quiz: 58, exam: 60 },
         "2023": { midYear: 66, yearEnd: 70, attitude: 72, homework: 68, quiz: 64, exam: 66 },
         "2024": { midYear: 70, yearEnd: 78, attitude: 75, homework: 72, quiz: 68, exam: 70 },
         "2025": { midYear: 72, yearEnd: null, attitude: 74, homework: 70, quiz: 68, exam: 72 }
@@ -157,6 +161,7 @@ export const academicData = {
       name: "Geography", 
       teacherComment: "Good map reading skills. Needs to work on understanding climate patterns and geographical processes.",
       scores: {
+        "2022": { midYear: 65, yearEnd: 69, attitude: 70, homework: 68, quiz: 64, exam: 65 },
         "2023": { midYear: 71, yearEnd: 75, attitude: 76, homework: 74, quiz: 70, exam: 71 },
         "2024": { midYear: 75, yearEnd: 78, attitude: 80, homework: 78, quiz: 74, exam: 75 },
         "2025": { midYear: 82, yearEnd: null, attitude: 85, homework: 86, quiz: 80, exam: 82 }
@@ -166,6 +171,7 @@ export const academicData = {
       name: "Art", 
       teacherComment: "Exceptional creativity and artistic talent! Emma's work is always inspiring and thoughtfully composed.",
       scores: {
+        "2022": { midYear: 84, yearEnd: 86, attitude: 88, homework: 86, quiz: 82, exam: 84 },
         "2023": { midYear: 88, yearEnd: 90, attitude: 92, homework: 90, quiz: 85, exam: 88 },
         "2024": { midYear: 90, yearEnd: 92, attitude: 94, homework: 92, quiz: 88, exam: 90 },
         "2025": { midYear: 95, yearEnd: null, attitude: 96, homework: 95, quiz: 92, exam: 95 }
@@ -175,6 +181,7 @@ export const academicData = {
       name: "Music", 
       teacherComment: "Shows interest in music theory. Practice more on rhythm and timing to improve performance.",
       scores: {
+        "2022": { midYear: 58, yearEnd: 60, attitude: 62, homework: 55, quiz: 54, exam: 58 },
         "2023": { midYear: 62, yearEnd: 65, attitude: 68, homework: 60, quiz: 58, exam: 62 },
         "2024": { midYear: 65, yearEnd: 72, attitude: 70, homework: 65, quiz: 62, exam: 65 },
         "2025": { midYear: 65, yearEnd: null, attitude: 68, homework: 62, quiz: 60, exam: 65 }
@@ -184,6 +191,7 @@ export const academicData = {
       name: "Physical Education", 
       teacherComment: "Participates well in team sports. Should focus on improving endurance and flexibility.",
       scores: {
+        "2022": { midYear: 50, yearEnd: 53, attitude: 55, homework: 50, quiz: 48, exam: 50 },
         "2023": { midYear: 55, yearEnd: 58, attitude: 60, homework: 55, quiz: 52, exam: 55 },
         "2024": { midYear: 58, yearEnd: 62, attitude: 65, homework: 60, quiz: 55, exam: 58 },
         "2025": { midYear: 65, yearEnd: null, attitude: 68, homework: 62, quiz: 60, exam: 65 }
@@ -193,6 +201,7 @@ export const academicData = {
       name: "Mandarin", 
       teacherComment: "Good pronunciation and character recognition. Continue practicing writing strokes.",
       scores: {
+        "2022": { midYear: 68, yearEnd: 70, attitude: 72, homework: 70, quiz: 66, exam: 68 },
         "2023": { midYear: 72, yearEnd: 76, attitude: 78, homework: 75, quiz: 70, exam: 72 },
         "2024": { midYear: 76, yearEnd: 82, attitude: 82, homework: 78, quiz: 74, exam: 76 },
         "2025": { midYear: 78, yearEnd: null, attitude: 80, homework: 76, quiz: 74, exam: 78 }
@@ -202,6 +211,7 @@ export const academicData = {
       name: "Computer Studies", 
       teacherComment: "Excellent understanding of programming concepts. Shows great potential in coding projects.",
       scores: {
+        "2022": { midYear: 72, yearEnd: 76, attitude: 80, homework: 75, quiz: 70, exam: 72 },
         "2023": { midYear: 78, yearEnd: 82, attitude: 85, homework: 80, quiz: 76, exam: 78 },
         "2024": { midYear: 82, yearEnd: 86, attitude: 88, homework: 85, quiz: 80, exam: 82 },
         "2025": { midYear: 88, yearEnd: null, attitude: 90, homework: 88, quiz: 85, exam: 88 }
@@ -211,6 +221,7 @@ export const academicData = {
       name: "French", 
       teacherComment: "Struggling with grammar and vocabulary. Recommend extra tutoring sessions and daily practice.",
       scores: {
+        "2022": { midYear: 30, yearEnd: 33, attitude: 40, homework: 35, quiz: 28, exam: 30 },
         "2023": { midYear: 35, yearEnd: 38, attitude: 45, homework: 40, quiz: 32, exam: 35 },
         "2024": { midYear: 38, yearEnd: 42, attitude: 48, homework: 42, quiz: 35, exam: 38 },
         "2025": { midYear: 45, yearEnd: null, attitude: 50, homework: 48, quiz: 42, exam: 45 }
@@ -220,6 +231,7 @@ export const academicData = {
       name: "Chemistry", 
       teacherComment: "Needs significant improvement in understanding chemical equations. Extra help sessions available.",
       scores: {
+        "2022": { midYear: 28, yearEnd: 30, attitude: 36, homework: 32, quiz: 26, exam: 28 },
         "2023": { midYear: 32, yearEnd: 36, attitude: 42, homework: 38, quiz: 30, exam: 32 },
         "2024": { midYear: 36, yearEnd: 40, attitude: 45, homework: 40, quiz: 34, exam: 36 },
         "2025": { midYear: 42, yearEnd: null, attitude: 48, homework: 45, quiz: 40, exam: 42 }
@@ -229,6 +241,7 @@ export const academicData = {
       name: "Physics", 
       teacherComment: "Finds concepts challenging. Would benefit from visual learning aids and one-on-one support.",
       scores: {
+        "2022": { midYear: 24, yearEnd: 26, attitude: 32, homework: 30, quiz: 22, exam: 24 },
         "2023": { midYear: 28, yearEnd: 32, attitude: 38, homework: 35, quiz: 26, exam: 28 },
         "2024": { midYear: 32, yearEnd: 36, attitude: 42, homework: 38, quiz: 30, exam: 32 },
         "2025": { midYear: 38, yearEnd: null, attitude: 45, homework: 42, quiz: 36, exam: 38 }
@@ -253,6 +266,7 @@ export const academicData = {
 
 // Class averages for comparison
 export const classAverages = {
+  "2022": { midYear: 68, yearEnd: 72, attitude: 72, homework: 70, quiz: 66, exam: 68 },
   "2023": { midYear: 72, yearEnd: 75, attitude: 76, homework: 74, quiz: 70, exam: 72 },
   "2024": { midYear: 74, yearEnd: 77, attitude: 78, homework: 76, quiz: 73, exam: 74 },
   "2025": { midYear: 76, yearEnd: null, attitude: 80, homework: 78, quiz: 75, exam: 76 }

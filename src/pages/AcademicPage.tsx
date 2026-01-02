@@ -41,7 +41,7 @@ import {
   PolarRadiusAxis,
 } from "recharts";
 
-type YearKey = "2023" | "2024" | "2025";
+type YearKey = "2022" | "2023" | "2024" | "2025";
 type ExamType = "midYear" | "yearEnd";
 
 // Helper to get score from data structure
@@ -74,7 +74,7 @@ export default function AcademicPage() {
   const [selectedYear, setSelectedYear] = useState<YearKey>("2025");
   const [selectedYears, setSelectedYears] = useState<string[]>(["2025"]);
   const [subjectFilter, setSubjectFilter] = useState("all");
-  const [trendPeriod, setTrendPeriod] = useState<"1year" | "2years" | "all">("all");
+  const [trendPeriod, setTrendPeriod] = useState<"1year" | "2years" | "3years" | "all">("all");
   const [reportGenerated, setReportGenerated] = useState(false);
   const [expandedSubject, setExpandedSubject] = useState<string | null>(null);
   
@@ -267,9 +267,9 @@ export default function AcademicPage() {
     return declines.sort((a, b) => b.decline - a.decline).slice(0, 3);
   }, [selectedYear, examType]);
 
-  // Year-over-year trend data with period filtering
+  // Year-over-year trend data with period filtering (3 years of data)
   const trendData = useMemo(() => {
-    const years: YearKey[] = ["2023", "2024", "2025"];
+    const years: YearKey[] = ["2022", "2023", "2024", "2025"];
     const periods: { year: YearKey; type: ExamType; label: string }[] = [];
     years.forEach(year => {
       periods.push({ year, type: "midYear", label: `Mid ${year}` });
@@ -284,7 +284,10 @@ export default function AcademicPage() {
       filteredPeriods = periods.slice(-2); // Last 2 periods (current year)
     } else if (trendPeriod === "2years") {
       filteredPeriods = periods.slice(-4); // Last 4 periods
+    } else if (trendPeriod === "3years") {
+      filteredPeriods = periods.slice(-6); // Last 6 periods
     }
+    // "all" shows all periods
     
     return filteredPeriods.map(p => {
       const result: Record<string, number | string | null> = { period: p.label };
@@ -931,12 +934,13 @@ export default function AcademicPage() {
                     {([
                       { key: "1year", label: "1Y" },
                       { key: "2years", label: "2Y" },
+                      { key: "3years", label: "3Y" },
                       { key: "all", label: "All" }
                     ] as const).map(({ key, label }) => (
                       <button
                         key={key}
                         onClick={() => setTrendPeriod(key)}
-                        className={`px-3 py-1.5 text-xs font-medium rounded-md transition-all ${
+                        className={`px-2.5 py-1.5 text-xs font-medium rounded-md transition-all ${
                           trendPeriod === key
                             ? "bg-primary text-primary-foreground shadow-sm"
                             : "text-muted-foreground hover:text-foreground"
@@ -969,93 +973,100 @@ export default function AcademicPage() {
                   ))}
                 </div>
 
-                {/* Moomoo-Style Gradient Area Chart */}
+                {/* Moomoo-Style Gradient Area Chart - Scrollable */}
                 <div className="space-y-2">
-                  <div className="h-56">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <AreaChart data={trendData}>
-                        <defs>
-                          <linearGradient id="gradientGreen" x1="0" y1="0" x2="0" y2="1">
-                            <stop offset="0%" stopColor="#22c55e" stopOpacity={0.4} />
-                            <stop offset="100%" stopColor="#22c55e" stopOpacity={0.05} />
-                          </linearGradient>
-                          <linearGradient id="gradientRed" x1="0" y1="0" x2="0" y2="1">
-                            <stop offset="0%" stopColor="#ef4444" stopOpacity={0.4} />
-                            <stop offset="100%" stopColor="#ef4444" stopOpacity={0.05} />
-                          </linearGradient>
-                          <linearGradient id="gradientBlue" x1="0" y1="0" x2="0" y2="1">
-                            <stop offset="0%" stopColor="#3b82f6" stopOpacity={0.4} />
-                            <stop offset="100%" stopColor="#3b82f6" stopOpacity={0.05} />
-                          </linearGradient>
-                        </defs>
-                        <CartesianGrid 
-                          strokeDasharray="3 3" 
-                          stroke="hsl(var(--border))" 
-                          strokeOpacity={0.2}
-                          vertical={false}
-                        />
-                        <XAxis 
-                          dataKey="period" 
-                          tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }}
-                          axisLine={false}
-                          tickLine={false}
-                        />
-                        <YAxis 
-                          domain={[50, 100]}
-                          tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }}
-                          axisLine={false}
-                          tickLine={false}
-                          width={35}
-                        />
-                        <Tooltip 
-                          contentStyle={{ 
-                            backgroundColor: "hsl(var(--card))", 
-                            border: "1px solid hsl(var(--border))", 
-                            borderRadius: "12px",
-                            boxShadow: "0 4px 12px rgba(0,0,0,0.1)"
-                          }}
-                          labelStyle={{ fontWeight: 600, marginBottom: 4 }}
-                        />
-                        <ReferenceLine 
-                          y={75} 
-                          stroke="hsl(var(--muted-foreground))" 
-                          strokeDasharray="5 5" 
-                          strokeOpacity={0.5}
-                          label={{ value: "Target", fontSize: 9, fill: "hsl(var(--muted-foreground))" }}
-                        />
-                        {subjectFilter === "all" ? (
-                          <Area
-                            type="monotone"
-                            dataKey="Average"
-                            stroke={trendDirection.direction === "up" ? "#22c55e" : trendDirection.direction === "down" ? "#ef4444" : "#3b82f6"}
-                            strokeWidth={2.5}
-                            fill={trendDirection.direction === "up" ? "url(#gradientGreen)" : trendDirection.direction === "down" ? "url(#gradientRed)" : "url(#gradientBlue)"}
-                            dot={{ 
-                              fill: trendDirection.direction === "up" ? "#22c55e" : trendDirection.direction === "down" ? "#ef4444" : "#3b82f6", 
-                              strokeWidth: 0, 
-                              r: 5 
-                            }}
-                            activeDot={{ r: 7, strokeWidth: 2, stroke: "#fff" }}
-                            connectNulls
+                  <div className="flex items-center justify-between">
+                    <p className="text-[10px] text-muted-foreground">← Swipe to see more data →</p>
+                    <p className="text-[10px] text-muted-foreground">{trendData.length} periods</p>
+                  </div>
+                  <div className="h-56 overflow-x-auto overflow-y-hidden scrollbar-thin scrollbar-thumb-muted scrollbar-track-transparent">
+                    <div style={{ width: Math.max(100, trendData.length * 80) + '%', minWidth: '100%', height: '100%' }}>
+                      <ResponsiveContainer width="100%" height="100%">
+                        <AreaChart data={trendData} margin={{ top: 10, right: 20, left: 0, bottom: 0 }}>
+                          <defs>
+                            <linearGradient id="gradientGreen" x1="0" y1="0" x2="0" y2="1">
+                              <stop offset="0%" stopColor="#22c55e" stopOpacity={0.4} />
+                              <stop offset="100%" stopColor="#22c55e" stopOpacity={0.05} />
+                            </linearGradient>
+                            <linearGradient id="gradientRed" x1="0" y1="0" x2="0" y2="1">
+                              <stop offset="0%" stopColor="#ef4444" stopOpacity={0.4} />
+                              <stop offset="100%" stopColor="#ef4444" stopOpacity={0.05} />
+                            </linearGradient>
+                            <linearGradient id="gradientBlue" x1="0" y1="0" x2="0" y2="1">
+                              <stop offset="0%" stopColor="#3b82f6" stopOpacity={0.4} />
+                              <stop offset="100%" stopColor="#3b82f6" stopOpacity={0.05} />
+                            </linearGradient>
+                          </defs>
+                          <CartesianGrid 
+                            strokeDasharray="3 3" 
+                            stroke="hsl(var(--border))" 
+                            strokeOpacity={0.2}
+                            vertical={false}
                           />
-                        ) : (
-                          <Area
-                            type="monotone"
-                            dataKey={subjectFilter}
-                            stroke={trendDirection.direction === "up" ? "#22c55e" : trendDirection.direction === "down" ? "#ef4444" : "#3b82f6"}
-                            strokeWidth={2.5}
-                            fill={trendDirection.direction === "up" ? "url(#gradientGreen)" : trendDirection.direction === "down" ? "url(#gradientRed)" : "url(#gradientBlue)"}
-                            dot={{ 
-                              fill: trendDirection.direction === "up" ? "#22c55e" : trendDirection.direction === "down" ? "#ef4444" : "#3b82f6", 
-                              strokeWidth: 0, 
-                              r: 5 
-                            }}
-                            activeDot={{ r: 7, strokeWidth: 2, stroke: "#fff" }}
-                            connectNulls
+                          <XAxis 
+                            dataKey="period" 
+                            tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }}
+                            axisLine={false}
+                            tickLine={false}
+                            interval={0}
                           />
-                        )}
-                      </AreaChart>
-                    </ResponsiveContainer>
+                          <YAxis 
+                            domain={[30, 100]}
+                            tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }}
+                            axisLine={false}
+                            tickLine={false}
+                            width={35}
+                          />
+                          <Tooltip 
+                            contentStyle={{ 
+                              backgroundColor: "hsl(var(--card))", 
+                              border: "1px solid hsl(var(--border))", 
+                              borderRadius: "12px",
+                              boxShadow: "0 4px 12px rgba(0,0,0,0.1)"
+                            }}
+                            labelStyle={{ fontWeight: 600, marginBottom: 4 }}
+                          />
+                          <ReferenceLine 
+                            y={75} 
+                            stroke="hsl(var(--muted-foreground))" 
+                            strokeDasharray="5 5" 
+                            strokeOpacity={0.5}
+                            label={{ value: "Target", fontSize: 9, fill: "hsl(var(--muted-foreground))" }}
+                          />
+                          {subjectFilter === "all" ? (
+                            <Area
+                              type="monotone"
+                              dataKey="Average"
+                              stroke={trendDirection.direction === "up" ? "#22c55e" : trendDirection.direction === "down" ? "#ef4444" : "#3b82f6"}
+                              strokeWidth={2.5}
+                              fill={trendDirection.direction === "up" ? "url(#gradientGreen)" : trendDirection.direction === "down" ? "url(#gradientRed)" : "url(#gradientBlue)"}
+                              dot={{ 
+                                fill: trendDirection.direction === "up" ? "#22c55e" : trendDirection.direction === "down" ? "#ef4444" : "#3b82f6", 
+                                strokeWidth: 0, 
+                                r: 5 
+                              }}
+                              activeDot={{ r: 7, strokeWidth: 2, stroke: "#fff" }}
+                              connectNulls
+                            />
+                          ) : (
+                            <Area
+                              type="monotone"
+                              dataKey={subjectFilter}
+                              stroke={trendDirection.direction === "up" ? "#22c55e" : trendDirection.direction === "down" ? "#ef4444" : "#3b82f6"}
+                              strokeWidth={2.5}
+                              fill={trendDirection.direction === "up" ? "url(#gradientGreen)" : trendDirection.direction === "down" ? "url(#gradientRed)" : "url(#gradientBlue)"}
+                              dot={{ 
+                                fill: trendDirection.direction === "up" ? "#22c55e" : trendDirection.direction === "down" ? "#ef4444" : "#3b82f6", 
+                                strokeWidth: 0, 
+                                r: 5 
+                              }}
+                              activeDot={{ r: 7, strokeWidth: 2, stroke: "#fff" }}
+                              connectNulls
+                            />
+                          )}
+                        </AreaChart>
+                      </ResponsiveContainer>
+                    </div>
                   </div>
                 </div>
 
