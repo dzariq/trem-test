@@ -89,7 +89,11 @@ export default function TeacherHomePage() {
         showProfile 
         leftContent={
           <div className="flex items-center gap-3">
-            <img src={schoolBadge} alt="School Badge" className="h-11 w-auto" />
+            <img 
+              src={schoolBadge} 
+              alt="School Badge" 
+              className="h-16 w-auto -my-3 drop-shadow-md" 
+            />
             <div>
               <p className="text-xs text-muted-foreground">Welcome back,</p>
               <p className="text-sm font-semibold text-foreground">{teacherProfile.name}</p>
