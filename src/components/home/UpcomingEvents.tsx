@@ -2,7 +2,7 @@ import { useState } from "react";
 import { upcomingEvents } from "@/data/mockData";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ChevronRight, MapPin, Clock, Calendar } from "lucide-react";
+import { ChevronRight, MapPin, Clock } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { useNavigate } from "react-router-dom";
 
@@ -65,17 +65,9 @@ export function UpcomingEvents() {
           return (
             <Card key={event.id} className="bg-card border-border shadow-sm">
               <CardContent className="p-3 flex items-center gap-4">
-                <div 
-                  className="relative flex flex-col items-center justify-center text-white rounded-lg w-14 h-14 flex-shrink-0 overflow-hidden"
-                  style={{
-                    background: 'linear-gradient(145deg, #22c55e 0%, #16a34a 50%, #15803d 100%)',
-                  }}
-                >
-                  {/* Calendar icon pattern - non-overlapping */}
-                  <Calendar className="absolute -top-1 -right-1 h-5 w-5 opacity-[0.15]" strokeWidth={1} />
-                  <Calendar className="absolute -bottom-2 left-0 h-6 w-6 opacity-[0.12]" strokeWidth={1} />
-                  <span className="relative text-lg font-bold leading-none">{day}</span>
-                  <span className="relative text-xs uppercase">{month}</span>
+                <div className="flex flex-col items-center justify-center bg-primary text-primary-foreground rounded-lg w-14 h-14 flex-shrink-0">
+                  <span className="text-lg font-bold leading-none">{day}</span>
+                  <span className="text-xs uppercase">{month}</span>
                 </div>
                 <div className="flex-1 min-w-0">
                   <h3 className="font-medium text-foreground truncate">{event.title}</h3>
