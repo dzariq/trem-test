@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Progress } from "@/components/ui/progress";
-import { Download, FileText, Award, Trophy, BookOpen, TrendingUp, TrendingDown, Check, ArrowUp, ArrowDown, Minus, BarChart3, GitCompare, Target, AlertTriangle, Star, Goal, CheckCircle2, Circle, Edit2, ChevronDown, MessageSquare, Calendar } from "lucide-react";
+import { Download, FileText, Award, Trophy, BookOpen, TrendingUp, TrendingDown, Check, ArrowUp, ArrowDown, Minus, BarChart3, GitCompare, Target, AlertTriangle, Star, Goal, CheckCircle2, Circle, Edit2, ChevronDown, MessageSquare, Calendar, Sparkles } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import schoolLogo from "@/assets/school-badge.png";
 import {
@@ -649,7 +649,7 @@ export default function AcademicPage() {
               <TabsList className="grid w-full grid-cols-3 bg-muted/50">
                 <TabsTrigger value="grades">Grades</TabsTrigger>
                 <TabsTrigger value="behavior">Behavior</TabsTrigger>
-                <TabsTrigger value="cocurriculum">Achievements</TabsTrigger>
+                <TabsTrigger value="cocurriculum">Awards</TabsTrigger>
               </TabsList>
 
               <TabsContent value="grades" className="mt-4">
@@ -815,37 +815,51 @@ export default function AcademicPage() {
                     key={index} 
                     className="relative p-4 rounded-xl border overflow-hidden"
                     style={{ 
-                      background: 'linear-gradient(135deg, #fef3c7 0%, #fcd34d 50%, #f59e0b 100%)', 
-                      borderColor: 'rgba(251, 191, 36, 0.5)'
+                      background: 'linear-gradient(145deg, #fffbeb 0%, #fef3c7 25%, #fde68a 60%, #fcd34d 100%)', 
+                      borderColor: 'rgba(251, 191, 36, 0.3)',
+                      boxShadow: '0 2px 8px rgba(251, 191, 36, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.5)'
                     }}
                   >
-                    {/* Inner shine effect */}
+                    {/* Primary shine effect */}
                     <div 
                       className="absolute inset-0 pointer-events-none"
                       style={{
-                        background: 'radial-gradient(ellipse at 30% 20%, rgba(255, 255, 255, 0.25) 0%, transparent 40%)',
+                        background: 'radial-gradient(ellipse at 20% 10%, rgba(255, 255, 255, 0.4) 0%, transparent 35%)',
                       }}
                     />
-                    {/* Trophy pattern decorations - lighter scattered pattern */}
-                    <div className="absolute top-3 right-3 opacity-[0.06] pointer-events-none">
-                      <Trophy className="h-5 w-5 text-amber-600" />
+                    {/* Secondary subtle shimmer */}
+                    <div 
+                      className="absolute inset-0 pointer-events-none"
+                      style={{
+                        background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, transparent 50%, rgba(255, 255, 255, 0.05) 100%)',
+                      }}
+                    />
+                    {/* Trophy decorations - refined cascading pattern with sparkles */}
+                    <div className="absolute top-2 right-3 opacity-[0.07] pointer-events-none rotate-[-12deg]">
+                      <Trophy className="h-4 w-4 text-amber-500" />
                     </div>
-                    <div className="absolute bottom-3 right-2 opacity-[0.08] pointer-events-none">
-                      <Trophy className="h-7 w-7 text-amber-600" />
+                    <div className="absolute top-6 right-6 opacity-[0.04] pointer-events-none">
+                      <Sparkles className="h-3 w-3 text-amber-500" />
                     </div>
-                    <div className="absolute top-1/2 right-12 -translate-y-1/2 opacity-[0.05] pointer-events-none">
-                      <Trophy className="h-4 w-4 text-amber-600" />
+                    <div className="absolute top-1/2 right-2 -translate-y-1/2 opacity-[0.08] pointer-events-none">
+                      <Trophy className="h-6 w-6 text-amber-500" />
                     </div>
-                    <div className="absolute bottom-1 right-20 opacity-[0.04] pointer-events-none">
-                      <Trophy className="h-3 w-3 text-amber-600" />
+                    <div className="absolute bottom-4 right-8 opacity-[0.05] pointer-events-none rotate-[8deg]">
+                      <Trophy className="h-3.5 w-3.5 text-amber-500" />
+                    </div>
+                    <div className="absolute bottom-2 right-3 opacity-[0.03] pointer-events-none">
+                      <Sparkles className="h-2.5 w-2.5 text-amber-500" />
                     </div>
                     
                     <div className="relative flex items-start gap-3 pr-14">
                       <div 
-                        className="p-2.5 rounded-full flex-shrink-0"
-                        style={{ backgroundColor: 'rgba(180, 83, 9, 0.2)' }}
+                        className="p-2.5 rounded-full flex-shrink-0 shadow-sm"
+                        style={{ 
+                          backgroundColor: 'rgba(251, 191, 36, 0.25)',
+                          border: '1px solid rgba(251, 191, 36, 0.3)'
+                        }}
                       >
-                        <Trophy className="h-5 w-5" style={{ color: '#92400e' }} />
+                        <Trophy className="h-5 w-5" style={{ color: '#b45309' }} />
                       </div>
                       <div>
                         <h3 className="font-semibold" style={{ color: '#78350f' }}>{item.activity}</h3>
