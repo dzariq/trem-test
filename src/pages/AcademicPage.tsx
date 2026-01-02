@@ -826,18 +826,21 @@ export default function AcademicPage() {
                         background: 'radial-gradient(ellipse at 30% 20%, rgba(255, 255, 255, 0.25) 0%, transparent 40%)',
                       }}
                     />
-                    {/* Trophy pattern decorations */}
-                    <div className="absolute top-2 right-2 opacity-15 pointer-events-none">
-                      <Trophy className="h-6 w-6 text-amber-800" />
+                    {/* Trophy pattern decorations - lighter scattered pattern */}
+                    <div className="absolute top-3 right-3 opacity-[0.06] pointer-events-none">
+                      <Trophy className="h-5 w-5 text-amber-600" />
                     </div>
-                    <div className="absolute bottom-2 right-8 opacity-10 pointer-events-none">
-                      <Trophy className="h-4 w-4 text-amber-800" />
+                    <div className="absolute bottom-3 right-2 opacity-[0.08] pointer-events-none">
+                      <Trophy className="h-7 w-7 text-amber-600" />
                     </div>
-                    <div className="absolute top-1/2 right-4 -translate-y-1/2 opacity-8 pointer-events-none">
-                      <Trophy className="h-8 w-8 text-amber-800" />
+                    <div className="absolute top-1/2 right-12 -translate-y-1/2 opacity-[0.05] pointer-events-none">
+                      <Trophy className="h-4 w-4 text-amber-600" />
+                    </div>
+                    <div className="absolute bottom-1 right-20 opacity-[0.04] pointer-events-none">
+                      <Trophy className="h-3 w-3 text-amber-600" />
                     </div>
                     
-                    <div className="relative flex items-start gap-3">
+                    <div className="relative flex items-start gap-3 pr-14">
                       <div 
                         className="p-2.5 rounded-full flex-shrink-0"
                         style={{ backgroundColor: 'rgba(180, 83, 9, 0.2)' }}
