@@ -68,10 +68,13 @@ export function UpcomingEvents() {
                 <div 
                   className="relative flex flex-col items-center justify-center text-white rounded-lg w-14 h-14 flex-shrink-0 overflow-hidden"
                   style={{
-                    background: 'linear-gradient(145deg, hsl(var(--primary)) 0%, hsl(var(--primary) / 0.8) 100%)',
+                    background: 'linear-gradient(145deg, #22c55e 0%, #16a34a 50%, #15803d 100%)',
                   }}
                 >
-                  <Calendar className="absolute inset-0 m-auto h-10 w-10 opacity-[0.15]" strokeWidth={1} />
+                  {/* Calendar icon pattern */}
+                  <Calendar className="absolute -top-1 -left-1 h-6 w-6 opacity-[0.12]" strokeWidth={1} />
+                  <Calendar className="absolute -bottom-1 -right-1 h-8 w-8 opacity-[0.15]" strokeWidth={1} />
+                  <Calendar className="absolute top-1/2 right-0 -translate-y-1/2 h-5 w-5 opacity-[0.10]" strokeWidth={1} />
                   <span className="relative text-lg font-bold leading-none">{day}</span>
                   <span className="relative text-xs uppercase">{month}</span>
                 </div>
