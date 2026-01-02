@@ -415,3 +415,49 @@ export const examComparisonData: Record<string, Record<string, ExamData>> = {
     "2023-midYear": { average: 70, passRate: 80, aRate: 28, highest: 88, lowest: 52, attitude: 7.3, homework: 7.0, quiz: 6.8, exam: 49 },
   },
 };
+
+// Subject-wise yearly performance data per class for trend analysis
+export const subjectYearlyData: Record<string, {
+  year: string;
+  Mathematics: number;
+  Science: number;
+  English: number;
+  Arts: number;
+  "Chinese as a Second Language": number;
+  "Physical Education": number;
+}[]> = {
+  "5A": [
+    { year: "2021", Mathematics: 65, Science: 68, English: 70, Arts: 75, "Chinese as a Second Language": 62, "Physical Education": 82 },
+    { year: "2022", Mathematics: 68, Science: 70, English: 72, Arts: 78, "Chinese as a Second Language": 65, "Physical Education": 84 },
+    { year: "2023", Mathematics: 72, Science: 74, English: 75, Arts: 80, "Chinese as a Second Language": 68, "Physical Education": 86 },
+    { year: "2024", Mathematics: 75, Science: 77, English: 78, Arts: 82, "Chinese as a Second Language": 72, "Physical Education": 88 },
+    { year: "2025", Mathematics: 78, Science: 80, English: 80, Arts: 84, "Chinese as a Second Language": 75, "Physical Education": 90 },
+    { year: "2026", Mathematics: 80, Science: 82, English: 82, Arts: 86, "Chinese as a Second Language": 78, "Physical Education": 91 },
+  ],
+  "5B": [
+    { year: "2021", Mathematics: 70, Science: 72, English: 74, Arts: 78, "Chinese as a Second Language": 68, "Physical Education": 85 },
+    { year: "2022", Mathematics: 73, Science: 75, English: 76, Arts: 80, "Chinese as a Second Language": 71, "Physical Education": 87 },
+    { year: "2023", Mathematics: 76, Science: 78, English: 79, Arts: 82, "Chinese as a Second Language": 74, "Physical Education": 89 },
+    { year: "2024", Mathematics: 79, Science: 81, English: 82, Arts: 85, "Chinese as a Second Language": 77, "Physical Education": 91 },
+    { year: "2025", Mathematics: 82, Science: 84, English: 85, Arts: 87, "Chinese as a Second Language": 80, "Physical Education": 93 },
+    { year: "2026", Mathematics: 85, Science: 86, English: 87, Arts: 89, "Chinese as a Second Language": 83, "Physical Education": 94 },
+  ],
+  "4A": [
+    { year: "2021", Mathematics: 60, Science: 62, English: 65, Arts: 72, "Chinese as a Second Language": 58, "Physical Education": 80 },
+    { year: "2022", Mathematics: 63, Science: 65, English: 68, Arts: 75, "Chinese as a Second Language": 61, "Physical Education": 82 },
+    { year: "2023", Mathematics: 67, Science: 69, English: 71, Arts: 78, "Chinese as a Second Language": 64, "Physical Education": 84 },
+    { year: "2024", Mathematics: 70, Science: 72, English: 74, Arts: 80, "Chinese as a Second Language": 68, "Physical Education": 86 },
+    { year: "2025", Mathematics: 73, Science: 75, English: 77, Arts: 82, "Chinese as a Second Language": 71, "Physical Education": 88 },
+    { year: "2026", Mathematics: 76, Science: 78, English: 80, Arts: 84, "Chinese as a Second Language": 74, "Physical Education": 90 },
+  ],
+};
+
+// Multi-class comparison data for cross-class analysis
+export const multiClassTrendData = [
+  { year: "2021", "5A": 68, "5B": 72, "4A": 65 },
+  { year: "2022", "5A": 70, "5B": 74, "4A": 68 },
+  { year: "2023", "5A": 72, "5B": 75, "4A": 70 },
+  { year: "2024", "5A": 74, "5B": 78, "4A": 73 },
+  { year: "2025", "5A": 76, "5B": 80, "4A": 75 },
+  { year: "2026", "5A": 77, "5B": 82, "4A": 78 },
+];

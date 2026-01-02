@@ -17,7 +17,7 @@ import {
 } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import schoolLogo from "@/assets/school-badge.png";
-import { teacherProfile, classRosters, classGrades, detailedClassGrades, yearOverYearData, categoryYearOverYear, examComparisonData, ExamData } from "@/data/teacherMockData";
+import { teacherProfile, classRosters, classGrades, detailedClassGrades, yearOverYearData, categoryYearOverYear, examComparisonData, ExamData, subjectYearlyData, multiClassTrendData } from "@/data/teacherMockData";
 import {
   Select,
   SelectContent,
@@ -44,6 +44,14 @@ import {
   LineChart,
   Line,
   Legend,
+  AreaChart,
+  Area,
+  RadarChart,
+  Radar,
+  PolarGrid,
+  PolarAngleAxis,
+  PolarRadiusAxis,
+  ReferenceLine,
 } from "recharts";
 import {
   Collapsible,
@@ -1258,127 +1266,427 @@ ${atRiskStudents.length > 0 ? `3. Arrange parent meetings for at-risk students` 
 
               {/* ==================== TRENDS SUB-TAB ==================== */}
               <TabsContent value="trends" className="space-y-4">
-                {/* Class Selector */}
-                <Select value={selectedClass} onValueChange={setSelectedClass}>
-                  <SelectTrigger className="w-full">
-                    <SelectValue placeholder="Select Class" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {teacherProfile.classes.map((cls) => (
-                      <SelectItem key={cls} value={cls}>{cls}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                {/* Filters Row */}
+                <div className="grid grid-cols-2 gap-2">
+                  <Select value={selectedClass} onValueChange={setSelectedClass}>
+                    <SelectTrigger className="text-xs">
+                      <SelectValue placeholder="Class" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Classes</SelectItem>
+                      {teacherProfile.classes.map((cls) => (
+                        <SelectItem key={cls} value={cls}>{cls}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <Select defaultValue="all">
+                    <SelectTrigger className="text-xs">
+                      <SelectValue placeholder="Subject" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Subjects</SelectItem>
+                      {subjects.map((sub) => (
+                        <SelectItem key={sub} value={sub}>{sub}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
 
-                {/* Year-Over-Year Trend Comparison */}
-                <Card>
-                  <CardHeader className="pb-2">
-                    <CardTitle className="text-sm flex items-center gap-2">
-                      <TrendingUp className="h-4 w-4" />
-                      Year-Over-Year Trend
-                    </CardTitle>
-                    <p className="text-xs text-muted-foreground">Class average performance across years</p>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    {/* Overall Score Trend */}
-                    <div>
-                      <p className="text-xs font-medium text-muted-foreground mb-2">Overall Score</p>
-                      <div className="h-40">
-                        <ResponsiveContainer width="100%" height="100%">
-                          <LineChart data={yearOverYearData[selectedClass as keyof typeof yearOverYearData] || []}>
-                            <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
-                            <XAxis dataKey="year" tick={{ fontSize: 10 }} />
-                            <YAxis domain={[0, 100]} tick={{ fontSize: 10 }} width={30} />
-                            <Tooltip />
-                            <Legend wrapperStyle={{ fontSize: '10px' }} />
-                            <Line 
-                              type="monotone" 
-                              dataKey="midYear" 
-                              stroke="hsl(var(--primary))" 
-                              strokeWidth={2}
-                              dot={{ fill: "hsl(var(--primary))", r: 4 }}
-                              name="Mid-Year"
-                            />
-                            <Line 
-                              type="monotone" 
-                              dataKey="yearEnd" 
-                              stroke="#10b981" 
-                              strokeWidth={2}
-                              dot={{ fill: "#10b981", r: 4 }}
-                              name="Year-End"
-                              connectNulls={false}
-                            />
-                          </LineChart>
-                        </ResponsiveContainer>
+                {/* Quick Stats Row - Moomoo Style */}
+                <div className="grid grid-cols-4 gap-2">
+                  {(() => {
+                    const data = yearOverYearData[selectedClass as keyof typeof yearOverYearData] || yearOverYearData["5A"];
+                    const latest = data[data.length - 1];
+                    const previous = data[data.length - 2];
+                    const change = latest.midYear - previous.midYear;
+                    const changePercent = ((change / previous.midYear) * 100).toFixed(1);
+                    
+                    return (
+                      <>
+                        <div className="p-2 rounded-lg bg-gradient-to-br from-primary/10 to-primary/5 border border-primary/20 text-center">
+                          <p className="text-lg font-bold text-foreground">{latest.midYear}%</p>
+                          <p className="text-[9px] text-muted-foreground">Current Avg</p>
+                        </div>
+                        <div className={`p-2 rounded-lg text-center ${change >= 0 ? 'bg-gradient-to-br from-emerald-500/10 to-emerald-600/5 border border-emerald-500/20' : 'bg-gradient-to-br from-red-500/10 to-red-600/5 border border-red-500/20'}`}>
+                          <p className={`text-lg font-bold ${change >= 0 ? 'text-emerald-600' : 'text-red-600'}`}>
+                            {change >= 0 ? '+' : ''}{change}%
+                          </p>
+                          <p className="text-[9px] text-muted-foreground">YoY Change</p>
+                        </div>
+                        <div className="p-2 rounded-lg bg-gradient-to-br from-amber-500/10 to-amber-600/5 border border-amber-500/20 text-center">
+                          <p className="text-lg font-bold text-foreground">{Math.max(...data.map(d => d.midYear))}%</p>
+                          <p className="text-[9px] text-muted-foreground">Peak Score</p>
+                        </div>
+                        <div className="p-2 rounded-lg bg-gradient-to-br from-blue-500/10 to-blue-600/5 border border-blue-500/20 text-center">
+                          <p className="text-lg font-bold text-foreground">{data.length}</p>
+                          <p className="text-[9px] text-muted-foreground">Years Data</p>
+                        </div>
+                      </>
+                    );
+                  })()}
+                </div>
+
+                {/* Main Performance Area Chart - Moomoo Style */}
+                <div className="p-4 rounded-xl bg-gradient-to-br from-card to-accent/30 border border-border/50 shadow-sm">
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="flex items-center gap-2">
+                      <div className="w-8 h-8 rounded-lg bg-primary/20 flex items-center justify-center">
+                        <TrendingUp className="h-4 w-4 text-primary" />
+                      </div>
+                      <div>
+                        <h4 className="text-sm font-semibold text-foreground">Performance Trend</h4>
+                        <p className="text-[10px] text-muted-foreground">Class average over time</p>
                       </div>
                     </div>
+                    <Badge variant="outline" className="text-[10px]">
+                      {selectedClass === "all" ? "All Classes" : selectedClass}
+                    </Badge>
+                  </div>
+                  
+                  <div className="h-48">
+                    <ResponsiveContainer width="100%" height="100%">
+                      {selectedClass === "all" ? (
+                        <AreaChart data={multiClassTrendData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
+                          <defs>
+                            <linearGradient id="gradient5A" x1="0" y1="0" x2="0" y2="1">
+                              <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.3}/>
+                              <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0.05}/>
+                            </linearGradient>
+                            <linearGradient id="gradient5B" x1="0" y1="0" x2="0" y2="1">
+                              <stop offset="5%" stopColor="#10b981" stopOpacity={0.3}/>
+                              <stop offset="95%" stopColor="#10b981" stopOpacity={0.05}/>
+                            </linearGradient>
+                            <linearGradient id="gradient4A" x1="0" y1="0" x2="0" y2="1">
+                              <stop offset="5%" stopColor="#f59e0b" stopOpacity={0.3}/>
+                              <stop offset="95%" stopColor="#f59e0b" stopOpacity={0.05}/>
+                            </linearGradient>
+                          </defs>
+                          <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" strokeOpacity={0.3} vertical={false} />
+                          <XAxis dataKey="year" tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }} axisLine={false} tickLine={false} />
+                          <YAxis domain={[50, 100]} tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }} axisLine={false} tickLine={false} width={30} />
+                          <Tooltip contentStyle={{ backgroundColor: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', borderRadius: '8px' }} />
+                          <Legend wrapperStyle={{ fontSize: '10px' }} />
+                          <ReferenceLine y={50} stroke="#f59e0b" strokeDasharray="5 5" strokeOpacity={0.5} />
+                          <ReferenceLine y={80} stroke="#22c55e" strokeDasharray="5 5" strokeOpacity={0.5} />
+                          <Area type="monotone" dataKey="5A" stroke="hsl(var(--primary))" strokeWidth={2} fill="url(#gradient5A)" dot={{ r: 4, fill: 'hsl(var(--primary))', strokeWidth: 2, stroke: 'hsl(var(--background))' }} />
+                          <Area type="monotone" dataKey="5B" stroke="#10b981" strokeWidth={2} fill="url(#gradient5B)" dot={{ r: 4, fill: '#10b981', strokeWidth: 2, stroke: 'hsl(var(--background))' }} />
+                          <Area type="monotone" dataKey="4A" stroke="#f59e0b" strokeWidth={2} fill="url(#gradient4A)" dot={{ r: 4, fill: '#f59e0b', strokeWidth: 2, stroke: 'hsl(var(--background))' }} />
+                        </AreaChart>
+                      ) : (
+                        <AreaChart data={yearOverYearData[selectedClass as keyof typeof yearOverYearData] || []} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
+                          <defs>
+                            <linearGradient id="gradientMid" x1="0" y1="0" x2="0" y2="1">
+                              <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.4}/>
+                              <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0.05}/>
+                            </linearGradient>
+                            <linearGradient id="gradientEnd" x1="0" y1="0" x2="0" y2="1">
+                              <stop offset="5%" stopColor="#10b981" stopOpacity={0.4}/>
+                              <stop offset="95%" stopColor="#10b981" stopOpacity={0.05}/>
+                            </linearGradient>
+                          </defs>
+                          <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" strokeOpacity={0.3} vertical={false} />
+                          <XAxis dataKey="year" tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }} axisLine={false} tickLine={false} />
+                          <YAxis domain={[50, 100]} tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }} axisLine={false} tickLine={false} width={30} />
+                          <Tooltip contentStyle={{ backgroundColor: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', borderRadius: '8px' }} />
+                          <Legend wrapperStyle={{ fontSize: '10px' }} />
+                          <ReferenceLine y={50} stroke="#f59e0b" strokeDasharray="5 5" strokeOpacity={0.5} label={{ value: "Pass", fontSize: 9, fill: '#f59e0b' }} />
+                          <ReferenceLine y={80} stroke="#22c55e" strokeDasharray="5 5" strokeOpacity={0.5} label={{ value: "A", fontSize: 9, fill: '#22c55e' }} />
+                          <Area type="monotone" dataKey="midYear" stroke="hsl(var(--primary))" strokeWidth={2.5} fill="url(#gradientMid)" dot={{ r: 5, fill: 'hsl(var(--primary))', strokeWidth: 2, stroke: 'hsl(var(--background))' }} activeDot={{ r: 7, strokeWidth: 2, stroke: '#fff' }} name="Mid-Year" />
+                          <Area type="monotone" dataKey="yearEnd" stroke="#10b981" strokeWidth={2.5} fill="url(#gradientEnd)" dot={{ r: 5, fill: '#10b981', strokeWidth: 2, stroke: 'hsl(var(--background))' }} activeDot={{ r: 7, strokeWidth: 2, stroke: '#fff' }} name="Year-End" connectNulls={false} />
+                        </AreaChart>
+                      )}
+                    </ResponsiveContainer>
+                  </div>
+                </div>
 
-                    {/* Category Trend */}
-                    <div className="pt-3 border-t">
-                      <p className="text-xs font-medium text-muted-foreground mb-2">Category Breakdown</p>
-                      <div className="h-48">
-                        <ResponsiveContainer width="100%" height="100%">
-                          <LineChart data={categoryYearOverYear[selectedClass as keyof typeof categoryYearOverYear] || []}>
-                            <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
-                            <XAxis dataKey="year" tick={{ fontSize: 10 }} />
-                            <YAxis tick={{ fontSize: 10 }} width={30} />
-                            <Tooltip />
-                            <Legend wrapperStyle={{ fontSize: '10px' }} />
-                            <Line 
-                              type="monotone" 
-                              dataKey="attitude" 
-                              stroke="hsl(var(--primary))" 
-                              strokeWidth={2}
-                              dot={{ r: 3 }}
-                              name="Attitude (/10)"
-                            />
-                            <Line 
-                              type="monotone" 
-                              dataKey="homework" 
-                              stroke="#f59e0b" 
-                              strokeWidth={2}
-                              dot={{ r: 3 }}
-                              name="Homework (/10)"
-                            />
-                            <Line 
-                              type="monotone" 
-                              dataKey="quiz" 
-                              stroke="#10b981" 
-                              strokeWidth={2}
-                              dot={{ r: 3 }}
-                              name="Quiz (/10)"
-                            />
-                          </LineChart>
-                        </ResponsiveContainer>
+                {/* Subject Trends - Multi-line Area Chart */}
+                {selectedClass !== "all" && (
+                  <div className="p-4 rounded-xl bg-gradient-to-br from-card to-accent/30 border border-border/50 shadow-sm">
+                    <div className="flex items-center justify-between mb-3">
+                      <div className="flex items-center gap-2">
+                        <div className="w-8 h-8 rounded-lg bg-blue-500/20 flex items-center justify-center">
+                          <BookOpen className="h-4 w-4 text-blue-500" />
+                        </div>
+                        <div>
+                          <h4 className="text-sm font-semibold text-foreground">Subject Performance</h4>
+                          <p className="text-[10px] text-muted-foreground">All subjects over time</p>
+                        </div>
                       </div>
+                    </div>
+                    
+                    <div className="h-52">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <LineChart data={subjectYearlyData[selectedClass as keyof typeof subjectYearlyData] || []} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
+                          <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" strokeOpacity={0.3} vertical={false} />
+                          <XAxis dataKey="year" tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }} axisLine={false} tickLine={false} />
+                          <YAxis domain={[40, 100]} tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }} axisLine={false} tickLine={false} width={30} />
+                          <Tooltip contentStyle={{ backgroundColor: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', borderRadius: '8px' }} />
+                          <Legend wrapperStyle={{ fontSize: '9px' }} />
+                          <Line type="monotone" dataKey="Mathematics" stroke="#3b82f6" strokeWidth={2} dot={{ r: 3 }} />
+                          <Line type="monotone" dataKey="Science" stroke="#10b981" strokeWidth={2} dot={{ r: 3 }} />
+                          <Line type="monotone" dataKey="English" stroke="#8b5cf6" strokeWidth={2} dot={{ r: 3 }} />
+                          <Line type="monotone" dataKey="Arts" stroke="#f59e0b" strokeWidth={2} dot={{ r: 3 }} />
+                          <Line type="monotone" dataKey="Physical Education" stroke="#ef4444" strokeWidth={2} dot={{ r: 3 }} name="PE" />
+                          <Line type="monotone" dataKey="Chinese as a Second Language" stroke="#06b6d4" strokeWidth={2} dot={{ r: 3 }} name="Chinese" />
+                        </LineChart>
+                      </ResponsiveContainer>
+                    </div>
+                  </div>
+                )}
+
+                {/* Top Growth & Needs Attention - Side by Side */}
+                <div className="grid grid-cols-2 gap-3">
+                  {/* Top Growth - Moomoo Style */}
+                  <div className="p-3 rounded-xl bg-gradient-to-br from-emerald-500/10 to-emerald-600/5 border border-emerald-500/20">
+                    <div className="flex items-center gap-2 mb-2">
+                      <div className="w-6 h-6 rounded-md bg-emerald-500/20 flex items-center justify-center">
+                        <TrendingUp className="h-3 w-3 text-emerald-500" />
+                      </div>
+                      <span className="text-xs font-semibold text-foreground">Top Growth</span>
+                    </div>
+                    {(() => {
+                      const data = subjectYearlyData[selectedClass as keyof typeof subjectYearlyData] || subjectYearlyData["5A"];
+                      const latest = data[data.length - 1];
+                      const previous = data[data.length - 2];
+                      const growthData = [
+                        { name: "Math", growth: latest.Mathematics - previous.Mathematics },
+                        { name: "Science", growth: latest.Science - previous.Science },
+                        { name: "English", growth: latest.English - previous.English },
+                        { name: "Arts", growth: latest.Arts - previous.Arts },
+                        { name: "PE", growth: latest["Physical Education"] - previous["Physical Education"] },
+                        { name: "Chinese", growth: latest["Chinese as a Second Language"] - previous["Chinese as a Second Language"] },
+                      ].sort((a, b) => b.growth - a.growth).slice(0, 3);
                       
-                      {/* Trend insight */}
-                      {(() => {
-                        const data = categoryYearOverYear[selectedClass as keyof typeof categoryYearOverYear] || [];
-                        if (data.length < 2) return null;
-                        const latest = data[data.length - 1];
-                        const previous = data[data.length - 2];
-                        const attitudeChange = latest.attitude - previous.attitude;
-                        const homeworkChange = latest.homework - previous.homework;
-                        const quizChange = latest.quiz - previous.quiz;
-                        
-                        const improvements = [];
-                        if (attitudeChange > 0) improvements.push(`Attitude +${attitudeChange.toFixed(1)}`);
-                        if (homeworkChange > 0) improvements.push(`Homework +${homeworkChange.toFixed(1)}`);
-                        if (quizChange > 0) improvements.push(`Quiz +${quizChange.toFixed(1)}`);
-                        
-                        return improvements.length > 0 ? (
-                          <div className="flex items-center gap-2 p-2 rounded-lg bg-emerald-50 border border-emerald-200 mt-3">
-                            <TrendingUp className="h-4 w-4 text-emerald-600" />
-                            <p className="text-xs text-emerald-700">
-                              <span className="font-medium">Improvements:</span> {improvements.join(", ")}
+                      return (
+                        <div className="space-y-1.5">
+                          {growthData.map((item, idx) => (
+                            <div key={idx} className="flex items-center justify-between p-1.5 rounded-lg bg-emerald-500/10">
+                              <span className="text-[10px] font-medium text-foreground">{item.name}</span>
+                              <span className="text-[10px] font-bold text-emerald-600">+{item.growth}%</span>
+                            </div>
+                          ))}
+                        </div>
+                      );
+                    })()}
+                  </div>
+
+                  {/* Needs Attention - Moomoo Style */}
+                  <div className="p-3 rounded-xl bg-gradient-to-br from-amber-500/10 to-amber-600/5 border border-amber-500/20">
+                    <div className="flex items-center gap-2 mb-2">
+                      <div className="w-6 h-6 rounded-md bg-amber-500/20 flex items-center justify-center">
+                        <AlertTriangle className="h-3 w-3 text-amber-500" />
+                      </div>
+                      <span className="text-xs font-semibold text-foreground">Focus Areas</span>
+                    </div>
+                    {(() => {
+                      const data = subjectYearlyData[selectedClass as keyof typeof subjectYearlyData] || subjectYearlyData["5A"];
+                      const latest = data[data.length - 1];
+                      const lowScores = [
+                        { name: "Math", score: latest.Mathematics },
+                        { name: "Science", score: latest.Science },
+                        { name: "English", score: latest.English },
+                        { name: "Arts", score: latest.Arts },
+                        { name: "PE", score: latest["Physical Education"] },
+                        { name: "Chinese", score: latest["Chinese as a Second Language"] },
+                      ].sort((a, b) => a.score - b.score).slice(0, 3);
+                      
+                      return (
+                        <div className="space-y-1.5">
+                          {lowScores.map((item, idx) => (
+                            <div key={idx} className="flex items-center justify-between p-1.5 rounded-lg bg-amber-500/10">
+                              <span className="text-[10px] font-medium text-foreground">{item.name}</span>
+                              <span className="text-[10px] font-bold text-amber-600">{item.score}%</span>
+                            </div>
+                          ))}
+                        </div>
+                      );
+                    })()}
+                  </div>
+                </div>
+
+                {/* Radar Chart - Class Strengths Profile */}
+                {selectedClass !== "all" && (
+                  <div className="p-4 rounded-xl bg-gradient-to-br from-card to-accent/30 border border-border/50 shadow-sm">
+                    <div className="flex items-center gap-2 mb-3">
+                      <div className="w-8 h-8 rounded-lg bg-purple-500/20 flex items-center justify-center">
+                        <Target className="h-4 w-4 text-purple-500" />
+                      </div>
+                      <div>
+                        <h4 className="text-sm font-semibold text-foreground">Class Strengths Profile</h4>
+                        <p className="text-[10px] text-muted-foreground">Subject performance radar</p>
+                      </div>
+                    </div>
+                    
+                    <div className="h-56">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <RadarChart data={(() => {
+                          const data = subjectYearlyData[selectedClass as keyof typeof subjectYearlyData] || subjectYearlyData["5A"];
+                          const latest = data[data.length - 1];
+                          return [
+                            { subject: "Math", score: latest.Mathematics },
+                            { subject: "Science", score: latest.Science },
+                            { subject: "English", score: latest.English },
+                            { subject: "Arts", score: latest.Arts },
+                            { subject: "PE", score: latest["Physical Education"] },
+                            { subject: "Chinese", score: latest["Chinese as a Second Language"] },
+                          ];
+                        })()} cx="50%" cy="50%" outerRadius="70%">
+                          <PolarGrid stroke="hsl(var(--border))" strokeOpacity={0.5} />
+                          <PolarAngleAxis dataKey="subject" tick={{ fontSize: 9, fill: 'hsl(var(--muted-foreground))' }} tickLine={false} />
+                          <PolarRadiusAxis angle={30} domain={[0, 100]} tick={{ fontSize: 8, fill: 'hsl(var(--muted-foreground))' }} tickCount={5} axisLine={false} />
+                          <Radar name="Score" dataKey="score" stroke="hsl(var(--primary))" fill="hsl(var(--primary))" fillOpacity={0.3} strokeWidth={2} dot={{ r: 4, fill: 'hsl(var(--primary))' }} />
+                        </RadarChart>
+                      </ResponsiveContainer>
+                    </div>
+                  </div>
+                )}
+
+                {/* Category Trends - Stacked Bar */}
+                <div className="p-4 rounded-xl bg-gradient-to-br from-card to-accent/30 border border-border/50 shadow-sm">
+                  <div className="flex items-center gap-2 mb-3">
+                    <div className="w-8 h-8 rounded-lg bg-cyan-500/20 flex items-center justify-center">
+                      <BarChart3 className="h-4 w-4 text-cyan-500" />
+                    </div>
+                    <div>
+                      <h4 className="text-sm font-semibold text-foreground">Category Breakdown</h4>
+                      <p className="text-[10px] text-muted-foreground">Attitude, Homework, Quiz trends</p>
+                    </div>
+                  </div>
+                  
+                  <div className="h-40">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <BarChart data={categoryYearOverYear[selectedClass as keyof typeof categoryYearOverYear] || categoryYearOverYear["5A"]} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
+                        <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" strokeOpacity={0.3} vertical={false} />
+                        <XAxis dataKey="year" tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }} axisLine={false} tickLine={false} />
+                        <YAxis tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }} axisLine={false} tickLine={false} width={25} />
+                        <Tooltip contentStyle={{ backgroundColor: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', borderRadius: '8px' }} />
+                        <Legend wrapperStyle={{ fontSize: '9px' }} />
+                        <Bar dataKey="attitude" fill="hsl(var(--primary))" radius={[2, 2, 0, 0]} name="Attitude" />
+                        <Bar dataKey="homework" fill="#f59e0b" radius={[2, 2, 0, 0]} name="Homework" />
+                        <Bar dataKey="quiz" fill="#10b981" radius={[2, 2, 0, 0]} name="Quiz" />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </div>
+                  
+                  {/* Trend insight */}
+                  {(() => {
+                    const data = categoryYearOverYear[selectedClass as keyof typeof categoryYearOverYear] || categoryYearOverYear["5A"];
+                    if (data.length < 2) return null;
+                    const latest = data[data.length - 1];
+                    const previous = data[data.length - 2];
+                    const attitudeChange = latest.attitude - previous.attitude;
+                    const homeworkChange = latest.homework - previous.homework;
+                    const quizChange = latest.quiz - previous.quiz;
+                    
+                    const improvements = [];
+                    if (attitudeChange > 0) improvements.push(`Attitude +${attitudeChange.toFixed(1)}`);
+                    if (homeworkChange > 0) improvements.push(`Homework +${homeworkChange.toFixed(1)}`);
+                    if (quizChange > 0) improvements.push(`Quiz +${quizChange.toFixed(1)}`);
+                    
+                    const declines = [];
+                    if (attitudeChange < 0) declines.push(`Attitude ${attitudeChange.toFixed(1)}`);
+                    if (homeworkChange < 0) declines.push(`Homework ${homeworkChange.toFixed(1)}`);
+                    if (quizChange < 0) declines.push(`Quiz ${quizChange.toFixed(1)}`);
+                    
+                    return (
+                      <div className="flex flex-col gap-2 mt-3">
+                        {improvements.length > 0 && (
+                          <div className="flex items-center gap-2 p-2 rounded-lg bg-emerald-50 border border-emerald-200">
+                            <TrendingUp className="h-3 w-3 text-emerald-600" />
+                            <p className="text-[10px] text-emerald-700">
+                              <span className="font-medium">Improving:</span> {improvements.join(", ")}
                             </p>
                           </div>
-                        ) : null;
-                      })()}
+                        )}
+                        {declines.length > 0 && (
+                          <div className="flex items-center gap-2 p-2 rounded-lg bg-red-50 border border-red-200">
+                            <TrendingDown className="h-3 w-3 text-red-600" />
+                            <p className="text-[10px] text-red-700">
+                              <span className="font-medium">Declining:</span> {declines.join(", ")}
+                            </p>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })()}
+                </div>
+
+                {/* Performance Heatmap */}
+                <div className="p-4 rounded-xl bg-gradient-to-br from-card to-accent/30 border border-border/50 shadow-sm">
+                  <div className="flex items-center gap-2 mb-3">
+                    <div className="w-8 h-8 rounded-lg bg-rose-500/20 flex items-center justify-center">
+                      <BarChart3 className="h-4 w-4 text-rose-500" />
                     </div>
-                  </CardContent>
-                </Card>
+                    <div>
+                      <h4 className="text-sm font-semibold text-foreground">Subject Heatmap</h4>
+                      <p className="text-[10px] text-muted-foreground">Performance intensity over years</p>
+                    </div>
+                  </div>
+                  
+                  <div className="overflow-x-auto">
+                    {(() => {
+                      const data = subjectYearlyData[selectedClass as keyof typeof subjectYearlyData] || subjectYearlyData["5A"];
+                      const subjectKeys = ["Mathematics", "Science", "English", "Arts", "Physical Education", "Chinese as a Second Language"] as const;
+                      
+                      const getHeatColor = (score: number) => {
+                        if (score >= 90) return "bg-emerald-500";
+                        if (score >= 80) return "bg-emerald-400";
+                        if (score >= 70) return "bg-lime-400";
+                        if (score >= 60) return "bg-amber-400";
+                        if (score >= 50) return "bg-orange-400";
+                        return "bg-red-400";
+                      };
+                      
+                      const shortNames: Record<string, string> = {
+                        "Mathematics": "Math",
+                        "Science": "Sci",
+                        "English": "Eng",
+                        "Arts": "Art",
+                        "Physical Education": "PE",
+                        "Chinese as a Second Language": "Chi",
+                      };
+                      
+                      return (
+                        <div className="min-w-[280px]">
+                          {/* Year headers */}
+                          <div className="flex gap-1 mb-1 ml-12">
+                            {data.map(d => (
+                              <div key={d.year} className="flex-1 text-center text-[9px] font-medium text-muted-foreground">
+                                {d.year}
+                              </div>
+                            ))}
+                          </div>
+                          {/* Subject rows */}
+                          {subjectKeys.map(subject => (
+                            <div key={subject} className="flex gap-1 mb-1">
+                              <div className="w-12 shrink-0 text-[9px] font-medium text-foreground truncate pr-1 flex items-center">
+                                {shortNames[subject]}
+                              </div>
+                              {data.map((yearData, idx) => (
+                                <div
+                                  key={idx}
+                                  className={`flex-1 h-6 rounded flex items-center justify-center text-[9px] font-semibold text-white ${getHeatColor(yearData[subject])}`}
+                                  title={`${subject} - ${yearData.year}: ${yearData[subject]}%`}
+                                >
+                                  {yearData[subject]}
+                                </div>
+                              ))}
+                            </div>
+                          ))}
+                        </div>
+                      );
+                    })()}
+                  </div>
+                  
+                  {/* Legend */}
+                  <div className="flex items-center justify-center gap-1 mt-3">
+                    <span className="text-[8px] text-muted-foreground mr-1">Low</span>
+                    {["bg-red-400", "bg-orange-400", "bg-amber-400", "bg-lime-400", "bg-emerald-400", "bg-emerald-500"].map((color, i) => (
+                      <div key={i} className={`w-4 h-3 rounded-sm ${color}`} />
+                    ))}
+                    <span className="text-[8px] text-muted-foreground ml-1">High</span>
+                  </div>
+                </div>
               </TabsContent>
 
               {/* ==================== COMPARISON SUB-TAB ==================== */}
