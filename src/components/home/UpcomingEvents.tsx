@@ -2,7 +2,7 @@ import { useState } from "react";
 import { upcomingEvents } from "@/data/mockData";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ChevronRight, MapPin, Clock } from "lucide-react";
+import { ChevronRight, MapPin, Clock, Calendar } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { useNavigate } from "react-router-dom";
 
@@ -65,7 +65,13 @@ export function UpcomingEvents() {
           return (
             <Card key={event.id} className="bg-card border-border shadow-sm">
               <CardContent className="p-3 flex items-center gap-4">
-                <div className="flex flex-col items-center justify-center bg-primary text-primary-foreground rounded-lg w-14 h-14 flex-shrink-0">
+                <div 
+                  className="relative flex flex-col items-center justify-center text-white rounded-lg w-14 h-14 flex-shrink-0 overflow-hidden"
+                  style={{
+                    background: 'linear-gradient(145deg, hsl(var(--primary)) 0%, hsl(var(--primary) / 0.8) 100%)',
+                  }}
+                >
+                  <Calendar className="absolute top-1 right-1 h-3 w-3 opacity-40" strokeWidth={1.5} />
                   <span className="text-lg font-bold leading-none">{day}</span>
                   <span className="text-xs uppercase">{month}</span>
                 </div>
