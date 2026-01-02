@@ -973,16 +973,22 @@ export default function AcademicPage() {
                   ))}
                 </div>
 
-                {/* Moomoo-Style Gradient Area Chart - Scrollable */}
+                {/* Moomoo-Style Gradient Area Chart - Scrollable with Touch Gestures */}
                 <div className="space-y-2">
                   <div className="flex items-center justify-between">
                     <p className="text-[10px] text-muted-foreground">← Swipe to see more data →</p>
                     <p className="text-[10px] text-muted-foreground">{trendData.length} periods</p>
                   </div>
-                  <div className="h-56 overflow-x-auto overflow-y-hidden scrollbar-thin scrollbar-thumb-muted scrollbar-track-transparent">
-                    <div style={{ width: Math.max(100, trendData.length * 80) + '%', minWidth: '100%', height: '100%' }}>
+                  <div 
+                    className="h-64 overflow-x-auto overflow-y-hidden scrollbar-thin scrollbar-thumb-muted scrollbar-track-transparent touch-pan-x"
+                    style={{
+                      WebkitOverflowScrolling: 'touch',
+                      scrollBehavior: 'smooth',
+                    }}
+                  >
+                    <div style={{ width: Math.max(100, (trendData.length / 4) * 100) + '%', minWidth: '100%', height: '100%' }}>
                       <ResponsiveContainer width="100%" height="100%">
-                        <AreaChart data={trendData} margin={{ top: 10, right: 20, left: 0, bottom: 0 }}>
+                        <AreaChart data={trendData} margin={{ top: 10, right: 20, left: 0, bottom: 20 }}>
                           <defs>
                             <linearGradient id="gradientGreen" x1="0" y1="0" x2="0" y2="1">
                               <stop offset="0%" stopColor="#22c55e" stopOpacity={0.4} />
@@ -1005,10 +1011,38 @@ export default function AcademicPage() {
                           />
                           <XAxis 
                             dataKey="period" 
-                            tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }}
                             axisLine={false}
                             tickLine={false}
                             interval={0}
+                            height={40}
+                            tick={({ x, y, payload }) => {
+                              const parts = payload.value.split(' ');
+                              return (
+                                <g transform={`translate(${x},${y})`}>
+                                  <text 
+                                    x={0} 
+                                    y={0} 
+                                    dy={12} 
+                                    textAnchor="middle" 
+                                    fontSize={10}
+                                    fill="hsl(var(--muted-foreground))"
+                                  >
+                                    {parts[0]}
+                                  </text>
+                                  <text 
+                                    x={0} 
+                                    y={0} 
+                                    dy={24} 
+                                    textAnchor="middle" 
+                                    fontSize={9}
+                                    fill="hsl(var(--muted-foreground))"
+                                    opacity={0.7}
+                                  >
+                                    {parts[1]}
+                                  </text>
+                                </g>
+                              );
+                            }}
                           />
                           <YAxis 
                             domain={[30, 100]}
