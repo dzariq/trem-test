@@ -106,6 +106,14 @@ export default function AcademicPage() {
     D: "bg-chart-5 text-card",
   };
 
+  // Background colors for subject cards (lighter versions)
+  const gradeCardBgColors: Record<string, string> = {
+    A: "bg-chart-1/10 border-chart-1/30",
+    B: "bg-chart-2/10 border-chart-2/30",
+    C: "bg-chart-4/10 border-chart-4/30",
+    D: "bg-chart-5/10 border-chart-5/30",
+  };
+
   const getGradeFromScore = (score: number) => {
     if (score >= 90) return "A+";
     if (score >= 80) return "A";
@@ -409,10 +417,17 @@ export default function AcademicPage() {
 
               <TabsContent value="grades" className="mt-4">
                 <div className="space-y-3">
-                  {/* Group subjects into rows of 2 */}
-                  {Array.from({ length: Math.ceil(academicData.subjects.length / 2) }, (_, rowIndex) => {
-                    const rowSubjects = academicData.subjects.slice(rowIndex * 2, rowIndex * 2 + 2);
-                    const expandedInRow = rowSubjects.find(s => s.name === expandedSubject);
+                  {/* Sort subjects by score (highest to lowest), then group into rows of 2 */}
+                  {(() => {
+                    const sortedSubjects = [...academicData.subjects].sort((a, b) => {
+                      const scoreA = getScore(a, selectedYear, examType) ?? 0;
+                      const scoreB = getScore(b, selectedYear, examType) ?? 0;
+                      return scoreB - scoreA;
+                    });
+                    
+                    return Array.from({ length: Math.ceil(sortedSubjects.length / 2) }, (_, rowIndex) => {
+                      const rowSubjects = sortedSubjects.slice(rowIndex * 2, rowIndex * 2 + 2);
+                      const expandedInRow = rowSubjects.find(s => s.name === expandedSubject);
                     
                     return (
                       <div key={rowIndex} className="space-y-3">
@@ -422,16 +437,19 @@ export default function AcademicPage() {
                             const score = getScore(subject, selectedYear, examType);
                             const isPending = score === null || score === undefined;
                             const isExpanded = expandedSubject === subject.name;
+                            const gradeKey = isPending ? 'C' : getGradeFromScore(score!)[0];
+                            const cardBgClass = gradeCardBgColors[gradeKey] || gradeCardBgColors.C;
                             
                             return (
                               <div
                                 key={index}
                                 onClick={() => setExpandedSubject(isExpanded ? null : subject.name)}
                                 className={`
-                                  flex flex-col p-4 rounded-xl bg-card border cursor-pointer
+                                  flex flex-col p-4 rounded-xl cursor-pointer
                                   transition-all duration-200 ease-out min-h-[80px]
-                                  hover:shadow-md hover:border-primary/30
-                                  ${isExpanded ? 'border-primary shadow-md ring-1 ring-primary/20' : 'border-border'}
+                                  hover:shadow-md
+                                  ${cardBgClass}
+                                  ${isExpanded ? 'ring-2 ring-primary/40 shadow-md' : ''}
                                 `}
                               >
                                 <div className="flex items-start justify-between mb-1">
@@ -498,7 +516,8 @@ export default function AcademicPage() {
                         )}
                       </div>
                     );
-                  })}
+                  });
+                  })()}
                 </div>
               </TabsContent>
 
