@@ -1164,6 +1164,10 @@ export default function TeacherAcademicPage() {
                       <CardTitle className="text-sm flex items-center gap-2 text-amber-700">
                         <Award className="h-4 w-4" />
                         Top Performers ({topPerformers.length})
+                        <span className="ml-auto flex gap-1">
+                          <span className="px-1.5 py-0.5 text-[10px] font-semibold rounded-full bg-amber-500 text-white">A*</span>
+                          <span className="px-1.5 py-0.5 text-[10px] font-semibold rounded-full bg-amber-500 text-white">A</span>
+                        </span>
                       </CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-2">
@@ -1208,6 +1212,10 @@ export default function TeacherAcademicPage() {
                       <CardTitle className="text-sm flex items-center gap-2 text-blue-700">
                         <UserCheck className="h-4 w-4" />
                         Middle Performers ({middlePerformers.length})
+                        <span className="ml-auto flex gap-1">
+                          <span className="px-1.5 py-0.5 text-[10px] font-semibold rounded-full bg-blue-500 text-white">B</span>
+                          <span className="px-1.5 py-0.5 text-[10px] font-semibold rounded-full bg-blue-500 text-white">C</span>
+                        </span>
                       </CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-2">
@@ -1244,6 +1252,10 @@ export default function TeacherAcademicPage() {
                       <CardTitle className="text-sm flex items-center gap-2 text-red-700">
                         <AlertTriangle className="h-4 w-4" />
                         At-Risk Students ({atRiskStudents.length})
+                        <span className="ml-auto flex gap-1">
+                          <span className="px-1.5 py-0.5 text-[10px] font-semibold rounded-full bg-red-500 text-white">D</span>
+                          <span className="px-1.5 py-0.5 text-[10px] font-semibold rounded-full bg-red-500 text-white">E</span>
+                        </span>
                       </CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-2">
