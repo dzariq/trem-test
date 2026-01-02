@@ -453,27 +453,6 @@ export default function CalendarPage() {
                     </div>
                   </CardContent>
                 </Card>
-
-                {/* Enrollment */}
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <Users className="h-4 w-4 text-muted-foreground" />
-                      <span className="text-sm font-medium">Enrollment</span>
-                    </div>
-                    <span className="text-sm text-muted-foreground">
-                      {selectedCCA.currentEnrollment} / {selectedCCA.maxCapacity} students
-                    </span>
-                  </div>
-                  <Progress 
-                    value={(selectedCCA.currentEnrollment / selectedCCA.maxCapacity) * 100} 
-                    className="h-2"
-                  />
-                  {selectedCCA.currentEnrollment >= selectedCCA.maxCapacity && (
-                    <p className="text-xs text-destructive">This activity is at full capacity</p>
-                  )}
-                </div>
-
                 {/* Requirements */}
                 <div className="space-y-2">
                   <div className="flex items-center gap-2">
