@@ -220,17 +220,17 @@ export function ResultsSummary() {
                 {risingStars.map((item) => (
                   <div 
                     key={item.name} 
-                    className="relative flex flex-col items-center p-2.5 rounded-lg border overflow-hidden"
+                    className="relative flex flex-col items-center p-2.5 rounded-lg border overflow-hidden animate-glow"
                     style={{ 
                       background: 'linear-gradient(135deg, #fef3c7 0%, #fcd34d 50%, #f59e0b 100%)', 
-                      borderColor: 'rgba(251, 191, 36, 0.5)' 
+                      borderColor: 'rgba(251, 191, 36, 0.5)'
                     }}
                   >
-                    {/* Inner shine effect */}
+                    {/* Inner shine effect - lighter */}
                     <div 
                       className="absolute inset-0 pointer-events-none"
                       style={{
-                        background: 'radial-gradient(ellipse at 30% 20%, rgba(255, 255, 255, 0.6) 0%, transparent 50%)',
+                        background: 'radial-gradient(ellipse at 30% 20%, rgba(255, 255, 255, 0.25) 0%, transparent 40%)',
                       }}
                     />
                     {/* Star pattern background */}
