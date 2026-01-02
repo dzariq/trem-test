@@ -1453,19 +1453,19 @@ export default function AcademicPage() {
                   </div>
                 </div>
 
-                {/* Category Comparison Bar Chart */}
+                {/* Subject Comparison Bar Chart */}
                 <div className="space-y-2">
-                  <h4 className="text-sm font-medium text-foreground">Category Comparison</h4>
-                  <div className="h-40">
+                  <h4 className="text-sm font-medium text-foreground">Subject Comparison</h4>
+                  <div className="h-48">
                     <ResponsiveContainer width="100%" height="100%">
-                      <BarChart data={categoryComparison}>
+                      <BarChart data={comparisonData.map(d => ({ ...d, name: shortenSubjectName(d.name) }))} layout="vertical">
                         <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" strokeOpacity={0.3} />
-                        <XAxis dataKey="category" tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }} />
-                        <YAxis domain={[50, 100]} tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }} />
+                        <XAxis type="number" domain={[0, 100]} tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }} />
+                        <YAxis dataKey="name" type="category" tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }} width={60} />
                         <Tooltip contentStyle={{ backgroundColor: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: "8px" }} />
                         <Legend wrapperStyle={{ fontSize: 10 }} />
-                        <Bar dataKey="examA" name={getExamLabelForComparison(compareExamA)} fill="hsl(var(--chart-1))" />
-                        <Bar dataKey="examB" name={getExamLabelForComparison(compareExamB)} fill="hsl(var(--chart-2))" />
+                        <Bar dataKey="examA" name={getExamLabelForComparison(compareExamA)} fill="hsl(var(--chart-1))" barSize={8} />
+                        <Bar dataKey="examB" name={getExamLabelForComparison(compareExamB)} fill="hsl(var(--chart-2))" barSize={8} />
                       </BarChart>
                     </ResponsiveContainer>
                   </div>
