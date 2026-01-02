@@ -151,17 +151,47 @@ export default function AcademicPage() {
     return Object.entries(grades).map(([grade, count]) => ({ grade, count })).filter(g => g.count > 0);
   }, [selectedYear, examType]);
 
-  // Strengths and weaknesses
-  const { strengths, weaknesses } = useMemo(() => {
+  // Top 3 and Bottom 3 subjects
+  const { top3, bottom3 } = useMemo(() => {
     const sorted = [...academicData.subjects].sort((a, b) => {
       const scoreA = getScore(a, selectedYear, examType) ?? 0;
       const scoreB = getScore(b, selectedYear, examType) ?? 0;
       return scoreB - scoreA;
     });
     return {
-      strengths: sorted.slice(0, 2),
-      weaknesses: sorted.slice(-2).reverse()
+      top3: sorted.slice(0, 3),
+      bottom3: sorted.slice(-3).reverse()
     };
+  }, [selectedYear, examType]);
+
+  // Rising stars - subjects with biggest improvement from previous exam
+  const risingStars = useMemo(() => {
+    // Determine previous exam period
+    let prevYear: YearKey = selectedYear;
+    let prevType: ExamType = examType;
+    
+    if (examType === "midYear") {
+      // Previous is last year's year-end
+      if (selectedYear === "2025") { prevYear = "2024"; prevType = "yearEnd"; }
+      else if (selectedYear === "2024") { prevYear = "2023"; prevType = "yearEnd"; }
+      else { return []; } // No previous for 2023 mid
+    } else {
+      // Previous is same year's mid-year
+      prevType = "midYear";
+    }
+
+    const improvements = academicData.subjects.map(s => {
+      const current = getScore(s, selectedYear, examType) ?? 0;
+      const prev = getScore(s, prevYear, prevType) ?? 0;
+      return {
+        subject: s,
+        current,
+        prev,
+        improvement: current - prev
+      };
+    }).filter(item => item.improvement > 0 && item.current > 0 && item.prev > 0);
+
+    return improvements.sort((a, b) => b.improvement - a.improvement).slice(0, 3);
   }, [selectedYear, examType]);
 
   // Year-over-year trend data
@@ -443,38 +473,10 @@ export default function AcademicPage() {
 
               {/* OVERVIEW TAB */}
               <TabsContent value="overview" className="space-y-4">
-                {/* Category Performance */}
-                <div className="space-y-3">
-                  <h4 className="text-sm font-medium text-foreground">Category Performance</h4>
-                  {categoryAverages.map((cat) => (
-                    <div key={cat.category} className="space-y-1">
-                      <div className="flex justify-between text-xs">
-                        <span className="text-muted-foreground">{cat.category}</span>
-                        <span className="font-medium text-foreground">{cat.score}%</span>
-                      </div>
-                      <div className="relative">
-                        <Progress value={cat.score} className="h-2" />
-                        <div 
-                          className="absolute top-0 h-2 w-0.5 bg-foreground/50" 
-                          style={{ left: `${cat.classAverage}%` }}
-                          title={`Class Avg: ${cat.classAverage}%`}
-                        />
-                      </div>
-                      <p className="text-[10px] text-muted-foreground">
-                        {cat.score >= cat.classAverage ? (
-                          <span className="text-chart-1">+{cat.score - cat.classAverage}% above class avg</span>
-                        ) : (
-                          <span className="text-destructive">{cat.score - cat.classAverage}% below class avg</span>
-                        )}
-                      </p>
-                    </div>
-                  ))}
-                </div>
-
                 {/* Subject Performance Bar Chart */}
                 <div className="space-y-2">
                   <h4 className="text-sm font-medium text-foreground">Subject Performance</h4>
-                  <div className="h-40">
+                  <div className="h-44">
                     <ResponsiveContainer width="100%" height="100%">
                       <BarChart data={subjectPerformance} layout="vertical">
                         <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" strokeOpacity={0.3} />
@@ -494,7 +496,78 @@ export default function AcademicPage() {
                   </div>
                 </div>
 
-                {/* Grade Distribution Pie */}
+                {/* Top 3 Performers & Bottom 3 to Focus */}
+                <div className="grid grid-cols-2 gap-3">
+                  {/* Top 3 */}
+                  <div className="space-y-2">
+                    <h4 className="text-sm font-medium text-foreground flex items-center gap-1.5">
+                      <Trophy className="h-4 w-4 text-chart-1" /> Top Performers
+                    </h4>
+                    <div className="space-y-1.5">
+                      {top3.map((s, index) => {
+                        const score = getScore(s, selectedYear, examType);
+                        return (
+                          <div key={s.name} className="flex items-center justify-between p-2 rounded-lg bg-chart-1/10 border border-chart-1/20">
+                            <div className="flex items-center gap-2">
+                              <span className="w-5 h-5 rounded-full bg-chart-1/20 flex items-center justify-center text-xs font-bold text-chart-1">
+                                {index + 1}
+                              </span>
+                              <span className="text-sm font-medium text-foreground">{s.name}</span>
+                            </div>
+                            <Badge variant="secondary" className="text-xs font-semibold">{score}%</Badge>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  {/* Bottom 3 */}
+                  <div className="space-y-2">
+                    <h4 className="text-sm font-medium text-foreground flex items-center gap-1.5">
+                      <AlertTriangle className="h-4 w-4 text-chart-4" /> Needs Attention
+                    </h4>
+                    <div className="space-y-1.5">
+                      {bottom3.map((s, index) => {
+                        const score = getScore(s, selectedYear, examType);
+                        return (
+                          <div key={s.name} className="flex items-center justify-between p-2 rounded-lg bg-chart-4/10 border border-chart-4/20">
+                            <div className="flex items-center gap-2">
+                              <span className="w-5 h-5 rounded-full bg-chart-4/20 flex items-center justify-center text-xs font-bold text-chart-4">
+                                {index + 1}
+                              </span>
+                              <span className="text-sm font-medium text-foreground">{s.name}</span>
+                            </div>
+                            <Badge variant="outline" className="text-xs font-semibold border-chart-4/30">{score}%</Badge>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Rising Stars */}
+                {risingStars.length > 0 && (
+                  <div className="space-y-2">
+                    <h4 className="text-sm font-medium text-foreground flex items-center gap-1.5">
+                      <TrendingUp className="h-4 w-4 text-chart-2" /> Rising Stars
+                    </h4>
+                    <p className="text-[10px] text-muted-foreground -mt-1">Biggest improvements from previous exam</p>
+                    <div className="grid grid-cols-3 gap-2">
+                      {risingStars.map((item) => (
+                        <div key={item.subject.name} className="flex flex-col items-center p-2.5 rounded-lg bg-chart-2/10 border border-chart-2/20">
+                          <span className="text-xs font-medium text-foreground text-center">{item.subject.name}</span>
+                          <div className="flex items-center gap-1 mt-1">
+                            <ArrowUp className="h-3 w-3 text-chart-2" />
+                            <span className="text-sm font-bold text-chart-2">+{item.improvement}%</span>
+                          </div>
+                          <span className="text-[10px] text-muted-foreground">{item.prev}% → {item.current}%</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Grade Distribution Pie + Stats Grid */}
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <h4 className="text-sm font-medium text-foreground">Grade Distribution</h4>
@@ -529,57 +602,21 @@ export default function AcademicPage() {
                     </div>
                   </div>
 
-                  {/* Strengths & Weaknesses */}
+                  {/* Summary Stats */}
                   <div className="space-y-2">
-                    <div className="space-y-1">
-                      <h4 className="text-xs font-medium text-foreground flex items-center gap-1">
-                        <Star className="h-3 w-3 text-chart-1" /> Strengths
-                      </h4>
-                      {strengths.map(s => (
-                        <div key={s.name} className="text-xs p-1.5 rounded bg-chart-1/10 text-foreground">
-                          {s.name}: {getScore(s, selectedYear, examType)}%
-                        </div>
-                      ))}
+                    <div className="flex flex-col items-center text-center p-3 rounded-lg bg-accent/50">
+                      <BookOpen className="h-5 w-5 mb-1 text-chart-1" />
+                      <span className="text-lg font-bold text-foreground">{currentAverage}%</span>
+                      <span className="text-[10px] text-muted-foreground leading-tight">Current Average</span>
                     </div>
-                    <div className="space-y-1">
-                      <h4 className="text-xs font-medium text-foreground flex items-center gap-1">
-                        <Target className="h-3 w-3 text-chart-4" /> Focus Areas
-                      </h4>
-                      {weaknesses.map(s => (
-                        <div key={s.name} className="text-xs p-1.5 rounded bg-chart-4/10 text-foreground">
-                          {s.name}: {getScore(s, selectedYear, examType)}%
-                        </div>
-                      ))}
+                    <div className="flex flex-col items-center text-center p-3 rounded-lg bg-accent/50">
+                      <TrendingUp className="h-5 w-5 mb-1 text-chart-3" />
+                      <span className="text-lg font-bold text-foreground">
+                        {currentAverage - (classAverages[selectedYear]?.[examType] ?? 0) >= 0 ? "+" : ""}
+                        {currentAverage - (classAverages[selectedYear]?.[examType] ?? 0)}%
+                      </span>
+                      <span className="text-[10px] text-muted-foreground leading-tight">vs Class Avg</span>
                     </div>
-                  </div>
-                </div>
-
-                {/* Stats Grid */}
-                <div className="grid grid-cols-3 gap-3">
-                  <div className="flex flex-col items-center text-center p-3 rounded-lg bg-accent/50">
-                    <BookOpen className="h-5 w-5 mb-1 text-chart-1" />
-                    <span className="text-base font-bold text-foreground">{currentAverage}%</span>
-                    <span className="text-[10px] text-muted-foreground leading-tight">Current Avg</span>
-                    <span className="text-[10px] text-muted-foreground/70">
-                      {currentAverage >= 80 ? "Above Average" : currentAverage >= 65 ? "Average" : "Needs Improvement"}
-                    </span>
-                  </div>
-                  <div className="flex flex-col items-center text-center p-3 rounded-lg bg-accent/50">
-                    <Award className="h-5 w-5 mb-1 text-chart-2" />
-                    <span className="text-base font-bold text-foreground">{strengths[0]?.name}</span>
-                    <span className="text-[10px] text-muted-foreground leading-tight">Top Subject</span>
-                    <span className="text-[10px] text-muted-foreground/70">{getScore(strengths[0], selectedYear, examType)}%</span>
-                  </div>
-                  <div className="flex flex-col items-center text-center p-3 rounded-lg bg-accent/50">
-                    <TrendingUp className="h-5 w-5 mb-1 text-chart-3" />
-                    <span className="text-base font-bold text-foreground">
-                      {currentAverage - (classAverages[selectedYear]?.[examType] ?? 0) >= 0 ? "+" : ""}
-                      {currentAverage - (classAverages[selectedYear]?.[examType] ?? 0)}%
-                    </span>
-                    <span className="text-[10px] text-muted-foreground leading-tight">vs Class Avg</span>
-                    <span className="text-[10px] text-muted-foreground/70">
-                      {currentAverage >= (classAverages[selectedYear]?.[examType] ?? 0) ? "Above" : "Below"}
-                    </span>
                   </div>
                 </div>
               </TabsContent>
