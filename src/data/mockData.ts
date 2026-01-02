@@ -375,7 +375,7 @@ export const academicData = {
     { category: "Attendance", grade: "A" },
     { category: "Punctuality", grade: "B" },
     { category: "Cooperation", grade: "A" },
-    { category: "Self Control", grade: "B" },
+    { category: "Self Control", grade: "C" },
     { category: "Responsibility", grade: "A" },
     { category: "Initiative", grade: "B" },
     { category: "Leadership", grade: "A" }
