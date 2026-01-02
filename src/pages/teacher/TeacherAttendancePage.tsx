@@ -153,7 +153,7 @@ export default function TeacherAttendancePage() {
 
       {/* Tab Buttons */}
       <div className="px-4 mt-4">
-        <div className="flex gap-2 p-1 bg-muted rounded-xl">
+        <div className="flex gap-2 p-1 bg-muted/50 rounded-xl">
           <button
             onClick={() => setActiveTab("take")}
             className={cn(
