@@ -230,6 +230,33 @@ export default function AcademicPage() {
     return improvements.sort((a, b) => b.improvement - a.improvement).slice(0, 3);
   }, [selectedYear, examType]);
 
+  // Falling behind - subjects with biggest decline from previous exam
+  const fallingBehind = useMemo(() => {
+    let prevYear: YearKey = selectedYear;
+    let prevType: ExamType = examType;
+    
+    if (examType === "midYear") {
+      if (selectedYear === "2025") { prevYear = "2024"; prevType = "yearEnd"; }
+      else if (selectedYear === "2024") { prevYear = "2023"; prevType = "yearEnd"; }
+      else { return []; }
+    } else {
+      prevType = "midYear";
+    }
+
+    const declines = academicData.subjects.map(s => {
+      const current = getScore(s, selectedYear, examType) ?? 0;
+      const prev = getScore(s, prevYear, prevType) ?? 0;
+      return {
+        subject: s,
+        current,
+        prev,
+        decline: prev - current
+      };
+    }).filter(item => item.decline > 0 && item.current > 0 && item.prev > 0);
+
+    return declines.sort((a, b) => b.decline - a.decline).slice(0, 3);
+  }, [selectedYear, examType]);
+
   // Year-over-year trend data
   const trendData = useMemo(() => {
     const years: YearKey[] = ["2023", "2024", "2025"];
@@ -833,31 +860,74 @@ export default function AcademicPage() {
                   </div>
                 </div>
 
-                {/* Category Trend */}
-                <div className="space-y-2">
-                  <h4 className="text-sm font-medium text-foreground">Category Trends by Year</h4>
-                  <div className="h-44">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <BarChart data={categoryTrendData}>
-                        <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" strokeOpacity={0.3} />
-                        <XAxis dataKey="year" tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }} />
-                        <YAxis domain={[50, 100]} tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }} />
-                        <Tooltip contentStyle={{ backgroundColor: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: "8px" }} />
-                        <Legend wrapperStyle={{ fontSize: 10 }} />
-                        <Bar dataKey="Attitude" fill="hsl(var(--chart-1))" />
-                        <Bar dataKey="Homework" fill="hsl(var(--chart-2))" />
-                        <Bar dataKey="Quiz" fill="hsl(var(--chart-3))" />
-                        <Bar dataKey="Exam" fill="hsl(var(--chart-4))" />
-                      </BarChart>
-                    </ResponsiveContainer>
+                {/* Rising & Falling Subjects */}
+                <div className="grid grid-cols-2 gap-3">
+                  {/* Rising Subjects */}
+                  <div className="space-y-2">
+                    <h4 className="text-sm font-medium text-foreground flex items-center gap-1.5">
+                      <TrendingUp className="h-4 w-4 text-green-500" />
+                      Rising Subjects
+                    </h4>
+                    <div className="space-y-2">
+                      {risingStars.length > 0 ? risingStars.map((item, idx) => (
+                        <div 
+                          key={idx} 
+                          className="p-2.5 rounded-lg border border-green-500/30 bg-green-500/10"
+                        >
+                          <div className="flex items-center justify-between">
+                            <span className="text-xs font-medium text-foreground">{item.subject.name}</span>
+                            <span className="text-xs font-bold text-green-600">+{item.improvement}%</span>
+                          </div>
+                          <p className="text-[10px] text-muted-foreground mt-0.5">
+                            {item.prev}% → {item.current}%
+                          </p>
+                        </div>
+                      )) : (
+                        <p className="text-xs text-muted-foreground p-2">No improving subjects</p>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Falling Behind */}
+                  <div className="space-y-2">
+                    <h4 className="text-sm font-medium text-foreground flex items-center gap-1.5">
+                      <TrendingDown className="h-4 w-4 text-red-500" />
+                      Needs Focus
+                    </h4>
+                    <div className="space-y-2">
+                      {fallingBehind.length > 0 ? fallingBehind.map((item, idx) => (
+                        <div 
+                          key={idx} 
+                          className="p-2.5 rounded-lg border border-red-500/30 bg-red-500/10"
+                        >
+                          <div className="flex items-center justify-between">
+                            <span className="text-xs font-medium text-foreground">{item.subject.name}</span>
+                            <span className="text-xs font-bold text-red-600">-{item.decline}%</span>
+                          </div>
+                          <p className="text-[10px] text-muted-foreground mt-0.5">
+                            {item.prev}% → {item.current}%
+                          </p>
+                        </div>
+                      )) : (
+                        <p className="text-xs text-muted-foreground p-2">All subjects stable!</p>
+                      )}
+                    </div>
                   </div>
                 </div>
 
-                {/* Trend Insights */}
+                {/* Dynamic Trend Insights */}
                 <div className="p-3 rounded-lg bg-accent/50 border border-primary/20">
                   <p className="text-sm text-foreground">
-                    <span className="font-medium">Insight:</span> Consistent improvement across all categories from 2023 to 2025. 
-                    Homework scores show the highest growth (+12%), while Attitude remains the strongest category.
+                    <span className="font-medium">Insight:</span>{" "}
+                    {risingStars.length > 0 && (
+                      <>{risingStars[0].subject.name} shows great improvement (+{risingStars[0].improvement}%). </>
+                    )}
+                    {fallingBehind.length > 0 && (
+                      <>Focus more on {fallingBehind[0].subject.name} which dropped {fallingBehind[0].decline}%. </>
+                    )}
+                    {risingStars.length === 0 && fallingBehind.length === 0 && (
+                      <>Performance is stable across all subjects.</>
+                    )}
                   </p>
                 </div>
               </TabsContent>
