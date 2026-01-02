@@ -31,7 +31,7 @@ export function AnnouncementCarousel() {
         <Button 
           variant="link" 
           className="text-primary p-0 h-auto text-sm"
-          onClick={() => navigate("/announcements")}
+          onClick={() => navigate("/parent/announcements")}
         >
           See all <ChevronRight className="h-4 w-4 ml-1" />
         </Button>
