@@ -695,19 +695,19 @@ export default function TeacherAcademicPage() {
 
           <TabsContent value="analysis" className="space-y-4">
             {/* Sub-tabs for Class Analysis */}
-            <Tabs defaultValue="report" className="w-full">
+            <Tabs defaultValue="overview" className="w-full">
               <TabsList className="grid w-full grid-cols-3 mb-4">
-                <TabsTrigger value="report" className="text-xs">Report</TabsTrigger>
+                <TabsTrigger value="overview" className="text-xs">Overview</TabsTrigger>
                 <TabsTrigger value="trends" className="text-xs">Trends</TabsTrigger>
                 <TabsTrigger value="comparison" className="text-xs">Comparison</TabsTrigger>
               </TabsList>
 
-              {/* ==================== REPORT SUB-TAB ==================== */}
-              <TabsContent value="report" className="space-y-4">
-                {/* Filters Row */}
-                <div className="grid grid-cols-3 gap-2">
+              {/* ==================== OVERVIEW SUB-TAB ==================== */}
+              <TabsContent value="overview" className="space-y-4">
+                {/* Filters Row - Class and Year selectors */}
+                <div className="flex gap-2">
                   <Select value={selectedClass} onValueChange={setSelectedClass}>
-                    <SelectTrigger className="text-xs">
+                    <SelectTrigger className="text-xs flex-1">
                       <SelectValue placeholder="Class" />
                     </SelectTrigger>
                     <SelectContent>
@@ -719,7 +719,7 @@ export default function TeacherAcademicPage() {
 
                   <Popover>
                     <PopoverTrigger asChild>
-                      <Button variant="outline" className="text-xs h-9 justify-between">
+                      <Button variant="outline" className="text-xs h-9 justify-between flex-1">
                         {selectedYears.length === 1 
                           ? selectedYears[0] 
                           : `${selectedYears.length} Years`}
@@ -745,7 +745,7 @@ export default function TeacherAcademicPage() {
                   </Popover>
 
                   <Select value={selectedPeriod} onValueChange={(v) => setSelectedPeriod(v as "midYear" | "yearEnd")}>
-                    <SelectTrigger className="text-xs">
+                    <SelectTrigger className="text-xs flex-1">
                       <SelectValue placeholder="Period" />
                     </SelectTrigger>
                     <SelectContent>
@@ -758,213 +758,133 @@ export default function TeacherAcademicPage() {
 
                 {/* Selected filters badge */}
                 <div className="flex flex-wrap items-center gap-1 text-xs">
+                  <Badge variant="secondary" className="text-[10px] font-medium">
+                    {selectedClass}
+                  </Badge>
                   {selectedYears.map(year => (
                     <Badge key={year} variant="outline" className="text-[10px] font-normal">
                       {year}
                     </Badge>
                   ))}
-                  <Badge variant="secondary" className="text-[10px] font-normal">
+                  <Badge variant="outline" className="text-[10px] font-normal">
                     {examPeriods.find(p => p.value === selectedPeriod)?.label}
                   </Badge>
                 </div>
 
-                {/* Summary Stats - 2x3 Grid */}
-                <div className="grid grid-cols-3 gap-2">
-                  <Card>
-                    <CardContent className="p-2 text-center">
-                      <Users className="h-4 w-4 mx-auto mb-1 text-primary" />
-                      <p className="text-lg font-bold text-foreground">{students.length}</p>
-                      <p className="text-[10px] text-muted-foreground">Class Size</p>
-                    </CardContent>
-                  </Card>
-                  <Card>
-                    <CardContent className="p-2 text-center">
-                      <Minus className="h-4 w-4 mx-auto mb-1 text-primary" />
-                      <p className="text-lg font-bold text-foreground">{classAverage}</p>
-                      <p className="text-[10px] text-muted-foreground">Average</p>
-                    </CardContent>
-                  </Card>
-                  <Card>
-                    <CardContent className="p-2 text-center">
-                      <Target className="h-4 w-4 mx-auto mb-1 text-emerald-600" />
-                      <p className="text-lg font-bold text-foreground">{passRate}%</p>
-                      <p className="text-[10px] text-muted-foreground">Pass Rate</p>
-                    </CardContent>
-                  </Card>
-                  <Card>
-                    <CardContent className="p-2 text-center">
-                      <Award className="h-4 w-4 mx-auto mb-1 text-amber-500" />
-                      <p className="text-lg font-bold text-foreground">{aGradeRate}%</p>
-                      <p className="text-[10px] text-muted-foreground">A Grade</p>
-                    </CardContent>
-                  </Card>
-                  <Card>
-                    <CardContent className="p-2 text-center">
-                      <TrendingUp className="h-4 w-4 mx-auto mb-1 text-emerald-600" />
-                      <p className="text-lg font-bold text-foreground">{highestScore}</p>
-                      <p className="text-[10px] text-muted-foreground">Highest</p>
-                    </CardContent>
-                  </Card>
-                  <Card>
-                    <CardContent className="p-2 text-center">
-                      <TrendingDown className="h-4 w-4 mx-auto mb-1 text-red-600" />
-                      <p className="text-lg font-bold text-foreground">{lowestScore}</p>
-                      <p className="text-[10px] text-muted-foreground">Lowest</p>
-                    </CardContent>
-                  </Card>
+                {/* Subject Performance Bar Chart */}
+                <div className="space-y-2">
+                  <h4 className="text-sm font-medium text-foreground">Subject Performance</h4>
+                  <div className="h-44">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <BarChart data={subjectAverages} layout="vertical">
+                        <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" strokeOpacity={0.3} />
+                        <XAxis type="number" domain={[0, 100]} tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }} />
+                        <YAxis type="category" dataKey="name" tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }} width={70} />
+                        <Tooltip 
+                          contentStyle={{ backgroundColor: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: "8px" }}
+                          formatter={(value: number) => [`${value.toFixed(1)}%`, "Average"]}
+                        />
+                        <Bar dataKey="average" radius={[0, 4, 4, 0]}>
+                          {subjectAverages.map((_, index) => (
+                            <Cell key={index} fill={SUBJECT_COLORS[index % SUBJECT_COLORS.length]} />
+                          ))}
+                        </Bar>
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </div>
                 </div>
 
-                {/* Category Performance */}
-                <Card>
-                  <CardHeader className="pb-2">
-                    <CardTitle className="text-sm flex items-center gap-2">
-                      <BarChart3 className="h-4 w-4" />
-                      Category Performance
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-3">
-                    {categoryAverages.map((cat) => (
-                      <div key={cat.name} className="space-y-1">
-                        <div className="flex justify-between text-xs">
-                          <span className="text-muted-foreground">{cat.name}</span>
-                          <span className="font-medium">{cat.average.toFixed(1)}/{cat.max}</span>
+                {/* Top 3 Performers & Subjects Needing Focus */}
+                <div className="grid grid-cols-2 gap-3">
+                  {/* Top Subjects */}
+                  <div className="space-y-2">
+                    <h4 className="text-sm font-medium text-foreground flex items-center gap-1.5">
+                      <Award className="h-4 w-4" style={{ color: '#22c55e' }} /> Top Subjects
+                    </h4>
+                    <div className="space-y-2">
+                      {subjectAverages.slice(0, 3).map((sub, index) => (
+                        <div key={sub.fullName} className="flex items-center gap-2 p-2.5 rounded-lg border min-h-[50px]" style={{ backgroundColor: 'rgba(34, 197, 94, 0.1)', borderColor: 'rgba(34, 197, 94, 0.2)' }}>
+                          <span className="w-6 h-6 shrink-0 rounded-full flex items-center justify-center text-xs font-bold" style={{ backgroundColor: 'rgba(34, 197, 94, 0.2)', color: '#16a34a' }}>
+                            {index + 1}
+                          </span>
+                          <div className="flex flex-col min-w-0 flex-1">
+                            <span className="text-xs font-medium text-foreground leading-tight truncate">{sub.name}</span>
+                            <Badge className="text-[10px] font-semibold w-fit mt-0.5 text-white" style={{ backgroundColor: '#22c55e' }}>{sub.average.toFixed(0)}%</Badge>
+                          </div>
                         </div>
-                        <Progress value={cat.percentage} className="h-2" />
-                      </div>
-                    ))}
-                    {weakestCategory && (
-                      <div className="flex items-center gap-2 p-2 rounded-lg bg-amber-50 border border-amber-200 mt-2">
-                        <AlertTriangle className="h-4 w-4 text-amber-600" />
-                        <p className="text-xs text-amber-700">
-                          <span className="font-medium">{weakestCategory.name}</span> needs improvement ({weakestCategory.percentage.toFixed(0)}%)
-                        </p>
-                      </div>
-                    )}
-
-                    {/* Category by Subject Analysis */}
-                    <div className="pt-3 border-t mt-3">
-                      <div className="flex items-center justify-between mb-3">
-                        <span className="text-xs font-medium text-muted-foreground">View by Subject</span>
-                        <Select value={selectedCategory} onValueChange={(v) => setSelectedCategory(v as "attitude" | "homework" | "quiz" | "exam")}>
-                          <SelectTrigger className="w-24 h-7 text-xs">
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="attitude">Attitude</SelectItem>
-                            <SelectItem value="homework">Homework</SelectItem>
-                            <SelectItem value="quiz">Quiz</SelectItem>
-                            <SelectItem value="exam">Exam</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-                      
-                      <div className="h-40">
-                        <ResponsiveContainer width="100%" height="100%">
-                          <BarChart data={categoryBySubjectData} layout="vertical">
-                            <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
-                            <XAxis type="number" domain={[0, 100]} tick={{ fontSize: 9 }} tickFormatter={(v) => `${v}%`} />
-                            <YAxis dataKey="name" type="category" tick={{ fontSize: 9 }} width={55} />
-                            <Tooltip 
-                              formatter={(value: number, name: string, props: { payload?: { fullName?: string; average?: number; max?: number } }) => [
-                                `${props.payload?.average?.toFixed(1)}/${props.payload?.max} (${value.toFixed(0)}%)`, 
-                                props.payload?.fullName || 'Score'
-                              ]} 
-                            />
-                            <Bar dataKey="percentage" radius={[0, 4, 4, 0]}>
-                              {categoryBySubjectData.map((entry, index) => (
-                                <Cell 
-                                  key={`cell-${index}`} 
-                                  fill={index === 0 ? "#10b981" : index === categoryBySubjectData.length - 1 ? "#f59e0b" : "hsl(var(--primary))"} 
-                                />
-                              ))}
-                            </Bar>
-                          </BarChart>
-                        </ResponsiveContainer>
-                      </div>
-                      
-                      {categoryBySubjectData.length > 0 && (
-                        <div className="flex justify-between text-[10px] mt-2">
-                          <span className="text-emerald-600">Best: {categoryBySubjectData[0]?.fullName}</span>
-                          <span className="text-amber-600">Needs work: {categoryBySubjectData[categoryBySubjectData.length - 1]?.fullName}</span>
-                        </div>
-                      )}
+                      ))}
                     </div>
-                  </CardContent>
-                </Card>
+                  </div>
 
-                {/* Subject Performance */}
-                <Card>
-                  <CardHeader className="pb-2">
-                    <CardTitle className="text-sm flex items-center gap-2">
-                      <BookOpen className="h-4 w-4" />
-                      Subject Performance
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="h-48">
+                  {/* Subjects Needing Focus */}
+                  <div className="space-y-2">
+                    <h4 className="text-sm font-medium text-foreground flex items-center gap-1.5">
+                      <AlertTriangle className="h-4 w-4" style={{ color: '#f59e0b' }} /> Needs Focus
+                    </h4>
+                    <div className="space-y-2">
+                      {subjectAverages.slice(-3).reverse().map((sub, index) => (
+                        <div key={sub.fullName} className="flex items-center gap-2 p-2.5 rounded-lg border min-h-[50px]" style={{ backgroundColor: 'rgba(251, 191, 36, 0.1)', borderColor: 'rgba(251, 191, 36, 0.3)' }}>
+                          <span className="w-6 h-6 shrink-0 rounded-full flex items-center justify-center text-xs font-bold" style={{ backgroundColor: 'rgba(251, 191, 36, 0.2)', color: '#d97706' }}>
+                            {index + 1}
+                          </span>
+                          <div className="flex flex-col min-w-0 flex-1">
+                            <span className="text-xs font-medium text-foreground leading-tight truncate">{sub.name}</span>
+                            <Badge className="text-[10px] font-semibold w-fit mt-0.5 text-white" style={{ backgroundColor: '#f59e0b' }}>{sub.average.toFixed(0)}%</Badge>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Grade Distribution Pie + Stats Grid */}
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <h4 className="text-sm font-medium text-foreground">Grade Distribution</h4>
+                    <div className="h-28">
                       <ResponsiveContainer width="100%" height="100%">
-                        <BarChart data={subjectAverages} layout="vertical">
-                          <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
-                          <XAxis type="number" domain={[0, 100]} tick={{ fontSize: 10 }} />
-                          <YAxis dataKey="name" type="category" tick={{ fontSize: 10 }} width={60} />
-                          <Tooltip formatter={(value: number) => [`${value.toFixed(1)}%`, 'Average']} />
-                          <Bar dataKey="average" fill="hsl(var(--primary))" radius={[0, 4, 4, 0]} />
-                        </BarChart>
+                        <PieChart>
+                          <Pie
+                            data={gradeDistribution.filter(d => d.count > 0)}
+                            dataKey="count"
+                            nameKey="range"
+                            cx="50%"
+                            cy="50%"
+                            innerRadius={25}
+                            outerRadius={45}
+                            paddingAngle={2}
+                          >
+                            {gradeDistribution.filter(d => d.count > 0).map((entry) => (
+                              <Cell key={entry.range} fill={GRADE_COLORS[entry.range as keyof typeof GRADE_COLORS]} />
+                            ))}
+                          </Pie>
+                          <Tooltip formatter={(value: number) => [value, 'Students']} />
+                        </PieChart>
                       </ResponsiveContainer>
                     </div>
-                  </CardContent>
-                </Card>
+                    <div className="flex flex-wrap gap-1 justify-center">
+                      {gradeDistribution.filter(d => d.count > 0).map((g) => (
+                        <Badge key={g.range} variant="outline" className="text-[10px] px-1.5 py-0">
+                          <span className="w-2 h-2 rounded-full mr-1" style={{ backgroundColor: GRADE_COLORS[g.range as keyof typeof GRADE_COLORS] }} />
+                          {g.range}: {g.count}
+                        </Badge>
+                      ))}
+                    </div>
+                  </div>
 
-                {/* Grade Distribution - Bar + Pie */}
-                <div className="grid grid-cols-2 gap-3">
-                  <Card>
-                    <CardHeader className="pb-1">
-                      <CardTitle className="text-xs">Distribution</CardTitle>
-                    </CardHeader>
-                    <CardContent className="p-2">
-                      <div className="h-32">
-                        <ResponsiveContainer width="100%" height="100%">
-                          <BarChart data={gradeDistribution}>
-                            <XAxis dataKey="range" tick={{ fontSize: 10 }} />
-                            <YAxis allowDecimals={false} tick={{ fontSize: 10 }} width={20} />
-                            <Bar dataKey="count" radius={[2, 2, 0, 0]}>
-                              {gradeDistribution.map((entry, index) => (
-                                <Cell key={`cell-${index}`} fill={GRADE_COLORS[entry.range as keyof typeof GRADE_COLORS]} />
-                              ))}
-                            </Bar>
-                          </BarChart>
-                        </ResponsiveContainer>
-                      </div>
-                    </CardContent>
-                  </Card>
-                  <Card>
-                    <CardHeader className="pb-1">
-                      <CardTitle className="text-xs">Breakdown</CardTitle>
-                    </CardHeader>
-                    <CardContent className="p-2">
-                      <div className="h-32">
-                        <ResponsiveContainer width="100%" height="100%">
-                          <PieChart>
-                            <Pie
-                              data={gradeDistribution.filter(d => d.count > 0)}
-                              cx="50%"
-                              cy="50%"
-                              innerRadius={20}
-                              outerRadius={45}
-                              dataKey="count"
-                              label={({ range, percent }) => `${range} ${(percent * 100).toFixed(0)}%`}
-                              labelLine={false}
-                            >
-                              {gradeDistribution.filter(d => d.count > 0).map((entry, index) => (
-                                <Cell key={`cell-${index}`} fill={GRADE_COLORS[entry.range as keyof typeof GRADE_COLORS]} />
-                              ))}
-                            </Pie>
-                            <Tooltip formatter={(value: number) => [value, 'Students']} />
-                          </PieChart>
-                        </ResponsiveContainer>
-                      </div>
-                    </CardContent>
-                  </Card>
+                  {/* Summary Stats */}
+                  <div className="space-y-2">
+                    <div className="flex flex-col items-center text-center p-3 rounded-lg bg-accent/50">
+                      <Users className="h-5 w-5 mb-1 text-primary" />
+                      <span className="text-lg font-bold text-foreground">{students.length}</span>
+                      <span className="text-[10px] text-muted-foreground leading-tight">Students</span>
+                    </div>
+                    <div className="flex flex-col items-center text-center p-3 rounded-lg bg-accent/50">
+                      <Target className="h-5 w-5 mb-1 text-emerald-600" />
+                      <span className="text-lg font-bold text-foreground">{classAverage}%</span>
+                      <span className="text-[10px] text-muted-foreground leading-tight">Class Average</span>
+                    </div>
+                  </div>
                 </div>
 
                 {/* At-Risk Students */}
@@ -1033,452 +953,6 @@ export default function TeacherAcademicPage() {
                         </Badge>
                       </div>
                     ))}
-                  </CardContent>
-                </Card>
-
-                {/* Class Report Generation */}
-                <Card className="border-primary/30 bg-gradient-to-br from-primary/5 to-transparent">
-                  <CardHeader className="pb-2">
-                    <CardTitle className="text-sm flex items-center gap-2">
-                      <FileText className="h-4 w-4 text-primary" />
-                      Class Performance Report
-                    </CardTitle>
-                    <p className="text-xs text-muted-foreground">
-                      Auto-generated insights for {selectedClass} • {selectedYears.join(", ")} • {examPeriods.find(p => p.value === selectedPeriod)?.label}
-                    </p>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    {/* Summary */}
-                    <div className="p-3 rounded-lg bg-background border">
-                      <h4 className="text-xs font-semibold text-muted-foreground uppercase mb-2">Summary</h4>
-                      <p className="text-sm text-foreground">
-                        Class {selectedClass} has <span className="font-semibold">{students.length} students</span> with 
-                        an average score of <span className="font-semibold">{classAverage}%</span>. 
-                        The pass rate is <span className="font-semibold text-emerald-600">{passRate}%</span> with 
-                        <span className="font-semibold text-amber-600"> {aGradeRate}%</span> achieving A grades.
-                      </p>
-                    </div>
-
-                    {/* Strengths */}
-                    <div className="p-3 rounded-lg bg-emerald-50 border border-emerald-200">
-                      <h4 className="text-xs font-semibold text-emerald-700 uppercase mb-2 flex items-center gap-1">
-                        <TrendingUp className="h-3 w-3" /> Strengths
-                      </h4>
-                      <ul className="space-y-1.5 text-sm text-emerald-800">
-                        {(() => {
-                          const bestSubject = subjectAverages.length > 0 
-                            ? subjectAverages.reduce((a, b) => a.average > b.average ? a : b)
-                            : null;
-                          const bestCategory = categoryAverages.length > 0
-                            ? categoryAverages.reduce((a, b) => a.percentage > b.percentage ? a : b)
-                            : null;
-                          const topCount = rankedStudents.filter(s => s.score && s.score >= 80).length;
-                          
-                          return (
-                            <>
-                              {bestSubject && (
-                                <li className="flex items-start gap-2">
-                                  <CheckCircle className="h-3.5 w-3.5 mt-0.5 text-emerald-600" />
-                                  <span><span className="font-medium">{bestSubject.name}</span> is the strongest subject with {bestSubject.average.toFixed(0)}% average</span>
-                                </li>
-                              )}
-                              {bestCategory && (
-                                <li className="flex items-start gap-2">
-                                  <CheckCircle className="h-3.5 w-3.5 mt-0.5 text-emerald-600" />
-                                  <span><span className="font-medium">{bestCategory.name}</span> scores are consistently high at {bestCategory.percentage.toFixed(0)}%</span>
-                                </li>
-                              )}
-                              {topCount > 0 && (
-                                <li className="flex items-start gap-2">
-                                  <CheckCircle className="h-3.5 w-3.5 mt-0.5 text-emerald-600" />
-                                  <span><span className="font-medium">{topCount} students</span> achieved B grade or higher</span>
-                                </li>
-                              )}
-                            </>
-                          );
-                        })()}
-                      </ul>
-                    </div>
-
-                    {/* Weaknesses */}
-                    <div className="p-3 rounded-lg bg-amber-50 border border-amber-200">
-                      <h4 className="text-xs font-semibold text-amber-700 uppercase mb-2 flex items-center gap-1">
-                        <AlertTriangle className="h-3 w-3" /> Areas for Improvement
-                      </h4>
-                      <ul className="space-y-1.5 text-sm text-amber-800">
-                        {(() => {
-                          const worstSubject = subjectAverages.length > 0 
-                            ? subjectAverages.reduce((a, b) => a.average < b.average ? a : b)
-                            : null;
-                          const worstCategory = categoryAverages.length > 0
-                            ? categoryAverages.reduce((a, b) => a.percentage < b.percentage ? a : b)
-                            : null;
-                          
-                          return (
-                            <>
-                              {worstSubject && (
-                                <li className="flex items-start gap-2">
-                                  <XCircle className="h-3.5 w-3.5 mt-0.5 text-amber-600" />
-                                  <span><span className="font-medium">{worstSubject.name}</span> needs attention with {worstSubject.average.toFixed(0)}% average</span>
-                                </li>
-                              )}
-                              {worstCategory && (
-                                <li className="flex items-start gap-2">
-                                  <XCircle className="h-3.5 w-3.5 mt-0.5 text-amber-600" />
-                                  <span><span className="font-medium">{worstCategory.name}</span> is the weakest category at {worstCategory.percentage.toFixed(0)}%</span>
-                                </li>
-                              )}
-                              {atRiskStudents.length > 0 && (
-                                <li className="flex items-start gap-2">
-                                  <XCircle className="h-3.5 w-3.5 mt-0.5 text-amber-600" />
-                                  <span><span className="font-medium">{atRiskStudents.length} students</span> are at risk of failing (below 50%)</span>
-                                </li>
-                              )}
-                            </>
-                          );
-                        })()}
-                      </ul>
-                    </div>
-
-                    {/* Recommendations */}
-                    <div className="p-3 rounded-lg bg-blue-50 border border-blue-200">
-                      <h4 className="text-xs font-semibold text-blue-700 uppercase mb-2 flex items-center gap-1">
-                        <Lightbulb className="h-3 w-3" /> Recommendations
-                      </h4>
-                      <ul className="space-y-1.5 text-sm text-blue-800">
-                        {(() => {
-                          const worstSubject = subjectAverages.length > 0 
-                            ? subjectAverages.reduce((a, b) => a.average < b.average ? a : b)
-                            : null;
-                          const worstCategory = categoryAverages.length > 0
-                            ? categoryAverages.reduce((a, b) => a.percentage < b.percentage ? a : b)
-                            : null;
-                          
-                          return (
-                            <>
-                              {worstSubject && (
-                                <li className="flex items-start gap-2">
-                                  <span className="font-medium text-blue-600">1.</span>
-                                  <span>Schedule additional tutoring sessions for <span className="font-medium">{worstSubject.name}</span></span>
-                                </li>
-                              )}
-                              {worstCategory && (
-                                <li className="flex items-start gap-2">
-                                  <span className="font-medium text-blue-600">2.</span>
-                                  <span>Implement weekly <span className="font-medium">{worstCategory.name.toLowerCase()}</span> practice across all subjects</span>
-                                </li>
-                              )}
-                              {atRiskStudents.length > 0 && (
-                                <li className="flex items-start gap-2">
-                                  <span className="font-medium text-blue-600">3.</span>
-                                  <span>Arrange parent meetings for the {atRiskStudents.length} at-risk students</span>
-                                </li>
-                              )}
-                              <li className="flex items-start gap-2">
-                                <span className="font-medium text-blue-600">{atRiskStudents.length > 0 ? "4" : "3"}.</span>
-                                <span>Celebrate class achievements to boost morale and motivation</span>
-                              </li>
-                            </>
-                          );
-                        })()}
-                      </ul>
-                    </div>
-
-                    {/* Teacher Notes */}
-                    <div className="space-y-2">
-                      <label className="text-xs font-medium text-muted-foreground">Teacher Notes (Optional)</label>
-                      <Textarea 
-                        placeholder="Add your own observations or notes to include in the report..."
-                        className="min-h-[80px] text-sm resize-none"
-                      />
-                    </div>
-
-                    {/* Action Buttons */}
-                    <div className="grid grid-cols-2 gap-2">
-                      <Button 
-                        variant="outline" 
-                        size="sm"
-                        onClick={() => {
-                          const bestSubject = subjectAverages.length > 0 
-                            ? subjectAverages.reduce((a, b) => a.average > b.average ? a : b)
-                            : null;
-                          const worstSubject = subjectAverages.length > 0 
-                            ? subjectAverages.reduce((a, b) => a.average < b.average ? a : b)
-                            : null;
-                          const bestCategory = categoryAverages.length > 0
-                            ? categoryAverages.reduce((a, b) => a.percentage > b.percentage ? a : b)
-                            : null;
-                          const worstCategory = categoryAverages.length > 0
-                            ? categoryAverages.reduce((a, b) => a.percentage < b.percentage ? a : b)
-                            : null;
-                            
-                          const report = `CLASS PERFORMANCE REPORT
-========================
-Class: ${selectedClass} | Year: ${selectedYears.join(", ")} | Period: ${examPeriods.find(p => p.value === selectedPeriod)?.label}
-Generated: ${new Date().toLocaleDateString()}
-
-SUMMARY
--------
-• Total Students: ${students.length}
-• Class Average: ${classAverage}%
-• Pass Rate: ${passRate}%
-• A-Grade Rate: ${aGradeRate}%
-• Highest Score: ${highestScore}%
-• Lowest Score: ${lowestScore}%
-
-STRENGTHS
----------
-${bestSubject ? `• ${bestSubject.name} is the strongest subject (avg: ${bestSubject.average.toFixed(0)}%)` : ""}
-${bestCategory ? `• ${bestCategory.name} scores are consistently high (${bestCategory.percentage.toFixed(0)}%)` : ""}
-• ${rankedStudents.filter(s => s.score && s.score >= 80).length} students achieved B grade or higher
-
-AREAS FOR IMPROVEMENT
----------------------
-${worstSubject ? `• ${worstSubject.name} needs attention (avg: ${worstSubject.average.toFixed(0)}%)` : ""}
-${worstCategory ? `• ${worstCategory.name} is the weakest category (${worstCategory.percentage.toFixed(0)}%)` : ""}
-${atRiskStudents.length > 0 ? `• ${atRiskStudents.length} students are at risk of failing` : ""}
-
-RECOMMENDATIONS
----------------
-${worstSubject ? `1. Schedule additional tutoring sessions for ${worstSubject.name}` : ""}
-${worstCategory ? `2. Implement weekly ${worstCategory.name.toLowerCase()} practice across all subjects` : ""}
-${atRiskStudents.length > 0 ? `3. Arrange parent meetings for at-risk students` : ""}
-4. Celebrate class achievements to boost morale`;
-
-                          navigator.clipboard.writeText(report);
-                          toast({
-                            title: "Report Copied",
-                            description: "Class report has been copied to clipboard",
-                          });
-                        }}
-                      >
-                        <Copy className="h-3.5 w-3.5 mr-1" />
-                        Copy
-                      </Button>
-                      <Button 
-                        variant="outline" 
-                        size="sm"
-                        onClick={() => window.print()}
-                      >
-                        <Printer className="h-3.5 w-3.5 mr-1" />
-                        Print
-                      </Button>
-                      <Button 
-                        variant="outline" 
-                        size="sm"
-                        onClick={() => {
-                          // Generate CSV content
-                          const csvRows = [
-                            ["Class Performance Report"],
-                            [`Class: ${selectedClass}`, `Year: ${selectedYears.join(", ")}`, `Period: ${examPeriods.find(p => p.value === selectedPeriod)?.label}`],
-                            [`Generated: ${new Date().toLocaleDateString()}`],
-                            [],
-                            ["Summary Statistics"],
-                            ["Metric", "Value"],
-                            ["Total Students", students.length.toString()],
-                            ["Class Average", `${classAverage}%`],
-                            ["Pass Rate", `${passRate}%`],
-                            ["A-Grade Rate", `${aGradeRate}%`],
-                            ["Highest Score", `${highestScore}%`],
-                            ["Lowest Score", `${lowestScore}%`],
-                            [],
-                            ["Category Performance"],
-                            ["Category", "Average", "Max", "Percentage"],
-                            ...categoryAverages.map(cat => [cat.name, cat.average.toFixed(1), cat.max.toString(), `${cat.percentage.toFixed(0)}%`]),
-                            [],
-                            ["Subject Performance"],
-                            ["Subject", "Average"],
-                            ...subjectAverages.map(sub => [sub.fullName, sub.average.toFixed(1)]),
-                            [],
-                            ["Grade Distribution"],
-                            ["Grade", "Count"],
-                            ...gradeDistribution.map(g => [g.range, g.count.toString()]),
-                            [],
-                            ["Student Rankings"],
-                            ["Rank", "Name", "Score"],
-                            ...rankedStudents.map((s, i) => [(i + 1).toString(), s.name, s.score ? `${s.score}%` : "N/A"]),
-                          ];
-                          
-                          if (atRiskStudents.length > 0) {
-                            csvRows.push([]);
-                            csvRows.push(["At-Risk Students"]);
-                            csvRows.push(["Name", "Score"]);
-                            atRiskStudents.forEach(s => csvRows.push([s.name, s.score ? `${s.score}%` : "N/A"]));
-                          }
-                          
-                          const csvContent = csvRows.map(row => row.map(cell => `"${cell}"`).join(",")).join("\n");
-                          const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
-                          const url = URL.createObjectURL(blob);
-                          const link = document.createElement("a");
-                          link.href = url;
-                          link.download = `class_report_${selectedClass}_${selectedYears.join("-")}_${selectedPeriod}.csv`;
-                          document.body.appendChild(link);
-                          link.click();
-                          document.body.removeChild(link);
-                          URL.revokeObjectURL(url);
-                          
-                          toast({
-                            title: "CSV Downloaded",
-                            description: "Class report has been downloaded as CSV",
-                          });
-                        }}
-                      >
-                        <FileSpreadsheet className="h-3.5 w-3.5 mr-1" />
-                        CSV
-                      </Button>
-                      <Button 
-                        variant="default" 
-                        size="sm"
-                        onClick={() => {
-                          // Generate PDF using browser print
-                          const bestSubject = subjectAverages.length > 0 
-                            ? subjectAverages.reduce((a, b) => a.average > b.average ? a : b)
-                            : null;
-                          const worstSubject = subjectAverages.length > 0 
-                            ? subjectAverages.reduce((a, b) => a.average < b.average ? a : b)
-                            : null;
-                          const bestCategory = categoryAverages.length > 0
-                            ? categoryAverages.reduce((a, b) => a.percentage > b.percentage ? a : b)
-                            : null;
-                          const worstCategory = categoryAverages.length > 0
-                            ? categoryAverages.reduce((a, b) => a.percentage < b.percentage ? a : b)
-                            : null;
-                          
-                          const printWindow = window.open('', '_blank');
-                          if (!printWindow) {
-                            toast({
-                              title: "Pop-up Blocked",
-                              description: "Please allow pop-ups to download PDF",
-                              variant: "destructive",
-                            });
-                            return;
-                          }
-                          
-                          const htmlContent = `
-<!DOCTYPE html>
-<html>
-<head>
-  <title>Class Report - ${selectedClass}</title>
-  <style>
-    body { font-family: Arial, sans-serif; padding: 20px; max-width: 800px; margin: 0 auto; }
-    h1 { color: #1a1a1a; border-bottom: 2px solid #10b981; padding-bottom: 10px; }
-    h2 { color: #374151; margin-top: 24px; }
-    .meta { color: #6b7280; font-size: 14px; margin-bottom: 20px; }
-    .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin: 16px 0; }
-    .stat-card { background: #f3f4f6; padding: 12px; border-radius: 8px; text-align: center; }
-    .stat-value { font-size: 24px; font-weight: bold; color: #111827; }
-    .stat-label { font-size: 12px; color: #6b7280; }
-    table { width: 100%; border-collapse: collapse; margin: 16px 0; }
-    th, td { padding: 8px 12px; text-align: left; border-bottom: 1px solid #e5e7eb; }
-    th { background: #f9fafb; font-weight: 600; color: #374151; }
-    .section { background: #f9fafb; padding: 16px; border-radius: 8px; margin: 16px 0; }
-    .section.strength { background: #ecfdf5; border-left: 4px solid #10b981; }
-    .section.weakness { background: #fffbeb; border-left: 4px solid #f59e0b; }
-    .section.recommendation { background: #eff6ff; border-left: 4px solid #3b82f6; }
-    ul { margin: 8px 0; padding-left: 20px; }
-    li { margin: 4px 0; }
-    @media print { body { print-color-adjust: exact; -webkit-print-color-adjust: exact; } }
-  </style>
-</head>
-<body>
-  <h1>📊 Class Performance Report</h1>
-  <div class="meta">
-    <strong>Class:</strong> ${selectedClass} | 
-    <strong>Year:</strong> ${selectedYears.join(", ")} | 
-    <strong>Period:</strong> ${examPeriods.find(p => p.value === selectedPeriod)?.label}<br/>
-    <strong>Generated:</strong> ${new Date().toLocaleDateString()}
-  </div>
-  
-  <h2>Summary Statistics</h2>
-  <div class="stats-grid">
-    <div class="stat-card"><div class="stat-value">${students.length}</div><div class="stat-label">Students</div></div>
-    <div class="stat-card"><div class="stat-value">${classAverage}%</div><div class="stat-label">Average</div></div>
-    <div class="stat-card"><div class="stat-value">${passRate}%</div><div class="stat-label">Pass Rate</div></div>
-    <div class="stat-card"><div class="stat-value">${aGradeRate}%</div><div class="stat-label">A-Grade</div></div>
-    <div class="stat-card"><div class="stat-value">${highestScore}%</div><div class="stat-label">Highest</div></div>
-    <div class="stat-card"><div class="stat-value">${lowestScore}%</div><div class="stat-label">Lowest</div></div>
-  </div>
-  
-  <h2>Category Performance</h2>
-  <table>
-    <tr><th>Category</th><th>Average</th><th>Max</th><th>Percentage</th></tr>
-    ${categoryAverages.map(cat => `<tr><td>${cat.name}</td><td>${cat.average.toFixed(1)}</td><td>${cat.max}</td><td>${cat.percentage.toFixed(0)}%</td></tr>`).join('')}
-  </table>
-  
-  <h2>Subject Performance</h2>
-  <table>
-    <tr><th>Subject</th><th>Average</th></tr>
-    ${subjectAverages.map(sub => `<tr><td>${sub.fullName}</td><td>${sub.average.toFixed(1)}%</td></tr>`).join('')}
-  </table>
-  
-  <h2>Grade Distribution</h2>
-  <table>
-    <tr><th>Grade</th><th>Count</th></tr>
-    ${gradeDistribution.map(g => `<tr><td>${g.range}</td><td>${g.count}</td></tr>`).join('')}
-  </table>
-  
-  <div class="section strength">
-    <h3>✅ Strengths</h3>
-    <ul>
-      ${bestSubject ? `<li><strong>${bestSubject.fullName}</strong> is the strongest subject (avg: ${bestSubject.average.toFixed(0)}%)</li>` : ''}
-      ${bestCategory ? `<li><strong>${bestCategory.name}</strong> scores are consistently high (${bestCategory.percentage.toFixed(0)}%)</li>` : ''}
-      <li><strong>${rankedStudents.filter(s => s.score && s.score >= 80).length} students</strong> achieved B grade or higher</li>
-    </ul>
-  </div>
-  
-  <div class="section weakness">
-    <h3>⚠️ Areas for Improvement</h3>
-    <ul>
-      ${worstSubject ? `<li><strong>${worstSubject.fullName}</strong> needs attention (avg: ${worstSubject.average.toFixed(0)}%)</li>` : ''}
-      ${worstCategory ? `<li><strong>${worstCategory.name}</strong> is the weakest category (${worstCategory.percentage.toFixed(0)}%)</li>` : ''}
-      ${atRiskStudents.length > 0 ? `<li><strong>${atRiskStudents.length} students</strong> are at risk of failing</li>` : ''}
-    </ul>
-  </div>
-  
-  <div class="section recommendation">
-    <h3>💡 Recommendations</h3>
-    <ul>
-      ${worstSubject ? `<li>Schedule additional tutoring sessions for <strong>${worstSubject.fullName}</strong></li>` : ''}
-      ${worstCategory ? `<li>Implement weekly <strong>${worstCategory.name.toLowerCase()}</strong> practice across all subjects</li>` : ''}
-      ${atRiskStudents.length > 0 ? `<li>Arrange parent meetings for the ${atRiskStudents.length} at-risk students</li>` : ''}
-      <li>Celebrate class achievements to boost morale and motivation</li>
-    </ul>
-  </div>
-  
-  <h2>Top Performers</h2>
-  <table>
-    <tr><th>Rank</th><th>Name</th><th>Score</th></tr>
-    ${rankedStudents.slice(0, 5).map((s, i) => `<tr><td>${i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : `#${i + 1}`}</td><td>${s.name}</td><td>${s.score}%</td></tr>`).join('')}
-  </table>
-  
-  ${atRiskStudents.length > 0 ? `
-  <h2>At-Risk Students</h2>
-  <table>
-    <tr><th>Name</th><th>Score</th></tr>
-    ${atRiskStudents.map(s => `<tr><td>${s.name}</td><td>${s.score}%</td></tr>`).join('')}
-  </table>
-  ` : ''}
-</body>
-</html>
-                          `;
-                          
-                          printWindow.document.write(htmlContent);
-                          printWindow.document.close();
-                          printWindow.focus();
-                          setTimeout(() => {
-                            printWindow.print();
-                          }, 250);
-                          
-                          toast({
-                            title: "PDF Ready",
-                            description: "Use 'Save as PDF' in the print dialog",
-                          });
-                        }}
-                      >
-                        <Download className="h-3.5 w-3.5 mr-1" />
-                        PDF
-                      </Button>
-                    </div>
                   </CardContent>
                 </Card>
               </TabsContent>
@@ -2269,6 +1743,16 @@ ${atRiskStudents.length > 0 ? `3. Arrange parent meetings for at-risk students` 
     </TeacherAppLayout>
   );
 }
+
+// Subject colors for charts
+const SUBJECT_COLORS = [
+  "#8b5cf6", // violet
+  "#06b6d4", // cyan
+  "#10b981", // emerald
+  "#f59e0b", // amber
+  "#ef4444", // red
+  "#ec4899", // pink
+];
 
 // Grade colors for charts
 const GRADE_COLORS = {
