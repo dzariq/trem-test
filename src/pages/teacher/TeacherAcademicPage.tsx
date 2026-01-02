@@ -967,7 +967,7 @@ export default function TeacherAcademicPage() {
                   {/* Best Subject */}
                   <div className="flex flex-col items-center text-center p-3 rounded-xl" style={{ backgroundColor: 'rgba(251, 191, 36, 0.1)' }}>
                     <Award className="h-5 w-5 mb-1.5" style={{ color: '#f59e0b' }} />
-                    <span className="text-lg font-bold text-foreground">
+                    <span className="text-sm font-bold text-foreground">
                       {subjectAverages[0]?.name || 'N/A'}
                     </span>
                     <span className="text-[10px] text-muted-foreground leading-tight">Best Subject</span>
