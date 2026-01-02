@@ -126,7 +126,7 @@ export default function StudentHandbookPage() {
                         </AccordionTrigger>
                         <AccordionContent className="px-3 pb-3">
                           <ul className="space-y-1.5">
-                            {subsection.points.map((point, pointIdx) => (
+                            {subsection.points.slice(0, 3).map((point, pointIdx) => (
                               <li key={pointIdx} className="flex items-start gap-2 text-xs text-muted-foreground">
                                 <span className={cn("mt-1.5 h-1.5 w-1.5 rounded-full flex-shrink-0", section.color.replace('text-', 'bg-'))} />
                                 <span>{point}</span>
