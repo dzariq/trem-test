@@ -372,12 +372,25 @@ export const academicData = {
     }
   ],
   behavior: [
-    { category: "Punctuality", grade: "A", description: "Consistently on time" },
-    { category: "Participation", grade: "A", description: "Actively participates in class" },
-    { category: "Teamwork", grade: "B", description: "Works well with peers" },
-    { category: "Discipline", grade: "A", description: "Follows school rules" },
-    { category: "Homework", grade: "C", description: "Frequently late submissions" }
+    { category: "Attendance", grade: "A" },
+    { category: "Punctuality", grade: "B" },
+    { category: "Cooperation", grade: "A" },
+    { category: "Self Control", grade: "B" },
+    { category: "Responsibility", grade: "A" },
+    { category: "Initiative", grade: "B" },
+    { category: "Leadership", grade: "A" }
   ],
+  behaviorComments: {
+    homeroomComment: "Emma is a wonderful student who always shows kindness to her classmates. She has made excellent progress this semester and continues to be a positive influence in the classroom.",
+    responsibilityComment: "Emma consistently completes her assigned duties and takes ownership of her responsibilities. She is reliable and can be counted on to help others."
+  },
+  awards: {
+    sportsHouse: { organization: "Basketball", role: "Captain" },
+    club: { organization: "Science Club", role: "Member" },
+    studentLeadership: { organization: "Prefect Board", role: "Vice-Captain" },
+    events: { organization: "Sports Day", role: "Coordinator" },
+    achievements: { event: "Science Fair", award: "Gold" }
+  },
   coCurriculum: [
     { activity: "Basketball Team", achievement: "1st Place - Inter-School Tournament" },
     { activity: "Science Club", achievement: "Gold Award - Science Fair" },
