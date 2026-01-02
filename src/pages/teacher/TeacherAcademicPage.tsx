@@ -1110,31 +1110,32 @@ export default function TeacherAcademicPage() {
                     </div>
                   </div>}
 
-                {/* Grade Distribution Cards + Stats Grid */}
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <h4 className="text-sm font-medium text-foreground">Grade Distribution</h4>
-                    <div className="grid grid-cols-5 gap-1.5">
-                      {gradeDistribution.map(g => {
+                {/* Grade Distribution Cards */}
+                <div className="space-y-2">
+                  <h4 className="text-sm font-medium text-foreground">Grade Distribution</h4>
+                  <div className="grid grid-cols-5 gap-2">
+                    {gradeDistribution.map(g => {
                       const total = gradeDistribution.reduce((sum, d) => sum + d.count, 0);
                       const percentage = total > 0 ? Math.round(g.count / total * 100) : 0;
-                      return <div key={g.range} className="flex flex-col items-center p-2 rounded-lg border border-border/50" style={{
-                        backgroundColor: `${GRADE_COLORS[g.range as keyof typeof GRADE_COLORS]}15`
-                      }}>
-                            <span className="text-sm font-bold" style={{
-                          color: GRADE_COLORS[g.range as keyof typeof GRADE_COLORS]
-                        }}>
-                              {g.range}
-                            </span>
-                            <span className="text-lg font-semibold text-foreground">{g.count}</span>
-                            <span className="text-[10px] text-muted-foreground">{percentage}%</span>
-                          </div>;
+                      return (
+                        <div 
+                          key={g.range} 
+                          className="flex flex-col items-center p-3 rounded-lg border border-border/50" 
+                          style={{
+                            backgroundColor: `${GRADE_COLORS[g.range as keyof typeof GRADE_COLORS]}15`
+                          }}
+                        >
+                          <span className="text-base font-bold" style={{
+                            color: GRADE_COLORS[g.range as keyof typeof GRADE_COLORS]
+                          }}>
+                            {g.range}
+                          </span>
+                          <span className="text-xl font-semibold text-foreground">{g.count}</span>
+                          <span className="text-xs text-muted-foreground">{percentage}%</span>
+                        </div>
+                      );
                     })}
-                    </div>
                   </div>
-
-                  {/* Summary Stats */}
-                  
                 </div>
 
                 {/* Top Students with medals - Moved up */}
