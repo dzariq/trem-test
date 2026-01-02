@@ -815,40 +815,40 @@ export default function AcademicPage() {
                     key={index} 
                     className="relative p-4 rounded-xl border overflow-hidden"
                     style={{ 
-                      background: 'linear-gradient(145deg, #fffbeb 0%, #fef3c7 25%, #fde68a 60%, #fcd34d 100%)', 
-                      borderColor: 'rgba(251, 191, 36, 0.3)',
-                      boxShadow: '0 2px 8px rgba(251, 191, 36, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.5)'
+                      background: 'linear-gradient(145deg, #fef3c7 0%, #fde68a 25%, #fbbf24 60%, #f59e0b 100%)', 
+                      borderColor: 'rgba(217, 119, 6, 0.4)',
+                      boxShadow: '0 2px 8px rgba(217, 119, 6, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.4)'
                     }}
                   >
                     {/* Primary shine effect */}
                     <div 
                       className="absolute inset-0 pointer-events-none"
                       style={{
-                        background: 'radial-gradient(ellipse at 20% 10%, rgba(255, 255, 255, 0.4) 0%, transparent 35%)',
+                        background: 'radial-gradient(ellipse at 20% 10%, rgba(255, 255, 255, 0.35) 0%, transparent 35%)',
                       }}
                     />
                     {/* Secondary subtle shimmer */}
                     <div 
                       className="absolute inset-0 pointer-events-none"
                       style={{
-                        background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, transparent 50%, rgba(255, 255, 255, 0.05) 100%)',
+                        background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.08) 0%, transparent 50%, rgba(255, 255, 255, 0.03) 100%)',
                       }}
                     />
-                    {/* Trophy decorations - refined cascading pattern with sparkles */}
-                    <div className="absolute top-2 right-3 opacity-[0.07] pointer-events-none rotate-[-12deg]">
-                      <Trophy className="h-4 w-4 text-amber-500" />
+                    {/* Trophy decorations - more visible cascading pattern */}
+                    <div className="absolute top-2 right-3 opacity-[0.15] pointer-events-none rotate-[-12deg]">
+                      <Trophy className="h-4 w-4 text-amber-700" />
                     </div>
-                    <div className="absolute top-6 right-6 opacity-[0.04] pointer-events-none">
-                      <Sparkles className="h-3 w-3 text-amber-500" />
+                    <div className="absolute top-6 right-6 opacity-[0.12] pointer-events-none">
+                      <Sparkles className="h-3 w-3 text-amber-700" />
                     </div>
-                    <div className="absolute top-1/2 right-2 -translate-y-1/2 opacity-[0.08] pointer-events-none">
-                      <Trophy className="h-6 w-6 text-amber-500" />
+                    <div className="absolute top-1/2 right-2 -translate-y-1/2 opacity-[0.18] pointer-events-none">
+                      <Trophy className="h-6 w-6 text-amber-700" />
                     </div>
-                    <div className="absolute bottom-4 right-8 opacity-[0.05] pointer-events-none rotate-[8deg]">
-                      <Trophy className="h-3.5 w-3.5 text-amber-500" />
+                    <div className="absolute bottom-4 right-8 opacity-[0.13] pointer-events-none rotate-[8deg]">
+                      <Trophy className="h-3.5 w-3.5 text-amber-700" />
                     </div>
-                    <div className="absolute bottom-2 right-3 opacity-[0.03] pointer-events-none">
-                      <Sparkles className="h-2.5 w-2.5 text-amber-500" />
+                    <div className="absolute bottom-2 right-3 opacity-[0.10] pointer-events-none">
+                      <Sparkles className="h-2.5 w-2.5 text-amber-700" />
                     </div>
                     
                     <div className="relative flex items-start gap-3 pr-14">
