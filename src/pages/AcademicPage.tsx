@@ -2490,7 +2490,11 @@ export default function AcademicPage() {
                                       className="h-full rounded-full transition-all"
                                       style={{ 
                                         width: `${item.current}%`,
-                                        backgroundColor: item.achieved ? '#22c55e' : 'hsl(var(--muted-foreground) / 0.4)'
+                                        backgroundColor: item.achieved 
+                                          ? '#22c55e' 
+                                          : item.gap <= 30 
+                                            ? '#3b82f6' 
+                                            : '#f87171'
                                       }}
                                     />
                                   </div>
