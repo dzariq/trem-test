@@ -149,8 +149,8 @@ export const academicData = {
       teacherComment: "Shows good understanding of historical events. Could improve on essay structure and analysis.",
       scores: {
         "2023": { midYear: 66, yearEnd: 70, attitude: 72, homework: 68, quiz: 64, exam: 66 },
-        "2024": { midYear: 70, yearEnd: 74, attitude: 75, homework: 72, quiz: 68, exam: 70 },
-        "2025": { midYear: 78, yearEnd: null, attitude: 80, homework: 82, quiz: 76, exam: 78 }
+        "2024": { midYear: 70, yearEnd: 78, attitude: 75, homework: 72, quiz: 68, exam: 70 },
+        "2025": { midYear: 72, yearEnd: null, attitude: 74, homework: 70, quiz: 68, exam: 72 }
       }
     },
     { 
@@ -176,8 +176,8 @@ export const academicData = {
       teacherComment: "Shows interest in music theory. Practice more on rhythm and timing to improve performance.",
       scores: {
         "2023": { midYear: 62, yearEnd: 65, attitude: 68, homework: 60, quiz: 58, exam: 62 },
-        "2024": { midYear: 65, yearEnd: 68, attitude: 70, homework: 65, quiz: 62, exam: 65 },
-        "2025": { midYear: 70, yearEnd: null, attitude: 72, homework: 68, quiz: 65, exam: 70 }
+        "2024": { midYear: 65, yearEnd: 72, attitude: 70, homework: 65, quiz: 62, exam: 65 },
+        "2025": { midYear: 65, yearEnd: null, attitude: 68, homework: 62, quiz: 60, exam: 65 }
       }
     },
     { 
@@ -194,8 +194,8 @@ export const academicData = {
       teacherComment: "Good pronunciation and character recognition. Continue practicing writing strokes.",
       scores: {
         "2023": { midYear: 72, yearEnd: 76, attitude: 78, homework: 75, quiz: 70, exam: 72 },
-        "2024": { midYear: 76, yearEnd: 80, attitude: 82, homework: 78, quiz: 74, exam: 76 },
-        "2025": { midYear: 83, yearEnd: null, attitude: 85, homework: 82, quiz: 80, exam: 83 }
+        "2024": { midYear: 76, yearEnd: 82, attitude: 82, homework: 78, quiz: 74, exam: 76 },
+        "2025": { midYear: 78, yearEnd: null, attitude: 80, homework: 76, quiz: 74, exam: 78 }
       }
     },
     { 
