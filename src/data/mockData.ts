@@ -439,13 +439,104 @@ export const calendarEvents: CalendarEvent[] = [
 ];
 
 export const ccaActivities = [
-  { id: 1, name: "Basketball", day: "Monday", time: "3:30 PM - 5:00 PM", venue: "Gymnasium", coach: "Mr. Johnson", category: "Sports" },
-  { id: 2, name: "Art Club", day: "Tuesday", time: "3:30 PM - 5:00 PM", venue: "Art Room", coach: "Ms. Chen", category: "Arts" },
-  { id: 3, name: "Robotics Club", day: "Wednesday", time: "3:30 PM - 5:30 PM", venue: "STEM Lab", coach: "Mr. Patel", category: "Academic" },
-  { id: 4, name: "Swimming", day: "Thursday", time: "3:30 PM - 5:00 PM", venue: "Swimming Pool", coach: "Ms. Williams", category: "Sports" },
-  { id: 5, name: "Drama Club", day: "Friday", time: "3:30 PM - 5:00 PM", venue: "Auditorium", coach: "Mr. Lee", category: "Arts" },
-  { id: 6, name: "Debate Club", day: "Monday", time: "4:00 PM - 5:30 PM", venue: "Library", coach: "Ms. Brown", category: "Academic" },
-  { id: 7, name: "Badminton", day: "Wednesday", time: "3:30 PM - 5:00 PM", venue: "Sports Hall", coach: "Mr. Tan", category: "Sports" }
+  { 
+    id: 1, 
+    name: "Basketball", 
+    day: "Monday", 
+    time: "3:30 PM - 5:00 PM", 
+    venue: "Gymnasium", 
+    coach: "Mr. Johnson", 
+    category: "Sports",
+    description: "Learn basketball fundamentals, teamwork, and competitive play. Open to all skill levels.",
+    maxCapacity: 25,
+    currentEnrollment: 22,
+    requirements: "Sports attire, basketball shoes, water bottle",
+    upcomingSession: "2026-01-06"
+  },
+  { 
+    id: 2, 
+    name: "Art Club", 
+    day: "Tuesday", 
+    time: "3:30 PM - 5:00 PM", 
+    venue: "Art Room", 
+    coach: "Ms. Chen", 
+    category: "Arts",
+    description: "Explore various art techniques including painting, drawing, and sculpture. Materials provided.",
+    maxCapacity: 20,
+    currentEnrollment: 18,
+    requirements: "Apron or old clothes",
+    upcomingSession: "2026-01-07"
+  },
+  { 
+    id: 3, 
+    name: "Robotics Club", 
+    day: "Wednesday", 
+    time: "3:30 PM - 5:30 PM", 
+    venue: "STEM Lab", 
+    coach: "Mr. Patel", 
+    category: "Academic",
+    description: "Build and program robots using LEGO Mindstorms and Arduino. Prepare for competitions.",
+    maxCapacity: 15,
+    currentEnrollment: 15,
+    requirements: "Laptop (optional), notebook",
+    upcomingSession: "2026-01-08"
+  },
+  { 
+    id: 4, 
+    name: "Swimming", 
+    day: "Thursday", 
+    time: "3:30 PM - 5:00 PM", 
+    venue: "Swimming Pool", 
+    coach: "Ms. Williams", 
+    category: "Sports",
+    description: "Swimming lessons for beginners to advanced. Focus on stroke technique and water safety.",
+    maxCapacity: 20,
+    currentEnrollment: 16,
+    requirements: "Swimsuit, goggles, towel, swim cap",
+    upcomingSession: "2026-01-09"
+  },
+  { 
+    id: 5, 
+    name: "Drama Club", 
+    day: "Friday", 
+    time: "3:30 PM - 5:00 PM", 
+    venue: "Auditorium", 
+    coach: "Mr. Lee", 
+    category: "Arts",
+    description: "Theater arts including acting, stage production, and public speaking. Annual play production.",
+    maxCapacity: 30,
+    currentEnrollment: 24,
+    requirements: "Comfortable clothing",
+    upcomingSession: "2026-01-10"
+  },
+  { 
+    id: 6, 
+    name: "Debate Club", 
+    day: "Monday", 
+    time: "4:00 PM - 5:30 PM", 
+    venue: "Library", 
+    coach: "Ms. Brown", 
+    category: "Academic",
+    description: "Develop critical thinking and public speaking skills through structured debates and discussions.",
+    maxCapacity: 16,
+    currentEnrollment: 12,
+    requirements: "Notebook, pen",
+    upcomingSession: "2026-01-06"
+  },
+  { 
+    id: 7, 
+    name: "Badminton", 
+    day: "Wednesday", 
+    time: "3:30 PM - 5:00 PM", 
+    venue: "Sports Hall", 
+    coach: "Mr. Tan", 
+    category: "Sports",
+    description: "Badminton training for all levels. Singles and doubles play, tournament preparation.",
+    maxCapacity: 24,
+    currentEnrollment: 20,
+    requirements: "Sports attire, badminton racket (available for loan)",
+    upcomingSession: "2026-01-08"
+  }
 ];
 
 export const tickets = [
