@@ -37,25 +37,26 @@ export function EnvelopeAwardCard({
           boxShadow: '0 2px 8px rgba(217, 119, 6, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.4)'
         }}
       >
-        {/* Envelope flap - triangle pointing DOWN (closed) */}
+        {/* Envelope flap - triangle outline only */}
         <div className="absolute top-0 left-0 right-0 overflow-visible z-20">
           <svg 
-            viewBox="0 0 100 20" 
+            viewBox="0 0 100 18" 
             preserveAspectRatio="none" 
-            className="w-full h-6"
+            className="w-full h-5"
           >
-            <defs>
-              <linearGradient id="flapDown" x1="0%" y1="0%" x2="0%" y2="100%">
-                <stop offset="0%" stopColor="#d4950f"/>
-                <stop offset="50%" stopColor="#c9880d"/>
-                <stop offset="100%" stopColor="#b8780b"/>
-              </linearGradient>
-            </defs>
-            {/* Triangle flap pointing down */}
-            <polygon points="0,0 100,0 50,20" fill="url(#flapDown)"/>
-            {/* Fold lines for depth */}
-            <line x1="0" y1="0" x2="50" y2="20" stroke="rgba(255,255,255,0.2)" strokeWidth="0.3"/>
-            <line x1="100" y1="0" x2="50" y2="20" stroke="rgba(0,0,0,0.1)" strokeWidth="0.3"/>
+            {/* Same gold background as envelope */}
+            <polygon points="0,0 100,0 50,18" fill="#f59e0b"/>
+            {/* Triangle outline */}
+            <polygon 
+              points="0,0 100,0 50,18" 
+              fill="none" 
+              stroke="#b45309" 
+              strokeWidth="0.8"
+              strokeLinejoin="round"
+            />
+            {/* Subtle fold lines */}
+            <line x1="0" y1="0" x2="50" y2="18" stroke="rgba(255,255,255,0.15)" strokeWidth="0.3"/>
+            <line x1="100" y1="0" x2="50" y2="18" stroke="rgba(0,0,0,0.08)" strokeWidth="0.3"/>
           </svg>
         </div>
 
