@@ -1124,11 +1124,18 @@ export default function AcademicPage() {
                             labelStyle={{ fontWeight: 600, marginBottom: 4 }}
                           />
                           <ReferenceLine 
-                            y={75} 
-                            stroke="hsl(var(--muted-foreground))" 
+                            y={50} 
+                            stroke="#f59e0b" 
                             strokeDasharray="5 5" 
-                            strokeOpacity={0.5}
-                            label={{ value: "Target", fontSize: 9, fill: "hsl(var(--muted-foreground))" }}
+                            strokeOpacity={0.6}
+                            label={{ value: "Pass", fontSize: 9, fill: "#f59e0b" }}
+                          />
+                          <ReferenceLine 
+                            y={80} 
+                            stroke="#22c55e" 
+                            strokeDasharray="5 5" 
+                            strokeOpacity={0.6}
+                            label={{ value: "A", fontSize: 9, fill: "#22c55e" }}
                           />
                           {subjectFilter === "all" ? (
                             <Area
