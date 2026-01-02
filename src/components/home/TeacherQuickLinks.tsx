@@ -7,15 +7,27 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
+interface TeacherQuickLinksProps {
+  onTimetableClick?: () => void;
+}
+
 const quickLinks = [
-  { icon: CalendarClock, label: "Timetable", path: "/teacher/timetable", bgColor: "bg-emerald-100", iconColor: "text-emerald-600" },
+  { icon: CalendarClock, label: "Timetable", path: "/teacher/timetable", bgColor: "bg-emerald-100", iconColor: "text-emerald-600", action: "timetable" },
   { icon: BookOpen, label: "Grade Entry", path: "/teacher/academic", bgColor: "bg-blue-100", iconColor: "text-blue-600" },
   { icon: Calendar, label: "Calendar", path: "/teacher/calendar", bgColor: "bg-amber-100", iconColor: "text-amber-600" },
   { icon: BookMarked, label: "Handbook", path: "/teacher/handbook", bgColor: "bg-purple-100", iconColor: "text-purple-600" },
 ];
 
-export function TeacherQuickLinks() {
+export function TeacherQuickLinks({ onTimetableClick }: TeacherQuickLinksProps) {
   const navigate = useNavigate();
+
+  const handleClick = (link: typeof quickLinks[0]) => {
+    if (link.action === "timetable" && onTimetableClick) {
+      onTimetableClick();
+    } else {
+      navigate(link.path);
+    }
+  };
 
   return (
     <section className="px-4 -mt-6 relative z-10">
@@ -24,7 +36,7 @@ export function TeacherQuickLinks() {
           {quickLinks.map((link) => (
             <button
               key={link.label}
-              onClick={() => navigate(link.path)}
+              onClick={() => handleClick(link)}
               className={cn(
                 "flex flex-col items-center justify-center py-1.5 px-1 rounded-xl",
                 "transition-all duration-200 hover:bg-muted/50",
