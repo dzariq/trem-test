@@ -1277,7 +1277,7 @@ export default function TeacherAcademicPage() {
 
                 {/* Performance Dialog */}
                 <Dialog open={performanceDialogOpen} onOpenChange={setPerformanceDialogOpen}>
-                  <DialogContent className="max-w-md max-h-[80vh] overflow-hidden flex flex-col">
+                  <DialogContent className="w-[95vw] max-w-lg h-[85vh] rounded-2xl overflow-hidden flex flex-col">
                     <DialogHeader>
                       <DialogTitle>Student Performance</DialogTitle>
                     </DialogHeader>
