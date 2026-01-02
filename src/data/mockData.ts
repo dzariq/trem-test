@@ -181,6 +181,46 @@ export const academicData = {
         "2024": { midYear: 58, yearEnd: 62, attitude: 65, homework: 60, quiz: 55, exam: 58 },
         "2025": { midYear: 65, yearEnd: null, attitude: 68, homework: 62, quiz: 60, exam: 65 }
       }
+    },
+    { 
+      name: "Mandarin", 
+      scores: {
+        "2023": { midYear: 72, yearEnd: 76, attitude: 78, homework: 75, quiz: 70, exam: 72 },
+        "2024": { midYear: 76, yearEnd: 80, attitude: 82, homework: 78, quiz: 74, exam: 76 },
+        "2025": { midYear: 83, yearEnd: null, attitude: 85, homework: 82, quiz: 80, exam: 83 }
+      }
+    },
+    { 
+      name: "Computer Studies", 
+      scores: {
+        "2023": { midYear: 78, yearEnd: 82, attitude: 85, homework: 80, quiz: 76, exam: 78 },
+        "2024": { midYear: 82, yearEnd: 86, attitude: 88, homework: 85, quiz: 80, exam: 82 },
+        "2025": { midYear: 88, yearEnd: null, attitude: 90, homework: 88, quiz: 85, exam: 88 }
+      }
+    },
+    { 
+      name: "French", 
+      scores: {
+        "2023": { midYear: 35, yearEnd: 38, attitude: 45, homework: 40, quiz: 32, exam: 35 },
+        "2024": { midYear: 38, yearEnd: 42, attitude: 48, homework: 42, quiz: 35, exam: 38 },
+        "2025": { midYear: 45, yearEnd: null, attitude: 50, homework: 48, quiz: 42, exam: 45 }
+      }
+    },
+    { 
+      name: "Chemistry", 
+      scores: {
+        "2023": { midYear: 32, yearEnd: 36, attitude: 42, homework: 38, quiz: 30, exam: 32 },
+        "2024": { midYear: 36, yearEnd: 40, attitude: 45, homework: 40, quiz: 34, exam: 36 },
+        "2025": { midYear: 42, yearEnd: null, attitude: 48, homework: 45, quiz: 40, exam: 42 }
+      }
+    },
+    { 
+      name: "Physics", 
+      scores: {
+        "2023": { midYear: 28, yearEnd: 32, attitude: 38, homework: 35, quiz: 26, exam: 28 },
+        "2024": { midYear: 32, yearEnd: 36, attitude: 42, homework: 38, quiz: 30, exam: 32 },
+        "2025": { midYear: 38, yearEnd: null, attitude: 45, homework: 42, quiz: 36, exam: 38 }
+      }
     }
   ],
   behavior: [
