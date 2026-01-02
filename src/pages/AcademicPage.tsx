@@ -7,7 +7,6 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Progress } from "@/components/ui/progress";
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Download, FileText, Award, Trophy, BookOpen, TrendingUp, TrendingDown, Check, ArrowUp, ArrowDown, Minus, BarChart3, GitCompare, Target, AlertTriangle, Star, Goal, CheckCircle2, Circle, Edit2, ChevronDown, MessageSquare } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import schoolLogo from "@/assets/school-badge.png";
@@ -68,6 +67,7 @@ export default function AcademicPage() {
   const [selectedYears, setSelectedYears] = useState<string[]>(["2025"]);
   const [subjectFilter, setSubjectFilter] = useState("all");
   const [reportGenerated, setReportGenerated] = useState(false);
+  const [expandedSubject, setExpandedSubject] = useState<string | null>(null);
   
   // Grade Analysis sub-tabs
   const [analysisTab, setAnalysisTab] = useState("overview");
@@ -408,45 +408,86 @@ export default function AcademicPage() {
               </TabsList>
 
               <TabsContent value="grades" className="mt-4">
-                <div className="grid grid-cols-2 gap-2">
-                  {academicData.subjects.map((subject, index) => {
-                    const score = getScore(subject, selectedYear, examType);
-                    const isPending = score === null || score === undefined;
+                <div className="space-y-3">
+                  {/* Group subjects into rows of 2 */}
+                  {Array.from({ length: Math.ceil(academicData.subjects.length / 2) }, (_, rowIndex) => {
+                    const rowSubjects = academicData.subjects.slice(rowIndex * 2, rowIndex * 2 + 2);
+                    const expandedInRow = rowSubjects.find(s => s.name === expandedSubject);
                     
                     return (
-                      <Collapsible key={index}>
-                        <CollapsibleTrigger className="w-full text-left">
-                          <div className="flex flex-col p-3 rounded-lg bg-accent/30 border border-border/50 hover:bg-accent/50 transition-colors cursor-pointer">
-                            <div className="flex items-center justify-between mb-1">
-                              <h3 className="font-medium text-foreground text-sm">{subject.name}</h3>
-                              <div className="flex items-center gap-1">
-                                {isPending ? (
-                                  <Badge variant="outline" className="text-muted-foreground text-xs">--</Badge>
-                                ) : (
-                                  <Badge className={`${gradeColors[getGradeFromScore(score!)[0]] || gradeColors.C} text-xs`}>
-                                    {getGradeFromScore(score!)}
-                                  </Badge>
-                                )}
-                                <ChevronDown className="h-3 w-3 text-muted-foreground transition-transform duration-200 group-data-[state=open]:rotate-180" />
+                      <div key={rowIndex} className="space-y-3">
+                        {/* Subject Cards Row */}
+                        <div className="grid grid-cols-2 gap-3">
+                          {rowSubjects.map((subject, index) => {
+                            const score = getScore(subject, selectedYear, examType);
+                            const isPending = score === null || score === undefined;
+                            const isExpanded = expandedSubject === subject.name;
+                            
+                            return (
+                              <div
+                                key={index}
+                                onClick={() => setExpandedSubject(isExpanded ? null : subject.name)}
+                                className={`
+                                  flex flex-col p-4 rounded-xl bg-card border cursor-pointer
+                                  transition-all duration-200 ease-out min-h-[80px]
+                                  hover:shadow-md hover:border-primary/30
+                                  ${isExpanded ? 'border-primary shadow-md ring-1 ring-primary/20' : 'border-border'}
+                                `}
+                              >
+                                <div className="flex items-center justify-between mb-1">
+                                  <h3 className="font-medium text-foreground text-sm truncate flex-1 mr-2">{subject.name}</h3>
+                                  <div className="flex items-center gap-1.5 flex-shrink-0">
+                                    {isPending ? (
+                                      <Badge variant="outline" className="text-muted-foreground text-xs">--</Badge>
+                                    ) : (
+                                      <Badge className={`${gradeColors[getGradeFromScore(score!)[0]] || gradeColors.C} text-xs`}>
+                                        {getGradeFromScore(score!)}
+                                      </Badge>
+                                    )}
+                                    <ChevronDown 
+                                      className={`h-4 w-4 text-muted-foreground transition-transform duration-200 ${
+                                        isExpanded ? 'rotate-180' : ''
+                                      }`} 
+                                    />
+                                  </div>
+                                </div>
+                                <p className="text-lg font-semibold text-foreground">
+                                  {isPending ? "Pending" : `${score}%`}
+                                </p>
+                              </div>
+                            );
+                          })}
+                        </div>
+                        
+                        {/* Expanded Comment Box - Full Width */}
+                        {expandedInRow && (
+                          <div className="animate-fade-in">
+                            <div className="bg-primary/5 border border-primary/20 rounded-xl p-4 relative">
+                              {/* Pointer arrow */}
+                              <div 
+                                className="absolute -top-2"
+                                style={{
+                                  left: expandedInRow === rowSubjects[0] ? 'calc(25% - 8px)' : 'calc(75% - 8px)'
+                                }}
+                              >
+                                <div className="w-4 h-4 bg-primary/5 border-l border-t border-primary/20 rotate-45" />
+                              </div>
+                              
+                              <div className="flex items-start gap-3">
+                                <div className="flex-shrink-0 w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
+                                  <MessageSquare className="h-4 w-4 text-primary" />
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                  <p className="text-xs font-medium text-primary mb-1">Teacher's Comment</p>
+                                  <p className="text-sm text-muted-foreground leading-relaxed">
+                                    {expandedInRow.teacherComment}
+                                  </p>
+                                </div>
                               </div>
                             </div>
-                            <p className="text-lg font-semibold text-foreground">
-                              {isPending ? "Pending" : `${score}%`}
-                            </p>
                           </div>
-                        </CollapsibleTrigger>
-                        <CollapsibleContent>
-                          <div className="px-3 py-2 mt-1 rounded-lg bg-muted/50 border border-border/30">
-                            <div className="flex items-start gap-2">
-                              <MessageSquare className="h-4 w-4 text-primary mt-0.5 shrink-0" />
-                              <div>
-                                <p className="text-xs font-medium text-muted-foreground mb-1">Teacher's Comment</p>
-                                <p className="text-sm text-foreground">{subject.teacherComment}</p>
-                              </div>
-                            </div>
-                          </div>
-                        </CollapsibleContent>
-                      </Collapsible>
+                        )}
+                      </div>
                     );
                   })}
                 </div>
