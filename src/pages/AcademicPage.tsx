@@ -570,18 +570,34 @@ export default function AcademicPage() {
                 {risingStars.length > 0 && (
                   <div className="space-y-2">
                     <h4 className="text-sm font-medium text-foreground flex items-center gap-1.5">
-                      <TrendingUp className="h-4 w-4 text-chart-2" /> Rising Stars
+                      <TrendingUp className="h-4 w-4" style={{ color: '#d97706' }} /> Rising Stars
                     </h4>
                     <p className="text-[10px] text-muted-foreground -mt-1">Biggest improvements from previous exam</p>
                     <div className="grid grid-cols-3 gap-2">
                       {risingStars.map((item) => (
-                        <div key={item.subject.name} className="flex flex-col items-center p-2.5 rounded-lg bg-chart-2/10 border border-chart-2/20">
-                          <span className="text-xs font-medium text-foreground text-center">{shortenSubjectName(item.subject.name)}</span>
-                          <div className="flex items-center gap-1 mt-1">
-                            <ArrowUp className="h-3 w-3 text-chart-2" />
-                            <span className="text-sm font-bold text-chart-2">+{item.improvement}%</span>
+                        <div 
+                          key={item.subject.name} 
+                          className="relative flex flex-col items-center p-2.5 rounded-lg border overflow-hidden"
+                          style={{ backgroundColor: 'rgba(251, 191, 36, 0.1)', borderColor: 'rgba(251, 191, 36, 0.3)' }}
+                        >
+                          {/* Star pattern background */}
+                          <div className="absolute inset-0 opacity-20 pointer-events-none" style={{ color: '#fcd34d' }}>
+                            <svg className="absolute top-1 left-1 w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                              <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                            </svg>
+                            <svg className="absolute top-2 right-2 w-2 h-2" fill="currentColor" viewBox="0 0 20 20">
+                              <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                            </svg>
+                            <svg className="absolute bottom-1 right-1 w-2.5 h-2.5" fill="currentColor" viewBox="0 0 20 20">
+                              <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                            </svg>
                           </div>
-                          <span className="text-[10px] text-muted-foreground">{item.prev}% → {item.current}%</span>
+                          <span className="text-xs font-medium text-foreground text-center relative z-10">{shortenSubjectName(item.subject.name)}</span>
+                          <div className="flex items-center gap-1 mt-1 relative z-10">
+                            <ArrowUp className="h-3 w-3" style={{ color: '#d97706' }} />
+                            <span className="text-sm font-bold" style={{ color: '#d97706' }}>+{item.improvement}%</span>
+                          </div>
+                          <span className="text-[10px] text-muted-foreground relative z-10">{item.prev}% → {item.current}%</span>
                         </div>
                       ))}
                     </div>
