@@ -157,6 +157,30 @@ export const academicData = {
         "2024": { midYear: 75, yearEnd: 78, attitude: 80, homework: 78, quiz: 74, exam: 75 },
         "2025": { midYear: 82, yearEnd: null, attitude: 85, homework: 86, quiz: 80, exam: 82 }
       }
+    },
+    { 
+      name: "Art", 
+      scores: {
+        "2023": { midYear: 88, yearEnd: 90, attitude: 92, homework: 90, quiz: 85, exam: 88 },
+        "2024": { midYear: 90, yearEnd: 92, attitude: 94, homework: 92, quiz: 88, exam: 90 },
+        "2025": { midYear: 95, yearEnd: null, attitude: 96, homework: 95, quiz: 92, exam: 95 }
+      }
+    },
+    { 
+      name: "Music", 
+      scores: {
+        "2023": { midYear: 62, yearEnd: 65, attitude: 68, homework: 60, quiz: 58, exam: 62 },
+        "2024": { midYear: 65, yearEnd: 68, attitude: 70, homework: 65, quiz: 62, exam: 65 },
+        "2025": { midYear: 70, yearEnd: null, attitude: 72, homework: 68, quiz: 65, exam: 70 }
+      }
+    },
+    { 
+      name: "Physical Education", 
+      scores: {
+        "2023": { midYear: 55, yearEnd: 58, attitude: 60, homework: 55, quiz: 52, exam: 55 },
+        "2024": { midYear: 58, yearEnd: 62, attitude: 65, homework: 60, quiz: 55, exam: 58 },
+        "2025": { midYear: 65, yearEnd: null, attitude: 68, homework: 62, quiz: 60, exam: 65 }
+      }
     }
   ],
   behavior: [
