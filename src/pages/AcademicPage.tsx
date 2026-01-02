@@ -1397,74 +1397,36 @@ export default function AcademicPage() {
                   )}
                 </div>
 
-                {/* Grade Distribution Pie + Stats Grid */}
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <h4 className="text-sm font-medium text-foreground">Grade Distribution</h4>
-                    <div className="h-28">
-                      <ResponsiveContainer width="100%" height="100%">
-                        <PieChart>
-                          <Pie
-                            data={gradeDistribution}
-                            dataKey="count"
-                            nameKey="grade"
-                            cx="50%"
-                            cy="50%"
-                            innerRadius={25}
-                            outerRadius={45}
-                            paddingAngle={2}
+                {/* Grade Distribution Cards */}
+                <div className="space-y-2">
+                  <h4 className="text-sm font-medium text-foreground">Grade Distribution</h4>
+                  <div className="grid grid-cols-6 gap-2">
+                    {(() => {
+                      const totalSubjects = academicData.subjects.length;
+                      const gradeCardColors: Record<string, { bg: string; text: string }> = {
+                        "A*": { bg: 'rgba(5, 150, 105, 0.15)', text: '#059669' },
+                        "A": { bg: 'rgba(34, 197, 94, 0.12)', text: '#22c55e' },
+                        "B": { bg: 'rgba(59, 130, 246, 0.12)', text: '#3b82f6' },
+                        "C": { bg: 'rgba(234, 179, 8, 0.12)', text: '#ca8a04' },
+                        "D": { bg: 'rgba(249, 115, 22, 0.12)', text: '#ea580c' },
+                        "E": { bg: 'rgba(239, 68, 68, 0.12)', text: '#dc2626' },
+                      };
+                      return gradeDistribution.map((g) => {
+                        const percentage = totalSubjects > 0 ? Math.round((g.count / totalSubjects) * 100) : 0;
+                        const colors = gradeCardColors[g.grade] || { bg: 'rgba(156, 163, 175, 0.12)', text: '#6b7280' };
+                        return (
+                          <div 
+                            key={g.grade}
+                            className="flex flex-col items-center text-center p-2 rounded-lg"
+                            style={{ backgroundColor: colors.bg }}
                           >
-                            {gradeDistribution.map((entry) => (
-                              <Cell key={entry.grade} fill={gradeChartColors[entry.grade] || pieColors[0]} />
-                            ))}
-                          </Pie>
-                          <Tooltip />
-                        </PieChart>
-                      </ResponsiveContainer>
-                    </div>
-                    <div className="flex flex-wrap gap-1 justify-center">
-                      {gradeDistribution.map((g) => (
-                        <Badge key={g.grade} variant="outline" className="text-[10px] px-1.5 py-0">
-                          <span className="w-2 h-2 rounded-full mr-1" style={{ backgroundColor: gradeChartColors[g.grade] || pieColors[0] }} />
-                          {g.grade}: {g.count}
-                        </Badge>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* Summary Stats */}
-                  <div className="space-y-2">
-                    <div 
-                      className="flex flex-col items-center text-center p-3 rounded-lg border"
-                      style={{ backgroundColor: 'rgba(59, 130, 246, 0.08)', borderColor: 'transparent' }}
-                    >
-                      <BookOpen className="h-5 w-5 mb-1" style={{ color: '#3b82f6' }} />
-                      <span className="text-lg font-bold text-foreground">{currentAverage}%</span>
-                      <span className="text-[10px] text-muted-foreground leading-tight">Current Average</span>
-                    </div>
-                    <div 
-                      className="flex flex-col items-center text-center p-3 rounded-lg border"
-                      style={{ 
-                        backgroundColor: currentAverage - (classAverages[selectedYear]?.[examType] ?? 0) >= 0 
-                          ? 'rgba(16, 185, 129, 0.08)' 
-                          : 'rgba(239, 68, 68, 0.08)', 
-                        borderColor: 'transparent' 
-                      }}
-                    >
-                      <TrendingUp 
-                        className="h-5 w-5 mb-1" 
-                        style={{ 
-                          color: currentAverage - (classAverages[selectedYear]?.[examType] ?? 0) >= 0 
-                            ? '#10b981' 
-                            : '#ef4444' 
-                        }} 
-                      />
-                      <span className="text-lg font-bold text-foreground">
-                        {currentAverage - (classAverages[selectedYear]?.[examType] ?? 0) >= 0 ? "+" : ""}
-                        {currentAverage - (classAverages[selectedYear]?.[examType] ?? 0)}%
-                      </span>
-                      <span className="text-[10px] text-muted-foreground leading-tight">vs Class Avg</span>
-                    </div>
+                            <span className="text-xs font-semibold" style={{ color: colors.text }}>{g.grade}</span>
+                            <span className="text-xl font-bold text-foreground">{g.count}</span>
+                            <span className="text-[10px] text-muted-foreground">{percentage}%</span>
+                          </div>
+                        );
+                      });
+                    })()}
                   </div>
                 </div>
               </TabsContent>
