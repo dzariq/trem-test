@@ -1299,38 +1299,47 @@ export default function TeacherAcademicPage() {
                       <button
                         onClick={() => setPerformanceDialogTab("top")}
                         className={cn(
-                          "flex-1 px-3 py-2 text-xs font-medium rounded-md transition-all flex items-center justify-center gap-1",
+                          "flex-1 px-3 py-2 text-xs font-medium rounded-md transition-all flex flex-col items-center justify-center gap-0.5",
                           performanceDialogTab === "top" 
                             ? "bg-amber-500 text-white shadow-sm" 
                             : "text-muted-foreground hover:text-foreground"
                         )}
                       >
-                        <Award className="h-3 w-3" />
-                        Top ({topPerformers.length})
+                        <div className="flex items-center gap-1">
+                          <Award className="h-3 w-3" />
+                          <span>Top</span>
+                        </div>
+                        <span className="text-[10px] opacity-90">({topPerformers.length})</span>
                       </button>
                       <button
                         onClick={() => setPerformanceDialogTab("middle")}
                         className={cn(
-                          "flex-1 px-3 py-2 text-xs font-medium rounded-md transition-all flex items-center justify-center gap-1",
+                          "flex-1 px-3 py-2 text-xs font-medium rounded-md transition-all flex flex-col items-center justify-center gap-0.5",
                           performanceDialogTab === "middle" 
                             ? "bg-blue-500 text-white shadow-sm" 
                             : "text-muted-foreground hover:text-foreground"
                         )}
                       >
-                        <UserCheck className="h-3 w-3" />
-                        Middle ({middlePerformers.length})
+                        <div className="flex items-center gap-1">
+                          <UserCheck className="h-3 w-3" />
+                          <span>Middle</span>
+                        </div>
+                        <span className="text-[10px] opacity-90">({middlePerformers.length})</span>
                       </button>
                       <button
                         onClick={() => setPerformanceDialogTab("atRisk")}
                         className={cn(
-                          "flex-1 px-3 py-2 text-xs font-medium rounded-md transition-all flex items-center justify-center gap-1",
+                          "flex-1 px-3 py-2 text-xs font-medium rounded-md transition-all flex flex-col items-center justify-center gap-0.5",
                           performanceDialogTab === "atRisk" 
                             ? "bg-red-500 text-white shadow-sm" 
                             : "text-muted-foreground hover:text-foreground"
                         )}
                       >
-                        <AlertTriangle className="h-3 w-3" />
-                        At-Risk ({atRiskStudents.length})
+                        <div className="flex items-center gap-1">
+                          <AlertTriangle className="h-3 w-3" />
+                          <span>At-Risk</span>
+                        </div>
+                        <span className="text-[10px] opacity-90">({atRiskStudents.length})</span>
                       </button>
                     </div>
 
