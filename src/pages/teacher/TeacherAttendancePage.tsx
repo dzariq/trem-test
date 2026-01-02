@@ -550,7 +550,7 @@ export default function TeacherAttendancePage() {
                     {/* Student List by Status */}
                     {selectedDayStats.students && selectedDayStats.students.length > 0 && (
                       <Tabs defaultValue="absent" className="w-full">
-                        <TabsList className="w-full grid grid-cols-4 h-9">
+                        <TabsList className="w-full grid grid-cols-4 h-9 bg-muted/50">
                           <TabsTrigger value="present" className="text-xs px-1">
                             <Check className="h-3 w-3 mr-1" />{studentsByStatus.present.length}
                           </TabsTrigger>
