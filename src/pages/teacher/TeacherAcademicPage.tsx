@@ -120,6 +120,7 @@ export default function TeacherAcademicPage() {
   const [studentGrades, setStudentGrades] = useState<Record<string, Record<string, StudentGrades>>>({});
   const [selectedYears, setSelectedYears] = useState<string[]>([academicYears[0]]);
   const [selectedPeriod, setSelectedPeriod] = useState<"midYear" | "yearEnd">("midYear");
+  const [selectedPeriods, setSelectedPeriods] = useState<string[]>(["midYear"]);
   const [selectedCategory, setSelectedCategory] = useState<"attitude" | "homework" | "quiz" | "exam">("quiz");
   
   // Comparison tab state
@@ -187,6 +188,14 @@ export default function TeacherAcademicPage() {
       prev.includes(cls) 
         ? prev.length > 1 ? prev.filter(c => c !== cls) : prev // Keep at least one selected
         : [...prev, cls]
+    );
+  };
+
+  const togglePeriod = (period: string) => {
+    setSelectedPeriods(prev => 
+      prev.includes(period) 
+        ? prev.length > 1 ? prev.filter(p => p !== period) : prev // Keep at least one selected
+        : [...prev, period]
     );
   };
 
@@ -769,16 +778,32 @@ export default function TeacherAcademicPage() {
                     </PopoverContent>
                   </Popover>
 
-                  <Select value={selectedPeriod} onValueChange={(v) => setSelectedPeriod(v as "midYear" | "yearEnd")}>
-                    <SelectTrigger className="text-xs flex-1">
-                      <SelectValue placeholder="Period" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {examPeriods.map((period) => (
-                        <SelectItem key={period.value} value={period.value}>{period.label}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button variant="outline" className="text-xs h-9 justify-between flex-1">
+                        {selectedPeriods.length === 1 
+                          ? examPeriods.find(p => p.value === selectedPeriods[0])?.label 
+                          : `${selectedPeriods.length} Periods`}
+                        <ChevronDown className="h-3 w-3 ml-1 opacity-50" />
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-40 p-2 bg-background z-50" align="start">
+                      <div className="space-y-2">
+                        {examPeriods.map((period) => (
+                          <label 
+                            key={period.value} 
+                            className="flex items-center gap-2 cursor-pointer hover:bg-accent/50 p-1 rounded"
+                          >
+                            <Checkbox 
+                              checked={selectedPeriods.includes(period.value)}
+                              onCheckedChange={() => togglePeriod(period.value)}
+                            />
+                            <span className="text-xs">{period.label}</span>
+                          </label>
+                        ))}
+                      </div>
+                    </PopoverContent>
+                  </Popover>
                 </div>
 
                 {/* Selected filters badge */}
@@ -793,9 +818,11 @@ export default function TeacherAcademicPage() {
                       {year}
                     </Badge>
                   ))}
-                  <Badge variant="outline" className="text-[10px] font-normal">
-                    {examPeriods.find(p => p.value === selectedPeriod)?.label}
-                  </Badge>
+                  {selectedPeriods.map(period => (
+                    <Badge key={period} variant="outline" className="text-[10px] font-normal">
+                      {examPeriods.find(p => p.value === period)?.label}
+                    </Badge>
+                  ))}
                 </div>
 
                 {/* Subject Performance Bar Chart */}
