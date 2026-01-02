@@ -1,13 +1,13 @@
 import { useState, useMemo, useRef, useCallback } from "react";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { AppHeader } from "@/components/layout/AppHeader";
-import { academicData, classAverages, students } from "@/data/mockData";
+import { academicData, classAverages, students, attendanceData } from "@/data/mockData";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Progress } from "@/components/ui/progress";
-import { Download, FileText, Award, Trophy, BookOpen, TrendingUp, TrendingDown, Check, ArrowUp, ArrowDown, Minus, BarChart3, GitCompare, Target, AlertTriangle, Star, Goal, CheckCircle2, Circle, Edit2, ChevronDown, MessageSquare } from "lucide-react";
+import { Download, FileText, Award, Trophy, BookOpen, TrendingUp, TrendingDown, Check, ArrowUp, ArrowDown, Minus, BarChart3, GitCompare, Target, AlertTriangle, Star, Goal, CheckCircle2, Circle, Edit2, ChevronDown, MessageSquare, Calendar } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import schoolLogo from "@/assets/school-badge.png";
 import {
@@ -256,7 +256,80 @@ export default function AcademicPage() {
     };
   }, [selectedYear, examType]);
 
-  // Rising stars - subjects with biggest improvement from previous exam
+  // Calculate attendance rate from all months
+  const attendanceStats = useMemo(() => {
+    const totalAttendance = attendanceData.monthly.reduce(
+      (acc, month) => ({
+        present: acc.present + month.present,
+        absent: acc.absent + month.absent,
+        late: acc.late + month.late,
+        excused: acc.excused + month.excused,
+      }),
+      { present: 0, absent: 0, late: 0, excused: 0 }
+    );
+    const totalDays = totalAttendance.present + totalAttendance.absent + totalAttendance.late + totalAttendance.excused;
+    const attendanceRate = totalDays > 0 ? Math.round((totalAttendance.present / totalDays) * 100) : 0;
+    return { attendanceRate };
+  }, []);
+
+  // Calculate subjects passing (score >= 50)
+  const passingStats = useMemo(() => {
+    const passingSubjects = academicData.subjects.filter(s => (getScore(s, selectedYear, examType) ?? 0) >= 50);
+    const passingCount = passingSubjects.length;
+    const totalSubjects = academicData.subjects.length;
+    const passingPercentage = Math.round((passingCount / totalSubjects) * 100);
+    return { passingCount, totalSubjects, passingPercentage };
+  }, [selectedYear, examType]);
+
+  // Find weakest subject
+  const weakestSubjectInfo = useMemo(() => {
+    const weakest = academicData.subjects.reduce((worst, s) => {
+      const currentScore = getScore(s, selectedYear, examType) ?? 100;
+      const worstScore = getScore(worst, selectedYear, examType) ?? 100;
+      return currentScore < worstScore ? s : worst;
+    });
+    const weakestScore = getScore(weakest, selectedYear, examType) ?? 0;
+    return { name: weakest.name, score: weakestScore };
+  }, [selectedYear, examType]);
+
+  // Best subject info
+  const bestSubjectInfo = useMemo(() => {
+    const best = academicData.subjects.reduce((bestSub, s) => {
+      const currentScore = getScore(s, selectedYear, examType) ?? 0;
+      const bestScore = getScore(bestSub, selectedYear, examType) ?? 0;
+      return currentScore > bestScore ? s : bestSub;
+    });
+    const bestScore = getScore(best, selectedYear, examType) ?? 0;
+    return { name: best.name, score: bestScore };
+  }, [selectedYear, examType]);
+
+  // Improvement from previous exam
+  const improvementStats = useMemo(() => {
+    let prevYear: YearKey = selectedYear;
+    let prevType: ExamType = examType;
+    
+    if (examType === "midYear") {
+      if (selectedYear === "2025") { prevYear = "2024"; prevType = "yearEnd"; }
+      else if (selectedYear === "2024") { prevYear = "2023"; prevType = "yearEnd"; }
+      else if (selectedYear === "2023") { prevYear = "2022"; prevType = "yearEnd"; }
+      else { return { points: 0, text: "N/A" }; }
+    } else {
+      prevType = "midYear";
+    }
+
+    const currentScores = academicData.subjects.map(s => getScore(s, selectedYear, examType)).filter(s => s !== null) as number[];
+    const prevScores = academicData.subjects.map(s => getScore(s, prevYear, prevType)).filter(s => s !== null) as number[];
+    
+    if (currentScores.length === 0 || prevScores.length === 0) return { points: 0, text: "N/A" };
+    
+    const currentAvg = Math.round(currentScores.reduce((a, b) => a + b, 0) / currentScores.length);
+    const prevAvg = Math.round(prevScores.reduce((a, b) => a + b, 0) / prevScores.length);
+    const points = currentAvg - prevAvg;
+    
+    return { points, text: points >= 0 ? `+${points}%` : `${points}%` };
+  }, [selectedYear, examType]);
+
+
   const risingStars = useMemo(() => {
     // Determine previous exam period
     let prevYear: YearKey = selectedYear;
@@ -918,6 +991,61 @@ export default function AcademicPage() {
                       </BarChart>
                     </ResponsiveContainer>
                   </div>
+                </div>
+
+                {/* Stats Cards Grid - 6 cards */}
+                <div className="grid grid-cols-3 gap-2">
+                  {[
+                    { 
+                      icon: BookOpen, 
+                      label: "Average", 
+                      value: `${currentAverage}%`,
+                      subtext: currentAverage >= 70 ? "Above Average" : currentAverage >= 50 ? "Average" : "Below Average",
+                      color: "text-chart-1" 
+                    },
+                    { 
+                      icon: Award, 
+                      label: "Best Subject", 
+                      value: shortenSubjectName(bestSubjectInfo.name),
+                      subtext: `${bestSubjectInfo.score}%`,
+                      color: "text-chart-2" 
+                    },
+                    { 
+                      icon: TrendingUp, 
+                      label: "Improvement", 
+                      value: improvementStats.text,
+                      subtext: improvementStats.points >= 0 ? "Improved" : "Declined",
+                      color: improvementStats.points >= 0 ? "text-chart-3" : "text-destructive" 
+                    },
+                    { 
+                      icon: Calendar, 
+                      label: "Attendance", 
+                      value: `${attendanceStats.attendanceRate}%`,
+                      subtext: "This Term",
+                      color: "text-chart-4" 
+                    },
+                    { 
+                      icon: Target, 
+                      label: "Passing", 
+                      value: `${passingStats.passingCount}/${passingStats.totalSubjects}`,
+                      subtext: `${passingStats.passingPercentage}%`,
+                      color: "text-chart-5" 
+                    },
+                    { 
+                      icon: AlertTriangle, 
+                      label: "Needs Focus", 
+                      value: shortenSubjectName(weakestSubjectInfo.name),
+                      subtext: `${weakestSubjectInfo.score}%`,
+                      color: "text-destructive" 
+                    },
+                  ].map((stat, index) => (
+                    <div key={index} className="flex flex-col items-center p-3 rounded-xl bg-accent/30 border border-border/50">
+                      <stat.icon className={`h-5 w-5 ${stat.color} mb-1`} />
+                      <span className={`text-lg font-bold ${stat.color}`}>{stat.value}</span>
+                      <span className="text-[10px] text-muted-foreground">{stat.label}</span>
+                      <span className="text-[9px] text-muted-foreground/70">{stat.subtext}</span>
+                    </div>
+                  ))}
                 </div>
 
                 {/* Top 3 Performers & Bottom 3 to Focus */}
