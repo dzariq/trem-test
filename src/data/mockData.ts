@@ -252,7 +252,8 @@ export const academicData = {
     { category: "Punctuality", grade: "A", description: "Consistently on time" },
     { category: "Participation", grade: "A", description: "Actively participates in class" },
     { category: "Teamwork", grade: "B", description: "Works well with peers" },
-    { category: "Discipline", grade: "A", description: "Follows school rules" }
+    { category: "Discipline", grade: "A", description: "Follows school rules" },
+    { category: "Homework", grade: "C", description: "Frequently late submissions" }
   ],
   coCurriculum: [
     { activity: "Basketball Team", achievement: "1st Place - Inter-School Tournament" },
