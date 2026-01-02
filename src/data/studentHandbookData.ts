@@ -130,19 +130,29 @@ export const studentHandbookData: StudentHandbookData = {
       lightBg: "bg-amber-50",
       subsections: [
         {
-          subtitle: "Individual & Personal Belongings",
+          subtitle: "Required Materials",
           points: [
             "Bring necessary stationery, textbooks, and workbooks to lessons.",
-            "Primary students should not bring mechanical pencils; they are not allowed in Cambridge exams.",
+            "Primary students should not bring mechanical pencils; they are not allowed in Cambridge exams."
+          ]
+        },
+        {
+          subtitle: "Prohibited Items",
+          points: [
             "Do not bring paper knives, craft knives, or scissors.",
             "Do not bring valuables or excessive money; school is not liable for loss or damage.",
             "Do not eat in class unless medically certified.",
             "No chewing gum or lollipops in school.",
+            "Card games and board games are prohibited unless approved via appeal."
+          ]
+        },
+        {
+          subtitle: "Electronic Devices",
+          points: [
             "Smartwatches are not allowed.",
             "Mobile phones and digital gadgets are discouraged; if brought, declare and surrender to homeroom teacher.",
             "Use of electronic devices is only for education or emergencies with teacher consent.",
-            "Unauthorized device use can lead to confiscation and disciplinary action.",
-            "Card games and board games are prohibited unless approved via appeal."
+            "Unauthorized device use can lead to confiscation and disciplinary action."
           ]
         }
       ]
@@ -154,18 +164,28 @@ export const studentHandbookData: StudentHandbookData = {
       lightBg: "bg-rose-50",
       subsections: [
         {
-          subtitle: "School Hours & Attendance",
+          subtitle: "Arrival & Punctuality",
           points: [
             "Stay within school compound during school hours unless written permission is granted.",
             "Be in school by 7:30am for homeroom.",
-            "Tardy 3 or more times in a month triggers a call to home.",
+            "Tardy 3 or more times in a month triggers a call to home."
+          ]
+        },
+        {
+          subtitle: "Absence Reporting",
+          points: [
             "If absent, parents must send an explanatory note to administrators.",
             "If unwell, stay at home; submit medical certificate within 3 days when possible.",
+            "Contagious illnesses require quarantine compliance and a fitness certificate before returning."
+          ]
+        },
+        {
+          subtitle: "Absence Consequences",
+          points: [
             "Continuous absence for 3 days or recurring absenteeism may require parent meeting with principal/deputy.",
             "No communication for 5 continuous days: school sends a memo on the 6th school day.",
             "No response within 7 days after memo can lead to suspension.",
-            "Unexcused absences over 20% of a term or serious attendance misconduct can lead to suspension or expulsion.",
-            "Contagious illnesses require quarantine compliance and a fitness certificate before returning."
+            "Unexcused absences over 20% of a term or serious attendance misconduct can lead to suspension or expulsion."
           ]
         }
       ]
@@ -177,14 +197,24 @@ export const studentHandbookData: StudentHandbookData = {
       lightBg: "bg-teal-50",
       subsections: [
         {
-          subtitle: "School Attire & Appearance",
+          subtitle: "Uniform Requirements",
           points: [
             "Wear designated uniform with name tag, black socks, and black shoes.",
             "Uniform is required Monday to Friday, except specified days; CCA days use Collinz sports attire.",
             "School sweaters may be worn in class if cold.",
-            "Sports attire is only for PE/CCA/extra-curricular activities.",
+            "Sports attire is only for PE/CCA/extra-curricular activities."
+          ]
+        },
+        {
+          subtitle: "Prohibited Attire",
+          points: [
             "Prohibited attire includes revealing clothing, very short skirts/shorts, singlets, sleeveless tops, leggings, cosmetics, high heels, caps/hats, and offensive wording.",
-            "Overly loose or extremely tight clothing is not allowed.",
+            "Overly loose or extremely tight clothing is not allowed."
+          ]
+        },
+        {
+          subtitle: "Hair & Accessories",
+          points: [
             "Hair dye is not allowed; only natural hair colour.",
             "If hair is longer than shoulder length, tie it up with approved colours.",
             "Piercing rules apply (simple stud earrings only; limited piercings)."
@@ -230,14 +260,24 @@ export const studentHandbookData: StudentHandbookData = {
       lightBg: "bg-orange-50",
       subsections: [
         {
-          subtitle: "Meals",
+          subtitle: "Meal Subscription",
           points: [
             "Snack and lunch can be subscribed (optional) with extra charge.",
-            "Home-cooked meals require students to bring their own cutlery and crockery.",
-            "Meal drop-off is done with the security guard at the designated block.",
+            "Home-cooked meals require students to bring their own cutlery and crockery."
+          ]
+        },
+        {
+          subtitle: "Food Restrictions",
+          points: [
             "Food brought in must be free of pork and beef.",
             "No ordering food via online delivery services.",
-            "Students cannot leave school to buy food during school hours or dismissal time.",
+            "Students cannot leave school to buy food during school hours or dismissal time."
+          ]
+        },
+        {
+          subtitle: "Food Drop-off & Water",
+          points: [
+            "Meal drop-off is done with the security guard at the designated block.",
             "External food delivery must be clearly labelled for identification.",
             "Water dispenser refills are only during break or lunch."
           ]
@@ -251,23 +291,38 @@ export const studentHandbookData: StudentHandbookData = {
       lightBg: "bg-cyan-50",
       subsections: [
         {
-          subtitle: "During Exams",
+          subtitle: "Attendance & Timing",
           points: [
             "All school rules apply during exam periods.",
             "Full school uniform is compulsory for all exams.",
             "Arrive at least 10 minutes before the exam starts.",
             "Arriving 10 minutes after the exam starts without valid reason means you may not sit for the exam.",
             "No extra time is given to latecomers.",
-            "Stay in the exam room for the full session.",
+            "Stay in the exam room for the full session."
+          ]
+        },
+        {
+          subtitle: "Absence & Rescheduling",
+          points: [
             "Medical absence must be informed before exam date; reschedule needs medical certificate.",
             "If absent without valid reason, a replacement exam may be allowed but result is not recorded; report shows 'ABS'.",
+            "Request special access arrangements at least 5 working days before exam with supporting documents."
+          ]
+        },
+        {
+          subtitle: "Allowed & Prohibited Items",
+          points: [
             "Year 1–4 may write with pencil; Year 5–11 use dark blue/black pen (pencil only for diagrams).",
-            "Request special access arrangements at least 5 working days before exam with supporting documents.",
             "No food/drinks in exam room unless medically supported.",
             "Bring required stationery (e.g., calculator, geometry set).",
             "Surrender phones/tablets/smart watches/communication devices before entering.",
             "Only transparent pencil case and transparent water tumbler are allowed; no calculator cases.",
-            "No books, notes, files, folders in the exam room.",
+            "No books, notes, files, folders in the exam room."
+          ]
+        },
+        {
+          subtitle: "Exam Conduct",
+          points: [
             "No toilet for exams under 2 hours unless emergency.",
             "No disruptive behaviour; invigilators can penalize."
           ]
