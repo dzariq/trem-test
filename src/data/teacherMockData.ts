@@ -66,7 +66,7 @@ export const classAttendanceRecords: Record<string, Record<string, Record<string
 // Teacher Attendance Statistics Data
 export const teacherAttendanceStats: Record<string, {
   monthly: { month: string; present: number; absent: number; late: number; excused: number }[];
-  dailyBreakdown: { date: string; status: "present" | "absent" | "late" | "excused"; studentName: string; reason?: string }[];
+  dailyBreakdown: { date: string; present: number; absent: number; late: number; excused: number }[];
 }> = {
   "5A": {
     monthly: [
@@ -78,21 +78,16 @@ export const teacherAttendanceStats: Record<string, {
       { month: "Jan", present: 58, absent: 4, late: 3, excused: 2 },
     ],
     dailyBreakdown: [
-      { date: "2026-01-02", status: "present", studentName: "Emma Johnson" },
-      { date: "2026-01-02", status: "absent", studentName: "Liam Smith", reason: "Sick leave" },
-      { date: "2026-01-02", status: "late", studentName: "Ava Wilson", reason: "Traffic" },
-      { date: "2026-01-01", status: "present", studentName: "Emma Johnson" },
-      { date: "2026-01-01", status: "absent", studentName: "Olivia Brown", reason: "Medical appointment" },
-      { date: "2026-01-01", status: "excused", studentName: "Benjamin Martinez", reason: "Family event" },
-      { date: "2025-12-20", status: "present", studentName: "Sophia Anderson" },
-      { date: "2025-12-20", status: "late", studentName: "Lucas Taylor", reason: "Bus delay" },
-      { date: "2025-12-19", status: "present", studentName: "James Miller" },
-      { date: "2025-12-19", status: "absent", studentName: "Noah Davis", reason: "Fever" },
-      { date: "2025-12-18", status: "excused", studentName: "Isabella Garcia", reason: "Competition" },
-      { date: "2025-12-18", status: "present", studentName: "Emma Johnson" },
-      { date: "2025-12-17", status: "late", studentName: "Liam Smith", reason: "Overslept" },
-      { date: "2025-12-17", status: "present", studentName: "Ava Wilson" },
-      { date: "2025-12-16", status: "absent", studentName: "Sophia Anderson", reason: "Sick" },
+      { date: "2026-01-02", present: 18, absent: 2, late: 1, excused: 1 },
+      { date: "2026-01-01", present: 19, absent: 1, late: 1, excused: 1 },
+      { date: "2025-12-20", present: 20, absent: 0, late: 2, excused: 0 },
+      { date: "2025-12-19", present: 17, absent: 3, late: 1, excused: 1 },
+      { date: "2025-12-18", present: 19, absent: 1, late: 0, excused: 2 },
+      { date: "2025-12-17", present: 18, absent: 2, late: 2, excused: 0 },
+      { date: "2025-12-16", present: 16, absent: 4, late: 1, excused: 1 },
+      { date: "2025-12-13", present: 21, absent: 0, late: 1, excused: 0 },
+      { date: "2025-12-12", present: 19, absent: 2, late: 0, excused: 1 },
+      { date: "2025-12-11", present: 18, absent: 1, late: 2, excused: 1 },
     ],
   },
   "5B": {
@@ -105,14 +100,14 @@ export const teacherAttendanceStats: Record<string, {
       { month: "Jan", present: 62, absent: 3, late: 2, excused: 1 },
     ],
     dailyBreakdown: [
-      { date: "2026-01-02", status: "present", studentName: "Mia Thomas" },
-      { date: "2026-01-02", status: "late", studentName: "Ethan Jackson", reason: "Traffic jam" },
-      { date: "2026-01-01", status: "absent", studentName: "Charlotte White", reason: "Doctor visit" },
-      { date: "2026-01-01", status: "present", studentName: "Alexander Harris" },
-      { date: "2025-12-20", status: "excused", studentName: "Amelia Martin", reason: "School event" },
-      { date: "2025-12-19", status: "present", studentName: "Daniel Thompson" },
-      { date: "2025-12-18", status: "late", studentName: "Harper Robinson", reason: "Late pickup" },
-      { date: "2025-12-17", status: "absent", studentName: "Matthew Clark", reason: "Flu" },
+      { date: "2026-01-02", present: 20, absent: 1, late: 1, excused: 0 },
+      { date: "2026-01-01", present: 19, absent: 2, late: 0, excused: 1 },
+      { date: "2025-12-20", present: 21, absent: 0, late: 1, excused: 0 },
+      { date: "2025-12-19", present: 18, absent: 2, late: 1, excused: 1 },
+      { date: "2025-12-18", present: 20, absent: 0, late: 2, excused: 0 },
+      { date: "2025-12-17", present: 17, absent: 3, late: 1, excused: 1 },
+      { date: "2025-12-16", present: 19, absent: 1, late: 1, excused: 1 },
+      { date: "2025-12-13", present: 22, absent: 0, late: 0, excused: 0 },
     ],
   },
   "4A": {
@@ -125,13 +120,12 @@ export const teacherAttendanceStats: Record<string, {
       { month: "Jan", present: 48, absent: 2, late: 2, excused: 0 },
     ],
     dailyBreakdown: [
-      { date: "2026-01-02", status: "present", studentName: "Abigail Walker" },
-      { date: "2026-01-02", status: "present", studentName: "Sebastian Hall" },
-      { date: "2026-01-01", status: "late", studentName: "Emily Young", reason: "Car trouble" },
-      { date: "2026-01-01", status: "present", studentName: "Jack Allen" },
-      { date: "2025-12-20", status: "absent", studentName: "Elizabeth King", reason: "Cold" },
-      { date: "2025-12-19", status: "present", studentName: "Henry Wright" },
-      { date: "2025-12-18", status: "excused", studentName: "Sofia Scott", reason: "Family trip" },
+      { date: "2026-01-02", present: 16, absent: 0, late: 2, excused: 0 },
+      { date: "2026-01-01", present: 15, absent: 1, late: 1, excused: 1 },
+      { date: "2025-12-20", present: 17, absent: 1, late: 0, excused: 0 },
+      { date: "2025-12-19", present: 16, absent: 0, late: 1, excused: 1 },
+      { date: "2025-12-18", present: 14, absent: 2, late: 1, excused: 1 },
+      { date: "2025-12-17", present: 15, absent: 1, late: 2, excused: 0 },
     ],
   },
 };
