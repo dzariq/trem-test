@@ -945,31 +945,33 @@ export default function AcademicPage() {
               {/* TRENDS TAB */}
               <TabsContent value="trends" className="space-y-4">
                 {/* Current Score Header - Moomoo Style */}
-                <div className="flex items-center justify-between p-4 rounded-xl bg-gradient-to-r from-accent/50 to-accent/30 border border-border/50">
-                  <div>
-                    <p className="text-xs text-muted-foreground mb-0.5">
-                      {subjectFilter === "all" ? "Overall Average" : subjectFilter}
-                    </p>
-                    <div className="flex items-baseline gap-2">
-                      <span className="text-3xl font-bold text-foreground">
-                        {trendDirection.currentValue ?? currentAverage}%
-                      </span>
-                      {trendDirection.direction !== "stable" && (
-                        <span className={`flex items-center text-sm font-semibold ${
-                          trendDirection.direction === "up" ? "text-green-500" : "text-red-500"
-                        }`}>
-                          {trendDirection.direction === "up" ? (
-                            <TrendingUp className="h-4 w-4 mr-0.5" />
-                          ) : (
-                            <TrendingDown className="h-4 w-4 mr-0.5" />
-                          )}
-                          {trendDirection.direction === "up" ? "+" : "-"}{trendDirection.change}%
+                <div className="p-4 rounded-xl bg-gradient-to-r from-accent/50 to-accent/30 border border-border/50 space-y-3">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0 flex-1">
+                      <p className="text-xs text-muted-foreground mb-0.5 truncate">
+                        {subjectFilter === "all" ? "Overall Average" : subjectFilter}
+                      </p>
+                      <div className="flex items-baseline gap-2 flex-wrap">
+                        <span className="text-3xl font-bold text-foreground">
+                          {trendDirection.currentValue ?? currentAverage}%
                         </span>
-                      )}
+                        {trendDirection.direction !== "stable" && (
+                          <span className={`flex items-center text-sm font-semibold ${
+                            trendDirection.direction === "up" ? "text-green-500" : "text-red-500"
+                          }`}>
+                            {trendDirection.direction === "up" ? (
+                              <TrendingUp className="h-4 w-4 mr-0.5" />
+                            ) : (
+                              <TrendingDown className="h-4 w-4 mr-0.5" />
+                            )}
+                            {trendDirection.direction === "up" ? "+" : "-"}{trendDirection.change}%
+                          </span>
+                        )}
+                      </div>
                     </div>
                   </div>
                   {/* Period Toggle */}
-                  <div className="flex gap-1 bg-muted/50 p-1 rounded-lg">
+                  <div className="flex gap-1 bg-muted/50 p-1 rounded-lg w-fit">
                     {([
                       { key: "1year", label: "1Y" },
                       { key: "2years", label: "2Y" },
@@ -979,7 +981,7 @@ export default function AcademicPage() {
                       <button
                         key={key}
                         onClick={() => setTrendPeriod(key)}
-                        className={`px-2.5 py-1.5 text-xs font-medium rounded-md transition-all ${
+                        className={`px-3 py-1.5 text-xs font-medium rounded-md transition-all whitespace-nowrap ${
                           trendPeriod === key
                             ? "bg-primary text-primary-foreground shadow-sm"
                             : "text-muted-foreground hover:text-foreground"
