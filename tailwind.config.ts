@@ -136,6 +136,20 @@ export default {
   				'Liberation Mono',
   				'Courier New',
   				'monospace'
+  			],
+  			'certificate-title': [
+  				'Playfair Display',
+  				'Georgia',
+  				'serif'
+  			],
+  			'certificate-script': [
+  				'Great Vibes',
+  				'cursive'
+  			],
+  			'certificate-body': [
+  				'Cormorant Garamond',
+  				'Georgia',
+  				'serif'
   			]
   		}
   	}
