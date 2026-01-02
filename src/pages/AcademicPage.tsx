@@ -869,173 +869,186 @@ export default function AcademicPage() {
                 )}
               </TabsContent>
 
-              <TabsContent value="cocurriculum" className="mt-4 space-y-4">
-                {/* Awards Section */}
+              <TabsContent value="cocurriculum" className="mt-4 space-y-3">
+                {/* Awards displayed as trophy-style cards with category tags */}
                 {academicData.awards && (
-                  <div className="space-y-3">
+                  <>
                     {/* Sports House */}
                     {academicData.awards.sportsHouse.organization !== "None" && academicData.awards.sportsHouse.organization && (
-                      <Card className="bg-amber-50 border-amber-200 overflow-hidden">
-                        <CardHeader className="p-3 pb-2" style={{ background: 'linear-gradient(135deg, #fef3c7 0%, #fcd34d 50%, #f59e0b 100%)' }}>
-                          <CardTitle className="text-sm font-semibold text-amber-800">Sports House</CardTitle>
-                        </CardHeader>
-                        <CardContent className="p-3">
-                          <div className="grid grid-cols-2 gap-3">
-                            <div>
-                              <p className="text-xs text-amber-700 font-medium mb-1">Organization</p>
-                              <Badge className="bg-amber-100 text-amber-800 border-amber-300">{academicData.awards.sportsHouse.organization}</Badge>
-                            </div>
-                            <div>
-                              <p className="text-xs text-amber-700 font-medium mb-1">Role</p>
-                              <Badge className="bg-amber-100 text-amber-800 border-amber-300">{academicData.awards.sportsHouse.role}</Badge>
-                            </div>
+                      <div 
+                        className="relative p-4 rounded-xl border overflow-hidden"
+                        style={{ 
+                          background: 'linear-gradient(145deg, #fef3c7 0%, #fde68a 25%, #fbbf24 60%, #f59e0b 100%)', 
+                          borderColor: 'rgba(217, 119, 6, 0.4)',
+                          boxShadow: '0 2px 8px rgba(217, 119, 6, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.4)'
+                        }}
+                      >
+                        <div className="absolute inset-0 pointer-events-none" style={{ background: 'radial-gradient(ellipse at 20% 10%, rgba(255, 255, 255, 0.35) 0%, transparent 35%)' }} />
+                        <div className="absolute -top-1 right-2 opacity-[0.15] pointer-events-none rotate-[-8deg]">
+                          <Trophy className="h-14 w-14 text-amber-700" strokeWidth={1} />
+                        </div>
+                        <div className="absolute -bottom-2 right-16 opacity-[0.12] pointer-events-none rotate-[10deg]">
+                          <Trophy className="h-11 w-11 text-amber-700" strokeWidth={1} />
+                        </div>
+                        <div className="relative flex items-start gap-3 pr-14">
+                          <div className="p-2.5 rounded-full flex-shrink-0 shadow-sm" style={{ backgroundColor: 'rgba(251, 191, 36, 0.25)', border: '1px solid rgba(251, 191, 36, 0.3)' }}>
+                            <Trophy className="h-5 w-5" style={{ color: '#b45309' }} />
                           </div>
-                        </CardContent>
-                      </Card>
+                          <div>
+                            <div className="flex items-center gap-2 mb-1">
+                              <span className="text-[10px] font-semibold uppercase px-2 py-0.5 rounded-full" style={{ backgroundColor: 'rgba(120, 53, 15, 0.15)', color: '#78350f' }}>Sports House</span>
+                            </div>
+                            <h3 className="font-semibold" style={{ color: '#78350f' }}>{academicData.awards.sportsHouse.organization}</h3>
+                            <p className="text-sm flex items-center gap-1.5 mt-1" style={{ color: '#92400e' }}>
+                              <Award className="h-3.5 w-3.5" />
+                              {academicData.awards.sportsHouse.role}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
                     )}
 
                     {/* Club */}
                     {academicData.awards.club.organization !== "None" && academicData.awards.club.organization && (
-                      <Card className="bg-amber-50 border-amber-200 overflow-hidden">
-                        <CardHeader className="p-3 pb-2" style={{ background: 'linear-gradient(135deg, #fef3c7 0%, #fcd34d 50%, #f59e0b 100%)' }}>
-                          <CardTitle className="text-sm font-semibold text-amber-800">Club</CardTitle>
-                        </CardHeader>
-                        <CardContent className="p-3">
-                          <div className="grid grid-cols-2 gap-3">
-                            <div>
-                              <p className="text-xs text-amber-700 font-medium mb-1">Organization</p>
-                              <Badge className="bg-amber-100 text-amber-800 border-amber-300">{academicData.awards.club.organization}</Badge>
-                            </div>
-                            <div>
-                              <p className="text-xs text-amber-700 font-medium mb-1">Role</p>
-                              <Badge className="bg-amber-100 text-amber-800 border-amber-300">{academicData.awards.club.role}</Badge>
-                            </div>
+                      <div 
+                        className="relative p-4 rounded-xl border overflow-hidden"
+                        style={{ 
+                          background: 'linear-gradient(145deg, #fef3c7 0%, #fde68a 25%, #fbbf24 60%, #f59e0b 100%)', 
+                          borderColor: 'rgba(217, 119, 6, 0.4)',
+                          boxShadow: '0 2px 8px rgba(217, 119, 6, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.4)'
+                        }}
+                      >
+                        <div className="absolute inset-0 pointer-events-none" style={{ background: 'radial-gradient(ellipse at 20% 10%, rgba(255, 255, 255, 0.35) 0%, transparent 35%)' }} />
+                        <div className="absolute -top-1 right-2 opacity-[0.15] pointer-events-none rotate-[-8deg]">
+                          <Trophy className="h-14 w-14 text-amber-700" strokeWidth={1} />
+                        </div>
+                        <div className="absolute -bottom-2 right-16 opacity-[0.12] pointer-events-none rotate-[10deg]">
+                          <Trophy className="h-11 w-11 text-amber-700" strokeWidth={1} />
+                        </div>
+                        <div className="relative flex items-start gap-3 pr-14">
+                          <div className="p-2.5 rounded-full flex-shrink-0 shadow-sm" style={{ backgroundColor: 'rgba(251, 191, 36, 0.25)', border: '1px solid rgba(251, 191, 36, 0.3)' }}>
+                            <Trophy className="h-5 w-5" style={{ color: '#b45309' }} />
                           </div>
-                        </CardContent>
-                      </Card>
+                          <div>
+                            <div className="flex items-center gap-2 mb-1">
+                              <span className="text-[10px] font-semibold uppercase px-2 py-0.5 rounded-full" style={{ backgroundColor: 'rgba(120, 53, 15, 0.15)', color: '#78350f' }}>Club</span>
+                            </div>
+                            <h3 className="font-semibold" style={{ color: '#78350f' }}>{academicData.awards.club.organization}</h3>
+                            <p className="text-sm flex items-center gap-1.5 mt-1" style={{ color: '#92400e' }}>
+                              <Award className="h-3.5 w-3.5" />
+                              {academicData.awards.club.role}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
                     )}
 
                     {/* Student Leadership */}
                     {academicData.awards.studentLeadership.organization !== "None" && academicData.awards.studentLeadership.organization && (
-                      <Card className="bg-amber-50 border-amber-200 overflow-hidden">
-                        <CardHeader className="p-3 pb-2" style={{ background: 'linear-gradient(135deg, #fef3c7 0%, #fcd34d 50%, #f59e0b 100%)' }}>
-                          <CardTitle className="text-sm font-semibold text-amber-800">Student Leadership</CardTitle>
-                        </CardHeader>
-                        <CardContent className="p-3">
-                          <div className="grid grid-cols-2 gap-3">
-                            <div>
-                              <p className="text-xs text-amber-700 font-medium mb-1">Organization</p>
-                              <Badge className="bg-amber-100 text-amber-800 border-amber-300">{academicData.awards.studentLeadership.organization}</Badge>
-                            </div>
-                            <div>
-                              <p className="text-xs text-amber-700 font-medium mb-1">Role</p>
-                              <Badge className="bg-amber-100 text-amber-800 border-amber-300">{academicData.awards.studentLeadership.role}</Badge>
-                            </div>
+                      <div 
+                        className="relative p-4 rounded-xl border overflow-hidden"
+                        style={{ 
+                          background: 'linear-gradient(145deg, #fef3c7 0%, #fde68a 25%, #fbbf24 60%, #f59e0b 100%)', 
+                          borderColor: 'rgba(217, 119, 6, 0.4)',
+                          boxShadow: '0 2px 8px rgba(217, 119, 6, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.4)'
+                        }}
+                      >
+                        <div className="absolute inset-0 pointer-events-none" style={{ background: 'radial-gradient(ellipse at 20% 10%, rgba(255, 255, 255, 0.35) 0%, transparent 35%)' }} />
+                        <div className="absolute -top-1 right-2 opacity-[0.15] pointer-events-none rotate-[-8deg]">
+                          <Trophy className="h-14 w-14 text-amber-700" strokeWidth={1} />
+                        </div>
+                        <div className="absolute -bottom-2 right-16 opacity-[0.12] pointer-events-none rotate-[10deg]">
+                          <Trophy className="h-11 w-11 text-amber-700" strokeWidth={1} />
+                        </div>
+                        <div className="relative flex items-start gap-3 pr-14">
+                          <div className="p-2.5 rounded-full flex-shrink-0 shadow-sm" style={{ backgroundColor: 'rgba(251, 191, 36, 0.25)', border: '1px solid rgba(251, 191, 36, 0.3)' }}>
+                            <Trophy className="h-5 w-5" style={{ color: '#b45309' }} />
                           </div>
-                        </CardContent>
-                      </Card>
+                          <div>
+                            <div className="flex items-center gap-2 mb-1">
+                              <span className="text-[10px] font-semibold uppercase px-2 py-0.5 rounded-full" style={{ backgroundColor: 'rgba(120, 53, 15, 0.15)', color: '#78350f' }}>Leadership</span>
+                            </div>
+                            <h3 className="font-semibold" style={{ color: '#78350f' }}>{academicData.awards.studentLeadership.organization}</h3>
+                            <p className="text-sm flex items-center gap-1.5 mt-1" style={{ color: '#92400e' }}>
+                              <Award className="h-3.5 w-3.5" />
+                              {academicData.awards.studentLeadership.role}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
                     )}
 
                     {/* Events */}
                     {academicData.awards.events.organization !== "None" && academicData.awards.events.organization && (
-                      <Card className="bg-amber-50 border-amber-200 overflow-hidden">
-                        <CardHeader className="p-3 pb-2" style={{ background: 'linear-gradient(135deg, #fef3c7 0%, #fcd34d 50%, #f59e0b 100%)' }}>
-                          <CardTitle className="text-sm font-semibold text-amber-800">Events</CardTitle>
-                        </CardHeader>
-                        <CardContent className="p-3">
-                          <div className="grid grid-cols-2 gap-3">
-                            <div>
-                              <p className="text-xs text-amber-700 font-medium mb-1">Organization</p>
-                              <Badge className="bg-amber-100 text-amber-800 border-amber-300">{academicData.awards.events.organization}</Badge>
-                            </div>
-                            <div>
-                              <p className="text-xs text-amber-700 font-medium mb-1">Role</p>
-                              <Badge className="bg-amber-100 text-amber-800 border-amber-300">{academicData.awards.events.role}</Badge>
-                            </div>
+                      <div 
+                        className="relative p-4 rounded-xl border overflow-hidden"
+                        style={{ 
+                          background: 'linear-gradient(145deg, #fef3c7 0%, #fde68a 25%, #fbbf24 60%, #f59e0b 100%)', 
+                          borderColor: 'rgba(217, 119, 6, 0.4)',
+                          boxShadow: '0 2px 8px rgba(217, 119, 6, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.4)'
+                        }}
+                      >
+                        <div className="absolute inset-0 pointer-events-none" style={{ background: 'radial-gradient(ellipse at 20% 10%, rgba(255, 255, 255, 0.35) 0%, transparent 35%)' }} />
+                        <div className="absolute -top-1 right-2 opacity-[0.15] pointer-events-none rotate-[-8deg]">
+                          <Trophy className="h-14 w-14 text-amber-700" strokeWidth={1} />
+                        </div>
+                        <div className="absolute -bottom-2 right-16 opacity-[0.12] pointer-events-none rotate-[10deg]">
+                          <Trophy className="h-11 w-11 text-amber-700" strokeWidth={1} />
+                        </div>
+                        <div className="relative flex items-start gap-3 pr-14">
+                          <div className="p-2.5 rounded-full flex-shrink-0 shadow-sm" style={{ backgroundColor: 'rgba(251, 191, 36, 0.25)', border: '1px solid rgba(251, 191, 36, 0.3)' }}>
+                            <Trophy className="h-5 w-5" style={{ color: '#b45309' }} />
                           </div>
-                        </CardContent>
-                      </Card>
+                          <div>
+                            <div className="flex items-center gap-2 mb-1">
+                              <span className="text-[10px] font-semibold uppercase px-2 py-0.5 rounded-full" style={{ backgroundColor: 'rgba(120, 53, 15, 0.15)', color: '#78350f' }}>Events</span>
+                            </div>
+                            <h3 className="font-semibold" style={{ color: '#78350f' }}>{academicData.awards.events.organization}</h3>
+                            <p className="text-sm flex items-center gap-1.5 mt-1" style={{ color: '#92400e' }}>
+                              <Award className="h-3.5 w-3.5" />
+                              {academicData.awards.events.role}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
                     )}
 
                     {/* Achievements */}
                     {academicData.awards.achievements.event !== "None" && academicData.awards.achievements.event && (
-                      <Card className="bg-amber-50 border-amber-200 overflow-hidden">
-                        <CardHeader className="p-3 pb-2" style={{ background: 'linear-gradient(135deg, #fef3c7 0%, #fcd34d 50%, #f59e0b 100%)' }}>
-                          <CardTitle className="text-sm font-semibold text-amber-800">Achievements</CardTitle>
-                        </CardHeader>
-                        <CardContent className="p-3">
-                          <div className="grid grid-cols-2 gap-3">
-                            <div>
-                              <p className="text-xs text-amber-700 font-medium mb-1">Event</p>
-                              <Badge className="bg-amber-100 text-amber-800 border-amber-300">{academicData.awards.achievements.event}</Badge>
-                            </div>
-                            <div>
-                              <p className="text-xs text-amber-700 font-medium mb-1">Award</p>
-                              <Badge className="bg-amber-100 text-amber-800 border-amber-300">{academicData.awards.achievements.award}</Badge>
-                            </div>
+                      <div 
+                        className="relative p-4 rounded-xl border overflow-hidden"
+                        style={{ 
+                          background: 'linear-gradient(145deg, #fef3c7 0%, #fde68a 25%, #fbbf24 60%, #f59e0b 100%)', 
+                          borderColor: 'rgba(217, 119, 6, 0.4)',
+                          boxShadow: '0 2px 8px rgba(217, 119, 6, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.4)'
+                        }}
+                      >
+                        <div className="absolute inset-0 pointer-events-none" style={{ background: 'radial-gradient(ellipse at 20% 10%, rgba(255, 255, 255, 0.35) 0%, transparent 35%)' }} />
+                        <div className="absolute -top-1 right-2 opacity-[0.15] pointer-events-none rotate-[-8deg]">
+                          <Trophy className="h-14 w-14 text-amber-700" strokeWidth={1} />
+                        </div>
+                        <div className="absolute -bottom-2 right-16 opacity-[0.12] pointer-events-none rotate-[10deg]">
+                          <Trophy className="h-11 w-11 text-amber-700" strokeWidth={1} />
+                        </div>
+                        <div className="relative flex items-start gap-3 pr-14">
+                          <div className="p-2.5 rounded-full flex-shrink-0 shadow-sm" style={{ backgroundColor: 'rgba(251, 191, 36, 0.25)', border: '1px solid rgba(251, 191, 36, 0.3)' }}>
+                            <Trophy className="h-5 w-5" style={{ color: '#b45309' }} />
                           </div>
-                        </CardContent>
-                      </Card>
+                          <div>
+                            <div className="flex items-center gap-2 mb-1">
+                              <span className="text-[10px] font-semibold uppercase px-2 py-0.5 rounded-full" style={{ backgroundColor: 'rgba(120, 53, 15, 0.15)', color: '#78350f' }}>Achievement</span>
+                            </div>
+                            <h3 className="font-semibold" style={{ color: '#78350f' }}>{academicData.awards.achievements.event}</h3>
+                            <p className="text-sm flex items-center gap-1.5 mt-1" style={{ color: '#92400e' }}>
+                              <Award className="h-3.5 w-3.5" />
+                              {academicData.awards.achievements.award}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
                     )}
-                  </div>
+                  </>
                 )}
-
-                {/* Co-Curriculum Activities - Trophy Cards */}
-                <div className="space-y-3">
-                  <h4 className="text-sm font-medium text-foreground">Activities & Achievements</h4>
-                  {academicData.coCurriculum.map((item, index) => (
-                    <div 
-                      key={index} 
-                      className="relative p-4 rounded-xl border overflow-hidden"
-                      style={{ 
-                        background: 'linear-gradient(145deg, #fef3c7 0%, #fde68a 25%, #fbbf24 60%, #f59e0b 100%)', 
-                        borderColor: 'rgba(217, 119, 6, 0.4)',
-                        boxShadow: '0 2px 8px rgba(217, 119, 6, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.4)'
-                      }}
-                    >
-                      {/* Primary shine effect */}
-                      <div 
-                        className="absolute inset-0 pointer-events-none"
-                        style={{
-                          background: 'radial-gradient(ellipse at 20% 10%, rgba(255, 255, 255, 0.35) 0%, transparent 35%)',
-                        }}
-                      />
-                      {/* Secondary subtle shimmer */}
-                      <div 
-                        className="absolute inset-0 pointer-events-none"
-                        style={{
-                          background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.08) 0%, transparent 50%, rgba(255, 255, 255, 0.03) 100%)',
-                        }}
-                      />
-                      {/* Trophy decorations */}
-                      <div className="absolute -top-1 right-2 opacity-[0.15] pointer-events-none rotate-[-8deg]">
-                        <Trophy className="h-14 w-14 text-amber-700" strokeWidth={1} />
-                      </div>
-                      <div className="absolute -bottom-2 right-16 opacity-[0.12] pointer-events-none rotate-[10deg]">
-                        <Trophy className="h-11 w-11 text-amber-700" strokeWidth={1} />
-                      </div>
-                      
-                      <div className="relative flex items-start gap-3 pr-14">
-                        <div 
-                          className="p-2.5 rounded-full flex-shrink-0 shadow-sm"
-                          style={{ 
-                            backgroundColor: 'rgba(251, 191, 36, 0.25)',
-                            border: '1px solid rgba(251, 191, 36, 0.3)'
-                          }}
-                        >
-                          <Trophy className="h-5 w-5" style={{ color: '#b45309' }} />
-                        </div>
-                        <div>
-                          <h3 className="font-semibold" style={{ color: '#78350f' }}>{item.activity}</h3>
-                          <p className="text-sm flex items-center gap-1.5 mt-1" style={{ color: '#92400e' }}>
-                            <Award className="h-3.5 w-3.5" />
-                            {item.achievement}
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
               </TabsContent>
             </Tabs>
 
