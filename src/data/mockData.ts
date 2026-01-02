@@ -208,7 +208,7 @@ export const attendanceData = {
     { month: "Oct", present: 19, absent: 1, late: 2, excused: 0 },
     { month: "Nov", present: 17, absent: 2, late: 2, excused: 1 },
     { month: "Dec", present: 14, absent: 1, late: 0, excused: 1 },
-    { month: "Jan", present: 1, absent: 0, late: 0, excused: 0 }
+    { month: "Jan", present: 18, absent: 2, late: 1, excused: 1 }
   ],
   currentMonth: {
     present: 89,
