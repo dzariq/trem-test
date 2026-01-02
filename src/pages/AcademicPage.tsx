@@ -890,6 +890,7 @@ export default function AcademicPage() {
                         categoryColor={{ bg: 'rgba(239, 68, 68, 0.15)', text: '#dc2626' }}
                         organization={academicData.awards.sportsHouse.organization}
                         role={academicData.awards.sportsHouse.role}
+                        year="2025"
                         onClick={() => {
                           setSelectedAward({
                             category: "Sports House",
@@ -908,6 +909,7 @@ export default function AcademicPage() {
                         categoryColor={{ bg: 'rgba(59, 130, 246, 0.15)', text: '#2563eb' }}
                         organization={academicData.awards.club.organization}
                         role={academicData.awards.club.role}
+                        year="2024"
                         onClick={() => {
                           setSelectedAward({
                             category: "Club",
@@ -926,6 +928,7 @@ export default function AcademicPage() {
                         categoryColor={{ bg: 'rgba(168, 85, 247, 0.15)', text: '#9333ea' }}
                         organization={academicData.awards.studentLeadership.organization}
                         role={academicData.awards.studentLeadership.role}
+                        year="2024"
                         onClick={() => {
                           setSelectedAward({
                             category: "Leadership",
@@ -944,6 +947,7 @@ export default function AcademicPage() {
                         categoryColor={{ bg: 'rgba(34, 197, 94, 0.15)', text: '#16a34a' }}
                         organization={academicData.awards.events.organization}
                         role={academicData.awards.events.role}
+                        year="2023"
                         onClick={() => {
                           setSelectedAward({
                             category: "Events",
@@ -962,6 +966,7 @@ export default function AcademicPage() {
                         categoryColor={{ bg: 'rgba(236, 72, 153, 0.15)', text: '#db2777' }}
                         organization={academicData.awards.achievements.event}
                         role={academicData.awards.achievements.award}
+                        year="2023"
                         onClick={() => {
                           setSelectedAward({
                             category: "Achievement",
