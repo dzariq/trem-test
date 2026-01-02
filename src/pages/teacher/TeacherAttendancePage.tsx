@@ -6,7 +6,8 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { CalendarIcon, Check, X, Clock, AlertCircle, Save, ChevronLeft, ChevronRight } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { CalendarIcon, Check, X, Clock, AlertCircle, Save, ChevronLeft, ChevronRight as ChevronRightIcon } from "lucide-react";
 import { format, startOfWeek, endOfWeek, isToday, parseISO } from "date-fns";
 import { cn } from "@/lib/utils";
 import { toast } from "@/hooks/use-toast";
@@ -53,6 +54,13 @@ export default function TeacherAttendancePage() {
   // Statistics state
   const [selectedYear, setSelectedYear] = useState("2026");
   const [selectedMonth, setSelectedMonth] = useState(0); // January
+  const [selectedDayStats, setSelectedDayStats] = useState<{
+    date: string;
+    present: number;
+    absent: number;
+    late: number;
+    excused: number;
+  } | null>(null);
   
 
   const students = classRosters[selectedClass as keyof typeof classRosters] || [];
@@ -348,7 +356,7 @@ export default function TeacherAttendancePage() {
                 </button>
                 <CardTitle className="text-base">{monthNames[selectedMonth]} {selectedYear}</CardTitle>
                 <button onClick={goToNextMonth} className="p-1.5 rounded-lg hover:bg-muted transition-colors">
-                  <ChevronRight className="h-5 w-5 text-muted-foreground" />
+                  <ChevronRightIcon className="h-5 w-5 text-muted-foreground" />
                 </button>
               </div>
             </CardHeader>
@@ -402,49 +410,66 @@ export default function TeacherAttendancePage() {
                           const itemDate = parseISO(item.date);
                           const isTodayItem = isToday(itemDate);
                           const total = item.present + item.absent + item.late + item.excused;
+                          const attendanceRate = total > 0 ? Math.round((item.present / total) * 100) : 0;
+                          const presentPct = total > 0 ? (item.present / total) * 100 : 0;
+                          const absentPct = total > 0 ? (item.absent / total) * 100 : 0;
+                          const latePct = total > 0 ? (item.late / total) * 100 : 0;
+                          const excusedPct = total > 0 ? (item.excused / total) * 100 : 0;
+                          
                           return (
                             <div
                               key={itemIdx}
-                              className={`p-3 rounded-lg border transition-all ${
+                              onClick={() => setSelectedDayStats(item)}
+                              className={cn(
+                                "p-3 rounded-xl border cursor-pointer transition-all hover:shadow-md hover:scale-[1.02] active:scale-[0.98]",
                                 isTodayItem 
                                   ? "ring-2 ring-primary/50 border-primary/30 bg-primary/5" 
-                                  : "bg-card border-border/50"
-                              }`}
+                                  : "bg-card border-border/50 hover:border-border"
+                              )}
                             >
                               {/* Date Header */}
                               <div className="flex items-center justify-between mb-2">
-                                <span className="font-medium text-sm text-foreground">
+                                <span className="font-semibold text-foreground">
                                   {format(itemDate, "EEE, d")}
                                 </span>
-                                {isTodayItem && (
-                                  <span className="text-[10px] font-medium text-primary bg-primary/10 px-1.5 py-0.5 rounded">Today</span>
-                                )}
-                              </div>
-                              
-                              {/* Status Grid */}
-                              <div className="grid grid-cols-4 gap-1">
-                                <div className="flex flex-col items-center p-1.5 rounded bg-emerald-100 dark:bg-emerald-950/40">
-                                  <Check className="h-3 w-3 text-emerald-600 mb-0.5" />
-                                  <span className="text-xs font-bold text-emerald-700 dark:text-emerald-400">{item.present}</span>
-                                </div>
-                                <div className="flex flex-col items-center p-1.5 rounded bg-red-100 dark:bg-red-950/40">
-                                  <X className="h-3 w-3 text-red-600 mb-0.5" />
-                                  <span className="text-xs font-bold text-red-700 dark:text-red-400">{item.absent}</span>
-                                </div>
-                                <div className="flex flex-col items-center p-1.5 rounded bg-amber-100 dark:bg-amber-950/40">
-                                  <Clock className="h-3 w-3 text-amber-600 mb-0.5" />
-                                  <span className="text-xs font-bold text-amber-700 dark:text-amber-400">{item.late}</span>
-                                </div>
-                                <div className="flex flex-col items-center p-1.5 rounded bg-purple-100 dark:bg-purple-950/40">
-                                  <AlertCircle className="h-3 w-3 text-purple-600 mb-0.5" />
-                                  <span className="text-xs font-bold text-purple-700 dark:text-purple-400">{item.excused}</span>
+                                <div className="flex items-center gap-1">
+                                  {isTodayItem && (
+                                    <Badge variant="secondary" className="text-[10px] h-5 px-1.5 bg-primary/10 text-primary border-0">
+                                      Today
+                                    </Badge>
+                                  )}
+                                  <ChevronRightIcon className="h-4 w-4 text-muted-foreground" />
                                 </div>
                               </div>
                               
-                              {/* Total */}
-                              <div className="mt-2 text-center">
-                                <span className="text-[10px] text-muted-foreground">Total: {total}</span>
+                              {/* Progress Bar */}
+                              <div className="h-2 rounded-full bg-muted overflow-hidden flex mb-3">
+                                <div style={{ width: `${presentPct}%` }} className="bg-emerald-500 transition-all" />
+                                <div style={{ width: `${absentPct}%` }} className="bg-red-500 transition-all" />
+                                <div style={{ width: `${latePct}%` }} className="bg-amber-500 transition-all" />
+                                <div style={{ width: `${excusedPct}%` }} className="bg-purple-500 transition-all" />
                               </div>
+                              
+                              {/* Inline Stats */}
+                              <div className="flex items-center gap-3 text-xs mb-2">
+                                <span className="flex items-center gap-1 text-emerald-600 dark:text-emerald-400 font-medium">
+                                  <Check className="h-3 w-3" /> {item.present}
+                                </span>
+                                <span className="flex items-center gap-1 text-red-600 dark:text-red-400 font-medium">
+                                  <X className="h-3 w-3" /> {item.absent}
+                                </span>
+                                <span className="flex items-center gap-1 text-amber-600 dark:text-amber-400 font-medium">
+                                  <Clock className="h-3 w-3" /> {item.late}
+                                </span>
+                                <span className="flex items-center gap-1 text-purple-600 dark:text-purple-400 font-medium">
+                                  <AlertCircle className="h-3 w-3" /> {item.excused}
+                                </span>
+                              </div>
+                              
+                              {/* Attendance Rate */}
+                              <p className="text-xs text-muted-foreground">
+                                {attendanceRate}% Attendance
+                              </p>
                             </div>
                           );
                         })}
@@ -457,6 +482,88 @@ export default function TeacherAttendancePage() {
           </Card>
         </div>
       )}
+
+      {/* Day Details Dialog */}
+      <Dialog open={!!selectedDayStats} onOpenChange={(open) => !open && setSelectedDayStats(null)}>
+        <DialogContent className="max-w-sm mx-auto">
+          {selectedDayStats && (() => {
+            const dayDate = parseISO(selectedDayStats.date);
+            const total = selectedDayStats.present + selectedDayStats.absent + selectedDayStats.late + selectedDayStats.excused;
+            const attendanceRate = total > 0 ? Math.round((selectedDayStats.present / total) * 100) : 0;
+            const presentPct = total > 0 ? (selectedDayStats.present / total) * 100 : 0;
+            const absentPct = total > 0 ? (selectedDayStats.absent / total) * 100 : 0;
+            const latePct = total > 0 ? (selectedDayStats.late / total) * 100 : 0;
+            const excusedPct = total > 0 ? (selectedDayStats.excused / total) * 100 : 0;
+            
+            return (
+              <>
+                <DialogHeader>
+                  <DialogTitle className="text-center">
+                    {format(dayDate, "EEEE, MMMM d, yyyy")}
+                  </DialogTitle>
+                </DialogHeader>
+                
+                <div className="space-y-4">
+                  {/* Attendance Rate Highlight */}
+                  <div className="text-center py-4 rounded-xl bg-muted/50">
+                    <span className="text-4xl font-bold text-foreground">{attendanceRate}%</span>
+                    <p className="text-sm text-muted-foreground mt-1">Attendance Rate</p>
+                  </div>
+                  
+                  {/* Large Progress Bar */}
+                  <div className="h-4 rounded-full bg-muted overflow-hidden flex">
+                    <div style={{ width: `${presentPct}%` }} className="bg-emerald-500 transition-all" />
+                    <div style={{ width: `${absentPct}%` }} className="bg-red-500 transition-all" />
+                    <div style={{ width: `${latePct}%` }} className="bg-amber-500 transition-all" />
+                    <div style={{ width: `${excusedPct}%` }} className="bg-purple-500 transition-all" />
+                  </div>
+                  
+                  {/* Stats Grid */}
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="p-4 rounded-xl bg-emerald-50 dark:bg-emerald-950/30 text-center">
+                      <div className="flex items-center justify-center gap-2 mb-1">
+                        <Check className="h-5 w-5 text-emerald-600" />
+                        <span className="text-2xl font-bold text-emerald-600">{selectedDayStats.present}</span>
+                      </div>
+                      <p className="text-xs text-emerald-600/80">Present</p>
+                      <p className="text-xs text-emerald-600/60 mt-0.5">{Math.round(presentPct)}%</p>
+                    </div>
+                    <div className="p-4 rounded-xl bg-red-50 dark:bg-red-950/30 text-center">
+                      <div className="flex items-center justify-center gap-2 mb-1">
+                        <X className="h-5 w-5 text-red-600" />
+                        <span className="text-2xl font-bold text-red-600">{selectedDayStats.absent}</span>
+                      </div>
+                      <p className="text-xs text-red-600/80">Absent</p>
+                      <p className="text-xs text-red-600/60 mt-0.5">{Math.round(absentPct)}%</p>
+                    </div>
+                    <div className="p-4 rounded-xl bg-amber-50 dark:bg-amber-950/30 text-center">
+                      <div className="flex items-center justify-center gap-2 mb-1">
+                        <Clock className="h-5 w-5 text-amber-600" />
+                        <span className="text-2xl font-bold text-amber-600">{selectedDayStats.late}</span>
+                      </div>
+                      <p className="text-xs text-amber-600/80">Late</p>
+                      <p className="text-xs text-amber-600/60 mt-0.5">{Math.round(latePct)}%</p>
+                    </div>
+                    <div className="p-4 rounded-xl bg-purple-50 dark:bg-purple-950/30 text-center">
+                      <div className="flex items-center justify-center gap-2 mb-1">
+                        <AlertCircle className="h-5 w-5 text-purple-600" />
+                        <span className="text-2xl font-bold text-purple-600">{selectedDayStats.excused}</span>
+                      </div>
+                      <p className="text-xs text-purple-600/80">Excused</p>
+                      <p className="text-xs text-purple-600/60 mt-0.5">{Math.round(excusedPct)}%</p>
+                    </div>
+                  </div>
+                  
+                  {/* Total */}
+                  <div className="text-center pt-2 border-t border-border">
+                    <span className="text-sm text-muted-foreground">Total Students: <span className="font-semibold text-foreground">{total}</span></span>
+                  </div>
+                </div>
+              </>
+            );
+          })()}
+        </DialogContent>
+      </Dialog>
     </TeacherAppLayout>
   );
 }
