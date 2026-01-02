@@ -20,6 +20,7 @@ import SecurityPrivacyPage from "./pages/SecurityPrivacyPage";
 import PrivacyPolicyPage from "./pages/PrivacyPolicyPage";
 import ContactPage from "./pages/ContactPage";
 import AwardsPage from "./pages/AwardsPage";
+import StudentHandbookPage from "./pages/StudentHandbookPage";
 
 // Teacher Pages
 import TeacherHomePage from "./pages/teacher/TeacherHomePage";
@@ -59,6 +60,7 @@ const App = () => (
           <Route path="/parent/privacy-policy" element={<PrivacyPolicyPage />} />
           <Route path="/parent/contact" element={<ContactPage />} />
           <Route path="/parent/awards" element={<AwardsPage />} />
+          <Route path="/parent/handbook" element={<StudentHandbookPage />} />
 
           {/* Teacher Routes */}
           <Route path="/teacher" element={<TeacherHomePage />} />
