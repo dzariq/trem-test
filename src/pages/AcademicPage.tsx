@@ -83,6 +83,7 @@ export default function AcademicPage() {
   );
   const [reportGenerated, setReportGenerated] = useState(false);
   const [expandedSubject, setExpandedSubject] = useState<string | null>(null);
+  const [subjectsExpanded, setSubjectsExpanded] = useState(false);
   
   // Pinch-to-zoom state for chart
   const [chartZoom, setChartZoom] = useState(1);
@@ -1140,32 +1141,57 @@ export default function AcademicPage() {
                         </Button>
                       </div>
                     </div>
-                    <div className="flex flex-wrap gap-2">
-                      {academicData.subjects.map((subject) => {
-                        const isSelected = gradesSelectedSubjects.includes(subject.name);
-                        return (
-                          <Badge
-                            key={subject.name}
-                            variant={isSelected ? "default" : "outline"}
-                            className={`cursor-pointer text-sm px-3 py-1.5 rounded-full transition-colors ${
-                              isSelected 
-                                ? "bg-primary text-primary-foreground hover:bg-primary/90" 
-                                : "hover:bg-accent"
-                            }`}
-                            onClick={() => {
-                              if (isSelected) {
-                                setGradesSelectedSubjects(prev => prev.filter(s => s !== subject.name));
-                              } else {
-                                setGradesSelectedSubjects(prev => [...prev, subject.name]);
-                              }
-                            }}
-                          >
-                            {isSelected && <Check className="h-3 w-3 mr-1" />}
-                            {shortenSubjectName(subject.name)}
-                          </Badge>
-                        );
-                      })}
-                    </div>
+                    {(() => {
+                      const allSubjects = academicData.subjects;
+                      const visibleCount = 4;
+                      const visibleSubjects = subjectsExpanded ? allSubjects : allSubjects.slice(0, visibleCount);
+                      const hiddenCount = allSubjects.length - visibleCount;
+                      
+                      return (
+                        <div className="space-y-2">
+                          <div className="grid grid-cols-4 gap-2">
+                            {visibleSubjects.map((subject) => {
+                              const isSelected = gradesSelectedSubjects.includes(subject.name);
+                              return (
+                                <Badge
+                                  key={subject.name}
+                                  variant={isSelected ? "default" : "outline"}
+                                  className={`cursor-pointer min-w-[70px] h-9 px-2 py-2 text-xs font-medium rounded-full transition-all flex items-center justify-center text-center ${
+                                    isSelected 
+                                      ? "bg-primary text-primary-foreground hover:bg-primary/90" 
+                                      : "hover:bg-accent border-border"
+                                  }`}
+                                  onClick={() => {
+                                    if (isSelected) {
+                                      setGradesSelectedSubjects(prev => prev.filter(s => s !== subject.name));
+                                    } else {
+                                      setGradesSelectedSubjects(prev => [...prev, subject.name]);
+                                    }
+                                  }}
+                                >
+                                  <span className="truncate">{shortenSubjectName(subject.name)}</span>
+                                  {isSelected && <Check className="h-3 w-3 ml-1 flex-shrink-0" />}
+                                </Badge>
+                              );
+                            })}
+                          </div>
+                          {hiddenCount > 0 && (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="w-full h-8 text-xs text-muted-foreground hover:text-foreground"
+                              onClick={() => setSubjectsExpanded(!subjectsExpanded)}
+                            >
+                              {subjectsExpanded ? (
+                                <>Show less <ChevronDown className="h-3 w-3 ml-1 rotate-180 transition-transform" /></>
+                              ) : (
+                                <>+{hiddenCount} more <ChevronDown className="h-3 w-3 ml-1 transition-transform" /></>
+                              )}
+                            </Button>
+                          )}
+                        </div>
+                      );
+                    })()}
                   </div>
                 </div>
 
