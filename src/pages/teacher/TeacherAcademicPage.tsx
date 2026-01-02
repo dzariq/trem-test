@@ -13,11 +13,11 @@ import {
   Save, TrendingUp, TrendingDown, Minus, ChevronDown, ChevronUp, 
   Users, Target, Award, AlertTriangle, BookOpen, BarChart3,
   FileText, CheckCircle, XCircle, Lightbulb, Copy, Printer,
-  ArrowRight, ArrowUpRight, ArrowDownRight, Scale, Download, FileSpreadsheet
+  ArrowRight, ArrowUpRight, ArrowDownRight, Scale, Download, FileSpreadsheet, Check
 } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import schoolLogo from "@/assets/school-badge.png";
-import { teacherProfile, classRosters, classGrades, detailedClassGrades, yearOverYearData, categoryYearOverYear, examComparisonData, ExamData, subjectYearlyData, multiClassTrendData } from "@/data/teacherMockData";
+import { teacherProfile, classRosters, classGrades, detailedClassGrades, yearOverYearData, categoryYearOverYear, examComparisonData, ExamData, subjectYearlyData, multiClassTrendData, subjectExamData } from "@/data/teacherMockData";
 import {
   Select,
   SelectContent,
@@ -85,6 +85,19 @@ const examPeriods = [
   { value: "yearEnd", label: "Year-End" },
 ];
 
+// Helper to shorten long subject names
+const shortenSubjectName = (name: string): string => {
+  const abbreviations: Record<string, string> = {
+    "Mathematics": "Math",
+    "Physical Education": "PE",
+    "Chinese as a Second Language": "Chinese",
+    "Social Studies": "Social St.",
+    "Information Technology": "IT",
+    "Computer Science": "Comp Sci",
+  };
+  return abbreviations[name] || name;
+};
+
 interface StudentGrades {
   attitude: string;
   homework: string;
@@ -132,6 +145,7 @@ export default function TeacherAcademicPage() {
   const [examBClass, setExamBClass] = useState(teacherProfile.classes[0]);
   const [examBYear, setExamBYear] = useState("2025");
   const [examBPeriod, setExamBPeriod] = useState<"midYear" | "yearEnd">("yearEnd");
+  const [compareSubjects, setCompareSubjects] = useState<string[]>([...subjects]);
 
   // Trends tab state - like student page
   const [trendPeriod, setTrendPeriod] = useState<"1year" | "2years" | "3years" | "all">("all");
@@ -1644,97 +1658,149 @@ export default function TeacherAcademicPage() {
 
               {/* ==================== COMPARISON SUB-TAB ==================== */}
               <TabsContent value="comparison" className="space-y-4">
-                {/* Exam A and Exam B Selectors */}
-                <div className="grid grid-cols-2 gap-3">
-                  {/* Exam A */}
-                  <Card className="border-primary/30">
-                    <CardHeader className="p-3 pb-2">
-                      <CardTitle className="text-xs text-primary">Exam A</CardTitle>
-                    </CardHeader>
-                    <CardContent className="p-3 pt-0 space-y-2">
-                      <Select value={examAClass} onValueChange={setExamAClass}>
-                        <SelectTrigger className="h-8 text-xs">
-                          <SelectValue placeholder="Class" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {teacherProfile.classes.map((cls) => (
-                            <SelectItem key={cls} value={cls}>{cls}</SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      <Select value={examAYear} onValueChange={setExamAYear}>
-                        <SelectTrigger className="h-8 text-xs">
-                          <SelectValue placeholder="Year" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {academicYears.map((year) => (
-                            <SelectItem key={year} value={year}>{year}</SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      <Select value={examAPeriod} onValueChange={(v) => setExamAPeriod(v as "midYear" | "yearEnd")}>
-                        <SelectTrigger className="h-8 text-xs">
-                          <SelectValue placeholder="Period" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {examPeriods.map((period) => (
-                            <SelectItem key={period.value} value={period.value}>{period.label}</SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </CardContent>
-                  </Card>
-
-                  {/* Exam B */}
-                  <Card className="border-emerald-500/30">
-                    <CardHeader className="p-3 pb-2">
-                      <CardTitle className="text-xs text-emerald-600">Exam B</CardTitle>
-                    </CardHeader>
-                    <CardContent className="p-3 pt-0 space-y-2">
-                      <Select value={examBClass} onValueChange={setExamBClass}>
-                        <SelectTrigger className="h-8 text-xs">
-                          <SelectValue placeholder="Class" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {teacherProfile.classes.map((cls) => (
-                            <SelectItem key={cls} value={cls}>{cls}</SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      <Select value={examBYear} onValueChange={setExamBYear}>
-                        <SelectTrigger className="h-8 text-xs">
-                          <SelectValue placeholder="Year" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {academicYears.map((year) => (
-                            <SelectItem key={year} value={year}>{year}</SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      <Select value={examBPeriod} onValueChange={(v) => setExamBPeriod(v as "midYear" | "yearEnd")}>
-                        <SelectTrigger className="h-8 text-xs">
-                          <SelectValue placeholder="Period" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {examPeriods.map((period) => (
-                            <SelectItem key={period.value} value={period.value}>{period.label}</SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </CardContent>
-                  </Card>
+                {/* Exam Selectors */}
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <label className="text-xs font-medium text-muted-foreground">Exam A</label>
+                    <Select value={examAClass} onValueChange={setExamAClass}>
+                      <SelectTrigger className="w-full h-9 text-sm">
+                        <SelectValue placeholder="Class" />
+                      </SelectTrigger>
+                      <SelectContent className="bg-card">
+                        {teacherProfile.classes.map((cls) => (
+                          <SelectItem key={cls} value={cls}>{cls}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <Select value={examAYear} onValueChange={setExamAYear}>
+                      <SelectTrigger className="w-full h-9 text-sm">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent className="bg-card">
+                        {academicYears.slice(0, 4).map((year) => (
+                          <SelectItem key={year} value={year}>{year}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <Select 
+                      value={examAPeriod} 
+                      onValueChange={(v) => setExamAPeriod(v as "midYear" | "yearEnd")}
+                    >
+                      <SelectTrigger className="w-full h-9 text-sm">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent className="bg-card">
+                        {examPeriods.map((period) => (
+                          <SelectItem key={period.value} value={period.value}>{period.label}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-xs font-medium text-muted-foreground">Exam B</label>
+                    <Select value={examBClass} onValueChange={setExamBClass}>
+                      <SelectTrigger className="w-full h-9 text-sm">
+                        <SelectValue placeholder="Class" />
+                      </SelectTrigger>
+                      <SelectContent className="bg-card">
+                        {teacherProfile.classes.map((cls) => (
+                          <SelectItem key={cls} value={cls}>{cls}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <Select value={examBYear} onValueChange={setExamBYear}>
+                      <SelectTrigger className="w-full h-9 text-sm">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent className="bg-card">
+                        {academicYears.slice(0, 4).map((year) => (
+                          <SelectItem key={year} value={year}>{year}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <Select 
+                      value={examBPeriod} 
+                      onValueChange={(v) => setExamBPeriod(v as "midYear" | "yearEnd")}
+                    >
+                      <SelectTrigger className="w-full h-9 text-sm">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent className="bg-card">
+                        {examPeriods.map((period) => (
+                          <SelectItem key={period.value} value={period.value}>{period.label}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
                 </div>
 
-                {/* Comparison Results */}
+                {/* Subject Multi-Select */}
+                <div className="space-y-2">
+                  <label className="text-xs font-medium text-muted-foreground">Subjects</label>
+                  <div className="flex flex-wrap gap-1.5 p-2 rounded-lg border border-input bg-background min-h-[38px]">
+                    {subjects.map(s => {
+                      const isSelected = compareSubjects.includes(s);
+                      return (
+                        <Badge
+                          key={s}
+                          variant={isSelected ? "default" : "outline"}
+                          className={`cursor-pointer text-xs transition-colors ${
+                            isSelected 
+                              ? "bg-primary text-primary-foreground hover:bg-primary/80" 
+                              : "hover:bg-accent"
+                          }`}
+                          onClick={() => {
+                            if (isSelected) {
+                              if (compareSubjects.length > 1) {
+                                setCompareSubjects(prev => prev.filter(name => name !== s));
+                              }
+                            } else {
+                              setCompareSubjects(prev => [...prev, s]);
+                            }
+                          }}
+                        >
+                          {shortenSubjectName(s)}
+                          {isSelected && <Check className="h-3 w-3 ml-1" />}
+                        </Badge>
+                      );
+                    })}
+                  </div>
+                  <div className="flex gap-2">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="text-xs h-7 px-2"
+                      onClick={() => setCompareSubjects([...subjects])}
+                    >
+                      Select All
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="text-xs h-7 px-2"
+                      onClick={() => setCompareSubjects([subjects[0]])}
+                    >
+                      Clear
+                    </Button>
+                  </div>
+                </div>
+
+                {/* Comparison Content */}
                 {(() => {
                   const examAKey = `${examAYear}-${examAPeriod}`;
                   const examBKey = `${examBYear}-${examBPeriod}`;
-                  const classAData = examComparisonData[examAClass as keyof typeof examComparisonData] || {};
-                  const classBData = examComparisonData[examBClass as keyof typeof examComparisonData] || {};
-                  const examA = classAData[examAKey];
-                  const examB = classBData[examBKey];
+                  const subjectDataA = subjectExamData[examAClass as keyof typeof subjectExamData]?.[examAKey];
+                  const subjectDataB = subjectExamData[examBClass as keyof typeof subjectExamData]?.[examBKey];
                   
-                  if (!examA || !examB) {
+                  const getExamLabelForComparison = (cls: string, year: string, period: string) => {
+                    const periodLabel = period === "midYear" ? "Mid-Year" : "Year-End";
+                    return `${cls} ${periodLabel} ${year}`;
+                  };
+
+                  const examALabel = getExamLabelForComparison(examAClass, examAYear, examAPeriod);
+                  const examBLabel = getExamLabelForComparison(examBClass, examBYear, examBPeriod);
+
+                  if (!subjectDataA || !subjectDataB) {
                     return (
                       <Card className="bg-muted/30">
                         <CardContent className="p-8 text-center">
@@ -1745,197 +1811,281 @@ export default function TeacherAcademicPage() {
                     );
                   }
 
-                  const getDeltaIcon = (a: number, b: number) => {
-                    const diff = a - b;
-                    if (diff > 0) return <ArrowUpRight className="h-3 w-3 text-emerald-600" />;
-                    if (diff < 0) return <ArrowDownRight className="h-3 w-3 text-red-600" />;
-                    return <ArrowRight className="h-3 w-3 text-muted-foreground" />;
-                  };
+                  // Build comparison data based on selected subjects
+                  const comparisonData = compareSubjects.map(subjectName => {
+                    const scoreA = subjectDataA[subjectName] ?? 0;
+                    const scoreB = subjectDataB[subjectName] ?? 0;
+                    const delta = scoreA - scoreB;
+                    return {
+                      name: subjectName,
+                      examA: scoreA,
+                      examB: scoreB,
+                      delta,
+                      improved: delta > 0
+                    };
+                  });
 
-                  const getDeltaColor = (a: number, b: number) => {
-                    const diff = a - b;
-                    if (diff > 0) return "text-emerald-600";
-                    if (diff < 0) return "text-red-600";
-                    return "text-muted-foreground";
-                  };
-
-                  const formatDelta = (a: number, b: number, suffix: string = "") => {
-                    const diff = a - b;
-                    if (diff > 0) return `+${diff.toFixed(1)}${suffix}`;
-                    return `${diff.toFixed(1)}${suffix}`;
-                  };
-
-                  const examALabel = `${examAClass} ${examAYear} ${examPeriods.find(p => p.value === examAPeriod)?.label}`;
-                  const examBLabel = `${examBClass} ${examBYear} ${examPeriods.find(p => p.value === examBPeriod)?.label}`;
-
-                  // Prepare chart data for category comparison
-                  const categoryComparisonData = [
-                    { name: "Attitude", examA: examA.attitude, examB: examB.attitude },
-                    { name: "Homework", examA: examA.homework, examB: examB.homework },
-                    { name: "Quiz", examA: examA.quiz, examB: examB.quiz },
-                    { name: "Exam", examA: examA.exam / 7, examB: examB.exam / 7 }, // Normalize exam to 10
-                  ];
+                  const avgA = comparisonData.length > 0 ? Math.round(comparisonData.reduce((sum, d) => sum + d.examA, 0) / comparisonData.length) : 0;
+                  const avgB = comparisonData.length > 0 ? Math.round(comparisonData.reduce((sum, d) => sum + d.examB, 0) / comparisonData.length) : 0;
 
                   return (
                     <>
-                      {/* Side-by-Side Stats */}
-                      <Card>
-                        <CardHeader className="pb-2">
-                          <CardTitle className="text-sm flex items-center gap-2">
-                            <Scale className="h-4 w-4" />
-                            Comparison Overview
-                          </CardTitle>
-                        </CardHeader>
-                        <CardContent className="space-y-3">
-                          {/* Average */}
-                          <div className="flex items-center justify-between p-2 rounded-lg bg-accent/30">
-                            <div className="text-center flex-1">
-                              <p className="text-lg font-bold text-primary">{examA.average}%</p>
-                              <p className="text-[10px] text-muted-foreground">{examALabel}</p>
-                            </div>
-                            <div className="flex flex-col items-center px-3">
-                              {getDeltaIcon(examA.average, examB.average)}
-                              <span className={cn("text-xs font-medium", getDeltaColor(examA.average, examB.average))}>
-                                {formatDelta(examA.average, examB.average)}
-                              </span>
-                              <span className="text-[9px] text-muted-foreground">Average</span>
-                            </div>
-                            <div className="text-center flex-1">
-                              <p className="text-lg font-bold text-emerald-600">{examB.average}%</p>
-                              <p className="text-[10px] text-muted-foreground">{examBLabel}</p>
-                            </div>
-                          </div>
+                      {/* Comparison Summary Cards */}
+                      <div className="grid grid-cols-2 gap-3">
+                        <div className="p-3 rounded-lg bg-chart-1/10 border border-chart-1/30">
+                          <p className="text-xs text-muted-foreground mb-1">{examALabel}</p>
+                          <p className="text-xl font-bold text-foreground">{avgA}%</p>
+                          <p className="text-xs text-muted-foreground">Average</p>
+                        </div>
+                        <div className="p-3 rounded-lg bg-chart-2/10 border border-chart-2/30">
+                          <p className="text-xs text-muted-foreground mb-1">{examBLabel}</p>
+                          <p className="text-xl font-bold text-foreground">{avgB}%</p>
+                          <p className="text-xs text-muted-foreground">Average</p>
+                        </div>
+                      </div>
 
-                          {/* Pass Rate */}
-                          <div className="flex items-center justify-between p-2 rounded-lg bg-accent/30">
-                            <div className="text-center flex-1">
-                              <p className="text-lg font-bold text-primary">{examA.passRate}%</p>
+                      {/* Top 5 Growth Leaders - Moomoo Style */}
+                      <div className="p-4 rounded-xl bg-gradient-to-br from-emerald-500/10 to-emerald-600/5 border border-emerald-500/20">
+                        <div className="flex items-center justify-between mb-3">
+                          <div className="flex items-center gap-2">
+                            <div className="w-8 h-8 rounded-lg bg-emerald-500/20 flex items-center justify-center">
+                              <TrendingUp className="h-4 w-4 text-emerald-500" />
                             </div>
-                            <div className="flex flex-col items-center px-3">
-                              {getDeltaIcon(examA.passRate, examB.passRate)}
-                              <span className={cn("text-xs font-medium", getDeltaColor(examA.passRate, examB.passRate))}>
-                                {formatDelta(examA.passRate, examB.passRate, "%")}
-                              </span>
-                              <span className="text-[9px] text-muted-foreground">Pass Rate</span>
-                            </div>
-                            <div className="text-center flex-1">
-                              <p className="text-lg font-bold text-emerald-600">{examB.passRate}%</p>
-                            </div>
-                          </div>
-
-                          {/* A-Grade Rate */}
-                          <div className="flex items-center justify-between p-2 rounded-lg bg-accent/30">
-                            <div className="text-center flex-1">
-                              <p className="text-lg font-bold text-primary">{examA.aRate}%</p>
-                            </div>
-                            <div className="flex flex-col items-center px-3">
-                              {getDeltaIcon(examA.aRate, examB.aRate)}
-                              <span className={cn("text-xs font-medium", getDeltaColor(examA.aRate, examB.aRate))}>
-                                {formatDelta(examA.aRate, examB.aRate, "%")}
-                              </span>
-                              <span className="text-[9px] text-muted-foreground">A-Grade</span>
-                            </div>
-                            <div className="text-center flex-1">
-                              <p className="text-lg font-bold text-emerald-600">{examB.aRate}%</p>
-                            </div>
-                          </div>
-
-                          {/* Highest/Lowest */}
-                          <div className="grid grid-cols-2 gap-2">
-                            <div className="flex items-center justify-between p-2 rounded-lg bg-emerald-50 border border-emerald-200">
-                              <div className="text-center flex-1">
-                                <p className="text-sm font-bold">{examA.highest}</p>
-                              </div>
-                              <div className="flex flex-col items-center px-2">
-                                <TrendingUp className="h-3 w-3 text-emerald-600" />
-                                <span className="text-[9px] text-emerald-600">Highest</span>
-                              </div>
-                              <div className="text-center flex-1">
-                                <p className="text-sm font-bold">{examB.highest}</p>
-                              </div>
-                            </div>
-                            <div className="flex items-center justify-between p-2 rounded-lg bg-red-50 border border-red-200">
-                              <div className="text-center flex-1">
-                                <p className="text-sm font-bold">{examA.lowest}</p>
-                              </div>
-                              <div className="flex flex-col items-center px-2">
-                                <TrendingDown className="h-3 w-3 text-red-600" />
-                                <span className="text-[9px] text-red-600">Lowest</span>
-                              </div>
-                              <div className="text-center flex-1">
-                                <p className="text-sm font-bold">{examB.lowest}</p>
-                              </div>
-                            </div>
-                          </div>
-                        </CardContent>
-                      </Card>
-
-                      {/* Category Comparison Chart */}
-                      <Card>
-                        <CardHeader className="pb-2">
-                          <CardTitle className="text-sm flex items-center gap-2">
-                            <BarChart3 className="h-4 w-4" />
-                            Category Comparison
-                          </CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                          <div className="h-48">
-                            <ResponsiveContainer width="100%" height="100%">
-                              <BarChart data={categoryComparisonData}>
-                                <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
-                                <XAxis dataKey="name" tick={{ fontSize: 10 }} />
-                                <YAxis domain={[0, 10]} tick={{ fontSize: 10 }} width={25} />
-                                <Tooltip />
-                                <Legend wrapperStyle={{ fontSize: '10px' }} />
-                                <Bar dataKey="examA" name={examALabel} fill="hsl(var(--primary))" radius={[2, 2, 0, 0]} />
-                                <Bar dataKey="examB" name={examBLabel} fill="#10b981" radius={[2, 2, 0, 0]} />
-                              </BarChart>
-                            </ResponsiveContainer>
-                          </div>
-                        </CardContent>
-                      </Card>
-
-                      {/* Summary Insight */}
-                      <Card className={cn(
-                        "border",
-                        examA.average > examB.average ? "border-primary/30 bg-primary/5" : 
-                        examA.average < examB.average ? "border-emerald-500/30 bg-emerald-50/50" :
-                        "border-muted bg-muted/30"
-                      )}>
-                        <CardContent className="p-4">
-                          <div className="flex items-start gap-3">
-                            {examA.average !== examB.average ? (
-                              examA.average > examB.average ? (
-                                <TrendingUp className="h-5 w-5 text-primary mt-0.5" />
-                              ) : (
-                                <TrendingDown className="h-5 w-5 text-emerald-600 mt-0.5" />
-                              )
-                            ) : (
-                              <Minus className="h-5 w-5 text-muted-foreground mt-0.5" />
-                            )}
                             <div>
-                              <p className="text-sm font-medium text-foreground">
-                                {examA.average > examB.average 
-                                  ? `${examALabel} performed better`
-                                  : examA.average < examB.average 
-                                  ? `${examBLabel} performed better`
-                                  : "Both exams had similar performance"}
-                              </p>
-                              <p className="text-xs text-muted-foreground mt-1">
-                                {examA.average !== examB.average && (
-                                  <>
-                                    Average score difference: <span className="font-medium">{Math.abs(examA.average - examB.average).toFixed(1)}%</span>
-                                    {examA.passRate !== examB.passRate && (
-                                      <> • Pass rate difference: <span className="font-medium">{Math.abs(examA.passRate - examB.passRate)}%</span></>
-                                    )}
-                                  </>
-                                )}
-                                {examA.average === examB.average && "Both exam periods achieved identical average scores."}
-                              </p>
+                              <h4 className="text-sm font-semibold text-foreground">Top Growth Leaders</h4>
+                              <p className="text-[10px] text-muted-foreground">Best performing subjects</p>
                             </div>
                           </div>
-                        </CardContent>
-                      </Card>
+                          <Badge className="bg-emerald-500/20 text-emerald-600 border-emerald-500/30 text-xs">
+                            Top 5
+                          </Badge>
+                        </div>
+                        
+                        {/* Top 5 Growth Chart */}
+                        {(() => {
+                          const top5Growth = [...comparisonData]
+                            .sort((a, b) => b.delta - a.delta)
+                            .slice(0, 5)
+                            .filter(item => item.delta > 0);
+                          
+                          if (top5Growth.length === 0) {
+                            return (
+                              <div className="text-center py-4 text-muted-foreground text-sm">
+                                No subjects showed improvement in this period
+                              </div>
+                            );
+                          }
+                          
+                          const maxDelta = Math.max(...top5Growth.map(t => t.delta));
+                          
+                          return (
+                            <div className="space-y-3">
+                              {/* Mini Area Chart */}
+                              <div className="h-32 -mx-2">
+                                <ResponsiveContainer width="100%" height="100%">
+                                  <AreaChart 
+                                    data={top5Growth.map(item => ({
+                                      name: shortenSubjectName(item.name),
+                                      growth: item.delta,
+                                      percentChange: item.examB > 0 ? ((item.delta / item.examB) * 100) : 0,
+                                      from: item.examB,
+                                      to: item.examA
+                                    }))}
+                                    margin={{ top: 10, right: 10, left: 10, bottom: 0 }}
+                                  >
+                                    <defs>
+                                      <linearGradient id="growthGradientTeacher" x1="0" y1="0" x2="0" y2="1">
+                                        <stop offset="5%" stopColor="hsl(142, 76%, 46%)" stopOpacity={0.4}/>
+                                        <stop offset="95%" stopColor="hsl(142, 76%, 46%)" stopOpacity={0.05}/>
+                                      </linearGradient>
+                                    </defs>
+                                    <XAxis 
+                                      dataKey="name" 
+                                      axisLine={false}
+                                      tickLine={false}
+                                      tick={{ fontSize: 9, fill: 'hsl(var(--muted-foreground))' }}
+                                      interval={0}
+                                      height={30}
+                                    />
+                                    <YAxis hide />
+                                    <Area
+                                      type="monotone"
+                                      dataKey="growth"
+                                      stroke="hsl(142, 76%, 46%)"
+                                      strokeWidth={2}
+                                      fill="url(#growthGradientTeacher)"
+                                      dot={{ r: 4, fill: "hsl(142, 76%, 46%)", strokeWidth: 2, stroke: "hsl(var(--background))" }}
+                                      activeDot={{ r: 6, fill: "hsl(142, 76%, 46%)", strokeWidth: 2, stroke: "hsl(var(--background))" }}
+                                    />
+                                    <Tooltip
+                                      content={({ active, payload }) => {
+                                        if (active && payload && payload.length) {
+                                          const data = payload[0].payload;
+                                          return (
+                                            <div className="bg-popover border border-border rounded-lg shadow-lg p-2">
+                                              <p className="text-xs font-medium text-foreground">{data.name}</p>
+                                              <p className="text-xs text-emerald-500 font-bold">+{data.growth} pts</p>
+                                              <p className="text-[10px] text-muted-foreground">{data.from} → {data.to}</p>
+                                            </div>
+                                          );
+                                        }
+                                        return null;
+                                      }}
+                                    />
+                                  </AreaChart>
+                                </ResponsiveContainer>
+                              </div>
+                              
+                              {/* Top 5 Rankings */}
+                              <div className="space-y-2">
+                                {top5Growth.map((item, index) => {
+                                  const percentChange = item.examB > 0 ? ((item.delta / item.examB) * 100).toFixed(1) : '0.0';
+                                  const barWidth = (item.delta / maxDelta) * 100;
+                                  
+                                  return (
+                                    <div key={item.name} className="flex items-center gap-2">
+                                      {/* Rank Badge */}
+                                      <div className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold ${
+                                        index === 0 ? 'bg-yellow-500/20 text-yellow-600' :
+                                        index === 1 ? 'bg-gray-400/20 text-gray-500' :
+                                        index === 2 ? 'bg-amber-600/20 text-amber-600' :
+                                        'bg-muted text-muted-foreground'
+                                      }`}>
+                                        {index + 1}
+                                      </div>
+                                      
+                                      {/* Subject Name */}
+                                      <span className="text-xs font-medium text-foreground w-16 truncate">
+                                        {shortenSubjectName(item.name)}
+                                      </span>
+                                      
+                                      {/* Growth Bar */}
+                                      <div className="flex-1 h-4 bg-muted/30 rounded-full overflow-hidden relative">
+                                        <div 
+                                          className="h-full bg-gradient-to-r from-emerald-500 to-emerald-400 rounded-full transition-all duration-700"
+                                          style={{ width: `${barWidth}%` }}
+                                        />
+                                      </div>
+                                      
+                                      {/* Growth Stats */}
+                                      <div className="flex items-center gap-1 min-w-[60px] justify-end">
+                                        <span className="text-xs font-bold text-emerald-500">+{item.delta}</span>
+                                        <span className="text-[9px] text-muted-foreground">({percentChange}%)</span>
+                                      </div>
+                                    </div>
+                                  );
+                                })}
+                              </div>
+                              
+                              {/* Summary Footer */}
+                              <div className="pt-2 border-t border-emerald-500/20 flex items-center justify-between">
+                                <span className="text-[10px] text-muted-foreground">
+                                  Average growth: +{(top5Growth.reduce((sum, t) => sum + t.delta, 0) / top5Growth.length).toFixed(1)} pts
+                                </span>
+                                <span className="text-[10px] text-emerald-500 font-medium">
+                                  🏆 {shortenSubjectName(top5Growth[0].name)} leads with +{top5Growth[0].delta} pts
+                                </span>
+                              </div>
+                            </div>
+                          );
+                        })()}
+                      </div>
+
+                      {/* Subject Comparison - Moomoo Style */}
+                      <div className="space-y-3">
+                        <h4 className="text-sm font-medium text-foreground">Subject Performance</h4>
+                        <div className="space-y-3">
+                          {comparisonData.map((item) => {
+                            const percentChange = item.examB > 0 ? ((item.delta / item.examB) * 100).toFixed(1) : '0.0';
+                            return (
+                              <div key={item.name} className="p-3 rounded-xl bg-accent/30 border border-border/50">
+                                <div className="flex items-center justify-between mb-2">
+                                  <span className="text-sm font-semibold text-foreground">{shortenSubjectName(item.name)}</span>
+                                  <div className="flex items-center gap-2">
+                                    <Badge 
+                                      variant={item.delta > 0 ? "default" : item.delta < 0 ? "destructive" : "secondary"}
+                                      className={`text-xs px-2 py-0.5 ${
+                                        item.delta > 0 
+                                          ? "bg-emerald-500/20 text-emerald-600 border-emerald-500/30" 
+                                          : item.delta < 0 
+                                          ? "bg-red-500/20 text-red-600 border-red-500/30" 
+                                          : ""
+                                      }`}
+                                    >
+                                      {item.delta > 0 ? <TrendingUp className="h-3 w-3 mr-1" /> : item.delta < 0 ? <TrendingDown className="h-3 w-3 mr-1" /> : <Minus className="h-3 w-3 mr-1" />}
+                                      {item.delta > 0 ? "+" : ""}{item.delta}pts ({item.delta >= 0 ? "+" : ""}{percentChange}%)
+                                    </Badge>
+                                  </div>
+                                </div>
+                                
+                                {/* Visual Bars */}
+                                <div className="space-y-1.5">
+                                  {/* Exam B (Previous) - Blue */}
+                                  <div className="flex items-center gap-2">
+                                    <span className="text-[10px] text-muted-foreground w-16 truncate">{examBLabel.split(' ')[0]}</span>
+                                    <div className="flex-1 h-5 bg-muted/30 rounded-full overflow-hidden relative">
+                                      <div 
+                                        className="h-full bg-blue-500 rounded-full transition-all duration-500"
+                                        style={{ width: `${(item.examB / 100) * 100}%` }}
+                                      />
+                                      <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] font-bold text-foreground">
+                                        {item.examB}
+                                      </span>
+                                    </div>
+                                  </div>
+                                  
+                                  {/* Exam A (Current) - Orange */}
+                                  <div className="flex items-center gap-2">
+                                    <span className="text-[10px] text-muted-foreground w-16 truncate">{examALabel.split(' ')[0]}</span>
+                                    <div className="flex-1 h-5 bg-muted/30 rounded-full overflow-hidden relative">
+                                      <div 
+                                        className="h-full bg-orange-500 rounded-full transition-all duration-500"
+                                        style={{ width: `${(item.examA / 100) * 100}%` }}
+                                      />
+                                      <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] font-bold text-foreground">
+                                        {item.examA}
+                                      </span>
+                                    </div>
+                                  </div>
+                                </div>
+                                
+                                {/* Delta Line */}
+                                {item.delta !== 0 && (
+                                  <div className="mt-2 pt-2 border-t border-border/30 flex items-center justify-between">
+                                    <span className="text-[10px] text-muted-foreground">Change</span>
+                                    <div className="flex items-center gap-1">
+                                      <span className={`text-xs font-bold ${item.delta > 0 ? "text-emerald-600" : "text-red-600"}`}>
+                                        {item.examB} → {item.examA}
+                                      </span>
+                                      <span className={`text-[10px] ${item.delta > 0 ? "text-emerald-600" : "text-red-600"}`}>
+                                        ({item.delta > 0 ? "↑" : "↓"} {Math.abs(item.delta)} points)
+                                      </span>
+                                    </div>
+                                  </div>
+                                )}
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+
+                      {/* Comparison Insight */}
+                      <div className="p-3 rounded-lg bg-accent/50 border border-primary/20">
+                        <p className="text-sm text-foreground">
+                          <span className="font-medium">Insight:</span>{" "}
+                          {(() => {
+                            const improved = comparisonData.filter(d => d.delta > 0).length;
+                            const declined = comparisonData.filter(d => d.delta < 0).length;
+                            const avgDelta = Math.round(comparisonData.reduce((sum, d) => sum + d.delta, 0) / comparisonData.length);
+                            if (avgDelta > 0) {
+                              return `Overall improvement of +${avgDelta}% from ${examBLabel} to ${examALabel}. ${improved} subjects improved, ${declined} declined.`;
+                            } else if (avgDelta < 0) {
+                              return `Overall decline of ${avgDelta}% from ${examBLabel} to ${examALabel}. Focus on ${comparisonData.filter(d => d.delta < 0).map(d => shortenSubjectName(d.name)).join(", ")}.`;
+                            }
+                            return "Performance remained stable between the two periods.";
+                          })()}
+                        </p>
+                      </div>
                     </>
                   );
                 })()}
