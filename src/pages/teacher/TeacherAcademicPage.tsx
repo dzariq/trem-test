@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo, useRef, useCallback } from "react";
 import { TeacherAppLayout } from "@/components/layout/TeacherAppLayout";
 import { AppHeader } from "@/components/layout/AppHeader";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -129,6 +129,49 @@ export default function TeacherAcademicPage() {
   const [examBClass, setExamBClass] = useState(teacherProfile.classes[0]);
   const [examBYear, setExamBYear] = useState("2025");
   const [examBPeriod, setExamBPeriod] = useState<"midYear" | "yearEnd">("yearEnd");
+
+  // Trends tab state - like student page
+  const [trendPeriod, setTrendPeriod] = useState<"1year" | "2years" | "3years" | "all">("all");
+  const [subjectFilter, setSubjectFilter] = useState("all");
+  
+  // Pinch-to-zoom state for chart
+  const [chartZoom, setChartZoom] = useState(1);
+  const chartContainerRef = useRef<HTMLDivElement>(null);
+  const lastTouchDistance = useRef<number | null>(null);
+
+  const handleTouchStart = useCallback((e: React.TouchEvent) => {
+    if (e.touches.length === 2) {
+      const touch1 = e.touches[0];
+      const touch2 = e.touches[1];
+      lastTouchDistance.current = Math.hypot(
+        touch2.clientX - touch1.clientX,
+        touch2.clientY - touch1.clientY
+      );
+    }
+  }, []);
+
+  const handleTouchMove = useCallback((e: React.TouchEvent) => {
+    if (e.touches.length === 2 && lastTouchDistance.current !== null) {
+      const touch1 = e.touches[0];
+      const touch2 = e.touches[1];
+      const currentDistance = Math.hypot(
+        touch2.clientX - touch1.clientX,
+        touch2.clientY - touch1.clientY
+      );
+      
+      const scale = currentDistance / lastTouchDistance.current;
+      setChartZoom(prev => Math.min(3, Math.max(0.5, prev * scale)));
+      lastTouchDistance.current = currentDistance;
+    }
+  }, []);
+
+  const handleTouchEnd = useCallback(() => {
+    lastTouchDistance.current = null;
+  }, []);
+
+  const resetZoom = useCallback(() => {
+    setChartZoom(1);
+  }, []);
 
   const toggleYear = (year: string) => {
     setSelectedYears(prev => 
@@ -300,6 +343,182 @@ export default function TeacherAcademicPage() {
   })).sort((a, b) => b.average - a.average);
 
   const selectedStudentData = students.find(s => s.id === selectedStudent);
+
+  // Year-over-year trend data with period filtering (like student page)
+  const trendData = useMemo(() => {
+    const data = subjectYearlyData[selectedClass as keyof typeof subjectYearlyData] || subjectYearlyData["5A"];
+    const years = data.map(d => d.year);
+    
+    // Create periods array (mid-year and year-end for each year except current)
+    const periods: { year: string; type: "midYear" | "yearEnd"; label: string }[] = [];
+    years.forEach((year, idx) => {
+      periods.push({ year, type: "midYear", label: `Mid ${year}` });
+      if (idx < years.length - 1) {
+        periods.push({ year, type: "yearEnd", label: `End ${year}` });
+      }
+    });
+    
+    // Filter based on trendPeriod
+    let filteredPeriods = periods;
+    if (trendPeriod === "1year") {
+      filteredPeriods = periods.slice(-2);
+    } else if (trendPeriod === "2years") {
+      filteredPeriods = periods.slice(-4);
+    } else if (trendPeriod === "3years") {
+      filteredPeriods = periods.slice(-6);
+    }
+    
+    return filteredPeriods.map(p => {
+      const yearData = data.find(d => d.year === p.year);
+      if (!yearData) return { period: p.label, Average: 0 };
+      
+      const result: Record<string, number | string | null> = { period: p.label };
+      result["Mathematics"] = yearData.Mathematics;
+      result["Science"] = yearData.Science;
+      result["English"] = yearData.English;
+      result["Arts"] = yearData.Arts;
+      result["Physical Education"] = yearData["Physical Education"];
+      result["Chinese as a Second Language"] = yearData["Chinese as a Second Language"];
+      
+      // Calculate average
+      const scores = [yearData.Mathematics, yearData.Science, yearData.English, yearData.Arts, yearData["Physical Education"], yearData["Chinese as a Second Language"]];
+      result["Average"] = Math.round(scores.reduce((a, b) => a + b, 0) / scores.length);
+      return result;
+    });
+  }, [selectedClass, trendPeriod]);
+
+  // Calculate trend direction for selected subject(s)
+  const trendDirection = useMemo(() => {
+    if (trendData.length < 2) return { direction: "stable" as const, change: 0, currentValue: 0 };
+    
+    const key = subjectFilter === "all" ? "Average" : subjectFilter;
+    const firstValue = trendData[0]?.[key] as number | null;
+    const lastValue = trendData[trendData.length - 1]?.[key] as number | null;
+    
+    if (firstValue === null || lastValue === null) return { direction: "stable" as const, change: 0, currentValue: 0 };
+    
+    const change = lastValue - firstValue;
+    return {
+      direction: change > 0 ? "up" as const : change < 0 ? "down" as const : "stable" as const,
+      change: Math.abs(change),
+      currentValue: lastValue
+    };
+  }, [trendData, subjectFilter]);
+
+  // Rising subjects - biggest improvement from first to last period
+  const risingSubjects = useMemo(() => {
+    if (trendData.length < 2) return [];
+    const subjectNames = ["Mathematics", "Science", "English", "Arts", "Physical Education", "Chinese as a Second Language"];
+    
+    return subjectNames.map(name => {
+      const first = trendData[0]?.[name] as number ?? 0;
+      const last = trendData[trendData.length - 1]?.[name] as number ?? 0;
+      return { name, first, last, improvement: last - first };
+    })
+    .filter(s => s.improvement > 0)
+    .sort((a, b) => b.improvement - a.improvement)
+    .slice(0, 3);
+  }, [trendData]);
+
+  // Falling subjects - biggest decline
+  const fallingSubjects = useMemo(() => {
+    if (trendData.length < 2) return [];
+    const subjectNames = ["Mathematics", "Science", "English", "Arts", "Physical Education", "Chinese as a Second Language"];
+    
+    return subjectNames.map(name => {
+      const first = trendData[0]?.[name] as number ?? 0;
+      const last = trendData[trendData.length - 1]?.[name] as number ?? 0;
+      return { name, first, last, decline: first - last };
+    })
+    .filter(s => s.decline > 0)
+    .sort((a, b) => b.decline - a.decline)
+    .slice(0, 3);
+  }, [trendData]);
+
+  // Radar chart data for subject strengths
+  const radarData = useMemo(() => {
+    const data = subjectYearlyData[selectedClass as keyof typeof subjectYearlyData] || subjectYearlyData["5A"];
+    const latest = data[data.length - 1];
+    const shortNames: Record<string, string> = {
+      "Mathematics": "Math",
+      "Science": "Science",
+      "English": "English",
+      "Arts": "Arts",
+      "Physical Education": "PE",
+      "Chinese as a Second Language": "Chinese",
+    };
+    return [
+      { subject: shortNames["Mathematics"], score: latest.Mathematics, fullMark: 100 },
+      { subject: shortNames["Science"], score: latest.Science, fullMark: 100 },
+      { subject: shortNames["English"], score: latest.English, fullMark: 100 },
+      { subject: shortNames["Arts"], score: latest.Arts, fullMark: 100 },
+      { subject: shortNames["Physical Education"], score: latest["Physical Education"], fullMark: 100 },
+      { subject: shortNames["Chinese as a Second Language"], score: latest["Chinese as a Second Language"], fullMark: 100 },
+    ];
+  }, [selectedClass]);
+
+  // Radar average for color coding
+  const radarAverage = useMemo(() => {
+    const scores = radarData.map(d => d.score);
+    return scores.reduce((a, b) => a + b, 0) / scores.length;
+  }, [radarData]);
+
+  // Subject vs School Average data
+  const subjectVsSchoolData = useMemo(() => {
+    const data = subjectYearlyData[selectedClass as keyof typeof subjectYearlyData] || subjectYearlyData["5A"];
+    const latest = data[data.length - 1];
+    const schoolAvg = 72; // Mock school average
+    const shortNames: Record<string, string> = {
+      "Mathematics": "Math",
+      "Science": "Science",
+      "English": "English",
+      "Arts": "Arts",
+      "Physical Education": "PE",
+      "Chinese as a Second Language": "Chinese",
+    };
+    return [
+      { name: shortNames["Mathematics"], fullName: "Mathematics", classScore: latest.Mathematics, schoolAvg, delta: latest.Mathematics - schoolAvg },
+      { name: shortNames["Science"], fullName: "Science", classScore: latest.Science, schoolAvg, delta: latest.Science - schoolAvg },
+      { name: shortNames["English"], fullName: "English", classScore: latest.English, schoolAvg, delta: latest.English - schoolAvg },
+      { name: shortNames["Arts"], fullName: "Arts", classScore: latest.Arts, schoolAvg, delta: latest.Arts - schoolAvg },
+      { name: shortNames["Physical Education"], fullName: "Physical Education", classScore: latest["Physical Education"], schoolAvg, delta: latest["Physical Education"] - schoolAvg },
+      { name: shortNames["Chinese as a Second Language"], fullName: "Chinese as a Second Language", classScore: latest["Chinese as a Second Language"], schoolAvg, delta: latest["Chinese as a Second Language"] - schoolAvg },
+    ].sort((a, b) => b.delta - a.delta);
+  }, [selectedClass]);
+
+  // Performance Heatmap data
+  const heatmapData = useMemo(() => {
+    const data = subjectYearlyData[selectedClass as keyof typeof subjectYearlyData] || subjectYearlyData["5A"];
+    const subjectKeys = ["Mathematics", "Science", "English", "Arts", "Physical Education", "Chinese as a Second Language"] as const;
+    const shortNames: Record<string, string> = {
+      "Mathematics": "Math",
+      "Science": "Sci",
+      "English": "Eng",
+      "Arts": "Arts",
+      "Physical Education": "PE",
+      "Chinese as a Second Language": "Chi",
+    };
+    
+    return subjectKeys.map(subject => ({
+      subject: shortNames[subject],
+      fullName: subject,
+      scores: data.map(yearData => ({
+        period: yearData.year,
+        score: yearData[subject]
+      }))
+    }));
+  }, [selectedClass]);
+
+  // Helper function to get heatmap cell color based on score
+  const getHeatmapColor = (score: number | null): string => {
+    if (score === null) return "hsl(var(--muted))";
+    if (score >= 85) return "#16a34a";
+    if (score >= 75) return "#22c55e";
+    if (score >= 65) return "#84cc16";
+    if (score >= 55) return "#eab308";
+    if (score >= 45) return "#f97316";
+    return "#ef4444";
+  };
 
   return (
     <TeacherAppLayout>
@@ -1266,425 +1485,481 @@ ${atRiskStudents.length > 0 ? `3. Arrange parent meetings for at-risk students` 
 
               {/* ==================== TRENDS SUB-TAB ==================== */}
               <TabsContent value="trends" className="space-y-4">
-                {/* Filters Row */}
-                <div className="grid grid-cols-2 gap-2">
-                  <Select value={selectedClass} onValueChange={setSelectedClass}>
-                    <SelectTrigger className="text-xs">
-                      <SelectValue placeholder="Class" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">All Classes</SelectItem>
-                      {teacherProfile.classes.map((cls) => (
-                        <SelectItem key={cls} value={cls}>{cls}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <Select defaultValue="all">
-                    <SelectTrigger className="text-xs">
-                      <SelectValue placeholder="Subject" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">All Subjects</SelectItem>
-                      {subjects.map((sub) => (
-                        <SelectItem key={sub} value={sub}>{sub}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                {/* Quick Stats Row - Moomoo Style */}
-                <div className="grid grid-cols-4 gap-2">
-                  {(() => {
-                    const data = yearOverYearData[selectedClass as keyof typeof yearOverYearData] || yearOverYearData["5A"];
-                    const latest = data[data.length - 1];
-                    const previous = data[data.length - 2];
-                    const change = latest.midYear - previous.midYear;
-                    const changePercent = ((change / previous.midYear) * 100).toFixed(1);
-                    
-                    return (
-                      <>
-                        <div className="p-2 rounded-lg bg-gradient-to-br from-primary/10 to-primary/5 border border-primary/20 text-center">
-                          <p className="text-lg font-bold text-foreground">{latest.midYear}%</p>
-                          <p className="text-[9px] text-muted-foreground">Current Avg</p>
-                        </div>
-                        <div className={`p-2 rounded-lg text-center ${change >= 0 ? 'bg-gradient-to-br from-emerald-500/10 to-emerald-600/5 border border-emerald-500/20' : 'bg-gradient-to-br from-red-500/10 to-red-600/5 border border-red-500/20'}`}>
-                          <p className={`text-lg font-bold ${change >= 0 ? 'text-emerald-600' : 'text-red-600'}`}>
-                            {change >= 0 ? '+' : ''}{change}%
-                          </p>
-                          <p className="text-[9px] text-muted-foreground">YoY Change</p>
-                        </div>
-                        <div className="p-2 rounded-lg bg-gradient-to-br from-amber-500/10 to-amber-600/5 border border-amber-500/20 text-center">
-                          <p className="text-lg font-bold text-foreground">{Math.max(...data.map(d => d.midYear))}%</p>
-                          <p className="text-[9px] text-muted-foreground">Peak Score</p>
-                        </div>
-                        <div className="p-2 rounded-lg bg-gradient-to-br from-blue-500/10 to-blue-600/5 border border-blue-500/20 text-center">
-                          <p className="text-lg font-bold text-foreground">{data.length}</p>
-                          <p className="text-[9px] text-muted-foreground">Years Data</p>
-                        </div>
-                      </>
-                    );
-                  })()}
-                </div>
-
-                {/* Main Performance Area Chart - Moomoo Style */}
-                <div className="p-4 rounded-xl bg-gradient-to-br from-card to-accent/30 border border-border/50 shadow-sm">
-                  <div className="flex items-center justify-between mb-3">
-                    <div className="flex items-center gap-2">
-                      <div className="w-8 h-8 rounded-lg bg-primary/20 flex items-center justify-center">
-                        <TrendingUp className="h-4 w-4 text-primary" />
-                      </div>
-                      <div>
-                        <h4 className="text-sm font-semibold text-foreground">Performance Trend</h4>
-                        <p className="text-[10px] text-muted-foreground">Class average over time</p>
+                {/* Current Score Header - Moomoo Style */}
+                <div className="p-4 rounded-xl bg-gradient-to-r from-accent/50 to-accent/30 border border-border/50 space-y-3">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0 flex-1">
+                      <p className="text-xs text-muted-foreground mb-0.5 truncate">
+                        {subjectFilter === "all" ? `Class ${selectedClass} Average` : subjectFilter}
+                      </p>
+                      <div className="flex items-baseline gap-2 flex-wrap">
+                        <span className="text-3xl font-bold text-foreground">
+                          {trendDirection.currentValue ?? classAverage}%
+                        </span>
+                        {trendDirection.direction !== "stable" && (
+                          <span className={`flex items-center text-sm font-semibold ${
+                            trendDirection.direction === "up" ? "text-green-500" : "text-red-500"
+                          }`}>
+                            {trendDirection.direction === "up" ? (
+                              <TrendingUp className="h-4 w-4 mr-0.5" />
+                            ) : (
+                              <TrendingDown className="h-4 w-4 mr-0.5" />
+                            )}
+                            {trendDirection.direction === "up" ? "+" : "-"}{trendDirection.change}%
+                          </span>
+                        )}
                       </div>
                     </div>
-                    <Badge variant="outline" className="text-[10px]">
-                      {selectedClass === "all" ? "All Classes" : selectedClass}
-                    </Badge>
+                    {/* Class Selector */}
+                    <Select value={selectedClass} onValueChange={setSelectedClass}>
+                      <SelectTrigger className="w-20 h-8 text-xs">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {teacherProfile.classes.map((cls) => (
+                          <SelectItem key={cls} value={cls}>{cls}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   </div>
-                  
-                  <div className="h-48">
-                    <ResponsiveContainer width="100%" height="100%">
-                      {selectedClass === "all" ? (
-                        <AreaChart data={multiClassTrendData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
-                          <defs>
-                            <linearGradient id="gradient5A" x1="0" y1="0" x2="0" y2="1">
-                              <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.3}/>
-                              <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0.05}/>
-                            </linearGradient>
-                            <linearGradient id="gradient5B" x1="0" y1="0" x2="0" y2="1">
-                              <stop offset="5%" stopColor="#10b981" stopOpacity={0.3}/>
-                              <stop offset="95%" stopColor="#10b981" stopOpacity={0.05}/>
-                            </linearGradient>
-                            <linearGradient id="gradient4A" x1="0" y1="0" x2="0" y2="1">
-                              <stop offset="5%" stopColor="#f59e0b" stopOpacity={0.3}/>
-                              <stop offset="95%" stopColor="#f59e0b" stopOpacity={0.05}/>
-                            </linearGradient>
-                          </defs>
-                          <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" strokeOpacity={0.3} vertical={false} />
-                          <XAxis dataKey="year" tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }} axisLine={false} tickLine={false} />
-                          <YAxis domain={[50, 100]} tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }} axisLine={false} tickLine={false} width={30} />
-                          <Tooltip contentStyle={{ backgroundColor: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', borderRadius: '8px' }} />
-                          <Legend wrapperStyle={{ fontSize: '10px' }} />
-                          <ReferenceLine y={50} stroke="#f59e0b" strokeDasharray="5 5" strokeOpacity={0.5} />
-                          <ReferenceLine y={80} stroke="#22c55e" strokeDasharray="5 5" strokeOpacity={0.5} />
-                          <Area type="monotone" dataKey="5A" stroke="hsl(var(--primary))" strokeWidth={2} fill="url(#gradient5A)" dot={{ r: 4, fill: 'hsl(var(--primary))', strokeWidth: 2, stroke: 'hsl(var(--background))' }} />
-                          <Area type="monotone" dataKey="5B" stroke="#10b981" strokeWidth={2} fill="url(#gradient5B)" dot={{ r: 4, fill: '#10b981', strokeWidth: 2, stroke: 'hsl(var(--background))' }} />
-                          <Area type="monotone" dataKey="4A" stroke="#f59e0b" strokeWidth={2} fill="url(#gradient4A)" dot={{ r: 4, fill: '#f59e0b', strokeWidth: 2, stroke: 'hsl(var(--background))' }} />
-                        </AreaChart>
-                      ) : (
-                        <AreaChart data={yearOverYearData[selectedClass as keyof typeof yearOverYearData] || []} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
-                          <defs>
-                            <linearGradient id="gradientMid" x1="0" y1="0" x2="0" y2="1">
-                              <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.4}/>
-                              <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0.05}/>
-                            </linearGradient>
-                            <linearGradient id="gradientEnd" x1="0" y1="0" x2="0" y2="1">
-                              <stop offset="5%" stopColor="#10b981" stopOpacity={0.4}/>
-                              <stop offset="95%" stopColor="#10b981" stopOpacity={0.05}/>
-                            </linearGradient>
-                          </defs>
-                          <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" strokeOpacity={0.3} vertical={false} />
-                          <XAxis dataKey="year" tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }} axisLine={false} tickLine={false} />
-                          <YAxis domain={[50, 100]} tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }} axisLine={false} tickLine={false} width={30} />
-                          <Tooltip contentStyle={{ backgroundColor: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', borderRadius: '8px' }} />
-                          <Legend wrapperStyle={{ fontSize: '10px' }} />
-                          <ReferenceLine y={50} stroke="#f59e0b" strokeDasharray="5 5" strokeOpacity={0.5} label={{ value: "Pass", fontSize: 9, fill: '#f59e0b' }} />
-                          <ReferenceLine y={80} stroke="#22c55e" strokeDasharray="5 5" strokeOpacity={0.5} label={{ value: "A", fontSize: 9, fill: '#22c55e' }} />
-                          <Area type="monotone" dataKey="midYear" stroke="hsl(var(--primary))" strokeWidth={2.5} fill="url(#gradientMid)" dot={{ r: 5, fill: 'hsl(var(--primary))', strokeWidth: 2, stroke: 'hsl(var(--background))' }} activeDot={{ r: 7, strokeWidth: 2, stroke: '#fff' }} name="Mid-Year" />
-                          <Area type="monotone" dataKey="yearEnd" stroke="#10b981" strokeWidth={2.5} fill="url(#gradientEnd)" dot={{ r: 5, fill: '#10b981', strokeWidth: 2, stroke: 'hsl(var(--background))' }} activeDot={{ r: 7, strokeWidth: 2, stroke: '#fff' }} name="Year-End" connectNulls={false} />
-                        </AreaChart>
+                  {/* Period Toggle */}
+                  <div className="flex gap-1 bg-muted/50 p-1 rounded-lg w-fit">
+                    {([
+                      { key: "1year", label: "1Y" },
+                      { key: "2years", label: "2Y" },
+                      { key: "3years", label: "3Y" },
+                      { key: "all", label: "All" }
+                    ] as const).map(({ key, label }) => (
+                      <button
+                        key={key}
+                        onClick={() => setTrendPeriod(key)}
+                        className={`px-3 py-1.5 text-xs font-medium rounded-md transition-all whitespace-nowrap ${
+                          trendPeriod === key
+                            ? "bg-primary text-primary-foreground shadow-sm"
+                            : "text-muted-foreground hover:text-foreground"
+                        }`}
+                      >
+                        {label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Subject Filter Pills */}
+                <div className="flex gap-2 overflow-x-auto pb-2">
+                  <Badge 
+                    variant={subjectFilter === "all" ? "default" : "outline"}
+                    className="cursor-pointer whitespace-nowrap"
+                    onClick={() => setSubjectFilter("all")}
+                  >
+                    All Subjects
+                  </Badge>
+                  {subjects.map((subject) => (
+                    <Badge
+                      key={subject}
+                      variant={subjectFilter === subject ? "default" : "outline"}
+                      className="cursor-pointer whitespace-nowrap"
+                      onClick={() => setSubjectFilter(subject)}
+                    >
+                      {subject.length > 12 ? subject.substring(0, 12) + "..." : subject}
+                    </Badge>
+                  ))}
+                </div>
+
+                {/* Moomoo-Style Gradient Area Chart - Scrollable with Pinch-to-Zoom */}
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <p className="text-[10px] text-muted-foreground">← Swipe • Pinch to zoom →</p>
+                    <div className="flex items-center gap-2">
+                      {chartZoom !== 1 && (
+                        <button 
+                          onClick={resetZoom}
+                          className="text-[10px] text-primary underline"
+                        >
+                          Reset zoom
+                        </button>
                       )}
+                      <p className="text-[10px] text-muted-foreground">
+                        {chartZoom !== 1 ? `${Math.round(chartZoom * 100)}%` : `${trendData.length} periods`}
+                      </p>
+                    </div>
+                  </div>
+                  <div 
+                    ref={chartContainerRef}
+                    className="h-64 overflow-x-auto overflow-y-hidden scrollbar-thin scrollbar-thumb-muted scrollbar-track-transparent"
+                    style={{
+                      WebkitOverflowScrolling: 'touch',
+                      scrollBehavior: 'smooth',
+                      touchAction: 'pan-x pinch-zoom',
+                    }}
+                    onTouchStart={handleTouchStart}
+                    onTouchMove={handleTouchMove}
+                    onTouchEnd={handleTouchEnd}
+                  >
+                    <div style={{ 
+                      width: Math.max(100, (trendData.length / 4) * 100 * chartZoom) + '%', 
+                      minWidth: '100%', 
+                      height: '100%',
+                      transition: 'width 0.1s ease-out'
+                    }}>
+                      <ResponsiveContainer width="100%" height="100%">
+                        <AreaChart data={trendData} margin={{ top: 10, right: 20, left: 0, bottom: 20 }}>
+                          <defs>
+                            <linearGradient id="gradientGreen" x1="0" y1="0" x2="0" y2="1">
+                              <stop offset="0%" stopColor="#22c55e" stopOpacity={0.4} />
+                              <stop offset="100%" stopColor="#22c55e" stopOpacity={0.05} />
+                            </linearGradient>
+                            <linearGradient id="gradientRed" x1="0" y1="0" x2="0" y2="1">
+                              <stop offset="0%" stopColor="#ef4444" stopOpacity={0.4} />
+                              <stop offset="100%" stopColor="#ef4444" stopOpacity={0.05} />
+                            </linearGradient>
+                            <linearGradient id="gradientBlue" x1="0" y1="0" x2="0" y2="1">
+                              <stop offset="0%" stopColor="#3b82f6" stopOpacity={0.4} />
+                              <stop offset="100%" stopColor="#3b82f6" stopOpacity={0.05} />
+                            </linearGradient>
+                          </defs>
+                          <CartesianGrid 
+                            strokeDasharray="3 3" 
+                            stroke="hsl(var(--border))" 
+                            strokeOpacity={0.2}
+                            vertical={false}
+                          />
+                          <XAxis 
+                            dataKey="period" 
+                            axisLine={false}
+                            tickLine={false}
+                            interval={0}
+                            height={40}
+                            tick={({ x, y, payload }) => {
+                              const parts = payload.value.split(' ');
+                              return (
+                                <g transform={`translate(${x},${y})`}>
+                                  <text 
+                                    x={0} 
+                                    y={0} 
+                                    dy={12} 
+                                    textAnchor="middle" 
+                                    fontSize={10}
+                                    fill="hsl(var(--muted-foreground))"
+                                  >
+                                    {parts[0]}
+                                  </text>
+                                  <text 
+                                    x={0} 
+                                    y={0} 
+                                    dy={24} 
+                                    textAnchor="middle" 
+                                    fontSize={9}
+                                    fill="hsl(var(--muted-foreground))"
+                                    opacity={0.7}
+                                  >
+                                    {parts[1]}
+                                  </text>
+                                </g>
+                              );
+                            }}
+                          />
+                          <YAxis 
+                            domain={[30, 100]}
+                            tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }}
+                            axisLine={false}
+                            tickLine={false}
+                            width={35}
+                          />
+                          <Tooltip 
+                            contentStyle={{ 
+                              backgroundColor: "hsl(var(--card))", 
+                              border: "1px solid hsl(var(--border))", 
+                              borderRadius: "12px",
+                              boxShadow: "0 4px 12px rgba(0,0,0,0.1)"
+                            }}
+                            labelStyle={{ fontWeight: 600, marginBottom: 4 }}
+                          />
+                          <ReferenceLine 
+                            y={50} 
+                            stroke="#f59e0b" 
+                            strokeDasharray="5 5" 
+                            strokeOpacity={0.6}
+                            label={{ value: "Pass", fontSize: 9, fill: "#f59e0b" }}
+                          />
+                          <ReferenceLine 
+                            y={80} 
+                            stroke="#22c55e" 
+                            strokeDasharray="5 5" 
+                            strokeOpacity={0.6}
+                            label={{ value: "A", fontSize: 9, fill: "#22c55e" }}
+                          />
+                          {subjectFilter === "all" ? (
+                            <Area
+                              type="monotone"
+                              dataKey="Average"
+                              stroke={trendDirection.direction === "up" ? "#22c55e" : trendDirection.direction === "down" ? "#ef4444" : "#3b82f6"}
+                              strokeWidth={2.5}
+                              fill={trendDirection.direction === "up" ? "url(#gradientGreen)" : trendDirection.direction === "down" ? "url(#gradientRed)" : "url(#gradientBlue)"}
+                              dot={{ 
+                                fill: trendDirection.direction === "up" ? "#22c55e" : trendDirection.direction === "down" ? "#ef4444" : "#3b82f6", 
+                                strokeWidth: 0, 
+                                r: 5 
+                              }}
+                              activeDot={{ r: 7, strokeWidth: 2, stroke: "#fff" }}
+                              connectNulls
+                            />
+                          ) : (
+                            <Area
+                              type="monotone"
+                              dataKey={subjectFilter}
+                              stroke={trendDirection.direction === "up" ? "#22c55e" : trendDirection.direction === "down" ? "#ef4444" : "#3b82f6"}
+                              strokeWidth={2.5}
+                              fill={trendDirection.direction === "up" ? "url(#gradientGreen)" : trendDirection.direction === "down" ? "url(#gradientRed)" : "url(#gradientBlue)"}
+                              dot={{ 
+                                fill: trendDirection.direction === "up" ? "#22c55e" : trendDirection.direction === "down" ? "#ef4444" : "#3b82f6", 
+                                strokeWidth: 0, 
+                                r: 5 
+                              }}
+                              activeDot={{ r: 7, strokeWidth: 2, stroke: "#fff" }}
+                              connectNulls
+                            />
+                          )}
+                        </AreaChart>
+                      </ResponsiveContainer>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Rising & Falling Subjects */}
+                <div className="grid grid-cols-2 gap-3">
+                  {/* Rising Subjects */}
+                  <div className="space-y-2">
+                    <h4 className="text-sm font-medium text-foreground flex items-center gap-1.5">
+                      <TrendingUp className="h-4 w-4 text-green-500" />
+                      Rising Subjects
+                    </h4>
+                    <div className="space-y-2">
+                      {risingSubjects.length > 0 ? risingSubjects.map((item, idx) => (
+                        <div 
+                          key={idx} 
+                          className="p-2.5 rounded-lg border border-green-500/30 bg-green-500/10"
+                        >
+                          <div className="flex items-center justify-between">
+                            <span className="text-xs font-medium text-foreground">{item.name.length > 12 ? item.name.substring(0, 12) + "..." : item.name}</span>
+                            <span className="text-xs font-bold text-green-600">+{item.improvement}%</span>
+                          </div>
+                          <p className="text-[10px] text-muted-foreground mt-0.5">
+                            {item.first}% → {item.last}%
+                          </p>
+                        </div>
+                      )) : (
+                        <p className="text-xs text-muted-foreground p-2">No improving subjects</p>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Falling Behind */}
+                  <div className="space-y-2">
+                    <h4 className="text-sm font-medium text-foreground flex items-center gap-1.5">
+                      <TrendingDown className="h-4 w-4 text-red-500" />
+                      Needs Focus
+                    </h4>
+                    <div className="space-y-2">
+                      {fallingSubjects.length > 0 ? fallingSubjects.map((item, idx) => (
+                        <div 
+                          key={idx} 
+                          className="p-2.5 rounded-lg border border-red-500/30 bg-red-500/10"
+                        >
+                          <div className="flex items-center justify-between">
+                            <span className="text-xs font-medium text-foreground">{item.name.length > 12 ? item.name.substring(0, 12) + "..." : item.name}</span>
+                            <span className="text-xs font-bold text-red-600">-{item.decline}%</span>
+                          </div>
+                          <p className="text-[10px] text-muted-foreground mt-0.5">
+                            {item.first}% → {item.last}%
+                          </p>
+                        </div>
+                      )) : (
+                        <p className="text-xs text-muted-foreground p-2">All subjects stable!</p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Dynamic Trend Insights */}
+                <div className="p-3 rounded-lg bg-accent/50 border border-primary/20">
+                  <p className="text-sm text-foreground">
+                    <span className="font-medium">Insight:</span>{" "}
+                    {risingSubjects.length > 0 && (
+                      <>{risingSubjects[0].name} shows great improvement (+{risingSubjects[0].improvement}%). </>
+                    )}
+                    {fallingSubjects.length > 0 && (
+                      <>Focus more on {fallingSubjects[0].name} which dropped {fallingSubjects[0].decline}%. </>
+                    )}
+                    {risingSubjects.length === 0 && fallingSubjects.length === 0 && (
+                      <>Performance is stable across all subjects for Class {selectedClass}.</>
+                    )}
+                  </p>
+                </div>
+
+                {/* Radar Chart - Subject Strengths Profile */}
+                <div className="space-y-2">
+                  <h4 className="text-sm font-medium text-foreground flex items-center gap-1.5">
+                    <Target className="h-4 w-4 text-primary" />
+                    Strengths Profile
+                  </h4>
+                  <div className="h-56">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <RadarChart data={radarData} cx="50%" cy="50%" outerRadius="70%">
+                        <PolarGrid stroke="hsl(var(--border))" strokeOpacity={0.5} />
+                        <PolarAngleAxis 
+                          dataKey="subject" 
+                          tick={{ fontSize: 9, fill: "hsl(var(--muted-foreground))" }}
+                          tickLine={false}
+                        />
+                        <PolarRadiusAxis 
+                          angle={30} 
+                          domain={[0, 100]} 
+                          tick={{ fontSize: 8, fill: "hsl(var(--muted-foreground))" }}
+                          tickCount={5}
+                          axisLine={false}
+                        />
+                        <Radar
+                          name="Score"
+                          dataKey="score"
+                          stroke={radarAverage >= 70 ? "#22c55e" : radarAverage >= 50 ? "#f59e0b" : "#ef4444"}
+                          fill={radarAverage >= 70 ? "#22c55e" : radarAverage >= 50 ? "#f59e0b" : "#ef4444"}
+                          fillOpacity={0.3}
+                          strokeWidth={2}
+                        />
+                        <Tooltip 
+                          contentStyle={{ 
+                            backgroundColor: "hsl(var(--card))", 
+                            border: "1px solid hsl(var(--border))", 
+                            borderRadius: "8px",
+                            fontSize: 12
+                          }}
+                          formatter={(value: number) => [`${value}%`, "Score"]}
+                        />
+                      </RadarChart>
                     </ResponsiveContainer>
                   </div>
+                  <p className="text-[10px] text-muted-foreground text-center">
+                    Visual snapshot of performance across all subjects
+                  </p>
                 </div>
 
-                {/* Subject Trends - Multi-line Area Chart */}
-                {selectedClass !== "all" && (
-                  <div className="p-4 rounded-xl bg-gradient-to-br from-card to-accent/30 border border-border/50 shadow-sm">
-                    <div className="flex items-center justify-between mb-3">
-                      <div className="flex items-center gap-2">
-                        <div className="w-8 h-8 rounded-lg bg-blue-500/20 flex items-center justify-center">
-                          <BookOpen className="h-4 w-4 text-blue-500" />
-                        </div>
-                        <div>
-                          <h4 className="text-sm font-semibold text-foreground">Subject Performance</h4>
-                          <p className="text-[10px] text-muted-foreground">All subjects over time</p>
-                        </div>
-                      </div>
-                    </div>
-                    
-                    <div className="h-52">
-                      <ResponsiveContainer width="100%" height="100%">
-                        <LineChart data={subjectYearlyData[selectedClass as keyof typeof subjectYearlyData] || []} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
-                          <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" strokeOpacity={0.3} vertical={false} />
-                          <XAxis dataKey="year" tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }} axisLine={false} tickLine={false} />
-                          <YAxis domain={[40, 100]} tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }} axisLine={false} tickLine={false} width={30} />
-                          <Tooltip contentStyle={{ backgroundColor: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', borderRadius: '8px' }} />
-                          <Legend wrapperStyle={{ fontSize: '9px' }} />
-                          <Line type="monotone" dataKey="Mathematics" stroke="#3b82f6" strokeWidth={2} dot={{ r: 3 }} />
-                          <Line type="monotone" dataKey="Science" stroke="#10b981" strokeWidth={2} dot={{ r: 3 }} />
-                          <Line type="monotone" dataKey="English" stroke="#8b5cf6" strokeWidth={2} dot={{ r: 3 }} />
-                          <Line type="monotone" dataKey="Arts" stroke="#f59e0b" strokeWidth={2} dot={{ r: 3 }} />
-                          <Line type="monotone" dataKey="Physical Education" stroke="#ef4444" strokeWidth={2} dot={{ r: 3 }} name="PE" />
-                          <Line type="monotone" dataKey="Chinese as a Second Language" stroke="#06b6d4" strokeWidth={2} dot={{ r: 3 }} name="Chinese" />
-                        </LineChart>
-                      </ResponsiveContainer>
-                    </div>
-                  </div>
-                )}
-
-                {/* Top Growth & Needs Attention - Side by Side */}
-                <div className="grid grid-cols-2 gap-3">
-                  {/* Top Growth - Moomoo Style */}
-                  <div className="p-3 rounded-xl bg-gradient-to-br from-emerald-500/10 to-emerald-600/5 border border-emerald-500/20">
-                    <div className="flex items-center gap-2 mb-2">
-                      <div className="w-6 h-6 rounded-md bg-emerald-500/20 flex items-center justify-center">
-                        <TrendingUp className="h-3 w-3 text-emerald-500" />
-                      </div>
-                      <span className="text-xs font-semibold text-foreground">Top Growth</span>
-                    </div>
-                    {(() => {
-                      const data = subjectYearlyData[selectedClass as keyof typeof subjectYearlyData] || subjectYearlyData["5A"];
-                      const latest = data[data.length - 1];
-                      const previous = data[data.length - 2];
-                      const growthData = [
-                        { name: "Math", growth: latest.Mathematics - previous.Mathematics },
-                        { name: "Science", growth: latest.Science - previous.Science },
-                        { name: "English", growth: latest.English - previous.English },
-                        { name: "Arts", growth: latest.Arts - previous.Arts },
-                        { name: "PE", growth: latest["Physical Education"] - previous["Physical Education"] },
-                        { name: "Chinese", growth: latest["Chinese as a Second Language"] - previous["Chinese as a Second Language"] },
-                      ].sort((a, b) => b.growth - a.growth).slice(0, 3);
-                      
-                      return (
-                        <div className="space-y-1.5">
-                          {growthData.map((item, idx) => (
-                            <div key={idx} className="flex items-center justify-between p-1.5 rounded-lg bg-emerald-500/10">
-                              <span className="text-[10px] font-medium text-foreground">{item.name}</span>
-                              <span className="text-[10px] font-bold text-emerald-600">+{item.growth}%</span>
-                            </div>
-                          ))}
-                        </div>
-                      );
-                    })()}
-                  </div>
-
-                  {/* Needs Attention - Moomoo Style */}
-                  <div className="p-3 rounded-xl bg-gradient-to-br from-amber-500/10 to-amber-600/5 border border-amber-500/20">
-                    <div className="flex items-center gap-2 mb-2">
-                      <div className="w-6 h-6 rounded-md bg-amber-500/20 flex items-center justify-center">
-                        <AlertTriangle className="h-3 w-3 text-amber-500" />
-                      </div>
-                      <span className="text-xs font-semibold text-foreground">Focus Areas</span>
-                    </div>
-                    {(() => {
-                      const data = subjectYearlyData[selectedClass as keyof typeof subjectYearlyData] || subjectYearlyData["5A"];
-                      const latest = data[data.length - 1];
-                      const lowScores = [
-                        { name: "Math", score: latest.Mathematics },
-                        { name: "Science", score: latest.Science },
-                        { name: "English", score: latest.English },
-                        { name: "Arts", score: latest.Arts },
-                        { name: "PE", score: latest["Physical Education"] },
-                        { name: "Chinese", score: latest["Chinese as a Second Language"] },
-                      ].sort((a, b) => a.score - b.score).slice(0, 3);
-                      
-                      return (
-                        <div className="space-y-1.5">
-                          {lowScores.map((item, idx) => (
-                            <div key={idx} className="flex items-center justify-between p-1.5 rounded-lg bg-amber-500/10">
-                              <span className="text-[10px] font-medium text-foreground">{item.name}</span>
-                              <span className="text-[10px] font-bold text-amber-600">{item.score}%</span>
-                            </div>
-                          ))}
-                        </div>
-                      );
-                    })()}
-                  </div>
-                </div>
-
-                {/* Radar Chart - Class Strengths Profile */}
-                {selectedClass !== "all" && (
-                  <div className="p-4 rounded-xl bg-gradient-to-br from-card to-accent/30 border border-border/50 shadow-sm">
-                    <div className="flex items-center gap-2 mb-3">
-                      <div className="w-8 h-8 rounded-lg bg-purple-500/20 flex items-center justify-center">
-                        <Target className="h-4 w-4 text-purple-500" />
-                      </div>
-                      <div>
-                        <h4 className="text-sm font-semibold text-foreground">Class Strengths Profile</h4>
-                        <p className="text-[10px] text-muted-foreground">Subject performance radar</p>
-                      </div>
-                    </div>
-                    
-                    <div className="h-56">
-                      <ResponsiveContainer width="100%" height="100%">
-                        <RadarChart data={(() => {
-                          const data = subjectYearlyData[selectedClass as keyof typeof subjectYearlyData] || subjectYearlyData["5A"];
-                          const latest = data[data.length - 1];
-                          return [
-                            { subject: "Math", score: latest.Mathematics },
-                            { subject: "Science", score: latest.Science },
-                            { subject: "English", score: latest.English },
-                            { subject: "Arts", score: latest.Arts },
-                            { subject: "PE", score: latest["Physical Education"] },
-                            { subject: "Chinese", score: latest["Chinese as a Second Language"] },
-                          ];
-                        })()} cx="50%" cy="50%" outerRadius="70%">
-                          <PolarGrid stroke="hsl(var(--border))" strokeOpacity={0.5} />
-                          <PolarAngleAxis dataKey="subject" tick={{ fontSize: 9, fill: 'hsl(var(--muted-foreground))' }} tickLine={false} />
-                          <PolarRadiusAxis angle={30} domain={[0, 100]} tick={{ fontSize: 8, fill: 'hsl(var(--muted-foreground))' }} tickCount={5} axisLine={false} />
-                          <Radar name="Score" dataKey="score" stroke="hsl(var(--primary))" fill="hsl(var(--primary))" fillOpacity={0.3} strokeWidth={2} dot={{ r: 4, fill: 'hsl(var(--primary))' }} />
-                        </RadarChart>
-                      </ResponsiveContainer>
-                    </div>
-                  </div>
-                )}
-
-                {/* Category Trends - Stacked Bar */}
-                <div className="p-4 rounded-xl bg-gradient-to-br from-card to-accent/30 border border-border/50 shadow-sm">
-                  <div className="flex items-center gap-2 mb-3">
-                    <div className="w-8 h-8 rounded-lg bg-cyan-500/20 flex items-center justify-center">
-                      <BarChart3 className="h-4 w-4 text-cyan-500" />
-                    </div>
-                    <div>
-                      <h4 className="text-sm font-semibold text-foreground">Category Breakdown</h4>
-                      <p className="text-[10px] text-muted-foreground">Attitude, Homework, Quiz trends</p>
-                    </div>
-                  </div>
-                  
-                  <div className="h-40">
+                {/* Subject vs School Average Horizontal Bar Chart */}
+                <div className="space-y-2">
+                  <h4 className="text-sm font-medium text-foreground flex items-center gap-1.5">
+                    <BarChart3 className="h-4 w-4 text-primary" />
+                    vs School Average
+                  </h4>
+                  <div className="h-64">
                     <ResponsiveContainer width="100%" height="100%">
-                      <BarChart data={categoryYearOverYear[selectedClass as keyof typeof categoryYearOverYear] || categoryYearOverYear["5A"]} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
-                        <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" strokeOpacity={0.3} vertical={false} />
-                        <XAxis dataKey="year" tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }} axisLine={false} tickLine={false} />
-                        <YAxis tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }} axisLine={false} tickLine={false} width={25} />
-                        <Tooltip contentStyle={{ backgroundColor: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', borderRadius: '8px' }} />
-                        <Legend wrapperStyle={{ fontSize: '9px' }} />
-                        <Bar dataKey="attitude" fill="hsl(var(--primary))" radius={[2, 2, 0, 0]} name="Attitude" />
-                        <Bar dataKey="homework" fill="#f59e0b" radius={[2, 2, 0, 0]} name="Homework" />
-                        <Bar dataKey="quiz" fill="#10b981" radius={[2, 2, 0, 0]} name="Quiz" />
+                      <BarChart data={subjectVsSchoolData} layout="vertical" barGap={2}>
+                        <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" strokeOpacity={0.3} horizontal={false} />
+                        <XAxis 
+                          type="number" 
+                          domain={[0, 100]} 
+                          tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }}
+                          axisLine={false}
+                          tickLine={false}
+                        />
+                        <YAxis 
+                          type="category" 
+                          dataKey="name" 
+                          tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }} 
+                          width={60}
+                          axisLine={false}
+                          tickLine={false}
+                        />
+                        <Tooltip 
+                          contentStyle={{ 
+                            backgroundColor: "hsl(var(--card))", 
+                            border: "1px solid hsl(var(--border))", 
+                            borderRadius: "8px" 
+                          }}
+                          formatter={(value: number, name: string) => [
+                            `${value}%`, 
+                            name === "classScore" ? "Class Score" : "School Average"
+                          ]}
+                        />
+                        <Legend 
+                          wrapperStyle={{ fontSize: 10 }} 
+                          formatter={(value) => value === "classScore" ? "Class Score" : "School Avg"}
+                        />
+                        <Bar dataKey="classScore" fill="#3b82f6" radius={[0, 4, 4, 0]} barSize={10} />
+                        <Bar dataKey="schoolAvg" fill="hsl(var(--muted-foreground))" radius={[0, 4, 4, 0]} barSize={10} opacity={0.5} />
                       </BarChart>
                     </ResponsiveContainer>
                   </div>
-                  
-                  {/* Trend insight */}
-                  {(() => {
-                    const data = categoryYearOverYear[selectedClass as keyof typeof categoryYearOverYear] || categoryYearOverYear["5A"];
-                    if (data.length < 2) return null;
-                    const latest = data[data.length - 1];
-                    const previous = data[data.length - 2];
-                    const attitudeChange = latest.attitude - previous.attitude;
-                    const homeworkChange = latest.homework - previous.homework;
-                    const quizChange = latest.quiz - previous.quiz;
-                    
-                    const improvements = [];
-                    if (attitudeChange > 0) improvements.push(`Attitude +${attitudeChange.toFixed(1)}`);
-                    if (homeworkChange > 0) improvements.push(`Homework +${homeworkChange.toFixed(1)}`);
-                    if (quizChange > 0) improvements.push(`Quiz +${quizChange.toFixed(1)}`);
-                    
-                    const declines = [];
-                    if (attitudeChange < 0) declines.push(`Attitude ${attitudeChange.toFixed(1)}`);
-                    if (homeworkChange < 0) declines.push(`Homework ${homeworkChange.toFixed(1)}`);
-                    if (quizChange < 0) declines.push(`Quiz ${quizChange.toFixed(1)}`);
-                    
-                    return (
-                      <div className="flex flex-col gap-2 mt-3">
-                        {improvements.length > 0 && (
-                          <div className="flex items-center gap-2 p-2 rounded-lg bg-emerald-50 border border-emerald-200">
-                            <TrendingUp className="h-3 w-3 text-emerald-600" />
-                            <p className="text-[10px] text-emerald-700">
-                              <span className="font-medium">Improving:</span> {improvements.join(", ")}
-                            </p>
-                          </div>
-                        )}
-                        {declines.length > 0 && (
-                          <div className="flex items-center gap-2 p-2 rounded-lg bg-red-50 border border-red-200">
-                            <TrendingDown className="h-3 w-3 text-red-600" />
-                            <p className="text-[10px] text-red-700">
-                              <span className="font-medium">Declining:</span> {declines.join(", ")}
-                            </p>
-                          </div>
-                        )}
-                      </div>
-                    );
-                  })()}
+                  {/* Delta badges */}
+                  <div className="flex flex-wrap gap-1.5 justify-center">
+                    {subjectVsSchoolData.slice(0, 4).map((item) => (
+                      <Badge 
+                        key={item.name} 
+                        variant={item.delta >= 0 ? "default" : "destructive"}
+                        className="text-[10px] px-2 py-0.5"
+                      >
+                        {item.name}: {item.delta >= 0 ? "+" : ""}{item.delta}%
+                      </Badge>
+                    ))}
+                  </div>
                 </div>
 
                 {/* Performance Heatmap */}
-                <div className="p-4 rounded-xl bg-gradient-to-br from-card to-accent/30 border border-border/50 shadow-sm">
-                  <div className="flex items-center gap-2 mb-3">
-                    <div className="w-8 h-8 rounded-lg bg-rose-500/20 flex items-center justify-center">
-                      <BarChart3 className="h-4 w-4 text-rose-500" />
-                    </div>
-                    <div>
-                      <h4 className="text-sm font-semibold text-foreground">Subject Heatmap</h4>
-                      <p className="text-[10px] text-muted-foreground">Performance intensity over years</p>
-                    </div>
-                  </div>
-                  
+                <div className="space-y-2">
+                  <h4 className="text-sm font-medium text-foreground flex items-center gap-1.5">
+                    <BarChart3 className="h-4 w-4 text-primary" />
+                    Performance Heatmap
+                  </h4>
+                  <p className="text-[10px] text-muted-foreground -mt-1">
+                    Scores across all years
+                  </p>
                   <div className="overflow-x-auto">
-                    {(() => {
-                      const data = subjectYearlyData[selectedClass as keyof typeof subjectYearlyData] || subjectYearlyData["5A"];
-                      const subjectKeys = ["Mathematics", "Science", "English", "Arts", "Physical Education", "Chinese as a Second Language"] as const;
-                      
-                      const getHeatColor = (score: number) => {
-                        if (score >= 90) return "bg-emerald-500";
-                        if (score >= 80) return "bg-emerald-400";
-                        if (score >= 70) return "bg-lime-400";
-                        if (score >= 60) return "bg-amber-400";
-                        if (score >= 50) return "bg-orange-400";
-                        return "bg-red-400";
-                      };
-                      
-                      const shortNames: Record<string, string> = {
-                        "Mathematics": "Math",
-                        "Science": "Sci",
-                        "English": "Eng",
-                        "Arts": "Art",
-                        "Physical Education": "PE",
-                        "Chinese as a Second Language": "Chi",
-                      };
-                      
-                      return (
-                        <div className="min-w-[280px]">
-                          {/* Year headers */}
-                          <div className="flex gap-1 mb-1 ml-12">
-                            {data.map(d => (
-                              <div key={d.year} className="flex-1 text-center text-[9px] font-medium text-muted-foreground">
-                                {d.year}
-                              </div>
-                            ))}
+                    <div className="min-w-[320px]">
+                      {/* Header row with periods */}
+                      <div className="flex gap-1 mb-1">
+                        <div className="w-16 shrink-0" />
+                        {heatmapData[0]?.scores.map((s) => (
+                          <div 
+                            key={s.period} 
+                            className="flex-1 text-center text-[9px] font-medium text-muted-foreground px-1"
+                          >
+                            {s.period}
                           </div>
-                          {/* Subject rows */}
-                          {subjectKeys.map(subject => (
-                            <div key={subject} className="flex gap-1 mb-1">
-                              <div className="w-12 shrink-0 text-[9px] font-medium text-foreground truncate pr-1 flex items-center">
-                                {shortNames[subject]}
-                              </div>
-                              {data.map((yearData, idx) => (
-                                <div
-                                  key={idx}
-                                  className={`flex-1 h-6 rounded flex items-center justify-center text-[9px] font-semibold text-white ${getHeatColor(yearData[subject])}`}
-                                  title={`${subject} - ${yearData.year}: ${yearData[subject]}%`}
-                                >
-                                  {yearData[subject]}
-                                </div>
-                              ))}
+                        ))}
+                      </div>
+                      {/* Subject rows */}
+                      {heatmapData.map((row) => (
+                        <div key={row.subject} className="flex gap-1 mb-1">
+                          <div className="w-16 shrink-0 text-[10px] font-medium text-foreground truncate pr-1 flex items-center">
+                            {row.subject}
+                          </div>
+                          {row.scores.map((cell, idx) => (
+                            <div
+                              key={idx}
+                              className="flex-1 h-7 rounded flex items-center justify-center text-[10px] font-semibold text-white transition-all hover:scale-105 cursor-default"
+                              style={{ 
+                                backgroundColor: getHeatmapColor(cell.score),
+                                opacity: cell.score === null ? 0.3 : 1
+                              }}
+                              title={`${row.fullName} - ${cell.period}: ${cell.score ?? 'N/A'}%`}
+                            >
+                              {cell.score ?? "–"}
                             </div>
                           ))}
                         </div>
-                      );
-                    })()}
+                      ))}
+                    </div>
                   </div>
-                  
                   {/* Legend */}
-                  <div className="flex items-center justify-center gap-1 mt-3">
-                    <span className="text-[8px] text-muted-foreground mr-1">Low</span>
-                    {["bg-red-400", "bg-orange-400", "bg-amber-400", "bg-lime-400", "bg-emerald-400", "bg-emerald-500"].map((color, i) => (
-                      <div key={i} className={`w-4 h-3 rounded-sm ${color}`} />
+                  <div className="flex items-center justify-center gap-1 mt-2">
+                    <span className="text-[9px] text-muted-foreground mr-1">Low</span>
+                    {["#ef4444", "#f97316", "#eab308", "#84cc16", "#22c55e", "#16a34a"].map((color, i) => (
+                      <div 
+                        key={i} 
+                        className="w-4 h-3 rounded-sm" 
+                        style={{ backgroundColor: color }} 
+                      />
                     ))}
-                    <span className="text-[8px] text-muted-foreground ml-1">High</span>
+                    <span className="text-[9px] text-muted-foreground ml-1">High</span>
                   </div>
                 </div>
               </TabsContent>
