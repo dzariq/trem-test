@@ -834,21 +834,21 @@ export default function AcademicPage() {
                         background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.08) 0%, transparent 50%, rgba(255, 255, 255, 0.03) 100%)',
                       }}
                     />
-                    {/* Trophy decorations - more visible cascading pattern */}
-                    <div className="absolute top-2 right-3 opacity-[0.15] pointer-events-none rotate-[-12deg]">
-                      <Trophy className="h-4 w-4 text-amber-700" />
+                    {/* Trophy decorations - large thin-stroke pattern covering the box */}
+                    <div className="absolute -top-2 -right-2 opacity-[0.12] pointer-events-none rotate-[-15deg]">
+                      <Trophy className="h-12 w-12 text-amber-700" strokeWidth={1} />
                     </div>
-                    <div className="absolute top-6 right-6 opacity-[0.12] pointer-events-none">
-                      <Sparkles className="h-3 w-3 text-amber-700" />
+                    <div className="absolute top-1 left-2 opacity-[0.08] pointer-events-none">
+                      <Sparkles className="h-6 w-6 text-amber-700" strokeWidth={1} />
                     </div>
-                    <div className="absolute top-1/2 right-2 -translate-y-1/2 opacity-[0.18] pointer-events-none">
-                      <Trophy className="h-6 w-6 text-amber-700" />
+                    <div className="absolute -bottom-3 right-1/3 opacity-[0.10] pointer-events-none rotate-[12deg]">
+                      <Trophy className="h-14 w-14 text-amber-700" strokeWidth={1} />
                     </div>
-                    <div className="absolute bottom-4 right-8 opacity-[0.13] pointer-events-none rotate-[8deg]">
-                      <Trophy className="h-3.5 w-3.5 text-amber-700" />
+                    <div className="absolute top-1/2 -right-1 -translate-y-1/2 opacity-[0.14] pointer-events-none">
+                      <Trophy className="h-10 w-10 text-amber-700" strokeWidth={1} />
                     </div>
-                    <div className="absolute bottom-2 right-3 opacity-[0.10] pointer-events-none">
-                      <Sparkles className="h-2.5 w-2.5 text-amber-700" />
+                    <div className="absolute bottom-1 left-1/4 opacity-[0.07] pointer-events-none">
+                      <Sparkles className="h-5 w-5 text-amber-700" strokeWidth={1} />
                     </div>
                     
                     <div className="relative flex items-start gap-3 pr-14">
