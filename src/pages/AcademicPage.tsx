@@ -1645,6 +1645,8 @@ export default function AcademicPage() {
                                 stroke="hsl(142, 76%, 46%)"
                                 strokeWidth={2}
                                 fill="url(#growthGradient)"
+                                dot={{ r: 4, fill: "hsl(142, 76%, 46%)", strokeWidth: 2, stroke: "hsl(var(--background))" }}
+                                activeDot={{ r: 6, fill: "hsl(142, 76%, 46%)", strokeWidth: 2, stroke: "hsl(var(--background))" }}
                               />
                               <Tooltip
                                 content={({ active, payload }) => {
