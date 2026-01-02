@@ -34,6 +34,7 @@ import {
   AreaChart,
   Area,
   ReferenceLine,
+  ReferenceDot,
   RadarChart,
   Radar,
   PolarGrid,
@@ -877,7 +878,10 @@ export default function AcademicPage() {
                   <h4 className="text-sm font-medium text-foreground flex items-center gap-2">
                     Subject Performance
                     <Badge variant="outline" className="text-[10px] px-1.5 py-0">
-                      <span className="w-2 h-2 rounded-full mr-1" style={{ backgroundColor: '#000000' }} />
+                      <span
+                        className="w-2 h-2 rounded-full mr-1"
+                        style={{ backgroundColor: "hsl(var(--foreground))" }}
+                      />
                       Goal
                     </Badge>
                   </h4>
@@ -899,28 +903,18 @@ export default function AcademicPage() {
                             <Cell key={index} fill={lineColors[index % lineColors.length]} />
                           ))}
                         </Bar>
-                        {/* Goal dot markers - centered in bar */}
-                        <Bar 
-                          dataKey="goal" 
-                          fill="transparent"
-                          shape={(props: { x?: number; y?: number; width?: number; height?: number; payload?: { goal: number } }) => {
-                            const { y, height, payload } = props;
-                            if (y === undefined || height === undefined || !payload) return null;
-                            // Calculate x position based on goal value (0-100 scale)
-                            const chartWidth = 230;
-                            const xPos = 70 + (payload.goal / 100) * chartWidth;
-                            // Center vertically on the bar row
-                            const centerY = y + height / 2;
-                            return (
-                              <circle 
-                                cx={xPos} 
-                                cy={centerY} 
-                                r={5} 
-                                fill="#000000" 
-                              />
-                            );
-                          }}
-                        />
+
+                        {subjectPerformance.map((entry) => (
+                          <ReferenceDot
+                            key={`goal-${entry.name}`}
+                            x={entry.goal}
+                            y={entry.name}
+                            r={4}
+                            fill="hsl(var(--foreground))"
+                            stroke="hsl(var(--background))"
+                            strokeWidth={1}
+                          />
+                        ))}
                       </BarChart>
                     </ResponsiveContainer>
                   </div>
