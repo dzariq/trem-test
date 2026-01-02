@@ -134,8 +134,26 @@ export default function TeacherAcademicPage() {
   
   // Awards state
   const [awardsData, setAwardsData] = useState<Record<string, {
-    achievement: string;
-  }>>({});
+    sportsHouseOrg: string;
+    sportsHouseRole: string;
+    clubOrg: string;
+    clubRole: string;
+    leadershipOrg: string;
+    leadershipRole: string;
+    eventsOrg: string;
+    eventsRole: string;
+    achievementEvent: string;
+    achievementAward: string;
+  }>>({}); 
+
+  // Award dropdown options
+  const sportsHouseOptions = ["None", "Basketball", "Football", "Volleyball", "Badminton", "Swimming", "Track & Field", "Tennis"];
+  const clubOptions = ["None", "Science Club", "Art Club", "Music Club", "Drama Club", "Chess Club", "Debate Club", "Robotics Club", "Photography Club"];
+  const leadershipOptions = ["None", "Prefect Board", "Student Council", "Class Monitor", "House Captain", "Sports Captain", "CCA Leader"];
+  const eventsOptions = ["None", "Sports Day", "Science Fair", "Art Exhibition", "Music Concert", "Drama Production", "Math Olympiad", "Spelling Bee"];
+  const roleOptions = ["None", "Captain", "Vice-Captain", "Member", "Leader", "Secretary", "Treasurer", "Coordinator"];
+  const achievementEventOptions = ["None", "Sports Day", "Academic Competition", "Science Fair", "Art Competition", "Music Festival", "Leadership Camp", "Community Service"];
+  const achievementAwardOptions = ["None", "Gold", "Silver", "Bronze", "Champion", "1st Runner-up", "2nd Runner-up", "Merit Award", "Participation"];
 
   // Comparison tab state
   const [comparisonClass, setComparisonClass] = useState(teacherProfile.classes[0]);
@@ -287,7 +305,18 @@ export default function TeacherAcademicPage() {
   };
   
   const getStudentAwards = (studentId: string) => {
-    return awardsData[studentId] || { achievement: "" };
+    return awardsData[studentId] || { 
+      sportsHouseOrg: "",
+      sportsHouseRole: "",
+      clubOrg: "",
+      clubRole: "",
+      leadershipOrg: "",
+      leadershipRole: "",
+      eventsOrg: "",
+      eventsRole: "",
+      achievementEvent: "",
+      achievementAward: ""
+    };
   };
   
   const updateAwards = (studentId: string, field: string, value: string) => {
@@ -994,30 +1023,221 @@ export default function TeacherAcademicPage() {
 
                 {/* Awards Entry */}
                 {entryCategory === "awards" && (
-                  <div className="space-y-4">
-                    <Card className="bg-amber-50 border-amber-200 overflow-hidden">
-                      <CardHeader className="p-3 pb-2" style={{ background: 'linear-gradient(135deg, #fef3c7 0%, #fcd34d 50%, #f59e0b 100%)' }}>
-                        <div className="flex items-center gap-2">
-                          <Award className="h-5 w-5 text-amber-700" />
-                          <CardTitle className="text-sm font-semibold text-amber-800">Achievement & Awards</CardTitle>
-                        </div>
+                  <div className="space-y-3">
+                    {/* Sports House */}
+                    <Card className="bg-muted/30">
+                      <CardHeader className="p-3 pb-2 bg-muted/50">
+                        <CardTitle className="text-sm font-semibold text-foreground">Sports House</CardTitle>
                       </CardHeader>
                       <CardContent className="p-3">
-                        <Textarea
-                          placeholder="Enter student achievements and awards (e.g., 'First place in Science Fair', 'Perfect Attendance Award')..."
-                          value={getStudentAwards(selectedStudent).achievement}
-                          onChange={(e) => updateAwards(selectedStudent, "achievement", e.target.value)}
-                          className="min-h-[120px] text-sm resize-none bg-background/80 border-amber-200"
-                        />
+                        <div className="grid grid-cols-2 gap-3">
+                          <div className="space-y-1">
+                            <label className="text-xs text-muted-foreground">Organization</label>
+                            <Select 
+                              value={getStudentAwards(selectedStudent).sportsHouseOrg || "None"} 
+                              onValueChange={(v) => updateAwards(selectedStudent, "sportsHouseOrg", v)}
+                            >
+                              <SelectTrigger className="bg-background">
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent className="bg-background z-50">
+                                {sportsHouseOptions.map(opt => (
+                                  <SelectItem key={opt} value={opt}>{opt}</SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </div>
+                          <div className="space-y-1">
+                            <label className="text-xs text-muted-foreground">Role & Responsibility</label>
+                            <Select 
+                              value={getStudentAwards(selectedStudent).sportsHouseRole || "None"} 
+                              onValueChange={(v) => updateAwards(selectedStudent, "sportsHouseRole", v)}
+                            >
+                              <SelectTrigger className="bg-background">
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent className="bg-background z-50">
+                                {roleOptions.map(opt => (
+                                  <SelectItem key={opt} value={opt}>{opt}</SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </div>
+                        </div>
                       </CardContent>
                     </Card>
 
-                    <div className="flex items-center gap-2 p-3 rounded-lg bg-amber-100/50 border border-amber-200">
-                      <Lightbulb className="h-4 w-4 text-amber-600 shrink-0" />
-                      <p className="text-xs text-amber-700">
-                        Include academic achievements, extracurricular accomplishments, and character awards.
-                      </p>
-                    </div>
+                    {/* Club */}
+                    <Card className="bg-muted/30">
+                      <CardHeader className="p-3 pb-2 bg-muted/50">
+                        <CardTitle className="text-sm font-semibold text-foreground">Club</CardTitle>
+                      </CardHeader>
+                      <CardContent className="p-3">
+                        <div className="grid grid-cols-2 gap-3">
+                          <div className="space-y-1">
+                            <label className="text-xs text-muted-foreground">Organization</label>
+                            <Select 
+                              value={getStudentAwards(selectedStudent).clubOrg || "None"} 
+                              onValueChange={(v) => updateAwards(selectedStudent, "clubOrg", v)}
+                            >
+                              <SelectTrigger className="bg-background">
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent className="bg-background z-50">
+                                {clubOptions.map(opt => (
+                                  <SelectItem key={opt} value={opt}>{opt}</SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </div>
+                          <div className="space-y-1">
+                            <label className="text-xs text-muted-foreground">Role & Responsibility</label>
+                            <Select 
+                              value={getStudentAwards(selectedStudent).clubRole || "None"} 
+                              onValueChange={(v) => updateAwards(selectedStudent, "clubRole", v)}
+                            >
+                              <SelectTrigger className="bg-background">
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent className="bg-background z-50">
+                                {roleOptions.map(opt => (
+                                  <SelectItem key={opt} value={opt}>{opt}</SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+
+                    {/* Student Leadership */}
+                    <Card className="bg-muted/30">
+                      <CardHeader className="p-3 pb-2 bg-muted/50">
+                        <CardTitle className="text-sm font-semibold text-foreground">Student Leadership</CardTitle>
+                      </CardHeader>
+                      <CardContent className="p-3">
+                        <div className="grid grid-cols-2 gap-3">
+                          <div className="space-y-1">
+                            <label className="text-xs text-muted-foreground">Organization</label>
+                            <Select 
+                              value={getStudentAwards(selectedStudent).leadershipOrg || "None"} 
+                              onValueChange={(v) => updateAwards(selectedStudent, "leadershipOrg", v)}
+                            >
+                              <SelectTrigger className="bg-background">
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent className="bg-background z-50">
+                                {leadershipOptions.map(opt => (
+                                  <SelectItem key={opt} value={opt}>{opt}</SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </div>
+                          <div className="space-y-1">
+                            <label className="text-xs text-muted-foreground">Role & Responsibility</label>
+                            <Select 
+                              value={getStudentAwards(selectedStudent).leadershipRole || "None"} 
+                              onValueChange={(v) => updateAwards(selectedStudent, "leadershipRole", v)}
+                            >
+                              <SelectTrigger className="bg-background">
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent className="bg-background z-50">
+                                {roleOptions.map(opt => (
+                                  <SelectItem key={opt} value={opt}>{opt}</SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+
+                    {/* Events */}
+                    <Card className="bg-muted/30">
+                      <CardHeader className="p-3 pb-2 bg-muted/50">
+                        <CardTitle className="text-sm font-semibold text-foreground">Events</CardTitle>
+                      </CardHeader>
+                      <CardContent className="p-3">
+                        <div className="grid grid-cols-2 gap-3">
+                          <div className="space-y-1">
+                            <label className="text-xs text-muted-foreground">Organization</label>
+                            <Select 
+                              value={getStudentAwards(selectedStudent).eventsOrg || "None"} 
+                              onValueChange={(v) => updateAwards(selectedStudent, "eventsOrg", v)}
+                            >
+                              <SelectTrigger className="bg-background">
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent className="bg-background z-50">
+                                {eventsOptions.map(opt => (
+                                  <SelectItem key={opt} value={opt}>{opt}</SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </div>
+                          <div className="space-y-1">
+                            <label className="text-xs text-muted-foreground">Role & Responsibility</label>
+                            <Select 
+                              value={getStudentAwards(selectedStudent).eventsRole || "None"} 
+                              onValueChange={(v) => updateAwards(selectedStudent, "eventsRole", v)}
+                            >
+                              <SelectTrigger className="bg-background">
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent className="bg-background z-50">
+                                {roleOptions.map(opt => (
+                                  <SelectItem key={opt} value={opt}>{opt}</SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+
+                    {/* Achievements */}
+                    <Card className="bg-muted/30">
+                      <CardHeader className="p-3 pb-2 bg-muted/50">
+                        <CardTitle className="text-sm font-semibold text-foreground">Achievements</CardTitle>
+                      </CardHeader>
+                      <CardContent className="p-3">
+                        <div className="grid grid-cols-2 gap-3">
+                          <div className="space-y-1">
+                            <label className="text-xs text-muted-foreground">Event</label>
+                            <Select 
+                              value={getStudentAwards(selectedStudent).achievementEvent || "None"} 
+                              onValueChange={(v) => updateAwards(selectedStudent, "achievementEvent", v)}
+                            >
+                              <SelectTrigger className="bg-background">
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent className="bg-background z-50">
+                                {achievementEventOptions.map(opt => (
+                                  <SelectItem key={opt} value={opt}>{opt}</SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </div>
+                          <div className="space-y-1">
+                            <label className="text-xs text-muted-foreground">Award</label>
+                            <Select 
+                              value={getStudentAwards(selectedStudent).achievementAward || "None"} 
+                              onValueChange={(v) => updateAwards(selectedStudent, "achievementAward", v)}
+                            >
+                              <SelectTrigger className="bg-background">
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent className="bg-background z-50">
+                                {achievementAwardOptions.map(opt => (
+                                  <SelectItem key={opt} value={opt}>{opt}</SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
                   </div>
                 )}
 
