@@ -2098,7 +2098,7 @@ export default function AcademicPage() {
                               <div className="h-3 bg-transparent border border-border rounded-full overflow-hidden">
                                 <div 
                                   className={`h-full rounded-full transition-all ${
-                                    item.achieved ? "bg-chart-1" : item.gap <= 5 ? "bg-chart-2" : "bg-chart-4"
+                                    item.achieved ? "bg-chart-1" : "bg-muted-foreground/40"
                                   }`}
                                   style={{ width: `${item.current}%` }}
                                 />
