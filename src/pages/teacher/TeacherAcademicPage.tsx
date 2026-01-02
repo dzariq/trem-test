@@ -1745,10 +1745,14 @@ export default function TeacherAcademicPage() {
               <TabsContent value="comparison" className="space-y-4">
                 {/* Exam Selectors */}
                 <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <label className="text-xs font-medium text-muted-foreground">Exam A</label>
+                  {/* Exam A - Light Blue Box */}
+                  <div className="space-y-3 p-3 rounded-xl border" style={{ backgroundColor: 'rgba(59, 130, 246, 0.08)', borderColor: 'rgba(59, 130, 246, 0.25)' }}>
+                    <label className="text-xs font-semibold flex items-center gap-1.5" style={{ color: '#3b82f6' }}>
+                      <div className="w-2 h-2 rounded-full" style={{ backgroundColor: '#3b82f6' }} />
+                      Exam A
+                    </label>
                     <Select value={examAClass} onValueChange={setExamAClass}>
-                      <SelectTrigger className="w-full h-9 text-sm">
+                      <SelectTrigger className="w-full h-9 text-sm bg-background/80">
                         <SelectValue placeholder="Class" />
                       </SelectTrigger>
                       <SelectContent className="bg-card">
@@ -1758,7 +1762,7 @@ export default function TeacherAcademicPage() {
                       </SelectContent>
                     </Select>
                     <Select value={examAYear} onValueChange={setExamAYear}>
-                      <SelectTrigger className="w-full h-9 text-sm">
+                      <SelectTrigger className="w-full h-9 text-sm bg-background/80">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent className="bg-card">
@@ -1771,7 +1775,7 @@ export default function TeacherAcademicPage() {
                       value={examAPeriod} 
                       onValueChange={(v) => setExamAPeriod(v as "midYear" | "yearEnd")}
                     >
-                      <SelectTrigger className="w-full h-9 text-sm">
+                      <SelectTrigger className="w-full h-9 text-sm bg-background/80">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent className="bg-card">
@@ -1781,10 +1785,15 @@ export default function TeacherAcademicPage() {
                       </SelectContent>
                     </Select>
                   </div>
-                  <div className="space-y-2">
-                    <label className="text-xs font-medium text-muted-foreground">Exam B</label>
+                  
+                  {/* Exam B - Light Red Box */}
+                  <div className="space-y-3 p-3 rounded-xl border" style={{ backgroundColor: 'rgba(239, 68, 68, 0.08)', borderColor: 'rgba(239, 68, 68, 0.25)' }}>
+                    <label className="text-xs font-semibold flex items-center gap-1.5" style={{ color: '#ef4444' }}>
+                      <div className="w-2 h-2 rounded-full" style={{ backgroundColor: '#ef4444' }} />
+                      Exam B
+                    </label>
                     <Select value={examBClass} onValueChange={setExamBClass}>
-                      <SelectTrigger className="w-full h-9 text-sm">
+                      <SelectTrigger className="w-full h-9 text-sm bg-background/80">
                         <SelectValue placeholder="Class" />
                       </SelectTrigger>
                       <SelectContent className="bg-card">
@@ -1794,7 +1803,7 @@ export default function TeacherAcademicPage() {
                       </SelectContent>
                     </Select>
                     <Select value={examBYear} onValueChange={setExamBYear}>
-                      <SelectTrigger className="w-full h-9 text-sm">
+                      <SelectTrigger className="w-full h-9 text-sm bg-background/80">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent className="bg-card">
@@ -1807,7 +1816,7 @@ export default function TeacherAcademicPage() {
                       value={examBPeriod} 
                       onValueChange={(v) => setExamBPeriod(v as "midYear" | "yearEnd")}
                     >
-                      <SelectTrigger className="w-full h-9 text-sm">
+                      <SelectTrigger className="w-full h-9 text-sm bg-background/80">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent className="bg-card">
