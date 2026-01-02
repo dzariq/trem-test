@@ -140,6 +140,10 @@ export default function TeacherAcademicPage() {
   const [chartZoom, setChartZoom] = useState(1);
   const chartContainerRef = useRef<HTMLDivElement>(null);
   const lastTouchDistance = useRef<number | null>(null);
+  
+  // View more state for lists
+  const [showAllTopPerformers, setShowAllTopPerformers] = useState(false);
+  const [showAllAtRisk, setShowAllAtRisk] = useState(false);
 
   const handleTouchStart = useCallback((e: React.TouchEvent) => {
     if (e.touches.length === 2) {
@@ -982,41 +986,16 @@ export default function TeacherAcademicPage() {
                   </div>
                 </div>
 
-                {/* At-Risk Students */}
-                {atRiskStudents.length > 0 && (
-                  <Card className="border-red-200 bg-red-50/30">
-                    <CardHeader className="pb-2">
-                      <CardTitle className="text-sm flex items-center gap-2 text-red-700">
-                        <AlertTriangle className="h-4 w-4" />
-                        At-Risk Students ({atRiskStudents.length})
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent className="space-y-2">
-                      {atRiskStudents.map((student) => (
-                        <div 
-                          key={student.id} 
-                          className="flex items-center justify-between p-2 rounded-lg bg-background border border-red-200"
-                        >
-                          <span className="text-sm font-medium">{student.name}</span>
-                          <Badge variant="destructive" className="text-xs">
-                            {student.score}%
-                          </Badge>
-                        </div>
-                      ))}
-                    </CardContent>
-                  </Card>
-                )}
-
-                {/* Top Students with medals */}
+                {/* Top Students with medals - Moved up */}
                 <Card>
                   <CardHeader className="pb-2">
                     <CardTitle className="text-sm flex items-center gap-2">
-                      <Award className="h-4 w-4" />
-                      Top Performers
+                      <Award className="h-4 w-4 text-amber-500" />
+                      Top Performers ({rankedStudents.length})
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-2">
-                    {rankedStudents.slice(0, 5).map((student, index) => (
+                    {rankedStudents.slice(0, showAllTopPerformers ? rankedStudents.length : 7).map((student, index) => (
                       <div 
                         key={student.id} 
                         className={cn(
@@ -1048,8 +1027,53 @@ export default function TeacherAcademicPage() {
                         </Badge>
                       </div>
                     ))}
+                    {rankedStudents.length > 7 && (
+                      <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        className="w-full text-xs text-muted-foreground hover:text-foreground"
+                        onClick={() => setShowAllTopPerformers(!showAllTopPerformers)}
+                      >
+                        {showAllTopPerformers ? "Show Less" : `View More (${rankedStudents.length - 7} more)`}
+                      </Button>
+                    )}
                   </CardContent>
                 </Card>
+
+                {/* At-Risk Students - below 50% */}
+                {atRiskStudents.length > 0 && (
+                  <Card className="border-red-200 bg-red-50/30">
+                    <CardHeader className="pb-2">
+                      <CardTitle className="text-sm flex items-center gap-2 text-red-700">
+                        <AlertTriangle className="h-4 w-4" />
+                        At-Risk Students ({atRiskStudents.length})
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-2">
+                      {atRiskStudents.slice(0, showAllAtRisk ? atRiskStudents.length : 7).map((student) => (
+                        <div 
+                          key={student.id} 
+                          className="flex items-center justify-between p-2 rounded-lg bg-background border border-red-200"
+                        >
+                          <span className="text-sm font-medium">{student.name}</span>
+                          <Badge variant="destructive" className="text-xs">
+                            {student.score}%
+                          </Badge>
+                        </div>
+                      ))}
+                      {atRiskStudents.length > 7 && (
+                        <Button 
+                          variant="ghost" 
+                          size="sm" 
+                          className="w-full text-xs text-red-600 hover:text-red-700 hover:bg-red-50"
+                          onClick={() => setShowAllAtRisk(!showAllAtRisk)}
+                        >
+                          {showAllAtRisk ? "Show Less" : `View More (${atRiskStudents.length - 7} more)`}
+                        </Button>
+                      )}
+                    </CardContent>
+                  </Card>
+                )}
               </TabsContent>
 
               {/* ==================== TRENDS SUB-TAB ==================== */}
