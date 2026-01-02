@@ -1110,21 +1110,31 @@ export default function AcademicPage() {
                       {risingStars.map((item) => (
                         <div 
                           key={item.subject.name} 
-                          className="relative flex flex-col items-center p-2.5 rounded-lg border overflow-hidden"
-                          style={{ backgroundColor: 'rgba(251, 191, 36, 0.1)', borderColor: 'rgba(251, 191, 36, 0.3)' }}
+                          className="relative flex flex-col items-center p-2.5 rounded-lg border overflow-hidden animate-glow"
+                          style={{ 
+                            background: 'linear-gradient(135deg, #fef3c7 0%, #fcd34d 50%, #f59e0b 100%)', 
+                            borderColor: 'rgba(251, 191, 36, 0.5)'
+                          }}
                         >
+                          {/* Inner shine effect */}
+                          <div 
+                            className="absolute inset-0 pointer-events-none"
+                            style={{
+                              background: 'radial-gradient(ellipse at 30% 20%, rgba(255, 255, 255, 0.25) 0%, transparent 40%)',
+                            }}
+                          />
                           {/* Star pattern background */}
                           <div className="absolute inset-0 pointer-events-none">
-                            <svg className="absolute -top-1 -left-1 w-8 h-8 opacity-30" fill="none" stroke="#f59e0b" strokeWidth="1" viewBox="0 0 24 24">
+                            <svg className="absolute -top-1 -left-1 w-8 h-8 opacity-40" fill="#fbbf24" stroke="#f59e0b" strokeWidth="0.5" viewBox="0 0 24 24">
                               <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
                             </svg>
-                            <svg className="absolute top-0 right-0 w-6 h-6 opacity-25" fill="none" stroke="#fbbf24" strokeWidth="1" viewBox="0 0 24 24">
+                            <svg className="absolute top-0 right-0 w-6 h-6 opacity-35" fill="#fde68a" stroke="#fbbf24" strokeWidth="0.5" viewBox="0 0 24 24">
                               <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
                             </svg>
-                            <svg className="absolute -bottom-2 -right-1 w-7 h-7 opacity-35" fill="none" stroke="#f59e0b" strokeWidth="1" viewBox="0 0 24 24">
+                            <svg className="absolute -bottom-2 -right-1 w-7 h-7 opacity-45" fill="#fbbf24" stroke="#f59e0b" strokeWidth="0.5" viewBox="0 0 24 24">
                               <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
                             </svg>
-                            <svg className="absolute bottom-2 left-0 w-5 h-5 opacity-20" fill="none" stroke="#fcd34d" strokeWidth="1" viewBox="0 0 24 24">
+                            <svg className="absolute bottom-2 left-0 w-5 h-5 opacity-30" fill="#fde68a" stroke="#fcd34d" strokeWidth="0.5" viewBox="0 0 24 24">
                               <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
                             </svg>
                           </div>
@@ -1133,7 +1143,21 @@ export default function AcademicPage() {
                             <ArrowUp className="h-3 w-3" style={{ color: '#d97706' }} />
                             <span className="text-sm font-bold" style={{ color: '#d97706' }}>+{item.improvement}%</span>
                           </div>
-                          <span className="text-[10px] text-muted-foreground relative z-10">{item.prev}% → {item.current}%</span>
+                          <div className="flex items-center gap-1 mt-1 relative z-10">
+                            <span 
+                              className="text-[10px] font-medium px-2 py-0.5 rounded-full"
+                              style={{ backgroundColor: '#fef3c7', color: '#92400e' }}
+                            >
+                              {item.prev}%
+                            </span>
+                            <span className="text-[10px] text-muted-foreground">→</span>
+                            <span 
+                              className="text-[10px] font-semibold px-2 py-0.5 rounded-full"
+                              style={{ backgroundColor: '#f59e0b', color: '#ffffff' }}
+                            >
+                              {item.current}%
+                            </span>
+                          </div>
                         </div>
                       ))}
                     </div>
@@ -1177,13 +1201,31 @@ export default function AcademicPage() {
 
                   {/* Summary Stats */}
                   <div className="space-y-2">
-                    <div className="flex flex-col items-center text-center p-3 rounded-lg bg-accent/50">
-                      <BookOpen className="h-5 w-5 mb-1 text-chart-1" />
+                    <div 
+                      className="flex flex-col items-center text-center p-3 rounded-lg border"
+                      style={{ backgroundColor: 'rgba(59, 130, 246, 0.08)', borderColor: 'transparent' }}
+                    >
+                      <BookOpen className="h-5 w-5 mb-1" style={{ color: '#3b82f6' }} />
                       <span className="text-lg font-bold text-foreground">{currentAverage}%</span>
                       <span className="text-[10px] text-muted-foreground leading-tight">Current Average</span>
                     </div>
-                    <div className="flex flex-col items-center text-center p-3 rounded-lg bg-accent/50">
-                      <TrendingUp className="h-5 w-5 mb-1 text-chart-3" />
+                    <div 
+                      className="flex flex-col items-center text-center p-3 rounded-lg border"
+                      style={{ 
+                        backgroundColor: currentAverage - (classAverages[selectedYear]?.[examType] ?? 0) >= 0 
+                          ? 'rgba(16, 185, 129, 0.08)' 
+                          : 'rgba(239, 68, 68, 0.08)', 
+                        borderColor: 'transparent' 
+                      }}
+                    >
+                      <TrendingUp 
+                        className="h-5 w-5 mb-1" 
+                        style={{ 
+                          color: currentAverage - (classAverages[selectedYear]?.[examType] ?? 0) >= 0 
+                            ? '#10b981' 
+                            : '#ef4444' 
+                        }} 
+                      />
                       <span className="text-lg font-bold text-foreground">
                         {currentAverage - (classAverages[selectedYear]?.[examType] ?? 0) >= 0 ? "+" : ""}
                         {currentAverage - (classAverages[selectedYear]?.[examType] ?? 0)}%
