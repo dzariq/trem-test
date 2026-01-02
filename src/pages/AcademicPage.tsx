@@ -837,7 +837,7 @@ export default function AcademicPage() {
                     return (
                       <Card key={index} className={`${config.bg} ${config.border} overflow-hidden relative`}>
                         {/* Oversized watermark grade letter */}
-                        <div className={`absolute -right-3 -bottom-4 text-[5rem] font-black leading-none ${config.watermark} select-none pointer-events-none`}>
+                        <div className={`absolute -right-1 -bottom-3 text-[4.5rem] font-black leading-none ${config.watermark} select-none pointer-events-none`}>
                           {item.grade}
                         </div>
                         <CardContent className="p-3 relative z-10">
