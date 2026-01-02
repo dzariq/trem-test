@@ -83,7 +83,10 @@ export function AnnouncementCarousel() {
             <p className="text-sm text-muted-foreground mb-4">
               {mainAnnouncement.snippet}
             </p>
-            <Button className="w-full">
+            <Button 
+              className="w-full"
+              onClick={() => navigate(`/parent/announcements/${mainAnnouncement.id}`)}
+            >
               Read More
             </Button>
           </CardContent>

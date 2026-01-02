@@ -16,6 +16,7 @@ import SupportPage from "./pages/SupportPage";
 import ProfilePage from "./pages/ProfilePage";
 import NotificationsPage from "./pages/NotificationsPage";
 import AnnouncementsPage from "./pages/AnnouncementsPage";
+import AnnouncementDetailPage from "./pages/AnnouncementDetailPage";
 import SecurityPrivacyPage from "./pages/SecurityPrivacyPage";
 import PrivacyPolicyPage from "./pages/PrivacyPolicyPage";
 import ContactPage from "./pages/ContactPage";
@@ -56,6 +57,7 @@ const App = () => (
           <Route path="/parent/profile" element={<ProfilePage />} />
           <Route path="/parent/notifications" element={<NotificationsPage />} />
           <Route path="/parent/announcements" element={<AnnouncementsPage />} />
+          <Route path="/parent/announcements/:id" element={<AnnouncementDetailPage />} />
           <Route path="/parent/security-privacy" element={<SecurityPrivacyPage />} />
           <Route path="/parent/privacy-policy" element={<PrivacyPolicyPage />} />
           <Route path="/parent/contact" element={<ContactPage />} />
