@@ -2095,12 +2095,12 @@ export default function AcademicPage() {
                             
                             {/* Progress Bar */}
                             <div className="relative mb-2">
-                              <div className="h-3 bg-muted rounded-full overflow-hidden">
+                              <div className="h-3 bg-transparent border border-border rounded-full overflow-hidden">
                                 <div 
                                   className={`h-full rounded-full transition-all ${
                                     item.achieved ? "bg-chart-1" : item.gap <= 5 ? "bg-chart-2" : "bg-chart-4"
                                   }`}
-                                  style={{ width: `${item.progress}%` }}
+                                  style={{ width: `${item.current}%` }}
                                 />
                               </div>
                               {/* Target marker */}
