@@ -533,13 +533,13 @@ export default function AcademicPage() {
                       {top3.map((s, index) => {
                         const score = getScore(s, selectedYear, examType);
                         return (
-                          <div key={s.name} className="flex items-center gap-2 p-2.5 rounded-lg border" style={{ backgroundColor: 'rgba(34, 197, 94, 0.1)', borderColor: 'rgba(34, 197, 94, 0.2)' }}>
+                          <div key={s.name} className="flex items-center gap-2 p-2.5 rounded-lg border min-h-[60px]" style={{ backgroundColor: 'rgba(34, 197, 94, 0.1)', borderColor: 'rgba(34, 197, 94, 0.2)' }}>
                             <span className="w-6 h-6 shrink-0 rounded-full flex items-center justify-center text-xs font-bold" style={{ backgroundColor: 'rgba(34, 197, 94, 0.2)', color: '#16a34a' }}>
                               {index + 1}
                             </span>
-                            <div className="flex flex-col min-w-0">
-                              <span className="text-sm font-medium text-foreground">{shortenSubjectName(s.name)}</span>
-                              <Badge className="text-xs font-semibold w-fit mt-0.5 text-white" style={{ backgroundColor: '#22c55e' }}>{score}%</Badge>
+                            <div className="flex flex-col min-w-0 flex-1">
+                              <span className="text-sm font-medium text-foreground leading-tight">{shortenSubjectName(s.name)}</span>
+                              <Badge className="text-xs font-semibold w-fit mt-1 text-white" style={{ backgroundColor: '#22c55e' }}>{score}%</Badge>
                             </div>
                           </div>
                         );
@@ -557,13 +557,13 @@ export default function AcademicPage() {
                         {needsAttention.map((s, index) => {
                           const score = getScore(s, selectedYear, examType);
                           return (
-                            <div key={s.name} className="flex items-center gap-2 p-2.5 rounded-lg border" style={{ backgroundColor: 'rgba(254, 202, 202, 0.3)', borderColor: 'rgba(248, 113, 113, 0.3)' }}>
+                            <div key={s.name} className="flex items-center gap-2 p-2.5 rounded-lg border min-h-[60px]" style={{ backgroundColor: 'rgba(254, 202, 202, 0.3)', borderColor: 'rgba(248, 113, 113, 0.3)' }}>
                               <span className="w-6 h-6 shrink-0 rounded-full flex items-center justify-center text-xs font-bold" style={{ backgroundColor: 'rgba(254, 202, 202, 0.5)', color: '#dc2626' }}>
                                 {index + 1}
                               </span>
-                              <div className="flex flex-col min-w-0">
-                                <span className="text-sm font-medium text-foreground">{shortenSubjectName(s.name)}</span>
-                                <Badge className="text-xs font-semibold w-fit mt-0.5 text-white" style={{ backgroundColor: '#f87171' }}>{score}%</Badge>
+                              <div className="flex flex-col min-w-0 flex-1">
+                                <span className="text-sm font-medium text-foreground leading-tight">{shortenSubjectName(s.name)}</span>
+                                <Badge className="text-xs font-semibold w-fit mt-1 text-white" style={{ backgroundColor: '#f87171' }}>{score}%</Badge>
                               </div>
                             </div>
                           );
