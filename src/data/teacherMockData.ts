@@ -461,3 +461,133 @@ export const multiClassTrendData = [
   { year: "2025", "5A": 76, "5B": 80, "4A": 75 },
   { year: "2026", "5A": 77, "5B": 82, "4A": 78 },
 ];
+
+// Subject-level exam comparison data per class for subject comparison
+export const subjectExamData: Record<string, Record<string, Record<string, number>>> = {
+  "5A": {
+    "2026-midYear": {
+      "Mathematics": 80,
+      "Science": 82,
+      "English": 78,
+      "Arts": 72,
+      "Chinese as a Second Language": 65,
+      "Physical Education": 88
+    },
+    "2025-yearEnd": {
+      "Mathematics": 78,
+      "Science": 80,
+      "English": 76,
+      "Arts": 74,
+      "Chinese as a Second Language": 68,
+      "Physical Education": 86
+    },
+    "2025-midYear": {
+      "Mathematics": 75,
+      "Science": 77,
+      "English": 74,
+      "Arts": 76,
+      "Chinese as a Second Language": 70,
+      "Physical Education": 84
+    },
+    "2024-yearEnd": {
+      "Mathematics": 73,
+      "Science": 75,
+      "English": 72,
+      "Arts": 78,
+      "Chinese as a Second Language": 72,
+      "Physical Education": 82
+    },
+    "2024-midYear": {
+      "Mathematics": 70,
+      "Science": 72,
+      "English": 70,
+      "Arts": 80,
+      "Chinese as a Second Language": 74,
+      "Physical Education": 80
+    }
+  },
+  "5B": {
+    "2026-midYear": {
+      "Mathematics": 85,
+      "Science": 86,
+      "English": 84,
+      "Arts": 88,
+      "Chinese as a Second Language": 80,
+      "Physical Education": 92
+    },
+    "2025-yearEnd": {
+      "Mathematics": 82,
+      "Science": 84,
+      "English": 82,
+      "Arts": 86,
+      "Chinese as a Second Language": 78,
+      "Physical Education": 90
+    },
+    "2025-midYear": {
+      "Mathematics": 79,
+      "Science": 81,
+      "English": 80,
+      "Arts": 84,
+      "Chinese as a Second Language": 75,
+      "Physical Education": 88
+    },
+    "2024-yearEnd": {
+      "Mathematics": 76,
+      "Science": 78,
+      "English": 77,
+      "Arts": 82,
+      "Chinese as a Second Language": 72,
+      "Physical Education": 86
+    },
+    "2024-midYear": {
+      "Mathematics": 73,
+      "Science": 75,
+      "English": 74,
+      "Arts": 80,
+      "Chinese as a Second Language": 69,
+      "Physical Education": 84
+    }
+  },
+  "4A": {
+    "2026-midYear": {
+      "Mathematics": 76,
+      "Science": 78,
+      "English": 80,
+      "Arts": 84,
+      "Chinese as a Second Language": 74,
+      "Physical Education": 90
+    },
+    "2025-yearEnd": {
+      "Mathematics": 73,
+      "Science": 75,
+      "English": 77,
+      "Arts": 82,
+      "Chinese as a Second Language": 71,
+      "Physical Education": 88
+    },
+    "2025-midYear": {
+      "Mathematics": 70,
+      "Science": 72,
+      "English": 74,
+      "Arts": 80,
+      "Chinese as a Second Language": 68,
+      "Physical Education": 86
+    },
+    "2024-yearEnd": {
+      "Mathematics": 67,
+      "Science": 69,
+      "English": 71,
+      "Arts": 78,
+      "Chinese as a Second Language": 65,
+      "Physical Education": 84
+    },
+    "2024-midYear": {
+      "Mathematics": 64,
+      "Science": 66,
+      "English": 68,
+      "Arts": 76,
+      "Chinese as a Second Language": 62,
+      "Physical Education": 82
+    }
+  }
+};
