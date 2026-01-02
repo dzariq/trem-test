@@ -427,12 +427,12 @@ export const subjectYearlyData: Record<string, {
   "Physical Education": number;
 }[]> = {
   "5A": [
-    { year: "2021", Mathematics: 65, Science: 68, English: 70, Arts: 75, "Chinese as a Second Language": 62, "Physical Education": 82 },
-    { year: "2022", Mathematics: 68, Science: 70, English: 72, Arts: 78, "Chinese as a Second Language": 65, "Physical Education": 84 },
+    { year: "2021", Mathematics: 65, Science: 68, English: 70, Arts: 75, "Chinese as a Second Language": 72, "Physical Education": 82 },
+    { year: "2022", Mathematics: 68, Science: 70, English: 72, Arts: 78, "Chinese as a Second Language": 70, "Physical Education": 84 },
     { year: "2023", Mathematics: 72, Science: 74, English: 75, Arts: 80, "Chinese as a Second Language": 68, "Physical Education": 86 },
-    { year: "2024", Mathematics: 75, Science: 77, English: 78, Arts: 82, "Chinese as a Second Language": 72, "Physical Education": 88 },
-    { year: "2025", Mathematics: 78, Science: 80, English: 80, Arts: 84, "Chinese as a Second Language": 75, "Physical Education": 90 },
-    { year: "2026", Mathematics: 80, Science: 82, English: 82, Arts: 86, "Chinese as a Second Language": 78, "Physical Education": 91 },
+    { year: "2024", Mathematics: 75, Science: 77, English: 78, Arts: 76, "Chinese as a Second Language": 65, "Physical Education": 88 },
+    { year: "2025", Mathematics: 78, Science: 80, English: 80, Arts: 74, "Chinese as a Second Language": 62, "Physical Education": 90 },
+    { year: "2026", Mathematics: 80, Science: 82, English: 82, Arts: 72, "Chinese as a Second Language": 60, "Physical Education": 91 },
   ],
   "5B": [
     { year: "2021", Mathematics: 70, Science: 72, English: 74, Arts: 78, "Chinese as a Second Language": 68, "Physical Education": 85 },
