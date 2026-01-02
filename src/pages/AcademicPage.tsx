@@ -242,7 +242,7 @@ export default function AcademicPage() {
         grades[grade as keyof typeof grades]++;
       }
     });
-    return Object.entries(grades).map(([grade, count]) => ({ grade, count })).filter(g => g.count > 0);
+    return Object.entries(grades).map(([grade, count]) => ({ grade, count }));
   }, [selectedYear, examType]);
 
   // Top 3 and Bottom 3 subjects (bottom only includes scores below 50%)
