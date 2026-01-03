@@ -181,7 +181,7 @@ export default function TeacherAcademicPage() {
 
   // Trends tab state - like student page
   const [trendPeriod, setTrendPeriod] = useState<"1year" | "2years" | "3years" | "all">("all");
-  const [subjectFilter, setSubjectFilter] = useState("all");
+  const [trendsSelectedSubjects, setTrendsSelectedSubjects] = useState<string[]>([...subjects]);
 
   // Pinch-to-zoom state for chart
   const [chartZoom, setChartZoom] = useState(1);
@@ -809,16 +809,31 @@ export default function TeacherAcademicPage() {
     });
   }, [selectedClass, trendPeriod]);
 
-  // Calculate trend direction for selected subject(s)
+  // Calculate trend direction for selected subject(s) - uses average of all selected subjects
   const trendDirection = useMemo(() => {
     if (trendData.length < 2) return {
       direction: "stable" as const,
       change: 0,
       currentValue: 0
     };
-    const key = subjectFilter === "all" ? "Average" : subjectFilter;
-    const firstValue = trendData[0]?.[key] as number | null;
-    const lastValue = trendData[trendData.length - 1]?.[key] as number | null;
+    
+    // Calculate average of selected subjects for first and last periods
+    const calcAverage = (entry: Record<string, number | string | null>) => {
+      let total = 0;
+      let count = 0;
+      trendsSelectedSubjects.forEach(subj => {
+        const val = entry[subj];
+        if (typeof val === 'number') {
+          total += val;
+          count++;
+        }
+      });
+      return count > 0 ? Math.round(total / count) : null;
+    };
+    
+    const firstValue = calcAverage(trendData[0]);
+    const lastValue = calcAverage(trendData[trendData.length - 1]);
+    
     if (firstValue === null || lastValue === null) return {
       direction: "stable" as const,
       change: 0,
@@ -830,15 +845,15 @@ export default function TeacherAcademicPage() {
       change: Math.abs(change),
       currentValue: lastValue
     };
-  }, [trendData, subjectFilter]);
+  }, [trendData, trendsSelectedSubjects]);
 
-  // Rising subjects - biggest improvement from first to last period (filtered by selectedSubjects)
+  // Rising subjects - biggest improvement from first to last period (filtered by trendsSelectedSubjects)
   const risingSubjects = useMemo(() => {
     if (trendData.length < 2) return [];
     // Get all subject keys from trendData (excluding 'period' and 'Average')
     const firstEntry = trendData[0];
     const subjectNames = Object.keys(firstEntry).filter(k => k !== 'period' && k !== 'Average');
-    return subjectNames.filter(name => selectedSubjects.includes(name)).map(name => {
+    return subjectNames.filter(name => trendsSelectedSubjects.includes(name)).map(name => {
       const first = (trendData[0]?.[name] as number) ?? 0;
       const last = (trendData[trendData.length - 1]?.[name] as number) ?? 0;
       return {
@@ -848,14 +863,14 @@ export default function TeacherAcademicPage() {
         improvement: last - first
       };
     }).filter(s => s.improvement > 0).sort((a, b) => b.improvement - a.improvement).slice(0, 3);
-  }, [trendData, selectedSubjects]);
+  }, [trendData, trendsSelectedSubjects]);
 
-  // Falling subjects - biggest decline (filtered by selectedSubjects)
+  // Falling subjects - biggest decline (filtered by trendsSelectedSubjects)
   const fallingSubjects = useMemo(() => {
     if (trendData.length < 2) return [];
     const firstEntry = trendData[0];
     const subjectNames = Object.keys(firstEntry).filter(k => k !== 'period' && k !== 'Average');
-    return subjectNames.filter(name => selectedSubjects.includes(name)).map(name => {
+    return subjectNames.filter(name => trendsSelectedSubjects.includes(name)).map(name => {
       const first = (trendData[0]?.[name] as number) ?? 0;
       const last = (trendData[trendData.length - 1]?.[name] as number) ?? 0;
       return {
@@ -865,9 +880,9 @@ export default function TeacherAcademicPage() {
         decline: first - last
       };
     }).filter(s => s.decline > 0).sort((a, b) => b.decline - a.decline).slice(0, 3);
-  }, [trendData, selectedSubjects]);
+  }, [trendData, trendsSelectedSubjects]);
 
-  // Radar chart data for subject strengths (filtered by selectedSubjects)
+  // Radar chart data for subject strengths (filtered by trendsSelectedSubjects)
   const radarData = useMemo(() => {
     const data = subjectYearlyData[selectedClass as keyof typeof subjectYearlyData] || subjectYearlyData["5A"];
     const latest = data[data.length - 1];
@@ -886,8 +901,8 @@ export default function TeacherAcademicPage() {
         });
       }
     });
-    return allSubjects.filter(s => selectedSubjects.includes(s.name));
-  }, [selectedClass, selectedSubjects]);
+    return allSubjects.filter(s => trendsSelectedSubjects.includes(s.name));
+  }, [selectedClass, trendsSelectedSubjects]);
 
   // Radar average for color coding
   const radarAverage = useMemo(() => {
@@ -3031,7 +3046,7 @@ export default function TeacherAcademicPage() {
                   <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0 flex-1">
                       <p className="text-xs text-muted-foreground mb-0.5 truncate">
-                        {subjectFilter === "all" ? `Class ${selectedClass} Average` : subjectFilter}
+                        {trendsSelectedSubjects.length === subjects.length ? `Class ${selectedClass} Average` : `${trendsSelectedSubjects.length} Subject${trendsSelectedSubjects.length > 1 ? 's' : ''} Selected`}
                       </p>
                       <div className="flex items-baseline gap-2 flex-wrap">
                         <span className="text-3xl font-bold text-foreground">
@@ -3086,20 +3101,20 @@ export default function TeacherAcademicPage() {
                   Generate Report
                 </Button>
 
-                {/* Subject Filter - Standardized Pills */}
+                {/* Subject Filter - Standardized Pills with Multi-Select */}
                 <div className="space-y-2">
                   <div className="flex items-center justify-between">
                     <span className="text-sm font-medium text-foreground">Subjects:</span>
                     <div className="flex gap-2">
                       <button
-                        className={`text-sm font-medium transition-colors ${subjectFilter === "all" ? "text-primary" : "text-foreground hover:text-primary"}`}
-                        onClick={() => setSubjectFilter("all")}
+                        className={`text-sm font-medium transition-colors ${trendsSelectedSubjects.length === subjects.length ? "text-primary" : "text-foreground hover:text-primary"}`}
+                        onClick={() => setTrendsSelectedSubjects([...subjects])}
                       >
                         All
                       </button>
                       <button
                         className="text-sm font-medium text-foreground hover:text-primary transition-colors"
-                        onClick={() => setSubjectFilter(subjects[0] || "all")}
+                        onClick={() => setTrendsSelectedSubjects([subjects[0]])}
                       >
                         Clear
                       </button>
@@ -3112,15 +3127,21 @@ export default function TeacherAcademicPage() {
                         baseName={group.baseName}
                         shortName={group.shortName}
                         variants={group.variants || []}
-                        selectedSubjects={subjectFilter === "all" ? [] : [subjectFilter]}
+                        selectedSubjects={trendsSelectedSubjects}
                         onToggle={(subjectName) => {
-                          if (subjectFilter === subjectName) {
-                            setSubjectFilter("all");
-                          } else {
-                            setSubjectFilter(subjectName);
-                          }
+                          setTrendsSelectedSubjects(prev => {
+                            if (prev.includes(subjectName)) {
+                              // Don't allow removing last subject
+                              if (prev.length > 1) {
+                                return prev.filter(s => s !== subjectName);
+                              }
+                              return prev;
+                            } else {
+                              return [...prev, subjectName];
+                            }
+                          });
                         }}
-                        singleSelect={true}
+                        singleSelect={false}
                       />
                     ))}
                   </div>
@@ -3210,23 +3231,25 @@ export default function TeacherAcademicPage() {
                           fontSize: 9,
                           fill: "#22c55e"
                         }} />
-                          {subjectFilter === "all" ? <Area type="monotone" dataKey="Average" stroke={trendDirection.direction === "up" ? "#22c55e" : trendDirection.direction === "down" ? "#ef4444" : "#3b82f6"} strokeWidth={2.5} fill={trendDirection.direction === "up" ? "url(#gradientGreen)" : trendDirection.direction === "down" ? "url(#gradientRed)" : "url(#gradientBlue)"} dot={{
-                          fill: trendDirection.direction === "up" ? "#22c55e" : trendDirection.direction === "down" ? "#ef4444" : "#3b82f6",
-                          strokeWidth: 0,
-                          r: 5
-                        }} activeDot={{
-                          r: 7,
-                          strokeWidth: 2,
-                          stroke: "#fff"
-                        }} connectNulls /> : <Area type="monotone" dataKey={subjectFilter} stroke={trendDirection.direction === "up" ? "#22c55e" : trendDirection.direction === "down" ? "#ef4444" : "#3b82f6"} strokeWidth={2.5} fill={trendDirection.direction === "up" ? "url(#gradientGreen)" : trendDirection.direction === "down" ? "url(#gradientRed)" : "url(#gradientBlue)"} dot={{
-                          fill: trendDirection.direction === "up" ? "#22c55e" : trendDirection.direction === "down" ? "#ef4444" : "#3b82f6",
-                          strokeWidth: 0,
-                          r: 5
-                        }} activeDot={{
-                          r: 7,
-                          strokeWidth: 2,
-                          stroke: "#fff"
-                        }} connectNulls />}
+                          {/* Render Area for the average of selected subjects */}
+                          <Area 
+                            type="monotone" 
+                            dataKey="Average" 
+                            stroke={trendDirection.direction === "up" ? "#22c55e" : trendDirection.direction === "down" ? "#ef4444" : "#3b82f6"} 
+                            strokeWidth={2.5} 
+                            fill={trendDirection.direction === "up" ? "url(#gradientGreen)" : trendDirection.direction === "down" ? "url(#gradientRed)" : "url(#gradientBlue)"} 
+                            dot={{
+                              fill: trendDirection.direction === "up" ? "#22c55e" : trendDirection.direction === "down" ? "#ef4444" : "#3b82f6",
+                              strokeWidth: 0,
+                              r: 5
+                            }} 
+                            activeDot={{
+                              r: 7,
+                              strokeWidth: 2,
+                              stroke: "#fff"
+                            }} 
+                            connectNulls 
+                          />
                         </AreaChart>
                       </ResponsiveContainer>
                     </div>
@@ -4115,7 +4138,7 @@ export default function TeacherAcademicPage() {
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '10px' }}>
                   <div style={{ padding: '10px', borderRadius: '6px', backgroundColor: trendDirection.direction === 'up' ? '#dcfce7' : trendDirection.direction === 'down' ? '#fee2e2' : '#f3f4f6', border: '1px solid #ddd', textAlign: 'center' }}>
                     <div style={{ fontSize: '20px', fontWeight: 700, color: '#1a1a1a' }}>{trendDirection.currentValue}%</div>
-                    <div style={{ fontSize: '9px', color: '#666' }}>{subjectFilter === 'all' ? 'Class Average' : subjectFilter}</div>
+                    <div style={{ fontSize: '9px', color: '#666' }}>{trendsSelectedSubjects.length === subjects.length ? 'Class Average' : `${trendsSelectedSubjects.length} Subject${trendsSelectedSubjects.length > 1 ? 's' : ''}`}</div>
                     <div style={{ fontSize: '10px', fontWeight: 600, color: trendDirection.direction === 'up' ? '#22c55e' : trendDirection.direction === 'down' ? '#ef4444' : '#6b7280', marginTop: '4px' }}>
                       {trendDirection.direction === 'up' ? '↑' : trendDirection.direction === 'down' ? '↓' : '→'} {trendDirection.change}%
                     </div>
