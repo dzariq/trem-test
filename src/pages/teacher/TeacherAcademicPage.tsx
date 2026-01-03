@@ -1067,12 +1067,162 @@ export default function TeacherAcademicPage() {
                   <SelectValue placeholder="Select Subject" />
                 </SelectTrigger>
                 <SelectContent>
+                  <SelectItem value="Homeroom Behavior" className="font-semibold text-purple-600">
+                    Homeroom Behavior
+                  </SelectItem>
+                  <div className="h-px bg-border my-1" />
                   {subjects.map(subject => <SelectItem key={subject} value={subject}>{subject}</SelectItem>)}
                 </SelectContent>
               </Select>
             </div>
 
-            {selectedEntrySubject ? <>
+            {selectedEntrySubject === "Homeroom Behavior" ? <>
+              {/* Behavior Header */}
+              <Card className="bg-purple-50 dark:bg-purple-950/20 border-purple-200">
+                <CardContent className="p-3">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="font-semibold text-foreground">Homeroom Behavior</p>
+                      <p className="text-sm text-muted-foreground">Class {selectedClass} • {students.length} students</p>
+                    </div>
+                    <Badge variant="outline" className="bg-purple-100 border-purple-300 text-purple-600">
+                      <UserCheck className="h-3 w-3 mr-1" />
+                      Behavior
+                    </Badge>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Student List for Behavior Entry */}
+              <div className="space-y-2">
+                {students.map(student => {
+                  const isExpanded = expandedStudents.includes(student.id);
+                  const behavior = getStudentBehavior(student.id);
+                  const filledCount = Object.entries(behavior).filter(([key, val]) => 
+                    key !== 'homeroomComment' && key !== 'responsibilityComment' && val !== ""
+                  ).length;
+                  const hasData = filledCount > 0;
+                  
+                  return (
+                    <Collapsible key={student.id} open={isExpanded} onOpenChange={() => toggleStudent(student.id)}>
+                      <Card className={cn("overflow-hidden transition-colors", isExpanded ? "border-purple-400 shadow-md" : "")}>
+                        <CollapsibleTrigger asChild>
+                          <CardHeader className="p-3 cursor-pointer hover:bg-accent/30 transition-colors">
+                            <div className="flex items-center justify-between gap-3">
+                              <div className="flex items-center gap-3 flex-1 min-w-0">
+                                <div className="w-8 h-8 rounded-full bg-purple-100 flex items-center justify-center flex-shrink-0">
+                                  <span className="text-xs font-semibold text-purple-600">
+                                    {student.name.split(' ').map(n => n[0]).join('').slice(0, 2)}
+                                  </span>
+                                </div>
+                                <div className="min-w-0 flex-1">
+                                  <p className="text-sm font-semibold text-foreground truncate">{student.name}</p>
+                                  {hasData && !isExpanded && (
+                                    <p className="text-xs text-purple-600">{filledCount}/7 traits graded</p>
+                                  )}
+                                  {!hasData && !isExpanded && (
+                                    <p className="text-xs text-amber-500">Not graded</p>
+                                  )}
+                                </div>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                {hasData && (
+                                  <Badge variant="outline" className="text-xs px-2 py-0.5 border-purple-300 text-purple-600">
+                                    {filledCount}/7
+                                  </Badge>
+                                )}
+                                {isExpanded ? <ChevronUp className="h-4 w-4 text-muted-foreground" /> : <ChevronDown className="h-4 w-4 text-muted-foreground" />}
+                              </div>
+                            </div>
+                          </CardHeader>
+                        </CollapsibleTrigger>
+                        
+                        <CollapsibleContent>
+                          <CardContent className="p-3 pt-0 space-y-3">
+                            {/* Behavioral Traits Grid */}
+                            <div className="grid grid-cols-2 gap-2">
+                              {behaviorTraits.map(trait => {
+                                const currentGrade = behavior[trait.key as keyof typeof behavior] as string || "";
+                                return (
+                                  <div key={trait.key} className={cn("p-2 rounded-lg", trait.bgColor, trait.borderColor, "border")}>
+                                    <label className={cn("text-[10px] font-semibold uppercase block mb-1.5", trait.textColor)}>
+                                      {trait.label}
+                                    </label>
+                                    <Select 
+                                      value={currentGrade} 
+                                      onValueChange={(v) => updateBehavior(student.id, trait.key, v)}
+                                    >
+                                      <SelectTrigger className={cn("h-9 bg-background/80 text-sm", trait.borderColor)}>
+                                        <SelectValue placeholder="Grade">
+                                          {currentGrade && (
+                                            <Badge className={cn("font-bold text-xs", getGradeColor(currentGrade))}>
+                                              {currentGrade}
+                                            </Badge>
+                                          )}
+                                        </SelectValue>
+                                      </SelectTrigger>
+                                      <SelectContent>
+                                        {gradeOptions.map(grade => (
+                                          <SelectItem key={grade} value={grade}>
+                                            <Badge className={cn("font-bold", getGradeColor(grade))}>
+                                              {grade}
+                                            </Badge>
+                                          </SelectItem>
+                                        ))}
+                                      </SelectContent>
+                                    </Select>
+                                  </div>
+                                );
+                              })}
+                            </div>
+
+                            {/* Comment Sections */}
+                            <div className="space-y-2">
+                              <div>
+                                <label className="text-xs font-medium text-rose-600 mb-1 block">
+                                  Homeroom Teacher Comment
+                                </label>
+                                <Textarea
+                                  placeholder="Enter homeroom teacher comment..."
+                                  value={behavior.homeroomComment}
+                                  onChange={(e) => updateBehavior(student.id, "homeroomComment", e.target.value)}
+                                  className="min-h-[60px] text-sm resize-none bg-rose-50/50 dark:bg-rose-950/20 border-rose-200"
+                                />
+                              </div>
+
+                              <div>
+                                <label className="text-xs font-medium text-purple-600 mb-1 block">
+                                  Responsibility Comment
+                                </label>
+                                <Textarea
+                                  placeholder="Enter responsibility comment..."
+                                  value={behavior.responsibilityComment}
+                                  onChange={(e) => updateBehavior(student.id, "responsibilityComment", e.target.value)}
+                                  className="min-h-[60px] text-sm resize-none bg-purple-50/50 dark:bg-purple-950/20 border-purple-200"
+                                />
+                              </div>
+                            </div>
+                          </CardContent>
+                        </CollapsibleContent>
+                      </Card>
+                    </Collapsible>
+                  );
+                })}
+              </div>
+
+              {/* Floating Save Button */}
+              <Button 
+                className="fixed z-50 shadow-xl bottom-24 right-4 h-14 w-14 rounded-full p-0 bg-purple-600 hover:bg-purple-700"
+                onClick={() => {
+                  toast({
+                    title: "Behavior Saved",
+                    description: `Homeroom behavior for ${selectedClass} has been saved.`,
+                  });
+                }}
+              >
+                <Save className="h-6 w-6" />
+              </Button>
+            </> : selectedEntrySubject ? <>
               {/* Subject Header */}
               <Card className="bg-primary/5 border-primary/20">
                 <CardContent className="p-3">
