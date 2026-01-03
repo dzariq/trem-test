@@ -13,6 +13,8 @@ interface Subject {
   teacherComment: string;
   yearEndScore?: number | null;
   yearEndGrade?: string;
+  classStudyRecommendation?: string;
+  studyRecommendation?: string;
 }
 
 interface BehaviorItem {
@@ -347,16 +349,17 @@ export function ReportCardDialog({
               <table style={{ width: '100%', borderCollapse: 'separate', borderSpacing: '0', fontSize: '11px', borderRadius: '8px', overflow: 'hidden', border: '2px solid #e5e7eb', background: 'white' }}>
                 <thead>
                   <tr style={{ background: 'linear-gradient(90deg, #065f46 0%, #047857 20%, #059669 40%, #10b981 60%, #34d399 80%, #6ee7b7 100%)' }}>
-                    <th style={{ color: 'white', padding: '10px 8px', textAlign: 'left', fontWeight: '600', fontSize: '11px', borderRight: '2px solid rgba(255,255,255,0.4)' }} rowSpan={2}>Subject</th>
-                    <th style={{ color: 'white', padding: '8px 6px', textAlign: 'center', fontWeight: '600', fontSize: '11px', borderRight: '2px solid rgba(255,255,255,0.4)' }} colSpan={2}>Mid-Year</th>
-                    <th style={{ color: 'white', padding: '8px 6px', textAlign: 'center', fontWeight: '600', fontSize: '11px', borderRight: '2px solid rgba(255,255,255,0.4)' }} colSpan={2}>Year-End</th>
-                    <th style={{ color: 'white', padding: '10px 8px', textAlign: 'left', fontWeight: '600', fontSize: '11px' }} rowSpan={2}>Teacher&apos;s Comment</th>
+                    <th style={{ color: 'white', padding: '10px 6px', textAlign: 'left', fontWeight: '600', fontSize: '10px', borderRight: '2px solid rgba(255,255,255,0.4)' }} rowSpan={2}>Subject</th>
+                    <th style={{ color: 'white', padding: '6px 4px', textAlign: 'center', fontWeight: '600', fontSize: '10px', borderRight: '2px solid rgba(255,255,255,0.4)' }} colSpan={2}>Mid-Year</th>
+                    <th style={{ color: 'white', padding: '6px 4px', textAlign: 'center', fontWeight: '600', fontSize: '10px', borderRight: '2px solid rgba(255,255,255,0.4)' }} colSpan={2}>Year-End</th>
+                    <th style={{ color: 'white', padding: '10px 6px', textAlign: 'left', fontWeight: '600', fontSize: '10px', borderRight: '2px solid rgba(255,255,255,0.4)' }} rowSpan={2}>Class Recommendation</th>
+                    <th style={{ color: 'white', padding: '10px 6px', textAlign: 'left', fontWeight: '600', fontSize: '10px' }} rowSpan={2}>Study Tips</th>
                   </tr>
                   <tr style={{ background: 'linear-gradient(90deg, #047857 0%, #059669 25%, #10b981 50%, #34d399 75%, #6ee7b7 100%)' }}>
-                    <th style={{ color: 'white', padding: '6px 4px', textAlign: 'center', fontWeight: '500', fontSize: '10px', width: '50px', borderRight: '2px solid rgba(255,255,255,0.4)', borderTop: '2px solid rgba(255,255,255,0.4)' }}>Score</th>
-                    <th style={{ color: 'white', padding: '6px 4px', textAlign: 'center', fontWeight: '500', fontSize: '10px', width: '45px', borderRight: '2px solid rgba(255,255,255,0.4)', borderTop: '2px solid rgba(255,255,255,0.4)' }}>Grade</th>
-                    <th style={{ color: 'white', padding: '6px 4px', textAlign: 'center', fontWeight: '500', fontSize: '10px', width: '50px', borderRight: '2px solid rgba(255,255,255,0.4)', borderTop: '2px solid rgba(255,255,255,0.4)' }}>Score</th>
-                    <th style={{ color: 'white', padding: '6px 4px', textAlign: 'center', fontWeight: '500', fontSize: '10px', width: '45px', borderTop: '2px solid rgba(255,255,255,0.4)' }}>Grade</th>
+                    <th style={{ color: 'white', padding: '4px 3px', textAlign: 'center', fontWeight: '500', fontSize: '9px', width: '40px', borderRight: '2px solid rgba(255,255,255,0.4)', borderTop: '2px solid rgba(255,255,255,0.4)' }}>Score</th>
+                    <th style={{ color: 'white', padding: '4px 3px', textAlign: 'center', fontWeight: '500', fontSize: '9px', width: '35px', borderRight: '2px solid rgba(255,255,255,0.4)', borderTop: '2px solid rgba(255,255,255,0.4)' }}>Grade</th>
+                    <th style={{ color: 'white', padding: '4px 3px', textAlign: 'center', fontWeight: '500', fontSize: '9px', width: '40px', borderRight: '2px solid rgba(255,255,255,0.4)', borderTop: '2px solid rgba(255,255,255,0.4)' }}>Score</th>
+                    <th style={{ color: 'white', padding: '4px 3px', textAlign: 'center', fontWeight: '500', fontSize: '9px', width: '35px', borderRight: '2px solid rgba(255,255,255,0.4)', borderTop: '2px solid rgba(255,255,255,0.4)' }}>Grade</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -388,24 +391,24 @@ export function ReportCardDialog({
                     const derivedYearEndGradeColor = gradeColors[derivedYearEndGrade] || gradeColors["C"];
                     return (
                       <tr key={subject.name} style={{ position: 'relative', background: getRowBg(subject.grade) }}>
-                        <td style={{ padding: '6px 8px', borderBottom: '2px solid #e5e7eb', borderRight: '2px solid #e5e7eb', fontWeight: '500', fontSize: '11px' }}>
+                        <td style={{ padding: '5px 6px', borderBottom: '2px solid #e5e7eb', borderRight: '2px solid #e5e7eb', fontWeight: '500', fontSize: '9px' }}>
                           <span style={{ position: 'relative', zIndex: 1 }}>{subject.name}</span>
                         </td>
                         {/* Mid-Year Score */}
-                        <td style={{ position: 'relative', padding: '5px', borderBottom: '2px solid #e5e7eb', borderRight: '2px solid #e5e7eb', textAlign: 'center', fontWeight: '600', overflow: 'hidden', fontSize: '11px' }}>
+                        <td style={{ position: 'relative', padding: '4px', borderBottom: '2px solid #e5e7eb', borderRight: '2px solid #e5e7eb', textAlign: 'center', fontWeight: '600', overflow: 'hidden', fontSize: '10px' }}>
                           <span style={{ position: 'relative', zIndex: 1 }}>{subject.score !== null ? `${subject.score}%` : '-'}</span>
                         </td>
                         {/* Mid-Year Grade */}
-                        <td style={{ padding: '5px', borderBottom: '2px solid #e5e7eb', borderRight: '2px solid #e5e7eb', textAlign: 'center' }}>
+                        <td style={{ padding: '4px', borderBottom: '2px solid #e5e7eb', borderRight: '2px solid #e5e7eb', textAlign: 'center' }}>
                           <span style={{ 
                             display: 'inline-flex', 
                             alignItems: 'center', 
                             justifyContent: 'center', 
-                            minWidth: '26px', 
-                            padding: '3px 7px', 
-                            borderRadius: '4px', 
+                            minWidth: '22px', 
+                            padding: '2px 5px', 
+                            borderRadius: '3px', 
                             fontWeight: '600', 
-                            fontSize: '10px',
+                            fontSize: '9px',
                             backgroundColor: midYearGradeColor.bg,
                             color: midYearGradeColor.text
                           }}>
@@ -413,27 +416,34 @@ export function ReportCardDialog({
                           </span>
                         </td>
                         {/* Year-End Score */}
-                        <td style={{ position: 'relative', padding: '5px', borderBottom: '2px solid #e5e7eb', borderRight: '2px solid #e5e7eb', textAlign: 'center', fontWeight: '600', overflow: 'hidden', fontSize: '11px' }}>
+                        <td style={{ position: 'relative', padding: '4px', borderBottom: '2px solid #e5e7eb', borderRight: '2px solid #e5e7eb', textAlign: 'center', fontWeight: '600', overflow: 'hidden', fontSize: '10px' }}>
                           <span style={{ position: 'relative', zIndex: 1 }}>{yearEndScore !== null ? `${yearEndScore}%` : '-'}</span>
                         </td>
                         {/* Year-End Grade */}
-                        <td style={{ padding: '5px', borderBottom: '2px solid #e5e7eb', borderRight: '2px solid #e5e7eb', textAlign: 'center' }}>
+                        <td style={{ padding: '4px', borderBottom: '2px solid #e5e7eb', borderRight: '2px solid #e5e7eb', textAlign: 'center' }}>
                           <span style={{ 
                             display: 'inline-flex', 
                             alignItems: 'center', 
                             justifyContent: 'center', 
-                            minWidth: '26px', 
-                            padding: '3px 7px', 
-                            borderRadius: '4px', 
+                            minWidth: '22px', 
+                            padding: '2px 5px', 
+                            borderRadius: '3px', 
                             fontWeight: '600', 
-                            fontSize: '10px',
+                            fontSize: '9px',
                             backgroundColor: derivedYearEndGradeColor.bg,
                             color: derivedYearEndGradeColor.text
                           }}>
                             {derivedYearEndGrade}
                           </span>
                         </td>
-                        <td style={{ padding: '6px 8px', borderBottom: '2px solid #e5e7eb', fontSize: '10px', color: '#374151' }}>{subject.teacherComment}</td>
+                        {/* Class Study Recommendation */}
+                        <td style={{ padding: '5px 6px', borderBottom: '2px solid #e5e7eb', borderRight: '2px solid #e5e7eb', fontSize: '8px', color: '#374151', lineHeight: '1.3' }}>
+                          {subject.classStudyRecommendation || '-'}
+                        </td>
+                        {/* Study Recommendation */}
+                        <td style={{ padding: '5px 6px', borderBottom: '2px solid #e5e7eb', fontSize: '8px', color: '#374151', lineHeight: '1.3' }}>
+                          {subject.studyRecommendation || '-'}
+                        </td>
                       </tr>
                     );
                   })}
