@@ -1433,6 +1433,20 @@ export default function AcademicPage() {
                 <div className="space-y-2">
                   <div className="flex items-center justify-between">
                     <span className="text-sm font-medium text-foreground">Subjects:</span>
+                    <div className="flex gap-2">
+                      <button
+                        className="text-sm font-medium text-foreground hover:text-primary transition-colors"
+                        onClick={() => setSubjectFilter("all")}
+                      >
+                        All
+                      </button>
+                      <button
+                        className="text-sm font-medium text-foreground hover:text-primary transition-colors"
+                        onClick={() => setSubjectFilter(academicData.subjects[0]?.name || "all")}
+                      >
+                        Clear
+                      </button>
+                    </div>
                   </div>
                   <div className="flex flex-wrap gap-1.5 p-2.5 rounded-lg border border-border bg-background">
                     {/* All Subjects pill */}
