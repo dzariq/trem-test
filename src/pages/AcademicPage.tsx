@@ -1129,16 +1129,6 @@ export default function AcademicPage() {
                     </div>
                   </div>
 
-                  {/* Report Button for Overview */}
-                  <Button
-                    size="sm"
-                    className="w-full gap-2 bg-emerald-600 hover:bg-emerald-700 text-white"
-                    onClick={() => setOverviewReportDialogOpen(true)}
-                  >
-                    <FileText className="h-4 w-4" />
-                    Generate Report
-                  </Button>
-
                   {/* Multi-Select Subject Filter */}
                   <div className="space-y-2">
                     <div className="flex items-center justify-between">
@@ -1178,6 +1168,16 @@ export default function AcademicPage() {
                       ))}
                     </div>
                   </div>
+
+                  {/* Report Button for Overview */}
+                  <Button
+                    size="sm"
+                    className="w-full gap-2 bg-emerald-600 hover:bg-emerald-700 text-white"
+                    onClick={() => setOverviewReportDialogOpen(true)}
+                  >
+                    <FileText className="h-4 w-4" />
+                    Generate Report
+                  </Button>
                 </div>
 
                 {/* Rising Stars */}
