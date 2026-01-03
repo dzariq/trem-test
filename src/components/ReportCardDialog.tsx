@@ -237,15 +237,21 @@ export function ReportCardDialog({
                   
                   {/* Overall Average & Attendance inside the name box */}
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1.5fr', gap: '10px' }}>
-                    <div>
-                      <div style={{ fontSize: '8px', fontWeight: '600', color: '#065f46', textTransform: 'uppercase', marginBottom: '4px', letterSpacing: '0.5px' }}>Overall Average</div>
-                      <div style={{ textAlign: 'center', background: 'rgba(255, 255, 255, 0.75)', backdropFilter: 'blur(4px)', padding: '12px 10px', borderRadius: '10px', border: '1px solid rgba(6, 95, 70, 0.15)', boxShadow: '0 2px 8px rgba(0,0,0,0.06)' }}>
-                        <div style={{ fontSize: '26px', fontWeight: '700', color: '#065f46' }}>{overallAverage}%</div>
+                    {/* Overall Average - Browser Style */}
+                    <div style={{ borderRadius: '10px', overflow: 'hidden', boxShadow: '0 2px 8px rgba(0,0,0,0.08)' }}>
+                      <div style={{ background: '#4b5563', padding: '6px 10px' }}>
+                        <div style={{ fontSize: '8px', fontWeight: '600', color: 'white', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Overall Average</div>
+                      </div>
+                      <div style={{ textAlign: 'center', background: 'rgba(255, 255, 255, 0.85)', padding: '14px 10px' }}>
+                        <div style={{ fontSize: '28px', fontWeight: '700', color: '#065f46' }}>{overallAverage}%</div>
                       </div>
                     </div>
-                    <div>
-                      <div style={{ fontSize: '8px', fontWeight: '600', color: '#065f46', textTransform: 'uppercase', marginBottom: '4px', letterSpacing: '0.5px' }}>Attendance</div>
-                      <div style={{ background: 'rgba(255, 255, 255, 0.75)', backdropFilter: 'blur(4px)', padding: '10px 12px', borderRadius: '10px', border: '1px solid rgba(6, 95, 70, 0.15)', boxShadow: '0 2px 8px rgba(0,0,0,0.06)' }}>
+                    {/* Attendance - Browser Style */}
+                    <div style={{ borderRadius: '10px', overflow: 'hidden', boxShadow: '0 2px 8px rgba(0,0,0,0.08)' }}>
+                      <div style={{ background: '#4b5563', padding: '6px 10px' }}>
+                        <div style={{ fontSize: '8px', fontWeight: '600', color: 'white', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Attendance</div>
+                      </div>
+                      <div style={{ background: 'rgba(255, 255, 255, 0.85)', padding: '10px 12px' }}>
                         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
                           <span style={{ fontSize: '22px', fontWeight: '700', color: attendance.percentage >= 90 ? '#16a34a' : attendance.percentage >= 75 ? '#ca8a04' : '#dc2626' }}>{attendance.percentage}%</span>
                           <div style={{ fontSize: '10px', color: '#374151', fontWeight: '600', background: 'rgba(255,255,255,0.9)', padding: '4px 10px', borderRadius: '8px', border: '1px solid #e5e7eb' }}>
