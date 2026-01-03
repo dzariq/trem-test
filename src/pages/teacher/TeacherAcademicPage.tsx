@@ -1350,7 +1350,7 @@ export default function TeacherAcademicPage() {
                       </button>
                     </div>
                   </div>
-                  <div className="flex flex-wrap gap-2 p-3 rounded-lg border border-border bg-background">
+                  <div className="flex flex-wrap gap-1.5 p-2.5 rounded-lg border border-border bg-background">
                     {/* Grouped subject pills with dropdowns */}
                     {subjectGroups.map((group) => (
                       <SubjectGroupPill
@@ -1362,17 +1362,6 @@ export default function TeacherAcademicPage() {
                         onToggle={toggleSubjectFilter}
                       />
                     ))}
-                    
-                    {/* Standalone subjects (not in any group) */}
-                    {standaloneSubjects.map(subject => {
-                      const isSelected = selectedSubjects.includes(subject);
-                      return <button key={subject} onClick={() => toggleSubjectFilter(subject)} className={cn("px-3 py-1.5 rounded-full text-xs font-medium transition-all flex items-center gap-1.5", isSelected ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground hover:bg-muted/80")}>
-                            {isSelected && <svg className="w-3 h-3" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                              </svg>}
-                            {getShortSubjectName(subject)}
-                          </button>;
-                    })}
                   </div>
                 </div>
 

@@ -1081,7 +1081,7 @@ export default function AcademicPage() {
                         </button>
                       </div>
                     </div>
-                    <div className="flex flex-wrap gap-2 p-3 rounded-lg border border-border bg-background">
+                    <div className="flex flex-wrap gap-1.5 p-2.5 rounded-lg border border-border bg-background">
                       {/* Grouped subject pills with dropdowns */}
                       {subjectGroups.map((group) => (
                         <SubjectGroupPill
@@ -1099,31 +1099,6 @@ export default function AcademicPage() {
                           }}
                         />
                       ))}
-                      
-                      {/* Standalone subjects (not in any group) */}
-                      {standaloneSubjects.map((subjectName) => {
-                        const isSelected = gradesSelectedSubjects.includes(subjectName);
-                        return (
-                          <button
-                            key={subjectName}
-                            className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all flex items-center gap-1.5 ${
-                              isSelected 
-                                ? "bg-primary text-primary-foreground" 
-                                : "bg-muted text-muted-foreground hover:bg-muted/80"
-                            }`}
-                            onClick={() => {
-                              if (isSelected) {
-                                setGradesSelectedSubjects(prev => prev.filter(s => s !== subjectName));
-                              } else {
-                                setGradesSelectedSubjects(prev => [...prev, subjectName]);
-                              }
-                            }}
-                          >
-                            {isSelected && <Check className="h-3 w-3" />}
-                            {shortenSubjectName(subjectName)}
-                          </button>
-                        );
-                      })}
                     </div>
                   </div>
                 </div>
