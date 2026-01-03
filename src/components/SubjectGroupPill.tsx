@@ -95,65 +95,63 @@ export function SubjectGroupPill({
                 : "text-foreground hover:bg-accent"
             )}
           >
-            {singleSelect ? (
-              // Radio button style for single select
-              <div
-                className={cn(
-                  "w-5 h-5 rounded-full border-2 flex items-center justify-center transition-colors",
-                  isSelected
-                    ? "border-primary"
-                    : "border-muted-foreground"
-                )}
-              >
-                {isSelected && <div className="w-2.5 h-2.5 rounded-full bg-primary" />}
-              </div>
-            ) : (
-              // Checkbox style for multi select
-              <div
-                className={cn(
-                  "w-5 h-5 rounded border-2 flex items-center justify-center transition-colors",
-                  isSelected
-                    ? "bg-primary border-primary"
-                    : "border-muted-foreground"
-                )}
-              >
-                {isSelected && <Check className="h-3.5 w-3.5 text-primary-foreground" />}
-              </div>
-            )}
+            {/* Always use checkbox style for consistency */}
+            <div
+              className={cn(
+                "w-5 h-5 rounded border-2 flex items-center justify-center transition-colors",
+                isSelected
+                  ? "bg-primary border-primary"
+                  : "border-muted-foreground"
+              )}
+            >
+              {isSelected && <Check className="h-3.5 w-3.5 text-primary-foreground" />}
+            </div>
             {variant.shortName}
           </button>
         );
       })}
       
-      {/* Select All / Clear for this group - only show for multi-select */}
-      {!singleSelect && (
-        <div className="border-t border-border mt-2 pt-3 px-4 flex gap-4">
-          <button
-            onClick={() => {
+      {/* Select All / Clear buttons - always show for consistency */}
+      <div className="border-t border-border mt-2 pt-3 px-4 flex gap-4">
+        <button
+          onClick={() => {
+            if (singleSelect) {
+              // For single select, select the first variant
+              if (variants.length > 0) {
+                onToggle(variants[0].name);
+              }
+            } else {
               variants.forEach((v) => {
                 if (!selectedSubjects.includes(v.name)) {
                   onToggle(v.name);
                 }
               });
-            }}
-            className="text-sm text-muted-foreground hover:text-primary font-medium"
-          >
-            Select All
-          </button>
-          <button
-            onClick={() => {
+            }
+            if (singleSelect) setIsOpen(false);
+          }}
+          className="text-sm text-muted-foreground hover:text-primary font-medium"
+        >
+          Select All
+        </button>
+        <button
+          onClick={() => {
+            if (singleSelect) {
+              // For single select in Trends, clicking clear should reset to "all"
+              // We need to signal this somehow - for now just close
+              setIsOpen(false);
+            } else {
               variants.forEach((v) => {
                 if (selectedSubjects.includes(v.name)) {
                   onToggle(v.name);
                 }
               });
-            }}
-            className="text-sm text-muted-foreground hover:text-primary font-medium"
-          >
-            Clear
-          </button>
-        </div>
-      )}
+            }
+          }}
+          className="text-sm text-muted-foreground hover:text-primary font-medium"
+        >
+          Clear
+        </button>
+      </div>
     </>
   );
 
