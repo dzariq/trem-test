@@ -1582,7 +1582,7 @@ export default function AcademicPage() {
                         baseName={group.baseName}
                         shortName={group.shortName}
                         variants={group.variants || []}
-                        selectedSubjects={subjectFilter === "all" ? [] : [subjectFilter]}
+                        selectedSubjects={subjectFilter === "all" ? academicData.subjects.map(s => s.name) : [subjectFilter]}
                         onToggle={(subjectName) => setSubjectFilter(subjectName)}
                         singleSelect
                       />
