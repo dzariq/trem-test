@@ -1,7 +1,9 @@
-import { useRef } from "react";
+import { useRef, useState } from "react";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Download, X } from "lucide-react";
+import { Download, X, Loader2 } from "lucide-react";
+import html2canvas from "html2canvas";
+import { jsPDF } from "jspdf";
 import schoolLogo from "@/assets/school-badge.png";
 
 interface CertificateDialogProps {
@@ -168,74 +170,39 @@ export function CertificateDialog({
   year = "2025",
 }: CertificateDialogProps) {
   const certificateRef = useRef<HTMLDivElement>(null);
+  const [isDownloading, setIsDownloading] = useState(false);
 
-  const handleDownload = () => {
+  const handleDownload = async () => {
     const printContent = certificateRef.current;
-    if (!printContent) return;
+    if (!printContent || isDownloading) return;
 
-    const printWindow = window.open('', '_blank');
-    if (!printWindow) return;
-
-    printWindow.document.write(`
-      <!DOCTYPE html>
-      <html>
-        <head>
-          <title>Certificate - ${studentName}</title>
-          <style>
-            @import url('https://fonts.googleapis.com/css2?family=Great+Vibes&family=Playfair+Display:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap');
-            
-            * {
-              margin: 0;
-              padding: 0;
-              box-sizing: border-box;
-            }
-            
-            body {
-              font-family: 'Inter', sans-serif;
-              display: flex;
-              justify-content: center;
-              align-items: center;
-              min-height: 100vh;
-              background: #f5f5f5;
-            }
-            
-            .certificate-container {
-              width: 420px;
-              height: 594px;
-            }
-            
-            @page {
-              size: A4 portrait;
-              margin: 0;
-            }
-            
-            @media print {
-              body { 
-                -webkit-print-color-adjust: exact; 
-                print-color-adjust: exact; 
-                background: white;
-              }
-              .certificate-container {
-                width: 100%;
-                height: 100%;
-              }
-            }
-          </style>
-        </head>
-        <body>
-          <div class="certificate-container">
-            ${printContent.innerHTML}
-          </div>
-        </body>
-      </html>
-    `);
+    setIsDownloading(true);
     
-    printWindow.document.close();
-    printWindow.onload = () => {
-      setTimeout(() => {
-        printWindow.print();
-      }, 500);
-    };
+    try {
+      const canvas = await html2canvas(printContent, {
+        scale: 2,
+        useCORS: true,
+        allowTaint: true,
+        backgroundColor: null,
+      });
+      
+      const imgData = canvas.toDataURL('image/png');
+      const pdf = new jsPDF({
+        orientation: 'portrait',
+        unit: 'mm',
+        format: 'a4',
+      });
+      
+      const pdfWidth = pdf.internal.pageSize.getWidth();
+      const pdfHeight = pdf.internal.pageSize.getHeight();
+      
+      pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
+      pdf.save(`Certificate-${studentName.replace(/\s+/g, '-')}.pdf`);
+    } catch (error) {
+      console.error('Error generating PDF:', error);
+    } finally {
+      setIsDownloading(false);
+    }
   };
 
   // Format full date
@@ -452,7 +419,8 @@ export function CertificateDialog({
         {/* Download Button - Dark Green Theme */}
         <Button 
           onClick={handleDownload}
-          className="gap-2 shadow-xl print:hidden px-6 py-5 text-sm hover:scale-105 transition-all duration-300 rounded-full font-medium"
+          disabled={isDownloading}
+          className="gap-2 shadow-xl print:hidden px-6 py-5 text-sm hover:scale-105 transition-all duration-300 rounded-full font-medium disabled:opacity-70 disabled:cursor-not-allowed"
           style={{ 
             background: 'linear-gradient(135deg, #1a3d2e 0%, #0f2318 100%)',
             color: '#e8c967',
@@ -460,8 +428,17 @@ export function CertificateDialog({
             boxShadow: '0 10px 30px -10px rgba(0, 0, 0, 0.5)'
           }}
         >
-          <Download className="h-4 w-4" />
-          Download Certificate
+          {isDownloading ? (
+            <>
+              <Loader2 className="h-4 w-4 animate-spin" />
+              Generating PDF...
+            </>
+          ) : (
+            <>
+              <Download className="h-4 w-4" />
+              Download Certificate
+            </>
+          )}
         </Button>
       </DialogContent>
     </Dialog>
