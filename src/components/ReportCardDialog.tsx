@@ -520,7 +520,7 @@ export function ReportCardDialog({
                     {displayedSubjects
                       .filter(s => s.classStudyRecommendation || s.studyRecommendation)
                       .map((subject, index) => (
-                        <tr key={subject.name} style={{ background: index % 2 === 0 ? '#faf5ff' : '#f3e8ff', borderBottom: '1px solid #e9d5ff' }}>
+                        <tr key={subject.name} style={{ background: index % 2 === 0 ? '#fefce8' : '#fef9c3', borderBottom: '1px solid #fde047' }}>
                           <td style={{ padding: '5px 8px', fontWeight: '600', color: '#1a1a1a', fontSize: '8px' }}>{subject.name}</td>
                           <td style={{ padding: '5px 8px', fontSize: '7px', color: '#374151', lineHeight: '1.4' }}>
                             {subject.classStudyRecommendation || '-'}
@@ -528,7 +528,7 @@ export function ReportCardDialog({
                               <div style={{ marginTop: '4px' }}>
                                 <span style={{ 
                                   display: 'inline-block',
-                                  background: '#7c3aed', 
+                                  background: '#b45309', 
                                   color: 'white', 
                                   padding: '1px 6px', 
                                   borderRadius: '8px', 
