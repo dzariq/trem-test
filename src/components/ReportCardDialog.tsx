@@ -501,9 +501,9 @@ export function ReportCardDialog({
               </table>
             </div>
 
-            {/* Learning Tips - Separate Table - Always starts on page 2 */}
+            {/* Learning Tips - Separate Table */}
             {displayedSubjects.some(s => s.classStudyRecommendation || s.studyRecommendation) && (
-              <div style={{ marginBottom: '12px', pageBreakBefore: 'always' }}>
+              <div style={{ marginBottom: '12px' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '8px', paddingBottom: '6px', borderBottom: '1px solid #065f46' }}>
                   <span style={{ color: '#065f46' }}><IconBookMarked /></span>
                   <h3 style={{ fontSize: '14px', fontWeight: '700', color: '#065f46' }}>Learning Tips</h3>
