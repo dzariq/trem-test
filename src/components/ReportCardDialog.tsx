@@ -280,9 +280,9 @@ export function ReportCardDialog({
             {/* Header with both logos */}
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid #d1d5db', paddingBottom: '10px', marginBottom: '10px', gap: '8px', flexWrap: 'wrap' }}>
               <img src={collinzLogo} alt="Collinz School" style={{ height: '40px', objectFit: 'contain' }} />
-              <div style={{ background: '#065f46', color: 'white', padding: '6px 12px', borderRadius: '6px', textAlign: 'center', border: '2px solid #047857' }}>
-                <div style={{ fontSize: '8px', fontWeight: '600', opacity: 0.9, letterSpacing: '0.5px' }}>ACADEMIC REPORT</div>
-                <div style={{ fontSize: '11px', fontWeight: '700' }}>{examType} {year}</div>
+              <div style={{ textAlign: 'center' }}>
+                <div style={{ fontWeight: '600', color: '#065f46', letterSpacing: '1px', fontFamily: "'Brush Script MT', 'Segoe Script', cursive", fontSize: '16px' }}>Academic Report</div>
+                <div style={{ fontSize: '13px', fontWeight: '700', color: '#065f46' }}>{examType} {year}</div>
               </div>
               <img src={cambridgeLogo} alt="Cambridge Assessment" style={{ height: '35px', objectFit: 'contain' }} />
             </div>
@@ -314,7 +314,7 @@ export function ReportCardDialog({
                     </div>
                     <div style={{ background: 'white', padding: '6px 10px' }}>
                       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '4px' }}>
-                        <span style={{ fontSize: '18px', fontWeight: '700', color: attendance.percentage >= 90 ? '#16a34a' : attendance.percentage >= 75 ? '#ca8a04' : '#dc2626' }}>{attendance.percentage}%</span>
+                        <span style={{ fontSize: '18px', fontWeight: '700', color: '#065f46' }}>{attendance.percentage}%</span>
                         <div style={{ fontSize: '9px', color: '#374151', fontWeight: '600', background: '#f9fafb', padding: '3px 8px', borderRadius: '8px', border: '1px solid #d1d5db' }}>
                           {attendance.present}/{attendance.totalDays} days
                         </div>
