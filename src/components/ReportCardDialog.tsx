@@ -3,7 +3,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Button } from "@/components/ui/button";
 import { Printer } from "lucide-react";
 import collinzLogo from "@/assets/collinz-school-logo.png";
-import collinzLogoBW from "@/assets/collinz-logo-bw.png";
+import schoolBadge from "@/assets/school-badge.png";
 import cambridgeLogo from "@/assets/cambridge-logo.jpg";
 
 interface Subject {
@@ -218,16 +218,16 @@ export function ReportCardDialog({
                 padding: '14px',
                 overflow: 'hidden'
               }}>
-                {/* Oversized Logo Watermark */}
+                {/* School Badge Watermark */}
                 <img 
-                  src={collinzLogoBW} 
+                  src={schoolBadge} 
                   alt="" 
                   style={{
                     position: 'absolute',
-                    right: '-50px',
-                    top: '-30px',
-                    width: '280px',
-                    opacity: 0.12,
+                    right: '-20px',
+                    top: '-10px',
+                    width: '140px',
+                    opacity: 0.15,
                     pointerEvents: 'none'
                   }} 
                 />
