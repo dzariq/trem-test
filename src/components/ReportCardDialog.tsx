@@ -448,10 +448,10 @@ export function ReportCardDialog({
                     const derivedYearEndGradeColor = gradeColors[derivedYearEndGrade] || gradeColors["C"];
                     const midYearBgColor = gradeCardBgColors[subject.grade] || 'white';
                     const yearEndBgColor = gradeCardBgColors[derivedYearEndGrade] || 'white';
-                    const rowAltBg = index % 2 === 0 ? 'white' : '#f9fafb';
+                    const rowAltBg = index % 2 === 0 ? '#fffbeb' : '#fef3c7';
                     
                     return (
-                      <tr key={subject.name} style={{ borderBottom: '1px solid #e5e7eb' }}>
+                      <tr key={subject.name} style={{ borderBottom: '1px solid #fcd34d' }}>
                         <td style={{ padding: '6px 8px', fontWeight: '600', color: '#1a1a1a', fontSize: '8px', background: rowAltBg }}>{subject.name}</td>
                         <td style={{ padding: '6px 8px', textAlign: 'center', position: 'relative', background: midYearBgColor, overflow: 'hidden' }}>
                           {/* Watermark Grade */}
