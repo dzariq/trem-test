@@ -40,7 +40,7 @@ const gradeCategories = [{
 }];
 
 // Import centralized subjects config
-import { allSubjects, getShortSubjectName, subjectGroups } from "@/data/subjectsConfig";
+import { allSubjects, getShortSubjectName, getTinySubjectCode, subjectGroups } from "@/data/subjectsConfig";
 import { SubjectGroupPill } from "@/components/SubjectGroupPill";
 
 // Use centralized subjects list
@@ -882,26 +882,24 @@ export default function TeacherAcademicPage() {
     }).filter(s => s.decline > 0).sort((a, b) => b.decline - a.decline).slice(0, 3);
   }, [trendData, trendsSelectedSubjects]);
 
-  // Radar chart data for subject strengths (filtered by trendsSelectedSubjects)
+  // Radar chart data for subject strengths (filtered by trendsSelectedSubjects) - use tiny codes for compact display
   const radarData = useMemo(() => {
     const data = subjectYearlyData[selectedClass as keyof typeof subjectYearlyData] || subjectYearlyData["5A"];
     const latest = data[data.length - 1];
     
-    // Build radar data from all subjects in the data
-    const allSubjects: { name: string; subject: string; score: number; fullMark: number }[] = [];
+    // Build radar data from all subjects in the data using tiny codes
+    const subjectList: { name: string; subject: string; score: number; fullMark: number }[] = [];
     Object.entries(latest).forEach(([key, value]) => {
       if (key !== 'year' && typeof value === 'number') {
-        // Create short name
-        const shortName = getShortSubjectName(key);
-        allSubjects.push({
+        subjectList.push({
           name: key,
-          subject: shortName.length > 8 ? shortName.substring(0, 8) : shortName,
+          subject: getTinySubjectCode(key),
           score: value,
           fullMark: 100
         });
       }
     });
-    return allSubjects.filter(s => trendsSelectedSubjects.includes(s.name));
+    return subjectList.filter(s => trendsSelectedSubjects.includes(s.name));
   }, [selectedClass, trendsSelectedSubjects]);
 
   // Radar average for color coding
