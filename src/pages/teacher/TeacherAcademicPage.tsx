@@ -1,4 +1,4 @@
-import { useState, useMemo, useRef, useCallback } from "react";
+import { useState, useMemo, useRef, useCallback, useEffect } from "react";
 import { TeacherAppLayout } from "@/components/layout/TeacherAppLayout";
 import { AppHeader } from "@/components/layout/AppHeader";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -112,6 +112,8 @@ export default function TeacherAcademicPage() {
   const [selectedEntrySubject, setSelectedEntrySubject] = useState<string | null>(null);
   const [expandedStudents, setExpandedStudents] = useState<string[]>([]);
   const [expandedSubjects, setExpandedSubjects] = useState<string[]>([]);
+  const [isAtBottom, setIsAtBottom] = useState(false);
+  const gradeEntryRef = useRef<HTMLDivElement>(null);
   const [studentGrades, setStudentGrades] = useState<Record<string, Record<string, StudentGrades>>>({});
   const [selectedYears, setSelectedYears] = useState<string[]>([academicYears[0]]);
   const [selectedYear, setSelectedYear] = useState(academicYears[0]); // For single-select dropdowns
@@ -232,6 +234,21 @@ export default function TeacherAcademicPage() {
   }, []);
   const resetZoom = useCallback(() => {
     setChartZoom(1);
+  }, []);
+  
+  // Scroll detection for floating save button
+  useEffect(() => {
+    const handleScroll = () => {
+      const scrollTop = window.scrollY;
+      const windowHeight = window.innerHeight;
+      const documentHeight = document.documentElement.scrollHeight;
+      const isNearBottom = scrollTop + windowHeight >= documentHeight - 150;
+      setIsAtBottom(isNearBottom);
+    };
+    
+    window.addEventListener('scroll', handleScroll);
+    handleScroll(); // Check initial position
+    return () => window.removeEventListener('scroll', handleScroll);
   }, []);
   const toggleYear = (year: string) => {
     setSelectedYears(prev => prev.includes(year) ? prev.length > 1 ? prev.filter(y => y !== year) : prev // Keep at least one selected
@@ -1238,21 +1255,24 @@ export default function TeacherAcademicPage() {
                 })}
               </div>
 
-              {/* Save Button - Sticky at bottom for mobile */}
-              <div className="sticky bottom-20 pt-2">
-                <Button 
-                  className="w-full gap-2 h-12 text-base font-semibold shadow-lg"
-                  onClick={() => {
-                    toast({
-                      title: "Grades Saved",
-                      description: `${selectedEntrySubject} grades for ${selectedClass} have been saved.`,
-                    });
-                  }}
-                >
-                  <Save className="h-5 w-5" />
-                  Save All Grades
-                </Button>
-              </div>
+              {/* Floating Save Button */}
+              <Button 
+                className={cn(
+                  "fixed z-50 shadow-xl transition-all duration-300 ease-out",
+                  isAtBottom 
+                    ? "bottom-24 left-4 right-4 h-12 rounded-xl gap-2 text-base font-semibold" 
+                    : "bottom-24 right-4 h-14 w-14 rounded-full p-0"
+                )}
+                onClick={() => {
+                  toast({
+                    title: "Grades Saved",
+                    description: `${selectedEntrySubject} grades for ${selectedClass} have been saved.`,
+                  });
+                }}
+              >
+                <Save className={cn("transition-all", isAtBottom ? "h-5 w-5" : "h-6 w-6")} />
+                {isAtBottom && "Save All Grades"}
+              </Button>
             </> : (
               <Card className="border-dashed">
                 <CardContent className="p-6 text-center">
