@@ -503,17 +503,16 @@ export function ReportCardDialog({
             {/* Learning Tips - Separate Table */}
             {displayedSubjects.some(s => s.classStudyRecommendation || s.studyRecommendation) && (
               <div style={{ marginBottom: '12px' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '8px', paddingBottom: '6px', borderBottom: '1px solid #7c3aed' }}>
-                  <span style={{ color: '#7c3aed' }}><IconBookMarked /></span>
-                  <h3 style={{ fontSize: '11px', fontWeight: '700', color: '#7c3aed' }}>Learning Tips</h3>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '8px', paddingBottom: '6px', borderBottom: '1px solid #065f46' }}>
+                  <span style={{ color: '#065f46' }}><IconBookMarked /></span>
+                  <h3 style={{ fontSize: '11px', fontWeight: '700', color: '#065f46' }}>Learning Tips</h3>
                 </div>
                 
                 <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '8px' }}>
                   <thead>
-                    <tr style={{ background: '#7c3aed', color: 'white' }}>
+                    <tr style={{ background: '#065f46', color: 'white' }}>
                       <th style={{ padding: '5px 8px', textAlign: 'left', fontWeight: '600', fontSize: '8px', width: '120px', borderRadius: '4px 0 0 0' }}>Subject</th>
-                      <th style={{ padding: '5px 8px', textAlign: 'left', fontWeight: '600', fontSize: '8px' }}>Class Tips</th>
-                      <th style={{ padding: '5px 8px', textAlign: 'left', fontWeight: '600', fontSize: '8px', borderRadius: '0 4px 0 0' }}>Individual Tips</th>
+                      <th style={{ padding: '5px 8px', textAlign: 'left', fontWeight: '600', fontSize: '8px', borderRadius: '0 4px 0 0' }}>Learning Tips</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -522,8 +521,24 @@ export function ReportCardDialog({
                       .map((subject) => (
                         <tr key={subject.name} style={{ background: '#faf5ff', borderBottom: '1px solid #e9d5ff' }}>
                           <td style={{ padding: '5px 8px', fontWeight: '600', color: '#1a1a1a', fontSize: '8px' }}>{subject.name}</td>
-                          <td style={{ padding: '5px 8px', fontSize: '7px', color: '#374151', lineHeight: '1.4' }}>{subject.classStudyRecommendation || '-'}</td>
-                          <td style={{ padding: '5px 8px', fontSize: '7px', color: '#374151', lineHeight: '1.4' }}>{subject.studyRecommendation || '-'}</td>
+                          <td style={{ padding: '5px 8px', fontSize: '7px', color: '#374151', lineHeight: '1.4' }}>
+                            {subject.classStudyRecommendation || '-'}
+                            {subject.studyRecommendation && (
+                              <div style={{ marginTop: '4px' }}>
+                                <span style={{ 
+                                  display: 'inline-block',
+                                  background: '#7c3aed', 
+                                  color: 'white', 
+                                  padding: '1px 6px', 
+                                  borderRadius: '8px', 
+                                  fontSize: '6px', 
+                                  fontWeight: '600',
+                                  marginRight: '4px'
+                                }}>Individual Tips</span>
+                                <span>{subject.studyRecommendation}</span>
+                              </div>
+                            )}
+                          </td>
                         </tr>
                       ))}
                   </tbody>
