@@ -39,8 +39,11 @@ const gradeCategories = [{
   max: 70
 }];
 
-// Subjects for grade entry
-const subjects = ["Arts", "Chinese as a Second Language", "English", "Mathematics", "Science", "Physical Education"];
+// Subjects for grade entry - standardized list
+const subjects = [
+  "English (First Language)", "Mathematics", "Science", "Malay", "Chinese (Foreign Language)", 
+  "ICT", "History", "Geography", "Living Skills & Arts", "Music", "Moral"
+];
 
 // Academic years (past 6 years) and exam periods
 const academicYears = ["2026", "2025", "2024", "2023", "2022", "2021"];
@@ -55,12 +58,10 @@ const examPeriods = [{
 // Helper to shorten long subject names
 const shortenSubjectName = (name: string): string => {
   const abbreviations: Record<string, string> = {
+    "English (First Language)": "English",
+    "Chinese (Foreign Language)": "Chinese",
+    "Living Skills & Arts": "Living Skills",
     "Mathematics": "Math",
-    "Physical Education": "PE",
-    "Chinese as a Second Language": "Chinese",
-    "Social Studies": "Social St.",
-    "Information Technology": "IT",
-    "Computer Science": "Comp Sci"
   };
   return abbreviations[name] || name;
 };
