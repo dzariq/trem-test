@@ -1227,14 +1227,20 @@ export default function TeacherAcademicPage() {
               </Button>
             </> : selectedEntrySubject === "CCA Awards" ? <>
               {/* Awards Header */}
-              <Card className="bg-amber-50 dark:bg-amber-950/20 border-amber-200">
+              <Card 
+                className="border-amber-300 overflow-hidden"
+                style={{ 
+                  background: 'linear-gradient(135deg, #fef3c7 0%, #fcd34d 50%, #f59e0b 100%)',
+                  borderColor: 'rgba(251, 191, 36, 0.5)'
+                }}
+              >
                 <CardContent className="p-3">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="font-semibold text-foreground">CCA Awards</p>
-                      <p className="text-sm text-muted-foreground">Class {selectedClass} • {students.length} students</p>
+                      <p className="font-semibold text-amber-900">CCA Awards</p>
+                      <p className="text-sm text-amber-800/70">Class {selectedClass} • {students.length} students</p>
                     </div>
-                    <Badge variant="outline" className="bg-amber-100 border-amber-300 text-amber-600">
+                    <Badge className="bg-white/80 border-amber-400 text-amber-700">
                       <Award className="h-3 w-3 mr-1" />
                       Awards
                     </Badge>
@@ -1287,13 +1293,19 @@ export default function TeacherAcademicPage() {
                         <CollapsibleContent>
                           <CardContent className="p-3 pt-0 space-y-3">
                             {/* Sports House */}
-                            <div className="p-2 rounded-lg bg-orange-50 dark:bg-orange-950/20 border border-orange-200">
+                            <div 
+                              className="p-2.5 rounded-lg border overflow-hidden"
+                              style={{ 
+                                background: 'linear-gradient(135deg, #fef3c7 0%, #fcd34d 50%, #f59e0b 100%)',
+                                borderColor: 'rgba(251, 191, 36, 0.5)'
+                              }}
+                            >
                               <div className="flex items-center justify-between mb-2">
-                                <label className="text-xs font-semibold text-orange-700 uppercase">Sports House</label>
+                                <label className="text-xs font-semibold text-amber-900 uppercase">Sports House</label>
                                 <Button
                                   size="sm"
                                   variant="ghost"
-                                  className="h-6 px-2 text-orange-700 hover:bg-orange-100"
+                                  className="h-6 px-2 text-amber-900 hover:bg-white/30"
                                   onClick={() => addAwardEntry(student.id, "sportsHouse")}
                                 >
                                   <Plus className="h-3 w-3 mr-1" />
@@ -1301,20 +1313,20 @@ export default function TeacherAcademicPage() {
                                 </Button>
                               </div>
                               {awards.sportsHouse.length === 0 ? (
-                                <p className="text-[10px] text-muted-foreground text-center py-1">No entries</p>
+                                <p className="text-[10px] text-amber-800/70 text-center py-1">No entries</p>
                               ) : (
                                 <div className="space-y-2">
                                   {awards.sportsHouse.map(entry => (
                                     <div key={entry.id} className="grid grid-cols-[1fr_1fr_auto] gap-1.5 items-end">
                                       <Select value={entry.organization} onValueChange={(v) => updateAwardEntry(student.id, "sportsHouse", entry.id, "organization", v)}>
-                                        <SelectTrigger className="h-8 text-xs bg-background"><SelectValue /></SelectTrigger>
+                                        <SelectTrigger className="h-8 text-xs bg-white/80 border-amber-300"><SelectValue /></SelectTrigger>
                                         <SelectContent>{sportsHouseOptions.map(opt => <SelectItem key={opt} value={opt}>{opt}</SelectItem>)}</SelectContent>
                                       </Select>
                                       <Select value={entry.role} onValueChange={(v) => updateAwardEntry(student.id, "sportsHouse", entry.id, "role", v)}>
-                                        <SelectTrigger className="h-8 text-xs bg-background"><SelectValue /></SelectTrigger>
+                                        <SelectTrigger className="h-8 text-xs bg-white/80 border-amber-300"><SelectValue /></SelectTrigger>
                                         <SelectContent>{roleOptions.map(opt => <SelectItem key={opt} value={opt}>{opt}</SelectItem>)}</SelectContent>
                                       </Select>
-                                      <Button size="icon" variant="ghost" className="h-8 w-8 text-red-500" onClick={() => removeAwardEntry(student.id, "sportsHouse", entry.id)}><X className="h-3 w-3" /></Button>
+                                      <Button size="icon" variant="ghost" className="h-8 w-8 text-red-600 hover:bg-white/30" onClick={() => removeAwardEntry(student.id, "sportsHouse", entry.id)}><X className="h-3 w-3" /></Button>
                                     </div>
                                   ))}
                                 </div>
@@ -1322,13 +1334,19 @@ export default function TeacherAcademicPage() {
                             </div>
 
                             {/* Clubs */}
-                            <div className="p-2 rounded-lg bg-sky-50 dark:bg-sky-950/20 border border-sky-200">
+                            <div 
+                              className="p-2.5 rounded-lg border overflow-hidden"
+                              style={{ 
+                                background: 'linear-gradient(135deg, #fef3c7 0%, #fcd34d 50%, #f59e0b 100%)',
+                                borderColor: 'rgba(251, 191, 36, 0.5)'
+                              }}
+                            >
                               <div className="flex items-center justify-between mb-2">
-                                <label className="text-xs font-semibold text-sky-700 uppercase">Clubs</label>
+                                <label className="text-xs font-semibold text-amber-900 uppercase">Clubs</label>
                                 <Button
                                   size="sm"
                                   variant="ghost"
-                                  className="h-6 px-2 text-sky-700 hover:bg-sky-100"
+                                  className="h-6 px-2 text-amber-900 hover:bg-white/30"
                                   onClick={() => addAwardEntry(student.id, "clubs")}
                                 >
                                   <Plus className="h-3 w-3 mr-1" />
@@ -1336,20 +1354,20 @@ export default function TeacherAcademicPage() {
                                 </Button>
                               </div>
                               {awards.clubs.length === 0 ? (
-                                <p className="text-[10px] text-muted-foreground text-center py-1">No entries</p>
+                                <p className="text-[10px] text-amber-800/70 text-center py-1">No entries</p>
                               ) : (
                                 <div className="space-y-2">
                                   {awards.clubs.map(entry => (
                                     <div key={entry.id} className="grid grid-cols-[1fr_1fr_auto] gap-1.5 items-end">
                                       <Select value={entry.organization} onValueChange={(v) => updateAwardEntry(student.id, "clubs", entry.id, "organization", v)}>
-                                        <SelectTrigger className="h-8 text-xs bg-background"><SelectValue /></SelectTrigger>
+                                        <SelectTrigger className="h-8 text-xs bg-white/80 border-amber-300"><SelectValue /></SelectTrigger>
                                         <SelectContent>{clubOptions.map(opt => <SelectItem key={opt} value={opt}>{opt}</SelectItem>)}</SelectContent>
                                       </Select>
                                       <Select value={entry.role} onValueChange={(v) => updateAwardEntry(student.id, "clubs", entry.id, "role", v)}>
-                                        <SelectTrigger className="h-8 text-xs bg-background"><SelectValue /></SelectTrigger>
+                                        <SelectTrigger className="h-8 text-xs bg-white/80 border-amber-300"><SelectValue /></SelectTrigger>
                                         <SelectContent>{roleOptions.map(opt => <SelectItem key={opt} value={opt}>{opt}</SelectItem>)}</SelectContent>
                                       </Select>
-                                      <Button size="icon" variant="ghost" className="h-8 w-8 text-red-500" onClick={() => removeAwardEntry(student.id, "clubs", entry.id)}><X className="h-3 w-3" /></Button>
+                                      <Button size="icon" variant="ghost" className="h-8 w-8 text-red-600 hover:bg-white/30" onClick={() => removeAwardEntry(student.id, "clubs", entry.id)}><X className="h-3 w-3" /></Button>
                                     </div>
                                   ))}
                                 </div>
@@ -1357,13 +1375,19 @@ export default function TeacherAcademicPage() {
                             </div>
 
                             {/* Leadership */}
-                            <div className="p-2 rounded-lg bg-emerald-50 dark:bg-emerald-950/20 border border-emerald-200">
+                            <div 
+                              className="p-2.5 rounded-lg border overflow-hidden"
+                              style={{ 
+                                background: 'linear-gradient(135deg, #fef3c7 0%, #fcd34d 50%, #f59e0b 100%)',
+                                borderColor: 'rgba(251, 191, 36, 0.5)'
+                              }}
+                            >
                               <div className="flex items-center justify-between mb-2">
-                                <label className="text-xs font-semibold text-emerald-700 uppercase">Leadership</label>
+                                <label className="text-xs font-semibold text-amber-900 uppercase">Leadership</label>
                                 <Button
                                   size="sm"
                                   variant="ghost"
-                                  className="h-6 px-2 text-emerald-700 hover:bg-emerald-100"
+                                  className="h-6 px-2 text-amber-900 hover:bg-white/30"
                                   onClick={() => addAwardEntry(student.id, "leadership")}
                                 >
                                   <Plus className="h-3 w-3 mr-1" />
@@ -1371,20 +1395,20 @@ export default function TeacherAcademicPage() {
                                 </Button>
                               </div>
                               {awards.leadership.length === 0 ? (
-                                <p className="text-[10px] text-muted-foreground text-center py-1">No entries</p>
+                                <p className="text-[10px] text-amber-800/70 text-center py-1">No entries</p>
                               ) : (
                                 <div className="space-y-2">
                                   {awards.leadership.map(entry => (
                                     <div key={entry.id} className="grid grid-cols-[1fr_1fr_auto] gap-1.5 items-end">
                                       <Select value={entry.organization} onValueChange={(v) => updateAwardEntry(student.id, "leadership", entry.id, "organization", v)}>
-                                        <SelectTrigger className="h-8 text-xs bg-background"><SelectValue /></SelectTrigger>
+                                        <SelectTrigger className="h-8 text-xs bg-white/80 border-amber-300"><SelectValue /></SelectTrigger>
                                         <SelectContent>{leadershipOptions.map(opt => <SelectItem key={opt} value={opt}>{opt}</SelectItem>)}</SelectContent>
                                       </Select>
                                       <Select value={entry.role} onValueChange={(v) => updateAwardEntry(student.id, "leadership", entry.id, "role", v)}>
-                                        <SelectTrigger className="h-8 text-xs bg-background"><SelectValue /></SelectTrigger>
+                                        <SelectTrigger className="h-8 text-xs bg-white/80 border-amber-300"><SelectValue /></SelectTrigger>
                                         <SelectContent>{roleOptions.map(opt => <SelectItem key={opt} value={opt}>{opt}</SelectItem>)}</SelectContent>
                                       </Select>
-                                      <Button size="icon" variant="ghost" className="h-8 w-8 text-red-500" onClick={() => removeAwardEntry(student.id, "leadership", entry.id)}><X className="h-3 w-3" /></Button>
+                                      <Button size="icon" variant="ghost" className="h-8 w-8 text-red-600 hover:bg-white/30" onClick={() => removeAwardEntry(student.id, "leadership", entry.id)}><X className="h-3 w-3" /></Button>
                                     </div>
                                   ))}
                                 </div>
@@ -1392,13 +1416,19 @@ export default function TeacherAcademicPage() {
                             </div>
 
                             {/* Achievements */}
-                            <div className="p-2 rounded-lg bg-violet-50 dark:bg-violet-950/20 border border-violet-200">
+                            <div 
+                              className="p-2.5 rounded-lg border overflow-hidden"
+                              style={{ 
+                                background: 'linear-gradient(135deg, #fef3c7 0%, #fcd34d 50%, #f59e0b 100%)',
+                                borderColor: 'rgba(251, 191, 36, 0.5)'
+                              }}
+                            >
                               <div className="flex items-center justify-between mb-2">
-                                <label className="text-xs font-semibold text-violet-700 uppercase">Achievements</label>
+                                <label className="text-xs font-semibold text-amber-900 uppercase">Achievements</label>
                                 <Button
                                   size="sm"
                                   variant="ghost"
-                                  className="h-6 px-2 text-violet-700 hover:bg-violet-100"
+                                  className="h-6 px-2 text-amber-900 hover:bg-white/30"
                                   onClick={() => addAchievementEntry(student.id)}
                                 >
                                   <Plus className="h-3 w-3 mr-1" />
@@ -1406,20 +1436,20 @@ export default function TeacherAcademicPage() {
                                 </Button>
                               </div>
                               {awards.achievements.length === 0 ? (
-                                <p className="text-[10px] text-muted-foreground text-center py-1">No entries</p>
+                                <p className="text-[10px] text-amber-800/70 text-center py-1">No entries</p>
                               ) : (
                                 <div className="space-y-2">
                                   {awards.achievements.map(entry => (
                                     <div key={entry.id} className="grid grid-cols-[1fr_1fr_auto] gap-1.5 items-end">
                                       <Select value={entry.event} onValueChange={(v) => updateAchievementEntry(student.id, entry.id, "event", v)}>
-                                        <SelectTrigger className="h-8 text-xs bg-background"><SelectValue /></SelectTrigger>
+                                        <SelectTrigger className="h-8 text-xs bg-white/80 border-amber-300"><SelectValue /></SelectTrigger>
                                         <SelectContent>{achievementEventOptions.map(opt => <SelectItem key={opt} value={opt}>{opt}</SelectItem>)}</SelectContent>
                                       </Select>
                                       <Select value={entry.award} onValueChange={(v) => updateAchievementEntry(student.id, entry.id, "award", v)}>
-                                        <SelectTrigger className="h-8 text-xs bg-background"><SelectValue /></SelectTrigger>
+                                        <SelectTrigger className="h-8 text-xs bg-white/80 border-amber-300"><SelectValue /></SelectTrigger>
                                         <SelectContent>{achievementAwardOptions.map(opt => <SelectItem key={opt} value={opt}>{opt}</SelectItem>)}</SelectContent>
                                       </Select>
-                                      <Button size="icon" variant="ghost" className="h-8 w-8 text-red-500" onClick={() => removeAchievementEntry(student.id, entry.id)}><X className="h-3 w-3" /></Button>
+                                      <Button size="icon" variant="ghost" className="h-8 w-8 text-red-600 hover:bg-white/30" onClick={() => removeAchievementEntry(student.id, entry.id)}><X className="h-3 w-3" /></Button>
                                     </div>
                                   ))}
                                 </div>
