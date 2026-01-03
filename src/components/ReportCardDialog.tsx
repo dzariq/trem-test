@@ -352,8 +352,7 @@ export function ReportCardDialog({
                     <th style={{ color: 'white', padding: '8px 6px', textAlign: 'left', fontWeight: '600', fontSize: '10px', borderRight: '1px solid rgba(255,255,255,0.3)' }}>Subject</th>
                     <th style={{ color: 'white', padding: '8px 4px', textAlign: 'center', fontWeight: '600', fontSize: '10px', borderRight: '1px solid rgba(255,255,255,0.3)', width: '55px' }}>Mid-Year</th>
                     <th style={{ color: 'white', padding: '8px 4px', textAlign: 'center', fontWeight: '600', fontSize: '10px', borderRight: '1px solid rgba(255,255,255,0.3)', width: '55px' }}>Year-End</th>
-                    <th style={{ color: 'white', padding: '8px 6px', textAlign: 'left', fontWeight: '600', fontSize: '10px', borderRight: '1px solid rgba(255,255,255,0.3)' }}>Class Recommendation</th>
-                    <th style={{ color: 'white', padding: '8px 6px', textAlign: 'left', fontWeight: '600', fontSize: '10px' }}>Study Tips</th>
+                    <th style={{ color: 'white', padding: '8px 6px', textAlign: 'left', fontWeight: '600', fontSize: '10px' }}>Teacher's Comment</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -372,56 +371,77 @@ export function ReportCardDialog({
                     };
                     const derivedYearEndGrade = subject.yearEndGrade || getGradeFromScore(yearEndScore);
                     const derivedYearEndGradeColor = gradeColors[derivedYearEndGrade] || gradeColors["C"];
+                    const hasLearningTips = subject.classStudyRecommendation || subject.studyRecommendation;
                     return (
-                      <tr key={subject.name} style={{ position: 'relative', background: index % 2 === 0 ? 'white' : '#f9fafb' }}>
-                        <td style={{ padding: '5px 6px', borderBottom: '1px solid #d1d5db', borderRight: '1px solid #d1d5db', fontWeight: '500', fontSize: '9px' }}>
-                          {subject.name}
-                        </td>
-                        {/* Mid-Year Score with Grade Watermark */}
-                        <td style={{ position: 'relative', padding: '4px', borderBottom: '1px solid #d1d5db', borderRight: '1px solid #d1d5db', textAlign: 'center', fontWeight: '600', overflow: 'hidden', fontSize: '10px' }}>
-                          <span style={{ 
-                            position: 'absolute', 
-                            left: '50%', 
-                            bottom: '-8px', 
-                            transform: 'translateX(-50%)',
-                            fontSize: '32px', 
-                            fontWeight: '900', 
-                            color: midYearGradeColor.bg, 
-                            opacity: 0.35,
-                            pointerEvents: 'none',
-                            lineHeight: 1
-                          }}>
-                            {subject.grade}
-                          </span>
-                          <span style={{ position: 'relative', zIndex: 1 }}>{subject.score !== null ? `${subject.score}%` : '-'}</span>
-                        </td>
-                        {/* Year-End Score with Grade Watermark */}
-                        <td style={{ position: 'relative', padding: '4px', borderBottom: '1px solid #d1d5db', borderRight: '1px solid #d1d5db', textAlign: 'center', fontWeight: '600', overflow: 'hidden', fontSize: '10px' }}>
-                          <span style={{ 
-                            position: 'absolute', 
-                            left: '50%', 
-                            bottom: '-8px', 
-                            transform: 'translateX(-50%)',
-                            fontSize: '32px', 
-                            fontWeight: '900', 
-                            color: derivedYearEndGradeColor.bg, 
-                            opacity: 0.35,
-                            pointerEvents: 'none',
-                            lineHeight: 1
-                          }}>
-                            {derivedYearEndGrade}
-                          </span>
-                          <span style={{ position: 'relative', zIndex: 1 }}>{yearEndScore !== null ? `${yearEndScore}%` : '-'}</span>
-                        </td>
-                        {/* Class Study Recommendation */}
-                        <td style={{ padding: '5px 6px', borderBottom: '1px solid #d1d5db', borderRight: '1px solid #d1d5db', fontSize: '8px', color: '#374151', lineHeight: '1.3' }}>
-                          {subject.classStudyRecommendation || '-'}
-                        </td>
-                        {/* Study Recommendation */}
-                        <td style={{ padding: '5px 6px', borderBottom: '1px solid #d1d5db', fontSize: '8px', color: '#374151', lineHeight: '1.3' }}>
-                          {subject.studyRecommendation || '-'}
-                        </td>
-                      </tr>
+                      <>
+                        {/* Main subject row */}
+                        <tr key={subject.name} style={{ position: 'relative', background: index % 2 === 0 ? 'white' : '#f9fafb' }}>
+                          <td style={{ padding: '5px 6px', borderBottom: hasLearningTips ? 'none' : '1px solid #d1d5db', borderRight: '1px solid #d1d5db', fontWeight: '500', fontSize: '9px' }}>
+                            {subject.name}
+                          </td>
+                          {/* Mid-Year Score with Grade Watermark */}
+                          <td style={{ position: 'relative', padding: '4px', borderBottom: hasLearningTips ? 'none' : '1px solid #d1d5db', borderRight: '1px solid #d1d5db', textAlign: 'center', fontWeight: '600', overflow: 'hidden', fontSize: '10px' }}>
+                            <span style={{ 
+                              position: 'absolute', 
+                              left: '50%', 
+                              bottom: '-8px', 
+                              transform: 'translateX(-50%)',
+                              fontSize: '32px', 
+                              fontWeight: '900', 
+                              color: midYearGradeColor.bg, 
+                              opacity: 0.35,
+                              pointerEvents: 'none',
+                              lineHeight: 1
+                            }}>
+                              {subject.grade}
+                            </span>
+                            <span style={{ position: 'relative', zIndex: 1 }}>{subject.score !== null ? `${subject.score}%` : '-'}</span>
+                          </td>
+                          {/* Year-End Score with Grade Watermark */}
+                          <td style={{ position: 'relative', padding: '4px', borderBottom: hasLearningTips ? 'none' : '1px solid #d1d5db', borderRight: '1px solid #d1d5db', textAlign: 'center', fontWeight: '600', overflow: 'hidden', fontSize: '10px' }}>
+                            <span style={{ 
+                              position: 'absolute', 
+                              left: '50%', 
+                              bottom: '-8px', 
+                              transform: 'translateX(-50%)',
+                              fontSize: '32px', 
+                              fontWeight: '900', 
+                              color: derivedYearEndGradeColor.bg, 
+                              opacity: 0.35,
+                              pointerEvents: 'none',
+                              lineHeight: 1
+                            }}>
+                              {derivedYearEndGrade}
+                            </span>
+                            <span style={{ position: 'relative', zIndex: 1 }}>{yearEndScore !== null ? `${yearEndScore}%` : '-'}</span>
+                          </td>
+                          {/* Teacher's Comment */}
+                          <td style={{ padding: '5px 6px', borderBottom: hasLearningTips ? 'none' : '1px solid #d1d5db', fontSize: '8px', color: '#374151', lineHeight: '1.3' }}>
+                            {subject.teacherComment || '-'}
+                          </td>
+                        </tr>
+                        {/* Learning Tips row - below each subject */}
+                        {hasLearningTips && (
+                          <tr key={`${subject.name}-tips`} style={{ background: index % 2 === 0 ? '#f0fdf4' : '#ecfdf5' }}>
+                            <td colSpan={4} style={{ padding: '4px 6px 6px 6px', borderBottom: '1px solid #d1d5db' }}>
+                              <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                                {subject.classStudyRecommendation && (
+                                  <div style={{ flex: 1, minWidth: '200px' }}>
+                                    <span style={{ fontSize: '7px', fontWeight: '600', color: '#065f46', textTransform: 'uppercase', letterSpacing: '0.3px' }}>📚 Class Learning Tips: </span>
+                                    <span style={{ fontSize: '7px', color: '#374151' }}>{subject.classStudyRecommendation}</span>
+                                  </div>
+                                )}
+                                {subject.studyRecommendation && (
+                                  <div style={{ flex: 1, minWidth: '200px' }}>
+                                    <span style={{ fontSize: '7px', fontWeight: '600', color: '#0369a1', textTransform: 'uppercase', letterSpacing: '0.3px' }}>🎯 Individual Learning Tips: </span>
+                                    <span style={{ fontSize: '7px', color: '#374151' }}>{subject.studyRecommendation}</span>
+                                  </div>
+                                )}
+                              </div>
+                            </td>
+                          </tr>
+                        )}
+                      </>
                     );
                   })}
                 </tbody>
