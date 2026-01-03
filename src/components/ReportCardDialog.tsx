@@ -201,9 +201,9 @@ export function ReportCardDialog({
             {/* Header with both logos */}
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '3px solid #065f46', paddingBottom: '12px', marginBottom: '12px' }}>
               <img src={collinzLogo} alt="Collinz School" style={{ height: '60px', objectFit: 'contain' }} />
-              <div style={{ background: 'linear-gradient(135deg, #065f46 0%, #10b981 100%)', color: 'white', padding: '8px 16px', borderRadius: '8px', textAlign: 'center' }}>
-                <div style={{ fontSize: '13px', fontWeight: '700' }}>ACADEMIC REPORT</div>
-                <div style={{ fontSize: '10px', opacity: 0.9 }}>{examType} {year}</div>
+              <div style={{ background: 'linear-gradient(135deg, #065f46 0%, #10b981 100%)', color: 'white', padding: '10px 20px', borderRadius: '8px', textAlign: 'center' }}>
+                <div style={{ fontSize: '10px', fontWeight: '600', opacity: 0.9, letterSpacing: '0.5px' }}>ACADEMIC REPORT</div>
+                <div style={{ fontSize: '14px', fontWeight: '700' }}>{examType} {year}</div>
               </div>
               <img src={cambridgeLogo} alt="Cambridge Assessment" style={{ height: '50px', objectFit: 'contain' }} />
             </div>
@@ -373,9 +373,33 @@ export function ReportCardDialog({
                 <tbody>
                   {displayedSubjects.map((subject, index) => {
                     const gradeColor = gradeColors[subject.grade] || gradeColors["C"];
+                    // Determine row background based on grade
+                    const getRowBg = (grade: string) => {
+                      if (grade === "A*" || grade === "A") return 'rgba(220, 252, 231, 0.5)';
+                      if (grade === "B") return 'rgba(219, 234, 254, 0.4)';
+                      if (grade === "C") return 'rgba(254, 243, 199, 0.4)';
+                      if (grade === "D") return 'rgba(254, 215, 170, 0.4)';
+                      return index % 2 === 0 ? 'white' : '#f9fafb';
+                    };
                     return (
-                      <tr key={subject.name} style={{ background: index % 2 === 0 ? 'white' : '#f9fafb' }}>
-                        <td style={{ padding: '6px', borderBottom: '1px solid #e5e7eb', fontWeight: '500' }}>{subject.name}</td>
+                      <tr key={subject.name} style={{ position: 'relative', background: getRowBg(subject.grade) }}>
+                        <td style={{ position: 'relative', padding: '6px', borderBottom: '1px solid #e5e7eb', fontWeight: '500', overflow: 'hidden' }}>
+                          {/* Grade watermark overlay */}
+                          <span style={{ 
+                            position: 'absolute', 
+                            right: '2px', 
+                            top: '50%', 
+                            transform: 'translateY(-50%)', 
+                            fontSize: '24px', 
+                            fontWeight: '800', 
+                            color: gradeColor.bg, 
+                            opacity: 0.4,
+                            pointerEvents: 'none'
+                          }}>
+                            {subject.grade}
+                          </span>
+                          <span style={{ position: 'relative', zIndex: 1 }}>{subject.name}</span>
+                        </td>
                         <td style={{ padding: '6px', borderBottom: '1px solid #e5e7eb', textAlign: 'center', fontWeight: '600' }}>
                           {subject.score !== null ? `${subject.score}%` : 'Pending'}
                         </td>
