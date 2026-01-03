@@ -1672,21 +1672,21 @@ export default function AcademicPage() {
                             stroke="#f59e0b" 
                             strokeDasharray="5 5" 
                             strokeOpacity={0.6}
-                            label={{ value: "Pass", fontSize: 9, fill: "#f59e0b", position: "right" }}
+                            label={{ value: "Pass", fontSize: 9, fill: "#f59e0b", position: "insideTopLeft" }}
                           />
                           <ReferenceLine 
                             y={80} 
                             stroke="#22c55e" 
                             strokeDasharray="5 5" 
                             strokeOpacity={0.6}
-                            label={{ value: "A", fontSize: 9, fill: "#22c55e", position: "right" }}
+                            label={{ value: "A", fontSize: 9, fill: "#22c55e", position: "insideTopLeft" }}
                           />
                           <ReferenceLine 
                             y={trendGoalValue} 
                             stroke="hsl(var(--foreground))" 
                             strokeDasharray="4 4" 
                             strokeWidth={2}
-                            label={{ value: "Goal", fontSize: 9, fill: "hsl(var(--foreground))", position: "right" }}
+                            label={{ value: "Goal", fontSize: 9, fill: "hsl(var(--foreground))", position: "insideTopLeft" }}
                           />
                           {subjectFilter === "all" ? (
                             <Area
