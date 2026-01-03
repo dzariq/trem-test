@@ -1210,27 +1210,27 @@ export default function TeacherAcademicPage() {
                             <div className="space-y-3">
                               {/* Report Card Comments */}
                               <div>
-                                <label className="text-xs font-medium text-muted-foreground mb-1 block">
+                                <label className="text-xs font-medium text-emerald-600 mb-1 block">
                                   Report Card Comments
                                 </label>
                                 <Textarea 
                                   placeholder="Comments visible on report card..." 
                                   value={grades.reportComment} 
                                   onChange={e => updateGrade(student.id, selectedEntrySubject, "reportComment", e.target.value)} 
-                                  className="min-h-[70px] text-sm resize-none" 
+                                  className="min-h-[70px] text-sm resize-none border-emerald-200 bg-emerald-50/50 dark:bg-emerald-950/20" 
                                 />
                               </div>
                               
                               {/* Study Recommendations */}
                               <div>
-                                <label className="text-xs font-medium text-muted-foreground mb-1 block">
+                                <label className="text-xs font-medium text-amber-600 mb-1 block">
                                   Study Recommendations
                                 </label>
                                 <Textarea 
                                   placeholder="e.g., Focus on Chapter 5, practice more word problems..." 
                                   value={grades.studyRecommendation} 
                                   onChange={e => updateGrade(student.id, selectedEntrySubject, "studyRecommendation", e.target.value)} 
-                                  className="min-h-[70px] text-sm resize-none border-blue-200 bg-blue-50/50 dark:bg-blue-950/20" 
+                                  className="min-h-[70px] text-sm resize-none border-amber-200 bg-amber-50/50 dark:bg-amber-950/20" 
                                 />
                               </div>
                               
