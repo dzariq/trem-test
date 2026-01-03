@@ -61,9 +61,9 @@ export const subjectGroups: SubjectGroup[] = [
     baseName: "Humanities",
     shortName: "Humanities",
     variants: [
-      { name: "Business Studies", shortName: "Business" },
+      { name: "Business Studies", shortName: "Biz Studies" },
       { name: "Accounting", shortName: "Accounting" },
-      { name: "Economics", shortName: "Economics" }
+      { name: "Economics", shortName: "Econs" }
     ]
   },
   {
@@ -136,9 +136,12 @@ export const subjectShortNames: Record<string, string> = {
   "Additional Mathematics": "Add Math",
   "Mathematics": "Math",
   "Living Skills & Arts": "Living Skills",
-  "Global Perspectives": "Global Persp",
-  "Business Studies": "Business",
-  "Islamic Studies": "Islamic St."
+  "Global Perspectives": "Global Persp.",
+  "Business Studies": "Biz Studies",
+  "Islamic Studies": "Islamic St.",
+  "Economics": "Econs",
+  "Geography": "Geo",
+  "Chemistry": "Chem"
 };
 
 // Super short 3-letter codes for radar charts and compact displays
