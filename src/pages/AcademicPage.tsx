@@ -2068,20 +2068,7 @@ export default function AcademicPage() {
                   const bestPerforming = [...comparisonData].sort((a, b) => b.delta - a.delta)[0];
                   
                   return (
-                    <div className="grid grid-cols-2 gap-2">
-                      {/* Overall Change */}
-                      <div className="p-2.5 rounded-xl bg-muted/50 border border-border shadow-sm text-center">
-                        <div className="flex items-center justify-center gap-2 mb-1">
-                          <div className="w-6 h-6 rounded-lg bg-muted flex items-center justify-center">
-                            <ArrowRightLeft className="h-3 w-3 text-muted-foreground" />
-                          </div>
-                          <p className={`text-base font-bold ${overallChange > 0 ? 'text-emerald-600' : overallChange < 0 ? 'text-red-500' : 'text-foreground'}`}>
-                            {overallChange > 0 ? '+' : ''}{overallChange}%
-                          </p>
-                        </div>
-                        <p className="text-[10px] text-muted-foreground">Overall Change</p>
-                      </div>
-
+                    <div className="grid grid-cols-3 gap-2">
                       {/* Improved */}
                       <div className="p-2.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800 shadow-sm text-center">
                         <div className="flex items-center justify-center gap-2 mb-1">
