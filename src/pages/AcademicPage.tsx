@@ -60,10 +60,15 @@ const getCategoryScore = (subject: typeof academicData.subjects[0], year: YearKe
 };
 
 // Import centralized subjects config
-import { getShortSubjectName } from "@/data/subjectsConfig";
+import { getShortSubjectName, subjectGroups, allSubjects } from "@/data/subjectsConfig";
+import { SubjectGroupPill } from "@/components/SubjectGroupPill";
 
 // Use centralized short name function
 const shortenSubjectName = getShortSubjectName;
+
+// Get subjects that are not part of any variant group (standalone subjects)
+const groupedSubjectNames = subjectGroups.flatMap(g => g.variants?.map(v => v.name) || []);
+const standaloneSubjects = allSubjects.filter(s => !groupedSubjectNames.includes(s));
 
 export default function AcademicPage() {
   const [activeTab, setActiveTab] = useState("grades");
@@ -1077,11 +1082,30 @@ export default function AcademicPage() {
                       </div>
                     </div>
                     <div className="flex flex-wrap gap-2 p-3 rounded-lg border border-border bg-background">
-                      {academicData.subjects.map((subject) => {
-                        const isSelected = gradesSelectedSubjects.includes(subject.name);
+                      {/* Grouped subject pills with dropdowns */}
+                      {subjectGroups.map((group) => (
+                        <SubjectGroupPill
+                          key={group.baseName}
+                          baseName={group.baseName}
+                          shortName={group.shortName}
+                          variants={group.variants || []}
+                          selectedSubjects={gradesSelectedSubjects}
+                          onToggle={(subjectName) => {
+                            if (gradesSelectedSubjects.includes(subjectName)) {
+                              setGradesSelectedSubjects(prev => prev.filter(s => s !== subjectName));
+                            } else {
+                              setGradesSelectedSubjects(prev => [...prev, subjectName]);
+                            }
+                          }}
+                        />
+                      ))}
+                      
+                      {/* Standalone subjects (not in any group) */}
+                      {standaloneSubjects.map((subjectName) => {
+                        const isSelected = gradesSelectedSubjects.includes(subjectName);
                         return (
                           <button
-                            key={subject.name}
+                            key={subjectName}
                             className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all flex items-center gap-1.5 ${
                               isSelected 
                                 ? "bg-primary text-primary-foreground" 
@@ -1089,14 +1113,14 @@ export default function AcademicPage() {
                             }`}
                             onClick={() => {
                               if (isSelected) {
-                                setGradesSelectedSubjects(prev => prev.filter(s => s !== subject.name));
+                                setGradesSelectedSubjects(prev => prev.filter(s => s !== subjectName));
                               } else {
-                                setGradesSelectedSubjects(prev => [...prev, subject.name]);
+                                setGradesSelectedSubjects(prev => [...prev, subjectName]);
                               }
                             }}
                           >
                             {isSelected && <Check className="h-3 w-3" />}
-                            {shortenSubjectName(subject.name)}
+                            {shortenSubjectName(subjectName)}
                           </button>
                         );
                       })}
