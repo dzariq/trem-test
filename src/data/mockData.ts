@@ -260,10 +260,10 @@ export const academicData = {
       classStudyRecommendation: "Practice advanced problem sets and participate in math olympiad training. Focus on algebraic manipulation.",
       studyRecommendation: "Complete daily practice problems. Use online resources for additional challenging exercises.",
       scores: {
-        "2022": { midYear: 82, yearEnd: 84, attitude: 86, homework: 85, quiz: 80, exam: 82 },
-        "2023": { midYear: 84, yearEnd: 86, attitude: 88, homework: 87, quiz: 82, exam: 84 },
-        "2024": { midYear: 86, yearEnd: 88, attitude: 90, homework: 89, quiz: 84, exam: 86 },
-        "2025": { midYear: 88, yearEnd: null, attitude: 90, homework: 91, quiz: 86, exam: 88 }
+        "2022": { midYear: 42, yearEnd: 44, attitude: 56, homework: 55, quiz: 40, exam: 42 },
+        "2023": { midYear: 44, yearEnd: 46, attitude: 58, homework: 57, quiz: 42, exam: 44 },
+        "2024": { midYear: 46, yearEnd: 48, attitude: 60, homework: 59, quiz: 44, exam: 46 },
+        "2025": { midYear: 45, yearEnd: null, attitude: 60, homework: 61, quiz: 43, exam: 45 }
       }
     },
     // Subject 3 - B
@@ -390,10 +390,10 @@ export const academicData = {
       classStudyRecommendation: "Lead class discussions on Islamic values. Help organize religious activities and events.",
       studyRecommendation: "Practice daily recitation. Read Islamic literature and reflect on practical applications.",
       scores: {
-        "2022": { midYear: 82, yearEnd: 84, attitude: 90, homework: 88, quiz: 80, exam: 82 },
-        "2023": { midYear: 84, yearEnd: 86, attitude: 92, homework: 90, quiz: 82, exam: 84 },
-        "2024": { midYear: 86, yearEnd: 88, attitude: 94, homework: 92, quiz: 84, exam: 86 },
-        "2025": { midYear: 87, yearEnd: null, attitude: 95, homework: 93, quiz: 85, exam: 87 }
+        "2022": { midYear: 42, yearEnd: 44, attitude: 50, homework: 48, quiz: 40, exam: 42 },
+        "2023": { midYear: 44, yearEnd: 46, attitude: 52, homework: 50, quiz: 42, exam: 44 },
+        "2024": { midYear: 46, yearEnd: 48, attitude: 54, homework: 52, quiz: 44, exam: 46 },
+        "2025": { midYear: 42, yearEnd: null, attitude: 55, homework: 53, quiz: 40, exam: 42 }
       }
     },
     // Subject 13 - D
@@ -429,10 +429,10 @@ export const academicData = {
       classStudyRecommendation: "Lead case study presentations. Participate in business simulation activities.",
       studyRecommendation: "Follow business news regularly. Analyze real company case studies for practice.",
       scores: {
-        "2022": { midYear: 80, yearEnd: 82, attitude: 86, homework: 84, quiz: 78, exam: 80 },
-        "2023": { midYear: 82, yearEnd: 84, attitude: 88, homework: 86, quiz: 80, exam: 82 },
-        "2024": { midYear: 84, yearEnd: 86, attitude: 90, homework: 88, quiz: 82, exam: 84 },
-        "2025": { midYear: 86, yearEnd: null, attitude: 92, homework: 90, quiz: 84, exam: 86 }
+        "2022": { midYear: 40, yearEnd: 42, attitude: 46, homework: 44, quiz: 38, exam: 40 },
+        "2023": { midYear: 42, yearEnd: 44, attitude: 48, homework: 46, quiz: 40, exam: 42 },
+        "2024": { midYear: 44, yearEnd: 46, attitude: 50, homework: 48, quiz: 42, exam: 44 },
+        "2025": { midYear: 40, yearEnd: null, attitude: 52, homework: 50, quiz: 38, exam: 40 }
       }
     },
     // Subject 16 - B (Accounting)
