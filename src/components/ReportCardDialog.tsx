@@ -281,7 +281,7 @@ export function ReportCardDialog({
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid #d1d5db', paddingBottom: '10px', marginBottom: '10px', gap: '8px', flexWrap: 'wrap' }}>
               <img src={collinzLogo} alt="Collinz School" style={{ height: '40px', objectFit: 'contain' }} />
               <div style={{ textAlign: 'center' }}>
-                <div style={{ fontWeight: '600', color: '#065f46', letterSpacing: '1px', fontFamily: "'Brush Script MT', 'Segoe Script', cursive", fontSize: '16px' }}>Academic Report</div>
+                <div style={{ fontWeight: '400', color: '#d4a537', fontFamily: "'Great Vibes', cursive", fontSize: '22px' }}>Academic Report</div>
                 <div style={{ fontSize: '13px', fontWeight: '700', color: '#065f46' }}>{examType} {year}</div>
               </div>
               <img src={cambridgeLogo} alt="Cambridge Assessment" style={{ height: '35px', objectFit: 'contain' }} />
