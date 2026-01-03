@@ -1429,13 +1429,12 @@ export default function TeacherAcademicPage() {
 
                 {/* Report Button for Overview */}
                 <Button
-                  variant="outline"
                   size="sm"
-                  className="w-full gap-2"
+                  className="w-full gap-2 bg-emerald-600 hover:bg-emerald-700 text-white"
                   onClick={() => setOverviewReportDialogOpen(true)}
                 >
                   <FileText className="h-4 w-4" />
-                  Generate Overview Report
+                  Generate Report
                 </Button>
 
                 {/* Subject Selector - Toggle Chips */}
@@ -1720,9 +1719,8 @@ export default function TeacherAcademicPage() {
                   </div>
                   <div className="flex items-center gap-2">
                     <Button
-                      variant="outline"
                       size="sm"
-                      className="h-8 px-3 gap-1.5"
+                      className="h-8 px-3 gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white"
                       onClick={() => setBandsReportDialogOpen(true)}
                     >
                       <FileText className="h-3.5 w-3.5" />
@@ -2284,16 +2282,42 @@ export default function TeacherAcademicPage() {
                 {/* Bands Report Dialog */}
                 <Dialog open={bandsReportDialogOpen} onOpenChange={setBandsReportDialogOpen}>
                   <DialogContent className="w-[95vw] max-w-2xl max-h-[90vh] rounded-2xl overflow-hidden flex flex-col">
-                    <DialogHeader className="flex flex-row items-center justify-between">
+                    <DialogHeader className="flex flex-row items-center justify-between pr-10">
                       <DialogTitle className="flex items-center gap-2">
                         <FileText className="h-5 w-5 text-primary" />
                         Grade Distribution Report
                       </DialogTitle>
-                      <Button
-                        variant="default"
-                        size="sm"
-                        className="gap-1.5"
-                        onClick={() => {
+                      <div className="flex gap-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="gap-1.5"
+                          onClick={() => {
+                            // Generate CSV data for bands
+                            const csvRows = [
+                              ['Name', 'Score', 'Grade', 'Band'],
+                              ...bandsRankedStudents.map(s => {
+                                const band = s.score >= 80 ? 'Top' : s.score >= 50 ? 'Middle' : 'At-Risk';
+                                const grade = s.score >= 90 ? 'A*' : s.score >= 80 ? 'A' : s.score >= 70 ? 'B' : s.score >= 60 ? 'C' : s.score >= 50 ? 'D' : 'E';
+                                return [s.name, s.score.toString(), grade, band];
+                              })
+                            ];
+                            const csvContent = csvRows.map(row => row.join(',')).join('\n');
+                            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+                            const link = document.createElement('a');
+                            link.href = URL.createObjectURL(blob);
+                            link.download = `grade-distribution-${selectedClass}-${bandsSelectedSubject}-${new Date().toISOString().split('T')[0]}.csv`;
+                            link.click();
+                          }}
+                        >
+                          <FileSpreadsheet className="h-4 w-4" />
+                          CSV
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="gap-1.5"
+                          onClick={() => {
                           if (bandsReportRef.current) {
                             const printWindow = window.open('', '_blank');
                             if (printWindow) {
@@ -2540,10 +2564,11 @@ export default function TeacherAcademicPage() {
                             }
                           }
                         }}
-                      >
-                        <Printer className="h-4 w-4" />
-                        Print / Save PDF
-                      </Button>
+                        >
+                          <Printer className="h-4 w-4" />
+                          PDF
+                        </Button>
+                      </div>
                     </DialogHeader>
                     
                     <div className="flex-1 overflow-y-auto" ref={bandsReportRef}>
@@ -2870,13 +2895,12 @@ export default function TeacherAcademicPage() {
 
                 {/* Report Button for Trends */}
                 <Button
-                  variant="outline"
                   size="sm"
-                  className="w-full gap-2"
+                  className="w-full gap-2 bg-emerald-600 hover:bg-emerald-700 text-white"
                   onClick={() => setTrendsReportDialogOpen(true)}
                 >
                   <FileText className="h-4 w-4" />
-                  Generate Trends Report
+                  Generate Report
                 </Button>
 
                 {/* Subject Filter - Standardized Pills */}
@@ -3277,13 +3301,12 @@ export default function TeacherAcademicPage() {
 
                 {/* Report Button for Comparison */}
                 <Button
-                  variant="outline"
                   size="sm"
-                  className="w-full gap-2"
+                  className="w-full gap-2 bg-emerald-600 hover:bg-emerald-700 text-white"
                   onClick={() => setComparisonReportDialogOpen(true)}
                 >
                   <FileText className="h-4 w-4" />
-                  Generate Comparison Report
+                  Generate Report
                 </Button>
 
                 {/* Subject Multi-Select */}
@@ -3587,66 +3610,94 @@ export default function TeacherAcademicPage() {
         <DialogContent className="w-[95vw] max-w-3xl h-[90vh] rounded-2xl overflow-hidden flex flex-col">
           <DialogHeader className="flex flex-row items-center justify-between pr-12">
             <DialogTitle>Overview Report</DialogTitle>
-            <Button
-              variant="outline"
-              size="sm"
-              className="gap-2"
-              onClick={() => {
-                if (overviewReportRef.current) {
-                  const printWindow = window.open('', '_blank');
-                  if (printWindow) {
-                    printWindow.document.write(`
-                      <!DOCTYPE html>
-                      <html>
-                        <head>
-                          <title>Overview Report - Class ${selectedClass}</title>
-                          <style>
-                            @page { size: A4 portrait; margin: 15mm; }
-                            * { box-sizing: border-box; margin: 0; padding: 0; }
-                            body { 
-                              font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; 
-                              font-size: 10px; 
-                              line-height: 1.4; 
-                              color: #1a1a1a;
-                              padding: 10px;
-                            }
-                            .report-header { 
-                              display: flex !important; 
-                              align-items: center !important; 
-                              gap: 12px !important; 
-                              margin-bottom: 15px !important; 
-                              padding-bottom: 10px !important; 
-                              border-bottom: 2px solid #3b82f6 !important; 
-                            }
-                            .school-logo { width: 40px !important; height: 40px !important; object-fit: contain !important; }
-                            .section { margin-bottom: 12px; page-break-inside: avoid; }
-                            .section-title { font-size: 12px; font-weight: 600; margin-bottom: 8px; padding-bottom: 4px; border-bottom: 1px solid #ddd; }
-                            .stats-grid { display: grid !important; grid-template-columns: repeat(6, 1fr) !important; gap: 6px !important; text-align: center !important; }
-                            .stat-card { padding: 8px 4px; border: 1px solid #ddd; border-radius: 6px; background: #f9f9f9; }
-                            .stat-value { font-size: 14px; font-weight: 700; color: #1a1a1a; }
-                            .stat-label { font-size: 8px; color: #666; }
-                            .subject-grid { display: grid !important; grid-template-columns: repeat(2, 1fr) !important; gap: 8px !important; }
-                            .subject-item { display: flex; justify-content: space-between; padding: 6px 10px; background: #f5f5f5; border-radius: 4px; font-size: 10px; }
-                            .grade-grid { display: grid !important; grid-template-columns: repeat(6, 1fr) !important; gap: 6px !important; }
-                            .grade-card { text-align: center; padding: 8px 4px; border: 1px solid #ddd; border-radius: 6px; background: #fff; }
-                            .footer { text-align: center !important; font-size: 8px !important; color: #666 !important; margin-top: 15px !important; padding-top: 8px !important; border-top: 1px solid #ddd !important; }
-                            @media print { body { padding: 0 !important; margin: 0 !important; } .no-print { display: none !important; } }
-                          </style>
-                        </head>
-                        <body>
-                          ${overviewReportRef.current.innerHTML}
-                        </body>
-                      </html>
-                    `);
-                    printWindow.document.close();
-                    printWindow.print();
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                className="gap-2"
+                onClick={() => {
+                  // Generate CSV data for overview
+                  const csvRows = [
+                    ['Subject', 'Average', 'Highest', 'Lowest'],
+                    ...subjectAverages.map(sub => [
+                      sub.fullName,
+                      sub.average.toFixed(1),
+                      '100',
+                      '0'
+                    ])
+                  ];
+                  const csvContent = csvRows.map(row => row.join(',')).join('\n');
+                  const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+                  const link = document.createElement('a');
+                  link.href = URL.createObjectURL(blob);
+                  link.download = `overview-report-${selectedClass}-${new Date().toISOString().split('T')[0]}.csv`;
+                  link.click();
+                }}
+              >
+                <FileSpreadsheet className="h-4 w-4" />
+                CSV
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                className="gap-2"
+                onClick={() => {
+                  if (overviewReportRef.current) {
+                    const printWindow = window.open('', '_blank');
+                    if (printWindow) {
+                      printWindow.document.write(`
+                        <!DOCTYPE html>
+                        <html>
+                          <head>
+                            <title>Overview Report - Class ${selectedClass}</title>
+                            <style>
+                              @page { size: A4 portrait; margin: 15mm; }
+                              * { box-sizing: border-box; margin: 0; padding: 0; }
+                              body { 
+                                font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; 
+                                font-size: 10px; 
+                                line-height: 1.4; 
+                                color: #1a1a1a;
+                                padding: 10px;
+                              }
+                              .report-header { 
+                                display: flex !important; 
+                                align-items: center !important; 
+                                gap: 12px !important; 
+                                margin-bottom: 15px !important; 
+                                padding-bottom: 10px !important; 
+                                border-bottom: 2px solid #3b82f6 !important; 
+                              }
+                              .school-logo { width: 40px !important; height: 40px !important; object-fit: contain !important; }
+                              .section { margin-bottom: 12px; page-break-inside: avoid; }
+                              .section-title { font-size: 12px; font-weight: 600; margin-bottom: 8px; padding-bottom: 4px; border-bottom: 1px solid #ddd; }
+                              .stats-grid { display: grid !important; grid-template-columns: repeat(6, 1fr) !important; gap: 6px !important; text-align: center !important; }
+                              .stat-card { padding: 8px 4px; border: 1px solid #ddd; border-radius: 6px; background: #f9f9f9; }
+                              .stat-value { font-size: 14px; font-weight: 700; color: #1a1a1a; }
+                              .stat-label { font-size: 8px; color: #666; }
+                              .subject-grid { display: grid !important; grid-template-columns: repeat(2, 1fr) !important; gap: 8px !important; }
+                              .subject-item { display: flex; justify-content: space-between; padding: 6px 10px; background: #f5f5f5; border-radius: 4px; font-size: 10px; }
+                              .grade-grid { display: grid !important; grid-template-columns: repeat(6, 1fr) !important; gap: 6px !important; }
+                              .grade-card { text-align: center; padding: 8px 4px; border: 1px solid #ddd; border-radius: 6px; background: #fff; }
+                              .footer { text-align: center !important; font-size: 8px !important; color: #666 !important; margin-top: 15px !important; padding-top: 8px !important; border-top: 1px solid #ddd !important; }
+                              @media print { body { padding: 0 !important; margin: 0 !important; } .no-print { display: none !important; } }
+                            </style>
+                          </head>
+                          <body>
+                            ${overviewReportRef.current.innerHTML}
+                          </body>
+                        </html>
+                      `);
+                      printWindow.document.close();
+                      printWindow.print();
+                    }
                   }
-                }
-              }}
-            >
-              <Printer className="h-4 w-4" />
-              Print / Save PDF
-            </Button>
+                }}
+              >
+                <Printer className="h-4 w-4" />
+                PDF
+              </Button>
+            </div>
           </DialogHeader>
           
           <div className="flex-1 overflow-y-auto" ref={overviewReportRef}>
@@ -3772,63 +3823,92 @@ export default function TeacherAcademicPage() {
         <DialogContent className="w-[95vw] max-w-3xl h-[90vh] rounded-2xl overflow-hidden flex flex-col">
           <DialogHeader className="flex flex-row items-center justify-between pr-12">
             <DialogTitle>Trends Report</DialogTitle>
-            <Button
-              variant="outline"
-              size="sm"
-              className="gap-2"
-              onClick={() => {
-                if (trendsReportRef.current) {
-                  const printWindow = window.open('', '_blank');
-                  if (printWindow) {
-                    printWindow.document.write(`
-                      <!DOCTYPE html>
-                      <html>
-                        <head>
-                          <title>Trends Report - Class ${selectedClass}</title>
-                          <style>
-                            @page { size: A4 portrait; margin: 15mm; }
-                            * { box-sizing: border-box; margin: 0; padding: 0; }
-                            body { 
-                              font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; 
-                              font-size: 10px; 
-                              line-height: 1.4; 
-                              color: #1a1a1a;
-                              padding: 10px;
-                            }
-                            .report-header { 
-                              display: flex !important; 
-                              align-items: center !important; 
-                              gap: 12px !important; 
-                              margin-bottom: 15px !important; 
-                              padding-bottom: 10px !important; 
-                              border-bottom: 2px solid #22c55e !important; 
-                            }
-                            .school-logo { width: 40px !important; height: 40px !important; object-fit: contain !important; }
-                            .section { margin-bottom: 12px; page-break-inside: avoid; }
-                            .section-title { font-size: 12px; font-weight: 600; margin-bottom: 8px; padding-bottom: 4px; border-bottom: 1px solid #ddd; }
-                            .trend-grid { display: grid !important; grid-template-columns: repeat(2, 1fr) !important; gap: 10px !important; }
-                            .trend-card { padding: 10px; border: 1px solid #ddd; border-radius: 6px; background: #fff; }
-                            .subject-row { display: flex; justify-content: space-between; padding: 4px 8px; border-bottom: 1px solid #eee; font-size: 10px; }
-                            .heatmap-row { display: flex; gap: 4px; margin-bottom: 4px; }
-                            .heatmap-cell { width: 40px; height: 24px; display: flex; align-items: center; justify-content: center; font-size: 9px; font-weight: 600; color: white; border-radius: 3px; }
-                            .footer { text-align: center !important; font-size: 8px !important; color: #666 !important; margin-top: 15px !important; padding-top: 8px !important; border-top: 1px solid #ddd !important; }
-                            @media print { body { padding: 0 !important; margin: 0 !important; } .no-print { display: none !important; } }
-                          </style>
-                        </head>
-                        <body>
-                          ${trendsReportRef.current.innerHTML}
-                        </body>
-                      </html>
-                    `);
-                    printWindow.document.close();
-                    printWindow.print();
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                className="gap-2"
+                onClick={() => {
+                  // Generate CSV data for trends
+                  const csvRows = [
+                    ['Subject', 'Current Average', 'Change', 'Status'],
+                    ...subjectAverages.map(sub => {
+                      const rising = risingSubjects.find(r => r.name === sub.fullName);
+                      const falling = fallingSubjects.find(f => f.name === sub.fullName);
+                      const change = rising ? `+${rising.improvement}%` : falling ? `-${falling.decline}%` : '0%';
+                      const status = rising ? 'Rising' : falling ? 'Falling' : 'Stable';
+                      return [sub.fullName, sub.average.toFixed(1), change, status];
+                    })
+                  ];
+                  const csvContent = csvRows.map(row => row.join(',')).join('\n');
+                  const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+                  const link = document.createElement('a');
+                  link.href = URL.createObjectURL(blob);
+                  link.download = `trends-report-${selectedClass}-${new Date().toISOString().split('T')[0]}.csv`;
+                  link.click();
+                }}
+              >
+                <FileSpreadsheet className="h-4 w-4" />
+                CSV
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                className="gap-2"
+                onClick={() => {
+                  if (trendsReportRef.current) {
+                    const printWindow = window.open('', '_blank');
+                    if (printWindow) {
+                      printWindow.document.write(`
+                        <!DOCTYPE html>
+                        <html>
+                          <head>
+                            <title>Trends Report - Class ${selectedClass}</title>
+                            <style>
+                              @page { size: A4 portrait; margin: 15mm; }
+                              * { box-sizing: border-box; margin: 0; padding: 0; }
+                              body { 
+                                font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; 
+                                font-size: 10px; 
+                                line-height: 1.4; 
+                                color: #1a1a1a;
+                                padding: 10px;
+                              }
+                              .report-header { 
+                                display: flex !important; 
+                                align-items: center !important; 
+                                gap: 12px !important; 
+                                margin-bottom: 15px !important; 
+                                padding-bottom: 10px !important; 
+                                border-bottom: 2px solid #22c55e !important; 
+                              }
+                              .school-logo { width: 40px !important; height: 40px !important; object-fit: contain !important; }
+                              .section { margin-bottom: 12px; page-break-inside: avoid; }
+                              .section-title { font-size: 12px; font-weight: 600; margin-bottom: 8px; padding-bottom: 4px; border-bottom: 1px solid #ddd; }
+                              .trend-grid { display: grid !important; grid-template-columns: repeat(2, 1fr) !important; gap: 10px !important; }
+                              .trend-card { padding: 10px; border: 1px solid #ddd; border-radius: 6px; background: #fff; }
+                              .subject-row { display: flex; justify-content: space-between; padding: 4px 8px; border-bottom: 1px solid #eee; font-size: 10px; }
+                              .heatmap-row { display: flex; gap: 4px; margin-bottom: 4px; }
+                              .heatmap-cell { width: 40px; height: 24px; display: flex; align-items: center; justify-content: center; font-size: 9px; font-weight: 600; color: white; border-radius: 3px; }
+                              .footer { text-align: center !important; font-size: 8px !important; color: #666 !important; margin-top: 15px !important; padding-top: 8px !important; border-top: 1px solid #ddd !important; }
+                              @media print { body { padding: 0 !important; margin: 0 !important; } .no-print { display: none !important; } }
+                            </style>
+                          </head>
+                          <body>
+                            ${trendsReportRef.current.innerHTML}
+                          </body>
+                        </html>
+                      `);
+                      printWindow.document.close();
+                      printWindow.print();
+                    }
                   }
-                }
-              }}
-            >
-              <Printer className="h-4 w-4" />
-              Print / Save PDF
-            </Button>
+                }}
+              >
+                <Printer className="h-4 w-4" />
+                PDF
+              </Button>
+            </div>
           </DialogHeader>
           
           <div className="flex-1 overflow-y-auto" ref={trendsReportRef}>
@@ -3974,65 +4054,115 @@ export default function TeacherAcademicPage() {
         <DialogContent className="w-[95vw] max-w-3xl h-[90vh] rounded-2xl overflow-hidden flex flex-col">
           <DialogHeader className="flex flex-row items-center justify-between pr-12">
             <DialogTitle>Comparison Report</DialogTitle>
-            <Button
-              variant="outline"
-              size="sm"
-              className="gap-2"
-              onClick={() => {
-                if (comparisonReportRef.current) {
-                  const printWindow = window.open('', '_blank');
-                  if (printWindow) {
-                    printWindow.document.write(`
-                      <!DOCTYPE html>
-                      <html>
-                        <head>
-                          <title>Comparison Report</title>
-                          <style>
-                            @page { size: A4 portrait; margin: 15mm; }
-                            * { box-sizing: border-box; margin: 0; padding: 0; }
-                            body { 
-                              font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; 
-                              font-size: 10px; 
-                              line-height: 1.4; 
-                              color: #1a1a1a;
-                              padding: 10px;
-                            }
-                            .report-header { 
-                              display: flex !important; 
-                              align-items: center !important; 
-                              gap: 12px !important; 
-                              margin-bottom: 15px !important; 
-                              padding-bottom: 10px !important; 
-                              border-bottom: 2px solid #8b5cf6 !important; 
-                            }
-                            .school-logo { width: 40px !important; height: 40px !important; object-fit: contain !important; }
-                            .section { margin-bottom: 12px; page-break-inside: avoid; }
-                            .section-title { font-size: 12px; font-weight: 600; margin-bottom: 8px; padding-bottom: 4px; border-bottom: 1px solid #ddd; }
-                            .comparison-grid { display: grid !important; grid-template-columns: repeat(2, 1fr) !important; gap: 10px !important; }
-                            .comparison-box { padding: 10px; border: 1px solid #ddd; border-radius: 6px; }
-                            .comparison-box.blue { border-color: #3b82f6; background: #eff6ff; }
-                            .comparison-box.red { border-color: #ef4444; background: #fef2f2; }
-                            table { width: 100% !important; border-collapse: collapse !important; font-size: 9px !important; }
-                            th, td { padding: 5px 8px !important; border-bottom: 1px solid #ddd !important; }
-                            th { background: #f5f5f5 !important; font-weight: 600 !important; }
-                            .footer { text-align: center !important; font-size: 8px !important; color: #666 !important; margin-top: 15px !important; padding-top: 8px !important; border-top: 1px solid #ddd !important; }
-                            @media print { body { padding: 0 !important; margin: 0 !important; } .no-print { display: none !important; } }
-                          </style>
-                        </head>
-                        <body>
-                          ${comparisonReportRef.current.innerHTML}
-                        </body>
-                      </html>
-                    `);
-                    printWindow.document.close();
-                    printWindow.print();
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                className="gap-2"
+                onClick={() => {
+                  // Generate CSV data for comparison - we'll build it dynamically
+                  const examAKey = `${examAYear}-${examAPeriod}`;
+                  const examBKey = `${examBYear}-${examBPeriod}`;
+                  const subjectDataA = subjectExamData[examAClass as keyof typeof subjectExamData]?.[examAKey];
+                  const subjectDataB = subjectExamData[examBClass as keyof typeof subjectExamData]?.[examBKey];
+                  
+                  const getExamLabelForCSV = (cls: string, year: string, period: string) => {
+                    const periodLabel = period === "midYear" ? "Mid-Year" : "Year-End";
+                    return `${cls} ${periodLabel} ${year}`;
+                  };
+                  
+                  const examALabel = getExamLabelForCSV(examAClass, examAYear, examAPeriod);
+                  const examBLabel = getExamLabelForCSV(examBClass, examBYear, examBPeriod);
+                  
+                  if (subjectDataA && subjectDataB) {
+                    const compData = compareSubjects.map(subjectName => {
+                      const scoreA = subjectDataA[subjectName] ?? 0;
+                      const scoreB = subjectDataB[subjectName] ?? 0;
+                      const delta = scoreA - scoreB;
+                      return { name: subjectName, examA: scoreA, examB: scoreB, delta };
+                    });
+                    
+                    const csvRows = [
+                      ['Subject', examALabel, examBLabel, 'Change'],
+                      ...compData.map(d => [
+                        d.name,
+                        d.examA.toString(),
+                        d.examB.toString(),
+                        (d.delta >= 0 ? '+' : '') + d.delta.toString()
+                      ])
+                    ];
+                    const csvContent = csvRows.map(row => row.join(',')).join('\n');
+                    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+                    const link = document.createElement('a');
+                    link.href = URL.createObjectURL(blob);
+                    link.download = `comparison-report-${new Date().toISOString().split('T')[0]}.csv`;
+                    link.click();
                   }
-                }
-              }}
-            >
-              <Printer className="h-4 w-4" />
-              Print / Save PDF
-            </Button>
+                }}
+              >
+                <FileSpreadsheet className="h-4 w-4" />
+                CSV
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                className="gap-2"
+                onClick={() => {
+                  if (comparisonReportRef.current) {
+                    const printWindow = window.open('', '_blank');
+                    if (printWindow) {
+                      printWindow.document.write(`
+                        <!DOCTYPE html>
+                        <html>
+                          <head>
+                            <title>Comparison Report</title>
+                            <style>
+                              @page { size: A4 portrait; margin: 15mm; }
+                              * { box-sizing: border-box; margin: 0; padding: 0; }
+                              body { 
+                                font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; 
+                                font-size: 10px; 
+                                line-height: 1.4; 
+                                color: #1a1a1a;
+                                padding: 10px;
+                              }
+                              .report-header { 
+                                display: flex !important; 
+                                align-items: center !important; 
+                                gap: 12px !important; 
+                                margin-bottom: 15px !important; 
+                                padding-bottom: 10px !important; 
+                                border-bottom: 2px solid #8b5cf6 !important; 
+                              }
+                              .school-logo { width: 40px !important; height: 40px !important; object-fit: contain !important; }
+                              .section { margin-bottom: 12px; page-break-inside: avoid; }
+                              .section-title { font-size: 12px; font-weight: 600; margin-bottom: 8px; padding-bottom: 4px; border-bottom: 1px solid #ddd; }
+                              .comparison-grid { display: grid !important; grid-template-columns: repeat(2, 1fr) !important; gap: 10px !important; }
+                              .comparison-box { padding: 10px; border: 1px solid #ddd; border-radius: 6px; }
+                              .comparison-box.blue { border-color: #3b82f6; background: #eff6ff; }
+                              .comparison-box.red { border-color: #ef4444; background: #fef2f2; }
+                              table { width: 100% !important; border-collapse: collapse !important; font-size: 9px !important; }
+                              th, td { padding: 5px 8px !important; border-bottom: 1px solid #ddd !important; }
+                              th { background: #f5f5f5 !important; font-weight: 600 !important; }
+                              .footer { text-align: center !important; font-size: 8px !important; color: #666 !important; margin-top: 15px !important; padding-top: 8px !important; border-top: 1px solid #ddd !important; }
+                              @media print { body { padding: 0 !important; margin: 0 !important; } .no-print { display: none !important; } }
+                            </style>
+                          </head>
+                          <body>
+                            ${comparisonReportRef.current.innerHTML}
+                          </body>
+                        </html>
+                      `);
+                      printWindow.document.close();
+                      printWindow.print();
+                    }
+                  }
+                }}
+              >
+                <Printer className="h-4 w-4" />
+                PDF
+              </Button>
+            </div>
           </DialogHeader>
           
           <div className="flex-1 overflow-y-auto" ref={comparisonReportRef}>
