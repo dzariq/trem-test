@@ -241,28 +241,28 @@ export function ReportCardDialog({
                       <div style={{ fontSize: '22px', fontWeight: '700', color: '#065f46' }}>{overallAverage}%</div>
                       <div style={{ fontSize: '9px', color: '#6b7280' }}>Overall Average</div>
                     </div>
-                    <div style={{ background: 'rgba(255,255,255,0.85)', padding: '8px', borderRadius: '8px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '4px' }}>
-                        <div>
-                          <span style={{ fontSize: '16px', fontWeight: '700', color: attendance.percentage >= 90 ? '#16a34a' : attendance.percentage >= 75 ? '#ca8a04' : '#dc2626' }}>{attendance.percentage}%</span>
-                          <span style={{ fontSize: '9px', color: '#6b7280', marginLeft: '4px' }}>Attendance</span>
+                    <div style={{ background: 'rgba(255,255,255,0.85)', padding: '10px', borderRadius: '8px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
+                        <div style={{ display: 'flex', alignItems: 'baseline', gap: '6px' }}>
+                          <span style={{ fontSize: '20px', fontWeight: '700', color: attendance.percentage >= 90 ? '#16a34a' : attendance.percentage >= 75 ? '#ca8a04' : '#dc2626' }}>{attendance.percentage}%</span>
+                          <span style={{ fontSize: '10px', color: '#6b7280' }}>Attendance</span>
                         </div>
-                        <div style={{ fontSize: '9px', color: '#374151', fontWeight: '500' }}>
+                        <div style={{ fontSize: '11px', color: '#374151', fontWeight: '600', background: '#f3f4f6', padding: '3px 8px', borderRadius: '6px' }}>
                           {attendance.present}/{attendance.totalDays} days
                         </div>
                       </div>
                       <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
-                        <div style={{ fontSize: '7px', color: '#16a34a', background: '#dcfce7', padding: '2px 5px', borderRadius: '4px' }}>
-                          Present: {attendance.present}
+                        <div style={{ fontSize: '8px', color: '#16a34a', background: '#dcfce7', padding: '3px 8px', borderRadius: '10px', fontWeight: '600' }}>
+                          P: {attendance.present}
                         </div>
-                        <div style={{ fontSize: '7px', color: '#dc2626', background: '#fee2e2', padding: '2px 5px', borderRadius: '4px' }}>
-                          Absent: {attendance.absent}
+                        <div style={{ fontSize: '8px', color: '#dc2626', background: '#fee2e2', padding: '3px 8px', borderRadius: '10px', fontWeight: '600' }}>
+                          A: {attendance.absent}
                         </div>
-                        <div style={{ fontSize: '7px', color: '#ca8a04', background: '#fef3c7', padding: '2px 5px', borderRadius: '4px' }}>
-                          Late: {attendance.late}
+                        <div style={{ fontSize: '8px', color: '#ca8a04', background: '#fef3c7', padding: '3px 8px', borderRadius: '10px', fontWeight: '600' }}>
+                          L: {attendance.late}
                         </div>
-                        <div style={{ fontSize: '7px', color: '#2563eb', background: '#dbeafe', padding: '2px 5px', borderRadius: '4px' }}>
-                          Excused: {attendance.excused}
+                        <div style={{ fontSize: '8px', color: '#7c3aed', background: '#ede9fe', padding: '3px 8px', borderRadius: '10px', fontWeight: '600' }}>
+                          E: {attendance.excused}
                         </div>
                       </div>
                     </div>
