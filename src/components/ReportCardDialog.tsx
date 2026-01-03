@@ -345,7 +345,7 @@ export function ReportCardDialog({
             </div>
 
             {/* Academic Grades Table with Grading Key */}
-            <div style={{ marginBottom: '16px', background: 'linear-gradient(180deg, #dcfce7 0%, #d1fae5 50%, #a7f3d0 100%)', borderRadius: '10px', padding: '12px', border: '2px solid #10b981' }}>
+            <div style={{ marginBottom: '16px' }}>
               <div style={{ position: 'relative', zIndex: 1 }}>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '10px', paddingBottom: '8px', borderBottom: '2px solid #065f46' }}>
                   <h3 style={{ fontSize: '14px', fontWeight: '700', color: '#065f46', display: 'flex', alignItems: 'center', gap: '6px' }}>
@@ -376,17 +376,17 @@ export function ReportCardDialog({
                 </div>
               <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '11px', borderRadius: '8px', overflow: 'hidden', border: '2px solid #065f46', background: 'white' }}>
                 <thead>
-                  <tr style={{ background: 'linear-gradient(135deg, #065f46 0%, #10b981 100%)' }}>
-                    <th style={{ color: 'white', padding: '10px 8px', textAlign: 'left', fontWeight: '600', fontSize: '11px', border: '1px solid #047857' }} rowSpan={2}>Subject</th>
-                    <th style={{ color: 'white', padding: '8px 6px', textAlign: 'center', fontWeight: '600', fontSize: '11px', border: '1px solid #047857' }} colSpan={2}>Mid-Year</th>
-                    <th style={{ color: 'white', padding: '8px 6px', textAlign: 'center', fontWeight: '600', fontSize: '11px', border: '1px solid #047857' }} colSpan={2}>Year-End</th>
-                    <th style={{ color: 'white', padding: '10px 8px', textAlign: 'left', fontWeight: '600', fontSize: '11px', border: '1px solid #047857' }} rowSpan={2}>Teacher&apos;s Comment</th>
+                  <tr style={{ background: 'linear-gradient(90deg, #065f46 0%, #047857 20%, #059669 40%, #10b981 60%, #34d399 80%, #6ee7b7 100%)' }}>
+                    <th style={{ color: 'white', padding: '10px 8px', textAlign: 'left', fontWeight: '600', fontSize: '11px', borderRight: '1px solid rgba(255,255,255,0.3)' }} rowSpan={2}>Subject</th>
+                    <th style={{ color: 'white', padding: '8px 6px', textAlign: 'center', fontWeight: '600', fontSize: '11px', borderRight: '1px solid rgba(255,255,255,0.3)' }} colSpan={2}>Mid-Year</th>
+                    <th style={{ color: 'white', padding: '8px 6px', textAlign: 'center', fontWeight: '600', fontSize: '11px', borderRight: '1px solid rgba(255,255,255,0.3)' }} colSpan={2}>Year-End</th>
+                    <th style={{ color: 'white', padding: '10px 8px', textAlign: 'left', fontWeight: '600', fontSize: '11px' }} rowSpan={2}>Teacher&apos;s Comment</th>
                   </tr>
-                  <tr style={{ background: 'linear-gradient(135deg, #047857 0%, #059669 100%)' }}>
-                    <th style={{ color: 'white', padding: '6px 4px', textAlign: 'center', fontWeight: '500', fontSize: '10px', width: '50px', border: '1px solid #047857' }}>Score</th>
-                    <th style={{ color: 'white', padding: '6px 4px', textAlign: 'center', fontWeight: '500', fontSize: '10px', width: '45px', border: '1px solid #047857' }}>Grade</th>
-                    <th style={{ color: 'white', padding: '6px 4px', textAlign: 'center', fontWeight: '500', fontSize: '10px', width: '50px', border: '1px solid #047857' }}>Score</th>
-                    <th style={{ color: 'white', padding: '6px 4px', textAlign: 'center', fontWeight: '500', fontSize: '10px', width: '45px', border: '1px solid #047857' }}>Grade</th>
+                  <tr style={{ background: 'linear-gradient(90deg, #047857 0%, #059669 25%, #10b981 50%, #34d399 75%, #6ee7b7 100%)' }}>
+                    <th style={{ color: 'white', padding: '6px 4px', textAlign: 'center', fontWeight: '500', fontSize: '10px', width: '50px', borderRight: '1px solid rgba(255,255,255,0.3)' }}>Score</th>
+                    <th style={{ color: 'white', padding: '6px 4px', textAlign: 'center', fontWeight: '500', fontSize: '10px', width: '45px', borderRight: '1px solid rgba(255,255,255,0.3)' }}>Grade</th>
+                    <th style={{ color: 'white', padding: '6px 4px', textAlign: 'center', fontWeight: '500', fontSize: '10px', width: '50px', borderRight: '1px solid rgba(255,255,255,0.3)' }}>Score</th>
+                    <th style={{ color: 'white', padding: '6px 4px', textAlign: 'center', fontWeight: '500', fontSize: '10px', width: '45px', borderRight: '1px solid rgba(255,255,255,0.3)' }}>Grade</th>
                   </tr>
                 </thead>
                 <tbody>
