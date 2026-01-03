@@ -382,6 +382,50 @@ export const academicData = {
         "2024": { midYear: 54, yearEnd: 56, attitude: 64, homework: 60, quiz: 52, exam: 54 },
         "2025": { midYear: 55, yearEnd: null, attitude: 66, homework: 62, quiz: 53, exam: 55 }
       }
+    },
+    // Subject 14 - B (Chinese)
+    { 
+      name: "Chinese (Foreign Language)", 
+      teacherComment: "Emma shows good progress in learning Chinese characters and pronunciation. Her conversational skills have improved significantly this term. She participates actively in class activities and shows genuine interest in Chinese culture.",
+      scores: {
+        "2022": { midYear: 70, yearEnd: 72, attitude: 78, homework: 75, quiz: 68, exam: 70 },
+        "2023": { midYear: 72, yearEnd: 74, attitude: 80, homework: 77, quiz: 70, exam: 72 },
+        "2024": { midYear: 74, yearEnd: 76, attitude: 82, homework: 79, quiz: 72, exam: 74 },
+        "2025": { midYear: 76, yearEnd: null, attitude: 84, homework: 81, quiz: 74, exam: 76 }
+      }
+    },
+    // Subject 15 - A (Business Studies)
+    { 
+      name: "Business Studies", 
+      teacherComment: "Emma demonstrates excellent understanding of business concepts and market dynamics. Her case study analyses are thorough and insightful. She shows strong analytical thinking and applies theoretical knowledge well to real-world business scenarios.",
+      scores: {
+        "2022": { midYear: 80, yearEnd: 82, attitude: 86, homework: 84, quiz: 78, exam: 80 },
+        "2023": { midYear: 82, yearEnd: 84, attitude: 88, homework: 86, quiz: 80, exam: 82 },
+        "2024": { midYear: 84, yearEnd: 86, attitude: 90, homework: 88, quiz: 82, exam: 84 },
+        "2025": { midYear: 86, yearEnd: null, attitude: 92, homework: 90, quiz: 84, exam: 86 }
+      }
+    },
+    // Subject 16 - B (Accounting)
+    { 
+      name: "Accounting", 
+      teacherComment: "Good grasp of accounting principles and financial statements. Emma is meticulous with her calculations and maintains neat work. She needs to continue practicing journal entries and balance sheets to further strengthen her skills.",
+      scores: {
+        "2022": { midYear: 72, yearEnd: 74, attitude: 80, homework: 78, quiz: 70, exam: 72 },
+        "2023": { midYear: 74, yearEnd: 76, attitude: 82, homework: 80, quiz: 72, exam: 74 },
+        "2024": { midYear: 76, yearEnd: 78, attitude: 84, homework: 82, quiz: 74, exam: 76 },
+        "2025": { midYear: 78, yearEnd: null, attitude: 86, homework: 84, quiz: 76, exam: 78 }
+      }
+    },
+    // Subject 17 - C (Economics)
+    { 
+      name: "Economics", 
+      teacherComment: "Emma shows developing understanding of economic principles. She grasps microeconomics concepts well but needs more focus on macroeconomic theories. Regular reading of economic news and current affairs will help improve her contextual understanding.",
+      scores: {
+        "2022": { midYear: 62, yearEnd: 64, attitude: 70, homework: 68, quiz: 60, exam: 62 },
+        "2023": { midYear: 64, yearEnd: 66, attitude: 72, homework: 70, quiz: 62, exam: 64 },
+        "2024": { midYear: 66, yearEnd: 68, attitude: 74, homework: 72, quiz: 64, exam: 66 },
+        "2025": { midYear: 68, yearEnd: null, attitude: 76, homework: 74, quiz: 66, exam: 68 }
+      }
     }
   ],
   behavior: [
