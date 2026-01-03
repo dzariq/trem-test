@@ -15,38 +15,8 @@ import schoolLogo from "@/assets/school-badge.png";
 import { CertificateDialog } from "@/components/CertificateDialog";
 import { ReportCardDialog } from "@/components/ReportCardDialog";
 import { EnvelopeAwardCard } from "@/components/EnvelopeAwardCard";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import {
-  LineChart,
-  Line,
-  XAxis,
-  YAxis,
-  ResponsiveContainer,
-  Tooltip,
-  Legend,
-  CartesianGrid,
-  BarChart,
-  Bar,
-  Cell,
-  PieChart,
-  Pie,
-  AreaChart,
-  Area,
-  ReferenceLine,
-  ReferenceDot,
-  RadarChart,
-  Radar,
-  PolarGrid,
-  PolarAngleAxis,
-  PolarRadiusAxis,
-} from "recharts";
-
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { LineChart, Line, XAxis, YAxis, ResponsiveContainer, Tooltip, Legend, CartesianGrid, BarChart, Bar, Cell, PieChart, Pie, AreaChart, Area, ReferenceLine, ReferenceDot, RadarChart, Radar, PolarGrid, PolarAngleAxis, PolarRadiusAxis } from "recharts";
 type YearKey = "2022" | "2023" | "2024" | "2025";
 type ExamType = "midYear" | "yearEnd";
 
@@ -72,7 +42,6 @@ const shortenSubjectName = getShortSubjectName;
 // Get subjects that are not part of any variant group (standalone subjects)
 const groupedSubjectNames = subjectGroups.flatMap(g => g.variants?.map(v => v.name) || []);
 const standaloneSubjects = allSubjects.filter(s => !groupedSubjectNames.includes(s));
-
 export default function AcademicPage() {
   const [searchParams] = useSearchParams();
   const [mainSection, setMainSection] = useState<"report" | "analysis">(() => {
@@ -88,65 +57,53 @@ export default function AcademicPage() {
   const [selectedYears, setSelectedYears] = useState<string[]>(["2025"]);
   const [subjectFilter, setSubjectFilter] = useState("all");
   const [trendPeriod, setTrendPeriod] = useState<"1year" | "2years" | "3years" | "4years" | "5years" | "6years">("6years");
-  
+
   // Trends tab filters - multi-select subjects (like Overview)
-  const [trendsSelectedSubjects, setTrendsSelectedSubjects] = useState<string[]>(
-    academicData.subjects.map(s => s.name)
-  );
-  
+  const [trendsSelectedSubjects, setTrendsSelectedSubjects] = useState<string[]>(academicData.subjects.map(s => s.name));
+
   // Grades tab filters - exam selector and multi-select subjects
-  const [gradesSelectedSubjects, setGradesSelectedSubjects] = useState<string[]>(
-    academicData.subjects.map(s => s.name)
-  );
+  const [gradesSelectedSubjects, setGradesSelectedSubjects] = useState<string[]>(academicData.subjects.map(s => s.name));
   const [reportGenerated, setReportGenerated] = useState(false);
   const [reportCardDialogOpen, setReportCardDialogOpen] = useState(false);
   const [expandedSubject, setExpandedSubject] = useState<string | null>(null);
-  
+
   // Pinch-to-zoom state for chart
   const [chartZoom, setChartZoom] = useState(1);
   const chartContainerRef = useRef<HTMLDivElement>(null);
   const lastTouchDistance = useRef<number | null>(null);
-
   const handleTouchStart = useCallback((e: React.TouchEvent) => {
     if (e.touches.length === 2) {
       const touch1 = e.touches[0];
       const touch2 = e.touches[1];
-      lastTouchDistance.current = Math.hypot(
-        touch2.clientX - touch1.clientX,
-        touch2.clientY - touch1.clientY
-      );
+      lastTouchDistance.current = Math.hypot(touch2.clientX - touch1.clientX, touch2.clientY - touch1.clientY);
     }
   }, []);
-
   const handleTouchMove = useCallback((e: React.TouchEvent) => {
     if (e.touches.length === 2 && lastTouchDistance.current !== null) {
       const touch1 = e.touches[0];
       const touch2 = e.touches[1];
-      const currentDistance = Math.hypot(
-        touch2.clientX - touch1.clientX,
-        touch2.clientY - touch1.clientY
-      );
-      
+      const currentDistance = Math.hypot(touch2.clientX - touch1.clientX, touch2.clientY - touch1.clientY);
       const scale = currentDistance / lastTouchDistance.current;
       setChartZoom(prev => Math.min(3, Math.max(0.5, prev * scale)));
       lastTouchDistance.current = currentDistance;
     }
   }, []);
-
   const handleTouchEnd = useCallback(() => {
     lastTouchDistance.current = null;
   }, []);
-
   const resetZoom = useCallback(() => {
     setChartZoom(1);
   }, []);
-  
+
   // Grade Analysis sub-tabs
   const [analysisTab, setAnalysisTab] = useState("overview");
-  
+
   // Comparison state
-  const [compareExamA, setCompareExamA] = useState({ year: "2025" as YearKey, type: "midYear" as ExamType });
-  
+  const [compareExamA, setCompareExamA] = useState({
+    year: "2025" as YearKey,
+    type: "midYear" as ExamType
+  });
+
   // Goals state - default targets for each subject
   const [goals, setGoals] = useState<Record<string, number>>(() => {
     const initialGoals: Record<string, number> = {};
@@ -159,7 +116,10 @@ export default function AcademicPage() {
   });
   const [editingGoal, setEditingGoal] = useState<string | null>(null);
   const [tempGoalValue, setTempGoalValue] = useState<string>("");
-  const [compareExamB, setCompareExamB] = useState({ year: "2024" as YearKey, type: "yearEnd" as ExamType });
+  const [compareExamB, setCompareExamB] = useState({
+    year: "2024" as YearKey,
+    type: "yearEnd" as ExamType
+  });
   const [compareSubjects, setCompareSubjects] = useState<string[]>(academicData.subjects.map(s => s.name));
 
   // Certificate dialog state
@@ -177,46 +137,80 @@ export default function AcademicPage() {
   const trendsReportRef = useRef<HTMLDivElement>(null);
   const [comparisonReportDialogOpen, setComparisonReportDialogOpen] = useState(false);
   const comparisonReportRef = useRef<HTMLDivElement>(null);
-
   const isActivitiesTab = activeTab === "cocurriculum";
-
   const toggleYear = (year: string) => {
-    setSelectedYears(prev => 
-      prev.includes(year) 
-        ? prev.filter(y => y !== year)
-        : [...prev, year]
-    );
+    setSelectedYears(prev => prev.includes(year) ? prev.filter(y => y !== year) : [...prev, year]);
   };
-
   const gradeColors: Record<string, string> = {
     "A*": "bg-chart-1 text-card",
     A: "bg-chart-1 text-card",
     B: "bg-chart-2 text-card",
     C: "bg-chart-4 text-card",
     D: "bg-chart-5 text-card",
-    E: "bg-destructive text-destructive-foreground",
+    E: "bg-destructive text-destructive-foreground"
   };
 
   // Background colors for subject cards (using direct color values)
-  const gradeCardBgStyles: Record<string, { bg: string; border: string }> = {
-    "A*": { bg: 'rgba(5, 150, 105, 0.1)', border: 'rgba(5, 150, 105, 0.3)' },
-    A: { bg: 'rgba(34, 197, 94, 0.1)', border: 'rgba(34, 197, 94, 0.3)' },
-    B: { bg: 'rgba(234, 179, 8, 0.1)', border: 'rgba(234, 179, 8, 0.3)' },
-    C: { bg: 'rgba(249, 115, 22, 0.1)', border: 'rgba(249, 115, 22, 0.3)' },
-    D: { bg: 'rgba(239, 68, 68, 0.1)', border: 'rgba(239, 68, 68, 0.3)' },
-    E: { bg: 'rgba(220, 38, 38, 0.1)', border: 'rgba(220, 38, 38, 0.3)' },
+  const gradeCardBgStyles: Record<string, {
+    bg: string;
+    border: string;
+  }> = {
+    "A*": {
+      bg: 'rgba(5, 150, 105, 0.1)',
+      border: 'rgba(5, 150, 105, 0.3)'
+    },
+    A: {
+      bg: 'rgba(34, 197, 94, 0.1)',
+      border: 'rgba(34, 197, 94, 0.3)'
+    },
+    B: {
+      bg: 'rgba(234, 179, 8, 0.1)',
+      border: 'rgba(234, 179, 8, 0.3)'
+    },
+    C: {
+      bg: 'rgba(249, 115, 22, 0.1)',
+      border: 'rgba(249, 115, 22, 0.3)'
+    },
+    D: {
+      bg: 'rgba(239, 68, 68, 0.1)',
+      border: 'rgba(239, 68, 68, 0.3)'
+    },
+    E: {
+      bg: 'rgba(220, 38, 38, 0.1)',
+      border: 'rgba(220, 38, 38, 0.3)'
+    }
   };
 
   // Pill colors for grades
-  const gradePillStyles: Record<string, { bg: string; text: string }> = {
-    "A*": { bg: '#059669', text: '#ffffff' },
-    A: { bg: '#22c55e', text: '#ffffff' },
-    B: { bg: '#eab308', text: '#ffffff' },
-    C: { bg: '#f97316', text: '#ffffff' },
-    D: { bg: '#ef4444', text: '#ffffff' },
-    E: { bg: '#dc2626', text: '#ffffff' },
+  const gradePillStyles: Record<string, {
+    bg: string;
+    text: string;
+  }> = {
+    "A*": {
+      bg: '#059669',
+      text: '#ffffff'
+    },
+    A: {
+      bg: '#22c55e',
+      text: '#ffffff'
+    },
+    B: {
+      bg: '#eab308',
+      text: '#ffffff'
+    },
+    C: {
+      bg: '#f97316',
+      text: '#ffffff'
+    },
+    D: {
+      bg: '#ef4444',
+      text: '#ffffff'
+    },
+    E: {
+      bg: '#dc2626',
+      text: '#ffffff'
+    }
   };
-
   const getGradeFromScore = (score: number) => {
     if (score >= 90) return "A*";
     if (score >= 80) return "A";
@@ -225,11 +219,9 @@ export default function AcademicPage() {
     if (score >= 50) return "D";
     return "E";
   };
-
   const generateReport = () => {
     setReportCardDialogOpen(true);
   };
-
   const getExamLabel = () => {
     const examLabel = examType === "midYear" ? "Mid-Year" : "Year-End";
     return `${examLabel} ${selectedYear}`;
@@ -256,19 +248,24 @@ export default function AcademicPage() {
 
   // Subject performance data for bar chart (sorted best to worst)
   const subjectPerformance = useMemo(() => {
-    return academicData.subjects
-      .map(s => ({
-        name: s.name,
-        score: getScore(s, selectedYear, examType) ?? 0,
-        classAvg: classAverages[selectedYear]?.[examType] ?? 0,
-        goal: goals[s.name] ?? 80
-      }))
-      .sort((a, b) => b.score - a.score);
+    return academicData.subjects.map(s => ({
+      name: s.name,
+      score: getScore(s, selectedYear, examType) ?? 0,
+      classAvg: classAverages[selectedYear]?.[examType] ?? 0,
+      goal: goals[s.name] ?? 80
+    })).sort((a, b) => b.score - a.score);
   }, [selectedYear, examType, goals]);
 
   // Grade distribution
   const gradeDistribution = useMemo(() => {
-    const grades = { "A*": 0, "A": 0, "B": 0, "C": 0, "D": 0, "E": 0 };
+    const grades = {
+      "A*": 0,
+      "A": 0,
+      "B": 0,
+      "C": 0,
+      "D": 0,
+      "E": 0
+    };
     academicData.subjects.forEach(s => {
       const score = getScore(s, selectedYear, examType);
       if (score !== null) {
@@ -276,21 +273,24 @@ export default function AcademicPage() {
         grades[grade as keyof typeof grades]++;
       }
     });
-    return Object.entries(grades).map(([grade, count]) => ({ grade, count }));
+    return Object.entries(grades).map(([grade, count]) => ({
+      grade,
+      count
+    }));
   }, [selectedYear, examType]);
 
   // Top 3 and Bottom 3 subjects (bottom only includes scores below 50%)
-  const { top3, needsAttention } = useMemo(() => {
+  const {
+    top3,
+    needsAttention
+  } = useMemo(() => {
     const sorted = [...academicData.subjects].sort((a, b) => {
       const scoreA = getScore(a, selectedYear, examType) ?? 0;
       const scoreB = getScore(b, selectedYear, examType) ?? 0;
       return scoreB - scoreA;
     });
     // Filter subjects below 50% and take lowest 3
-    const below50 = sorted
-      .filter((s) => (getScore(s, selectedYear, examType) ?? 0) < 50)
-      .reverse()
-      .slice(0, 3);
+    const below50 = sorted.filter(s => (getScore(s, selectedYear, examType) ?? 0) < 50).reverse().slice(0, 3);
     return {
       top3: sorted.slice(0, 3),
       needsAttention: below50
@@ -299,18 +299,22 @@ export default function AcademicPage() {
 
   // Calculate attendance rate from all months
   const attendanceStats = useMemo(() => {
-    const totalAttendance = attendanceData.monthly.reduce(
-      (acc, month) => ({
-        present: acc.present + month.present,
-        absent: acc.absent + month.absent,
-        late: acc.late + month.late,
-        excused: acc.excused + month.excused,
-      }),
-      { present: 0, absent: 0, late: 0, excused: 0 }
-    );
+    const totalAttendance = attendanceData.monthly.reduce((acc, month) => ({
+      present: acc.present + month.present,
+      absent: acc.absent + month.absent,
+      late: acc.late + month.late,
+      excused: acc.excused + month.excused
+    }), {
+      present: 0,
+      absent: 0,
+      late: 0,
+      excused: 0
+    });
     const totalDays = totalAttendance.present + totalAttendance.absent + totalAttendance.late + totalAttendance.excused;
-    const attendanceRate = totalDays > 0 ? Math.round((totalAttendance.present / totalDays) * 100) : 0;
-    return { attendanceRate };
+    const attendanceRate = totalDays > 0 ? Math.round(totalAttendance.present / totalDays * 100) : 0;
+    return {
+      attendanceRate
+    };
   }, []);
 
   // Calculate subjects passing (score >= 50)
@@ -318,8 +322,12 @@ export default function AcademicPage() {
     const passingSubjects = academicData.subjects.filter(s => (getScore(s, selectedYear, examType) ?? 0) >= 50);
     const passingCount = passingSubjects.length;
     const totalSubjects = academicData.subjects.length;
-    const passingPercentage = Math.round((passingCount / totalSubjects) * 100);
-    return { passingCount, totalSubjects, passingPercentage };
+    const passingPercentage = Math.round(passingCount / totalSubjects * 100);
+    return {
+      passingCount,
+      totalSubjects,
+      passingPercentage
+    };
   }, [selectedYear, examType]);
 
   // Find weakest subject
@@ -330,7 +338,10 @@ export default function AcademicPage() {
       return currentScore < worstScore ? s : worst;
     });
     const weakestScore = getScore(weakest, selectedYear, examType) ?? 0;
-    return { name: weakest.name, score: weakestScore };
+    return {
+      name: weakest.name,
+      score: weakestScore
+    };
   }, [selectedYear, examType]);
 
   // Best subject info
@@ -341,51 +352,68 @@ export default function AcademicPage() {
       return currentScore > bestScore ? s : bestSub;
     });
     const bestScore = getScore(best, selectedYear, examType) ?? 0;
-    return { name: best.name, score: bestScore };
+    return {
+      name: best.name,
+      score: bestScore
+    };
   }, [selectedYear, examType]);
 
   // Improvement from previous exam
   const improvementStats = useMemo(() => {
     let prevYear: YearKey = selectedYear;
     let prevType: ExamType = examType;
-    
     if (examType === "midYear") {
-      if (selectedYear === "2025") { prevYear = "2024"; prevType = "yearEnd"; }
-      else if (selectedYear === "2024") { prevYear = "2023"; prevType = "yearEnd"; }
-      else if (selectedYear === "2023") { prevYear = "2022"; prevType = "yearEnd"; }
-      else { return { points: 0, text: "N/A" }; }
+      if (selectedYear === "2025") {
+        prevYear = "2024";
+        prevType = "yearEnd";
+      } else if (selectedYear === "2024") {
+        prevYear = "2023";
+        prevType = "yearEnd";
+      } else if (selectedYear === "2023") {
+        prevYear = "2022";
+        prevType = "yearEnd";
+      } else {
+        return {
+          points: 0,
+          text: "N/A"
+        };
+      }
     } else {
       prevType = "midYear";
     }
-
     const currentScores = academicData.subjects.map(s => getScore(s, selectedYear, examType)).filter(s => s !== null) as number[];
     const prevScores = academicData.subjects.map(s => getScore(s, prevYear, prevType)).filter(s => s !== null) as number[];
-    
-    if (currentScores.length === 0 || prevScores.length === 0) return { points: 0, text: "N/A" };
-    
+    if (currentScores.length === 0 || prevScores.length === 0) return {
+      points: 0,
+      text: "N/A"
+    };
     const currentAvg = Math.round(currentScores.reduce((a, b) => a + b, 0) / currentScores.length);
     const prevAvg = Math.round(prevScores.reduce((a, b) => a + b, 0) / prevScores.length);
     const points = currentAvg - prevAvg;
-    
-    return { points, text: points >= 0 ? `+${points}%` : `${points}%` };
+    return {
+      points,
+      text: points >= 0 ? `+${points}%` : `${points}%`
+    };
   }, [selectedYear, examType]);
-
-
   const risingStars = useMemo(() => {
     // Determine previous exam period
     let prevYear: YearKey = selectedYear;
     let prevType: ExamType = examType;
-    
     if (examType === "midYear") {
       // Previous is last year's year-end
-      if (selectedYear === "2025") { prevYear = "2024"; prevType = "yearEnd"; }
-      else if (selectedYear === "2024") { prevYear = "2023"; prevType = "yearEnd"; }
-      else { return []; } // No previous for 2023 mid
+      if (selectedYear === "2025") {
+        prevYear = "2024";
+        prevType = "yearEnd";
+      } else if (selectedYear === "2024") {
+        prevYear = "2023";
+        prevType = "yearEnd";
+      } else {
+        return [];
+      } // No previous for 2023 mid
     } else {
       // Previous is same year's mid-year
       prevType = "midYear";
     }
-
     const improvements = academicData.subjects.map(s => {
       const current = getScore(s, selectedYear, examType) ?? 0;
       const prev = getScore(s, prevYear, prevType) ?? 0;
@@ -396,7 +424,6 @@ export default function AcademicPage() {
         improvement: current - prev
       };
     }).filter(item => item.improvement > 0 && item.current > 0 && item.prev > 0);
-
     return improvements.sort((a, b) => b.improvement - a.improvement).slice(0, 3);
   }, [selectedYear, examType]);
 
@@ -404,15 +431,19 @@ export default function AcademicPage() {
   const fallingBehind = useMemo(() => {
     let prevYear: YearKey = selectedYear;
     let prevType: ExamType = examType;
-    
     if (examType === "midYear") {
-      if (selectedYear === "2025") { prevYear = "2024"; prevType = "yearEnd"; }
-      else if (selectedYear === "2024") { prevYear = "2023"; prevType = "yearEnd"; }
-      else { return []; }
+      if (selectedYear === "2025") {
+        prevYear = "2024";
+        prevType = "yearEnd";
+      } else if (selectedYear === "2024") {
+        prevYear = "2023";
+        prevType = "yearEnd";
+      } else {
+        return [];
+      }
     } else {
       prevType = "midYear";
     }
-
     const declines = academicData.subjects.map(s => {
       const current = getScore(s, selectedYear, examType) ?? 0;
       const prev = getScore(s, prevYear, prevType) ?? 0;
@@ -423,21 +454,33 @@ export default function AcademicPage() {
         decline: prev - current
       };
     }).filter(item => item.decline > 0 && item.current > 0 && item.prev > 0);
-
     return declines.sort((a, b) => b.decline - a.decline).slice(0, 3);
   }, [selectedYear, examType]);
 
   // Year-over-year trend data with period filtering (3 years of data)
   const trendData = useMemo(() => {
     const years: YearKey[] = ["2022", "2023", "2024", "2025"];
-    const periods: { year: YearKey; type: ExamType; label: string }[] = [];
+    const periods: {
+      year: YearKey;
+      type: ExamType;
+      label: string;
+    }[] = [];
     years.forEach(year => {
-      periods.push({ year, type: "midYear", label: `Mid ${year}` });
-      if (year !== "2025") { // 2025 year-end is null
-        periods.push({ year, type: "yearEnd", label: `End ${year}` });
+      periods.push({
+        year,
+        type: "midYear",
+        label: `Mid ${year}`
+      });
+      if (year !== "2025") {
+        // 2025 year-end is null
+        periods.push({
+          year,
+          type: "yearEnd",
+          label: `End ${year}`
+        });
       }
     });
-    
+
     // Filter based on trendPeriod
     let filteredPeriods = periods;
     if (trendPeriod === "1year") {
@@ -453,9 +496,10 @@ export default function AcademicPage() {
     } else if (trendPeriod === "6years") {
       filteredPeriods = periods; // All periods (6 years max)
     }
-    
     return filteredPeriods.map(p => {
-      const result: Record<string, number | string | null> = { period: p.label };
+      const result: Record<string, number | string | null> = {
+        period: p.label
+      };
       academicData.subjects.forEach(s => {
         result[s.name] = getScore(s, p.year, p.type);
       });
@@ -468,14 +512,17 @@ export default function AcademicPage() {
 
   // Calculate trend direction for selected subject(s)
   const trendDirection = useMemo(() => {
-    if (trendData.length < 2) return { direction: "stable" as const, change: 0 };
-    
+    if (trendData.length < 2) return {
+      direction: "stable" as const,
+      change: 0
+    };
     const key = subjectFilter === "all" ? "Average" : subjectFilter;
     const firstValue = trendData[0]?.[key] as number | null;
     const lastValue = trendData[trendData.length - 1]?.[key] as number | null;
-    
-    if (firstValue === null || lastValue === null) return { direction: "stable" as const, change: 0 };
-    
+    if (firstValue === null || lastValue === null) return {
+      direction: "stable" as const,
+      change: 0
+    };
     const change = lastValue - firstValue;
     return {
       direction: change > 0 ? "up" as const : change < 0 ? "down" as const : "stable" as const,
@@ -498,9 +545,10 @@ export default function AcademicPage() {
   const categoryTrendData = useMemo(() => {
     const years: YearKey[] = ["2023", "2024", "2025"];
     const categories = ["attitude", "homework", "quiz", "exam"] as const;
-    
     return years.map(year => {
-      const result: Record<string, number | string> = { year };
+      const result: Record<string, number | string> = {
+        year
+      };
       categories.forEach(cat => {
         const scores = academicData.subjects.map(s => getCategoryScore(s, year, cat)).filter(s => s !== null) as number[];
         result[cat.charAt(0).toUpperCase() + cat.slice(1)] = scores.length > 0 ? Math.round(scores.reduce((a, b) => a + b, 0) / scores.length) : 0;
@@ -524,20 +572,17 @@ export default function AcademicPage() {
     const yearData = classAverages[selectedYear];
     const subjectAverages = yearData?.bySubject as Record<string, number> | undefined;
     const fallbackAvg = yearData?.[examType] ?? 75;
-    
-    return academicData.subjects
-      .map(s => {
-        const studentScore = getScore(s, selectedYear, examType) ?? 0;
-        const classAvg = subjectAverages?.[s.name] ?? fallbackAvg;
-        return {
-          name: shortenSubjectName(s.name),
-          fullName: s.name,
-          student: studentScore,
-          classAvg: classAvg,
-          delta: studentScore - classAvg
-        };
-      })
-      .sort((a, b) => b.delta - a.delta);
+    return academicData.subjects.map(s => {
+      const studentScore = getScore(s, selectedYear, examType) ?? 0;
+      const classAvg = subjectAverages?.[s.name] ?? fallbackAvg;
+      return {
+        name: shortenSubjectName(s.name),
+        fullName: s.name,
+        student: studentScore,
+        classAvg: classAvg,
+        delta: studentScore - classAvg
+      };
+    }).sort((a, b) => b.delta - a.delta);
   }, [selectedYear, examType]);
 
   // Average score for radar color coding
@@ -548,14 +593,27 @@ export default function AcademicPage() {
 
   // Performance Heatmap data - subjects x exam periods
   const heatmapData = useMemo(() => {
-    const periods = [
-      { year: "2023" as YearKey, type: "midYear" as ExamType, label: "Mid '23" },
-      { year: "2023" as YearKey, type: "yearEnd" as ExamType, label: "End '23" },
-      { year: "2024" as YearKey, type: "midYear" as ExamType, label: "Mid '24" },
-      { year: "2024" as YearKey, type: "yearEnd" as ExamType, label: "End '24" },
-      { year: "2025" as YearKey, type: "midYear" as ExamType, label: "Mid '25" },
-    ];
-    
+    const periods = [{
+      year: "2023" as YearKey,
+      type: "midYear" as ExamType,
+      label: "Mid '23"
+    }, {
+      year: "2023" as YearKey,
+      type: "yearEnd" as ExamType,
+      label: "End '23"
+    }, {
+      year: "2024" as YearKey,
+      type: "midYear" as ExamType,
+      label: "Mid '24"
+    }, {
+      year: "2024" as YearKey,
+      type: "yearEnd" as ExamType,
+      label: "End '24"
+    }, {
+      year: "2025" as YearKey,
+      type: "midYear" as ExamType,
+      label: "Mid '25"
+    }];
     return academicData.subjects.map(s => ({
       subject: shortenSubjectName(s.name),
       fullName: s.name,
@@ -579,21 +637,19 @@ export default function AcademicPage() {
 
   // Comparison data - filtered by selected subjects
   const comparisonData = useMemo(() => {
-    return academicData.subjects
-      .filter(s => compareSubjects.includes(s.name))
-      .map(s => {
-        const scoreA = getScore(s, compareExamA.year, compareExamA.type) ?? 0;
-        const scoreB = getScore(s, compareExamB.year, compareExamB.type) ?? 0;
-        const delta = scoreA - scoreB;
-        return {
-          name: s.name,
-          examA: scoreA,
-          examB: scoreB,
-          delta,
-          improved: delta > 0,
-          goal: goals[s.name] ?? 80
-        };
-      });
+    return academicData.subjects.filter(s => compareSubjects.includes(s.name)).map(s => {
+      const scoreA = getScore(s, compareExamA.year, compareExamA.type) ?? 0;
+      const scoreB = getScore(s, compareExamB.year, compareExamB.type) ?? 0;
+      const delta = scoreA - scoreB;
+      return {
+        name: s.name,
+        examA: scoreA,
+        examB: scoreB,
+        delta,
+        improved: delta > 0,
+        goal: goals[s.name] ?? 80
+      };
+    });
   }, [compareExamA, compareExamB, compareSubjects, goals]);
 
   // Category comparison - filtered by selected subjects
@@ -613,57 +669,50 @@ export default function AcademicPage() {
       };
     });
   }, [compareExamA, compareExamB, compareSubjects]);
-
-  const getExamLabelForComparison = (exam: { year: YearKey; type: ExamType }) => {
+  const getExamLabelForComparison = (exam: {
+    year: YearKey;
+    type: ExamType;
+  }) => {
     return `${exam.type === "midYear" ? "Mid-Year" : "Year-End"} ${exam.year}`;
   };
 
   // Distinct colors for subjects
   const lineColors = ["#3b82f6", "#f59e0b", "#10b981", "#8b5cf6", "#ef4444"];
   const pieColors = ["hsl(var(--chart-1))", "hsl(var(--chart-2))", "hsl(var(--chart-3))", "hsl(var(--chart-4))", "hsl(var(--chart-5))"];
-  
+
   // Grade-specific colors for distribution chart
   const gradeChartColors: Record<string, string> = {
-    "A*": "#059669", // dark green
-    "A": "#16a34a",  // green
-    "B": "#22c55e",  // light green
-    "C": "#eab308",  // yellow
-    "D": "#f97316",  // orange
-    "E": "#ef4444",  // red
+    "A*": "#059669",
+    // dark green
+    "A": "#16a34a",
+    // green
+    "B": "#22c55e",
+    // light green
+    "C": "#eab308",
+    // yellow
+    "D": "#f97316",
+    // orange
+    "E": "#ef4444" // red
   };
-
-  const filteredSubjects = subjectFilter === "all" 
-    ? academicData.subjects 
-    : academicData.subjects.filter(s => s.name === subjectFilter);
-
-  return (
-    <AppLayout>
-      <AppHeader 
-        leftContent={
-          <div className="flex items-center gap-2">
+  const filteredSubjects = subjectFilter === "all" ? academicData.subjects : academicData.subjects.filter(s => s.name === subjectFilter);
+  return <AppLayout>
+      <AppHeader leftContent={<div className="flex items-center gap-2">
             <img src={schoolLogo} alt="School Logo" className="h-16 w-auto -my-3 drop-shadow-md" />
             <h1 className="text-xl font-semibold text-foreground">Academic</h1>
-          </div>
-        }
-        rightContent={
-          <Select defaultValue={students[0]?.id}>
+          </div>} rightContent={<Select defaultValue={students[0]?.id}>
             <SelectTrigger className="w-32 h-8 text-sm">
               <SelectValue placeholder="Student" />
             </SelectTrigger>
             <SelectContent className="bg-card">
-              {students.map((student) => (
-                <SelectItem key={student.id} value={student.id}>
+              {students.map(student => <SelectItem key={student.id} value={student.id}>
                   {student.name.split(' ')[0]} {student.name.split(' ')[1]?.[0]}.
-                </SelectItem>
-              ))}
+                </SelectItem>)}
             </SelectContent>
-          </Select>
-        }
-      />
+          </Select>} />
 
       {/* Main Tab Switcher - Report Card / Grade Analysis */}
       <section className="px-4 pt-4">
-        <Tabs value={mainSection} onValueChange={(v) => setMainSection(v as "report" | "analysis")} className="w-full">
+        <Tabs value={mainSection} onValueChange={v => setMainSection(v as "report" | "analysis")} className="w-full">
           <TabsList className="grid w-full grid-cols-2 bg-muted/50">
             <TabsTrigger value="report">Report Card</TabsTrigger>
             <TabsTrigger value="analysis">Grade Analysis</TabsTrigger>
@@ -672,8 +721,7 @@ export default function AcademicPage() {
       </section>
 
       {/* Report Card Section */}
-      {mainSection === "report" && (
-      <section className="px-4 py-4">
+      {mainSection === "report" && <section className="px-4 py-4">
         <Card className="bg-card border-border shadow-sm">
           <CardHeader className="pb-3">
             <CardTitle className="text-lg font-semibold flex items-center gap-2">
@@ -683,29 +731,17 @@ export default function AcademicPage() {
           </CardHeader>
           <CardContent className="space-y-4">
             {/* Year Selection for Activities Tab Only */}
-            {isActivitiesTab && (
-              <div className="space-y-2">
+            {isActivitiesTab && <div className="space-y-2">
                 <div className="flex gap-2">
-                  {(["2025", "2024", "2023"] as const).map((year) => (
-                    <button
-                      key={year}
-                      onClick={() => toggleYear(year)}
-                      className={`flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-md border text-sm font-medium transition-colors ${
-                        selectedYears.includes(year)
-                          ? "bg-primary text-primary-foreground border-primary"
-                          : "bg-card border-border text-foreground hover:bg-accent"
-                      }`}
-                    >
+                  {(["2025", "2024", "2023"] as const).map(year => <button key={year} onClick={() => toggleYear(year)} className={`flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-md border text-sm font-medium transition-colors ${selectedYears.includes(year) ? "bg-primary text-primary-foreground border-primary" : "bg-card border-border text-foreground hover:bg-accent"}`}>
                       {selectedYears.includes(year) && <Check className="h-3.5 w-3.5" />}
                       {year}
-                    </button>
-                  ))}
+                    </button>)}
                 </div>
                 <Badge variant="secondary" className="text-xs">
                   Viewing: {selectedYears.sort().reverse().join(", ")}
                 </Badge>
-              </div>
-            )}
+              </div>}
 
             {/* Tabs for Grades/Behavior/Activities */}
             <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
@@ -721,103 +757,74 @@ export default function AcademicPage() {
                 Download Report Card
               </Button>
 
-              {reportGenerated && (
-                <div className="p-3 rounded-lg bg-primary/10 border border-primary/20 text-center mt-2">
+              {reportGenerated && <div className="p-3 rounded-lg bg-primary/10 border border-primary/20 text-center mt-2">
                   <p className="text-sm text-foreground">Report Card for {getExamLabel()} downloaded!</p>
-                </div>
-              )}
+                </div>}
 
               <TabsContent value="grades" className="mt-4">
                 <div className="space-y-3">
                   {/* Sort subjects by score (highest to lowest), then group into rows of 2 */}
                   {(() => {
-                    const filteredSubjects = academicData.subjects.filter(s => 
-                      gradesSelectedSubjects.includes(s.name)
-                    );
-                    const sortedSubjects = [...filteredSubjects].sort((a, b) => {
-                      const scoreA = getScore(a, selectedYear, examType) ?? 0;
-                      const scoreB = getScore(b, selectedYear, examType) ?? 0;
-                      return scoreB - scoreA;
-                    });
-                    
-                    return Array.from({ length: Math.ceil(sortedSubjects.length / 2) }, (_, rowIndex) => {
-                      const rowSubjects = sortedSubjects.slice(rowIndex * 2, rowIndex * 2 + 2);
-                      const expandedInRow = rowSubjects.find(s => s.name === expandedSubject);
-                    
-                    return (
-                      <div key={rowIndex} className="space-y-3">
+                  const filteredSubjects = academicData.subjects.filter(s => gradesSelectedSubjects.includes(s.name));
+                  const sortedSubjects = [...filteredSubjects].sort((a, b) => {
+                    const scoreA = getScore(a, selectedYear, examType) ?? 0;
+                    const scoreB = getScore(b, selectedYear, examType) ?? 0;
+                    return scoreB - scoreA;
+                  });
+                  return Array.from({
+                    length: Math.ceil(sortedSubjects.length / 2)
+                  }, (_, rowIndex) => {
+                    const rowSubjects = sortedSubjects.slice(rowIndex * 2, rowIndex * 2 + 2);
+                    const expandedInRow = rowSubjects.find(s => s.name === expandedSubject);
+                    return <div key={rowIndex} className="space-y-3">
                         {/* Subject Cards Row */}
                         <div className="grid grid-cols-2 gap-3">
                           {rowSubjects.map((subject, index) => {
-                            const score = getScore(subject, selectedYear, examType);
-                            const isPending = score === null || score === undefined;
-                            const isExpanded = expandedSubject === subject.name;
-                            const gradeKey = isPending ? 'C' : getGradeFromScore(score!)[0];
-                            const cardStyle = gradeCardBgStyles[gradeKey] || gradeCardBgStyles.C;
-                            
-                            return (
-                              <div
-                                key={index}
-                                onClick={() => setExpandedSubject(isExpanded ? null : subject.name)}
-                                className={`
+                          const score = getScore(subject, selectedYear, examType);
+                          const isPending = score === null || score === undefined;
+                          const isExpanded = expandedSubject === subject.name;
+                          const gradeKey = isPending ? 'C' : getGradeFromScore(score!)[0];
+                          const cardStyle = gradeCardBgStyles[gradeKey] || gradeCardBgStyles.C;
+                          return <div key={index} onClick={() => setExpandedSubject(isExpanded ? null : subject.name)} className={`
                                   flex flex-col p-4 rounded-xl cursor-pointer border
                                   transition-all duration-200 ease-out min-h-[80px]
                                   hover:shadow-md
                                   ${isExpanded ? 'ring-2 ring-primary/40 shadow-md' : ''}
-                                `}
-                                style={{
-                                  backgroundColor: cardStyle.bg,
-                                  borderColor: cardStyle.border
-                                }}
-                              >
+                                `} style={{
+                            backgroundColor: cardStyle.bg,
+                            borderColor: cardStyle.border
+                          }}>
                                 <h3 className="font-medium text-foreground text-sm leading-tight mb-2">{subject.name}</h3>
                                 <div className="flex items-center justify-between mt-auto">
                                   <div className="flex items-center gap-2">
                                     <p className="text-lg font-semibold text-foreground">
                                       {isPending ? "Pending" : `${score}%`}
                                     </p>
-                                    {!isPending && (
-                                      <span 
-                                        className="text-xs font-semibold px-2 py-0.5 rounded-full"
-                                        style={{
-                                          backgroundColor: (gradePillStyles[getGradeFromScore(score!)[0]] || gradePillStyles.C).bg,
-                                          color: (gradePillStyles[getGradeFromScore(score!)[0]] || gradePillStyles.C).text
-                                        }}
-                                      >
+                                    {!isPending && <span className="text-xs font-semibold px-2 py-0.5 rounded-full" style={{
+                                  backgroundColor: (gradePillStyles[getGradeFromScore(score!)[0]] || gradePillStyles.C).bg,
+                                  color: (gradePillStyles[getGradeFromScore(score!)[0]] || gradePillStyles.C).text
+                                }}>
                                         {getGradeFromScore(score!)}
-                                      </span>
-                                    )}
+                                      </span>}
                                   </div>
-                                  <ChevronDown 
-                                    className={`h-4 w-4 text-muted-foreground transition-transform duration-200 ${
-                                      isExpanded ? 'rotate-180' : ''
-                                    }`} 
-                                  />
+                                  <ChevronDown className={`h-4 w-4 text-muted-foreground transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}`} />
                                 </div>
-                              </div>
-                            );
-                          })}
+                              </div>;
+                        })}
                         </div>
                         
                         {/* Expanded Comment Box - Full Width */}
-                        {expandedInRow && (
-                          <div className="animate-fade-in">
+                        {expandedInRow && <div className="animate-fade-in">
                             <div className="bg-primary/5 border border-primary/20 rounded-xl p-4 relative mt-1">
                               {/* Arrow pointer - clean triangle without bottom line */}
-                              <div 
-                                className="absolute -top-[10px] w-5 h-[10px] overflow-hidden"
-                                style={{
-                                  left: expandedInRow === rowSubjects[0] ? 'calc(25% - 10px)' : 'calc(75% - 10px)'
-                                }}
-                              >
-                                <div 
-                                  className="w-[14px] h-[14px] rotate-45 bg-primary/5 border-l border-t border-primary/20"
-                                  style={{ 
-                                    position: 'absolute',
-                                    top: '5px',
-                                    left: '3px'
-                                  }}
-                                />
+                              <div className="absolute -top-[10px] w-5 h-[10px] overflow-hidden" style={{
+                            left: expandedInRow === rowSubjects[0] ? 'calc(25% - 10px)' : 'calc(75% - 10px)'
+                          }}>
+                                <div className="w-[14px] h-[14px] rotate-45 bg-primary/5 border-l border-t border-primary/20" style={{
+                              position: 'absolute',
+                              top: '5px',
+                              left: '3px'
+                            }} />
                               </div>
                               
                               <div className="flex items-start gap-3">
@@ -832,12 +839,10 @@ export default function AcademicPage() {
                                 </div>
                               </div>
                             </div>
-                          </div>
-                        )}
-                      </div>
-                    );
+                          </div>}
+                      </div>;
                   });
-                  })()}
+                })()}
                 </div>
               </TabsContent>
 
@@ -853,22 +858,21 @@ export default function AcademicPage() {
                         <p className="text-sm font-medium text-primary mb-1">Smart Summary</p>
                         <p className="text-sm text-muted-foreground leading-relaxed">
                           {(() => {
-                            const grades = academicData.behavior.map(b => b.grade);
-                            const aCount = grades.filter(g => g === "A").length;
-                            const bCount = grades.filter(g => g === "B").length;
-                            const cCount = grades.filter(g => g === "C").length;
-                            const total = grades.length;
-                            
-                            if (aCount >= total * 0.7) {
-                              return "Excellent conduct! The student demonstrates outstanding behavior across all categories, showing strong character and positive attitude.";
-                            } else if (aCount + bCount >= total * 0.7) {
-                              return "Good overall conduct with some areas showing room for improvement. The student generally displays positive behavior and attitude.";
-                            } else if (cCount >= total * 0.5) {
-                              return "Needs improvement in behavioral areas. We recommend working with the student to develop better habits and attitudes.";
-                            } else {
-                              return "Average conduct with mixed performance. The student shows potential and should focus on consistency across all behavioral areas.";
-                            }
-                          })()}
+                          const grades = academicData.behavior.map(b => b.grade);
+                          const aCount = grades.filter(g => g === "A").length;
+                          const bCount = grades.filter(g => g === "B").length;
+                          const cCount = grades.filter(g => g === "C").length;
+                          const total = grades.length;
+                          if (aCount >= total * 0.7) {
+                            return "Excellent conduct! The student demonstrates outstanding behavior across all categories, showing strong character and positive attitude.";
+                          } else if (aCount + bCount >= total * 0.7) {
+                            return "Good overall conduct with some areas showing room for improvement. The student generally displays positive behavior and attitude.";
+                          } else if (cCount >= total * 0.5) {
+                            return "Needs improvement in behavioral areas. We recommend working with the student to develop better habits and attitudes.";
+                          } else {
+                            return "Average conduct with mixed performance. The student shows potential and should focus on consistency across all behavioral areas.";
+                          }
+                        })()}
                         </p>
                       </div>
                     </div>
@@ -878,31 +882,101 @@ export default function AcademicPage() {
                 {/* Behavioral Traits Grid */}
                 <div className="grid grid-cols-2 gap-3">
                   {academicData.behavior.map((item, index) => {
-                    const gradeConfig = {
-                      A: { label: "Excellent", bg: "bg-emerald-50", border: "border-emerald-200", text: "text-emerald-700", watermark: "text-emerald-200" },
-                      B: { label: "Good", bg: "bg-blue-50", border: "border-blue-200", text: "text-blue-700", watermark: "text-blue-200" },
-                      C: { label: "Average", bg: "bg-amber-50", border: "border-amber-200", text: "text-amber-700", watermark: "text-amber-200" },
-                      D: { label: "Needs Work", bg: "bg-orange-50", border: "border-orange-200", text: "text-orange-700", watermark: "text-orange-200" },
-                      E: { label: "Poor", bg: "bg-red-50", border: "border-red-200", text: "text-red-700", watermark: "text-red-200" }
+                  const gradeConfig = {
+                    A: {
+                      label: "Excellent",
+                      bg: "bg-emerald-50",
+                      border: "border-emerald-200",
+                      text: "text-emerald-700",
+                      watermark: "text-emerald-200"
+                    },
+                    B: {
+                      label: "Good",
+                      bg: "bg-blue-50",
+                      border: "border-blue-200",
+                      text: "text-blue-700",
+                      watermark: "text-blue-200"
+                    },
+                    C: {
+                      label: "Average",
+                      bg: "bg-amber-50",
+                      border: "border-amber-200",
+                      text: "text-amber-700",
+                      watermark: "text-amber-200"
+                    },
+                    D: {
+                      label: "Needs Work",
+                      bg: "bg-orange-50",
+                      border: "border-orange-200",
+                      text: "text-orange-700",
+                      watermark: "text-orange-200"
+                    },
+                    E: {
+                      label: "Poor",
+                      bg: "bg-red-50",
+                      border: "border-red-200",
+                      text: "text-red-700",
+                      watermark: "text-red-200"
+                    }
+                  };
+                  const config = gradeConfig[item.grade as keyof typeof gradeConfig] || gradeConfig.C;
+
+                  // Smart description based on grade
+                  const getSmartDescription = (category: string, grade: string) => {
+                    const descriptions: Record<string, Record<string, string>> = {
+                      Attendance: {
+                        A: "Excellent attendance record",
+                        B: "Good attendance",
+                        C: "Some absences noted",
+                        D: "Frequent absences",
+                        E: "Poor attendance"
+                      },
+                      Punctuality: {
+                        A: "Always on time",
+                        B: "Usually punctual",
+                        C: "Occasionally late",
+                        D: "Frequently late",
+                        E: "Chronically late"
+                      },
+                      Cooperation: {
+                        A: "Works excellently with others",
+                        B: "Cooperates well",
+                        C: "Cooperates when prompted",
+                        D: "Struggles to cooperate",
+                        E: "Needs improvement"
+                      },
+                      "Self Control": {
+                        A: "Excellent self-discipline",
+                        B: "Good self-control",
+                        C: "Sometimes impulsive",
+                        D: "Needs guidance",
+                        E: "Lacks self-control"
+                      },
+                      Responsibility: {
+                        A: "Highly responsible",
+                        B: "Generally responsible",
+                        C: "Moderately responsible",
+                        D: "Needs reminders",
+                        E: "Irresponsible"
+                      },
+                      Initiative: {
+                        A: "Takes excellent initiative",
+                        B: "Shows good initiative",
+                        C: "Some initiative shown",
+                        D: "Rarely takes initiative",
+                        E: "Lacks initiative"
+                      },
+                      Leadership: {
+                        A: "Strong leader",
+                        B: "Good leadership skills",
+                        C: "Developing leadership",
+                        D: "Emerging leader",
+                        E: "Needs leadership development"
+                      }
                     };
-                    const config = gradeConfig[item.grade as keyof typeof gradeConfig] || gradeConfig.C;
-                    
-                    // Smart description based on grade
-                    const getSmartDescription = (category: string, grade: string) => {
-                      const descriptions: Record<string, Record<string, string>> = {
-                        Attendance: { A: "Excellent attendance record", B: "Good attendance", C: "Some absences noted", D: "Frequent absences", E: "Poor attendance" },
-                        Punctuality: { A: "Always on time", B: "Usually punctual", C: "Occasionally late", D: "Frequently late", E: "Chronically late" },
-                        Cooperation: { A: "Works excellently with others", B: "Cooperates well", C: "Cooperates when prompted", D: "Struggles to cooperate", E: "Needs improvement" },
-                        "Self Control": { A: "Excellent self-discipline", B: "Good self-control", C: "Sometimes impulsive", D: "Needs guidance", E: "Lacks self-control" },
-                        Responsibility: { A: "Highly responsible", B: "Generally responsible", C: "Moderately responsible", D: "Needs reminders", E: "Irresponsible" },
-                        Initiative: { A: "Takes excellent initiative", B: "Shows good initiative", C: "Some initiative shown", D: "Rarely takes initiative", E: "Lacks initiative" },
-                        Leadership: { A: "Strong leader", B: "Good leadership skills", C: "Developing leadership", D: "Emerging leader", E: "Needs leadership development" }
-                      };
-                      return descriptions[category]?.[grade] || "No description available";
-                    };
-                    
-                    return (
-                      <Card key={index} className={`${config.bg} ${config.border} overflow-hidden relative`}>
+                    return descriptions[category]?.[grade] || "No description available";
+                  };
+                  return <Card key={index} className={`${config.bg} ${config.border} overflow-hidden relative`}>
                         {/* Oversized watermark grade letter */}
                         <div className={`absolute -right-1 -bottom-3 text-[4.5rem] font-black leading-none ${config.watermark} select-none pointer-events-none`}>
                           {item.grade}
@@ -911,14 +985,12 @@ export default function AcademicPage() {
                           <span className={`text-xs font-semibold uppercase ${config.text}`}>{item.category}</span>
                           <p className="text-xs text-muted-foreground mt-2">{getSmartDescription(item.category, item.grade)}</p>
                         </CardContent>
-                      </Card>
-                    );
-                  })}
+                      </Card>;
+                })}
                 </div>
 
                 {/* Comments Section */}
-                {academicData.behaviorComments && (
-                  <div className="space-y-3">
+                {academicData.behaviorComments && <div className="space-y-3">
                     <Card className="bg-rose-50 border-rose-200">
                       <CardContent className="p-3">
                         <p className="text-xs font-semibold uppercase text-rose-700 mb-2">Homeroom Teacher Comment</p>
@@ -932,160 +1004,104 @@ export default function AcademicPage() {
                         <p className="text-sm text-muted-foreground">{academicData.behaviorComments.responsibilityComment}</p>
                       </CardContent>
                     </Card>
-                  </div>
-                )}
+                  </div>}
               </TabsContent>
 
               <TabsContent value="cocurriculum" className="mt-4 space-y-3">
                 {/* Awards displayed as trophy-style cards with category tags */}
-                {academicData.awards && (
-                  <>
+                {academicData.awards && <>
                     {/* Sports House */}
-                    {academicData.awards.sportsHouse.organization !== "None" && academicData.awards.sportsHouse.organization && (
-                      <EnvelopeAwardCard
-                        category="Sports House"
-                        categoryColor={{ bg: 'rgba(239, 68, 68, 0.15)', text: '#dc2626' }}
-                        organization={academicData.awards.sportsHouse.organization}
-                        role={academicData.awards.sportsHouse.role}
-                        year="2025"
-                        onClick={() => {
-                          setSelectedAward({
-                            category: "Sports House",
-                            organization: academicData.awards.sportsHouse.organization,
-                            role: academicData.awards.sportsHouse.role
-                          });
-                          setCertificateOpen(true);
-                        }}
-                      />
-                    )}
+                    {academicData.awards.sportsHouse.organization !== "None" && academicData.awards.sportsHouse.organization && <EnvelopeAwardCard category="Sports House" categoryColor={{
+                  bg: 'rgba(239, 68, 68, 0.15)',
+                  text: '#dc2626'
+                }} organization={academicData.awards.sportsHouse.organization} role={academicData.awards.sportsHouse.role} year="2025" onClick={() => {
+                  setSelectedAward({
+                    category: "Sports House",
+                    organization: academicData.awards.sportsHouse.organization,
+                    role: academicData.awards.sportsHouse.role
+                  });
+                  setCertificateOpen(true);
+                }} />}
 
                     {/* Club */}
-                    {academicData.awards.club.organization !== "None" && academicData.awards.club.organization && (
-                      <EnvelopeAwardCard
-                        category="Club"
-                        categoryColor={{ bg: 'rgba(59, 130, 246, 0.15)', text: '#2563eb' }}
-                        organization={academicData.awards.club.organization}
-                        role={academicData.awards.club.role}
-                        year="2024"
-                        onClick={() => {
-                          setSelectedAward({
-                            category: "Club",
-                            organization: academicData.awards.club.organization,
-                            role: academicData.awards.club.role
-                          });
-                          setCertificateOpen(true);
-                        }}
-                      />
-                    )}
+                    {academicData.awards.club.organization !== "None" && academicData.awards.club.organization && <EnvelopeAwardCard category="Club" categoryColor={{
+                  bg: 'rgba(59, 130, 246, 0.15)',
+                  text: '#2563eb'
+                }} organization={academicData.awards.club.organization} role={academicData.awards.club.role} year="2024" onClick={() => {
+                  setSelectedAward({
+                    category: "Club",
+                    organization: academicData.awards.club.organization,
+                    role: academicData.awards.club.role
+                  });
+                  setCertificateOpen(true);
+                }} />}
 
                     {/* Student Leadership */}
-                    {academicData.awards.studentLeadership.organization !== "None" && academicData.awards.studentLeadership.organization && (
-                      <EnvelopeAwardCard
-                        category="Leadership"
-                        categoryColor={{ bg: 'rgba(168, 85, 247, 0.15)', text: '#9333ea' }}
-                        organization={academicData.awards.studentLeadership.organization}
-                        role={academicData.awards.studentLeadership.role}
-                        year="2024"
-                        onClick={() => {
-                          setSelectedAward({
-                            category: "Leadership",
-                            organization: academicData.awards.studentLeadership.organization,
-                            role: academicData.awards.studentLeadership.role
-                          });
-                          setCertificateOpen(true);
-                        }}
-                      />
-                    )}
+                    {academicData.awards.studentLeadership.organization !== "None" && academicData.awards.studentLeadership.organization && <EnvelopeAwardCard category="Leadership" categoryColor={{
+                  bg: 'rgba(168, 85, 247, 0.15)',
+                  text: '#9333ea'
+                }} organization={academicData.awards.studentLeadership.organization} role={academicData.awards.studentLeadership.role} year="2024" onClick={() => {
+                  setSelectedAward({
+                    category: "Leadership",
+                    organization: academicData.awards.studentLeadership.organization,
+                    role: academicData.awards.studentLeadership.role
+                  });
+                  setCertificateOpen(true);
+                }} />}
 
                     {/* Events */}
-                    {academicData.awards.events.organization !== "None" && academicData.awards.events.organization && (
-                      <EnvelopeAwardCard
-                        category="Events"
-                        categoryColor={{ bg: 'rgba(34, 197, 94, 0.15)', text: '#16a34a' }}
-                        organization={academicData.awards.events.organization}
-                        role={academicData.awards.events.role}
-                        year="2023"
-                        onClick={() => {
-                          setSelectedAward({
-                            category: "Events",
-                            organization: academicData.awards.events.organization,
-                            role: academicData.awards.events.role
-                          });
-                          setCertificateOpen(true);
-                        }}
-                      />
-                    )}
+                    {academicData.awards.events.organization !== "None" && academicData.awards.events.organization && <EnvelopeAwardCard category="Events" categoryColor={{
+                  bg: 'rgba(34, 197, 94, 0.15)',
+                  text: '#16a34a'
+                }} organization={academicData.awards.events.organization} role={academicData.awards.events.role} year="2023" onClick={() => {
+                  setSelectedAward({
+                    category: "Events",
+                    organization: academicData.awards.events.organization,
+                    role: academicData.awards.events.role
+                  });
+                  setCertificateOpen(true);
+                }} />}
 
                     {/* Achievements */}
-                    {academicData.awards.achievements.event !== "None" && academicData.awards.achievements.event && (
-                      <EnvelopeAwardCard
-                        category="Achievement"
-                        categoryColor={{ bg: 'rgba(236, 72, 153, 0.15)', text: '#db2777' }}
-                        organization={academicData.awards.achievements.event}
-                        role={academicData.awards.achievements.award}
-                        year="2023"
-                        onClick={() => {
-                          setSelectedAward({
-                            category: "Achievement",
-                            organization: academicData.awards.achievements.event,
-                            role: academicData.awards.achievements.award
-                          });
-                          setCertificateOpen(true);
-                        }}
-                      />
-                    )}
-                  </>
-                )}
+                    {academicData.awards.achievements.event !== "None" && academicData.awards.achievements.event && <EnvelopeAwardCard category="Achievement" categoryColor={{
+                  bg: 'rgba(236, 72, 153, 0.15)',
+                  text: '#db2777'
+                }} organization={academicData.awards.achievements.event} role={academicData.awards.achievements.award} year="2023" onClick={() => {
+                  setSelectedAward({
+                    category: "Achievement",
+                    organization: academicData.awards.achievements.event,
+                    role: academicData.awards.achievements.award
+                  });
+                  setCertificateOpen(true);
+                }} />}
+                  </>}
 
                 {/* Certificate Dialog */}
-                {selectedAward && (
-                  <CertificateDialog
-                    open={certificateOpen}
-                    onOpenChange={setCertificateOpen}
-                    category={selectedAward.category}
-                    organization={selectedAward.organization}
-                    role={selectedAward.role}
-                    studentName={students[0]?.name || "Student Name"}
-                  />
-                )}
+                {selectedAward && <CertificateDialog open={certificateOpen} onOpenChange={setCertificateOpen} category={selectedAward.category} organization={selectedAward.organization} role={selectedAward.role} studentName={students[0]?.name || "Student Name"} />}
               </TabsContent>
             </Tabs>
           </CardContent>
         </Card>
 
-      </section>
-      )}
+      </section>}
 
       {/* Report Card Dialog */}
-      <ReportCardDialog
-        open={reportCardDialogOpen}
-        onOpenChange={setReportCardDialogOpen}
-        studentName={students[0]?.name || "Emma Johnson"}
-        studentClass="Year 10 - International"
-        examType={examType === "midYear" ? "Mid-Year Exam" : "Year-End Exam"}
-        year={selectedYear}
-        subjects={academicData.subjects.map(s => ({
-          name: s.name,
-          score: getScore(s, selectedYear, examType),
-          grade: getScore(s, selectedYear, examType) !== null ? getGradeFromScore(getScore(s, selectedYear, examType)!) : "Pending",
-          teacherComment: s.teacherComment || "Good progress this term."
-        }))}
-        behavior={academicData.behavior}
-        homeroomComment={academicData.behaviorComments?.homeroomComment || "The student shows good potential and continues to make progress."}
-        attendance={{
-          present: attendanceData.currentMonth?.present || 85,
-          absent: attendanceData.currentMonth?.absent || 5,
-          late: attendanceData.currentMonth?.late || 3,
-          excused: 2,
-          totalDays: (attendanceData.currentMonth?.present || 85) + (attendanceData.currentMonth?.absent || 5) + 2,
-          percentage: Math.round((attendanceData.currentMonth?.present || 85) / ((attendanceData.currentMonth?.present || 85) + (attendanceData.currentMonth?.absent || 5)) * 100)
-        }}
-        achievements={academicData.coCurriculum?.map(c => `${c.activity}: ${c.achievement}`) || []}
-      />
+      <ReportCardDialog open={reportCardDialogOpen} onOpenChange={setReportCardDialogOpen} studentName={students[0]?.name || "Emma Johnson"} studentClass="Year 10 - International" examType={examType === "midYear" ? "Mid-Year Exam" : "Year-End Exam"} year={selectedYear} subjects={academicData.subjects.map(s => ({
+      name: s.name,
+      score: getScore(s, selectedYear, examType),
+      grade: getScore(s, selectedYear, examType) !== null ? getGradeFromScore(getScore(s, selectedYear, examType)!) : "Pending",
+      teacherComment: s.teacherComment || "Good progress this term."
+    }))} behavior={academicData.behavior} homeroomComment={academicData.behaviorComments?.homeroomComment || "The student shows good potential and continues to make progress."} attendance={{
+      present: attendanceData.currentMonth?.present || 85,
+      absent: attendanceData.currentMonth?.absent || 5,
+      late: attendanceData.currentMonth?.late || 3,
+      excused: 2,
+      totalDays: (attendanceData.currentMonth?.present || 85) + (attendanceData.currentMonth?.absent || 5) + 2,
+      percentage: Math.round((attendanceData.currentMonth?.present || 85) / ((attendanceData.currentMonth?.present || 85) + (attendanceData.currentMonth?.absent || 5)) * 100)
+    }} achievements={academicData.coCurriculum?.map(c => `${c.activity}: ${c.achievement}`) || []} />
 
       {/* Grade Analysis Section */}
-      {mainSection === "analysis" && (
-      <section className="px-4 py-4">
+      {mainSection === "analysis" && <section className="px-4 py-4">
         <Card className="bg-card border-border shadow-sm">
           <CardHeader className="pb-2">
             <CardTitle className="text-lg font-semibold flex items-center gap-2">
@@ -1111,7 +1127,7 @@ export default function AcademicPage() {
                   <div className="flex items-center gap-3">
                     <span className="text-sm font-medium text-muted-foreground shrink-0">Exam:</span>
                     <div className="flex gap-2 flex-1">
-                      <Select value={selectedYear} onValueChange={(v) => setSelectedYear(v as YearKey)}>
+                      <Select value={selectedYear} onValueChange={v => setSelectedYear(v as YearKey)}>
                         <SelectTrigger className="w-[100px]">
                           <SelectValue placeholder="Year" />
                         </SelectTrigger>
@@ -1122,7 +1138,7 @@ export default function AcademicPage() {
                           <SelectItem value="2022">2022</SelectItem>
                         </SelectContent>
                       </Select>
-                      <Select value={examType} onValueChange={(v) => setExamType(v as ExamType)}>
+                      <Select value={examType} onValueChange={v => setExamType(v as ExamType)}>
                         <SelectTrigger className="flex-1">
                           <SelectValue placeholder="Period" />
                         </SelectTrigger>
@@ -1139,38 +1155,23 @@ export default function AcademicPage() {
                     <div className="flex items-center justify-between">
                       <span className="text-sm font-medium text-foreground">Subjects:</span>
                       <div className="flex gap-2">
-                        <button
-                          className="text-sm font-medium text-foreground hover:text-primary transition-colors"
-                          onClick={() => setGradesSelectedSubjects(academicData.subjects.map(s => s.name))}
-                        >
+                        <button className="text-sm font-medium text-foreground hover:text-primary transition-colors" onClick={() => setGradesSelectedSubjects(academicData.subjects.map(s => s.name))}>
                           Select All
                         </button>
-                        <button
-                          className="text-sm font-medium text-foreground hover:text-primary transition-colors"
-                          onClick={() => setGradesSelectedSubjects([])}
-                        >
+                        <button className="text-sm font-medium text-foreground hover:text-primary transition-colors" onClick={() => setGradesSelectedSubjects([])}>
                           Clear
                         </button>
                       </div>
                     </div>
                     <div className="flex flex-wrap gap-1.5 p-2.5 rounded-lg border border-border bg-background items-center">
                       {/* Grouped subject pills with dropdowns */}
-                      {subjectGroups.map((group) => (
-                        <SubjectGroupPill
-                          key={group.baseName}
-                          baseName={group.baseName}
-                          shortName={group.shortName}
-                          variants={group.variants || []}
-                          selectedSubjects={gradesSelectedSubjects}
-                          onToggle={(subjectName) => {
-                            if (gradesSelectedSubjects.includes(subjectName)) {
-                              setGradesSelectedSubjects(prev => prev.filter(s => s !== subjectName));
-                            } else {
-                              setGradesSelectedSubjects(prev => [...prev, subjectName]);
-                            }
-                          }}
-                        />
-                      ))}
+                      {subjectGroups.map(group => <SubjectGroupPill key={group.baseName} baseName={group.baseName} shortName={group.shortName} variants={group.variants || []} selectedSubjects={gradesSelectedSubjects} onToggle={subjectName => {
+                      if (gradesSelectedSubjects.includes(subjectName)) {
+                        setGradesSelectedSubjects(prev => prev.filter(s => s !== subjectName));
+                      } else {
+                        setGradesSelectedSubjects(prev => [...prev, subjectName]);
+                      }
+                    }} />)}
                       {/* Subject count badge */}
                       <span className="ml-auto px-2 py-0.5 text-xs font-medium bg-primary/10 text-primary rounded-full">
                         {gradesSelectedSubjects.length}/{academicData.subjects.length}
@@ -1179,40 +1180,29 @@ export default function AcademicPage() {
                   </div>
 
                   {/* Report Button for Overview */}
-                  <Button
-                    size="sm"
-                    className="w-full gap-2 bg-emerald-600 hover:bg-emerald-700 text-white"
-                    onClick={() => setOverviewReportDialogOpen(true)}
-                  >
+                  <Button size="sm" className="w-full gap-2 bg-emerald-600 hover:bg-emerald-700 text-white" onClick={() => setOverviewReportDialogOpen(true)}>
                     <FileText className="h-4 w-4" />
                     Generate Report
                   </Button>
                 </div>
 
                 {/* Rising Stars */}
-                {risingStars.length > 0 && (
-                  <div className="space-y-2">
+                {risingStars.length > 0 && <div className="space-y-2">
                     <h4 className="text-sm font-medium text-foreground flex items-center gap-1.5">
-                      <TrendingUp className="h-4 w-4" style={{ color: '#d97706' }} /> Rising Stars
+                      <TrendingUp className="h-4 w-4" style={{
+                    color: '#d97706'
+                  }} /> Rising Stars
                     </h4>
                     <p className="text-[10px] text-muted-foreground -mt-1">Biggest improvements from previous exam</p>
                     <div className="grid grid-cols-3 gap-2">
-                      {risingStars.map((item) => (
-                        <div 
-                          key={item.subject.name} 
-                          className="relative flex flex-col items-center p-2.5 rounded-lg border overflow-hidden animate-glow"
-                          style={{ 
-                            background: 'linear-gradient(135deg, #fef3c7 0%, #fcd34d 50%, #f59e0b 100%)', 
-                            borderColor: 'rgba(251, 191, 36, 0.5)'
-                          }}
-                        >
+                      {risingStars.map(item => <div key={item.subject.name} className="relative flex flex-col items-center p-2.5 rounded-lg border overflow-hidden animate-glow" style={{
+                    background: 'linear-gradient(135deg, #fef3c7 0%, #fcd34d 50%, #f59e0b 100%)',
+                    borderColor: 'rgba(251, 191, 36, 0.5)'
+                  }}>
                           {/* Inner shine effect */}
-                          <div 
-                            className="absolute inset-0 pointer-events-none"
-                            style={{
-                              background: 'radial-gradient(ellipse at 30% 20%, rgba(255, 255, 255, 0.25) 0%, transparent 40%)',
-                            }}
-                          />
+                          <div className="absolute inset-0 pointer-events-none" style={{
+                      background: 'radial-gradient(ellipse at 30% 20%, rgba(255, 255, 255, 0.25) 0%, transparent 40%)'
+                    }} />
                           {/* Star pattern background */}
                           <div className="absolute inset-0 pointer-events-none">
                             <svg className="absolute -top-1 -left-1 w-8 h-8 opacity-40" fill="#fbbf24" stroke="#f59e0b" strokeWidth="0.5" viewBox="0 0 24 24">
@@ -1230,114 +1220,137 @@ export default function AcademicPage() {
                           </div>
                           <span className="text-xs font-medium text-foreground text-center relative z-10">{shortenSubjectName(item.subject.name)}</span>
                           <div className="flex items-center gap-1 mt-1 relative z-10">
-                            <ArrowUp className="h-3 w-3" style={{ color: '#d97706' }} />
-                            <span className="text-sm font-bold" style={{ color: '#d97706' }}>+{item.improvement}%</span>
+                            <ArrowUp className="h-3 w-3" style={{
+                        color: '#d97706'
+                      }} />
+                            <span className="text-sm font-bold" style={{
+                        color: '#d97706'
+                      }}>+{item.improvement}%</span>
                           </div>
                           <div className="flex items-center gap-1 mt-1 relative z-10">
-                            <span 
-                              className="text-[10px] font-medium px-2 py-0.5 rounded-full"
-                              style={{ backgroundColor: '#fef3c7', color: '#92400e' }}
-                            >
+                            <span className="text-[10px] font-medium px-2 py-0.5 rounded-full" style={{
+                        backgroundColor: '#fef3c7',
+                        color: '#92400e'
+                      }}>
                               {item.prev}%
                             </span>
                             <span className="text-[10px] text-muted-foreground">→</span>
-                            <span 
-                              className="text-[10px] font-semibold px-2 py-0.5 rounded-full"
-                              style={{ backgroundColor: '#f59e0b', color: '#ffffff' }}
-                            >
+                            <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full" style={{
+                        backgroundColor: '#f59e0b',
+                        color: '#ffffff'
+                      }}>
                               {item.current}%
                             </span>
                           </div>
-                        </div>
-                      ))}
+                        </div>)}
                     </div>
-                  </div>
-                )}
+                  </div>}
 
                 {/* At-Risk Subjects */}
-                {fallingBehind.length > 0 && (
-                  <div className="space-y-2">
+                {fallingBehind.length > 0 && <div className="space-y-2">
                     <h4 className="text-sm font-medium text-foreground flex items-center gap-1.5">
-                      <TrendingDown className="h-4 w-4" style={{ color: '#dc2626' }} /> At-Risk Subjects
+                      <TrendingDown className="h-4 w-4" style={{
+                    color: '#dc2626'
+                  }} /> At-Risk Subjects
                     </h4>
                     <p className="text-[10px] text-muted-foreground -mt-1">Subjects that need extra attention</p>
                     <div className="grid grid-cols-3 gap-2">
-                      {fallingBehind.slice(0, 3).map((item) => (
-                        <div 
-                          key={item.subject.name} 
-                          className="relative flex flex-col items-center p-2.5 rounded-lg border overflow-hidden"
-                          style={{ 
-                            background: 'linear-gradient(135deg, #fee2e2 0%, #fecaca 50%, #f87171 100%)', 
-                            borderColor: 'rgba(248, 113, 113, 0.5)'
-                          }}
-                        >
+                      {fallingBehind.slice(0, 3).map(item => <div key={item.subject.name} className="relative flex flex-col items-center p-2.5 rounded-lg border overflow-hidden" style={{
+                    background: 'linear-gradient(135deg, #fee2e2 0%, #fecaca 50%, #f87171 100%)',
+                    borderColor: 'rgba(248, 113, 113, 0.5)'
+                  }}>
                           {/* Inner shine effect */}
-                          <div 
-                            className="absolute inset-0 pointer-events-none"
-                            style={{
-                              background: 'radial-gradient(ellipse at 30% 20%, rgba(255, 255, 255, 0.2) 0%, transparent 40%)',
-                            }}
-                          />
+                          <div className="absolute inset-0 pointer-events-none" style={{
+                      background: 'radial-gradient(ellipse at 30% 20%, rgba(255, 255, 255, 0.2) 0%, transparent 40%)'
+                    }} />
                           {/* Warning pattern background */}
                           <div className="absolute inset-0 pointer-events-none">
-                            <AlertTriangle className="absolute top-1 -left-1 w-7 h-7 opacity-20" style={{ color: '#dc2626' }} />
-                            <AlertTriangle className="absolute bottom-1 -right-1 w-6 h-6 opacity-15" style={{ color: '#ef4444' }} />
+                            <AlertTriangle className="absolute top-1 -left-1 w-7 h-7 opacity-20" style={{
+                        color: '#dc2626'
+                      }} />
+                            <AlertTriangle className="absolute bottom-1 -right-1 w-6 h-6 opacity-15" style={{
+                        color: '#ef4444'
+                      }} />
                           </div>
                           <span className="text-xs font-medium text-foreground text-center relative z-10">{shortenSubjectName(item.subject.name)}</span>
                           <div className="flex items-center gap-1 mt-1 relative z-10">
-                            <ArrowDown className="h-3 w-3" style={{ color: '#dc2626' }} />
-                            <span className="text-sm font-bold" style={{ color: '#dc2626' }}>-{item.decline}%</span>
+                            <ArrowDown className="h-3 w-3" style={{
+                        color: '#dc2626'
+                      }} />
+                            <span className="text-sm font-bold" style={{
+                        color: '#dc2626'
+                      }}>-{item.decline}%</span>
                           </div>
                           <div className="flex items-center gap-1 mt-1 relative z-10">
-                            <span 
-                              className="text-[10px] font-medium px-2 py-0.5 rounded-full"
-                              style={{ backgroundColor: '#fef2f2', color: '#991b1b' }}
-                            >
+                            <span className="text-[10px] font-medium px-2 py-0.5 rounded-full" style={{
+                        backgroundColor: '#fef2f2',
+                        color: '#991b1b'
+                      }}>
                               {item.prev}%
                             </span>
                             <span className="text-[10px] text-muted-foreground">→</span>
-                            <span 
-                              className="text-[10px] font-semibold px-2 py-0.5 rounded-full"
-                              style={{ backgroundColor: '#ef4444', color: '#ffffff' }}
-                            >
+                            <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full" style={{
+                        backgroundColor: '#ef4444',
+                        color: '#ffffff'
+                      }}>
                               {item.current}%
                             </span>
                           </div>
-                        </div>
-                      ))}
+                        </div>)}
                     </div>
-                  </div>
-                )}
+                  </div>}
 
                 <div className="space-y-2">
                   <h4 className="text-sm font-medium text-foreground">Grade Distribution</h4>
                   <div className="grid grid-cols-6 gap-2">
                     {(() => {
-                      const totalSubjects = academicData.subjects.length;
-                      const gradeCardColors: Record<string, { bg: string; text: string }> = {
-                        "A*": { bg: 'rgba(5, 150, 105, 0.15)', text: '#059669' },
-                        "A": { bg: 'rgba(34, 197, 94, 0.12)', text: '#22c55e' },
-                        "B": { bg: 'rgba(59, 130, 246, 0.12)', text: '#3b82f6' },
-                        "C": { bg: 'rgba(234, 179, 8, 0.12)', text: '#ca8a04' },
-                        "D": { bg: 'rgba(249, 115, 22, 0.12)', text: '#ea580c' },
-                        "E": { bg: 'rgba(239, 68, 68, 0.12)', text: '#dc2626' },
+                    const totalSubjects = academicData.subjects.length;
+                    const gradeCardColors: Record<string, {
+                      bg: string;
+                      text: string;
+                    }> = {
+                      "A*": {
+                        bg: 'rgba(5, 150, 105, 0.15)',
+                        text: '#059669'
+                      },
+                      "A": {
+                        bg: 'rgba(34, 197, 94, 0.12)',
+                        text: '#22c55e'
+                      },
+                      "B": {
+                        bg: 'rgba(59, 130, 246, 0.12)',
+                        text: '#3b82f6'
+                      },
+                      "C": {
+                        bg: 'rgba(234, 179, 8, 0.12)',
+                        text: '#ca8a04'
+                      },
+                      "D": {
+                        bg: 'rgba(249, 115, 22, 0.12)',
+                        text: '#ea580c'
+                      },
+                      "E": {
+                        bg: 'rgba(239, 68, 68, 0.12)',
+                        text: '#dc2626'
+                      }
+                    };
+                    return gradeDistribution.map(g => {
+                      const percentage = totalSubjects > 0 ? Math.round(g.count / totalSubjects * 100) : 0;
+                      const colors = gradeCardColors[g.grade] || {
+                        bg: 'rgba(156, 163, 175, 0.12)',
+                        text: '#6b7280'
                       };
-                      return gradeDistribution.map((g) => {
-                        const percentage = totalSubjects > 0 ? Math.round((g.count / totalSubjects) * 100) : 0;
-                        const colors = gradeCardColors[g.grade] || { bg: 'rgba(156, 163, 175, 0.12)', text: '#6b7280' };
-                        return (
-                          <div 
-                            key={g.grade}
-                            className="flex flex-col items-center text-center p-2 rounded-lg"
-                            style={{ backgroundColor: colors.bg }}
-                          >
-                            <span className="text-xs font-semibold" style={{ color: colors.text }}>{g.grade}</span>
+                      return <div key={g.grade} className="flex flex-col items-center text-center p-2 rounded-lg" style={{
+                        backgroundColor: colors.bg
+                      }}>
+                            <span className="text-xs font-semibold" style={{
+                          color: colors.text
+                        }}>{g.grade}</span>
                             <span className="text-xl font-bold text-foreground">{g.count}</span>
                             <span className="text-[10px] text-muted-foreground">{percentage}%</span>
-                          </div>
-                        );
-                      });
-                    })()}
+                          </div>;
+                    });
+                  })()}
                   </div>
                 </div>
 
@@ -1345,10 +1358,9 @@ export default function AcademicPage() {
                   <h4 className="text-sm font-medium text-foreground flex items-center gap-2">
                     Subject Performance
                     <Badge variant="outline" className="text-[10px] px-1.5 py-0">
-                      <span
-                        className="w-2 h-2 rounded-full mr-1"
-                        style={{ backgroundColor: "hsl(var(--foreground))" }}
-                      />
+                      <span className="w-2 h-2 rounded-full mr-1" style={{
+                      backgroundColor: "hsl(var(--foreground))"
+                    }} />
                       Goal
                     </Badge>
                   </h4>
@@ -1356,32 +1368,24 @@ export default function AcademicPage() {
                     <ResponsiveContainer width="100%" height="100%">
                       <BarChart data={subjectPerformance} layout="vertical">
                         <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" strokeOpacity={0.3} />
-                        <XAxis type="number" domain={[0, 100]} tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }} />
-                        <YAxis type="category" dataKey="name" tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }} width={70} />
-                        <Tooltip 
-                          contentStyle={{ backgroundColor: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: "8px" }}
-                          formatter={(value: number, name: string) => [
-                            `${value}%`, 
-                            name === "score" ? "Score" : name === "goal" ? "Goal" : name
-                          ]}
-                        />
+                        <XAxis type="number" domain={[0, 100]} tick={{
+                        fontSize: 10,
+                        fill: "hsl(var(--muted-foreground))"
+                      }} />
+                        <YAxis type="category" dataKey="name" tick={{
+                        fontSize: 10,
+                        fill: "hsl(var(--muted-foreground))"
+                      }} width={70} />
+                        <Tooltip contentStyle={{
+                        backgroundColor: "hsl(var(--card))",
+                        border: "1px solid hsl(var(--border))",
+                        borderRadius: "8px"
+                      }} formatter={(value: number, name: string) => [`${value}%`, name === "score" ? "Score" : name === "goal" ? "Goal" : name]} />
                         <Bar dataKey="score" radius={[0, 4, 4, 0]}>
-                          {subjectPerformance.map((entry, index) => (
-                            <Cell key={index} fill={lineColors[index % lineColors.length]} />
-                          ))}
+                          {subjectPerformance.map((entry, index) => <Cell key={index} fill={lineColors[index % lineColors.length]} />)}
                         </Bar>
 
-                        {subjectPerformance.map((entry) => (
-                          <ReferenceDot
-                            key={`goal-${entry.name}`}
-                            x={entry.goal}
-                            y={entry.name}
-                            r={4}
-                            fill="hsl(var(--foreground))"
-                            stroke="hsl(var(--background))"
-                            strokeWidth={1}
-                          />
-                        ))}
+                        {subjectPerformance.map(entry => <ReferenceDot key={`goal-${entry.name}`} x={entry.goal} y={entry.name} r={4} fill="hsl(var(--foreground))" stroke="hsl(var(--background))" strokeWidth={1} />)}
                       </BarChart>
                     </ResponsiveContainer>
                   </div>
@@ -1389,73 +1393,64 @@ export default function AcademicPage() {
 
                 {/* Stats Cards Grid - 6 cards */}
                 <div className="grid grid-cols-3 gap-2">
-                  {[
-                    { 
-                      icon: BookOpen, 
-                      label: "Average", 
-                      value: `${currentAverage}%`,
-                      subtext: currentAverage >= 70 ? "Above Average" : currentAverage >= 50 ? "Average" : "Below Average",
-                      iconColor: "#3b82f6",
-                      bgColor: "rgba(59, 130, 246, 0.08)"
-                    },
-                    { 
-                      icon: Award, 
-                      label: "Best Subject", 
-                      value: shortenSubjectName(bestSubjectInfo.name),
-                      subtext: `${bestSubjectInfo.score}%`,
-                      iconColor: "#f59e0b",
-                      bgColor: "rgba(245, 158, 11, 0.08)"
-                    },
-                    { 
-                      icon: TrendingUp, 
-                      label: "Improvement", 
-                      value: improvementStats.text,
-                      subtext: improvementStats.points >= 0 ? "Improved" : "Declined",
-                      iconColor: improvementStats.points >= 0 ? "#10b981" : "#ef4444",
-                      bgColor: improvementStats.points >= 0 ? "rgba(16, 185, 129, 0.08)" : "rgba(239, 68, 68, 0.08)"
-                    },
-                    { 
-                      icon: Calendar, 
-                      label: "Attendance", 
-                      value: `${attendanceStats.attendanceRate}%`,
-                      subtext: "This Term",
-                      iconColor: "#8b5cf6",
-                      bgColor: "rgba(139, 92, 246, 0.08)"
-                    },
-                    { 
-                      icon: Target, 
-                      label: "Passing", 
-                      value: `${passingStats.passingCount}/${passingStats.totalSubjects}`,
-                      subtext: `${passingStats.passingPercentage}%`,
-                      iconColor: "#06b6d4",
-                      bgColor: "rgba(6, 182, 212, 0.08)"
-                    },
-                    { 
-                      icon: AlertTriangle, 
-                      label: "Needs Focus", 
-                      value: shortenSubjectName(weakestSubjectInfo.name),
-                      subtext: `${weakestSubjectInfo.score}%`,
-                      iconColor: "#ef4444",
-                      bgColor: "rgba(239, 68, 68, 0.08)"
-                    },
-                  ].map((stat, index) => {
-                    // Determine text size based on value length
-                    const valueLength = String(stat.value).length;
-                    const textSizeClass = valueLength > 12 ? "text-xs" : valueLength > 8 ? "text-sm" : "text-lg";
-                    
-                    return (
-                      <div 
-                        key={index} 
-                        className="flex flex-col items-center justify-center p-3 rounded-xl border min-h-[100px]"
-                        style={{ backgroundColor: stat.bgColor, borderColor: 'transparent' }}
-                      >
-                        <stat.icon className="h-5 w-5 mb-1" style={{ color: stat.iconColor }} />
+                  {[{
+                  icon: BookOpen,
+                  label: "Average",
+                  value: `${currentAverage}%`,
+                  subtext: currentAverage >= 70 ? "Above Average" : currentAverage >= 50 ? "Average" : "Below Average",
+                  iconColor: "#3b82f6",
+                  bgColor: "rgba(59, 130, 246, 0.08)"
+                }, {
+                  icon: Award,
+                  label: "Best Subject",
+                  value: shortenSubjectName(bestSubjectInfo.name),
+                  subtext: `${bestSubjectInfo.score}%`,
+                  iconColor: "#f59e0b",
+                  bgColor: "rgba(245, 158, 11, 0.08)"
+                }, {
+                  icon: TrendingUp,
+                  label: "Improvement",
+                  value: improvementStats.text,
+                  subtext: improvementStats.points >= 0 ? "Improved" : "Declined",
+                  iconColor: improvementStats.points >= 0 ? "#10b981" : "#ef4444",
+                  bgColor: improvementStats.points >= 0 ? "rgba(16, 185, 129, 0.08)" : "rgba(239, 68, 68, 0.08)"
+                }, {
+                  icon: Calendar,
+                  label: "Attendance",
+                  value: `${attendanceStats.attendanceRate}%`,
+                  subtext: "This Term",
+                  iconColor: "#8b5cf6",
+                  bgColor: "rgba(139, 92, 246, 0.08)"
+                }, {
+                  icon: Target,
+                  label: "Passing",
+                  value: `${passingStats.passingCount}/${passingStats.totalSubjects}`,
+                  subtext: `${passingStats.passingPercentage}%`,
+                  iconColor: "#06b6d4",
+                  bgColor: "rgba(6, 182, 212, 0.08)"
+                }, {
+                  icon: AlertTriangle,
+                  label: "Needs Focus",
+                  value: shortenSubjectName(weakestSubjectInfo.name),
+                  subtext: `${weakestSubjectInfo.score}%`,
+                  iconColor: "#ef4444",
+                  bgColor: "rgba(239, 68, 68, 0.08)"
+                }].map((stat, index) => {
+                  // Determine text size based on value length
+                  const valueLength = String(stat.value).length;
+                  const textSizeClass = valueLength > 12 ? "text-xs" : valueLength > 8 ? "text-sm" : "text-lg";
+                  return <div key={index} className="flex flex-col items-center justify-center p-3 rounded-xl border min-h-[100px]" style={{
+                    backgroundColor: stat.bgColor,
+                    borderColor: 'transparent'
+                  }}>
+                        <stat.icon className="h-5 w-5 mb-1" style={{
+                      color: stat.iconColor
+                    }} />
                         <span className={`${textSizeClass} font-bold text-foreground text-center leading-tight line-clamp-2`}>{stat.value}</span>
                         <span className="text-[10px] text-muted-foreground mt-0.5">{stat.label}</span>
                         <span className="text-[9px] text-muted-foreground/70">{stat.subtext}</span>
-                      </div>
-                    );
-                  })}
+                      </div>;
+                })}
                 </div>
 
                 {/* Top 3 Performers & Bottom 3 to Focus */}
@@ -1463,50 +1458,64 @@ export default function AcademicPage() {
                   {/* Top 3 */}
                   <div className="space-y-2">
                     <h4 className="text-sm font-medium text-foreground flex items-center gap-1.5">
-                      <Trophy className="h-4 w-4" style={{ color: '#22c55e' }} /> Top Performers
+                      <Trophy className="h-4 w-4" style={{
+                      color: '#22c55e'
+                    }} /> Top Performers
                     </h4>
                     <div className="space-y-2">
                       {top3.map((s, index) => {
-                        const score = getScore(s, selectedYear, examType);
-                        return (
-                          <div key={s.name} className="flex items-center gap-2 p-2.5 rounded-lg border min-h-[60px]" style={{ backgroundColor: 'rgba(34, 197, 94, 0.1)', borderColor: 'rgba(34, 197, 94, 0.2)' }}>
-                            <span className="w-6 h-6 shrink-0 rounded-full flex items-center justify-center text-xs font-bold" style={{ backgroundColor: 'rgba(34, 197, 94, 0.2)', color: '#16a34a' }}>
+                      const score = getScore(s, selectedYear, examType);
+                      return <div key={s.name} className="flex items-center gap-2 p-2.5 rounded-lg border min-h-[60px]" style={{
+                        backgroundColor: 'rgba(34, 197, 94, 0.1)',
+                        borderColor: 'rgba(34, 197, 94, 0.2)'
+                      }}>
+                            <span className="w-6 h-6 shrink-0 rounded-full flex items-center justify-center text-xs font-bold" style={{
+                          backgroundColor: 'rgba(34, 197, 94, 0.2)',
+                          color: '#16a34a'
+                        }}>
                               {index + 1}
                             </span>
                             <div className="flex flex-col min-w-0 flex-1">
                               <span className="text-sm font-medium text-foreground leading-tight">{shortenSubjectName(s.name)}</span>
-                              <Badge className="text-xs font-semibold w-fit mt-1 text-white" style={{ backgroundColor: '#22c55e' }}>{score}%</Badge>
+                              <Badge className="text-xs font-semibold w-fit mt-1 text-white" style={{
+                            backgroundColor: '#22c55e'
+                          }}>{score}%</Badge>
                             </div>
-                          </div>
-                        );
-                      })}
+                          </div>;
+                    })}
                     </div>
                   </div>
 
                   {/* Needs Attention - only subjects below 50% */}
-                  {needsAttention.length > 0 && (
-                    <div className="space-y-2">
+                  {needsAttention.length > 0 && <div className="space-y-2">
                       <h4 className="text-sm font-medium text-foreground flex items-center gap-1.5">
-                        <AlertTriangle className="h-4 w-4" style={{ color: '#ef4444' }} /> Needs Attention
+                        <AlertTriangle className="h-4 w-4" style={{
+                      color: '#ef4444'
+                    }} /> Needs Attention
                       </h4>
                       <div className="space-y-2">
                         {needsAttention.map((s, index) => {
-                          const score = getScore(s, selectedYear, examType);
-                          return (
-                            <div key={s.name} className="flex items-center gap-2 p-2.5 rounded-lg border min-h-[60px]" style={{ backgroundColor: 'rgba(254, 202, 202, 0.3)', borderColor: 'rgba(248, 113, 113, 0.3)' }}>
-                              <span className="w-6 h-6 shrink-0 rounded-full flex items-center justify-center text-xs font-bold" style={{ backgroundColor: 'rgba(254, 202, 202, 0.5)', color: '#dc2626' }}>
+                      const score = getScore(s, selectedYear, examType);
+                      return <div key={s.name} className="flex items-center gap-2 p-2.5 rounded-lg border min-h-[60px]" style={{
+                        backgroundColor: 'rgba(254, 202, 202, 0.3)',
+                        borderColor: 'rgba(248, 113, 113, 0.3)'
+                      }}>
+                              <span className="w-6 h-6 shrink-0 rounded-full flex items-center justify-center text-xs font-bold" style={{
+                          backgroundColor: 'rgba(254, 202, 202, 0.5)',
+                          color: '#dc2626'
+                        }}>
                                 {index + 1}
                               </span>
                               <div className="flex flex-col min-w-0 flex-1">
                                 <span className="text-sm font-medium text-foreground leading-tight">{shortenSubjectName(s.name)}</span>
-                                <Badge className="text-xs font-semibold w-fit mt-1 text-white" style={{ backgroundColor: '#f87171' }}>{score}%</Badge>
+                                <Badge className="text-xs font-semibold w-fit mt-1 text-white" style={{
+                            backgroundColor: '#f87171'
+                          }}>{score}%</Badge>
                               </div>
-                            </div>
-                          );
-                        })}
+                            </div>;
+                    })}
                       </div>
-                    </div>
-                  )}
+                    </div>}
                 </div>
 
               </TabsContent>
@@ -1524,43 +1533,39 @@ export default function AcademicPage() {
                         <span className="text-3xl font-bold text-foreground">
                           {trendDirection.currentValue ?? currentAverage}%
                         </span>
-                        {trendDirection.direction !== "stable" && (
-                          <span className={`flex items-center text-sm font-semibold ${
-                            trendDirection.direction === "up" ? "text-green-500" : "text-red-500"
-                          }`}>
-                            {trendDirection.direction === "up" ? (
-                              <TrendingUp className="h-4 w-4 mr-0.5" />
-                            ) : (
-                              <TrendingDown className="h-4 w-4 mr-0.5" />
-                            )}
+                        {trendDirection.direction !== "stable" && <span className={`flex items-center text-sm font-semibold ${trendDirection.direction === "up" ? "text-green-500" : "text-red-500"}`}>
+                            {trendDirection.direction === "up" ? <TrendingUp className="h-4 w-4 mr-0.5" /> : <TrendingDown className="h-4 w-4 mr-0.5" />}
                             {trendDirection.direction === "up" ? "+" : "-"}{trendDirection.change}%
-                          </span>
-                        )}
+                          </span>}
                       </div>
                     </div>
                   </div>
                   {/* Period Toggle */}
                   <div className="flex gap-1 bg-muted/50 p-1 rounded-lg w-fit">
-                    {([
-                      { key: "1year", label: "1Y" },
-                      { key: "2years", label: "2Y" },
-                      { key: "3years", label: "3Y" },
-                      { key: "4years", label: "4Y" },
-                      { key: "5years", label: "5Y" },
-                      { key: "6years", label: "6Y" },
-                    ] as const).map(({ key, label }) => (
-                      <button
-                        key={key}
-                        onClick={() => setTrendPeriod(key)}
-                        className={`px-3 py-1.5 text-xs font-medium rounded-md transition-all whitespace-nowrap ${
-                          trendPeriod === key
-                            ? "bg-primary text-primary-foreground shadow-sm"
-                            : "text-muted-foreground hover:text-foreground"
-                        }`}
-                      >
+                    {([{
+                    key: "1year",
+                    label: "1Y"
+                  }, {
+                    key: "2years",
+                    label: "2Y"
+                  }, {
+                    key: "3years",
+                    label: "3Y"
+                  }, {
+                    key: "4years",
+                    label: "4Y"
+                  }, {
+                    key: "5years",
+                    label: "5Y"
+                  }, {
+                    key: "6years",
+                    label: "6Y"
+                  }] as const).map(({
+                    key,
+                    label
+                  }) => <button key={key} onClick={() => setTrendPeriod(key)} className={`px-3 py-1.5 text-xs font-medium rounded-md transition-all whitespace-nowrap ${trendPeriod === key ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}>
                         {label}
-                      </button>
-                    ))}
+                      </button>)}
                   </div>
                 </div>
 
@@ -1569,38 +1574,23 @@ export default function AcademicPage() {
                   <div className="flex items-center justify-between">
                     <span className="text-sm font-medium text-foreground">Subjects:</span>
                     <div className="flex gap-2">
-                      <button
-                        className="text-sm font-medium text-foreground hover:text-primary transition-colors"
-                        onClick={() => setTrendsSelectedSubjects(academicData.subjects.map(s => s.name))}
-                      >
+                      <button className="text-sm font-medium text-foreground hover:text-primary transition-colors" onClick={() => setTrendsSelectedSubjects(academicData.subjects.map(s => s.name))}>
                         Select All
                       </button>
-                      <button
-                        className="text-sm font-medium text-foreground hover:text-primary transition-colors"
-                        onClick={() => setTrendsSelectedSubjects([])}
-                      >
+                      <button className="text-sm font-medium text-foreground hover:text-primary transition-colors" onClick={() => setTrendsSelectedSubjects([])}>
                         Clear
                       </button>
                     </div>
                   </div>
                   <div className="flex flex-wrap gap-1.5 p-2.5 rounded-lg border border-border bg-background items-center">
                     {/* Grouped subject pills with mobile-friendly drawers */}
-                    {subjectGroups.map((group) => (
-                      <SubjectGroupPill
-                        key={group.baseName}
-                        baseName={group.baseName}
-                        shortName={group.shortName}
-                        variants={group.variants || []}
-                        selectedSubjects={trendsSelectedSubjects}
-                        onToggle={(subjectName) => {
-                          if (trendsSelectedSubjects.includes(subjectName)) {
-                            setTrendsSelectedSubjects(prev => prev.filter(s => s !== subjectName));
-                          } else {
-                            setTrendsSelectedSubjects(prev => [...prev, subjectName]);
-                          }
-                        }}
-                      />
-                    ))}
+                    {subjectGroups.map(group => <SubjectGroupPill key={group.baseName} baseName={group.baseName} shortName={group.shortName} variants={group.variants || []} selectedSubjects={trendsSelectedSubjects} onToggle={subjectName => {
+                    if (trendsSelectedSubjects.includes(subjectName)) {
+                      setTrendsSelectedSubjects(prev => prev.filter(s => s !== subjectName));
+                    } else {
+                      setTrendsSelectedSubjects(prev => [...prev, subjectName]);
+                    }
+                  }} />)}
                     {/* Subject count badge */}
                     <span className="ml-auto px-2 py-0.5 text-xs font-medium bg-primary/10 text-primary rounded-full">
                       {trendsSelectedSubjects.length}/{academicData.subjects.length}
@@ -1609,11 +1599,7 @@ export default function AcademicPage() {
                 </div>
 
                 {/* Report Button for Trends */}
-                <Button
-                  size="sm"
-                  className="w-full gap-2 bg-emerald-600 hover:bg-emerald-700 text-white"
-                  onClick={() => setTrendsReportDialogOpen(true)}
-                >
+                <Button size="sm" className="w-full gap-2 bg-emerald-600 hover:bg-emerald-700 text-white" onClick={() => setTrendsReportDialogOpen(true)}>
                   <FileText className="h-4 w-4" />
                   Generate Report
                 </Button>
@@ -1623,39 +1609,32 @@ export default function AcademicPage() {
                   <div className="flex items-center justify-between">
                     <p className="text-[10px] text-muted-foreground">← Swipe • Pinch to zoom →</p>
                     <div className="flex items-center gap-2">
-                      {chartZoom !== 1 && (
-                        <button 
-                          onClick={resetZoom}
-                          className="text-[10px] text-primary underline"
-                        >
+                      {chartZoom !== 1 && <button onClick={resetZoom} className="text-[10px] text-primary underline">
                           Reset zoom
-                        </button>
-                      )}
+                        </button>}
                       <p className="text-[10px] text-muted-foreground">
                         {chartZoom !== 1 ? `${Math.round(chartZoom * 100)}%` : `${trendData.length} periods`}
                       </p>
                     </div>
                   </div>
-                  <div 
-                    ref={chartContainerRef}
-                    className="h-64 overflow-x-auto overflow-y-hidden scrollbar-thin scrollbar-thumb-muted scrollbar-track-transparent"
-                    style={{
-                      WebkitOverflowScrolling: 'touch',
-                      scrollBehavior: 'smooth',
-                      touchAction: 'pan-x pinch-zoom',
-                    }}
-                    onTouchStart={handleTouchStart}
-                    onTouchMove={handleTouchMove}
-                    onTouchEnd={handleTouchEnd}
-                  >
-                    <div style={{ 
-                      width: Math.max(100, (trendData.length / 4) * 100 * chartZoom) + '%', 
-                      minWidth: '100%', 
-                      height: '100%',
-                      transition: 'width 0.1s ease-out'
-                    }}>
+                  <div ref={chartContainerRef} className="h-64 overflow-x-auto overflow-y-hidden scrollbar-thin scrollbar-thumb-muted scrollbar-track-transparent" style={{
+                  WebkitOverflowScrolling: 'touch',
+                  scrollBehavior: 'smooth',
+                  touchAction: 'pan-x pinch-zoom'
+                }} onTouchStart={handleTouchStart} onTouchMove={handleTouchMove} onTouchEnd={handleTouchEnd}>
+                    <div style={{
+                    width: Math.max(100, trendData.length / 4 * 100 * chartZoom) + '%',
+                    minWidth: '100%',
+                    height: '100%',
+                    transition: 'width 0.1s ease-out'
+                  }}>
                       <ResponsiveContainer width="100%" height="100%">
-                        <AreaChart data={trendData} margin={{ top: 10, right: 20, left: 0, bottom: 20 }}>
+                        <AreaChart data={trendData} margin={{
+                        top: 10,
+                        right: 20,
+                        left: 0,
+                        bottom: 20
+                      }}>
                           <defs>
                             <linearGradient id="gradientGreen" x1="0" y1="0" x2="0" y2="1">
                               <stop offset="0%" stopColor="#22c55e" stopOpacity={0.4} />
@@ -1670,115 +1649,70 @@ export default function AcademicPage() {
                               <stop offset="100%" stopColor="#3b82f6" stopOpacity={0.05} />
                             </linearGradient>
                           </defs>
-                          <CartesianGrid 
-                            strokeDasharray="3 3" 
-                            stroke="hsl(var(--border))" 
-                            strokeOpacity={0.2}
-                            vertical={false}
-                          />
-                          <XAxis 
-                            dataKey="period" 
-                            axisLine={false}
-                            tickLine={false}
-                            interval={0}
-                            height={40}
-                            tick={({ x, y, payload }) => {
-                              const parts = payload.value.split(' ');
-                              return (
-                                <g transform={`translate(${x},${y})`}>
-                                  <text 
-                                    x={0} 
-                                    y={0} 
-                                    dy={12} 
-                                    textAnchor="middle" 
-                                    fontSize={10}
-                                    fill="hsl(var(--muted-foreground))"
-                                  >
+                          <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" strokeOpacity={0.2} vertical={false} />
+                          <XAxis dataKey="period" axisLine={false} tickLine={false} interval={0} height={40} tick={({
+                          x,
+                          y,
+                          payload
+                        }) => {
+                          const parts = payload.value.split(' ');
+                          return <g transform={`translate(${x},${y})`}>
+                                  <text x={0} y={0} dy={12} textAnchor="middle" fontSize={10} fill="hsl(var(--muted-foreground))">
                                     {parts[0]}
                                   </text>
-                                  <text 
-                                    x={0} 
-                                    y={0} 
-                                    dy={24} 
-                                    textAnchor="middle" 
-                                    fontSize={9}
-                                    fill="hsl(var(--muted-foreground))"
-                                    opacity={0.7}
-                                  >
+                                  <text x={0} y={0} dy={24} textAnchor="middle" fontSize={9} fill="hsl(var(--muted-foreground))" opacity={0.7}>
                                     {parts[1]}
                                   </text>
-                                </g>
-                              );
-                            }}
-                          />
-                          <YAxis 
-                            domain={[30, 100]}
-                            tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }}
-                            axisLine={false}
-                            tickLine={false}
-                            width={35}
-                          />
-                          <Tooltip 
-                            contentStyle={{ 
-                              backgroundColor: "hsl(var(--card))", 
-                              border: "1px solid hsl(var(--border))", 
-                              borderRadius: "12px",
-                              boxShadow: "0 4px 12px rgba(0,0,0,0.1)"
-                            }}
-                            labelStyle={{ fontWeight: 600, marginBottom: 4 }}
-                          />
-                          <ReferenceLine 
-                            y={50} 
-                            stroke="#f59e0b" 
-                            strokeDasharray="5 5" 
-                            strokeOpacity={0.6}
-                            label={{ value: "Pass", fontSize: 9, fill: "#f59e0b", position: "insideTopLeft" }}
-                          />
-                          <ReferenceLine 
-                            y={80} 
-                            stroke="#22c55e" 
-                            strokeDasharray="5 5" 
-                            strokeOpacity={0.6}
-                            label={{ value: "A", fontSize: 9, fill: "#22c55e", position: "insideTopLeft" }}
-                          />
-                          <ReferenceLine 
-                            y={trendGoalValue} 
-                            stroke="hsl(var(--foreground))" 
-                            strokeDasharray="4 4" 
-                            strokeWidth={2}
-                            label={{ value: "Goal", fontSize: 9, fill: "hsl(var(--foreground))", position: "insideTopLeft" }}
-                          />
-                          {subjectFilter === "all" ? (
-                            <Area
-                              type="monotone"
-                              dataKey="Average"
-                              stroke={trendDirection.direction === "up" ? "#22c55e" : trendDirection.direction === "down" ? "#ef4444" : "#3b82f6"}
-                              strokeWidth={2.5}
-                              fill={trendDirection.direction === "up" ? "url(#gradientGreen)" : trendDirection.direction === "down" ? "url(#gradientRed)" : "url(#gradientBlue)"}
-                              dot={{ 
-                                fill: trendDirection.direction === "up" ? "#22c55e" : trendDirection.direction === "down" ? "#ef4444" : "#3b82f6", 
-                                strokeWidth: 0, 
-                                r: 5 
-                              }}
-                              activeDot={{ r: 7, strokeWidth: 2, stroke: "#fff" }}
-                              connectNulls
-                            />
-                          ) : (
-                            <Area
-                              type="monotone"
-                              dataKey={subjectFilter}
-                              stroke={trendDirection.direction === "up" ? "#22c55e" : trendDirection.direction === "down" ? "#ef4444" : "#3b82f6"}
-                              strokeWidth={2.5}
-                              fill={trendDirection.direction === "up" ? "url(#gradientGreen)" : trendDirection.direction === "down" ? "url(#gradientRed)" : "url(#gradientBlue)"}
-                              dot={{ 
-                                fill: trendDirection.direction === "up" ? "#22c55e" : trendDirection.direction === "down" ? "#ef4444" : "#3b82f6", 
-                                strokeWidth: 0, 
-                                r: 5 
-                              }}
-                              activeDot={{ r: 7, strokeWidth: 2, stroke: "#fff" }}
-                              connectNulls
-                            />
-                          )}
+                                </g>;
+                        }} />
+                          <YAxis domain={[30, 100]} tick={{
+                          fontSize: 11,
+                          fill: "hsl(var(--muted-foreground))"
+                        }} axisLine={false} tickLine={false} width={35} />
+                          <Tooltip contentStyle={{
+                          backgroundColor: "hsl(var(--card))",
+                          border: "1px solid hsl(var(--border))",
+                          borderRadius: "12px",
+                          boxShadow: "0 4px 12px rgba(0,0,0,0.1)"
+                        }} labelStyle={{
+                          fontWeight: 600,
+                          marginBottom: 4
+                        }} />
+                          <ReferenceLine y={50} stroke="#f59e0b" strokeDasharray="5 5" strokeOpacity={0.6} label={{
+                          value: "Pass",
+                          fontSize: 9,
+                          fill: "#f59e0b",
+                          position: "insideTopLeft"
+                        }} />
+                          <ReferenceLine y={80} stroke="#22c55e" strokeDasharray="5 5" strokeOpacity={0.6} label={{
+                          value: "A",
+                          fontSize: 9,
+                          fill: "#22c55e",
+                          position: "insideTopLeft"
+                        }} />
+                          <ReferenceLine y={trendGoalValue} stroke="hsl(var(--foreground))" strokeDasharray="4 4" strokeWidth={2} label={{
+                          value: "Goal",
+                          fontSize: 9,
+                          fill: "hsl(var(--foreground))",
+                          position: "insideTopLeft"
+                        }} />
+                          {subjectFilter === "all" ? <Area type="monotone" dataKey="Average" stroke={trendDirection.direction === "up" ? "#22c55e" : trendDirection.direction === "down" ? "#ef4444" : "#3b82f6"} strokeWidth={2.5} fill={trendDirection.direction === "up" ? "url(#gradientGreen)" : trendDirection.direction === "down" ? "url(#gradientRed)" : "url(#gradientBlue)"} dot={{
+                          fill: trendDirection.direction === "up" ? "#22c55e" : trendDirection.direction === "down" ? "#ef4444" : "#3b82f6",
+                          strokeWidth: 0,
+                          r: 5
+                        }} activeDot={{
+                          r: 7,
+                          strokeWidth: 2,
+                          stroke: "#fff"
+                        }} connectNulls /> : <Area type="monotone" dataKey={subjectFilter} stroke={trendDirection.direction === "up" ? "#22c55e" : trendDirection.direction === "down" ? "#ef4444" : "#3b82f6"} strokeWidth={2.5} fill={trendDirection.direction === "up" ? "url(#gradientGreen)" : trendDirection.direction === "down" ? "url(#gradientRed)" : "url(#gradientBlue)"} dot={{
+                          fill: trendDirection.direction === "up" ? "#22c55e" : trendDirection.direction === "down" ? "#ef4444" : "#3b82f6",
+                          strokeWidth: 0,
+                          r: 5
+                        }} activeDot={{
+                          r: 7,
+                          strokeWidth: 2,
+                          stroke: "#fff"
+                        }} connectNulls />}
                         </AreaChart>
                       </ResponsiveContainer>
                     </div>
@@ -1794,11 +1728,7 @@ export default function AcademicPage() {
                       Rising Subjects
                     </h4>
                     <div className="space-y-2">
-                      {risingStars.length > 0 ? risingStars.map((item, idx) => (
-                        <div 
-                          key={idx} 
-                          className="p-2.5 rounded-lg border border-green-500/30 bg-green-500/10"
-                        >
+                      {risingStars.length > 0 ? risingStars.map((item, idx) => <div key={idx} className="p-2.5 rounded-lg border border-green-500/30 bg-green-500/10">
                           <div className="flex items-center justify-between">
                             <span className="text-xs font-medium text-foreground">{item.subject.name}</span>
                             <span className="text-xs font-bold text-green-600">+{item.improvement}%</span>
@@ -1806,10 +1736,7 @@ export default function AcademicPage() {
                           <p className="text-[10px] text-muted-foreground mt-0.5">
                             {item.prev}% → {item.current}%
                           </p>
-                        </div>
-                      )) : (
-                        <p className="text-xs text-muted-foreground p-2">No improving subjects</p>
-                      )}
+                        </div>) : <p className="text-xs text-muted-foreground p-2">No improving subjects</p>}
                     </div>
                   </div>
 
@@ -1820,11 +1747,7 @@ export default function AcademicPage() {
                       Needs Focus
                     </h4>
                     <div className="space-y-2">
-                      {fallingBehind.length > 0 ? fallingBehind.map((item, idx) => (
-                        <div 
-                          key={idx} 
-                          className="p-2.5 rounded-lg border border-red-500/30 bg-red-500/10"
-                        >
+                      {fallingBehind.length > 0 ? fallingBehind.map((item, idx) => <div key={idx} className="p-2.5 rounded-lg border border-red-500/30 bg-red-500/10">
                           <div className="flex items-center justify-between">
                             <span className="text-xs font-medium text-foreground">{item.subject.name}</span>
                             <span className="text-xs font-bold text-red-600">-{item.decline}%</span>
@@ -1832,10 +1755,7 @@ export default function AcademicPage() {
                           <p className="text-[10px] text-muted-foreground mt-0.5">
                             {item.prev}% → {item.current}%
                           </p>
-                        </div>
-                      )) : (
-                        <p className="text-xs text-muted-foreground p-2">All subjects stable!</p>
-                      )}
+                        </div>) : <p className="text-xs text-muted-foreground p-2">All subjects stable!</p>}
                     </div>
                   </div>
                 </div>
@@ -1844,15 +1764,9 @@ export default function AcademicPage() {
                 <div className="p-3 rounded-lg bg-accent/50 border border-primary/20">
                   <p className="text-sm text-foreground">
                     <span className="font-medium">Insight:</span>{" "}
-                    {risingStars.length > 0 && (
-                      <>{risingStars[0].subject.name} shows great improvement (+{risingStars[0].improvement}%). </>
-                    )}
-                    {fallingBehind.length > 0 && (
-                      <>Focus more on {fallingBehind[0].subject.name} which dropped {fallingBehind[0].decline}%. </>
-                    )}
-                    {risingStars.length === 0 && fallingBehind.length === 0 && (
-                      <>Performance is stable across all subjects.</>
-                    )}
+                    {risingStars.length > 0 && <>{risingStars[0].subject.name} shows great improvement (+{risingStars[0].improvement}%). </>}
+                    {fallingBehind.length > 0 && <>Focus more on {fallingBehind[0].subject.name} which dropped {fallingBehind[0].decline}%. </>}
+                    {risingStars.length === 0 && fallingBehind.length === 0 && <>Performance is stable across all subjects.</>}
                   </p>
                 </div>
 
@@ -1866,35 +1780,21 @@ export default function AcademicPage() {
                     <ResponsiveContainer width="100%" height="100%">
                       <RadarChart data={radarData} cx="50%" cy="50%" outerRadius="70%">
                         <PolarGrid stroke="hsl(var(--border))" strokeOpacity={0.5} />
-                        <PolarAngleAxis 
-                          dataKey="subject" 
-                          tick={{ fontSize: 9, fill: "hsl(var(--muted-foreground))" }}
-                          tickLine={false}
-                        />
-                        <PolarRadiusAxis 
-                          angle={30} 
-                          domain={[0, 100]} 
-                          tick={{ fontSize: 8, fill: "hsl(var(--muted-foreground))" }}
-                          tickCount={5}
-                          axisLine={false}
-                        />
-                        <Radar
-                          name="Score"
-                          dataKey="score"
-                          stroke={radarAverage >= 70 ? "#22c55e" : radarAverage >= 50 ? "#f59e0b" : "#ef4444"}
-                          fill={radarAverage >= 70 ? "#22c55e" : radarAverage >= 50 ? "#f59e0b" : "#ef4444"}
-                          fillOpacity={0.3}
-                          strokeWidth={2}
-                        />
-                        <Tooltip 
-                          contentStyle={{ 
-                            backgroundColor: "hsl(var(--card))", 
-                            border: "1px solid hsl(var(--border))", 
-                            borderRadius: "8px",
-                            fontSize: 12
-                          }}
-                          formatter={(value: number) => [`${value}%`, "Score"]}
-                        />
+                        <PolarAngleAxis dataKey="subject" tick={{
+                        fontSize: 9,
+                        fill: "hsl(var(--muted-foreground))"
+                      }} tickLine={false} />
+                        <PolarRadiusAxis angle={30} domain={[0, 100]} tick={{
+                        fontSize: 8,
+                        fill: "hsl(var(--muted-foreground))"
+                      }} tickCount={5} axisLine={false} />
+                        <Radar name="Score" dataKey="score" stroke={radarAverage >= 70 ? "#22c55e" : radarAverage >= 50 ? "#f59e0b" : "#ef4444"} fill={radarAverage >= 70 ? "#22c55e" : radarAverage >= 50 ? "#f59e0b" : "#ef4444"} fillOpacity={0.3} strokeWidth={2} />
+                        <Tooltip contentStyle={{
+                        backgroundColor: "hsl(var(--card))",
+                        border: "1px solid hsl(var(--border))",
+                        borderRadius: "8px",
+                        fontSize: 12
+                      }} formatter={(value: number) => [`${value}%`, "Score"]} />
                       </RadarChart>
                     </ResponsiveContainer>
                   </div>
@@ -1913,86 +1813,56 @@ export default function AcademicPage() {
                     <ResponsiveContainer width="100%" height="100%">
                       <BarChart data={subjectVsClassData} layout="vertical">
                         <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" strokeOpacity={0.3} horizontal={false} />
-                        <XAxis 
-                          type="number" 
-                          domain={[0, 100]} 
-                          tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }}
-                          axisLine={false}
-                          tickLine={false}
-                        />
-                        <YAxis 
-                          type="category" 
-                          dataKey="name" 
-                          tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }} 
-                          width={70}
-                          axisLine={false}
-                          tickLine={false}
-                        />
-                        <Tooltip 
-                          contentStyle={{ 
-                            backgroundColor: "hsl(var(--card))", 
-                            border: "1px solid hsl(var(--border))", 
-                            borderRadius: "8px" 
-                          }}
-                          formatter={(value: number, name: string) => [
-                            `${value}%`, 
-                            name === "student" ? "Your Score" : "Class Average"
-                          ]}
-                        />
-                        <Legend 
-                          wrapperStyle={{ fontSize: 10 }} 
-                          formatter={(value) => value === "student" ? "Your Score" : "Class Avg"}
-                        />
+                        <XAxis type="number" domain={[0, 100]} tick={{
+                        fontSize: 10,
+                        fill: "hsl(var(--muted-foreground))"
+                      }} axisLine={false} tickLine={false} />
+                        <YAxis type="category" dataKey="name" tick={{
+                        fontSize: 10,
+                        fill: "hsl(var(--muted-foreground))"
+                      }} width={70} axisLine={false} tickLine={false} />
+                        <Tooltip contentStyle={{
+                        backgroundColor: "hsl(var(--card))",
+                        border: "1px solid hsl(var(--border))",
+                        borderRadius: "8px"
+                      }} formatter={(value: number, name: string) => [`${value}%`, name === "student" ? "Your Score" : "Class Average"]} />
+                        <Legend wrapperStyle={{
+                        fontSize: 10
+                      }} formatter={value => value === "student" ? "Your Score" : "Class Avg"} />
                         <Bar dataKey="student" radius={[0, 4, 4, 0]} barSize={12}>
                           {subjectVsClassData.map((entry, index) => {
-                            const subjectColors: Record<string, string> = {
-                              "English": "#22c55e",
-                              "English 1L": "#22c55e",
-                              "English 2L": "#16a34a",
-                              "Math": "#f59e0b",
-                              "Mathematics": "#f59e0b",
-                              "Science": "#3b82f6",
-                              "Physics": "#06b6d4",
-                              "Chemistry": "#8b5cf6",
-                              "Biology": "#10b981",
-                              "History": "#ef4444",
-                              "Geography": "#f97316",
-                              "Art": "#ec4899",
-                              "ICT": "#6366f1",
-                              "Islamic St.": "#14b8a6",
-                              "Add Math": "#a855f7",
-                            };
-                            const fallbackColors = ["#3b82f6", "#f59e0b", "#22c55e", "#ef4444", "#8b5cf6", "#f97316", "#06b6d4", "#ec4899", "#10b981", "#6366f1"];
-                            const color = subjectColors[entry.name] || subjectColors[entry.fullName] || fallbackColors[index % fallbackColors.length];
-                            return <Cell key={`cell-${index}`} fill={color} />;
-                          })}
+                          const subjectColors: Record<string, string> = {
+                            "English": "#22c55e",
+                            "English 1L": "#22c55e",
+                            "English 2L": "#16a34a",
+                            "Math": "#f59e0b",
+                            "Mathematics": "#f59e0b",
+                            "Science": "#3b82f6",
+                            "Physics": "#06b6d4",
+                            "Chemistry": "#8b5cf6",
+                            "Biology": "#10b981",
+                            "History": "#ef4444",
+                            "Geography": "#f97316",
+                            "Art": "#ec4899",
+                            "ICT": "#6366f1",
+                            "Islamic St.": "#14b8a6",
+                            "Add Math": "#a855f7"
+                          };
+                          const fallbackColors = ["#3b82f6", "#f59e0b", "#22c55e", "#ef4444", "#8b5cf6", "#f97316", "#06b6d4", "#ec4899", "#10b981", "#6366f1"];
+                          const color = subjectColors[entry.name] || subjectColors[entry.fullName] || fallbackColors[index % fallbackColors.length];
+                          return <Cell key={`cell-${index}`} fill={color} />;
+                        })}
                         </Bar>
                         {/* Class Average as dots on top of bars */}
-                        {subjectVsClassData.map((entry) => (
-                          <ReferenceDot
-                            key={`classAvg-${entry.name}`}
-                            x={entry.classAvg}
-                            y={entry.name}
-                            r={4}
-                            fill="hsl(var(--foreground))"
-                            stroke="hsl(var(--background))"
-                            strokeWidth={1}
-                          />
-                        ))}
+                        {subjectVsClassData.map(entry => <ReferenceDot key={`classAvg-${entry.name}`} x={entry.classAvg} y={entry.name} r={4} fill="hsl(var(--foreground))" stroke="hsl(var(--background))" strokeWidth={1} />)}
                       </BarChart>
                     </ResponsiveContainer>
                   </div>
                   {/* Delta badges */}
                   <div className="flex flex-wrap gap-1.5 justify-center">
-                    {subjectVsClassData.slice(0, 4).map((item) => (
-                      <Badge 
-                        key={item.name} 
-                        variant={item.delta >= 0 ? "default" : "destructive"}
-                        className={`text-[10px] px-2 py-0.5 ${item.delta >= 0 ? "bg-[#3b82f6] hover:bg-[#3b82f6]/90" : ""}`}
-                      >
+                    {subjectVsClassData.slice(0, 4).map(item => <Badge key={item.name} variant={item.delta >= 0 ? "default" : "destructive"} className={`text-[10px] px-2 py-0.5 ${item.delta >= 0 ? "bg-[#3b82f6] hover:bg-[#3b82f6]/90" : ""}`}>
                         {item.name}: {item.delta >= 0 ? "+" : ""}{item.delta}%
-                      </Badge>
-                    ))}
+                      </Badge>)}
                   </div>
                 </div>
 
@@ -2010,48 +1880,30 @@ export default function AcademicPage() {
                       {/* Header row with periods */}
                       <div className="flex gap-1 mb-1">
                         <div className="w-16 shrink-0" />
-                        {heatmapData[0]?.scores.map((s) => (
-                          <div 
-                            key={s.period} 
-                            className="flex-1 text-center text-[9px] font-medium text-muted-foreground px-1"
-                          >
+                        {heatmapData[0]?.scores.map(s => <div key={s.period} className="flex-1 text-center text-[9px] font-medium text-muted-foreground px-1">
                             {s.period}
-                          </div>
-                        ))}
+                          </div>)}
                       </div>
                       {/* Subject rows */}
-                      {heatmapData.map((row) => (
-                        <div key={row.subject} className="flex gap-1 mb-1">
+                      {heatmapData.map(row => <div key={row.subject} className="flex gap-1 mb-1">
                           <div className="w-16 shrink-0 text-[10px] font-medium text-foreground truncate pr-1 flex items-center">
                             {row.subject}
                           </div>
-                          {row.scores.map((cell, idx) => (
-                            <div
-                              key={idx}
-                              className="flex-1 h-7 rounded flex items-center justify-center text-[10px] font-semibold text-white transition-all hover:scale-105 cursor-default"
-                              style={{ 
-                                backgroundColor: getHeatmapColor(cell.score),
-                                opacity: cell.score === null ? 0.3 : 1
-                              }}
-                              title={`${row.fullName} - ${cell.period}: ${cell.score ?? 'N/A'}%`}
-                            >
+                          {row.scores.map((cell, idx) => <div key={idx} className="flex-1 h-7 rounded flex items-center justify-center text-[10px] font-semibold text-white transition-all hover:scale-105 cursor-default" style={{
+                        backgroundColor: getHeatmapColor(cell.score),
+                        opacity: cell.score === null ? 0.3 : 1
+                      }} title={`${row.fullName} - ${cell.period}: ${cell.score ?? 'N/A'}%`}>
                               {cell.score ?? "–"}
-                            </div>
-                          ))}
-                        </div>
-                      ))}
+                            </div>)}
+                        </div>)}
                     </div>
                   </div>
                   {/* Legend */}
                   <div className="flex items-center justify-center gap-1 mt-2">
                     <span className="text-[9px] text-muted-foreground mr-1">Low</span>
-                    {["#ef4444", "#f97316", "#eab308", "#84cc16", "#22c55e", "#16a34a"].map((color, i) => (
-                      <div 
-                        key={i} 
-                        className="w-4 h-3 rounded-sm" 
-                        style={{ backgroundColor: color }} 
-                      />
-                    ))}
+                    {["#ef4444", "#f97316", "#eab308", "#84cc16", "#22c55e", "#16a34a"].map((color, i) => <div key={i} className="w-4 h-3 rounded-sm" style={{
+                    backgroundColor: color
+                  }} />)}
                     <span className="text-[9px] text-muted-foreground ml-1">High</span>
                   </div>
                 </div>
@@ -2063,21 +1915,21 @@ export default function AcademicPage() {
                 <div className="grid grid-cols-2 gap-4">
                   {/* Exam A - Light Blue Box */}
                   <div className="space-y-3 p-3 rounded-xl border" style={{
-                    backgroundColor: 'rgba(59, 130, 246, 0.08)',
-                    borderColor: 'rgba(59, 130, 246, 0.25)'
-                  }}>
+                  backgroundColor: 'rgba(59, 130, 246, 0.08)',
+                  borderColor: 'rgba(59, 130, 246, 0.25)'
+                }}>
                     <label className="text-xs font-semibold flex items-center gap-1.5" style={{
-                      color: '#3b82f6'
-                    }}>
+                    color: '#3b82f6'
+                  }}>
                       <div className="w-2 h-2 rounded-full" style={{
-                        backgroundColor: '#3b82f6'
-                      }} />
+                      backgroundColor: '#3b82f6'
+                    }} />
                       Exam A
                     </label>
-                    <Select 
-                      value={compareExamA.year} 
-                      onValueChange={(v) => setCompareExamA(prev => ({ ...prev, year: v as YearKey }))}
-                    >
+                    <Select value={compareExamA.year} onValueChange={v => setCompareExamA(prev => ({
+                    ...prev,
+                    year: v as YearKey
+                  }))}>
                       <SelectTrigger className="w-full h-9 text-sm bg-background/80">
                         <SelectValue />
                       </SelectTrigger>
@@ -2087,10 +1939,10 @@ export default function AcademicPage() {
                         <SelectItem value="2023">2023</SelectItem>
                       </SelectContent>
                     </Select>
-                    <Select 
-                      value={compareExamA.type} 
-                      onValueChange={(v) => setCompareExamA(prev => ({ ...prev, type: v as ExamType }))}
-                    >
+                    <Select value={compareExamA.type} onValueChange={v => setCompareExamA(prev => ({
+                    ...prev,
+                    type: v as ExamType
+                  }))}>
                       <SelectTrigger className="w-full h-9 text-sm bg-background/80">
                         <SelectValue />
                       </SelectTrigger>
@@ -2103,21 +1955,21 @@ export default function AcademicPage() {
                   
                   {/* Exam B - Light Red Box */}
                   <div className="space-y-3 p-3 rounded-xl border" style={{
-                    backgroundColor: 'rgba(239, 68, 68, 0.08)',
-                    borderColor: 'rgba(239, 68, 68, 0.25)'
-                  }}>
+                  backgroundColor: 'rgba(239, 68, 68, 0.08)',
+                  borderColor: 'rgba(239, 68, 68, 0.25)'
+                }}>
                     <label className="text-xs font-semibold flex items-center gap-1.5" style={{
-                      color: '#ef4444'
-                    }}>
+                    color: '#ef4444'
+                  }}>
                       <div className="w-2 h-2 rounded-full" style={{
-                        backgroundColor: '#ef4444'
-                      }} />
+                      backgroundColor: '#ef4444'
+                    }} />
                       Exam B
                     </label>
-                    <Select 
-                      value={compareExamB.year} 
-                      onValueChange={(v) => setCompareExamB(prev => ({ ...prev, year: v as YearKey }))}
-                    >
+                    <Select value={compareExamB.year} onValueChange={v => setCompareExamB(prev => ({
+                    ...prev,
+                    year: v as YearKey
+                  }))}>
                       <SelectTrigger className="w-full h-9 text-sm bg-background/80">
                         <SelectValue />
                       </SelectTrigger>
@@ -2127,10 +1979,10 @@ export default function AcademicPage() {
                         <SelectItem value="2023">2023</SelectItem>
                       </SelectContent>
                     </Select>
-                    <Select 
-                      value={compareExamB.type} 
-                      onValueChange={(v) => setCompareExamB(prev => ({ ...prev, type: v as ExamType }))}
-                    >
+                    <Select value={compareExamB.type} onValueChange={v => setCompareExamB(prev => ({
+                    ...prev,
+                    type: v as ExamType
+                  }))}>
                       <SelectTrigger className="w-full h-9 text-sm bg-background/80">
                         <SelectValue />
                       </SelectTrigger>
@@ -2147,41 +1999,26 @@ export default function AcademicPage() {
                   <div className="flex items-center justify-between">
                     <span className="text-sm font-medium text-foreground">Subjects</span>
                     <div className="flex gap-2">
-                      <button
-                        className="text-sm font-medium text-foreground hover:text-primary transition-colors"
-                        onClick={() => setCompareSubjects(academicData.subjects.map(s => s.name))}
-                      >
+                      <button className="text-sm font-medium text-foreground hover:text-primary transition-colors" onClick={() => setCompareSubjects(academicData.subjects.map(s => s.name))}>
                         Select All
                       </button>
-                      <button
-                        className="text-sm font-medium text-foreground hover:text-primary transition-colors"
-                        onClick={() => setCompareSubjects([academicData.subjects[0].name])}
-                      >
+                      <button className="text-sm font-medium text-foreground hover:text-primary transition-colors" onClick={() => setCompareSubjects([academicData.subjects[0].name])}>
                         Clear
                       </button>
                     </div>
                   </div>
                   <div className="flex flex-wrap gap-1.5 p-2.5 rounded-lg border border-border bg-background items-center">
                     {/* Grouped subject pills with dropdowns */}
-                    {subjectGroups.map((group) => (
-                      <SubjectGroupPill
-                        key={group.baseName}
-                        baseName={group.baseName}
-                        shortName={group.shortName}
-                        variants={group.variants || []}
-                        selectedSubjects={compareSubjects}
-                        onToggle={(subjectName) => {
-                          if (compareSubjects.includes(subjectName)) {
-                            // Don't allow deselecting all subjects
-                            if (compareSubjects.length > 1) {
-                              setCompareSubjects(prev => prev.filter(s => s !== subjectName));
-                            }
-                          } else {
-                            setCompareSubjects(prev => [...prev, subjectName]);
-                          }
-                        }}
-                      />
-                    ))}
+                    {subjectGroups.map(group => <SubjectGroupPill key={group.baseName} baseName={group.baseName} shortName={group.shortName} variants={group.variants || []} selectedSubjects={compareSubjects} onToggle={subjectName => {
+                    if (compareSubjects.includes(subjectName)) {
+                      // Don't allow deselecting all subjects
+                      if (compareSubjects.length > 1) {
+                        setCompareSubjects(prev => prev.filter(s => s !== subjectName));
+                      }
+                    } else {
+                      setCompareSubjects(prev => [...prev, subjectName]);
+                    }
+                  }} />)}
                     {/* Subject count badge */}
                     <span className="ml-auto px-2 py-0.5 text-xs font-medium bg-primary/10 text-primary rounded-full">
                       {compareSubjects.length}/{academicData.subjects.length}
@@ -2190,11 +2027,7 @@ export default function AcademicPage() {
                 </div>
 
                 {/* Report Button for Comparison */}
-                <Button
-                  size="sm"
-                  className="w-full gap-2 bg-emerald-600 hover:bg-emerald-700 text-white"
-                  onClick={() => setComparisonReportDialogOpen(true)}
-                >
+                <Button size="sm" className="w-full gap-2 bg-emerald-600 hover:bg-emerald-700 text-white" onClick={() => setComparisonReportDialogOpen(true)}>
                   <FileText className="h-4 w-4" />
                   Generate Report
                 </Button>
@@ -2225,7 +2058,7 @@ export default function AcademicPage() {
                         <TrendingUp className="h-4 w-4 text-emerald-500" />
                       </div>
                       <div>
-                        <h4 className="text-sm font-semibold text-foreground">Top Growth Leaders</h4>
+                        <h4 className="text-sm font-semibold text-foreground">Top Growth Subjects</h4>
                         <p className="text-[10px] text-muted-foreground">Best performing subjects</p>
                       </div>
                     </div>
@@ -2236,75 +2069,65 @@ export default function AcademicPage() {
                   
                   {/* Top 5 Growth Chart */}
                   {(() => {
-                    const top5Growth = [...comparisonData]
-                      .sort((a, b) => b.delta - a.delta)
-                      .slice(0, 5)
-                      .filter(item => item.delta > 0);
-                    
-                    if (top5Growth.length === 0) {
-                      return (
-                        <div className="text-center py-4 text-muted-foreground text-sm">
+                  const top5Growth = [...comparisonData].sort((a, b) => b.delta - a.delta).slice(0, 5).filter(item => item.delta > 0);
+                  if (top5Growth.length === 0) {
+                    return <div className="text-center py-4 text-muted-foreground text-sm">
                           No subjects showed improvement in this period
-                        </div>
-                      );
-                    }
-                    
-                    const maxDelta = Math.max(...top5Growth.map(t => t.delta));
-                    
-                    return (
-                      <div className="space-y-3">
+                        </div>;
+                  }
+                  const maxDelta = Math.max(...top5Growth.map(t => t.delta));
+                  return <div className="space-y-3">
                         {/* Mini Area Chart */}
                         <div className="h-32 -mx-2">
                           <ResponsiveContainer width="100%" height="100%">
-                            <AreaChart 
-                              data={top5Growth.map(item => ({
-                                name: shortenSubjectName(item.name),
-                                growth: item.delta,
-                                percentChange: item.examB > 0 ? ((item.delta / item.examB) * 100) : 0,
-                                from: item.examB,
-                                to: item.examA
-                              }))}
-                              margin={{ top: 10, right: 10, left: 10, bottom: 0 }}
-                            >
+                            <AreaChart data={top5Growth.map(item => ({
+                          name: shortenSubjectName(item.name),
+                          growth: item.delta,
+                          percentChange: item.examB > 0 ? item.delta / item.examB * 100 : 0,
+                          from: item.examB,
+                          to: item.examA
+                        }))} margin={{
+                          top: 10,
+                          right: 10,
+                          left: 10,
+                          bottom: 0
+                        }}>
                               <defs>
                                 <linearGradient id="growthGradient" x1="0" y1="0" x2="0" y2="1">
-                                  <stop offset="5%" stopColor="hsl(142, 76%, 46%)" stopOpacity={0.4}/>
-                                  <stop offset="95%" stopColor="hsl(142, 76%, 46%)" stopOpacity={0.05}/>
+                                  <stop offset="5%" stopColor="hsl(142, 76%, 46%)" stopOpacity={0.4} />
+                                  <stop offset="95%" stopColor="hsl(142, 76%, 46%)" stopOpacity={0.05} />
                                 </linearGradient>
                               </defs>
-                              <XAxis 
-                                dataKey="name" 
-                                axisLine={false}
-                                tickLine={false}
-                                tick={{ fontSize: 9, fill: 'hsl(var(--muted-foreground))' }}
-                                interval={0}
-                                height={30}
-                              />
+                              <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{
+                            fontSize: 9,
+                            fill: 'hsl(var(--muted-foreground))'
+                          }} interval={0} height={30} />
                               <YAxis hide />
-                              <Area
-                                type="monotone"
-                                dataKey="growth"
-                                stroke="hsl(142, 76%, 46%)"
-                                strokeWidth={2}
-                                fill="url(#growthGradient)"
-                                dot={{ r: 4, fill: "hsl(142, 76%, 46%)", strokeWidth: 2, stroke: "hsl(var(--background))" }}
-                                activeDot={{ r: 6, fill: "hsl(142, 76%, 46%)", strokeWidth: 2, stroke: "hsl(var(--background))" }}
-                              />
-                              <Tooltip
-                                content={({ active, payload }) => {
-                                  if (active && payload && payload.length) {
-                                    const data = payload[0].payload;
-                                    return (
-                                      <div className="bg-popover border border-border rounded-lg shadow-lg p-2">
+                              <Area type="monotone" dataKey="growth" stroke="hsl(142, 76%, 46%)" strokeWidth={2} fill="url(#growthGradient)" dot={{
+                            r: 4,
+                            fill: "hsl(142, 76%, 46%)",
+                            strokeWidth: 2,
+                            stroke: "hsl(var(--background))"
+                          }} activeDot={{
+                            r: 6,
+                            fill: "hsl(142, 76%, 46%)",
+                            strokeWidth: 2,
+                            stroke: "hsl(var(--background))"
+                          }} />
+                              <Tooltip content={({
+                            active,
+                            payload
+                          }) => {
+                            if (active && payload && payload.length) {
+                              const data = payload[0].payload;
+                              return <div className="bg-popover border border-border rounded-lg shadow-lg p-2">
                                         <p className="text-xs font-medium text-foreground">{data.name}</p>
                                         <p className="text-xs text-emerald-500 font-bold">+{data.growth} pts</p>
                                         <p className="text-[10px] text-muted-foreground">{data.from} → {data.to}</p>
-                                      </div>
-                                    );
-                                  }
-                                  return null;
-                                }}
-                              />
+                                      </div>;
+                            }
+                            return null;
+                          }} />
                             </AreaChart>
                           </ResponsiveContainer>
                         </div>
@@ -2312,18 +2135,11 @@ export default function AcademicPage() {
                         {/* Top 5 Rankings */}
                         <div className="space-y-2">
                           {top5Growth.map((item, index) => {
-                            const percentChange = item.examB > 0 ? ((item.delta / item.examB) * 100).toFixed(1) : '0.0';
-                            const barWidth = (item.delta / maxDelta) * 100;
-                            
-                            return (
-                              <div key={item.name} className="flex items-center gap-2">
+                        const percentChange = item.examB > 0 ? (item.delta / item.examB * 100).toFixed(1) : '0.0';
+                        const barWidth = item.delta / maxDelta * 100;
+                        return <div key={item.name} className="flex items-center gap-2">
                                 {/* Rank Badge */}
-                                <div className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold ${
-                                  index === 0 ? 'bg-yellow-500/20 text-yellow-600' :
-                                  index === 1 ? 'bg-gray-400/20 text-gray-500' :
-                                  index === 2 ? 'bg-amber-600/20 text-amber-600' :
-                                  'bg-muted text-muted-foreground'
-                                }`}>
+                                <div className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold ${index === 0 ? 'bg-yellow-500/20 text-yellow-600' : index === 1 ? 'bg-gray-400/20 text-gray-500' : index === 2 ? 'bg-amber-600/20 text-amber-600' : 'bg-muted text-muted-foreground'}`}>
                                   {index + 1}
                                 </div>
                                 
@@ -2334,10 +2150,9 @@ export default function AcademicPage() {
                                 
                                 {/* Growth Bar */}
                                 <div className="flex-1 h-4 bg-muted/30 rounded-full overflow-hidden relative">
-                                  <div 
-                                    className="h-full bg-gradient-to-r from-emerald-500 to-emerald-400 rounded-full transition-all duration-700"
-                                    style={{ width: `${barWidth}%` }}
-                                  />
+                                  <div className="h-full bg-gradient-to-r from-emerald-500 to-emerald-400 rounded-full transition-all duration-700" style={{
+                              width: `${barWidth}%`
+                            }} />
                                 </div>
                                 
                                 {/* Growth Stats */}
@@ -2345,9 +2160,8 @@ export default function AcademicPage() {
                                   <span className="text-xs font-bold text-emerald-500">+{item.delta}</span>
                                   <span className="text-[9px] text-muted-foreground">({percentChange}%)</span>
                                 </div>
-                              </div>
-                            );
-                          })}
+                              </div>;
+                      })}
                         </div>
                         
                         {/* Summary Footer */}
@@ -2359,33 +2173,22 @@ export default function AcademicPage() {
                             🏆 {shortenSubjectName(top5Growth[0].name)} leads with +{top5Growth[0].delta} pts
                           </span>
                         </div>
-                      </div>
-                    );
-                  })()}
+                      </div>;
+                })()}
                 </div>
 
                 {/* Subject Comparison - Moomoo Style */}
                 <div className="space-y-3">
                   <h4 className="text-sm font-medium text-foreground">Subject Performance</h4>
                   <div className="space-y-3">
-                    {comparisonData.map((item) => {
-                      const maxScore = Math.max(item.examA, item.examB, 1);
-                      const percentChange = item.examB > 0 ? ((item.delta / item.examB) * 100).toFixed(1) : '0.0';
-                      return (
-                        <div key={item.name} className="p-3 rounded-xl bg-accent/30 border border-border/50">
+                    {comparisonData.map(item => {
+                    const maxScore = Math.max(item.examA, item.examB, 1);
+                    const percentChange = item.examB > 0 ? (item.delta / item.examB * 100).toFixed(1) : '0.0';
+                    return <div key={item.name} className="p-3 rounded-xl bg-accent/30 border border-border/50">
                           <div className="flex items-center justify-between mb-2">
                             <span className="text-sm font-semibold text-foreground">{shortenSubjectName(item.name)}</span>
                             <div className="flex items-center gap-2">
-                              <Badge 
-                                variant={item.delta > 0 ? "default" : item.delta < 0 ? "destructive" : "secondary"}
-                                className={`text-xs px-2 py-0.5 ${
-                                  item.delta > 0 
-                                    ? "bg-emerald-500/20 text-emerald-600 border-emerald-500/30" 
-                                    : item.delta < 0 
-                                    ? "bg-red-500/20 text-red-600 border-red-500/30" 
-                                    : ""
-                                }`}
-                              >
+                              <Badge variant={item.delta > 0 ? "default" : item.delta < 0 ? "destructive" : "secondary"} className={`text-xs px-2 py-0.5 ${item.delta > 0 ? "bg-emerald-500/20 text-emerald-600 border-emerald-500/30" : item.delta < 0 ? "bg-red-500/20 text-red-600 border-red-500/30" : ""}`}>
                                 {item.delta > 0 ? <TrendingUp className="h-3 w-3 mr-1" /> : item.delta < 0 ? <TrendingDown className="h-3 w-3 mr-1" /> : <Minus className="h-3 w-3 mr-1" />}
                                 {item.delta > 0 ? "+" : ""}{item.delta}pts ({item.delta >= 0 ? "+" : ""}{percentChange}%)
                               </Badge>
@@ -2398,15 +2201,13 @@ export default function AcademicPage() {
                             <div className="flex items-center gap-2">
                               <span className="text-[10px] text-muted-foreground w-16 truncate">{getExamLabelForComparison(compareExamB).split(' ')[0]}</span>
                               <div className="flex-1 h-5 bg-muted/30 rounded-full overflow-hidden relative">
-                                <div 
-                                  className="h-full bg-blue-500 rounded-full transition-all duration-500"
-                                  style={{ width: `${(item.examB / 100) * 100}%` }}
-                                />
+                                <div className="h-full bg-blue-500 rounded-full transition-all duration-500" style={{
+                              width: `${item.examB / 100 * 100}%`
+                            }} />
                                 {/* Goal marker line */}
-                                <div 
-                                  className="absolute top-0 h-full w-0.5 bg-black"
-                                  style={{ left: `${item.goal}%` }}
-                                />
+                                <div className="absolute top-0 h-full w-0.5 bg-black" style={{
+                              left: `${item.goal}%`
+                            }} />
                                 <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] font-bold text-foreground">
                                   {item.examB}
                                 </span>
@@ -2417,15 +2218,13 @@ export default function AcademicPage() {
                             <div className="flex items-center gap-2">
                               <span className="text-[10px] text-muted-foreground w-16 truncate">{getExamLabelForComparison(compareExamA).split(' ')[0]}</span>
                               <div className="flex-1 h-5 bg-muted/30 rounded-full overflow-hidden relative">
-                                <div 
-                                  className="h-full bg-orange-500 rounded-full transition-all duration-500"
-                                  style={{ width: `${(item.examA / 100) * 100}%` }}
-                                />
+                                <div className="h-full bg-orange-500 rounded-full transition-all duration-500" style={{
+                              width: `${item.examA / 100 * 100}%`
+                            }} />
                                 {/* Goal marker line */}
-                                <div 
-                                  className="absolute top-0 h-full w-0.5 bg-black"
-                                  style={{ left: `${item.goal}%` }}
-                                />
+                                <div className="absolute top-0 h-full w-0.5 bg-black" style={{
+                              left: `${item.goal}%`
+                            }} />
                                 <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] font-bold text-foreground">
                                   {item.examA}
                                 </span>
@@ -2436,10 +2235,9 @@ export default function AcademicPage() {
                             <div className="flex items-center gap-2">
                               <span className="text-[10px] text-muted-foreground w-16 truncate font-medium">Goal</span>
                               <div className="flex-1 h-3 bg-muted/30 rounded-full overflow-hidden relative">
-                                <div 
-                                  className="h-full bg-black rounded-full transition-all duration-500"
-                                  style={{ width: `${(item.goal / 100) * 100}%` }}
-                                />
+                                <div className="h-full bg-black rounded-full transition-all duration-500" style={{
+                              width: `${item.goal / 100 * 100}%`
+                            }} />
                                 <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[9px] font-bold text-foreground">
                                   {item.goal}
                                 </span>
@@ -2448,8 +2246,7 @@ export default function AcademicPage() {
                           </div>
                           
                           {/* Delta Line */}
-                          {item.delta !== 0 && (
-                            <div className="mt-2 pt-2 border-t border-border/30 flex items-center justify-between">
+                          {item.delta !== 0 && <div className="mt-2 pt-2 border-t border-border/30 flex items-center justify-between">
                               <span className="text-[10px] text-muted-foreground">Change</span>
                               <div className="flex items-center gap-1">
                                 <span className={`text-xs font-bold ${item.delta > 0 ? "text-emerald-600" : "text-red-600"}`}>
@@ -2459,11 +2256,9 @@ export default function AcademicPage() {
                                   ({item.delta > 0 ? "↑" : "↓"} {Math.abs(item.delta)} points)
                                 </span>
                               </div>
-                            </div>
-                          )}
-                        </div>
-                      );
-                    })}
+                            </div>}
+                        </div>;
+                  })}
                   </div>
                 </div>
 
@@ -2472,16 +2267,16 @@ export default function AcademicPage() {
                   <p className="text-sm text-foreground">
                     <span className="font-medium">Insight:</span>{" "}
                     {(() => {
-                      const improved = comparisonData.filter(d => d.delta > 0).length;
-                      const declined = comparisonData.filter(d => d.delta < 0).length;
-                      const avgDelta = Math.round(comparisonData.reduce((sum, d) => sum + d.delta, 0) / comparisonData.length);
-                      if (avgDelta > 0) {
-                        return `Overall improvement of +${avgDelta}% from ${getExamLabelForComparison(compareExamB)} to ${getExamLabelForComparison(compareExamA)}. ${improved} subjects improved, ${declined} declined.`;
-                      } else if (avgDelta < 0) {
-                        return `Overall decline of ${avgDelta}% from ${getExamLabelForComparison(compareExamB)} to ${getExamLabelForComparison(compareExamA)}. Focus on ${comparisonData.filter(d => d.delta < 0).map(d => d.name).join(", ")}.`;
-                      }
-                      return "Performance remained stable between the two periods.";
-                    })()}
+                    const improved = comparisonData.filter(d => d.delta > 0).length;
+                    const declined = comparisonData.filter(d => d.delta < 0).length;
+                    const avgDelta = Math.round(comparisonData.reduce((sum, d) => sum + d.delta, 0) / comparisonData.length);
+                    if (avgDelta > 0) {
+                      return `Overall improvement of +${avgDelta}% from ${getExamLabelForComparison(compareExamB)} to ${getExamLabelForComparison(compareExamA)}. ${improved} subjects improved, ${declined} declined.`;
+                    } else if (avgDelta < 0) {
+                      return `Overall decline of ${avgDelta}% from ${getExamLabelForComparison(compareExamB)} to ${getExamLabelForComparison(compareExamA)}. Focus on ${comparisonData.filter(d => d.delta < 0).map(d => d.name).join(", ")}.`;
+                    }
+                    return "Performance remained stable between the two periods.";
+                  })()}
                   </p>
                 </div>
               </TabsContent>
@@ -2501,82 +2296,94 @@ export default function AcademicPage() {
 
                 {/* Goals Progress Summary */}
                 {(() => {
-                  const goalsData = academicData.subjects.map(s => {
-                    const current = getScore(s, "2025", "midYear") ?? 0;
-                    const target = goals[s.name] ?? 80;
-                    const progress = Math.min((current / target) * 100, 100);
-                    const achieved = current >= target;
-                    const gap = target - current;
-                    return { name: s.name, current, target, progress, achieved, gap };
-                  });
-                  const achievedCount = goalsData.filter(g => g.achieved).length;
-                  const onTrackCount = goalsData.filter(g => !g.achieved && g.gap <= 30).length;
-                  const needsWorkCount = goalsData.filter(g => !g.achieved && g.gap > 30).length;
-
-                  return (
-                    <>
+                const goalsData = academicData.subjects.map(s => {
+                  const current = getScore(s, "2025", "midYear") ?? 0;
+                  const target = goals[s.name] ?? 80;
+                  const progress = Math.min(current / target * 100, 100);
+                  const achieved = current >= target;
+                  const gap = target - current;
+                  return {
+                    name: s.name,
+                    current,
+                    target,
+                    progress,
+                    achieved,
+                    gap
+                  };
+                });
+                const achievedCount = goalsData.filter(g => g.achieved).length;
+                const onTrackCount = goalsData.filter(g => !g.achieved && g.gap <= 30).length;
+                const needsWorkCount = goalsData.filter(g => !g.achieved && g.gap > 30).length;
+                return <>
                       {/* Summary Cards */}
                       <div className="grid grid-cols-3 gap-2">
-                        <div className="p-3 rounded-xl text-center" style={{ backgroundColor: 'rgba(34, 197, 94, 0.15)', border: '1px solid rgba(34, 197, 94, 0.3)' }}>
+                        <div className="p-3 rounded-xl text-center" style={{
+                      backgroundColor: 'rgba(34, 197, 94, 0.15)',
+                      border: '1px solid rgba(34, 197, 94, 0.3)'
+                    }}>
                           <div className="flex items-center justify-center gap-1 mb-1">
-                            <CheckCircle2 className="h-5 w-5" style={{ color: '#22c55e' }} />
+                            <CheckCircle2 className="h-5 w-5" style={{
+                          color: '#22c55e'
+                        }} />
                           </div>
                           <p className="text-xl font-bold text-foreground">{achievedCount}</p>
                           <p className="text-xs text-muted-foreground">Achieved</p>
-                          <p className="text-[9px] mt-0.5" style={{ color: '#16a34a' }}>Met target</p>
+                          <p className="text-[9px] mt-0.5" style={{
+                        color: '#16a34a'
+                      }}>Met target</p>
                         </div>
-                        <div className="p-3 rounded-xl text-center" style={{ backgroundColor: 'rgba(59, 130, 246, 0.15)', border: '1px solid rgba(59, 130, 246, 0.3)' }}>
+                        <div className="p-3 rounded-xl text-center" style={{
+                      backgroundColor: 'rgba(59, 130, 246, 0.15)',
+                      border: '1px solid rgba(59, 130, 246, 0.3)'
+                    }}>
                           <div className="flex items-center justify-center gap-1 mb-1">
-                            <Target className="h-5 w-5" style={{ color: '#3b82f6' }} />
+                            <Target className="h-5 w-5" style={{
+                          color: '#3b82f6'
+                        }} />
                           </div>
                           <p className="text-xl font-bold text-foreground">{onTrackCount}</p>
                           <p className="text-xs text-muted-foreground">On Track</p>
-                          <p className="text-[9px] mt-0.5" style={{ color: '#2563eb' }}>≤30% to target</p>
+                          <p className="text-[9px] mt-0.5" style={{
+                        color: '#2563eb'
+                      }}>≤30% to target</p>
                         </div>
-                        <div className="p-3 rounded-xl text-center" style={{ backgroundColor: 'rgba(249, 115, 22, 0.15)', border: '1px solid rgba(249, 115, 22, 0.3)' }}>
+                        <div className="p-3 rounded-xl text-center" style={{
+                      backgroundColor: 'rgba(249, 115, 22, 0.15)',
+                      border: '1px solid rgba(249, 115, 22, 0.3)'
+                    }}>
                           <div className="flex items-center justify-center gap-1 mb-1">
-                            <AlertTriangle className="h-5 w-5" style={{ color: '#f97316' }} />
+                            <AlertTriangle className="h-5 w-5" style={{
+                          color: '#f97316'
+                        }} />
                           </div>
                           <p className="text-xl font-bold text-foreground">{needsWorkCount}</p>
                           <p className="text-xs text-muted-foreground">Needs Focus</p>
-                          <p className="text-[9px] mt-0.5" style={{ color: '#ea580c' }}>&gt;30% to target</p>
+                          <p className="text-[9px] mt-0.5" style={{
+                        color: '#ea580c'
+                      }}>&gt;30% to target</p>
                         </div>
                       </div>
 
                       {/* Individual Subject Goals */}
                       <div className="space-y-3">
-                        {goalsData.map((item) => (
-                          <div 
-                            key={item.name} 
-                            className="p-4 rounded-xl bg-accent/30 border border-border/50 transition-all"
-                          >
+                        {goalsData.map(item => <div key={item.name} className="p-4 rounded-xl bg-accent/30 border border-border/50 transition-all">
                             {/* Card Header - Tappable */}
-                            <div 
-                              className="flex items-center justify-between cursor-pointer active:opacity-70 min-h-[44px]"
-                              onClick={() => {
-                                if (editingGoal === item.name) {
-                                  setEditingGoal(null);
-                                } else {
-                                  setEditingGoal(item.name);
-                                  setTempGoalValue(item.target.toString());
-                                }
-                              }}
-                            >
+                            <div className="flex items-center justify-between cursor-pointer active:opacity-70 min-h-[44px]" onClick={() => {
+                        if (editingGoal === item.name) {
+                          setEditingGoal(null);
+                        } else {
+                          setEditingGoal(item.name);
+                          setTempGoalValue(item.target.toString());
+                        }
+                      }}>
                               <div className="flex items-center gap-3">
-                                {item.achieved ? (
-                                  <CheckCircle2 className="h-5 w-5" style={{ color: '#22c55e' }} />
-                                ) : item.gap <= 30 ? (
-                                  <Circle className="h-5 w-5 text-chart-2" />
-                                ) : (
-                                  <Circle className="h-5 w-5 text-chart-4" />
-                                )}
+                                {item.achieved ? <CheckCircle2 className="h-5 w-5" style={{
+                            color: '#22c55e'
+                          }} /> : item.gap <= 30 ? <Circle className="h-5 w-5 text-chart-2" /> : <Circle className="h-5 w-5 text-chart-4" />}
                                 <span className="font-medium text-foreground">{item.name}</span>
                               </div>
                               <div className="flex items-center gap-2">
-                                <Badge 
-                                  variant={item.achieved ? "default" : "outline"} 
-                                  className="text-sm px-3 py-1"
-                                >
+                                <Badge variant={item.achieved ? "default" : "outline"} className="text-sm px-3 py-1">
                                   {item.target}%
                                 </Badge>
                                 <Edit2 className={`h-4 w-4 transition-transform ${editingGoal === item.name ? 'rotate-45 text-primary' : 'text-muted-foreground'}`} />
@@ -2584,67 +2391,45 @@ export default function AcademicPage() {
                             </div>
 
                             {/* Expanded Slider Section */}
-                            {editingGoal === item.name && (
-                              <div className="mt-4 pt-4 border-t border-border/50 space-y-4 animate-in slide-in-from-top-2 duration-200">
+                            {editingGoal === item.name && <div className="mt-4 pt-4 border-t border-border/50 space-y-4 animate-in slide-in-from-top-2 duration-200">
                                 <div className="flex items-center justify-between">
                                   <span className="text-sm text-muted-foreground">Set Target Goal</span>
                                   <span className="text-lg font-bold text-primary">{tempGoalValue}%</span>
                                 </div>
-                                <input
-                                  type="range"
-                                  min="0"
-                                  max="100"
-                                  value={tempGoalValue}
-                                  onChange={(e) => setTempGoalValue(e.target.value)}
-                                  className="w-full h-10 appearance-none bg-transparent cursor-pointer touch-pan-x [&::-webkit-slider-runnable-track]:h-3 [&::-webkit-slider-runnable-track]:rounded-full [&::-webkit-slider-runnable-track]:bg-muted [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-7 [&::-webkit-slider-thumb]:h-7 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-primary [&::-webkit-slider-thumb]:shadow-lg [&::-webkit-slider-thumb]:-mt-2 [&::-webkit-slider-thumb]:border-4 [&::-webkit-slider-thumb]:border-background [&::-moz-range-track]:h-3 [&::-moz-range-track]:rounded-full [&::-moz-range-track]:bg-muted [&::-moz-range-thumb]:w-7 [&::-moz-range-thumb]:h-7 [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:bg-primary [&::-moz-range-thumb]:border-4 [&::-moz-range-thumb]:border-background"
-                                />
+                                <input type="range" min="0" max="100" value={tempGoalValue} onChange={e => setTempGoalValue(e.target.value)} className="w-full h-10 appearance-none bg-transparent cursor-pointer touch-pan-x [&::-webkit-slider-runnable-track]:h-3 [&::-webkit-slider-runnable-track]:rounded-full [&::-webkit-slider-runnable-track]:bg-muted [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-7 [&::-webkit-slider-thumb]:h-7 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-primary [&::-webkit-slider-thumb]:shadow-lg [&::-webkit-slider-thumb]:-mt-2 [&::-webkit-slider-thumb]:border-4 [&::-webkit-slider-thumb]:border-background [&::-moz-range-track]:h-3 [&::-moz-range-track]:rounded-full [&::-moz-range-track]:bg-muted [&::-moz-range-thumb]:w-7 [&::-moz-range-thumb]:h-7 [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:bg-primary [&::-moz-range-thumb]:border-4 [&::-moz-range-thumb]:border-background" />
                                 <div className="flex gap-2">
-                                  <Button
-                                    variant="outline"
-                                    className="flex-1 h-12 text-base"
-                                    onClick={() => setEditingGoal(null)}
-                                  >
+                                  <Button variant="outline" className="flex-1 h-12 text-base" onClick={() => setEditingGoal(null)}>
                                     Cancel
                                   </Button>
-                                  <Button
-                                    className="flex-1 h-12 text-base"
-                                    onClick={() => {
-                                      const newValue = parseInt(tempGoalValue);
-                                      if (!isNaN(newValue) && newValue >= 0 && newValue <= 100) {
-                                        setGoals(prev => ({ ...prev, [item.name]: newValue }));
-                                      }
-                                      setEditingGoal(null);
-                                    }}
-                                  >
+                                  <Button className="flex-1 h-12 text-base" onClick={() => {
+                            const newValue = parseInt(tempGoalValue);
+                            if (!isNaN(newValue) && newValue >= 0 && newValue <= 100) {
+                              setGoals(prev => ({
+                                ...prev,
+                                [item.name]: newValue
+                              }));
+                            }
+                            setEditingGoal(null);
+                          }}>
                                     <Check className="h-5 w-5 mr-2" />
                                     Save
                                   </Button>
                                 </div>
-                              </div>
-                            )}
+                              </div>}
                             
                             {/* Progress Bar - Only show when not editing */}
-                            {editingGoal !== item.name && (
-                              <>
+                            {editingGoal !== item.name && <>
                                 <div className="relative mt-3 mb-2">
                                   <div className="h-3 bg-transparent border border-border rounded-full overflow-hidden">
-                                    <div 
-                                      className="h-full rounded-full transition-all"
-                                      style={{ 
-                                        width: `${item.current}%`,
-                                        backgroundColor: item.achieved 
-                                          ? '#22c55e' 
-                                          : item.gap <= 30 
-                                            ? '#3b82f6' 
-                                            : '#f87171'
-                                      }}
-                                    />
+                                    <div className="h-full rounded-full transition-all" style={{
+                              width: `${item.current}%`,
+                              backgroundColor: item.achieved ? '#22c55e' : item.gap <= 30 ? '#3b82f6' : '#f87171'
+                            }} />
                                   </div>
                                   {/* Target marker */}
-                                  <div 
-                                    className="absolute top-0 h-3 w-0.5 bg-foreground/70 rounded"
-                                    style={{ left: `${Math.min(item.target, 100)}%` }}
-                                  />
+                                  <div className="absolute top-0 h-3 w-0.5 bg-foreground/70 rounded" style={{
+                            left: `${Math.min(item.target, 100)}%`
+                          }} />
                                 </div>
 
                                 {/* Score Details */}
@@ -2652,45 +2437,31 @@ export default function AcademicPage() {
                                   <span className="text-muted-foreground">
                                     Current: <span className="font-medium text-foreground">{item.current}%</span>
                                   </span>
-                                  {item.achieved ? (
-                                    <span className="text-chart-1 font-medium flex items-center gap-1">
+                                  {item.achieved ? <span className="text-chart-1 font-medium flex items-center gap-1">
                                       <CheckCircle2 className="h-4 w-4" />
                                       Goal Achieved!
-                                    </span>
-                                  ) : (
-                                    <span className={item.gap <= 30 ? "text-chart-2" : "text-chart-4"}>
+                                    </span> : <span className={item.gap <= 30 ? "text-chart-2" : "text-chart-4"}>
                                       {item.gap}% to go
-                                    </span>
-                                  )}
+                                    </span>}
                                 </div>
-                              </>
-                            )}
-                          </div>
-                        ))}
+                              </>}
+                          </div>)}
                       </div>
 
                       {/* Goal Tips */}
                       <div className="p-3 rounded-lg bg-accent/50 border border-primary/20">
                         <p className="text-sm text-foreground">
                           <span className="font-medium">Tip:</span>{" "}
-                          {achievedCount === goalsData.length ? (
-                            "Amazing! You've achieved all your goals. Consider setting higher targets!"
-                          ) : needsWorkCount > achievedCount ? (
-                            `Focus on ${goalsData.filter(g => !g.achieved && g.gap > 5).slice(0, 2).map(g => g.name).join(" and ")} to close the gap. Small consistent improvements lead to big results!`
-                          ) : (
-                            `You're doing great! ${onTrackCount} subjects are almost at target. Keep pushing!`
-                          )}
+                          {achievedCount === goalsData.length ? "Amazing! You've achieved all your goals. Consider setting higher targets!" : needsWorkCount > achievedCount ? `Focus on ${goalsData.filter(g => !g.achieved && g.gap > 5).slice(0, 2).map(g => g.name).join(" and ")} to close the gap. Small consistent improvements lead to big results!` : `You're doing great! ${onTrackCount} subjects are almost at target. Keep pushing!`}
                         </p>
                       </div>
-                    </>
-                  );
-                })()}
+                    </>;
+              })()}
               </TabsContent>
             </Tabs>
           </CardContent>
         </Card>
-      </section>
-      )}
+      </section>}
 
       {/* Overview Report Dialog */}
       <Dialog open={overviewReportDialogOpen} onOpenChange={setOverviewReportDialogOpen}>
@@ -2698,41 +2469,26 @@ export default function AcademicPage() {
           <DialogHeader className="flex flex-row items-center justify-between pr-12">
             <DialogTitle>Overview Report</DialogTitle>
             <div className="flex gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                className="gap-2"
-                onClick={() => {
-                  // Generate CSV data for overview
-                  const csvRows = [
-                    ['Subject', 'Score', 'Goal', 'Grade'],
-                    ...subjectPerformance.map(sub => [
-                      sub.name,
-                      sub.score.toString(),
-                      sub.goal.toString(),
-                      getGradeFromScore(sub.score)
-                    ])
-                  ];
-                  const csvContent = csvRows.map(row => row.join(',')).join('\n');
-                  const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-                  const link = document.createElement('a');
-                  link.href = URL.createObjectURL(blob);
-                  link.download = `overview-report-${new Date().toISOString().split('T')[0]}.csv`;
-                  link.click();
-                }}
-              >
+              <Button variant="outline" size="sm" className="gap-2" onClick={() => {
+              // Generate CSV data for overview
+              const csvRows = [['Subject', 'Score', 'Goal', 'Grade'], ...subjectPerformance.map(sub => [sub.name, sub.score.toString(), sub.goal.toString(), getGradeFromScore(sub.score)])];
+              const csvContent = csvRows.map(row => row.join(',')).join('\n');
+              const blob = new Blob([csvContent], {
+                type: 'text/csv;charset=utf-8;'
+              });
+              const link = document.createElement('a');
+              link.href = URL.createObjectURL(blob);
+              link.download = `overview-report-${new Date().toISOString().split('T')[0]}.csv`;
+              link.click();
+            }}>
                 <FileSpreadsheet className="h-4 w-4" />
                 CSV
               </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                className="gap-2"
-                onClick={() => {
-                  if (overviewReportRef.current) {
-                    const printWindow = window.open('', '_blank');
-                    if (printWindow) {
-                      printWindow.document.write(`
+              <Button variant="outline" size="sm" className="gap-2" onClick={() => {
+              if (overviewReportRef.current) {
+                const printWindow = window.open('', '_blank');
+                if (printWindow) {
+                  printWindow.document.write(`
                         <!DOCTYPE html>
                         <html>
                           <head>
@@ -2755,12 +2511,11 @@ export default function AcademicPage() {
                           <body>${overviewReportRef.current.innerHTML}</body>
                         </html>
                       `);
-                      printWindow.document.close();
-                      printWindow.print();
-                    }
-                  }
-                }}
-              >
+                  printWindow.document.close();
+                  printWindow.print();
+                }
+              }
+            }}>
                 <Printer className="h-4 w-4" />
                 PDF
               </Button>
@@ -2770,193 +2525,503 @@ export default function AcademicPage() {
           <div className="flex-1 overflow-y-auto" ref={overviewReportRef}>
             <div className="space-y-4 p-2">
               {/* Report Header */}
-              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '15px', paddingBottom: '10px', borderBottom: '2px solid #3b82f6' }}>
-                <img src={schoolLogo} alt="School Logo" style={{ width: '40px', height: '40px', objectFit: 'contain' }} />
-                <div style={{ textAlign: 'left' }}>
-                  <h1 style={{ fontSize: '16px', fontWeight: 700, margin: '0 0 2px 0' }}>Academic Overview Report</h1>
-                  <p style={{ fontSize: '10px', color: '#666', margin: 0 }}>Student Performance Analysis</p>
-                  <p style={{ fontSize: '9px', color: '#888', margin: '2px 0 0 0' }}>
-                    Generated on {new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}
+              <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '12px',
+              marginBottom: '15px',
+              paddingBottom: '10px',
+              borderBottom: '2px solid #3b82f6'
+            }}>
+                <img src={schoolLogo} alt="School Logo" style={{
+                width: '40px',
+                height: '40px',
+                objectFit: 'contain'
+              }} />
+                <div style={{
+                textAlign: 'left'
+              }}>
+                  <h1 style={{
+                  fontSize: '16px',
+                  fontWeight: 700,
+                  margin: '0 0 2px 0'
+                }}>Academic Overview Report</h1>
+                  <p style={{
+                  fontSize: '10px',
+                  color: '#666',
+                  margin: 0
+                }}>Student Performance Analysis</p>
+                  <p style={{
+                  fontSize: '9px',
+                  color: '#888',
+                  margin: '2px 0 0 0'
+                }}>
+                    Generated on {new Date().toLocaleDateString('en-GB', {
+                    day: 'numeric',
+                    month: 'long',
+                    year: 'numeric'
+                  })}
                     {' • '}{getExamLabel()}
                   </p>
                 </div>
               </div>
 
               {/* Summary Statistics Cards */}
-              <div style={{ marginBottom: '12px', pageBreakInside: 'avoid' }}>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '8px' }}>
+              <div style={{
+              marginBottom: '12px',
+              pageBreakInside: 'avoid'
+            }}>
+                <div style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(3, 1fr)',
+                gap: '8px'
+              }}>
                   {/* Average */}
-                  <div style={{ padding: '12px 8px', borderRadius: '10px', backgroundColor: '#dcfce7', textAlign: 'center' }}>
-                    <div style={{ fontSize: '14px', marginBottom: '4px' }}>📖</div>
-                    <div style={{ fontSize: '18px', fontWeight: 700, color: '#22c55e' }}>{currentAverage}%</div>
-                    <div style={{ fontSize: '10px', color: '#166534', fontWeight: 600 }}>Average</div>
-                    <div style={{ fontSize: '8px', color: '#166534', marginTop: '2px' }}>
+                  <div style={{
+                  padding: '12px 8px',
+                  borderRadius: '10px',
+                  backgroundColor: '#dcfce7',
+                  textAlign: 'center'
+                }}>
+                    <div style={{
+                    fontSize: '14px',
+                    marginBottom: '4px'
+                  }}>📖</div>
+                    <div style={{
+                    fontSize: '18px',
+                    fontWeight: 700,
+                    color: '#22c55e'
+                  }}>{currentAverage}%</div>
+                    <div style={{
+                    fontSize: '10px',
+                    color: '#166534',
+                    fontWeight: 600
+                  }}>Average</div>
+                    <div style={{
+                    fontSize: '8px',
+                    color: '#166534',
+                    marginTop: '2px'
+                  }}>
                       {currentAverage >= 80 ? 'Excellent' : currentAverage >= 60 ? 'Above Average' : 'Needs Improvement'}
                     </div>
                   </div>
                   {/* Best Subject */}
-                  <div style={{ padding: '12px 8px', borderRadius: '10px', backgroundColor: '#fef3c7', textAlign: 'center' }}>
-                    <div style={{ fontSize: '14px', marginBottom: '4px' }}>🏆</div>
-                    <div style={{ fontSize: '14px', fontWeight: 700, color: '#d97706' }}>{shortenSubjectName(bestSubjectInfo.name)}</div>
-                    <div style={{ fontSize: '10px', color: '#92400e', fontWeight: 600 }}>Best Subject</div>
-                    <div style={{ fontSize: '8px', color: '#92400e', marginTop: '2px' }}>{bestSubjectInfo.score}%</div>
+                  <div style={{
+                  padding: '12px 8px',
+                  borderRadius: '10px',
+                  backgroundColor: '#fef3c7',
+                  textAlign: 'center'
+                }}>
+                    <div style={{
+                    fontSize: '14px',
+                    marginBottom: '4px'
+                  }}>🏆</div>
+                    <div style={{
+                    fontSize: '14px',
+                    fontWeight: 700,
+                    color: '#d97706'
+                  }}>{shortenSubjectName(bestSubjectInfo.name)}</div>
+                    <div style={{
+                    fontSize: '10px',
+                    color: '#92400e',
+                    fontWeight: 600
+                  }}>Best Subject</div>
+                    <div style={{
+                    fontSize: '8px',
+                    color: '#92400e',
+                    marginTop: '2px'
+                  }}>{bestSubjectInfo.score}%</div>
                   </div>
                   {/* Improvement */}
-                  <div style={{ padding: '12px 8px', borderRadius: '10px', backgroundColor: '#ccfbf1', textAlign: 'center' }}>
-                    <div style={{ fontSize: '14px', marginBottom: '4px' }}>📈</div>
-                    <div style={{ fontSize: '18px', fontWeight: 700, color: '#0d9488' }}>{improvementStats.text}</div>
-                    <div style={{ fontSize: '10px', color: '#115e59', fontWeight: 600 }}>Improvement</div>
-                    <div style={{ fontSize: '8px', color: '#115e59', marginTop: '2px' }}>
+                  <div style={{
+                  padding: '12px 8px',
+                  borderRadius: '10px',
+                  backgroundColor: '#ccfbf1',
+                  textAlign: 'center'
+                }}>
+                    <div style={{
+                    fontSize: '14px',
+                    marginBottom: '4px'
+                  }}>📈</div>
+                    <div style={{
+                    fontSize: '18px',
+                    fontWeight: 700,
+                    color: '#0d9488'
+                  }}>{improvementStats.text}</div>
+                    <div style={{
+                    fontSize: '10px',
+                    color: '#115e59',
+                    fontWeight: 600
+                  }}>Improvement</div>
+                    <div style={{
+                    fontSize: '8px',
+                    color: '#115e59',
+                    marginTop: '2px'
+                  }}>
                       {improvementStats.points > 0 ? 'Improved' : improvementStats.points < 0 ? 'Declined' : 'Stable'}
                     </div>
                   </div>
                   {/* Attendance */}
-                  <div style={{ padding: '12px 8px', borderRadius: '10px', backgroundColor: '#eff6ff', textAlign: 'center' }}>
-                    <div style={{ fontSize: '14px', marginBottom: '4px' }}>📅</div>
-                    <div style={{ fontSize: '18px', fontWeight: 700, color: '#3b82f6' }}>{attendanceStats.attendanceRate}%</div>
-                    <div style={{ fontSize: '10px', color: '#1d4ed8', fontWeight: 600 }}>Attendance</div>
-                    <div style={{ fontSize: '8px', color: '#1d4ed8', marginTop: '2px' }}>This Term</div>
+                  <div style={{
+                  padding: '12px 8px',
+                  borderRadius: '10px',
+                  backgroundColor: '#eff6ff',
+                  textAlign: 'center'
+                }}>
+                    <div style={{
+                    fontSize: '14px',
+                    marginBottom: '4px'
+                  }}>📅</div>
+                    <div style={{
+                    fontSize: '18px',
+                    fontWeight: 700,
+                    color: '#3b82f6'
+                  }}>{attendanceStats.attendanceRate}%</div>
+                    <div style={{
+                    fontSize: '10px',
+                    color: '#1d4ed8',
+                    fontWeight: 600
+                  }}>Attendance</div>
+                    <div style={{
+                    fontSize: '8px',
+                    color: '#1d4ed8',
+                    marginTop: '2px'
+                  }}>This Term</div>
                   </div>
                   {/* Passing */}
-                  <div style={{ padding: '12px 8px', borderRadius: '10px', backgroundColor: '#f3e8ff', textAlign: 'center' }}>
-                    <div style={{ fontSize: '14px', marginBottom: '4px' }}>🎯</div>
-                    <div style={{ fontSize: '18px', fontWeight: 700, color: '#9333ea' }}>{passingStats.passingCount}/{passingStats.totalSubjects}</div>
-                    <div style={{ fontSize: '10px', color: '#6b21a8', fontWeight: 600 }}>Passing</div>
-                    <div style={{ fontSize: '8px', color: '#6b21a8', marginTop: '2px' }}>{passingStats.passingPercentage}%</div>
+                  <div style={{
+                  padding: '12px 8px',
+                  borderRadius: '10px',
+                  backgroundColor: '#f3e8ff',
+                  textAlign: 'center'
+                }}>
+                    <div style={{
+                    fontSize: '14px',
+                    marginBottom: '4px'
+                  }}>🎯</div>
+                    <div style={{
+                    fontSize: '18px',
+                    fontWeight: 700,
+                    color: '#9333ea'
+                  }}>{passingStats.passingCount}/{passingStats.totalSubjects}</div>
+                    <div style={{
+                    fontSize: '10px',
+                    color: '#6b21a8',
+                    fontWeight: 600
+                  }}>Passing</div>
+                    <div style={{
+                    fontSize: '8px',
+                    color: '#6b21a8',
+                    marginTop: '2px'
+                  }}>{passingStats.passingPercentage}%</div>
                   </div>
                   {/* Needs Focus */}
-                  <div style={{ padding: '12px 8px', borderRadius: '10px', backgroundColor: '#fee2e2', textAlign: 'center' }}>
-                    <div style={{ fontSize: '14px', marginBottom: '4px' }}>⚠️</div>
-                    <div style={{ fontSize: '14px', fontWeight: 700, color: '#dc2626' }}>{shortenSubjectName(weakestSubjectInfo.name)}</div>
-                    <div style={{ fontSize: '10px', color: '#991b1b', fontWeight: 600 }}>Needs Focus</div>
-                    <div style={{ fontSize: '8px', color: '#991b1b', marginTop: '2px' }}>{weakestSubjectInfo.score}%</div>
+                  <div style={{
+                  padding: '12px 8px',
+                  borderRadius: '10px',
+                  backgroundColor: '#fee2e2',
+                  textAlign: 'center'
+                }}>
+                    <div style={{
+                    fontSize: '14px',
+                    marginBottom: '4px'
+                  }}>⚠️</div>
+                    <div style={{
+                    fontSize: '14px',
+                    fontWeight: 700,
+                    color: '#dc2626'
+                  }}>{shortenSubjectName(weakestSubjectInfo.name)}</div>
+                    <div style={{
+                    fontSize: '10px',
+                    color: '#991b1b',
+                    fontWeight: 600
+                  }}>Needs Focus</div>
+                    <div style={{
+                    fontSize: '8px',
+                    color: '#991b1b',
+                    marginTop: '2px'
+                  }}>{weakestSubjectInfo.score}%</div>
                   </div>
                 </div>
               </div>
 
               {/* Rising Stars & At-Risk Subjects - Side by Side */}
-              {(risingStars.length > 0 || fallingBehind.length > 0) && (
-                <div style={{ display: 'grid', gridTemplateColumns: risingStars.length > 0 && fallingBehind.length > 0 ? 'repeat(2, 1fr)' : '1fr', gap: '12px', marginBottom: '12px', pageBreakInside: 'avoid' }}>
+              {(risingStars.length > 0 || fallingBehind.length > 0) && <div style={{
+              display: 'grid',
+              gridTemplateColumns: risingStars.length > 0 && fallingBehind.length > 0 ? 'repeat(2, 1fr)' : '1fr',
+              gap: '12px',
+              marginBottom: '12px',
+              pageBreakInside: 'avoid'
+            }}>
                   {/* Rising Stars */}
-                  {risingStars.length > 0 && (
-                    <div style={{ padding: '10px', borderRadius: '8px', background: 'linear-gradient(135deg, #fef9c3 0%, #fef3c7 100%)', border: '1px solid #fde047' }}>
-                      <h4 style={{ fontSize: '11px', fontWeight: 600, color: '#ca8a04', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                  {risingStars.length > 0 && <div style={{
+                padding: '10px',
+                borderRadius: '8px',
+                background: 'linear-gradient(135deg, #fef9c3 0%, #fef3c7 100%)',
+                border: '1px solid #fde047'
+              }}>
+                      <h4 style={{
+                  fontSize: '11px',
+                  fontWeight: 600,
+                  color: '#ca8a04',
+                  marginBottom: '8px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '4px'
+                }}>
                         ⭐ Rising Stars
                       </h4>
-                      <p style={{ fontSize: '8px', color: '#a16207', marginBottom: '8px' }}>Top performing subjects</p>
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                        {risingStars.slice(0, 3).map((item) => (
-                          <div 
-                            key={item.subject.name}
-                            style={{ 
-                              padding: '8px 10px', 
-                              borderRadius: '6px', 
-                              background: 'linear-gradient(135deg, #fef08a 0%, #fde047 100%)',
-                              border: '1px solid rgba(253, 224, 71, 0.6)',
-                              display: 'flex',
-                              justifyContent: 'space-between',
-                              alignItems: 'center'
-                            }}
-                          >
-                            <div style={{ fontSize: '9px', fontWeight: 600, color: '#713f12' }}>{shortenSubjectName(item.subject.name)}</div>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                              <div style={{ fontSize: '11px', fontWeight: 700, color: '#a16207' }}>+{item.improvement}%</div>
-                              <div style={{ fontSize: '7px', color: '#854d0e' }}>{item.prev}%→{item.current}%</div>
+                      <p style={{
+                  fontSize: '8px',
+                  color: '#a16207',
+                  marginBottom: '8px'
+                }}>Top performing subjects</p>
+                      <div style={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '6px'
+                }}>
+                        {risingStars.slice(0, 3).map(item => <div key={item.subject.name} style={{
+                    padding: '8px 10px',
+                    borderRadius: '6px',
+                    background: 'linear-gradient(135deg, #fef08a 0%, #fde047 100%)',
+                    border: '1px solid rgba(253, 224, 71, 0.6)',
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center'
+                  }}>
+                            <div style={{
+                      fontSize: '9px',
+                      fontWeight: 600,
+                      color: '#713f12'
+                    }}>{shortenSubjectName(item.subject.name)}</div>
+                            <div style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '6px'
+                    }}>
+                              <div style={{
+                        fontSize: '11px',
+                        fontWeight: 700,
+                        color: '#a16207'
+                      }}>+{item.improvement}%</div>
+                              <div style={{
+                        fontSize: '7px',
+                        color: '#854d0e'
+                      }}>{item.prev}%→{item.current}%</div>
                             </div>
-                          </div>
-                        ))}
+                          </div>)}
                       </div>
-                    </div>
-                  )}
+                    </div>}
                   
                   {/* At-Risk Subjects */}
-                  {fallingBehind.length > 0 && (
-                    <div style={{ padding: '10px', borderRadius: '8px', background: 'linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%)', border: '1px solid #fca5a5' }}>
-                      <h4 style={{ fontSize: '11px', fontWeight: 600, color: '#dc2626', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                  {fallingBehind.length > 0 && <div style={{
+                padding: '10px',
+                borderRadius: '8px',
+                background: 'linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%)',
+                border: '1px solid #fca5a5'
+              }}>
+                      <h4 style={{
+                  fontSize: '11px',
+                  fontWeight: 600,
+                  color: '#dc2626',
+                  marginBottom: '8px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '4px'
+                }}>
                         ⚠️ At-Risk Subjects
                       </h4>
-                      <p style={{ fontSize: '8px', color: '#b91c1c', marginBottom: '8px' }}>Needs extra attention</p>
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                        {fallingBehind.slice(0, 3).map((item) => (
-                          <div 
-                            key={item.subject.name}
-                            style={{ 
-                              padding: '8px 10px', 
-                              borderRadius: '6px', 
-                              background: 'linear-gradient(135deg, #fecaca 0%, #fca5a5 100%)',
-                              border: '1px solid rgba(252, 165, 165, 0.6)',
-                              display: 'flex',
-                              justifyContent: 'space-between',
-                              alignItems: 'center'
-                            }}
-                          >
-                            <div style={{ fontSize: '9px', fontWeight: 600, color: '#991b1b' }}>{shortenSubjectName(item.subject.name)}</div>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                              <div style={{ fontSize: '11px', fontWeight: 700, color: '#dc2626' }}>-{item.decline}%</div>
-                              <div style={{ fontSize: '7px', color: '#b91c1c' }}>{item.prev}%→{item.current}%</div>
+                      <p style={{
+                  fontSize: '8px',
+                  color: '#b91c1c',
+                  marginBottom: '8px'
+                }}>Needs extra attention</p>
+                      <div style={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '6px'
+                }}>
+                        {fallingBehind.slice(0, 3).map(item => <div key={item.subject.name} style={{
+                    padding: '8px 10px',
+                    borderRadius: '6px',
+                    background: 'linear-gradient(135deg, #fecaca 0%, #fca5a5 100%)',
+                    border: '1px solid rgba(252, 165, 165, 0.6)',
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center'
+                  }}>
+                            <div style={{
+                      fontSize: '9px',
+                      fontWeight: 600,
+                      color: '#991b1b'
+                    }}>{shortenSubjectName(item.subject.name)}</div>
+                            <div style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '6px'
+                    }}>
+                              <div style={{
+                        fontSize: '11px',
+                        fontWeight: 700,
+                        color: '#dc2626'
+                      }}>-{item.decline}%</div>
+                              <div style={{
+                        fontSize: '7px',
+                        color: '#b91c1c'
+                      }}>{item.prev}%→{item.current}%</div>
                             </div>
-                          </div>
-                        ))}
+                          </div>)}
                       </div>
-                    </div>
-                  )}
-                </div>
-              )}
+                    </div>}
+                </div>}
 
               {/* Subject Performance */}
-              <div style={{ marginBottom: '12px', pageBreakInside: 'avoid' }}>
-                <h3 style={{ fontSize: '12px', fontWeight: 600, marginBottom: '8px', paddingBottom: '4px', borderBottom: '1px solid #ddd' }}>Subject Performance</h3>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '6px' }}>
-                  {subjectPerformance.map((sub, idx) => (
-                    <div key={sub.name} style={{ 
-                      display: 'flex', justifyContent: 'space-between', padding: '6px 10px', 
-                      backgroundColor: idx < 3 ? '#dcfce7' : idx >= subjectPerformance.length - 3 ? '#fee2e2' : '#f5f5f5',
-                      borderRadius: '4px', fontSize: '10px'
-                    }}>
-                      <span style={{ fontWeight: 500 }}>{idx + 1}. {sub.name}</span>
-                      <span style={{ fontWeight: 700, color: sub.score >= 80 ? '#22c55e' : sub.score >= 50 ? '#3b82f6' : '#ef4444' }}>{sub.score}%</span>
-                    </div>
-                  ))}
+              <div style={{
+              marginBottom: '12px',
+              pageBreakInside: 'avoid'
+            }}>
+                <h3 style={{
+                fontSize: '12px',
+                fontWeight: 600,
+                marginBottom: '8px',
+                paddingBottom: '4px',
+                borderBottom: '1px solid #ddd'
+              }}>Subject Performance</h3>
+                <div style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(2, 1fr)',
+                gap: '6px'
+              }}>
+                  {subjectPerformance.map((sub, idx) => <div key={sub.name} style={{
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  padding: '6px 10px',
+                  backgroundColor: idx < 3 ? '#dcfce7' : idx >= subjectPerformance.length - 3 ? '#fee2e2' : '#f5f5f5',
+                  borderRadius: '4px',
+                  fontSize: '10px'
+                }}>
+                      <span style={{
+                    fontWeight: 500
+                  }}>{idx + 1}. {sub.name}</span>
+                      <span style={{
+                    fontWeight: 700,
+                    color: sub.score >= 80 ? '#22c55e' : sub.score >= 50 ? '#3b82f6' : '#ef4444'
+                  }}>{sub.score}%</span>
+                    </div>)}
                 </div>
               </div>
 
               {/* Grade Distribution */}
-              <div style={{ marginBottom: '12px', pageBreakInside: 'avoid' }}>
-                <h3 style={{ fontSize: '12px', fontWeight: 600, marginBottom: '8px', paddingBottom: '4px', borderBottom: '1px solid #ddd' }}>Grade Distribution</h3>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: '6px' }}>
-                  {gradeDistribution.map(g => (
-                    <div key={g.grade} style={{ textAlign: 'center', padding: '8px 4px', border: '1px solid #ddd', borderRadius: '6px', backgroundColor: '#fff' }}>
-                      <div style={{ fontSize: '12px', fontWeight: 700, color: gradeChartColors[g.grade] }}>{g.grade}</div>
-                      <div style={{ fontSize: '16px', fontWeight: 700, color: '#1a1a1a' }}>{g.count}</div>
-                    </div>
-                  ))}
+              <div style={{
+              marginBottom: '12px',
+              pageBreakInside: 'avoid'
+            }}>
+                <h3 style={{
+                fontSize: '12px',
+                fontWeight: 600,
+                marginBottom: '8px',
+                paddingBottom: '4px',
+                borderBottom: '1px solid #ddd'
+              }}>Grade Distribution</h3>
+                <div style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(6, 1fr)',
+                gap: '6px'
+              }}>
+                  {gradeDistribution.map(g => <div key={g.grade} style={{
+                  textAlign: 'center',
+                  padding: '8px 4px',
+                  border: '1px solid #ddd',
+                  borderRadius: '6px',
+                  backgroundColor: '#fff'
+                }}>
+                      <div style={{
+                    fontSize: '12px',
+                    fontWeight: 700,
+                    color: gradeChartColors[g.grade]
+                  }}>{g.grade}</div>
+                      <div style={{
+                    fontSize: '16px',
+                    fontWeight: 700,
+                    color: '#1a1a1a'
+                  }}>{g.count}</div>
+                    </div>)}
                 </div>
               </div>
 
               {/* Top & Needs Attention */}
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '12px', marginBottom: '12px', pageBreakInside: 'avoid' }}>
-                <div style={{ padding: '10px', borderRadius: '6px', backgroundColor: '#dcfce7', border: '1px solid #86efac' }}>
-                  <h4 style={{ fontSize: '11px', fontWeight: 600, color: '#16a34a', marginBottom: '6px' }}>Top Subjects</h4>
-                  {top3.map((s, i) => (
-                    <div key={s.name} style={{ display: 'flex', justifyContent: 'space-between', padding: '3px 6px', fontSize: '9px', borderBottom: '1px solid #86efac40' }}>
+              <div style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(2, 1fr)',
+              gap: '12px',
+              marginBottom: '12px',
+              pageBreakInside: 'avoid'
+            }}>
+                <div style={{
+                padding: '10px',
+                borderRadius: '6px',
+                backgroundColor: '#dcfce7',
+                border: '1px solid #86efac'
+              }}>
+                  <h4 style={{
+                  fontSize: '11px',
+                  fontWeight: 600,
+                  color: '#16a34a',
+                  marginBottom: '6px'
+                }}>Top Subjects</h4>
+                  {top3.map((s, i) => <div key={s.name} style={{
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  padding: '3px 6px',
+                  fontSize: '9px',
+                  borderBottom: '1px solid #86efac40'
+                }}>
                       <span>{i + 1}. {s.name}</span>
-                      <span style={{ fontWeight: 600 }}>{getScore(s, selectedYear, examType)}%</span>
-                    </div>
-                  ))}
+                      <span style={{
+                    fontWeight: 600
+                  }}>{getScore(s, selectedYear, examType)}%</span>
+                    </div>)}
                 </div>
-                <div style={{ padding: '10px', borderRadius: '6px', backgroundColor: '#fee2e2', border: '1px solid #fca5a5' }}>
-                  <h4 style={{ fontSize: '11px', fontWeight: 600, color: '#dc2626', marginBottom: '6px' }}>Needs Attention</h4>
-                  {needsAttention.length > 0 ? needsAttention.map((s, i) => (
-                    <div key={s.name} style={{ display: 'flex', justifyContent: 'space-between', padding: '3px 6px', fontSize: '9px', borderBottom: '1px solid #fca5a540' }}>
+                <div style={{
+                padding: '10px',
+                borderRadius: '6px',
+                backgroundColor: '#fee2e2',
+                border: '1px solid #fca5a5'
+              }}>
+                  <h4 style={{
+                  fontSize: '11px',
+                  fontWeight: 600,
+                  color: '#dc2626',
+                  marginBottom: '6px'
+                }}>Needs Attention</h4>
+                  {needsAttention.length > 0 ? needsAttention.map((s, i) => <div key={s.name} style={{
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  padding: '3px 6px',
+                  fontSize: '9px',
+                  borderBottom: '1px solid #fca5a540'
+                }}>
                       <span>{i + 1}. {s.name}</span>
-                      <span style={{ fontWeight: 600 }}>{getScore(s, selectedYear, examType)}%</span>
-                    </div>
-                  )) : <p style={{ fontSize: '9px', color: '#666' }}>All subjects passing!</p>}
+                      <span style={{
+                    fontWeight: 600
+                  }}>{getScore(s, selectedYear, examType)}%</span>
+                    </div>) : <p style={{
+                  fontSize: '9px',
+                  color: '#666'
+                }}>All subjects passing!</p>}
                 </div>
               </div>
 
               {/* Footer */}
-              <div style={{ textAlign: 'center', fontSize: '8px', color: '#666', marginTop: '15px', paddingTop: '8px', borderTop: '1px solid #ddd' }}>
+              <div style={{
+              textAlign: 'center',
+              fontSize: '8px',
+              color: '#666',
+              marginTop: '15px',
+              paddingTop: '8px',
+              borderTop: '1px solid #ddd'
+            }}>
                 <p>This report was generated automatically by the School Management System</p>
                 <p>© {new Date().getFullYear()} All Rights Reserved</p>
               </div>
@@ -2971,42 +3036,29 @@ export default function AcademicPage() {
           <DialogHeader className="flex flex-row items-center justify-between pr-12">
             <DialogTitle>Trends Report</DialogTitle>
             <div className="flex gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                className="gap-2"
-                onClick={() => {
-                  // Generate CSV data for trends
-                  const csvRows = [
-                    ['Period', ...academicData.subjects.map(s => s.name)],
-                    ...trendData.map(row => [
-                      row.period as string,
-                      ...academicData.subjects.map(s => {
-                        const value = row[s.name];
-                        return value !== null && value !== undefined ? value.toString() : '';
-                      })
-                    ])
-                  ];
-                  const csvContent = csvRows.map(row => row.join(',')).join('\n');
-                  const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-                  const link = document.createElement('a');
-                  link.href = URL.createObjectURL(blob);
-                  link.download = `trends-report-${new Date().toISOString().split('T')[0]}.csv`;
-                  link.click();
-                }}
-              >
+              <Button variant="outline" size="sm" className="gap-2" onClick={() => {
+              // Generate CSV data for trends
+              const csvRows = [['Period', ...academicData.subjects.map(s => s.name)], ...trendData.map(row => [row.period as string, ...academicData.subjects.map(s => {
+                const value = row[s.name];
+                return value !== null && value !== undefined ? value.toString() : '';
+              })])];
+              const csvContent = csvRows.map(row => row.join(',')).join('\n');
+              const blob = new Blob([csvContent], {
+                type: 'text/csv;charset=utf-8;'
+              });
+              const link = document.createElement('a');
+              link.href = URL.createObjectURL(blob);
+              link.download = `trends-report-${new Date().toISOString().split('T')[0]}.csv`;
+              link.click();
+            }}>
                 <FileSpreadsheet className="h-4 w-4" />
                 CSV
               </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                className="gap-2"
-                onClick={() => {
-                  if (trendsReportRef.current) {
-                    const printWindow = window.open('', '_blank');
-                    if (printWindow) {
-                      printWindow.document.write(`
+              <Button variant="outline" size="sm" className="gap-2" onClick={() => {
+              if (trendsReportRef.current) {
+                const printWindow = window.open('', '_blank');
+                if (printWindow) {
+                  printWindow.document.write(`
                         <!DOCTYPE html>
                         <html>
                           <head>
@@ -3028,12 +3080,11 @@ export default function AcademicPage() {
                           <body>${trendsReportRef.current.innerHTML}</body>
                         </html>
                       `);
-                      printWindow.document.close();
-                      printWindow.print();
-                    }
-                  }
-                }}
-              >
+                  printWindow.document.close();
+                  printWindow.print();
+                }
+              }
+            }}>
                 <Printer className="h-4 w-4" />
                 PDF
               </Button>
@@ -3043,95 +3094,271 @@ export default function AcademicPage() {
           <div className="flex-1 overflow-y-auto" ref={trendsReportRef}>
             <div className="space-y-4 p-2">
               {/* Report Header */}
-              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '15px', paddingBottom: '10px', borderBottom: '2px solid #22c55e' }}>
-                <img src={schoolLogo} alt="School Logo" style={{ width: '40px', height: '40px', objectFit: 'contain' }} />
-                <div style={{ textAlign: 'left' }}>
-                  <h1 style={{ fontSize: '16px', fontWeight: 700, margin: '0 0 2px 0' }}>Performance Trends Report</h1>
-                  <p style={{ fontSize: '10px', color: '#666', margin: 0 }}>Historical Performance Analysis</p>
-                  <p style={{ fontSize: '9px', color: '#888', margin: '2px 0 0 0' }}>
-                    Generated on {new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}
+              <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '12px',
+              marginBottom: '15px',
+              paddingBottom: '10px',
+              borderBottom: '2px solid #22c55e'
+            }}>
+                <img src={schoolLogo} alt="School Logo" style={{
+                width: '40px',
+                height: '40px',
+                objectFit: 'contain'
+              }} />
+                <div style={{
+                textAlign: 'left'
+              }}>
+                  <h1 style={{
+                  fontSize: '16px',
+                  fontWeight: 700,
+                  margin: '0 0 2px 0'
+                }}>Performance Trends Report</h1>
+                  <p style={{
+                  fontSize: '10px',
+                  color: '#666',
+                  margin: 0
+                }}>Historical Performance Analysis</p>
+                  <p style={{
+                  fontSize: '9px',
+                  color: '#888',
+                  margin: '2px 0 0 0'
+                }}>
+                    Generated on {new Date().toLocaleDateString('en-GB', {
+                    day: 'numeric',
+                    month: 'long',
+                    year: 'numeric'
+                  })}
                     {' • '}Period: {trendPeriod === '1year' ? 'Last 1 Year' : trendPeriod === '2years' ? 'Last 2 Years' : trendPeriod === '3years' ? 'Last 3 Years' : 'All Years'}
                   </p>
                 </div>
               </div>
 
               {/* Current Performance - Consolidated Summary */}
-              <div style={{ marginBottom: '12px', pageBreakInside: 'avoid' }}>
-                <h3 style={{ fontSize: '12px', fontWeight: 600, marginBottom: '8px', paddingBottom: '4px', borderBottom: '1px solid #ddd' }}>Current Performance</h3>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '10px' }}>
+              <div style={{
+              marginBottom: '12px',
+              pageBreakInside: 'avoid'
+            }}>
+                <h3 style={{
+                fontSize: '12px',
+                fontWeight: 600,
+                marginBottom: '8px',
+                paddingBottom: '4px',
+                borderBottom: '1px solid #ddd'
+              }}>Current Performance</h3>
+                <div style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(4, 1fr)',
+                gap: '10px'
+              }}>
                   {/* Overall Average */}
-                  <div style={{ padding: '10px', borderRadius: '6px', backgroundColor: '#eff6ff', border: '1px solid #bfdbfe', textAlign: 'center' }}>
-                    <div style={{ marginBottom: '4px' }}>
-                      <span style={{ fontSize: '12px' }}>📊</span>
+                  <div style={{
+                  padding: '10px',
+                  borderRadius: '6px',
+                  backgroundColor: '#eff6ff',
+                  border: '1px solid #bfdbfe',
+                  textAlign: 'center'
+                }}>
+                    <div style={{
+                    marginBottom: '4px'
+                  }}>
+                      <span style={{
+                      fontSize: '12px'
+                    }}>📊</span>
                     </div>
-                    <div style={{ fontSize: '18px', fontWeight: 700, color: '#3b82f6' }}>{currentAverage}%</div>
-                    <div style={{ fontSize: '9px', color: '#666' }}>Overall Average</div>
+                    <div style={{
+                    fontSize: '18px',
+                    fontWeight: 700,
+                    color: '#3b82f6'
+                  }}>{currentAverage}%</div>
+                    <div style={{
+                    fontSize: '9px',
+                    color: '#666'
+                  }}>Overall Average</div>
                   </div>
                   {/* Improvement */}
-                  <div style={{ padding: '10px', borderRadius: '6px', backgroundColor: trendDirection.direction === 'up' ? '#dcfce7' : trendDirection.direction === 'down' ? '#fee2e2' : '#f3f4f6', border: `1px solid ${trendDirection.direction === 'up' ? '#86efac' : trendDirection.direction === 'down' ? '#fca5a5' : '#d1d5db'}`, textAlign: 'center' }}>
-                    <div style={{ marginBottom: '4px' }}>
-                      <span style={{ fontSize: '12px' }}>{trendDirection.direction === 'up' ? '📈' : trendDirection.direction === 'down' ? '📉' : '➡️'}</span>
+                  <div style={{
+                  padding: '10px',
+                  borderRadius: '6px',
+                  backgroundColor: trendDirection.direction === 'up' ? '#dcfce7' : trendDirection.direction === 'down' ? '#fee2e2' : '#f3f4f6',
+                  border: `1px solid ${trendDirection.direction === 'up' ? '#86efac' : trendDirection.direction === 'down' ? '#fca5a5' : '#d1d5db'}`,
+                  textAlign: 'center'
+                }}>
+                    <div style={{
+                    marginBottom: '4px'
+                  }}>
+                      <span style={{
+                      fontSize: '12px'
+                    }}>{trendDirection.direction === 'up' ? '📈' : trendDirection.direction === 'down' ? '📉' : '➡️'}</span>
                     </div>
-                    <div style={{ fontSize: '18px', fontWeight: 700, color: trendDirection.direction === 'up' ? '#22c55e' : trendDirection.direction === 'down' ? '#ef4444' : '#6b7280' }}>
+                    <div style={{
+                    fontSize: '18px',
+                    fontWeight: 700,
+                    color: trendDirection.direction === 'up' ? '#22c55e' : trendDirection.direction === 'down' ? '#ef4444' : '#6b7280'
+                  }}>
                       {trendDirection.direction === 'up' ? '+' : trendDirection.direction === 'down' ? '-' : ''}{trendDirection.change}%
                     </div>
-                    <div style={{ fontSize: '9px', color: '#666' }}>Improvement</div>
+                    <div style={{
+                    fontSize: '9px',
+                    color: '#666'
+                  }}>Improvement</div>
                   </div>
                   {/* Rising Subjects with names */}
-                  <div style={{ padding: '10px', borderRadius: '6px', backgroundColor: '#dcfce7', border: '1px solid #86efac', textAlign: 'center' }}>
-                    <div style={{ marginBottom: '4px' }}>
-                      <span style={{ fontSize: '12px' }}>🚀</span>
+                  <div style={{
+                  padding: '10px',
+                  borderRadius: '6px',
+                  backgroundColor: '#dcfce7',
+                  border: '1px solid #86efac',
+                  textAlign: 'center'
+                }}>
+                    <div style={{
+                    marginBottom: '4px'
+                  }}>
+                      <span style={{
+                      fontSize: '12px'
+                    }}>🚀</span>
                     </div>
-                    <div style={{ fontSize: '18px', fontWeight: 700, color: '#22c55e' }}>{risingStars.length}</div>
-                    <div style={{ fontSize: '9px', color: '#666', marginBottom: '4px' }}>Rising Subjects</div>
-                    {risingStars.length > 0 && (
-                      <div style={{ fontSize: '8px', color: '#16a34a', lineHeight: '1.3' }}>
+                    <div style={{
+                    fontSize: '18px',
+                    fontWeight: 700,
+                    color: '#22c55e'
+                  }}>{risingStars.length}</div>
+                    <div style={{
+                    fontSize: '9px',
+                    color: '#666',
+                    marginBottom: '4px'
+                  }}>Rising Subjects</div>
+                    {risingStars.length > 0 && <div style={{
+                    fontSize: '8px',
+                    color: '#16a34a',
+                    lineHeight: '1.3'
+                  }}>
                         {risingStars.slice(0, 3).map(s => shortenSubjectName(s.subject.name)).join(', ')}
-                      </div>
-                    )}
+                      </div>}
                   </div>
                   {/* Needs Focus with names */}
-                  <div style={{ padding: '10px', borderRadius: '6px', backgroundColor: '#fee2e2', border: '1px solid #fca5a5', textAlign: 'center' }}>
-                    <div style={{ marginBottom: '4px' }}>
-                      <span style={{ fontSize: '12px' }}>⚠️</span>
+                  <div style={{
+                  padding: '10px',
+                  borderRadius: '6px',
+                  backgroundColor: '#fee2e2',
+                  border: '1px solid #fca5a5',
+                  textAlign: 'center'
+                }}>
+                    <div style={{
+                    marginBottom: '4px'
+                  }}>
+                      <span style={{
+                      fontSize: '12px'
+                    }}>⚠️</span>
                     </div>
-                    <div style={{ fontSize: '18px', fontWeight: 700, color: '#ef4444' }}>{fallingBehind.length}</div>
-                    <div style={{ fontSize: '9px', color: '#666', marginBottom: '4px' }}>Needs Focus</div>
-                    {fallingBehind.length > 0 && (
-                      <div style={{ fontSize: '8px', color: '#dc2626', lineHeight: '1.3' }}>
+                    <div style={{
+                    fontSize: '18px',
+                    fontWeight: 700,
+                    color: '#ef4444'
+                  }}>{fallingBehind.length}</div>
+                    <div style={{
+                    fontSize: '9px',
+                    color: '#666',
+                    marginBottom: '4px'
+                  }}>Needs Focus</div>
+                    {fallingBehind.length > 0 && <div style={{
+                    fontSize: '8px',
+                    color: '#dc2626',
+                    lineHeight: '1.3'
+                  }}>
                         {fallingBehind.slice(0, 3).map(s => shortenSubjectName(s.subject.name)).join(', ')}
-                      </div>
-                    )}
+                      </div>}
                   </div>
                 </div>
               </div>
 
               {/* Rising & Falling - Detailed breakdown */}
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '12px', marginBottom: '12px', pageBreakInside: 'avoid' }}>
-                <div style={{ padding: '10px', borderRadius: '6px', backgroundColor: '#f0fdf4', border: '1px solid #86efac' }}>
-                  <h4 style={{ fontSize: '11px', fontWeight: 600, color: '#16a34a', marginBottom: '6px' }}>Rising Subjects Details</h4>
-                  {risingStars.length > 0 ? risingStars.map((item, i) => (
-                    <div key={i} style={{ display: 'flex', justifyContent: 'space-between', padding: '4px 6px', fontSize: '9px', borderBottom: '1px solid #86efac40' }}>
+              <div style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(2, 1fr)',
+              gap: '12px',
+              marginBottom: '12px',
+              pageBreakInside: 'avoid'
+            }}>
+                <div style={{
+                padding: '10px',
+                borderRadius: '6px',
+                backgroundColor: '#f0fdf4',
+                border: '1px solid #86efac'
+              }}>
+                  <h4 style={{
+                  fontSize: '11px',
+                  fontWeight: 600,
+                  color: '#16a34a',
+                  marginBottom: '6px'
+                }}>Rising Subjects Details</h4>
+                  {risingStars.length > 0 ? risingStars.map((item, i) => <div key={i} style={{
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  padding: '4px 6px',
+                  fontSize: '9px',
+                  borderBottom: '1px solid #86efac40'
+                }}>
                       <span>{item.subject.name}</span>
-                      <span style={{ fontWeight: 600, color: '#22c55e' }}>+{item.improvement}% ({item.prev}% → {item.current}%)</span>
-                    </div>
-                  )) : <p style={{ fontSize: '9px', color: '#666' }}>No improving subjects</p>}
+                      <span style={{
+                    fontWeight: 600,
+                    color: '#22c55e'
+                  }}>+{item.improvement}% ({item.prev}% → {item.current}%)</span>
+                    </div>) : <p style={{
+                  fontSize: '9px',
+                  color: '#666'
+                }}>No improving subjects</p>}
                 </div>
-                <div style={{ padding: '10px', borderRadius: '6px', backgroundColor: '#fef2f2', border: '1px solid #fca5a5' }}>
-                  <h4 style={{ fontSize: '11px', fontWeight: 600, color: '#dc2626', marginBottom: '6px' }}>Needs Focus Details</h4>
-                  {fallingBehind.length > 0 ? fallingBehind.map((item, i) => (
-                    <div key={i} style={{ display: 'flex', justifyContent: 'space-between', padding: '4px 6px', fontSize: '9px', borderBottom: '1px solid #fca5a540' }}>
+                <div style={{
+                padding: '10px',
+                borderRadius: '6px',
+                backgroundColor: '#fef2f2',
+                border: '1px solid #fca5a5'
+              }}>
+                  <h4 style={{
+                  fontSize: '11px',
+                  fontWeight: 600,
+                  color: '#dc2626',
+                  marginBottom: '6px'
+                }}>Needs Focus Details</h4>
+                  {fallingBehind.length > 0 ? fallingBehind.map((item, i) => <div key={i} style={{
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  padding: '4px 6px',
+                  fontSize: '9px',
+                  borderBottom: '1px solid #fca5a540'
+                }}>
                       <span>{item.subject.name}</span>
-                      <span style={{ fontWeight: 600, color: '#ef4444' }}>-{item.decline}% ({item.prev}% → {item.current}%)</span>
-                    </div>
-                  )) : <p style={{ fontSize: '9px', color: '#666' }}>All subjects stable</p>}
+                      <span style={{
+                    fontWeight: 600,
+                    color: '#ef4444'
+                  }}>-{item.decline}% ({item.prev}% → {item.current}%)</span>
+                    </div>) : <p style={{
+                  fontSize: '9px',
+                  color: '#666'
+                }}>All subjects stable</p>}
                 </div>
               </div>
 
               {/* Performance Trend Chart (SVG for print) */}
-              <div style={{ marginBottom: '12px', pageBreakInside: 'avoid' }}>
-                <h3 style={{ fontSize: '12px', fontWeight: 600, marginBottom: '8px', paddingBottom: '4px', borderBottom: '1px solid #ddd' }}>Performance Trend</h3>
-                <div style={{ padding: '10px', backgroundColor: '#f9fafb', borderRadius: '6px', border: '1px solid #e5e7eb' }}>
+              <div style={{
+              marginBottom: '12px',
+              pageBreakInside: 'avoid'
+            }}>
+                <h3 style={{
+                fontSize: '12px',
+                fontWeight: 600,
+                marginBottom: '8px',
+                paddingBottom: '4px',
+                borderBottom: '1px solid #ddd'
+              }}>Performance Trend</h3>
+                <div style={{
+                padding: '10px',
+                backgroundColor: '#f9fafb',
+                borderRadius: '6px',
+                border: '1px solid #e5e7eb'
+              }}>
                   <svg width="100%" height="120" viewBox="0 0 500 120" preserveAspectRatio="xMidYMid meet">
                     {/* Background grid lines */}
                     <line x1="40" y1="20" x2="480" y2="20" stroke="#e5e7eb" strokeWidth="1" />
@@ -3151,166 +3378,233 @@ export default function AcademicPage() {
                       </linearGradient>
                     </defs>
                     {/* Draw trend line and area */}
-                    {trendData.length > 0 && (
-                      <>
-                        <path
-                          d={`M ${trendData.map((d, i) => {
-                            const x = 40 + (i / (trendData.length - 1 || 1)) * 440;
-                            const avg = typeof d.Average === 'number' ? d.Average : 0;
-                            const y = 100 - ((avg - 30) / 70) * 80;
-                            return `${i === 0 ? 'M' : 'L'} ${x} ${y}`;
-                          }).join(' ')} L ${40 + 440} 100 L 40 100 Z`}
-                          fill="url(#trendGradientPrint)"
-                        />
-                        <path
-                          d={trendData.map((d, i) => {
-                            const x = 40 + (i / (trendData.length - 1 || 1)) * 440;
-                            const avg = typeof d.Average === 'number' ? d.Average : 0;
-                            const y = 100 - ((avg - 30) / 70) * 80;
-                            return `${i === 0 ? 'M' : 'L'} ${x} ${y}`;
-                          }).join(' ')}
-                          fill="none"
-                          stroke={trendDirection.direction === 'up' ? '#22c55e' : trendDirection.direction === 'down' ? '#ef4444' : '#3b82f6'}
-                          strokeWidth="2.5"
-                        />
+                    {trendData.length > 0 && <>
+                        <path d={`M ${trendData.map((d, i) => {
+                      const x = 40 + i / (trendData.length - 1 || 1) * 440;
+                      const avg = typeof d.Average === 'number' ? d.Average : 0;
+                      const y = 100 - (avg - 30) / 70 * 80;
+                      return `${i === 0 ? 'M' : 'L'} ${x} ${y}`;
+                    }).join(' ')} L ${40 + 440} 100 L 40 100 Z`} fill="url(#trendGradientPrint)" />
+                        <path d={trendData.map((d, i) => {
+                      const x = 40 + i / (trendData.length - 1 || 1) * 440;
+                      const avg = typeof d.Average === 'number' ? d.Average : 0;
+                      const y = 100 - (avg - 30) / 70 * 80;
+                      return `${i === 0 ? 'M' : 'L'} ${x} ${y}`;
+                    }).join(' ')} fill="none" stroke={trendDirection.direction === 'up' ? '#22c55e' : trendDirection.direction === 'down' ? '#ef4444' : '#3b82f6'} strokeWidth="2.5" />
                         {/* Data points */}
                         {trendData.map((d, i) => {
-                          const x = 40 + (i / (trendData.length - 1 || 1)) * 440;
-                          const avg = typeof d.Average === 'number' ? d.Average : 0;
-                          const y = 100 - ((avg - 30) / 70) * 80;
-                          const periodStr = typeof d.period === 'string' ? d.period : String(d.period);
-                          return (
-                            <g key={i}>
+                      const x = 40 + i / (trendData.length - 1 || 1) * 440;
+                      const avg = typeof d.Average === 'number' ? d.Average : 0;
+                      const y = 100 - (avg - 30) / 70 * 80;
+                      const periodStr = typeof d.period === 'string' ? d.period : String(d.period);
+                      return <g key={i}>
                               <circle cx={x} cy={y} r="4" fill={trendDirection.direction === 'up' ? '#22c55e' : trendDirection.direction === 'down' ? '#ef4444' : '#3b82f6'} />
                               <text x={x} y={y - 8} fontSize="8" fill="#374151" textAnchor="middle" fontWeight="600">{avg}%</text>
                               <text x={x} y="115" fontSize="7" fill="#6b7280" textAnchor="middle">{periodStr.split(' ')[0]}</text>
-                            </g>
-                          );
-                        })}
-                      </>
-                    )}
+                            </g>;
+                    })}
+                      </>}
                   </svg>
                 </div>
               </div>
 
               {/* Strengths Profile + Subject vs Class Average - Side by Side */}
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '12px', marginBottom: '12px', pageBreakInside: 'avoid' }}>
+              <div style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(2, 1fr)',
+              gap: '12px',
+              marginBottom: '12px',
+              pageBreakInside: 'avoid'
+            }}>
                 {/* Strengths Profile Radar Chart (SVG for print) */}
-                <div style={{ padding: '12px', backgroundColor: '#ffffff', borderRadius: '8px', border: '1px solid #e5e7eb' }}>
-                  <h3 style={{ fontSize: '11px', fontWeight: 600, marginBottom: '10px', color: '#374151' }}>Strengths Profile</h3>
-                  <div style={{ textAlign: 'center' }}>
-                    <svg width="180" height="180" viewBox="0 0 180 180" style={{ margin: '0 auto', display: 'block' }}>
+                <div style={{
+                padding: '12px',
+                backgroundColor: '#ffffff',
+                borderRadius: '8px',
+                border: '1px solid #e5e7eb'
+              }}>
+                  <h3 style={{
+                  fontSize: '11px',
+                  fontWeight: 600,
+                  marginBottom: '10px',
+                  color: '#374151'
+                }}>Strengths Profile</h3>
+                  <div style={{
+                  textAlign: 'center'
+                }}>
+                    <svg width="180" height="180" viewBox="0 0 180 180" style={{
+                    margin: '0 auto',
+                    display: 'block'
+                  }}>
                       {/* Radar background circles with fill */}
-                      {[100, 80, 60, 40, 20].map((r, i) => (
-                        <circle key={i} cx="90" cy="90" r={r * 0.65} fill={i === 0 ? "#f9fafb" : "none"} stroke="#e5e7eb" strokeWidth="1" />
-                      ))}
+                      {[100, 80, 60, 40, 20].map((r, i) => <circle key={i} cx="90" cy="90" r={r * 0.65} fill={i === 0 ? "#f9fafb" : "none"} stroke="#e5e7eb" strokeWidth="1" />)}
                       {/* Axis lines */}
                       {radarData.slice(0, 6).map((_, i) => {
-                        const angle = (i * 60 - 90) * (Math.PI / 180);
-                        const x2 = 90 + 65 * Math.cos(angle);
-                        const y2 = 90 + 65 * Math.sin(angle);
-                        return <line key={i} x1="90" y1="90" x2={x2} y2={y2} stroke="#e5e7eb" strokeWidth="1" />;
-                      })}
+                      const angle = (i * 60 - 90) * (Math.PI / 180);
+                      const x2 = 90 + 65 * Math.cos(angle);
+                      const y2 = 90 + 65 * Math.sin(angle);
+                      return <line key={i} x1="90" y1="90" x2={x2} y2={y2} stroke="#e5e7eb" strokeWidth="1" />;
+                    })}
                       {/* Radar polygon with gradient-like fill */}
-                      <polygon
-                        points={radarData.slice(0, 6).map((d, i) => {
-                          const angle = (i * 60 - 90) * (Math.PI / 180);
-                          const r = (d.score / 100) * 65;
-                          const x = 90 + r * Math.cos(angle);
-                          const y = 90 + r * Math.sin(angle);
-                          return `${x},${y}`;
-                        }).join(' ')}
-                        fill={radarAverage >= 70 ? '#22c55e' : radarAverage >= 50 ? '#f59e0b' : '#ef4444'}
-                        fillOpacity="0.35"
-                        stroke={radarAverage >= 70 ? '#22c55e' : radarAverage >= 50 ? '#f59e0b' : '#ef4444'}
-                        strokeWidth="2.5"
-                      />
+                      <polygon points={radarData.slice(0, 6).map((d, i) => {
+                      const angle = (i * 60 - 90) * (Math.PI / 180);
+                      const r = d.score / 100 * 65;
+                      const x = 90 + r * Math.cos(angle);
+                      const y = 90 + r * Math.sin(angle);
+                      return `${x},${y}`;
+                    }).join(' ')} fill={radarAverage >= 70 ? '#22c55e' : radarAverage >= 50 ? '#f59e0b' : '#ef4444'} fillOpacity="0.35" stroke={radarAverage >= 70 ? '#22c55e' : radarAverage >= 50 ? '#f59e0b' : '#ef4444'} strokeWidth="2.5" />
                       {/* Data points and labels */}
                       {radarData.slice(0, 6).map((d, i) => {
-                        const angle = (i * 60 - 90) * (Math.PI / 180);
-                        const r = (d.score / 100) * 65;
-                        const x = 90 + r * Math.cos(angle);
-                        const y = 90 + r * Math.sin(angle);
-                        const labelR = 78;
-                        const labelX = 90 + labelR * Math.cos(angle);
-                        const labelY = 90 + labelR * Math.sin(angle);
-                        return (
-                          <g key={i}>
+                      const angle = (i * 60 - 90) * (Math.PI / 180);
+                      const r = d.score / 100 * 65;
+                      const x = 90 + r * Math.cos(angle);
+                      const y = 90 + r * Math.sin(angle);
+                      const labelR = 78;
+                      const labelX = 90 + labelR * Math.cos(angle);
+                      const labelY = 90 + labelR * Math.sin(angle);
+                      return <g key={i}>
                             <circle cx={x} cy={y} r="4" fill={radarAverage >= 70 ? '#22c55e' : radarAverage >= 50 ? '#f59e0b' : '#ef4444'} stroke="#fff" strokeWidth="1.5" />
                             <text x={labelX} y={labelY} fontSize="9" fill="#374151" textAnchor="middle" dominantBaseline="middle" fontWeight="500">
                               {d.subject}
                             </text>
-                          </g>
-                        );
-                      })}
+                          </g>;
+                    })}
                     </svg>
                   </div>
-                  <p style={{ fontSize: '8px', color: '#6b7280', textAlign: 'center', marginTop: '6px' }}>
+                  <p style={{
+                  fontSize: '8px',
+                  color: '#6b7280',
+                  textAlign: 'center',
+                  marginTop: '6px'
+                }}>
                     Visual snapshot of performance across subjects
                   </p>
                 </div>
 
                 {/* Subject vs Class Average - Horizontal Bar Chart Style */}
-                <div style={{ padding: '12px', backgroundColor: '#ffffff', borderRadius: '8px', border: '1px solid #e5e7eb' }}>
-                  <h3 style={{ fontSize: '11px', fontWeight: 600, marginBottom: '10px', color: '#374151' }}>Your Score vs Class Average</h3>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                <div style={{
+                padding: '12px',
+                backgroundColor: '#ffffff',
+                borderRadius: '8px',
+                border: '1px solid #e5e7eb'
+              }}>
+                  <h3 style={{
+                  fontSize: '11px',
+                  fontWeight: 600,
+                  marginBottom: '10px',
+                  color: '#374151'
+                }}>Your Score vs Class Average</h3>
+                  <div style={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '6px'
+                }}>
                     {subjectVsClassData.slice(0, 6).map((item, i) => {
-                      const subjectColors: Record<string, string> = {
-                        "Eng": "#22c55e", "Math": "#f59e0b", "Sci": "#3b82f6", "Phy": "#06b6d4",
-                        "Chem": "#8b5cf6", "Bio": "#10b981", "Hist": "#ef4444", "Geo": "#f97316",
-                        "Art": "#ec4899", "ICT": "#6366f1", "Islam": "#14b8a6", "Add M": "#a855f7"
-                      };
-                      const fallbackColors = ["#3b82f6", "#f59e0b", "#22c55e", "#ef4444", "#8b5cf6", "#f97316"];
-                      const barColor = subjectColors[item.name] || fallbackColors[i % fallbackColors.length];
-                      return (
-                        <div key={item.name} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                          <div style={{ width: '45px', fontSize: '9px', fontWeight: 500, color: '#374151', textAlign: 'right' }}>{item.name}</div>
-                          <div style={{ flex: 1, position: 'relative', height: '16px', backgroundColor: '#f3f4f6', borderRadius: '4px', overflow: 'hidden' }}>
+                    const subjectColors: Record<string, string> = {
+                      "Eng": "#22c55e",
+                      "Math": "#f59e0b",
+                      "Sci": "#3b82f6",
+                      "Phy": "#06b6d4",
+                      "Chem": "#8b5cf6",
+                      "Bio": "#10b981",
+                      "Hist": "#ef4444",
+                      "Geo": "#f97316",
+                      "Art": "#ec4899",
+                      "ICT": "#6366f1",
+                      "Islam": "#14b8a6",
+                      "Add M": "#a855f7"
+                    };
+                    const fallbackColors = ["#3b82f6", "#f59e0b", "#22c55e", "#ef4444", "#8b5cf6", "#f97316"];
+                    const barColor = subjectColors[item.name] || fallbackColors[i % fallbackColors.length];
+                    return <div key={item.name} style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '8px'
+                    }}>
+                          <div style={{
+                        width: '45px',
+                        fontSize: '9px',
+                        fontWeight: 500,
+                        color: '#374151',
+                        textAlign: 'right'
+                      }}>{item.name}</div>
+                          <div style={{
+                        flex: 1,
+                        position: 'relative',
+                        height: '16px',
+                        backgroundColor: '#f3f4f6',
+                        borderRadius: '4px',
+                        overflow: 'hidden'
+                      }}>
                             {/* Student bar */}
-                            <div style={{ 
-                              position: 'absolute', 
-                              left: 0, 
-                              top: 0, 
-                              height: '100%', 
-                              width: `${item.student}%`, 
-                              backgroundColor: barColor, 
-                              borderRadius: '4px',
-                              transition: 'width 0.3s'
-                            }} />
+                            <div style={{
+                          position: 'absolute',
+                          left: 0,
+                          top: 0,
+                          height: '100%',
+                          width: `${item.student}%`,
+                          backgroundColor: barColor,
+                          borderRadius: '4px',
+                          transition: 'width 0.3s'
+                        }} />
                             {/* Class average marker */}
-                            <div style={{ 
-                              position: 'absolute', 
-                              left: `${item.classAvg}%`, 
-                              top: '50%', 
-                              transform: 'translate(-50%, -50%)',
-                              width: '8px',
-                              height: '8px',
-                              backgroundColor: '#374151',
-                              borderRadius: '50%',
-                              border: '1.5px solid #fff'
-                            }} />
+                            <div style={{
+                          position: 'absolute',
+                          left: `${item.classAvg}%`,
+                          top: '50%',
+                          transform: 'translate(-50%, -50%)',
+                          width: '8px',
+                          height: '8px',
+                          backgroundColor: '#374151',
+                          borderRadius: '50%',
+                          border: '1.5px solid #fff'
+                        }} />
                           </div>
-                          <div style={{ 
-                            width: '35px', 
-                            fontSize: '9px', 
-                            fontWeight: 600, 
-                            color: item.delta >= 0 ? '#22c55e' : '#ef4444',
-                            textAlign: 'right'
-                          }}>
+                          <div style={{
+                        width: '35px',
+                        fontSize: '9px',
+                        fontWeight: 600,
+                        color: item.delta >= 0 ? '#22c55e' : '#ef4444',
+                        textAlign: 'right'
+                      }}>
                             {item.delta >= 0 ? '+' : ''}{item.delta}%
                           </div>
-                        </div>
-                      );
-                    })}
+                        </div>;
+                  })}
                   </div>
                   {/* Legend */}
-                  <div style={{ display: 'flex', justifyContent: 'center', gap: '16px', marginTop: '10px', fontSize: '8px', color: '#6b7280' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                      <div style={{ width: '12px', height: '8px', backgroundColor: '#3b82f6', borderRadius: '2px' }} />
+                  <div style={{
+                  display: 'flex',
+                  justifyContent: 'center',
+                  gap: '16px',
+                  marginTop: '10px',
+                  fontSize: '8px',
+                  color: '#6b7280'
+                }}>
+                    <div style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '4px'
+                  }}>
+                      <div style={{
+                      width: '12px',
+                      height: '8px',
+                      backgroundColor: '#3b82f6',
+                      borderRadius: '2px'
+                    }} />
                       <span>Your Score</span>
                     </div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                      <div style={{ width: '8px', height: '8px', backgroundColor: '#374151', borderRadius: '50%' }} />
+                    <div style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '4px'
+                  }}>
+                      <div style={{
+                      width: '8px',
+                      height: '8px',
+                      backgroundColor: '#374151',
+                      borderRadius: '50%'
+                    }} />
                       <span>Class Avg</span>
                     </div>
                   </div>
@@ -3319,55 +3613,124 @@ export default function AcademicPage() {
 
 
               {/* Historical Data Table */}
-              <div style={{ marginBottom: '12px', pageBreakInside: 'avoid' }}>
-                <h3 style={{ fontSize: '12px', fontWeight: 600, marginBottom: '8px', paddingBottom: '4px', borderBottom: '1px solid #ddd' }}>Historical Performance Data</h3>
-                <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '9px' }}>
+              <div style={{
+              marginBottom: '12px',
+              pageBreakInside: 'avoid'
+            }}>
+                <h3 style={{
+                fontSize: '12px',
+                fontWeight: 600,
+                marginBottom: '8px',
+                paddingBottom: '4px',
+                borderBottom: '1px solid #ddd'
+              }}>Historical Performance Data</h3>
+                <table style={{
+                width: '100%',
+                borderCollapse: 'collapse',
+                fontSize: '9px'
+              }}>
                   <thead>
-                    <tr style={{ backgroundColor: '#f5f5f5' }}>
-                      <th style={{ padding: '6px 8px', borderBottom: '1px solid #ddd', textAlign: 'left' }}>Period</th>
-                      <th style={{ padding: '6px 8px', borderBottom: '1px solid #ddd', textAlign: 'right' }}>Average</th>
+                    <tr style={{
+                    backgroundColor: '#f5f5f5'
+                  }}>
+                      <th style={{
+                      padding: '6px 8px',
+                      borderBottom: '1px solid #ddd',
+                      textAlign: 'left'
+                    }}>Period</th>
+                      <th style={{
+                      padding: '6px 8px',
+                      borderBottom: '1px solid #ddd',
+                      textAlign: 'right'
+                    }}>Average</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {trendData.map((item, idx) => (
-                      <tr key={idx} style={{ backgroundColor: idx % 2 === 0 ? '#fff' : '#f9f9f9' }}>
-                        <td style={{ padding: '5px 8px', borderBottom: '1px solid #eee' }}>{item.period}</td>
-                        <td style={{ padding: '5px 8px', borderBottom: '1px solid #eee', textAlign: 'right', fontWeight: 600 }}>{item.Average}%</td>
-                      </tr>
-                    ))}
+                    {trendData.map((item, idx) => <tr key={idx} style={{
+                    backgroundColor: idx % 2 === 0 ? '#fff' : '#f9f9f9'
+                  }}>
+                        <td style={{
+                      padding: '5px 8px',
+                      borderBottom: '1px solid #eee'
+                    }}>{item.period}</td>
+                        <td style={{
+                      padding: '5px 8px',
+                      borderBottom: '1px solid #eee',
+                      textAlign: 'right',
+                      fontWeight: 600
+                    }}>{item.Average}%</td>
+                      </tr>)}
                   </tbody>
                 </table>
               </div>
 
               {/* Performance Heatmap */}
-              <div style={{ marginBottom: '12px', pageBreakInside: 'avoid' }}>
-                <h3 style={{ fontSize: '12px', fontWeight: 600, marginBottom: '8px', paddingBottom: '4px', borderBottom: '1px solid #ddd' }}>Performance Heatmap</h3>
-                <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '9px' }}>
+              <div style={{
+              marginBottom: '12px',
+              pageBreakInside: 'avoid'
+            }}>
+                <h3 style={{
+                fontSize: '12px',
+                fontWeight: 600,
+                marginBottom: '8px',
+                paddingBottom: '4px',
+                borderBottom: '1px solid #ddd'
+              }}>Performance Heatmap</h3>
+                <table style={{
+                width: '100%',
+                borderCollapse: 'collapse',
+                fontSize: '9px'
+              }}>
                   <thead>
-                    <tr style={{ backgroundColor: '#f5f5f5' }}>
-                      <th style={{ padding: '4px 6px', borderBottom: '1px solid #ddd', textAlign: 'left', minWidth: '80px' }}>Subject</th>
-                      {heatmapData[0]?.scores.map(s => (
-                        <th key={s.period} style={{ padding: '4px 6px', borderBottom: '1px solid #ddd', textAlign: 'center', minWidth: '40px' }}>{s.period}</th>
-                      ))}
+                    <tr style={{
+                    backgroundColor: '#f5f5f5'
+                  }}>
+                      <th style={{
+                      padding: '4px 6px',
+                      borderBottom: '1px solid #ddd',
+                      textAlign: 'left',
+                      minWidth: '80px'
+                    }}>Subject</th>
+                      {heatmapData[0]?.scores.map(s => <th key={s.period} style={{
+                      padding: '4px 6px',
+                      borderBottom: '1px solid #ddd',
+                      textAlign: 'center',
+                      minWidth: '40px'
+                    }}>{s.period}</th>)}
                     </tr>
                   </thead>
                   <tbody>
-                    {heatmapData.map((row, idx) => (
-                      <tr key={row.subject} style={{ backgroundColor: idx % 2 === 0 ? '#fff' : '#f9f9f9' }}>
-                        <td style={{ padding: '4px 6px', borderBottom: '1px solid #eee', fontWeight: 500 }}>{row.fullName}</td>
-                        {row.scores.map((cell, cellIdx) => (
-                          <td key={cellIdx} style={{ padding: '4px 6px', borderBottom: '1px solid #eee', textAlign: 'center', fontWeight: 600, color: cell.score ? (cell.score >= 80 ? '#22c55e' : cell.score >= 50 ? '#3b82f6' : '#ef4444') : '#999' }}>
+                    {heatmapData.map((row, idx) => <tr key={row.subject} style={{
+                    backgroundColor: idx % 2 === 0 ? '#fff' : '#f9f9f9'
+                  }}>
+                        <td style={{
+                      padding: '4px 6px',
+                      borderBottom: '1px solid #eee',
+                      fontWeight: 500
+                    }}>{row.fullName}</td>
+                        {row.scores.map((cell, cellIdx) => <td key={cellIdx} style={{
+                      padding: '4px 6px',
+                      borderBottom: '1px solid #eee',
+                      textAlign: 'center',
+                      fontWeight: 600,
+                      color: cell.score ? cell.score >= 80 ? '#22c55e' : cell.score >= 50 ? '#3b82f6' : '#ef4444' : '#999'
+                    }}>
                             {cell.score ?? '-'}
-                          </td>
-                        ))}
-                      </tr>
-                    ))}
+                          </td>)}
+                      </tr>)}
                   </tbody>
                 </table>
               </div>
 
               {/* Footer */}
-              <div style={{ textAlign: 'center', fontSize: '8px', color: '#666', marginTop: '15px', paddingTop: '8px', borderTop: '1px solid #ddd' }}>
+              <div style={{
+              textAlign: 'center',
+              fontSize: '8px',
+              color: '#666',
+              marginTop: '15px',
+              paddingTop: '8px',
+              borderTop: '1px solid #ddd'
+            }}>
                 <p>This report was generated automatically by the School Management System</p>
                 <p>© {new Date().getFullYear()} All Rights Reserved</p>
               </div>
@@ -3382,43 +3745,28 @@ export default function AcademicPage() {
           <DialogHeader className="flex flex-row items-center justify-between pr-12">
             <DialogTitle>Comparison Report</DialogTitle>
             <div className="flex gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                className="gap-2"
-                onClick={() => {
-                  // Generate CSV data for comparison
-                  const examALabel = getExamLabelForComparison(compareExamA);
-                  const examBLabel = getExamLabelForComparison(compareExamB);
-                  const csvRows = [
-                    ['Subject', examALabel, examBLabel, 'Change'],
-                    ...comparisonData.map(d => [
-                      d.name,
-                      d.examA.toString(),
-                      d.examB.toString(),
-                      (d.delta >= 0 ? '+' : '') + d.delta.toString()
-                    ])
-                  ];
-                  const csvContent = csvRows.map(row => row.join(',')).join('\n');
-                  const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-                  const link = document.createElement('a');
-                  link.href = URL.createObjectURL(blob);
-                  link.download = `comparison-report-${new Date().toISOString().split('T')[0]}.csv`;
-                  link.click();
-                }}
-              >
+              <Button variant="outline" size="sm" className="gap-2" onClick={() => {
+              // Generate CSV data for comparison
+              const examALabel = getExamLabelForComparison(compareExamA);
+              const examBLabel = getExamLabelForComparison(compareExamB);
+              const csvRows = [['Subject', examALabel, examBLabel, 'Change'], ...comparisonData.map(d => [d.name, d.examA.toString(), d.examB.toString(), (d.delta >= 0 ? '+' : '') + d.delta.toString()])];
+              const csvContent = csvRows.map(row => row.join(',')).join('\n');
+              const blob = new Blob([csvContent], {
+                type: 'text/csv;charset=utf-8;'
+              });
+              const link = document.createElement('a');
+              link.href = URL.createObjectURL(blob);
+              link.download = `comparison-report-${new Date().toISOString().split('T')[0]}.csv`;
+              link.click();
+            }}>
                 <FileSpreadsheet className="h-4 w-4" />
                 CSV
               </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                className="gap-2"
-                onClick={() => {
-                  if (comparisonReportRef.current) {
-                    const printWindow = window.open('', '_blank');
-                    if (printWindow) {
-                      printWindow.document.write(`
+              <Button variant="outline" size="sm" className="gap-2" onClick={() => {
+              if (comparisonReportRef.current) {
+                const printWindow = window.open('', '_blank');
+                if (printWindow) {
+                  printWindow.document.write(`
                         <!DOCTYPE html>
                         <html>
                           <head>
@@ -3440,12 +3788,11 @@ export default function AcademicPage() {
                           <body>${comparisonReportRef.current.innerHTML}</body>
                         </html>
                       `);
-                      printWindow.document.close();
-                      printWindow.print();
-                    }
-                  }
-                }}
-              >
+                  printWindow.document.close();
+                  printWindow.print();
+                }
+              }
+            }}>
                 <Printer className="h-4 w-4" />
                 PDF
               </Button>
@@ -3454,163 +3801,402 @@ export default function AcademicPage() {
           
           <div className="flex-1 overflow-y-auto" ref={comparisonReportRef}>
             {(() => {
-              const examALabel = getExamLabelForComparison(compareExamA);
-              const examBLabel = getExamLabelForComparison(compareExamB);
-              const avgA = comparisonData.length > 0 ? Math.round(comparisonData.reduce((sum, d) => sum + d.examA, 0) / comparisonData.length) : 0;
-              const avgB = comparisonData.length > 0 ? Math.round(comparisonData.reduce((sum, d) => sum + d.examB, 0) / comparisonData.length) : 0;
-              const avgDelta = avgA - avgB;
-              const improvedSubjects = comparisonData.filter(d => d.delta > 0);
-              const declinedSubjects = comparisonData.filter(d => d.delta < 0);
-              const improved = improvedSubjects.length;
-              const declined = declinedSubjects.length;
-              
-              // Best performing subject - the one that improved the most
-              const bestPerforming = improvedSubjects.length > 0 
-                ? improvedSubjects.reduce((best, current) => current.delta > best.delta ? current : best)
-                : null;
+            const examALabel = getExamLabelForComparison(compareExamA);
+            const examBLabel = getExamLabelForComparison(compareExamB);
+            const avgA = comparisonData.length > 0 ? Math.round(comparisonData.reduce((sum, d) => sum + d.examA, 0) / comparisonData.length) : 0;
+            const avgB = comparisonData.length > 0 ? Math.round(comparisonData.reduce((sum, d) => sum + d.examB, 0) / comparisonData.length) : 0;
+            const avgDelta = avgA - avgB;
+            const improvedSubjects = comparisonData.filter(d => d.delta > 0);
+            const declinedSubjects = comparisonData.filter(d => d.delta < 0);
+            const improved = improvedSubjects.length;
+            const declined = declinedSubjects.length;
 
-              return (
-                <div className="space-y-4 p-2">
+            // Best performing subject - the one that improved the most
+            const bestPerforming = improvedSubjects.length > 0 ? improvedSubjects.reduce((best, current) => current.delta > best.delta ? current : best) : null;
+            return <div className="space-y-4 p-2">
                   {/* Report Header */}
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '15px', paddingBottom: '10px', borderBottom: '2px solid #8b5cf6' }}>
-                    <img src={schoolLogo} alt="School Logo" style={{ width: '40px', height: '40px', objectFit: 'contain' }} />
-                    <div style={{ textAlign: 'left' }}>
-                      <h1 style={{ fontSize: '16px', fontWeight: 700, margin: '0 0 2px 0' }}>Exam Comparison Report</h1>
-                      <p style={{ fontSize: '10px', color: '#666', margin: 0 }}>{examALabel} vs {examBLabel}</p>
-                      <p style={{ fontSize: '9px', color: '#888', margin: '2px 0 0 0' }}>
-                        Generated on {new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}
+                  <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '12px',
+                marginBottom: '15px',
+                paddingBottom: '10px',
+                borderBottom: '2px solid #8b5cf6'
+              }}>
+                    <img src={schoolLogo} alt="School Logo" style={{
+                  width: '40px',
+                  height: '40px',
+                  objectFit: 'contain'
+                }} />
+                    <div style={{
+                  textAlign: 'left'
+                }}>
+                      <h1 style={{
+                    fontSize: '16px',
+                    fontWeight: 700,
+                    margin: '0 0 2px 0'
+                  }}>Exam Comparison Report</h1>
+                      <p style={{
+                    fontSize: '10px',
+                    color: '#666',
+                    margin: 0
+                  }}>{examALabel} vs {examBLabel}</p>
+                      <p style={{
+                    fontSize: '9px',
+                    color: '#888',
+                    margin: '2px 0 0 0'
+                  }}>
+                        Generated on {new Date().toLocaleDateString('en-GB', {
+                      day: 'numeric',
+                      month: 'long',
+                      year: 'numeric'
+                    })}
                       </p>
                     </div>
                   </div>
 
                   {/* Summary Comparison */}
-                  <div style={{ marginBottom: '12px', pageBreakInside: 'avoid' }}>
-                    <h3 style={{ fontSize: '12px', fontWeight: 600, marginBottom: '8px', paddingBottom: '4px', borderBottom: '1px solid #ddd' }}>Summary Comparison</h3>
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '12px' }}>
-                      <div style={{ padding: '12px', borderRadius: '6px', backgroundColor: '#eff6ff', border: '1px solid #3b82f6' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '8px' }}>
-                          <div style={{ width: '10px', height: '10px', borderRadius: '50%', backgroundColor: '#3b82f6' }} />
-                          <span style={{ fontSize: '10px', fontWeight: 600, color: '#1d4ed8' }}>Exam A</span>
+                  <div style={{
+                marginBottom: '12px',
+                pageBreakInside: 'avoid'
+              }}>
+                    <h3 style={{
+                  fontSize: '12px',
+                  fontWeight: 600,
+                  marginBottom: '8px',
+                  paddingBottom: '4px',
+                  borderBottom: '1px solid #ddd'
+                }}>Summary Comparison</h3>
+                    <div style={{
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(2, 1fr)',
+                  gap: '12px'
+                }}>
+                      <div style={{
+                    padding: '12px',
+                    borderRadius: '6px',
+                    backgroundColor: '#eff6ff',
+                    border: '1px solid #3b82f6'
+                  }}>
+                        <div style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '6px',
+                      marginBottom: '8px'
+                    }}>
+                          <div style={{
+                        width: '10px',
+                        height: '10px',
+                        borderRadius: '50%',
+                        backgroundColor: '#3b82f6'
+                      }} />
+                          <span style={{
+                        fontSize: '10px',
+                        fontWeight: 600,
+                        color: '#1d4ed8'
+                      }}>Exam A</span>
                         </div>
-                        <p style={{ fontSize: '9px', color: '#666', marginBottom: '4px' }}>{examALabel}</p>
-                        <div style={{ fontSize: '24px', fontWeight: 700, color: '#1a1a1a' }}>{avgA}%</div>
-                        <p style={{ fontSize: '9px', color: '#666' }}>Average Score</p>
+                        <p style={{
+                      fontSize: '9px',
+                      color: '#666',
+                      marginBottom: '4px'
+                    }}>{examALabel}</p>
+                        <div style={{
+                      fontSize: '24px',
+                      fontWeight: 700,
+                      color: '#1a1a1a'
+                    }}>{avgA}%</div>
+                        <p style={{
+                      fontSize: '9px',
+                      color: '#666'
+                    }}>Average Score</p>
                       </div>
-                      <div style={{ padding: '12px', borderRadius: '6px', backgroundColor: '#fef2f2', border: '1px solid #ef4444' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '8px' }}>
-                          <div style={{ width: '10px', height: '10px', borderRadius: '50%', backgroundColor: '#ef4444' }} />
-                          <span style={{ fontSize: '10px', fontWeight: 600, color: '#dc2626' }}>Exam B</span>
+                      <div style={{
+                    padding: '12px',
+                    borderRadius: '6px',
+                    backgroundColor: '#fef2f2',
+                    border: '1px solid #ef4444'
+                  }}>
+                        <div style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '6px',
+                      marginBottom: '8px'
+                    }}>
+                          <div style={{
+                        width: '10px',
+                        height: '10px',
+                        borderRadius: '50%',
+                        backgroundColor: '#ef4444'
+                      }} />
+                          <span style={{
+                        fontSize: '10px',
+                        fontWeight: 600,
+                        color: '#dc2626'
+                      }}>Exam B</span>
                         </div>
-                        <p style={{ fontSize: '9px', color: '#666', marginBottom: '4px' }}>{examBLabel}</p>
-                        <div style={{ fontSize: '24px', fontWeight: 700, color: '#1a1a1a' }}>{avgB}%</div>
-                        <p style={{ fontSize: '9px', color: '#666' }}>Average Score</p>
+                        <p style={{
+                      fontSize: '9px',
+                      color: '#666',
+                      marginBottom: '4px'
+                    }}>{examBLabel}</p>
+                        <div style={{
+                      fontSize: '24px',
+                      fontWeight: 700,
+                      color: '#1a1a1a'
+                    }}>{avgB}%</div>
+                        <p style={{
+                      fontSize: '9px',
+                      color: '#666'
+                    }}>Average Score</p>
                       </div>
                     </div>
                   </div>
 
                   {/* Change Summary with Subject Names */}
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '8px', marginBottom: '12px', pageBreakInside: 'avoid' }}>
-                    <div style={{ padding: '10px', borderRadius: '6px', backgroundColor: avgDelta > 0 ? '#dcfce7' : avgDelta < 0 ? '#fee2e2' : '#f3f4f6', border: '1px solid #ddd', textAlign: 'center' }}>
-                      <div style={{ marginBottom: '4px' }}>
-                        <span style={{ fontSize: '12px' }}>{avgDelta > 0 ? '📈' : avgDelta < 0 ? '📉' : '➡️'}</span>
+                  <div style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(4, 1fr)',
+                gap: '8px',
+                marginBottom: '12px',
+                pageBreakInside: 'avoid'
+              }}>
+                    <div style={{
+                  padding: '10px',
+                  borderRadius: '6px',
+                  backgroundColor: avgDelta > 0 ? '#dcfce7' : avgDelta < 0 ? '#fee2e2' : '#f3f4f6',
+                  border: '1px solid #ddd',
+                  textAlign: 'center'
+                }}>
+                      <div style={{
+                    marginBottom: '4px'
+                  }}>
+                        <span style={{
+                      fontSize: '12px'
+                    }}>{avgDelta > 0 ? '📈' : avgDelta < 0 ? '📉' : '➡️'}</span>
                       </div>
-                      <div style={{ fontSize: '16px', fontWeight: 700, color: avgDelta > 0 ? '#22c55e' : avgDelta < 0 ? '#ef4444' : '#6b7280' }}>
+                      <div style={{
+                    fontSize: '16px',
+                    fontWeight: 700,
+                    color: avgDelta > 0 ? '#22c55e' : avgDelta < 0 ? '#ef4444' : '#6b7280'
+                  }}>
                         {avgDelta > 0 ? '+' : ''}{avgDelta}%
                       </div>
-                      <div style={{ fontSize: '8px', color: '#666' }}>Overall Change</div>
+                      <div style={{
+                    fontSize: '8px',
+                    color: '#666'
+                  }}>Overall Change</div>
                     </div>
-                    <div style={{ padding: '10px', borderRadius: '6px', backgroundColor: '#dcfce7', border: '1px solid #86efac', textAlign: 'center' }}>
-                      <div style={{ marginBottom: '4px' }}>
-                        <span style={{ fontSize: '12px' }}>🚀</span>
+                    <div style={{
+                  padding: '10px',
+                  borderRadius: '6px',
+                  backgroundColor: '#dcfce7',
+                  border: '1px solid #86efac',
+                  textAlign: 'center'
+                }}>
+                      <div style={{
+                    marginBottom: '4px'
+                  }}>
+                        <span style={{
+                      fontSize: '12px'
+                    }}>🚀</span>
                       </div>
-                      <div style={{ fontSize: '16px', fontWeight: 700, color: '#22c55e' }}>{improved}</div>
-                      <div style={{ fontSize: '8px', color: '#666' }}>Improved</div>
-                      {improvedSubjects.length > 0 && (
-                        <div style={{ fontSize: '7px', color: '#22c55e', marginTop: '4px', lineHeight: 1.3 }}>
+                      <div style={{
+                    fontSize: '16px',
+                    fontWeight: 700,
+                    color: '#22c55e'
+                  }}>{improved}</div>
+                      <div style={{
+                    fontSize: '8px',
+                    color: '#666'
+                  }}>Improved</div>
+                      {improvedSubjects.length > 0 && <div style={{
+                    fontSize: '7px',
+                    color: '#22c55e',
+                    marginTop: '4px',
+                    lineHeight: 1.3
+                  }}>
                           {improvedSubjects.slice(0, 3).map(s => shortenSubjectName(s.name)).join(', ')}
                           {improvedSubjects.length > 3 && ` +${improvedSubjects.length - 3}`}
-                        </div>
-                      )}
+                        </div>}
                     </div>
-                    <div style={{ padding: '10px', borderRadius: '6px', backgroundColor: '#fee2e2', border: '1px solid #fca5a5', textAlign: 'center' }}>
-                      <div style={{ marginBottom: '4px' }}>
-                        <span style={{ fontSize: '12px' }}>📉</span>
+                    <div style={{
+                  padding: '10px',
+                  borderRadius: '6px',
+                  backgroundColor: '#fee2e2',
+                  border: '1px solid #fca5a5',
+                  textAlign: 'center'
+                }}>
+                      <div style={{
+                    marginBottom: '4px'
+                  }}>
+                        <span style={{
+                      fontSize: '12px'
+                    }}>📉</span>
                       </div>
-                      <div style={{ fontSize: '16px', fontWeight: 700, color: '#ef4444' }}>{declined}</div>
-                      <div style={{ fontSize: '8px', color: '#666' }}>Declined</div>
-                      {declinedSubjects.length > 0 && (
-                        <div style={{ fontSize: '7px', color: '#ef4444', marginTop: '4px', lineHeight: 1.3 }}>
+                      <div style={{
+                    fontSize: '16px',
+                    fontWeight: 700,
+                    color: '#ef4444'
+                  }}>{declined}</div>
+                      <div style={{
+                    fontSize: '8px',
+                    color: '#666'
+                  }}>Declined</div>
+                      {declinedSubjects.length > 0 && <div style={{
+                    fontSize: '7px',
+                    color: '#ef4444',
+                    marginTop: '4px',
+                    lineHeight: 1.3
+                  }}>
                           {declinedSubjects.slice(0, 3).map(s => shortenSubjectName(s.name)).join(', ')}
                           {declinedSubjects.length > 3 && ` +${declinedSubjects.length - 3}`}
-                        </div>
-                      )}
+                        </div>}
                     </div>
-                    <div style={{ padding: '10px', borderRadius: '6px', backgroundColor: '#fef3c7', border: '1px solid #fcd34d', textAlign: 'center' }}>
-                      <div style={{ marginBottom: '4px' }}>
-                        <span style={{ fontSize: '12px' }}>🏆</span>
+                    <div style={{
+                  padding: '10px',
+                  borderRadius: '6px',
+                  backgroundColor: '#fef3c7',
+                  border: '1px solid #fcd34d',
+                  textAlign: 'center'
+                }}>
+                      <div style={{
+                    marginBottom: '4px'
+                  }}>
+                        <span style={{
+                      fontSize: '12px'
+                    }}>🏆</span>
                       </div>
-                      <div style={{ fontSize: '14px', fontWeight: 700, color: '#d97706' }}>
+                      <div style={{
+                    fontSize: '14px',
+                    fontWeight: 700,
+                    color: '#d97706'
+                  }}>
                         {bestPerforming ? shortenSubjectName(bestPerforming.name) : '-'}
                       </div>
-                      <div style={{ fontSize: '8px', color: '#666' }}>Best Performing</div>
-                      {bestPerforming && (
-                        <div style={{ fontSize: '7px', color: '#d97706', marginTop: '4px' }}>
+                      <div style={{
+                    fontSize: '8px',
+                    color: '#666'
+                  }}>Best Performing</div>
+                      {bestPerforming && <div style={{
+                    fontSize: '7px',
+                    color: '#d97706',
+                    marginTop: '4px'
+                  }}>
                           +{bestPerforming.delta} marks
-                        </div>
-                      )}
+                        </div>}
                     </div>
                   </div>
 
                   {/* Subject Comparison Table */}
-                  <div style={{ marginBottom: '12px', pageBreakInside: 'avoid' }}>
-                    <h3 style={{ fontSize: '12px', fontWeight: 600, marginBottom: '8px', paddingBottom: '4px', borderBottom: '1px solid #ddd' }}>Subject Comparison</h3>
-                    <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '9px' }}>
+                  <div style={{
+                marginBottom: '12px',
+                pageBreakInside: 'avoid'
+              }}>
+                    <h3 style={{
+                  fontSize: '12px',
+                  fontWeight: 600,
+                  marginBottom: '8px',
+                  paddingBottom: '4px',
+                  borderBottom: '1px solid #ddd'
+                }}>Subject Comparison</h3>
+                    <table style={{
+                  width: '100%',
+                  borderCollapse: 'collapse',
+                  fontSize: '9px'
+                }}>
                       <thead>
-                        <tr style={{ backgroundColor: '#f5f5f5' }}>
-                          <th style={{ padding: '6px 8px', borderBottom: '1px solid #ddd', textAlign: 'left' }}>Subject</th>
-                          <th style={{ padding: '6px 8px', borderBottom: '1px solid #ddd', textAlign: 'center' }}>Exam A</th>
-                          <th style={{ padding: '6px 8px', borderBottom: '1px solid #ddd', textAlign: 'center' }}>Exam B</th>
-                          <th style={{ padding: '6px 8px', borderBottom: '1px solid #ddd', textAlign: 'center' }}>Change</th>
+                        <tr style={{
+                      backgroundColor: '#f5f5f5'
+                    }}>
+                          <th style={{
+                        padding: '6px 8px',
+                        borderBottom: '1px solid #ddd',
+                        textAlign: 'left'
+                      }}>Subject</th>
+                          <th style={{
+                        padding: '6px 8px',
+                        borderBottom: '1px solid #ddd',
+                        textAlign: 'center'
+                      }}>Exam A</th>
+                          <th style={{
+                        padding: '6px 8px',
+                        borderBottom: '1px solid #ddd',
+                        textAlign: 'center'
+                      }}>Exam B</th>
+                          <th style={{
+                        padding: '6px 8px',
+                        borderBottom: '1px solid #ddd',
+                        textAlign: 'center'
+                      }}>Change</th>
                         </tr>
                       </thead>
                       <tbody>
-                        {comparisonData.map((item, idx) => (
-                          <tr key={item.name} style={{ backgroundColor: idx % 2 === 0 ? '#fff' : '#f9f9f9' }}>
-                            <td style={{ padding: '5px 8px', borderBottom: '1px solid #eee', fontWeight: 500 }}>{item.name}</td>
-                            <td style={{ padding: '5px 8px', borderBottom: '1px solid #eee', textAlign: 'center' }}>{item.examA}%</td>
-                            <td style={{ padding: '5px 8px', borderBottom: '1px solid #eee', textAlign: 'center' }}>{item.examB}%</td>
-                            <td style={{ padding: '5px 8px', borderBottom: '1px solid #eee', textAlign: 'center', fontWeight: 600, color: item.delta > 0 ? '#22c55e' : item.delta < 0 ? '#ef4444' : '#6b7280' }}>
+                        {comparisonData.map((item, idx) => <tr key={item.name} style={{
+                      backgroundColor: idx % 2 === 0 ? '#fff' : '#f9f9f9'
+                    }}>
+                            <td style={{
+                        padding: '5px 8px',
+                        borderBottom: '1px solid #eee',
+                        fontWeight: 500
+                      }}>{item.name}</td>
+                            <td style={{
+                        padding: '5px 8px',
+                        borderBottom: '1px solid #eee',
+                        textAlign: 'center'
+                      }}>{item.examA}%</td>
+                            <td style={{
+                        padding: '5px 8px',
+                        borderBottom: '1px solid #eee',
+                        textAlign: 'center'
+                      }}>{item.examB}%</td>
+                            <td style={{
+                        padding: '5px 8px',
+                        borderBottom: '1px solid #eee',
+                        textAlign: 'center',
+                        fontWeight: 600,
+                        color: item.delta > 0 ? '#22c55e' : item.delta < 0 ? '#ef4444' : '#6b7280'
+                      }}>
                               {item.delta > 0 ? '+' : ''}{item.delta}
                             </td>
-                          </tr>
-                        ))}
+                          </tr>)}
                       </tbody>
                     </table>
                   </div>
 
                   {/* Insight */}
-                  <div style={{ padding: '10px', borderRadius: '6px', backgroundColor: '#f3f4f6', border: '1px solid #ddd', marginBottom: '12px' }}>
-                    <p style={{ fontSize: '10px', color: '#1a1a1a' }}>
+                  <div style={{
+                padding: '10px',
+                borderRadius: '6px',
+                backgroundColor: '#f3f4f6',
+                border: '1px solid #ddd',
+                marginBottom: '12px'
+              }}>
+                    <p style={{
+                  fontSize: '10px',
+                  color: '#1a1a1a'
+                }}>
                       <strong>Insight:</strong>{' '}
-                      {avgDelta > 0 
-                        ? `Overall improvement of +${avgDelta}% from ${examBLabel} to ${examALabel}. ${improved} subjects improved, ${declined} declined.${bestPerforming ? ` Best performing: ${bestPerforming.name} (+${bestPerforming.delta}).` : ''}`
-                        : avgDelta < 0 
-                          ? `Overall decline of ${avgDelta}% from ${examBLabel} to ${examALabel}. Focus needed on declining subjects.`
-                          : `Performance remained stable between the two periods.`}
+                      {avgDelta > 0 ? `Overall improvement of +${avgDelta}% from ${examBLabel} to ${examALabel}. ${improved} subjects improved, ${declined} declined.${bestPerforming ? ` Best performing: ${bestPerforming.name} (+${bestPerforming.delta}).` : ''}` : avgDelta < 0 ? `Overall decline of ${avgDelta}% from ${examBLabel} to ${examALabel}. Focus needed on declining subjects.` : `Performance remained stable between the two periods.`}
                     </p>
                   </div>
 
                   {/* Footer */}
-                  <div style={{ textAlign: 'center', fontSize: '8px', color: '#666', marginTop: '15px', paddingTop: '8px', borderTop: '1px solid #ddd' }}>
+                  <div style={{
+                textAlign: 'center',
+                fontSize: '8px',
+                color: '#666',
+                marginTop: '15px',
+                paddingTop: '8px',
+                borderTop: '1px solid #ddd'
+              }}>
                     <p>This report was generated automatically by the School Management System</p>
                     <p>© {new Date().getFullYear()} All Rights Reserved</p>
                   </div>
-                </div>
-              );
-            })()}
+                </div>;
+          })()}
           </div>
         </DialogContent>
       </Dialog>
-    </AppLayout>
-  );
+    </AppLayout>;
 }
