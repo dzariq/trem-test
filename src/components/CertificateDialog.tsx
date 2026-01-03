@@ -180,23 +180,27 @@ export function CertificateDialog({
     
     try {
       const canvas = await html2canvas(printContent, {
-        scale: 2,
+        scale: 4, // Higher scale for sharper output
         useCORS: true,
         allowTaint: true,
         backgroundColor: null,
+        logging: false,
+        imageTimeout: 0,
       });
       
-      const imgData = canvas.toDataURL('image/png');
+      const imgData = canvas.toDataURL('image/png', 1.0); // Maximum quality
       const pdf = new jsPDF({
         orientation: 'portrait',
         unit: 'mm',
         format: 'a4',
+        compress: false, // Disable compression for sharper image
       });
       
       const pdfWidth = pdf.internal.pageSize.getWidth();
       const pdfHeight = pdf.internal.pageSize.getHeight();
       
-      pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
+      // Use higher quality image format
+      pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight, undefined, 'FAST');
       pdf.save(`Certificate-${studentName.replace(/\s+/g, '-')}.pdf`);
     } catch (error) {
       console.error('Error generating PDF:', error);
