@@ -113,7 +113,7 @@ export default function NotificationsPage() {
 
   return (
     <AppLayout>
-      <AppHeader title="Notifications" />
+      <AppHeader title="Notifications" showBack />
 
       <section className="px-4 py-4">
         {/* Filter and Actions */}
