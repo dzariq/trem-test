@@ -2607,11 +2607,6 @@ export default function AcademicPage() {
                 })()}
               </TabsContent>
             </Tabs>
-
-            <Button className="w-full mt-4 gap-2">
-              <FileText className="h-4 w-4" />
-              Generate Grade Analysis Report
-            </Button>
           </CardContent>
         </Card>
       </section>
