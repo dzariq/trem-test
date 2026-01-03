@@ -3157,48 +3157,48 @@ export default function AcademicPage() {
               {/* Strengths Profile + Subject vs Class Average - Side by Side */}
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '12px', marginBottom: '12px', pageBreakInside: 'avoid' }}>
                 {/* Strengths Profile Radar Chart (SVG for print) */}
-                <div>
-                  <h3 style={{ fontSize: '11px', fontWeight: 600, marginBottom: '6px', paddingBottom: '4px', borderBottom: '1px solid #ddd' }}>Strengths Profile</h3>
-                  <div style={{ padding: '8px', backgroundColor: '#f9fafb', borderRadius: '6px', border: '1px solid #e5e7eb', textAlign: 'center' }}>
-                    <svg width="200" height="160" viewBox="0 0 200 160" style={{ margin: '0 auto', display: 'block' }}>
-                      {/* Radar background circles */}
+                <div style={{ padding: '12px', backgroundColor: '#ffffff', borderRadius: '8px', border: '1px solid #e5e7eb' }}>
+                  <h3 style={{ fontSize: '11px', fontWeight: 600, marginBottom: '10px', color: '#374151' }}>Strengths Profile</h3>
+                  <div style={{ textAlign: 'center' }}>
+                    <svg width="180" height="180" viewBox="0 0 180 180" style={{ margin: '0 auto', display: 'block' }}>
+                      {/* Radar background circles with fill */}
                       {[100, 80, 60, 40, 20].map((r, i) => (
-                        <circle key={i} cx="100" cy="80" r={r * 0.55} fill="none" stroke="#e5e7eb" strokeWidth="1" />
+                        <circle key={i} cx="90" cy="90" r={r * 0.65} fill={i === 0 ? "#f9fafb" : "none"} stroke="#e5e7eb" strokeWidth="1" />
                       ))}
                       {/* Axis lines */}
                       {radarData.slice(0, 6).map((_, i) => {
                         const angle = (i * 60 - 90) * (Math.PI / 180);
-                        const x2 = 100 + 55 * Math.cos(angle);
-                        const y2 = 80 + 55 * Math.sin(angle);
-                        return <line key={i} x1="100" y1="80" x2={x2} y2={y2} stroke="#e5e7eb" strokeWidth="1" />;
+                        const x2 = 90 + 65 * Math.cos(angle);
+                        const y2 = 90 + 65 * Math.sin(angle);
+                        return <line key={i} x1="90" y1="90" x2={x2} y2={y2} stroke="#e5e7eb" strokeWidth="1" />;
                       })}
-                      {/* Radar polygon */}
+                      {/* Radar polygon with gradient-like fill */}
                       <polygon
                         points={radarData.slice(0, 6).map((d, i) => {
                           const angle = (i * 60 - 90) * (Math.PI / 180);
-                          const r = (d.score / 100) * 55;
-                          const x = 100 + r * Math.cos(angle);
-                          const y = 80 + r * Math.sin(angle);
+                          const r = (d.score / 100) * 65;
+                          const x = 90 + r * Math.cos(angle);
+                          const y = 90 + r * Math.sin(angle);
                           return `${x},${y}`;
                         }).join(' ')}
                         fill={radarAverage >= 70 ? '#22c55e' : radarAverage >= 50 ? '#f59e0b' : '#ef4444'}
-                        fillOpacity="0.3"
+                        fillOpacity="0.35"
                         stroke={radarAverage >= 70 ? '#22c55e' : radarAverage >= 50 ? '#f59e0b' : '#ef4444'}
-                        strokeWidth="2"
+                        strokeWidth="2.5"
                       />
                       {/* Data points and labels */}
                       {radarData.slice(0, 6).map((d, i) => {
                         const angle = (i * 60 - 90) * (Math.PI / 180);
-                        const r = (d.score / 100) * 55;
-                        const x = 100 + r * Math.cos(angle);
-                        const y = 80 + r * Math.sin(angle);
-                        const labelR = 68;
-                        const labelX = 100 + labelR * Math.cos(angle);
-                        const labelY = 80 + labelR * Math.sin(angle);
+                        const r = (d.score / 100) * 65;
+                        const x = 90 + r * Math.cos(angle);
+                        const y = 90 + r * Math.sin(angle);
+                        const labelR = 78;
+                        const labelX = 90 + labelR * Math.cos(angle);
+                        const labelY = 90 + labelR * Math.sin(angle);
                         return (
                           <g key={i}>
-                            <circle cx={x} cy={y} r="2.5" fill={radarAverage >= 70 ? '#22c55e' : radarAverage >= 50 ? '#f59e0b' : '#ef4444'} />
-                            <text x={labelX} y={labelY} fontSize="7" fill="#374151" textAnchor="middle" dominantBaseline="middle">
+                            <circle cx={x} cy={y} r="4" fill={radarAverage >= 70 ? '#22c55e' : radarAverage >= 50 ? '#f59e0b' : '#ef4444'} stroke="#fff" strokeWidth="1.5" />
+                            <text x={labelX} y={labelY} fontSize="9" fill="#374151" textAnchor="middle" dominantBaseline="middle" fontWeight="500">
                               {d.subject}
                             </text>
                           </g>
@@ -3206,55 +3206,74 @@ export default function AcademicPage() {
                       })}
                     </svg>
                   </div>
+                  <p style={{ fontSize: '8px', color: '#6b7280', textAlign: 'center', marginTop: '6px' }}>
+                    Visual snapshot of performance across subjects
+                  </p>
                 </div>
 
-                {/* Subject vs Class Average Bar Chart (SVG for print) */}
-                <div>
-                  <h3 style={{ fontSize: '11px', fontWeight: 600, marginBottom: '6px', paddingBottom: '4px', borderBottom: '1px solid #ddd' }}>Your Score vs Class Average</h3>
-                  <div style={{ padding: '8px', backgroundColor: '#f9fafb', borderRadius: '6px', border: '1px solid #e5e7eb' }}>
-                    <svg width="100%" height="140" viewBox="0 0 280 140" preserveAspectRatio="xMidYMid meet">
-                      {/* Grid lines */}
-                      <line x1="35" y1="15" x2="35" y2="105" stroke="#e5e7eb" strokeWidth="1" />
-                      <line x1="35" y1="105" x2="270" y2="105" stroke="#e5e7eb" strokeWidth="1" />
-                      {/* Y-axis labels */}
-                      <text x="30" y="18" fontSize="7" fill="#6b7280" textAnchor="end">100%</text>
-                      <text x="30" y="62" fontSize="7" fill="#6b7280" textAnchor="end">50%</text>
-                      <text x="30" y="105" fontSize="7" fill="#6b7280" textAnchor="end">0%</text>
-                      {/* Bars and dots */}
-                      {subjectVsClassData.slice(0, 6).map((item, i) => {
-                        const barWidth = 25;
-                        const groupWidth = 38;
-                        const x = 42 + i * groupWidth;
-                        const studentHeight = (item.student / 100) * 90;
-                        const classAvgY = 105 - (item.classAvg / 100) * 90;
-                        const subjectColors: Record<string, string> = {
-                          "Eng": "#22c55e", "Math": "#f59e0b", "Sci": "#3b82f6", "Phy": "#06b6d4",
-                          "Chem": "#8b5cf6", "Bio": "#10b981", "Hist": "#ef4444", "Geo": "#f97316",
-                          "Art": "#ec4899", "ICT": "#6366f1", "Islam": "#14b8a6", "Add M": "#a855f7"
-                        };
-                        const fallbackColors = ["#3b82f6", "#f59e0b", "#22c55e", "#ef4444", "#8b5cf6", "#f97316"];
-                        const barColor = subjectColors[item.name] || fallbackColors[i % fallbackColors.length];
-                        return (
-                          <g key={i}>
+                {/* Subject vs Class Average - Horizontal Bar Chart Style */}
+                <div style={{ padding: '12px', backgroundColor: '#ffffff', borderRadius: '8px', border: '1px solid #e5e7eb' }}>
+                  <h3 style={{ fontSize: '11px', fontWeight: 600, marginBottom: '10px', color: '#374151' }}>Your Score vs Class Average</h3>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                    {subjectVsClassData.slice(0, 6).map((item, i) => {
+                      const subjectColors: Record<string, string> = {
+                        "Eng": "#22c55e", "Math": "#f59e0b", "Sci": "#3b82f6", "Phy": "#06b6d4",
+                        "Chem": "#8b5cf6", "Bio": "#10b981", "Hist": "#ef4444", "Geo": "#f97316",
+                        "Art": "#ec4899", "ICT": "#6366f1", "Islam": "#14b8a6", "Add M": "#a855f7"
+                      };
+                      const fallbackColors = ["#3b82f6", "#f59e0b", "#22c55e", "#ef4444", "#8b5cf6", "#f97316"];
+                      const barColor = subjectColors[item.name] || fallbackColors[i % fallbackColors.length];
+                      return (
+                        <div key={item.name} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                          <div style={{ width: '45px', fontSize: '9px', fontWeight: 500, color: '#374151', textAlign: 'right' }}>{item.name}</div>
+                          <div style={{ flex: 1, position: 'relative', height: '16px', backgroundColor: '#f3f4f6', borderRadius: '4px', overflow: 'hidden' }}>
                             {/* Student bar */}
-                            <rect x={x} y={105 - studentHeight} width={barWidth} height={studentHeight} fill={barColor} rx="2" />
-                            {/* Class average dot */}
-                            <circle cx={x + barWidth/2} cy={classAvgY} r="3" fill="#374151" stroke="#fff" strokeWidth="1" />
-                            {/* Subject label */}
-                            <text x={x + barWidth/2} y="118" fontSize="6" fill="#374151" textAnchor="middle">{item.name}</text>
-                            {/* Delta badge */}
-                            <text x={x + barWidth/2} y="128" fontSize="6" fill={item.delta >= 0 ? '#22c55e' : '#ef4444'} textAnchor="middle" fontWeight="600">
-                              {item.delta >= 0 ? '+' : ''}{item.delta}%
-                            </text>
-                          </g>
-                        );
-                      })}
-                      {/* Legend */}
-                      <rect x="200" y="5" width="8" height="6" fill="#3b82f6" rx="1" />
-                      <text x="210" y="10" fontSize="6" fill="#374151">You</text>
-                      <circle cx="240" cy="8" r="3" fill="#374151" />
-                      <text x="246" y="10" fontSize="6" fill="#374151">Class</text>
-                    </svg>
+                            <div style={{ 
+                              position: 'absolute', 
+                              left: 0, 
+                              top: 0, 
+                              height: '100%', 
+                              width: `${item.student}%`, 
+                              backgroundColor: barColor, 
+                              borderRadius: '4px',
+                              transition: 'width 0.3s'
+                            }} />
+                            {/* Class average marker */}
+                            <div style={{ 
+                              position: 'absolute', 
+                              left: `${item.classAvg}%`, 
+                              top: '50%', 
+                              transform: 'translate(-50%, -50%)',
+                              width: '8px',
+                              height: '8px',
+                              backgroundColor: '#374151',
+                              borderRadius: '50%',
+                              border: '1.5px solid #fff'
+                            }} />
+                          </div>
+                          <div style={{ 
+                            width: '35px', 
+                            fontSize: '9px', 
+                            fontWeight: 600, 
+                            color: item.delta >= 0 ? '#22c55e' : '#ef4444',
+                            textAlign: 'right'
+                          }}>
+                            {item.delta >= 0 ? '+' : ''}{item.delta}%
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                  {/* Legend */}
+                  <div style={{ display: 'flex', justifyContent: 'center', gap: '16px', marginTop: '10px', fontSize: '8px', color: '#6b7280' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                      <div style={{ width: '12px', height: '8px', backgroundColor: '#3b82f6', borderRadius: '2px' }} />
+                      <span>Your Score</span>
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                      <div style={{ width: '8px', height: '8px', backgroundColor: '#374151', borderRadius: '50%' }} />
+                      <span>Class Avg</span>
+                    </div>
                   </div>
                 </div>
               </div>
