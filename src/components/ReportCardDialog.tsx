@@ -210,8 +210,8 @@ export function ReportCardDialog({
               <img src={cambridgeLogo} alt="Cambridge Assessment" style={{ height: '35px', objectFit: 'contain' }} />
             </div>
 
-            {/* Student Info Row with Attitude & Behaviour - Stack on mobile */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '10px' }}>
+            {/* Student Info Row with Attitude & Behaviour - Side by side */}
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginBottom: '10px' }}>
               {/* Student Name, Class, Overall Average & Attendance - Green & Gold Gradient with Pattern */}
               <div style={{ 
                 position: 'relative',
