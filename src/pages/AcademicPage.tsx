@@ -2068,25 +2068,27 @@ export default function AcademicPage() {
                   const bestPerforming = [...comparisonData].sort((a, b) => b.delta - a.delta)[0];
                   
                   return (
-                    <div className="grid grid-cols-4 gap-2">
+                    <div className="grid grid-cols-2 gap-2">
                       {/* Overall Change */}
-                      <div className="p-3 rounded-xl bg-muted/50 border border-border shadow-sm text-center">
-                        <div className="w-8 h-8 rounded-lg bg-muted flex items-center justify-center mx-auto mb-2">
-                          <ArrowRightLeft className="h-4 w-4 text-muted-foreground" />
+                      <div className="p-2.5 rounded-xl bg-muted/50 border border-border shadow-sm text-center">
+                        <div className="flex items-center justify-center gap-2 mb-1">
+                          <div className="w-6 h-6 rounded-lg bg-muted flex items-center justify-center">
+                            <ArrowRightLeft className="h-3 w-3 text-muted-foreground" />
+                          </div>
+                          <p className={`text-base font-bold ${overallChange > 0 ? 'text-emerald-600' : overallChange < 0 ? 'text-red-500' : 'text-foreground'}`}>
+                            {overallChange > 0 ? '+' : ''}{overallChange}%
+                          </p>
                         </div>
-                        <p className={`text-lg font-bold ${overallChange > 0 ? 'text-emerald-600' : overallChange < 0 ? 'text-red-500' : 'text-foreground'}`}>
-                          {overallChange > 0 ? '+' : ''}{overallChange}%
-                        </p>
                         <p className="text-[10px] text-muted-foreground">Overall Change</p>
                       </div>
 
                       {/* Improved */}
-                      <div className="p-3 rounded-xl bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800 shadow-sm text-center">
-                        <div className="w-8 h-8 rounded-lg bg-emerald-100 dark:bg-emerald-900/50 flex items-center justify-center mx-auto mb-2">
-                          <span className="text-base">🚀</span>
+                      <div className="p-2.5 rounded-xl bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800 shadow-sm text-center">
+                        <div className="flex items-center justify-center gap-2 mb-1">
+                          <span className="text-sm">🚀</span>
+                          <p className="text-base font-bold text-emerald-600">{improvedSubjects.length}</p>
+                          <p className="text-[10px] text-muted-foreground font-medium">Improved</p>
                         </div>
-                        <p className="text-lg font-bold text-emerald-600">{improvedSubjects.length}</p>
-                        <p className="text-[10px] text-muted-foreground font-medium">Improved</p>
                         <p className="text-[9px] text-emerald-600 truncate">
                           {improvedSubjects.slice(0, 2).map(s => shortenSubjectName(s.name)).join(', ')}
                           {improvedSubjects.length > 2 && ` +${improvedSubjects.length - 2}`}
@@ -2094,12 +2096,12 @@ export default function AcademicPage() {
                       </div>
 
                       {/* Declined */}
-                      <div className="p-3 rounded-xl bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-800 shadow-sm text-center">
-                        <div className="w-8 h-8 rounded-lg bg-red-100 dark:bg-red-900/50 flex items-center justify-center mx-auto mb-2">
-                          <span className="text-base">📉</span>
+                      <div className="p-2.5 rounded-xl bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-800 shadow-sm text-center">
+                        <div className="flex items-center justify-center gap-2 mb-1">
+                          <span className="text-sm">📉</span>
+                          <p className="text-base font-bold text-red-500">{declinedSubjects.length}</p>
+                          <p className="text-[10px] text-muted-foreground font-medium">Declined</p>
                         </div>
-                        <p className="text-lg font-bold text-red-500">{declinedSubjects.length}</p>
-                        <p className="text-[10px] text-muted-foreground font-medium">Declined</p>
                         <p className="text-[9px] text-red-500 truncate">
                           {declinedSubjects.slice(0, 2).map(s => shortenSubjectName(s.name)).join(', ')}
                           {declinedSubjects.length > 2 && ` +${declinedSubjects.length - 2}`}
@@ -2107,11 +2109,11 @@ export default function AcademicPage() {
                       </div>
 
                       {/* Best Performing */}
-                      <div className="p-3 rounded-xl bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 shadow-sm text-center">
-                        <div className="w-8 h-8 rounded-lg bg-amber-100 dark:bg-amber-900/50 flex items-center justify-center mx-auto mb-2">
-                          <span className="text-base">🏆</span>
+                      <div className="p-2.5 rounded-xl bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 shadow-sm text-center">
+                        <div className="flex items-center justify-center gap-2 mb-1">
+                          <span className="text-sm">🏆</span>
+                          <p className="text-sm font-bold text-amber-600 truncate max-w-[60px]">{bestPerforming ? shortenSubjectName(bestPerforming.name) : '-'}</p>
                         </div>
-                        <p className="text-sm font-bold text-amber-600 truncate">{bestPerforming ? shortenSubjectName(bestPerforming.name) : '-'}</p>
                         <p className="text-[10px] text-muted-foreground font-medium">Best Performing</p>
                         <p className="text-[9px] text-amber-600">
                           {bestPerforming && bestPerforming.delta > 0 ? `+${bestPerforming.delta} marks` : '-'}
