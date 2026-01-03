@@ -559,7 +559,7 @@ export default function TeacherAcademicPage() {
         const student = students.find(s => s.id === studentId);
         return student ? { ...student, score } : null;
       })
-      .filter((s): s is { id: string; name: string; photo: null; score: number } => s !== null)
+      .filter((s): s is { id: string; name: string; photo: string | null; mealPlan: boolean; outdoorCCA: boolean; sportsHouse: import("@/data/teacherMockData").SportsHouse; remarks: string; score: number } => s !== null)
       .sort((a, b) => b.score - a.score);
   }, [bandsFilteredScores, students]);
 
@@ -621,7 +621,7 @@ export default function TeacherAcademicPage() {
         const student = bandsCompareStudents.find(s => s.id === studentId);
         return student ? { ...student, score } : null;
       })
-      .filter((s): s is { id: string; name: string; photo: null; score: number } => s !== null)
+      .filter((s): s is { id: string; name: string; photo: string | null; mealPlan: boolean; outdoorCCA: boolean; sportsHouse: import("@/data/teacherMockData").SportsHouse; remarks: string; score: number } => s !== null)
       .sort((a, b) => b.score - a.score);
   }, [bandsCompareFilteredScores, bandsCompareStudents]);
 

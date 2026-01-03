@@ -9,48 +9,60 @@ export const teacherProfile = {
   classes: ["5A", "5B", "4A"]
 };
 
-export const classRosters = {
+export type SportsHouse = "red" | "blue" | "green" | "yellow";
+
+export interface ClassStudent {
+  id: string;
+  name: string;
+  photo: string | null;
+  mealPlan: boolean;
+  outdoorCCA: boolean;
+  sportsHouse: SportsHouse;
+  remarks: string;
+}
+
+export const classRosters: Record<string, ClassStudent[]> = {
   "5A": [
-    { id: "STU-001", name: "Emma Johnson", photo: null },
-    { id: "STU-002", name: "Liam Smith", photo: null },
-    { id: "STU-003", name: "Olivia Brown", photo: null },
-    { id: "STU-004", name: "Noah Davis", photo: null },
-    { id: "STU-005", name: "Ava Wilson", photo: null },
-    { id: "STU-006", name: "James Miller", photo: null },
-    { id: "STU-007", name: "Isabella Garcia", photo: null },
-    { id: "STU-008", name: "Benjamin Martinez", photo: null },
-    { id: "STU-009", name: "Sophia Anderson", photo: null },
-    { id: "STU-010", name: "Lucas Taylor", photo: null },
-    { id: "STU-011", name: "Mia Thomas", photo: null },
-    { id: "STU-012", name: "Ethan Jackson", photo: null },
-    { id: "STU-013", name: "Charlotte White", photo: null },
-    { id: "STU-014", name: "Alexander Harris", photo: null },
-    { id: "STU-015", name: "Amelia Martin", photo: null },
-    { id: "STU-016", name: "Daniel Thompson", photo: null },
-    { id: "STU-017", name: "Harper Robinson", photo: null },
-    { id: "STU-018", name: "Matthew Clark", photo: null },
-    { id: "STU-019", name: "Evelyn Lewis", photo: null },
-    { id: "STU-020", name: "Michael Lee", photo: null },
+    { id: "STU-001", name: "Emma Johnson", photo: null, mealPlan: true, outdoorCCA: true, sportsHouse: "red", remarks: "" },
+    { id: "STU-002", name: "Liam Smith", photo: null, mealPlan: true, outdoorCCA: false, sportsHouse: "blue", remarks: "Nut allergy - carry EpiPen" },
+    { id: "STU-003", name: "Olivia Brown", photo: null, mealPlan: false, outdoorCCA: true, sportsHouse: "green", remarks: "" },
+    { id: "STU-004", name: "Noah Davis", photo: null, mealPlan: true, outdoorCCA: true, sportsHouse: "yellow", remarks: "" },
+    { id: "STU-005", name: "Ava Wilson", photo: null, mealPlan: true, outdoorCCA: false, sportsHouse: "red", remarks: "Asthma - uses inhaler" },
+    { id: "STU-006", name: "James Miller", photo: null, mealPlan: false, outdoorCCA: true, sportsHouse: "blue", remarks: "" },
+    { id: "STU-007", name: "Isabella Garcia", photo: null, mealPlan: true, outdoorCCA: true, sportsHouse: "green", remarks: "" },
+    { id: "STU-008", name: "Benjamin Martinez", photo: null, mealPlan: true, outdoorCCA: false, sportsHouse: "yellow", remarks: "Requires extra support in Math" },
+    { id: "STU-009", name: "Sophia Anderson", photo: null, mealPlan: true, outdoorCCA: true, sportsHouse: "red", remarks: "" },
+    { id: "STU-010", name: "Lucas Taylor", photo: null, mealPlan: false, outdoorCCA: true, sportsHouse: "blue", remarks: "" },
+    { id: "STU-011", name: "Mia Thomas", photo: null, mealPlan: true, outdoorCCA: true, sportsHouse: "green", remarks: "" },
+    { id: "STU-012", name: "Ethan Jackson", photo: null, mealPlan: true, outdoorCCA: false, sportsHouse: "yellow", remarks: "" },
+    { id: "STU-013", name: "Charlotte White", photo: null, mealPlan: true, outdoorCCA: true, sportsHouse: "red", remarks: "" },
+    { id: "STU-014", name: "Alexander Harris", photo: null, mealPlan: false, outdoorCCA: true, sportsHouse: "blue", remarks: "Diabetic - monitors blood sugar" },
+    { id: "STU-015", name: "Amelia Martin", photo: null, mealPlan: true, outdoorCCA: true, sportsHouse: "green", remarks: "" },
+    { id: "STU-016", name: "Daniel Thompson", photo: null, mealPlan: true, outdoorCCA: false, sportsHouse: "yellow", remarks: "" },
+    { id: "STU-017", name: "Harper Robinson", photo: null, mealPlan: true, outdoorCCA: true, sportsHouse: "red", remarks: "" },
+    { id: "STU-018", name: "Matthew Clark", photo: null, mealPlan: false, outdoorCCA: true, sportsHouse: "blue", remarks: "" },
+    { id: "STU-019", name: "Evelyn Lewis", photo: null, mealPlan: true, outdoorCCA: true, sportsHouse: "green", remarks: "" },
+    { id: "STU-020", name: "Michael Lee", photo: null, mealPlan: true, outdoorCCA: false, sportsHouse: "yellow", remarks: "Learning support for English" },
   ],
   "5B": [
-    { id: "STU-021", name: "Abigail Walker", photo: null },
-    { id: "STU-022", name: "Sebastian Hall", photo: null },
-    { id: "STU-023", name: "Emily Young", photo: null },
-    { id: "STU-024", name: "Jack Allen", photo: null },
-    { id: "STU-025", name: "Elizabeth King", photo: null },
-    { id: "STU-026", name: "Henry Wright", photo: null },
-    { id: "STU-027", name: "Sofia Scott", photo: null },
-    { id: "STU-028", name: "Owen Green", photo: null },
+    { id: "STU-021", name: "Abigail Walker", photo: null, mealPlan: true, outdoorCCA: true, sportsHouse: "red", remarks: "" },
+    { id: "STU-022", name: "Sebastian Hall", photo: null, mealPlan: true, outdoorCCA: false, sportsHouse: "blue", remarks: "" },
+    { id: "STU-023", name: "Emily Young", photo: null, mealPlan: false, outdoorCCA: true, sportsHouse: "green", remarks: "Gifted program - advanced Math" },
+    { id: "STU-024", name: "Jack Allen", photo: null, mealPlan: true, outdoorCCA: true, sportsHouse: "yellow", remarks: "" },
+    { id: "STU-025", name: "Elizabeth King", photo: null, mealPlan: true, outdoorCCA: true, sportsHouse: "red", remarks: "" },
+    { id: "STU-026", name: "Henry Wright", photo: null, mealPlan: true, outdoorCCA: false, sportsHouse: "blue", remarks: "ADHD - seated in front" },
+    { id: "STU-027", name: "Sofia Scott", photo: null, mealPlan: false, outdoorCCA: true, sportsHouse: "green", remarks: "" },
+    { id: "STU-028", name: "Owen Green", photo: null, mealPlan: true, outdoorCCA: true, sportsHouse: "yellow", remarks: "" },
   ],
   "4A": [
-    { id: "STU-031", name: "Grace Adams", photo: null },
-    { id: "STU-032", name: "William Baker", photo: null },
-    { id: "STU-033", name: "Chloe Carter", photo: null },
-    { id: "STU-034", name: "Logan Collins", photo: null },
-    { id: "STU-035", name: "Lily Edwards", photo: null },
-    { id: "STU-036", name: "Mason Foster", photo: null },
-    { id: "STU-037", name: "Zoe Garcia", photo: null },
-    { id: "STU-038", name: "Elijah Howard", photo: null },
+    { id: "STU-031", name: "Grace Adams", photo: null, mealPlan: true, outdoorCCA: true, sportsHouse: "red", remarks: "" },
+    { id: "STU-032", name: "William Baker", photo: null, mealPlan: true, outdoorCCA: false, sportsHouse: "blue", remarks: "" },
+    { id: "STU-033", name: "Chloe Carter", photo: null, mealPlan: false, outdoorCCA: true, sportsHouse: "green", remarks: "Lactose intolerant" },
+    { id: "STU-034", name: "Logan Collins", photo: null, mealPlan: true, outdoorCCA: true, sportsHouse: "yellow", remarks: "" },
+    { id: "STU-035", name: "Lily Edwards", photo: null, mealPlan: true, outdoorCCA: true, sportsHouse: "red", remarks: "" },
+    { id: "STU-036", name: "Mason Foster", photo: null, mealPlan: true, outdoorCCA: false, sportsHouse: "blue", remarks: "" },
+    { id: "STU-037", name: "Zoe Garcia", photo: null, mealPlan: false, outdoorCCA: true, sportsHouse: "green", remarks: "" },
+    { id: "STU-038", name: "Elijah Howard", photo: null, mealPlan: true, outdoorCCA: true, sportsHouse: "yellow", remarks: "Wears glasses - seated near board" },
   ]
 };
 
