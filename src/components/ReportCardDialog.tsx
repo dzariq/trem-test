@@ -448,10 +448,11 @@ export function ReportCardDialog({
                     const derivedYearEndGradeColor = gradeColors[derivedYearEndGrade] || gradeColors["C"];
                     const midYearBgColor = gradeCardBgColors[subject.grade] || 'white';
                     const yearEndBgColor = gradeCardBgColors[derivedYearEndGrade] || 'white';
+                    const rowAltBg = index % 2 === 0 ? 'white' : '#f9fafb';
                     
                     return (
                       <tr key={subject.name} style={{ borderBottom: '1px solid #e5e7eb' }}>
-                        <td style={{ padding: '6px 8px', fontWeight: '600', color: '#1a1a1a', fontSize: '8px', background: 'white' }}>{subject.name}</td>
+                        <td style={{ padding: '6px 8px', fontWeight: '600', color: '#1a1a1a', fontSize: '8px', background: rowAltBg }}>{subject.name}</td>
                         <td style={{ padding: '6px 8px', textAlign: 'center', position: 'relative', background: midYearBgColor, overflow: 'hidden' }}>
                           {/* Watermark Grade */}
                           <span style={{
@@ -492,7 +493,7 @@ export function ReportCardDialog({
                             <span style={{ fontSize: '12px', fontWeight: '800', color: '#1a1a1a' }}>{yearEndScore !== null ? `${yearEndScore}%` : '-'}</span>
                           </div>
                         </td>
-                        <td style={{ padding: '6px 8px', fontSize: '7px', color: '#374151', lineHeight: '1.4', background: 'white' }}>{subject.teacherComment || '-'}</td>
+                        <td style={{ padding: '6px 8px', fontSize: '7px', color: '#374151', lineHeight: '1.4', background: rowAltBg }}>{subject.teacherComment || '-'}</td>
                       </tr>
                     );
                   })}
@@ -518,8 +519,8 @@ export function ReportCardDialog({
                   <tbody>
                     {displayedSubjects
                       .filter(s => s.classStudyRecommendation || s.studyRecommendation)
-                      .map((subject) => (
-                        <tr key={subject.name} style={{ background: '#faf5ff', borderBottom: '1px solid #e9d5ff' }}>
+                      .map((subject, index) => (
+                        <tr key={subject.name} style={{ background: index % 2 === 0 ? '#faf5ff' : '#f3e8ff', borderBottom: '1px solid #e9d5ff' }}>
                           <td style={{ padding: '5px 8px', fontWeight: '600', color: '#1a1a1a', fontSize: '8px' }}>{subject.name}</td>
                           <td style={{ padding: '5px 8px', fontSize: '7px', color: '#374151', lineHeight: '1.4' }}>
                             {subject.classStudyRecommendation || '-'}
