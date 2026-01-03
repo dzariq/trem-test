@@ -253,25 +253,17 @@ export function ReportCardDialog({
                         <div style={{ fontSize: '8px', fontWeight: '600', color: 'white', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Attendance</div>
                       </div>
                       <div style={{ background: 'white', padding: '10px 12px' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '6px' }}>
                           <span style={{ fontSize: '22px', fontWeight: '700', color: attendance.percentage >= 90 ? '#16a34a' : attendance.percentage >= 75 ? '#ca8a04' : '#dc2626' }}>{attendance.percentage}%</span>
-                          <div style={{ fontSize: '10px', color: '#374151', fontWeight: '600', background: 'rgba(255,255,255,0.9)', padding: '4px 10px', borderRadius: '8px', border: '1px solid #e5e7eb' }}>
+                          <div style={{ fontSize: '10px', color: '#374151', fontWeight: '600', background: '#f3f4f6', padding: '4px 10px', borderRadius: '8px', border: '1px solid #e5e7eb' }}>
                             {attendance.present}/{attendance.totalDays} days
                           </div>
                         </div>
-                        <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
-                          <div style={{ fontSize: '8px', color: '#16a34a', background: '#dcfce7', padding: '4px 10px', borderRadius: '12px', fontWeight: '600' }}>
-                            P: {attendance.present}
-                          </div>
-                          <div style={{ fontSize: '8px', color: '#dc2626', background: '#fee2e2', padding: '4px 10px', borderRadius: '12px', fontWeight: '600' }}>
-                            A: {attendance.absent}
-                          </div>
-                          <div style={{ fontSize: '8px', color: '#ca8a04', background: '#fef3c7', padding: '4px 10px', borderRadius: '12px', fontWeight: '600' }}>
-                            L: {attendance.late}
-                          </div>
-                          <div style={{ fontSize: '8px', color: '#7c3aed', background: '#ede9fe', padding: '4px 10px', borderRadius: '12px', fontWeight: '600' }}>
-                            E: {attendance.excused}
-                          </div>
+                        <div style={{ display: 'flex', gap: '4px' }}>
+                          <div style={{ fontSize: '7px', color: '#16a34a', background: '#dcfce7', padding: '3px 6px', borderRadius: '10px', fontWeight: '600' }}>P: {attendance.present}</div>
+                          <div style={{ fontSize: '7px', color: '#dc2626', background: '#fee2e2', padding: '3px 6px', borderRadius: '10px', fontWeight: '600' }}>A: {attendance.absent}</div>
+                          <div style={{ fontSize: '7px', color: '#ca8a04', background: '#fef3c7', padding: '3px 6px', borderRadius: '10px', fontWeight: '600' }}>L: {attendance.late}</div>
+                          <div style={{ fontSize: '7px', color: '#7c3aed', background: '#ede9fe', padding: '3px 6px', borderRadius: '10px', fontWeight: '600' }}>E: {attendance.excused}</div>
                         </div>
                       </div>
                     </div>
@@ -367,13 +359,13 @@ export function ReportCardDialog({
                     ))}
                   </div>
                 </div>
-              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '10px' }}>
+              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '10px', borderRadius: '6px', overflow: 'hidden' }}>
                 <thead>
-                  <tr>
-                    <th style={{ background: 'linear-gradient(135deg, #065f46 0%, #10b981 100%)', color: 'white', padding: '8px 6px', textAlign: 'left', fontWeight: '600', borderRadius: '6px 0 0 0' }}>Subject</th>
-                    <th style={{ background: 'linear-gradient(135deg, #065f46 0%, #10b981 100%)', color: 'white', padding: '8px 6px', textAlign: 'center', fontWeight: '600', width: '60px' }}>Score</th>
-                    <th style={{ background: 'linear-gradient(135deg, #065f46 0%, #10b981 100%)', color: 'white', padding: '8px 6px', textAlign: 'center', fontWeight: '600', width: '50px' }}>Grade</th>
-                    <th style={{ background: 'linear-gradient(135deg, #065f46 0%, #10b981 100%)', color: 'white', padding: '8px 6px', textAlign: 'left', fontWeight: '600', borderRadius: '0 6px 0 0' }}>Teacher&apos;s Comment</th>
+                  <tr style={{ background: 'linear-gradient(135deg, #065f46 0%, #10b981 100%)' }}>
+                    <th style={{ color: 'white', padding: '8px 6px', textAlign: 'left', fontWeight: '600' }}>Subject</th>
+                    <th style={{ color: 'white', padding: '8px 6px', textAlign: 'center', fontWeight: '600', width: '60px' }}>Score</th>
+                    <th style={{ color: 'white', padding: '8px 6px', textAlign: 'center', fontWeight: '600', width: '50px' }}>Grade</th>
+                    <th style={{ color: 'white', padding: '8px 6px', textAlign: 'left', fontWeight: '600' }}>Teacher&apos;s Comment</th>
                   </tr>
                 </thead>
                 <tbody>
