@@ -60,7 +60,7 @@ const getCategoryScore = (subject: typeof academicData.subjects[0], year: YearKe
 };
 
 // Import centralized subjects config
-import { getShortSubjectName, subjectGroups, allSubjects } from "@/data/subjectsConfig";
+import { getShortSubjectName, getTinySubjectCode, subjectGroups, allSubjects } from "@/data/subjectsConfig";
 import { SubjectGroupPill } from "@/components/SubjectGroupPill";
 
 // Use centralized short name function
@@ -484,10 +484,11 @@ export default function AcademicPage() {
     });
   }, []);
 
-  // Radar chart data for subject strengths profile
+  // Radar chart data for subject strengths profile - use tiny codes for compact display
   const radarData = useMemo(() => {
     return academicData.subjects.map(s => ({
-      subject: shortenSubjectName(s.name),
+      subject: getTinySubjectCode(s.name),
+      fullName: s.name,
       score: getScore(s, selectedYear, examType) ?? 0,
       fullMark: 100
     }));

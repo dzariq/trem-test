@@ -141,9 +141,43 @@ export const subjectShortNames: Record<string, string> = {
   "Islamic Studies": "Islamic St."
 };
 
+// Super short 3-letter codes for radar charts and compact displays
+export const subjectTinyCodes: Record<string, string> = {
+  "English (First Language)": "E1L",
+  "English (Second Language)": "E2L",
+  "Malay (First Language)": "M1L",
+  "Malay (Foreign Language)": "MFL",
+  "Chinese (Foreign Language)": "CFL",
+  "Chinese (Second Language)": "C2L",
+  "Chinese (Beginner)": "CB",
+  "Science": "SCI",
+  "Biology": "BIO",
+  "Chemistry": "CHE",
+  "Physics": "PHY",
+  "Mathematics": "MTH",
+  "Additional Mathematics": "AMT",
+  "Business Studies": "BUS",
+  "Accounting": "ACC",
+  "Economics": "ECO",
+  "Global Perspectives": "GP",
+  "Geography": "GEO",
+  "History": "HIS",
+  "ICT": "ICT",
+  "Living Skills & Arts": "LSA",
+  "Art": "ART",
+  "Music": "MUS",
+  "Moral": "MOR",
+  "Islamic Studies": "ISL"
+};
+
 // Helper function to get short name
 export const getShortSubjectName = (name: string): string => {
   return subjectShortNames[name] || name;
+};
+
+// Helper function to get tiny 3-letter code
+export const getTinySubjectCode = (name: string): string => {
+  return subjectTinyCodes[name] || name.substring(0, 3).toUpperCase();
 };
 
 // Get all variants for a base subject name
