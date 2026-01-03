@@ -58,6 +58,17 @@ const IconAward = () => (
   </svg>
 );
 
+// Book with Apple icon for Attitude & Behaviour
+const IconBookApple = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    {/* Book */}
+    <path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H16v16H6.5a2.5 2.5 0 0 1 0-5H16" />
+    {/* Apple */}
+    <path d="M19 8c1 0 2 1 2 2.5S20 13 19 14c-.5.5-1.5 1-2 1s-1.5-.5-2-1c-1-1-1-2.5-1-2.5s1-2.5 2-2.5c.5 0 1 .2 1.5.5.5-.3 1-.5 1.5-.5z" />
+    <path d="M19 5c0-1-1-2-2-2" />
+  </svg>
+);
+
 interface Subject {
   name: string;
   score: number | null;
@@ -110,12 +121,12 @@ const gradeColors: Record<string, { bg: string; text: string; border: string }> 
 
 // Ultra-light background colors for grade-based card coloring
 const gradeCardBgColors: Record<string, string> = {
-  "A*": "rgba(5, 150, 105, 0.06)",
-  "A": "rgba(34, 197, 94, 0.06)",
-  "B": "rgba(59, 130, 246, 0.06)",
-  "C": "rgba(234, 179, 8, 0.06)",
-  "D": "rgba(249, 115, 22, 0.06)",
-  "E": "rgba(239, 68, 68, 0.06)",
+  "A*": "rgba(5, 150, 105, 0.12)",
+  "A": "rgba(34, 197, 94, 0.12)",
+  "B": "rgba(59, 130, 246, 0.12)",
+  "C": "rgba(234, 179, 8, 0.12)",
+  "D": "rgba(249, 115, 22, 0.12)",
+  "E": "rgba(239, 68, 68, 0.12)",
 };
 
 const behaviorGradeColors: Record<string, { bg: string; text: string; cardBg: string }> = {
@@ -321,8 +332,8 @@ export function ReportCardDialog({
               
             {/* Attitude & Behaviour - Card Style */}
               <div style={{ borderRadius: '12px', padding: '10px' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '8px' }}>
-                  <span style={{ color: '#065f46' }}><IconStar /></span>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '4px', marginBottom: '8px' }}>
+                  <span style={{ color: '#065f46' }}><IconBookApple /></span>
                   <span style={{ fontSize: '11px', fontWeight: '700', color: '#065f46' }}>Attitude & Behaviour</span>
                 </div>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '4px' }}>
@@ -387,7 +398,7 @@ export function ReportCardDialog({
                   Academic Grades
                 </h3>
                 {/* Compact Grading Key Legend */}
-                <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
+                <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
                   {Object.entries(gradeColors).map(([grade, colors]) => (
                     <div key={grade} style={{ display: 'flex', alignItems: 'center', gap: '2px' }}>
                       <span style={{ 
@@ -432,7 +443,7 @@ export function ReportCardDialog({
                   
                   return (
                     <div key={subject.name} style={{ 
-                      border: '1px solid #e5e7eb', 
+                      border: '1px solid #d1d5db', 
                       borderRadius: '8px', 
                       overflow: 'hidden',
                       background: cardBgColor
@@ -458,13 +469,13 @@ export function ReportCardDialog({
                           borderRight: '1px solid #e5e7eb',
                           overflow: 'hidden'
                         }}>
-                          <div style={{ fontSize: '6px', fontWeight: '600', color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.3px', marginBottom: '2px' }}>Mid-Year</div>
+                          <div style={{ fontSize: '7px', fontWeight: '700', color: '#374151', textTransform: 'uppercase', letterSpacing: '0.3px', marginBottom: '2px' }}>Mid-Year</div>
                           <span style={{ 
                             position: 'absolute', 
                             left: '50%', 
                             bottom: '-6px', 
                             transform: 'translateX(-50%)',
-                            fontSize: '42px', 
+                            fontSize: '48px', 
                             fontWeight: '900', 
                             color: midYearGradeColor.bg, 
                             opacity: 0.12,
@@ -473,7 +484,7 @@ export function ReportCardDialog({
                           }}>
                             {subject.grade}
                           </span>
-                          <div style={{ fontSize: '16px', fontWeight: '800', color: '#1a1a1a', position: 'relative', zIndex: 1 }}>
+                          <div style={{ fontSize: '18px', fontWeight: '800', color: '#1a1a1a', position: 'relative', zIndex: 1 }}>
                             {subject.score !== null ? `${subject.score}%` : '-'}
                           </div>
                         </div>
@@ -484,13 +495,13 @@ export function ReportCardDialog({
                           textAlign: 'center',
                           overflow: 'hidden'
                         }}>
-                          <div style={{ fontSize: '6px', fontWeight: '600', color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.3px', marginBottom: '2px' }}>Year-End</div>
+                          <div style={{ fontSize: '7px', fontWeight: '700', color: '#374151', textTransform: 'uppercase', letterSpacing: '0.3px', marginBottom: '2px' }}>Year-End</div>
                           <span style={{ 
                             position: 'absolute', 
                             left: '50%', 
                             bottom: '-6px', 
                             transform: 'translateX(-50%)',
-                            fontSize: '42px', 
+                            fontSize: '48px', 
                             fontWeight: '900', 
                             color: derivedYearEndGradeColor.bg, 
                             opacity: 0.12,
@@ -499,7 +510,7 @@ export function ReportCardDialog({
                           }}>
                             {derivedYearEndGrade}
                           </span>
-                          <div style={{ fontSize: '16px', fontWeight: '800', color: '#1a1a1a', position: 'relative', zIndex: 1 }}>
+                          <div style={{ fontSize: '18px', fontWeight: '800', color: '#1a1a1a', position: 'relative', zIndex: 1 }}>
                             {yearEndScore !== null ? `${yearEndScore}%` : '-'}
                           </div>
                         </div>
@@ -507,7 +518,7 @@ export function ReportCardDialog({
                       
                       {/* Teacher Comment */}
                       {subject.teacherComment && (
-                        <div style={{ padding: '6px 10px', borderBottom: hasLearningTips ? '1px solid #e5e7eb' : 'none', background: '#fafafa' }}>
+                        <div style={{ padding: '6px 10px', borderBottom: hasLearningTips ? '1px solid #e5e7eb' : 'none', background: '#fafafa', borderLeft: '3px solid #10b981' }}>
                           <div style={{ display: 'flex', alignItems: 'flex-start', gap: '4px' }}>
                             <span style={{ color: '#6b7280', flexShrink: 0, marginTop: '1px' }}><IconMessage /></span>
                             <p style={{ fontSize: '7px', color: '#374151', lineHeight: '1.4', margin: 0 }}>{subject.teacherComment}</p>
@@ -518,11 +529,11 @@ export function ReportCardDialog({
                       {/* Learning Tips with Pill Badges */}
                       {hasLearningTips && (
                         <div style={{ padding: '6px 10px', background: '#fafafa' }}>
-                          <div style={{ display: 'flex', alignItems: 'flex-start', gap: '4px', marginBottom: '4px' }}>
-                            <span style={{ color: '#6b7280', flexShrink: 0, marginTop: '1px' }}><IconBookMarked /></span>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '2px', marginBottom: '4px' }}>
+                            <span style={{ color: '#6b7280', flexShrink: 0 }}><IconBookMarked /></span>
                             <span style={{ fontSize: '7px', fontWeight: '600', color: '#374151' }}>Learning Tips</span>
                           </div>
-                          <div style={{ display: 'flex', flexDirection: 'column', gap: '3px', paddingLeft: '16px' }}>
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '3px' }}>
                             {subject.classStudyRecommendation && (
                               <div style={{ display: 'flex', alignItems: 'flex-start', gap: '4px' }}>
                                 <span style={{ 
