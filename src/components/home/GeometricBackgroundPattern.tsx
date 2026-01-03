@@ -41,21 +41,6 @@ export function GeometricBackgroundPattern({ className }: GeometricBackgroundPat
             <stop offset="0%" stopColor="hsl(185, 40%, 95%)" stopOpacity="0.3" />
             <stop offset="100%" stopColor="transparent" stopOpacity="0" />
           </radialGradient>
-
-          {/* Very fine noise */}
-          <filter id="noise">
-            <feTurbulence 
-              type="fractalNoise" 
-              baseFrequency="1.5" 
-              numOctaves="3" 
-              stitchTiles="stitch"
-            />
-            <feColorMatrix type="saturate" values="0" />
-            <feComponentTransfer>
-              <feFuncA type="linear" slope="0.02" />
-            </feComponentTransfer>
-            <feBlend in="SourceGraphic" mode="overlay" />
-          </filter>
         </defs>
 
         {/* Base gradient - very light */}
@@ -65,9 +50,6 @@ export function GeometricBackgroundPattern({ className }: GeometricBackgroundPat
         <rect width="100%" height="100%" fill="url(#patch1)" />
         <rect width="100%" height="100%" fill="url(#patch2)" />
         <rect width="100%" height="100%" fill="url(#patch3)" />
-        
-        {/* Very fine noise */}
-        <rect width="100%" height="100%" filter="url(#noise)" opacity="0.3" />
       </svg>
     </div>
   );
