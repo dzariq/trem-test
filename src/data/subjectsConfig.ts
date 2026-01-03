@@ -36,7 +36,7 @@ export const subjectGroups: SubjectGroup[] = [
     variants: [
       { name: "Chinese (Foreign Language)", shortName: "Chinese FL" },
       { name: "Chinese (Second Language)", shortName: "Chinese 2L" },
-      { name: "Chinese (Beginner)", shortName: "Chinese Beg" }
+      { name: "Chinese (Beginner)", shortName: "Chinese B." }
     ]
   },
   {
@@ -132,7 +132,7 @@ export const subjectShortNames: Record<string, string> = {
   "Malay (Foreign Language)": "Malay FL",
   "Chinese (Foreign Language)": "Chinese FL",
   "Chinese (Second Language)": "Chinese 2L",
-  "Chinese (Beginner)": "Chinese Beg",
+  "Chinese (Beginner)": "Chinese B.",
   "Additional Mathematics": "Add Math",
   "Mathematics": "Math",
   "Living Skills & Arts": "Living Skills",

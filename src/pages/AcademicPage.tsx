@@ -1815,7 +1815,7 @@ export default function AcademicPage() {
                   </h4>
                   <div className="h-64">
                     <ResponsiveContainer width="100%" height="100%">
-                      <BarChart data={subjectVsClassData} layout="vertical" barGap={2}>
+                      <BarChart data={subjectVsClassData} layout="vertical">
                         <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" strokeOpacity={0.3} horizontal={false} />
                         <XAxis 
                           type="number" 
@@ -1828,7 +1828,7 @@ export default function AcademicPage() {
                           type="category" 
                           dataKey="name" 
                           tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }} 
-                          width={60}
+                          width={70}
                           axisLine={false}
                           tickLine={false}
                         />
@@ -1847,8 +1847,19 @@ export default function AcademicPage() {
                           wrapperStyle={{ fontSize: 10 }} 
                           formatter={(value) => value === "student" ? "Your Score" : "Class Avg"}
                         />
-                        <Bar dataKey="student" fill="#3b82f6" radius={[0, 4, 4, 0]} barSize={10} />
-                        <Bar dataKey="classAvg" fill="hsl(var(--muted-foreground))" radius={[0, 4, 4, 0]} barSize={10} opacity={0.5} />
+                        <Bar dataKey="student" fill="#3b82f6" radius={[0, 4, 4, 0]} barSize={12} />
+                        {/* Class Average as dots on top of bars */}
+                        {subjectVsClassData.map((entry) => (
+                          <ReferenceDot
+                            key={`classAvg-${entry.name}`}
+                            x={entry.classAvg}
+                            y={entry.name}
+                            r={4}
+                            fill="hsl(var(--foreground))"
+                            stroke="hsl(var(--background))"
+                            strokeWidth={1}
+                          />
+                        ))}
                       </BarChart>
                     </ResponsiveContainer>
                   </div>
