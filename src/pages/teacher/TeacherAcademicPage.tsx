@@ -1257,12 +1257,7 @@ export default function TeacherAcademicPage() {
 
               {/* Floating Save Button */}
               <Button 
-                className={cn(
-                  "fixed z-50 shadow-xl transition-all duration-300 ease-out",
-                  isAtBottom 
-                    ? "bottom-24 left-4 right-4 h-12 rounded-xl gap-2 text-base font-semibold" 
-                    : "bottom-24 right-4 h-14 w-14 rounded-full p-0"
-                )}
+                className="fixed z-50 shadow-xl bottom-24 right-4 h-14 w-14 rounded-full p-0"
                 onClick={() => {
                   toast({
                     title: "Grades Saved",
@@ -1270,8 +1265,7 @@ export default function TeacherAcademicPage() {
                   });
                 }}
               >
-                <Save className={cn("transition-all", isAtBottom ? "h-5 w-5" : "h-6 w-6")} />
-                {isAtBottom && "Save All Grades"}
+                <Save className="h-6 w-6" />
               </Button>
             </> : (
               <Card className="border-dashed">
