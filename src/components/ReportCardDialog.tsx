@@ -501,19 +501,19 @@ export function ReportCardDialog({
               </table>
             </div>
 
-            {/* Learning Tips - Separate Table */}
+            {/* Learning Tips - Separate Table - Always starts on page 2 */}
             {displayedSubjects.some(s => s.classStudyRecommendation || s.studyRecommendation) && (
-              <div style={{ marginBottom: '12px' }}>
+              <div style={{ marginBottom: '12px', pageBreakBefore: 'always' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '8px', paddingBottom: '6px', borderBottom: '1px solid #065f46' }}>
                   <span style={{ color: '#065f46' }}><IconBookMarked /></span>
-                  <h3 style={{ fontSize: '11px', fontWeight: '700', color: '#065f46' }}>Learning Tips</h3>
+                  <h3 style={{ fontSize: '14px', fontWeight: '700', color: '#065f46' }}>Learning Tips</h3>
                 </div>
                 
-                <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '8px' }}>
+                <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '11px' }}>
                   <thead>
                     <tr style={{ background: '#065f46', color: 'white' }}>
-                      <th style={{ padding: '5px 8px', textAlign: 'left', fontWeight: '600', fontSize: '8px', width: '120px', borderRadius: '4px 0 0 0' }}>Subject</th>
-                      <th style={{ padding: '5px 8px', textAlign: 'left', fontWeight: '600', fontSize: '8px', borderRadius: '0 4px 0 0' }}>Learning Tips</th>
+                      <th style={{ padding: '6px 10px', textAlign: 'left', fontWeight: '600', fontSize: '11px', width: '120px', borderRadius: '4px 0 0 0' }}>Subject</th>
+                      <th style={{ padding: '6px 10px', textAlign: 'left', fontWeight: '600', fontSize: '11px', borderRadius: '0 4px 0 0' }}>Learning Tips</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -521,20 +521,20 @@ export function ReportCardDialog({
                       .filter(s => s.classStudyRecommendation || s.studyRecommendation)
                       .map((subject, index) => (
                         <tr key={subject.name} style={{ background: index % 2 === 0 ? '#fffbeb' : '#fef3c7', borderBottom: '1px solid #fcd34d' }}>
-                          <td style={{ padding: '5px 8px', fontWeight: '600', color: '#1a1a1a', fontSize: '8px' }}>{subject.name}</td>
-                          <td style={{ padding: '5px 8px', fontSize: '7px', color: '#374151', lineHeight: '1.4' }}>
+                          <td style={{ padding: '6px 10px', fontWeight: '600', color: '#1a1a1a', fontSize: '11px' }}>{subject.name}</td>
+                          <td style={{ padding: '6px 10px', fontSize: '10px', color: '#374151', lineHeight: '1.5' }}>
                             {subject.classStudyRecommendation || '-'}
                             {subject.studyRecommendation && (
-                              <div style={{ marginTop: '4px' }}>
+                              <div style={{ marginTop: '6px' }}>
                                 <span style={{ 
                                   display: 'inline-block',
                                   background: '#065f46', 
                                   color: 'white', 
-                                  padding: '1px 6px', 
+                                  padding: '2px 8px', 
                                   borderRadius: '8px', 
-                                  fontSize: '6px', 
+                                  fontSize: '9px', 
                                   fontWeight: '600',
-                                  marginRight: '4px'
+                                  marginRight: '6px'
                                 }}>Individual Tips</span>
                                 <span>{subject.studyRecommendation}</span>
                               </div>
@@ -551,10 +551,10 @@ export function ReportCardDialog({
             <div style={{ marginBottom: '12px' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '8px', paddingBottom: '6px', borderBottom: '1px solid #065f46' }}>
                 <span style={{ color: '#065f46' }}><IconMessage /></span>
-                <h3 style={{ fontSize: '11px', fontWeight: '700', color: '#065f46' }}>Homeroom Teacher's Comment</h3>
+                <h3 style={{ fontSize: '14px', fontWeight: '700', color: '#065f46' }}>Homeroom Teacher's Comment</h3>
               </div>
-              <div style={{ background: '#fffbeb', border: '1px solid #fcd34d', borderRadius: '8px', padding: '10px' }}>
-                <p style={{ fontSize: '10px', color: '#78350f', lineHeight: '1.6', margin: 0 }}>{homeroomComment}</p>
+              <div style={{ background: '#fffbeb', border: '1px solid #fcd34d', borderRadius: '8px', padding: '12px' }}>
+                <p style={{ fontSize: '13px', color: '#78350f', lineHeight: '1.6', margin: 0 }}>{homeroomComment}</p>
               </div>
             </div>
 
@@ -563,11 +563,11 @@ export function ReportCardDialog({
               <div style={{ marginBottom: '12px' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '8px', paddingBottom: '6px', borderBottom: '1px solid #065f46' }}>
                   <span style={{ color: '#065f46' }}><IconTrophy /></span>
-                  <h3 style={{ fontSize: '11px', fontWeight: '700', color: '#065f46' }}>Academic Achievements</h3>
+                  <h3 style={{ fontSize: '14px', fontWeight: '700', color: '#065f46' }}>Academic Achievements</h3>
                 </div>
-                <div style={{ display: 'grid', gap: '4px' }}>
+                <div style={{ display: 'grid', gap: '6px' }}>
                   {achievements.map((achievement, index) => (
-                    <div key={index} style={{ background: '#fffbeb', border: '1px solid #fcd34d', padding: '6px 10px', borderRadius: '6px', fontSize: '10px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <div key={index} style={{ background: '#fffbeb', border: '1px solid #fcd34d', padding: '8px 12px', borderRadius: '6px', fontSize: '13px', display: 'flex', alignItems: 'center', gap: '8px' }}>
                       <span style={{ color: '#ca8a04' }}><IconAward /></span>
                       {achievement}
                     </div>
