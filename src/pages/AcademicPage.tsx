@@ -821,14 +821,14 @@ export default function AcademicPage() {
                                 ? "bg-amber-50 border border-amber-200" 
                                 : "bg-primary/5 border border-primary/20"
                             }`}>
-                              {/* Arrow pointer - clean triangle without bottom line */}
+                              {/* Arrow pointer - clean triangle without border line */}
                               <div className="absolute -top-[10px] w-5 h-[10px] overflow-hidden" style={{
                             left: expandedInRow === rowSubjects[0] ? 'calc(25% - 10px)' : 'calc(75% - 10px)'
                           }}>
-                                <div className={`w-[14px] h-[14px] rotate-45 border-l border-t ${
+                                <div className={`w-[14px] h-[14px] rotate-45 ${
                                   expandedSection === "tips"
-                                    ? "bg-amber-50 border-amber-200"
-                                    : "bg-primary/5 border-primary/20"
+                                    ? "bg-amber-50"
+                                    : "bg-primary/5"
                                 }`} style={{
                               position: 'absolute',
                               top: '5px',
