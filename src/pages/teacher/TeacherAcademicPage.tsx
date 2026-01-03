@@ -1971,14 +1971,44 @@ export default function TeacherAcademicPage() {
                   </div>
                 </div>
 
-                {/* Subject Filter Pills */}
-                <div className="flex gap-2 overflow-x-auto pb-2">
-                  <Badge variant={subjectFilter === "all" ? "default" : "outline"} className="cursor-pointer whitespace-nowrap" onClick={() => setSubjectFilter("all")}>
-                    All Subjects
-                  </Badge>
-                  {subjects.map(subject => <Badge key={subject} variant={subjectFilter === subject ? "default" : "outline"} className="cursor-pointer whitespace-nowrap" onClick={() => setSubjectFilter(subject)}>
-                      {subject.length > 12 ? subject.substring(0, 12) + "..." : subject}
-                    </Badge>)}
+                {/* Subject Filter - Standardized Pills */}
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-medium text-foreground">Subjects:</span>
+                    <div className="flex gap-2">
+                      <button
+                        className={`text-sm font-medium transition-colors ${subjectFilter === "all" ? "text-primary" : "text-foreground hover:text-primary"}`}
+                        onClick={() => setSubjectFilter("all")}
+                      >
+                        All
+                      </button>
+                      <button
+                        className="text-sm font-medium text-foreground hover:text-primary transition-colors"
+                        onClick={() => setSubjectFilter(subjects[0] || "all")}
+                      >
+                        Clear
+                      </button>
+                    </div>
+                  </div>
+                  <div className="flex flex-wrap gap-1.5 p-2.5 rounded-lg border border-border bg-background">
+                    {subjectGroups.map((group) => (
+                      <SubjectGroupPill
+                        key={group.baseName}
+                        baseName={group.baseName}
+                        shortName={group.shortName}
+                        variants={group.variants || []}
+                        selectedSubjects={subjectFilter === "all" ? [] : [subjectFilter]}
+                        onToggle={(subjectName) => {
+                          if (subjectFilter === subjectName) {
+                            setSubjectFilter("all");
+                          } else {
+                            setSubjectFilter(subjectName);
+                          }
+                        }}
+                        singleSelect={true}
+                      />
+                    ))}
+                  </div>
                 </div>
 
                 {/* Moomoo-Style Gradient Area Chart - Scrollable with Pinch-to-Zoom */}
