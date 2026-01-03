@@ -560,7 +560,7 @@ export function ReportCardDialog({
 
             {/* Achievements */}
             {achievements.length > 0 && (
-              <div style={{ marginBottom: '12px', pageBreakBefore: 'always' }}>
+              <div style={{ marginBottom: '12px' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '12px', paddingBottom: '6px', borderBottom: '1px solid #065f46' }}>
                   <span style={{ color: '#065f46' }}><IconTrophy /></span>
                   <h3 style={{ fontSize: '14px', fontWeight: '700', color: '#065f46' }}>Academic Achievements</h3>
