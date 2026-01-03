@@ -1,4 +1,5 @@
-import { useState, useMemo, useRef, useCallback } from "react";
+import { useState, useMemo, useRef, useCallback, useEffect } from "react";
+import { useSearchParams } from "react-router-dom";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { AppHeader } from "@/components/layout/AppHeader";
 import { academicData, classAverages, students, attendanceData } from "@/data/mockData";
@@ -73,7 +74,11 @@ const groupedSubjectNames = subjectGroups.flatMap(g => g.variants?.map(v => v.na
 const standaloneSubjects = allSubjects.filter(s => !groupedSubjectNames.includes(s));
 
 export default function AcademicPage() {
-  const [mainSection, setMainSection] = useState<"report" | "analysis">("report");
+  const [searchParams] = useSearchParams();
+  const [mainSection, setMainSection] = useState<"report" | "analysis">(() => {
+    const section = searchParams.get("section");
+    return section === "analysis" ? "analysis" : "report";
+  });
   const [activeTab, setActiveTab] = useState("grades");
   const [examType, setExamType] = useState<ExamType>("midYear");
   const [selectedYear, setSelectedYear] = useState<YearKey>("2025");
