@@ -213,7 +213,7 @@ export function ReportCardDialog({
             </div>
 
             {/* Student Info Row with Attitude & Behaviour - Side by side */}
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginBottom: '10px' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '0.8fr 1.2fr', gap: '8px', marginBottom: '10px' }}>
               {/* Student Name, Class, Overall Average & Attendance - Green & Gold Gradient with Pattern */}
               <div style={{ 
                 position: 'relative',
@@ -292,7 +292,7 @@ export function ReportCardDialog({
                   <span style={{ fontSize: '12px' }}>⭐</span>
                   <span style={{ fontSize: '10px', fontWeight: '700', color: '#065f46' }}>Attitude & Behaviour</span>
                 </div>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '4px' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '4px' }}>
                   {behavior.slice(0, 8).map((item) => {
                     const behaviorColor = behaviorGradeColors[item.grade] || behaviorGradeColors["C"];
                     const description = behaviorDescriptions[item.grade]?.[item.category] || "Good progress";
