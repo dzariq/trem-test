@@ -224,10 +224,10 @@ export function ReportCardDialog({
                   alt="" 
                   style={{
                     position: 'absolute',
-                    right: '-60px',
-                    bottom: '-30px',
+                    right: '-50px',
+                    top: '-30px',
                     width: '280px',
-                    opacity: 0.1,
+                    opacity: 0.12,
                     pointerEvents: 'none'
                   }} 
                 />
