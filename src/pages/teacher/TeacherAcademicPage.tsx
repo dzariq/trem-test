@@ -109,6 +109,7 @@ export default function TeacherAcademicPage() {
   const [expandedSubjects, setExpandedSubjects] = useState<string[]>([]);
   const [studentGrades, setStudentGrades] = useState<Record<string, Record<string, StudentGrades>>>({});
   const [selectedYears, setSelectedYears] = useState<string[]>([academicYears[0]]);
+  const [selectedYear, setSelectedYear] = useState(academicYears[0]); // For single-select dropdowns
   const [selectedPeriod, setSelectedPeriod] = useState<"midYear" | "yearEnd">("midYear");
   const [selectedPeriods, setSelectedPeriods] = useState<string[]>(["midYear"]);
   const [selectedSubjects, setSelectedSubjects] = useState<string[]>([...subjects]);
@@ -1554,6 +1555,87 @@ export default function TeacherAcademicPage() {
 
               {/* ==================== DISTRIBUTION SUB-TAB ==================== */}
               <TabsContent value="distribution" className="space-y-4">
+                {/* Filters Section */}
+                <div className="space-y-3 pb-2 border-b border-border">
+                  {/* Row 1: Class + Year + Exam Period */}
+                  <div className="flex items-center gap-2">
+                    <Select value={selectedClass} onValueChange={setSelectedClass}>
+                      <SelectTrigger className="w-[80px]">
+                        <SelectValue placeholder="Class" />
+                      </SelectTrigger>
+                      <SelectContent className="bg-card">
+                        {teacherProfile.classes.map((cls) => (
+                          <SelectItem key={cls} value={cls}>{cls}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <Select value={selectedYear} onValueChange={setSelectedYear}>
+                      <SelectTrigger className="w-[90px]">
+                        <SelectValue placeholder="Year" />
+                      </SelectTrigger>
+                      <SelectContent className="bg-card">
+                        {academicYears.map((year) => (
+                          <SelectItem key={year} value={year}>{year}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <Select value={selectedPeriod} onValueChange={(v) => setSelectedPeriod(v as "midYear" | "yearEnd")}>
+                      <SelectTrigger className="flex-1">
+                        <SelectValue placeholder="Period" />
+                      </SelectTrigger>
+                      <SelectContent className="bg-card">
+                        {examPeriods.map((period) => (
+                          <SelectItem key={period.value} value={period.value}>{period.label}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  
+                  {/* Row 2: Subject Filter Pills */}
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm font-medium text-foreground">Subjects:</span>
+                      <div className="flex gap-2">
+                        <button
+                          className="text-sm font-medium text-foreground hover:text-primary transition-colors"
+                          onClick={() => setSelectedSubjects([...subjects])}
+                        >
+                          Select All
+                        </button>
+                        <button
+                          className="text-sm font-medium text-foreground hover:text-primary transition-colors"
+                          onClick={() => {
+                            // Keep at least one subject
+                            if (subjects.length > 0) setSelectedSubjects([subjects[0]]);
+                          }}
+                        >
+                          Clear
+                        </button>
+                      </div>
+                    </div>
+                    <div className="flex flex-wrap gap-1.5 p-2.5 rounded-lg border border-border bg-background">
+                      {subjectGroups.map((group) => (
+                        <SubjectGroupPill
+                          key={group.baseName}
+                          baseName={group.baseName}
+                          shortName={group.shortName}
+                          variants={group.variants || []}
+                          selectedSubjects={selectedSubjects}
+                          onToggle={(subjectName) => {
+                            if (selectedSubjects.includes(subjectName)) {
+                              if (selectedSubjects.length > 1) {
+                                setSelectedSubjects(prev => prev.filter(s => s !== subjectName));
+                              }
+                            } else {
+                              setSelectedSubjects(prev => [...prev, subjectName]);
+                            }
+                          }}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                </div>
+
                 {/* Grade Distribution Cards */}
                 <div className="space-y-2">
                   <h4 className="text-sm font-medium text-foreground">Grade Distribution</h4>
