@@ -224,10 +224,10 @@ export function ReportCardDialog({
                   alt="" 
                   style={{
                     position: 'absolute',
-                    right: '-40px',
-                    bottom: '-20px',
-                    width: '180px',
-                    opacity: 0.08,
+                    right: '-60px',
+                    bottom: '-30px',
+                    width: '280px',
+                    opacity: 0.1,
                     pointerEvents: 'none'
                   }} 
                 />
@@ -427,16 +427,17 @@ export function ReportCardDialog({
                 {/* Trophy pattern at right corner */}
                 <div style={{ 
                   position: 'absolute', 
-                  right: '8px', 
-                  bottom: '8px', 
-                  fontSize: '36px', 
-                  opacity: 0.12, 
+                  right: '10px', 
+                  bottom: '10px', 
+                  fontSize: '48px', 
+                  opacity: 0.2, 
                   pointerEvents: 'none',
                   display: 'flex',
-                  gap: '6px'
+                  gap: '8px',
+                  alignItems: 'flex-end'
                 }}>
                   <span>🏆</span>
-                  <span style={{ fontSize: '24px', marginTop: '10px' }}>🏆</span>
+                  <span style={{ fontSize: '32px' }}>🏆</span>
                 </div>
                 <h4 style={{ fontSize: '11px', fontWeight: '600', color: '#92400e', marginBottom: '8px', position: 'relative', zIndex: 1 }}>🏆 Academic Achievements</h4>
                 <div style={{ display: 'grid', gap: '4px', position: 'relative', zIndex: 1 }}>
