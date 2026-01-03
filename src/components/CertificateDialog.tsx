@@ -1,3 +1,4 @@
+import { useRef } from "react";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Download, X } from "lucide-react";
@@ -166,8 +167,75 @@ export function CertificateDialog({
   studentName,
   year = "2025",
 }: CertificateDialogProps) {
+  const certificateRef = useRef<HTMLDivElement>(null);
+
   const handleDownload = () => {
-    window.print();
+    const printContent = certificateRef.current;
+    if (!printContent) return;
+
+    const printWindow = window.open('', '_blank');
+    if (!printWindow) return;
+
+    printWindow.document.write(`
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <title>Certificate - ${studentName}</title>
+          <style>
+            @import url('https://fonts.googleapis.com/css2?family=Great+Vibes&family=Playfair+Display:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap');
+            
+            * {
+              margin: 0;
+              padding: 0;
+              box-sizing: border-box;
+            }
+            
+            body {
+              font-family: 'Inter', sans-serif;
+              display: flex;
+              justify-content: center;
+              align-items: center;
+              min-height: 100vh;
+              background: #f5f5f5;
+            }
+            
+            .certificate-container {
+              width: 420px;
+              height: 594px;
+            }
+            
+            @page {
+              size: A4 portrait;
+              margin: 0;
+            }
+            
+            @media print {
+              body { 
+                -webkit-print-color-adjust: exact; 
+                print-color-adjust: exact; 
+                background: white;
+              }
+              .certificate-container {
+                width: 100%;
+                height: 100%;
+              }
+            }
+          </style>
+        </head>
+        <body>
+          <div class="certificate-container">
+            ${printContent.innerHTML}
+          </div>
+        </body>
+      </html>
+    `);
+    
+    printWindow.document.close();
+    printWindow.onload = () => {
+      setTimeout(() => {
+        printWindow.print();
+      }, 500);
+    };
   };
 
   // Format full date
@@ -189,6 +257,7 @@ export function CertificateDialog({
 
         {/* Certificate Container - Fixed A4 ratio (210mm x 297mm = 1:1.414) */}
         <div 
+          ref={certificateRef}
           className="relative overflow-hidden print:p-8"
           style={{
             width: '420px',
