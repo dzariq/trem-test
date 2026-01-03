@@ -1271,8 +1271,8 @@ export default function AcademicPage() {
                           />
                           {/* Warning pattern background */}
                           <div className="absolute inset-0 pointer-events-none">
-                            <AlertTriangle className="absolute -top-1 -left-1 w-6 h-6 opacity-20" style={{ color: '#dc2626' }} />
-                            <AlertTriangle className="absolute -bottom-1 -right-1 w-5 h-5 opacity-15" style={{ color: '#ef4444' }} />
+                            <AlertTriangle className="absolute top-1 -left-1 w-7 h-7 opacity-20" style={{ color: '#dc2626' }} />
+                            <AlertTriangle className="absolute bottom-1 -right-1 w-6 h-6 opacity-15" style={{ color: '#ef4444' }} />
                           </div>
                           <span className="text-xs font-medium text-foreground text-center relative z-10">{shortenSubjectName(item.subject.name)}</span>
                           <div className="flex items-center gap-1 mt-1 relative z-10">
