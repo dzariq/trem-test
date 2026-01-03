@@ -66,6 +66,7 @@ export default function AcademicPage() {
   const [reportGenerated, setReportGenerated] = useState(false);
   const [reportCardDialogOpen, setReportCardDialogOpen] = useState(false);
   const [expandedSubject, setExpandedSubject] = useState<string | null>(null);
+  const [expandedSection, setExpandedSection] = useState<"comment" | "tips">("comment");
 
   // Pinch-to-zoom state for chart
   const [chartZoom, setChartZoom] = useState(1);
@@ -827,17 +828,85 @@ export default function AcademicPage() {
                             }} />
                               </div>
                               
-                              <div className="flex items-start gap-3">
-                                <div className="flex-shrink-0 w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
-                                  <MessageSquare className="h-4 w-4 text-primary" />
-                                </div>
-                                <div className="flex-1 min-w-0">
-                                  <p className="text-xs font-medium text-primary mb-1">Teacher's Comment</p>
-                                  <p className="text-sm text-muted-foreground leading-relaxed">
-                                    {expandedInRow.teacherComment}
-                                  </p>
-                                </div>
+                              {/* Toggle Buttons */}
+                              <div className="flex gap-2 mb-3">
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setExpandedSection("comment");
+                                  }}
+                                  className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
+                                    expandedSection === "comment" 
+                                      ? "bg-primary text-primary-foreground" 
+                                      : "bg-muted text-muted-foreground hover:bg-muted/80"
+                                  }`}
+                                >
+                                  <MessageSquare className="h-3 w-3" />
+                                  Teacher's Comment
+                                </button>
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setExpandedSection("tips");
+                                  }}
+                                  className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
+                                    expandedSection === "tips" 
+                                      ? "bg-primary text-primary-foreground" 
+                                      : "bg-muted text-muted-foreground hover:bg-muted/80"
+                                  }`}
+                                >
+                                  <BookOpen className="h-3 w-3" />
+                                  Learning Tips
+                                </button>
                               </div>
+                              
+                              {/* Content Section */}
+                              {expandedSection === "comment" ? (
+                                <div className="flex items-start gap-3">
+                                  <div className="flex-shrink-0 w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
+                                    <MessageSquare className="h-4 w-4 text-primary" />
+                                  </div>
+                                  <div className="flex-1 min-w-0">
+                                    <p className="text-xs font-medium text-primary mb-1">Teacher's Comment</p>
+                                    <p className="text-sm text-muted-foreground leading-relaxed">
+                                      {expandedInRow.teacherComment}
+                                    </p>
+                                  </div>
+                                </div>
+                              ) : (
+                                <div className="flex items-start gap-3">
+                                  <div className="flex-shrink-0 w-8 h-8 rounded-full bg-amber-100 flex items-center justify-center">
+                                    <BookOpen className="h-4 w-4 text-amber-600" />
+                                  </div>
+                                  <div className="flex-1 min-w-0 space-y-3">
+                                    {expandedInRow.classStudyRecommendation && (
+                                      <div>
+                                        <p className="text-xs font-medium text-amber-600 mb-1">Class Learning Tips</p>
+                                        <p className="text-sm text-muted-foreground leading-relaxed">
+                                          {expandedInRow.classStudyRecommendation}
+                                        </p>
+                                      </div>
+                                    )}
+                                    {expandedInRow.studyRecommendation && (
+                                      <div className="pt-2 border-t border-border/50">
+                                        <div className="flex items-center gap-2 mb-1">
+                                          <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-primary text-primary-foreground">
+                                            Individual Tips
+                                          </span>
+                                        </div>
+                                        <p className="text-sm text-muted-foreground leading-relaxed">
+                                          {expandedInRow.studyRecommendation}
+                                        </p>
+                                      </div>
+                                    )}
+                                    {!expandedInRow.classStudyRecommendation && !expandedInRow.studyRecommendation && (
+                                      <p className="text-sm text-muted-foreground italic">
+                                        No learning tips available for this subject.
+                                      </p>
+                                    )}
+                                  </div>
+                                </div>
+                              )}
                             </div>
                           </div>}
                       </div>;
