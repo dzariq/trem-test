@@ -19,6 +19,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, LineChart, Line, Legend, AreaChart, Area, RadarChart, Radar, PolarGrid, PolarAngleAxis, PolarRadiusAxis, ReferenceLine, ReferenceDot } from "recharts";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { cn } from "@/lib/utils";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 // Grade categories with max scores
 const gradeCategories = [{
@@ -103,6 +104,7 @@ const getLetterGrade = (total: number): {
   };
 };
 export default function TeacherAcademicPage() {
+  const isMobile = useIsMobile();
   const [selectedClass, setSelectedClass] = useState(teacherProfile.classes[0]);
   const [selectedClasses, setSelectedClasses] = useState<string[]>([teacherProfile.classes[0]]);
   const [selectedStudent, setSelectedStudent] = useState<string | null>(null);
@@ -1768,18 +1770,18 @@ export default function TeacherAcademicPage() {
                 {/* Subject Performance Bar Chart */}
                 <div className="space-y-2">
                   <h4 className="text-sm font-medium text-foreground">Subject Performance</h4>
-                  <div style={{ height: `${Math.max(176, subjectAverages.length * 40)}px` }}>
+                  <div style={{ height: `${Math.max(176, subjectAverages.length * (isMobile ? 32 : 40))}px` }}>
                     <ResponsiveContainer width="100%" height="100%">
-                      <BarChart data={subjectAverages} layout="vertical">
+                      <BarChart data={subjectAverages} layout="vertical" margin={{ left: isMobile ? -15 : 0, right: isMobile ? 5 : 10 }}>
                         <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" strokeOpacity={0.3} />
                         <XAxis type="number" domain={[0, 100]} tick={{
-                        fontSize: 10,
+                        fontSize: isMobile ? 8 : 10,
                         fill: "hsl(var(--muted-foreground))"
                       }} />
                         <YAxis type="category" dataKey="name" tick={{
-                        fontSize: 10,
+                        fontSize: isMobile ? 8 : 10,
                         fill: "hsl(var(--muted-foreground))"
-                      }} width={80} />
+                      }} width={isMobile ? 55 : 80} />
                         <Tooltip contentStyle={{
                         backgroundColor: "hsl(var(--card))",
                         border: "1px solid hsl(var(--border))",
@@ -2162,12 +2164,12 @@ export default function TeacherAcademicPage() {
                           </div>
                         </div>
                       </div>
-                      <div className="h-[200px]">
+                      <div className={cn("h-[200px]", isMobile && "h-[160px]")}>
                         <ResponsiveContainer width="100%" height="100%">
-                          <BarChart data={bandsComparisonChartData} barGap={2}>
+                          <BarChart data={bandsComparisonChartData} barGap={2} margin={{ left: isMobile ? -15 : 5, right: isMobile ? 5 : 10 }}>
                             <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" strokeOpacity={0.3} vertical={false} />
-                            <XAxis dataKey="grade" tick={{ fontSize: 12, fill: "hsl(var(--foreground))" }} />
-                            <YAxis tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }} />
+                            <XAxis dataKey="grade" tick={{ fontSize: isMobile ? 10 : 12, fill: "hsl(var(--foreground))" }} />
+                            <YAxis tick={{ fontSize: isMobile ? 8 : 10, fill: "hsl(var(--muted-foreground))" }} width={isMobile ? 25 : 30} />
                             <Tooltip
                               contentStyle={{
                                 backgroundColor: "hsl(var(--card))",
@@ -3301,22 +3303,22 @@ export default function TeacherAcademicPage() {
                       </p>
                     </div>
                   </div>
-                  <div ref={chartContainerRef} className="h-64 overflow-x-auto overflow-y-hidden scrollbar-thin scrollbar-thumb-muted scrollbar-track-transparent" style={{
+                  <div ref={chartContainerRef} className={cn("h-64 overflow-x-auto overflow-y-hidden scrollbar-thin scrollbar-thumb-muted scrollbar-track-transparent", isMobile && "h-52")} style={{
                   WebkitOverflowScrolling: 'touch',
                   scrollBehavior: 'smooth',
                   touchAction: 'pan-x pinch-zoom'
                 }} onTouchStart={handleTouchStart} onTouchMove={handleTouchMove} onTouchEnd={handleTouchEnd}>
                     <div style={{
                     width: Math.max(100, trendData.length / 4 * 100 * chartZoom) + '%',
-                    minWidth: '100%',
+                    minWidth: isMobile ? '120%' : '100%',
                     height: '100%',
                     transition: 'width 0.1s ease-out'
                   }}>
                       <ResponsiveContainer width="100%" height="100%">
                         <AreaChart data={trendData} margin={{
                         top: 10,
-                        right: 20,
-                        left: 0,
+                        right: isMobile ? 10 : 20,
+                        left: isMobile ? -15 : 0,
                         bottom: 20
                       }}>
                           <defs>
@@ -3341,18 +3343,18 @@ export default function TeacherAcademicPage() {
                         }) => {
                           const parts = payload.value.split(' ');
                           return <g transform={`translate(${x},${y})`}>
-                                  <text x={0} y={0} dy={12} textAnchor="middle" fontSize={10} fill="hsl(var(--muted-foreground))">
+                                  <text x={0} y={0} dy={12} textAnchor="middle" fontSize={isMobile ? 8 : 10} fill="hsl(var(--muted-foreground))">
                                     {parts[0]}
                                   </text>
-                                  <text x={0} y={0} dy={24} textAnchor="middle" fontSize={9} fill="hsl(var(--muted-foreground))" opacity={0.7}>
+                                  <text x={0} y={0} dy={24} textAnchor="middle" fontSize={isMobile ? 7 : 9} fill="hsl(var(--muted-foreground))" opacity={0.7}>
                                     {parts[1]}
                                   </text>
                                 </g>;
                         }} />
                           <YAxis domain={[30, 100]} tick={{
-                          fontSize: 11,
+                          fontSize: isMobile ? 9 : 11,
                           fill: "hsl(var(--muted-foreground))"
-                        }} axisLine={false} tickLine={false} width={35} />
+                        }} axisLine={false} tickLine={false} width={isMobile ? 28 : 35} />
                           <Tooltip contentStyle={{
                           backgroundColor: "hsl(var(--card))",
                           border: "1px solid hsl(var(--border))",
@@ -3454,16 +3456,16 @@ export default function TeacherAcademicPage() {
                     <Target className="h-4 w-4 text-primary" />
                     Strengths Profile
                   </h4>
-                  <div className="h-56">
+                  <div className={cn("h-56", isMobile && "h-48")}>
                     <ResponsiveContainer width="100%" height="100%">
-                      <RadarChart data={radarData} cx="50%" cy="50%" outerRadius="70%">
+                      <RadarChart data={radarData} cx="50%" cy="50%" outerRadius={isMobile ? "60%" : "70%"}>
                         <PolarGrid stroke="hsl(var(--border))" strokeOpacity={0.5} />
                         <PolarAngleAxis dataKey="subject" tick={{
-                        fontSize: 9,
+                        fontSize: isMobile ? 7 : 9,
                         fill: "hsl(var(--muted-foreground))"
                       }} tickLine={false} />
                         <PolarRadiusAxis angle={30} domain={[0, 100]} tick={{
-                        fontSize: 8,
+                        fontSize: isMobile ? 6 : 8,
                         fill: "hsl(var(--muted-foreground))"
                       }} tickCount={5} axisLine={false} />
                         <Radar name="Score" dataKey="score" stroke={radarAverage >= 70 ? "#22c55e" : radarAverage >= 50 ? "#f59e0b" : "#ef4444"} fill={radarAverage >= 70 ? "#22c55e" : radarAverage >= 50 ? "#f59e0b" : "#ef4444"} fillOpacity={0.3} strokeWidth={2} />
@@ -3471,7 +3473,7 @@ export default function TeacherAcademicPage() {
                         backgroundColor: "hsl(var(--card))",
                         border: "1px solid hsl(var(--border))",
                         borderRadius: "8px",
-                        fontSize: 12
+                        fontSize: isMobile ? 10 : 12
                       }} formatter={(value: number) => [`${value}%`, "Score"]} />
                       </RadarChart>
                     </ResponsiveContainer>
@@ -3487,18 +3489,18 @@ export default function TeacherAcademicPage() {
                     <BarChart3 className="h-4 w-4 text-primary" />
                     Class VS Cohort Average
                   </h4>
-                  <div className="h-64">
+                  <div className={cn("h-64", isMobile && "h-56")}>
                     <ResponsiveContainer width="100%" height="100%">
-                      <BarChart data={subjectVsCohortData} layout="vertical" barGap={2}>
+                      <BarChart data={subjectVsCohortData} layout="vertical" barGap={2} margin={{ left: isMobile ? -10 : 0, right: isMobile ? 5 : 10 }}>
                         <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" strokeOpacity={0.3} horizontal={false} />
                         <XAxis type="number" domain={[0, 100]} tick={{
-                        fontSize: 10,
+                        fontSize: isMobile ? 8 : 10,
                         fill: "hsl(var(--muted-foreground))"
                       }} axisLine={false} tickLine={false} />
                         <YAxis type="category" dataKey="name" tick={{
-                        fontSize: 10,
+                        fontSize: isMobile ? 8 : 10,
                         fill: "hsl(var(--muted-foreground))"
-                      }} width={60} axisLine={false} tickLine={false} />
+                      }} width={isMobile ? 45 : 60} axisLine={false} tickLine={false} />
                         <Tooltip contentStyle={{
                         backgroundColor: "hsl(var(--card))",
                         border: "1px solid hsl(var(--border))",
@@ -3820,7 +3822,7 @@ export default function TeacherAcademicPage() {
                       const maxDelta = Math.max(...top5Growth.map(t => t.delta));
                       return <div className="space-y-3">
                               {/* Mini Area Chart */}
-                              <div className="h-32 -mx-2">
+                              <div className={cn("h-32 -mx-2", isMobile && "h-28 -mx-1")}>
                                 <ResponsiveContainer width="100%" height="100%">
                                   <AreaChart data={top5Growth.map(item => ({
                               name: shortenSubjectName(item.name),
@@ -3830,8 +3832,8 @@ export default function TeacherAcademicPage() {
                               to: item.examA
                             }))} margin={{
                               top: 10,
-                              right: 10,
-                              left: 10,
+                              right: isMobile ? 5 : 10,
+                              left: isMobile ? 5 : 10,
                               bottom: 0
                             }}>
                                     <defs>
@@ -3841,7 +3843,7 @@ export default function TeacherAcademicPage() {
                                       </linearGradient>
                                     </defs>
                                     <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{
-                                fontSize: 9,
+                                fontSize: isMobile ? 7 : 9,
                                 fill: 'hsl(var(--muted-foreground))'
                               }} interval={0} height={30} />
                                     <YAxis hide />
