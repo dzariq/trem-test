@@ -1066,11 +1066,11 @@ export default function TeacherAcademicPage() {
                 <SelectTrigger>
                   <SelectValue placeholder="Select Subject" />
                 </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="Homeroom Behavior" className="font-medium text-purple-400">
+                <SelectContent className="bg-white dark:bg-card">
+                  <SelectItem value="Homeroom Behavior" className="font-medium text-purple-600">
                     Homeroom Behavior
                   </SelectItem>
-                  <SelectItem value="Awards" className="font-medium text-amber-400">
+                  <SelectItem value="Awards" className="font-medium text-amber-600">
                     Awards
                   </SelectItem>
                   <div className="h-px bg-border my-1" />
