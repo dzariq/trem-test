@@ -49,11 +49,54 @@ const gradeColors: Record<string, { bg: string; text: string; border: string }> 
   "E": { bg: "#ef4444", text: "#ffffff", border: "#dc2626" },
 };
 
-const behaviorGradeColors: Record<string, { bg: string; text: string }> = {
-  "A": { bg: "#dcfce7", text: "#16a34a" },
-  "B": { bg: "#dbeafe", text: "#2563eb" },
-  "C": { bg: "#fef3c7", text: "#ca8a04" },
-  "D": { bg: "#fee2e2", text: "#dc2626" },
+const behaviorGradeColors: Record<string, { bg: string; text: string; cardBg: string }> = {
+  "A": { bg: "#dcfce7", text: "#16a34a", cardBg: "#dcfce7" },
+  "B": { bg: "#dbeafe", text: "#2563eb", cardBg: "#dbeafe" },
+  "C": { bg: "#fef3c7", text: "#ca8a04", cardBg: "#fef3c7" },
+  "D": { bg: "#fee2e2", text: "#dc2626", cardBg: "#fee2e2" },
+};
+
+const behaviorDescriptions: Record<string, Record<string, string>> = {
+  "A": {
+    "Initiative to Assist": "Always helps others",
+    "Homework Submission": "Always on time",
+    "Passion to Learn": "Highly enthusiastic",
+    "Communication Skills": "Excellent communicator",
+    "Participation": "Very active",
+    "Leadership Skills": "Strong leader",
+    "Punctuality": "Always punctual",
+    "Self-Discipline": "Highly disciplined"
+  },
+  "B": {
+    "Initiative to Assist": "Often helps others",
+    "Homework Submission": "Usually on time",
+    "Passion to Learn": "Shows good interest",
+    "Communication Skills": "Good communicator",
+    "Participation": "Participates well",
+    "Leadership Skills": "Shows leadership",
+    "Punctuality": "Usually punctual",
+    "Self-Discipline": "Well disciplined"
+  },
+  "C": {
+    "Initiative to Assist": "Sometimes helps",
+    "Homework Submission": "Sometimes late",
+    "Passion to Learn": "Moderate interest",
+    "Communication Skills": "Adequate skills",
+    "Participation": "Some participation",
+    "Leadership Skills": "Developing skills",
+    "Punctuality": "Sometimes late",
+    "Self-Discipline": "Needs improvement"
+  },
+  "D": {
+    "Initiative to Assist": "Rarely helps",
+    "Homework Submission": "Often late",
+    "Passion to Learn": "Limited interest",
+    "Communication Skills": "Needs improvement",
+    "Participation": "Low participation",
+    "Leadership Skills": "Needs development",
+    "Punctuality": "Often late",
+    "Self-Discipline": "Needs attention"
+  }
 };
 
 export function ReportCardDialog({
@@ -179,66 +222,61 @@ export function ReportCardDialog({
                 </div>
               </div>
               
-              {/* Attitude & Behaviour - Styled nicer */}
-              <div style={{ background: 'linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%)', border: '1px solid #e2e8f0', borderRadius: '12px', padding: '12px' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '10px' }}>
-                  <span style={{ fontSize: '14px' }}>⭐</span>
-                  <span style={{ fontSize: '11px', fontWeight: '700', color: '#065f46' }}>Attitude & Behaviour</span>
+            {/* Attitude & Behaviour - Card Style */}
+              <div style={{ borderRadius: '12px', padding: '10px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '8px' }}>
+                  <span style={{ fontSize: '12px' }}>⭐</span>
+                  <span style={{ fontSize: '10px', fontWeight: '700', color: '#065f46' }}>Attitude & Behaviour</span>
                 </div>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '6px' }}>
-                  {behavior.slice(0, 4).map((item) => {
+                  {behavior.slice(0, 8).map((item) => {
                     const behaviorColor = behaviorGradeColors[item.grade] || behaviorGradeColors["C"];
+                    const description = behaviorDescriptions[item.grade]?.[item.category] || "Good progress";
                     return (
-                      <div key={item.category} style={{ textAlign: 'center' }}>
-                        <div style={{ fontSize: '8px', color: '#64748b', marginBottom: '4px', fontWeight: '500' }}>{item.category}</div>
-                        <div style={{ 
-                          display: 'inline-flex', 
-                          alignItems: 'center', 
-                          justifyContent: 'center', 
-                          width: '28px', 
-                          height: '28px', 
-                          borderRadius: '50%', 
-                          fontWeight: '700', 
-                          fontSize: '12px',
-                          backgroundColor: behaviorColor.bg,
+                      <div key={item.category} style={{ 
+                        position: 'relative',
+                        background: behaviorColor.cardBg, 
+                        borderRadius: '8px', 
+                        padding: '8px',
+                        overflow: 'hidden',
+                        minHeight: '48px'
+                      }}>
+                        {/* Watermark Grade */}
+                        <div style={{
+                          position: 'absolute',
+                          right: '4px',
+                          bottom: '-4px',
+                          fontSize: '36px',
+                          fontWeight: '800',
                           color: behaviorColor.text,
-                          border: `2px solid ${behaviorColor.text}20`,
-                          boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
+                          opacity: 0.2,
+                          lineHeight: 1
                         }}>
                           {item.grade}
+                        </div>
+                        {/* Content */}
+                        <div style={{ position: 'relative', zIndex: 1 }}>
+                          <div style={{ 
+                            fontSize: '7px', 
+                            fontWeight: '700', 
+                            color: behaviorColor.text, 
+                            textTransform: 'uppercase',
+                            marginBottom: '2px'
+                          }}>
+                            {item.category}
+                          </div>
+                          <div style={{ 
+                            fontSize: '6px', 
+                            color: behaviorColor.text,
+                            opacity: 0.8
+                          }}>
+                            {description}
+                          </div>
                         </div>
                       </div>
                     );
                   })}
                 </div>
-                {behavior.length > 4 && (
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '6px', marginTop: '8px' }}>
-                    {behavior.slice(4).map((item) => {
-                      const behaviorColor = behaviorGradeColors[item.grade] || behaviorGradeColors["C"];
-                      return (
-                        <div key={item.category} style={{ textAlign: 'center' }}>
-                          <div style={{ fontSize: '8px', color: '#64748b', marginBottom: '4px', fontWeight: '500' }}>{item.category}</div>
-                          <div style={{ 
-                            display: 'inline-flex', 
-                            alignItems: 'center', 
-                            justifyContent: 'center', 
-                            width: '28px', 
-                            height: '28px', 
-                            borderRadius: '50%', 
-                            fontWeight: '700', 
-                            fontSize: '12px',
-                            backgroundColor: behaviorColor.bg,
-                            color: behaviorColor.text,
-                            border: `2px solid ${behaviorColor.text}20`,
-                            boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
-                          }}>
-                            {item.grade}
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                )}
               </div>
             </div>
 
