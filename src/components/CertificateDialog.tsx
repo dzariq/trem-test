@@ -106,15 +106,13 @@ export function CertificateDialog({
               outlineOffset: '4px',
             }}
           >
-            {/* Background Logo */}
+            {/* Background Logo - centered and upright */}
             <img 
               src={schoolLogo} 
               alt="" 
-              className="absolute -right-24 -bottom-24 w-[480px] h-[480px] object-contain pointer-events-none"
+              className="absolute right-4 bottom-16 w-[280px] h-[280px] object-contain pointer-events-none"
               style={{
-                opacity: 0.10,
-                maskImage: 'linear-gradient(135deg, transparent 0%, rgba(0,0,0,0.3) 30%, rgba(0,0,0,1) 100%)',
-                WebkitMaskImage: 'linear-gradient(135deg, transparent 0%, rgba(0,0,0,0.3) 30%, rgba(0,0,0,1) 100%)',
+                opacity: 0.08,
               }}
             />
 
@@ -211,8 +209,8 @@ export function CertificateDialog({
               </div>
 
               {/* Footer */}
-              <div className="w-full flex flex-col items-center gap-2 mt-auto">
-                <p className="text-xs font-certificate-body" style={{ color: 'rgba(212, 165, 55, 0.8)' }}>
+              <div className="w-full flex flex-col items-center gap-1 mt-auto">
+                <p className="text-[8px] font-certificate-body" style={{ color: 'rgba(212, 165, 55, 0.7)' }}>
                   {fullDate}
                 </p>
                 
