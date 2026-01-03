@@ -2945,6 +2945,176 @@ export default function AcademicPage() {
                 </div>
               </div>
 
+              {/* Performance Trend Chart (SVG for print) */}
+              <div style={{ marginBottom: '12px', pageBreakInside: 'avoid' }}>
+                <h3 style={{ fontSize: '12px', fontWeight: 600, marginBottom: '8px', paddingBottom: '4px', borderBottom: '1px solid #ddd' }}>Performance Trend</h3>
+                <div style={{ padding: '10px', backgroundColor: '#f9fafb', borderRadius: '6px', border: '1px solid #e5e7eb' }}>
+                  <svg width="100%" height="120" viewBox="0 0 500 120" preserveAspectRatio="xMidYMid meet">
+                    {/* Background grid lines */}
+                    <line x1="40" y1="20" x2="480" y2="20" stroke="#e5e7eb" strokeWidth="1" />
+                    <line x1="40" y1="50" x2="480" y2="50" stroke="#e5e7eb" strokeWidth="1" />
+                    <line x1="40" y1="80" x2="480" y2="80" stroke="#f59e0b" strokeWidth="1" strokeDasharray="4 4" opacity="0.5" />
+                    <line x1="40" y1="100" x2="480" y2="100" stroke="#e5e7eb" strokeWidth="1" />
+                    {/* Y-axis labels */}
+                    <text x="35" y="24" fontSize="8" fill="#6b7280" textAnchor="end">100</text>
+                    <text x="35" y="54" fontSize="8" fill="#6b7280" textAnchor="end">80</text>
+                    <text x="35" y="84" fontSize="8" fill="#f59e0b" textAnchor="end">50</text>
+                    <text x="35" y="104" fontSize="8" fill="#6b7280" textAnchor="end">30</text>
+                    {/* Area fill */}
+                    <defs>
+                      <linearGradient id="trendGradientPrint" x1="0%" y1="0%" x2="0%" y2="100%">
+                        <stop offset="0%" stopColor={trendDirection.direction === 'up' ? '#22c55e' : trendDirection.direction === 'down' ? '#ef4444' : '#3b82f6'} stopOpacity="0.3" />
+                        <stop offset="100%" stopColor={trendDirection.direction === 'up' ? '#22c55e' : trendDirection.direction === 'down' ? '#ef4444' : '#3b82f6'} stopOpacity="0.05" />
+                      </linearGradient>
+                    </defs>
+                    {/* Draw trend line and area */}
+                    {trendData.length > 0 && (
+                      <>
+                        <path
+                          d={`M ${trendData.map((d, i) => {
+                            const x = 40 + (i / (trendData.length - 1 || 1)) * 440;
+                            const avg = typeof d.Average === 'number' ? d.Average : 0;
+                            const y = 100 - ((avg - 30) / 70) * 80;
+                            return `${i === 0 ? 'M' : 'L'} ${x} ${y}`;
+                          }).join(' ')} L ${40 + 440} 100 L 40 100 Z`}
+                          fill="url(#trendGradientPrint)"
+                        />
+                        <path
+                          d={trendData.map((d, i) => {
+                            const x = 40 + (i / (trendData.length - 1 || 1)) * 440;
+                            const avg = typeof d.Average === 'number' ? d.Average : 0;
+                            const y = 100 - ((avg - 30) / 70) * 80;
+                            return `${i === 0 ? 'M' : 'L'} ${x} ${y}`;
+                          }).join(' ')}
+                          fill="none"
+                          stroke={trendDirection.direction === 'up' ? '#22c55e' : trendDirection.direction === 'down' ? '#ef4444' : '#3b82f6'}
+                          strokeWidth="2.5"
+                        />
+                        {/* Data points */}
+                        {trendData.map((d, i) => {
+                          const x = 40 + (i / (trendData.length - 1 || 1)) * 440;
+                          const avg = typeof d.Average === 'number' ? d.Average : 0;
+                          const y = 100 - ((avg - 30) / 70) * 80;
+                          const periodStr = typeof d.period === 'string' ? d.period : String(d.period);
+                          return (
+                            <g key={i}>
+                              <circle cx={x} cy={y} r="4" fill={trendDirection.direction === 'up' ? '#22c55e' : trendDirection.direction === 'down' ? '#ef4444' : '#3b82f6'} />
+                              <text x={x} y={y - 8} fontSize="8" fill="#374151" textAnchor="middle" fontWeight="600">{avg}%</text>
+                              <text x={x} y="115" fontSize="7" fill="#6b7280" textAnchor="middle">{periodStr.split(' ')[0]}</text>
+                            </g>
+                          );
+                        })}
+                      </>
+                    )}
+                  </svg>
+                </div>
+              </div>
+
+              {/* Strengths Profile Radar Chart (SVG for print) */}
+              <div style={{ marginBottom: '12px', pageBreakInside: 'avoid' }}>
+                <h3 style={{ fontSize: '12px', fontWeight: 600, marginBottom: '8px', paddingBottom: '4px', borderBottom: '1px solid #ddd' }}>Strengths Profile</h3>
+                <div style={{ padding: '10px', backgroundColor: '#f9fafb', borderRadius: '6px', border: '1px solid #e5e7eb', textAlign: 'center' }}>
+                  <svg width="240" height="200" viewBox="0 0 240 200" style={{ margin: '0 auto', display: 'block' }}>
+                    {/* Radar background circles */}
+                    {[100, 80, 60, 40, 20].map((r, i) => (
+                      <circle key={i} cx="120" cy="100" r={r * 0.7} fill="none" stroke="#e5e7eb" strokeWidth="1" />
+                    ))}
+                    {/* Axis lines */}
+                    {radarData.slice(0, 6).map((_, i) => {
+                      const angle = (i * 60 - 90) * (Math.PI / 180);
+                      const x2 = 120 + 70 * Math.cos(angle);
+                      const y2 = 100 + 70 * Math.sin(angle);
+                      return <line key={i} x1="120" y1="100" x2={x2} y2={y2} stroke="#e5e7eb" strokeWidth="1" />;
+                    })}
+                    {/* Radar polygon */}
+                    <polygon
+                      points={radarData.slice(0, 6).map((d, i) => {
+                        const angle = (i * 60 - 90) * (Math.PI / 180);
+                        const r = (d.score / 100) * 70;
+                        const x = 120 + r * Math.cos(angle);
+                        const y = 100 + r * Math.sin(angle);
+                        return `${x},${y}`;
+                      }).join(' ')}
+                      fill={radarAverage >= 70 ? '#22c55e' : radarAverage >= 50 ? '#f59e0b' : '#ef4444'}
+                      fillOpacity="0.3"
+                      stroke={radarAverage >= 70 ? '#22c55e' : radarAverage >= 50 ? '#f59e0b' : '#ef4444'}
+                      strokeWidth="2"
+                    />
+                    {/* Data points and labels */}
+                    {radarData.slice(0, 6).map((d, i) => {
+                      const angle = (i * 60 - 90) * (Math.PI / 180);
+                      const r = (d.score / 100) * 70;
+                      const x = 120 + r * Math.cos(angle);
+                      const y = 100 + r * Math.sin(angle);
+                      const labelR = 85;
+                      const labelX = 120 + labelR * Math.cos(angle);
+                      const labelY = 100 + labelR * Math.sin(angle);
+                      return (
+                        <g key={i}>
+                          <circle cx={x} cy={y} r="3" fill={radarAverage >= 70 ? '#22c55e' : radarAverage >= 50 ? '#f59e0b' : '#ef4444'} />
+                          <text x={labelX} y={labelY} fontSize="8" fill="#374151" textAnchor="middle" dominantBaseline="middle">
+                            {d.subject}
+                          </text>
+                          <text x={x} y={y - 8} fontSize="7" fill="#6b7280" textAnchor="middle">{d.score}%</text>
+                        </g>
+                      );
+                    })}
+                  </svg>
+                  <p style={{ fontSize: '9px', color: '#666', marginTop: '8px' }}>Visual snapshot of performance across subjects</p>
+                </div>
+              </div>
+
+              {/* Subject vs Class Average Bar Chart (SVG for print) */}
+              <div style={{ marginBottom: '12px', pageBreakInside: 'avoid' }}>
+                <h3 style={{ fontSize: '12px', fontWeight: 600, marginBottom: '8px', paddingBottom: '4px', borderBottom: '1px solid #ddd' }}>Your Score vs Class Average</h3>
+                <div style={{ padding: '10px', backgroundColor: '#f9fafb', borderRadius: '6px', border: '1px solid #e5e7eb' }}>
+                  <svg width="100%" height="160" viewBox="0 0 500 160" preserveAspectRatio="xMidYMid meet">
+                    {/* Grid lines */}
+                    <line x1="80" y1="20" x2="80" y2="130" stroke="#e5e7eb" strokeWidth="1" />
+                    <line x1="80" y1="130" x2="480" y2="130" stroke="#e5e7eb" strokeWidth="1" />
+                    {/* Y-axis labels */}
+                    <text x="75" y="25" fontSize="8" fill="#6b7280" textAnchor="end">100%</text>
+                    <text x="75" y="77" fontSize="8" fill="#6b7280" textAnchor="end">50%</text>
+                    <text x="75" y="130" fontSize="8" fill="#6b7280" textAnchor="end">0%</text>
+                    {/* Bars and dots */}
+                    {subjectVsClassData.slice(0, 6).map((item, i) => {
+                      const barWidth = 35;
+                      const groupWidth = 60;
+                      const x = 90 + i * groupWidth;
+                      const studentHeight = (item.student / 100) * 110;
+                      const classAvgY = 130 - (item.classAvg / 100) * 110;
+                      const subjectColors: Record<string, string> = {
+                        "Eng": "#22c55e", "Math": "#f59e0b", "Sci": "#3b82f6", "Phy": "#06b6d4",
+                        "Chem": "#8b5cf6", "Bio": "#10b981", "Hist": "#ef4444", "Geo": "#f97316",
+                        "Art": "#ec4899", "ICT": "#6366f1", "Islam": "#14b8a6", "Add M": "#a855f7"
+                      };
+                      const fallbackColors = ["#3b82f6", "#f59e0b", "#22c55e", "#ef4444", "#8b5cf6", "#f97316"];
+                      const barColor = subjectColors[item.name] || fallbackColors[i % fallbackColors.length];
+                      return (
+                        <g key={i}>
+                          {/* Student bar */}
+                          <rect x={x} y={130 - studentHeight} width={barWidth} height={studentHeight} fill={barColor} rx="2" />
+                          <text x={x + barWidth/2} y={125 - studentHeight} fontSize="7" fill={barColor} textAnchor="middle" fontWeight="600">{item.student}%</text>
+                          {/* Class average dot */}
+                          <circle cx={x + barWidth/2} cy={classAvgY} r="4" fill="#374151" stroke="#fff" strokeWidth="1" />
+                          {/* Subject label */}
+                          <text x={x + barWidth/2} y="145" fontSize="8" fill="#374151" textAnchor="middle">{item.name}</text>
+                          {/* Delta badge */}
+                          <text x={x + barWidth/2} y="155" fontSize="7" fill={item.delta >= 0 ? '#22c55e' : '#ef4444'} textAnchor="middle" fontWeight="600">
+                            {item.delta >= 0 ? '+' : ''}{item.delta}%
+                          </text>
+                        </g>
+                      );
+                    })}
+                    {/* Legend */}
+                    <rect x="370" y="10" width="12" height="8" fill="#3b82f6" rx="1" />
+                    <text x="385" y="17" fontSize="8" fill="#374151">Your Score</text>
+                    <circle cx="446" cy="14" r="4" fill="#374151" />
+                    <text x="455" y="17" fontSize="8" fill="#374151">Class Avg</text>
+                  </svg>
+                </div>
+              </div>
+
               {/* Historical Data Table */}
               <div style={{ marginBottom: '12px', pageBreakInside: 'avoid' }}>
                 <h3 style={{ fontSize: '12px', fontWeight: 600, marginBottom: '8px', paddingBottom: '4px', borderBottom: '1px solid #ddd' }}>Historical Performance Data</h3>
