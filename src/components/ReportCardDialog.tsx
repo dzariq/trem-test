@@ -203,7 +203,7 @@ export function ReportCardDialog({
             <div ref={reportRef} className="bg-white rounded-lg shadow-lg" style={{ width: 'min(100%, 210mm)', padding: '12px', fontSize: '10px' }}>
             
             {/* Header with both logos */}
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '3px solid #065f46', paddingBottom: '10px', marginBottom: '10px', gap: '8px', flexWrap: 'wrap' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '2px solid #e5e7eb', paddingBottom: '10px', marginBottom: '10px', gap: '8px', flexWrap: 'wrap' }}>
               <img src={collinzLogo} alt="Collinz School" style={{ height: '40px', objectFit: 'contain' }} />
               <div style={{ background: 'linear-gradient(135deg, #065f46 0%, #10b981 100%)', color: 'white', padding: '6px 12px', borderRadius: '6px', textAlign: 'center' }}>
                 <div style={{ fontSize: '8px', fontWeight: '600', opacity: 0.9, letterSpacing: '0.5px' }}>ACADEMIC REPORT</div>
@@ -218,13 +218,13 @@ export function ReportCardDialog({
               <div style={{ padding: '10px' }}>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
                   <div style={{ fontSize: '16px', fontWeight: '700', color: '#065f46' }}>{studentName}</div>
-                  <div style={{ fontSize: '12px', fontWeight: '600', color: '#065f46', background: 'rgba(220, 252, 231, 0.8)', padding: '3px 10px', borderRadius: '8px', border: '1px solid #bbf7d0' }}>Y10I</div>
+                  <div style={{ fontSize: '12px', fontWeight: '600', color: '#065f46', background: '#f0fdf4', padding: '3px 10px', borderRadius: '8px', border: '2px solid #e5e7eb' }}>Y10I</div>
                 </div>
                 
                 {/* Overall Average & Attendance inside the name box */}
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1.5fr', gap: '8px' }}>
                   {/* Overall Average */}
-                  <div style={{ borderRadius: '10px', overflow: 'hidden', boxShadow: '0 4px 16px rgba(0,0,0,0.1)', border: '1px solid #e5e7eb', display: 'flex', flexDirection: 'column' }}>
+                  <div style={{ borderRadius: '10px', overflow: 'hidden', boxShadow: '0 2px 8px rgba(0,0,0,0.08)', border: '2px solid #e5e7eb', display: 'flex', flexDirection: 'column' }}>
                     <div style={{ background: 'linear-gradient(135deg, #065f46 0%, #10b981 100%)', padding: '4px 8px' }}>
                       <div style={{ fontSize: '7px', fontWeight: '600', color: 'white', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Overall Average</div>
                     </div>
@@ -233,14 +233,14 @@ export function ReportCardDialog({
                     </div>
                   </div>
                   {/* Attendance */}
-                  <div style={{ borderRadius: '10px', overflow: 'hidden', boxShadow: '0 4px 16px rgba(0,0,0,0.1)', border: '1px solid #e5e7eb' }}>
+                  <div style={{ borderRadius: '10px', overflow: 'hidden', boxShadow: '0 2px 8px rgba(0,0,0,0.08)', border: '2px solid #e5e7eb' }}>
                     <div style={{ background: 'linear-gradient(135deg, #065f46 0%, #10b981 100%)', padding: '4px 8px' }}>
                       <div style={{ fontSize: '7px', fontWeight: '600', color: 'white', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Attendance</div>
                     </div>
                     <div style={{ background: 'white', padding: '6px 10px' }}>
                       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '4px' }}>
                         <span style={{ fontSize: '18px', fontWeight: '700', color: attendance.percentage >= 90 ? '#16a34a' : attendance.percentage >= 75 ? '#ca8a04' : '#dc2626' }}>{attendance.percentage}%</span>
-                        <div style={{ fontSize: '9px', color: '#374151', fontWeight: '600', background: '#f3f4f6', padding: '3px 8px', borderRadius: '8px', border: '1px solid #e5e7eb' }}>
+                        <div style={{ fontSize: '9px', color: '#374151', fontWeight: '600', background: '#f9fafb', padding: '3px 8px', borderRadius: '8px', border: '2px solid #e5e7eb' }}>
                           {attendance.present}/{attendance.totalDays} days
                         </div>
                       </div>
@@ -272,7 +272,8 @@ export function ReportCardDialog({
                         borderRadius: '8px', 
                         padding: '8px',
                         overflow: 'hidden',
-                        minHeight: '48px'
+                        minHeight: '48px',
+                        border: '2px solid #e5e7eb'
                       }}>
                         {/* Watermark Grade */}
                         <div style={{
@@ -316,7 +317,7 @@ export function ReportCardDialog({
             {/* Academic Grades Table with Grading Key */}
             <div style={{ marginBottom: '16px' }}>
               <div style={{ position: 'relative', zIndex: 1 }}>
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '10px', paddingBottom: '8px', borderBottom: '2px solid #065f46' }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '10px', paddingBottom: '8px', borderBottom: '2px solid #e5e7eb' }}>
                   <h3 style={{ fontSize: '14px', fontWeight: '700', color: '#065f46', display: 'flex', alignItems: 'center', gap: '6px' }}>
                     📚 Academic Grades
                   </h3>
@@ -343,19 +344,19 @@ export function ReportCardDialog({
                     ))}
                   </div>
                 </div>
-              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '11px', borderRadius: '8px', overflow: 'hidden', border: '2px solid #065f46', background: 'white' }}>
+              <table style={{ width: '100%', borderCollapse: 'separate', borderSpacing: '0', fontSize: '11px', borderRadius: '8px', overflow: 'hidden', border: '2px solid #e5e7eb', background: 'white' }}>
                 <thead>
                   <tr style={{ background: 'linear-gradient(90deg, #065f46 0%, #047857 20%, #059669 40%, #10b981 60%, #34d399 80%, #6ee7b7 100%)' }}>
-                    <th style={{ color: 'white', padding: '10px 8px', textAlign: 'left', fontWeight: '600', fontSize: '11px', borderRight: '1px solid rgba(255,255,255,0.3)' }} rowSpan={2}>Subject</th>
-                    <th style={{ color: 'white', padding: '8px 6px', textAlign: 'center', fontWeight: '600', fontSize: '11px', borderRight: '1px solid rgba(255,255,255,0.3)' }} colSpan={2}>Mid-Year</th>
-                    <th style={{ color: 'white', padding: '8px 6px', textAlign: 'center', fontWeight: '600', fontSize: '11px', borderRight: '1px solid rgba(255,255,255,0.3)' }} colSpan={2}>Year-End</th>
+                    <th style={{ color: 'white', padding: '10px 8px', textAlign: 'left', fontWeight: '600', fontSize: '11px', borderRight: '2px solid rgba(255,255,255,0.4)' }} rowSpan={2}>Subject</th>
+                    <th style={{ color: 'white', padding: '8px 6px', textAlign: 'center', fontWeight: '600', fontSize: '11px', borderRight: '2px solid rgba(255,255,255,0.4)' }} colSpan={2}>Mid-Year</th>
+                    <th style={{ color: 'white', padding: '8px 6px', textAlign: 'center', fontWeight: '600', fontSize: '11px', borderRight: '2px solid rgba(255,255,255,0.4)' }} colSpan={2}>Year-End</th>
                     <th style={{ color: 'white', padding: '10px 8px', textAlign: 'left', fontWeight: '600', fontSize: '11px' }} rowSpan={2}>Teacher&apos;s Comment</th>
                   </tr>
                   <tr style={{ background: 'linear-gradient(90deg, #047857 0%, #059669 25%, #10b981 50%, #34d399 75%, #6ee7b7 100%)' }}>
-                    <th style={{ color: 'white', padding: '6px 4px', textAlign: 'center', fontWeight: '500', fontSize: '10px', width: '50px', borderRight: '1px solid rgba(255,255,255,0.3)' }}>Score</th>
-                    <th style={{ color: 'white', padding: '6px 4px', textAlign: 'center', fontWeight: '500', fontSize: '10px', width: '45px', borderRight: '1px solid rgba(255,255,255,0.3)' }}>Grade</th>
-                    <th style={{ color: 'white', padding: '6px 4px', textAlign: 'center', fontWeight: '500', fontSize: '10px', width: '50px', borderRight: '1px solid rgba(255,255,255,0.3)' }}>Score</th>
-                    <th style={{ color: 'white', padding: '6px 4px', textAlign: 'center', fontWeight: '500', fontSize: '10px', width: '45px', borderRight: '1px solid rgba(255,255,255,0.3)' }}>Grade</th>
+                    <th style={{ color: 'white', padding: '6px 4px', textAlign: 'center', fontWeight: '500', fontSize: '10px', width: '50px', borderRight: '2px solid rgba(255,255,255,0.4)', borderTop: '2px solid rgba(255,255,255,0.4)' }}>Score</th>
+                    <th style={{ color: 'white', padding: '6px 4px', textAlign: 'center', fontWeight: '500', fontSize: '10px', width: '45px', borderRight: '2px solid rgba(255,255,255,0.4)', borderTop: '2px solid rgba(255,255,255,0.4)' }}>Grade</th>
+                    <th style={{ color: 'white', padding: '6px 4px', textAlign: 'center', fontWeight: '500', fontSize: '10px', width: '50px', borderRight: '2px solid rgba(255,255,255,0.4)', borderTop: '2px solid rgba(255,255,255,0.4)' }}>Score</th>
+                    <th style={{ color: 'white', padding: '6px 4px', textAlign: 'center', fontWeight: '500', fontSize: '10px', width: '45px', borderTop: '2px solid rgba(255,255,255,0.4)' }}>Grade</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -387,15 +388,15 @@ export function ReportCardDialog({
                     const derivedYearEndGradeColor = gradeColors[derivedYearEndGrade] || gradeColors["C"];
                     return (
                       <tr key={subject.name} style={{ position: 'relative', background: getRowBg(subject.grade) }}>
-                        <td style={{ padding: '6px 8px', border: '1px solid #a7f3d0', fontWeight: '500', fontSize: '11px' }}>
+                        <td style={{ padding: '6px 8px', borderBottom: '2px solid #e5e7eb', borderRight: '2px solid #e5e7eb', fontWeight: '500', fontSize: '11px' }}>
                           <span style={{ position: 'relative', zIndex: 1 }}>{subject.name}</span>
                         </td>
                         {/* Mid-Year Score */}
-                        <td style={{ position: 'relative', padding: '5px', border: '1px solid #a7f3d0', textAlign: 'center', fontWeight: '600', overflow: 'hidden', fontSize: '11px' }}>
+                        <td style={{ position: 'relative', padding: '5px', borderBottom: '2px solid #e5e7eb', borderRight: '2px solid #e5e7eb', textAlign: 'center', fontWeight: '600', overflow: 'hidden', fontSize: '11px' }}>
                           <span style={{ position: 'relative', zIndex: 1 }}>{subject.score !== null ? `${subject.score}%` : '-'}</span>
                         </td>
                         {/* Mid-Year Grade */}
-                        <td style={{ padding: '5px', border: '1px solid #a7f3d0', textAlign: 'center' }}>
+                        <td style={{ padding: '5px', borderBottom: '2px solid #e5e7eb', borderRight: '2px solid #e5e7eb', textAlign: 'center' }}>
                           <span style={{ 
                             display: 'inline-flex', 
                             alignItems: 'center', 
@@ -412,11 +413,11 @@ export function ReportCardDialog({
                           </span>
                         </td>
                         {/* Year-End Score */}
-                        <td style={{ position: 'relative', padding: '5px', border: '1px solid #a7f3d0', textAlign: 'center', fontWeight: '600', overflow: 'hidden', fontSize: '11px' }}>
+                        <td style={{ position: 'relative', padding: '5px', borderBottom: '2px solid #e5e7eb', borderRight: '2px solid #e5e7eb', textAlign: 'center', fontWeight: '600', overflow: 'hidden', fontSize: '11px' }}>
                           <span style={{ position: 'relative', zIndex: 1 }}>{yearEndScore !== null ? `${yearEndScore}%` : '-'}</span>
                         </td>
                         {/* Year-End Grade */}
-                        <td style={{ padding: '5px', border: '1px solid #a7f3d0', textAlign: 'center' }}>
+                        <td style={{ padding: '5px', borderBottom: '2px solid #e5e7eb', borderRight: '2px solid #e5e7eb', textAlign: 'center' }}>
                           <span style={{ 
                             display: 'inline-flex', 
                             alignItems: 'center', 
@@ -432,7 +433,7 @@ export function ReportCardDialog({
                             {derivedYearEndGrade}
                           </span>
                         </td>
-                        <td style={{ padding: '6px 8px', border: '1px solid #a7f3d0', fontSize: '10px', color: '#374151' }}>{subject.teacherComment}</td>
+                        <td style={{ padding: '6px 8px', borderBottom: '2px solid #e5e7eb', fontSize: '10px', color: '#374151' }}>{subject.teacherComment}</td>
                       </tr>
                     );
                   })}
@@ -442,7 +443,7 @@ export function ReportCardDialog({
             </div>
 
             {/* Homeroom Comment - Force page break before */}
-            <div className="page-break" style={{ position: 'relative', background: '#fef3c7', border: '2px solid #f59e0b', borderRadius: '10px', padding: '14px', marginBottom: '12px', overflow: 'hidden', pageBreakBefore: 'always' }}>
+            <div className="page-break" style={{ position: 'relative', background: '#fffbeb', border: '2px solid #e5e7eb', borderRadius: '10px', padding: '14px', marginBottom: '12px', overflow: 'hidden', pageBreakBefore: 'always' }}>
               {/* Chat bubble pattern at right corner */}
               <div style={{ 
                 position: 'absolute', 
@@ -463,7 +464,7 @@ export function ReportCardDialog({
 
             {/* Achievements */}
             {achievements.length > 0 && (
-              <div style={{ position: 'relative', background: 'linear-gradient(135deg, #fef3c7 0%, #fde68a 50%, #fbbf24 100%)', borderRadius: '10px', padding: '12px', marginBottom: '12px', overflow: 'hidden' }}>
+              <div style={{ position: 'relative', background: '#fffbeb', borderRadius: '10px', padding: '12px', marginBottom: '12px', overflow: 'hidden', border: '2px solid #e5e7eb' }}>
                 {/* Trophy pattern at right corner */}
                 <div style={{ 
                   position: 'absolute', 
@@ -492,26 +493,26 @@ export function ReportCardDialog({
             )}
 
             {/* Signatures */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '8px', marginTop: '16px', paddingTop: '12px', borderTop: '1px solid #e5e7eb' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '8px', marginTop: '16px', paddingTop: '12px', borderTop: '2px solid #e5e7eb' }}>
               <div style={{ textAlign: 'center' }}>
-                <div style={{ borderBottom: '1px solid #1a1a1a', height: '30px', marginBottom: '6px' }}></div>
+                <div style={{ borderBottom: '2px solid #374151', height: '30px', marginBottom: '6px' }}></div>
                 <div style={{ fontSize: '10px', fontWeight: '600', color: '#1a1a1a' }}>{headOfSchoolName}</div>
                 <div style={{ fontSize: '9px', color: '#6b7280' }}>Head of School</div>
               </div>
               <div style={{ textAlign: 'center' }}>
-                <div style={{ borderBottom: '1px solid #1a1a1a', height: '30px', marginBottom: '6px' }}></div>
+                <div style={{ borderBottom: '2px solid #374151', height: '30px', marginBottom: '6px' }}></div>
                 <div style={{ fontSize: '10px', fontWeight: '600', color: '#1a1a1a' }}>{principalName}</div>
                 <div style={{ fontSize: '9px', color: '#6b7280' }}>Senior Principal</div>
               </div>
               <div style={{ textAlign: 'center' }}>
-                <div style={{ borderBottom: '1px solid #1a1a1a', height: '30px', marginBottom: '6px' }}></div>
+                <div style={{ borderBottom: '2px solid #374151', height: '30px', marginBottom: '6px' }}></div>
                 <div style={{ fontSize: '10px', fontWeight: '600', color: '#1a1a1a' }}>{deputyPrincipalName}</div>
                 <div style={{ fontSize: '9px', color: '#6b7280' }}>Deputy Principal</div>
               </div>
             </div>
 
             {/* Footer */}
-            <div style={{ marginTop: '12px', textAlign: 'center', fontSize: '8px', color: '#9ca3af', paddingTop: '8px', borderTop: '1px solid #e5e7eb' }}>
+            <div style={{ marginTop: '12px', textAlign: 'center', fontSize: '8px', color: '#9ca3af', paddingTop: '8px', borderTop: '2px solid #e5e7eb' }}>
               This is a computer-generated report. Generated on {new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}.
             </div>
           </div>
