@@ -1,13 +1,12 @@
 import { useState, useEffect } from "react";
-import { Home, UserCheck, GraduationCap, Calendar } from "lucide-react";
+import { Home, UserCheck, GraduationCap, Calendar, Heart } from "lucide-react";
 import { NavLink } from "react-router-dom";
 import { cn } from "@/lib/utils";
-import heart3DIcon from "@/assets/heart-3d-icon.png";
 
 const navItems = [
   { to: "/teacher", icon: Home, label: "Home" },
   { to: "/teacher/attendance", icon: UserCheck, label: "Attendance" },
-  { to: "/teacher/dna", icon: null, label: "DNA", customIcon: heart3DIcon },
+  { to: "/teacher/dna", icon: Heart, label: "DNA", isHeart: true },
   { to: "/teacher/academic", icon: GraduationCap, label: "Academic" },
   { to: "/teacher/calendar", icon: Calendar, label: "Calendar" },
 ];
@@ -57,11 +56,14 @@ export function TeacherBottomNavigation() {
           >
             {({ isActive }) => (
               <>
-                {item.customIcon ? (
-                  <img 
-                    src={item.customIcon} 
-                    alt={item.label}
-                    className="h-6 w-6 mb-1 object-contain"
+                {item.isHeart ? (
+                  <Heart 
+                    className="h-5 w-5 mb-1" 
+                    fill="#ef4444" 
+                    color="#ef4444"
+                    style={{
+                      filter: "drop-shadow(0 1px 2px rgba(239, 68, 68, 0.4))"
+                    }}
                   />
                 ) : (
                   <item.icon className={cn(
