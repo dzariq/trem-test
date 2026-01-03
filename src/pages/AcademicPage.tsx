@@ -1217,7 +1217,39 @@ export default function AcademicPage() {
                   </div>
                 )}
 
-                {/* Subject Performance Bar Chart with Goal Dot Markers */}
+                {/* Grade Distribution Cards */}
+                <div className="space-y-2">
+                  <h4 className="text-sm font-medium text-foreground">Grade Distribution</h4>
+                  <div className="grid grid-cols-6 gap-2">
+                    {(() => {
+                      const totalSubjects = academicData.subjects.length;
+                      const gradeCardColors: Record<string, { bg: string; text: string }> = {
+                        "A*": { bg: 'rgba(5, 150, 105, 0.15)', text: '#059669' },
+                        "A": { bg: 'rgba(34, 197, 94, 0.12)', text: '#22c55e' },
+                        "B": { bg: 'rgba(59, 130, 246, 0.12)', text: '#3b82f6' },
+                        "C": { bg: 'rgba(234, 179, 8, 0.12)', text: '#ca8a04' },
+                        "D": { bg: 'rgba(249, 115, 22, 0.12)', text: '#ea580c' },
+                        "E": { bg: 'rgba(239, 68, 68, 0.12)', text: '#dc2626' },
+                      };
+                      return gradeDistribution.map((g) => {
+                        const percentage = totalSubjects > 0 ? Math.round((g.count / totalSubjects) * 100) : 0;
+                        const colors = gradeCardColors[g.grade] || { bg: 'rgba(156, 163, 175, 0.12)', text: '#6b7280' };
+                        return (
+                          <div 
+                            key={g.grade}
+                            className="flex flex-col items-center text-center p-2 rounded-lg"
+                            style={{ backgroundColor: colors.bg }}
+                          >
+                            <span className="text-xs font-semibold" style={{ color: colors.text }}>{g.grade}</span>
+                            <span className="text-xl font-bold text-foreground">{g.count}</span>
+                            <span className="text-[10px] text-muted-foreground">{percentage}%</span>
+                          </div>
+                        );
+                      });
+                    })()}
+                  </div>
+                </div>
+
                 <div className="space-y-2">
                   <h4 className="text-sm font-medium text-foreground flex items-center gap-2">
                     Subject Performance
@@ -1386,38 +1418,6 @@ export default function AcademicPage() {
                   )}
                 </div>
 
-                {/* Grade Distribution Cards */}
-                <div className="space-y-2">
-                  <h4 className="text-sm font-medium text-foreground">Grade Distribution</h4>
-                  <div className="grid grid-cols-6 gap-2">
-                    {(() => {
-                      const totalSubjects = academicData.subjects.length;
-                      const gradeCardColors: Record<string, { bg: string; text: string }> = {
-                        "A*": { bg: 'rgba(5, 150, 105, 0.15)', text: '#059669' },
-                        "A": { bg: 'rgba(34, 197, 94, 0.12)', text: '#22c55e' },
-                        "B": { bg: 'rgba(59, 130, 246, 0.12)', text: '#3b82f6' },
-                        "C": { bg: 'rgba(234, 179, 8, 0.12)', text: '#ca8a04' },
-                        "D": { bg: 'rgba(249, 115, 22, 0.12)', text: '#ea580c' },
-                        "E": { bg: 'rgba(239, 68, 68, 0.12)', text: '#dc2626' },
-                      };
-                      return gradeDistribution.map((g) => {
-                        const percentage = totalSubjects > 0 ? Math.round((g.count / totalSubjects) * 100) : 0;
-                        const colors = gradeCardColors[g.grade] || { bg: 'rgba(156, 163, 175, 0.12)', text: '#6b7280' };
-                        return (
-                          <div 
-                            key={g.grade}
-                            className="flex flex-col items-center text-center p-2 rounded-lg"
-                            style={{ backgroundColor: colors.bg }}
-                          >
-                            <span className="text-xs font-semibold" style={{ color: colors.text }}>{g.grade}</span>
-                            <span className="text-xl font-bold text-foreground">{g.count}</span>
-                            <span className="text-[10px] text-muted-foreground">{percentage}%</span>
-                          </div>
-                        );
-                      });
-                    })()}
-                  </div>
-                </div>
               </TabsContent>
 
               {/* TRENDS TAB */}
