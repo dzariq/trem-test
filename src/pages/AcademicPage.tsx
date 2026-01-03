@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Progress } from "@/components/ui/progress";
-import { Download, FileText, Award, Trophy, BookOpen, TrendingUp, TrendingDown, Check, ArrowUp, ArrowDown, Minus, BarChart3, GitCompare, Target, AlertTriangle, Star, Goal, CheckCircle2, Circle, Edit2, ChevronDown, MessageSquare, Calendar, Sparkles, Printer, FileSpreadsheet } from "lucide-react";
+import { Download, FileText, Award, Trophy, BookOpen, TrendingUp, TrendingDown, Check, ArrowUp, ArrowDown, Minus, BarChart3, GitCompare, Target, AlertTriangle, Star, Goal, CheckCircle2, Circle, Edit2, ChevronDown, MessageSquare, Calendar, Sparkles, Printer, FileSpreadsheet, ArrowRightLeft } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import schoolLogo from "@/assets/school-badge.png";
@@ -2034,21 +2034,92 @@ export default function AcademicPage() {
 
                 {/* Comparison Summary Cards */}
                 <div className="grid grid-cols-2 gap-3">
-                  <div className="p-3 rounded-lg bg-chart-1/10 border border-chart-1/30">
+                  <div className="p-3 rounded-lg bg-card border-l-4 border-l-blue-500 border border-border shadow-sm">
+                    <div className="flex items-center gap-2 mb-1">
+                      <span className="w-2 h-2 rounded-full bg-blue-500"></span>
+                      <span className="text-xs font-semibold text-blue-600">Exam A</span>
+                    </div>
                     <p className="text-xs text-muted-foreground mb-1">{getExamLabelForComparison(compareExamA)}</p>
-                    <p className="text-xl font-bold text-foreground">
+                    <p className="text-2xl font-bold text-foreground">
                       {Math.round(comparisonData.reduce((sum, d) => sum + d.examA, 0) / comparisonData.length)}%
                     </p>
-                    <p className="text-xs text-muted-foreground">Average</p>
+                    <p className="text-xs text-muted-foreground">Average Score</p>
                   </div>
-                  <div className="p-3 rounded-lg bg-chart-2/10 border border-chart-2/30">
+                  <div className="p-3 rounded-lg bg-card border-l-4 border-l-red-500 border border-border shadow-sm">
+                    <div className="flex items-center gap-2 mb-1">
+                      <span className="w-2 h-2 rounded-full bg-red-500"></span>
+                      <span className="text-xs font-semibold text-red-600">Exam B</span>
+                    </div>
                     <p className="text-xs text-muted-foreground mb-1">{getExamLabelForComparison(compareExamB)}</p>
-                    <p className="text-xl font-bold text-foreground">
+                    <p className="text-2xl font-bold text-foreground">
                       {Math.round(comparisonData.reduce((sum, d) => sum + d.examB, 0) / comparisonData.length)}%
                     </p>
-                    <p className="text-xs text-muted-foreground">Average</p>
+                    <p className="text-xs text-muted-foreground">Average Score</p>
                   </div>
                 </div>
+
+                {/* Comparison Stats Cards */}
+                {(() => {
+                  const avgA = Math.round(comparisonData.reduce((sum, d) => sum + d.examA, 0) / comparisonData.length);
+                  const avgB = Math.round(comparisonData.reduce((sum, d) => sum + d.examB, 0) / comparisonData.length);
+                  const overallChange = avgA - avgB;
+                  const improvedSubjects = comparisonData.filter(d => d.delta > 0);
+                  const declinedSubjects = comparisonData.filter(d => d.delta < 0);
+                  const bestPerforming = [...comparisonData].sort((a, b) => b.delta - a.delta)[0];
+                  
+                  return (
+                    <div className="grid grid-cols-4 gap-2">
+                      {/* Overall Change */}
+                      <div className="p-3 rounded-xl bg-muted/50 border border-border shadow-sm text-center">
+                        <div className="w-8 h-8 rounded-lg bg-muted flex items-center justify-center mx-auto mb-2">
+                          <ArrowRightLeft className="h-4 w-4 text-muted-foreground" />
+                        </div>
+                        <p className={`text-lg font-bold ${overallChange > 0 ? 'text-emerald-600' : overallChange < 0 ? 'text-red-500' : 'text-foreground'}`}>
+                          {overallChange > 0 ? '+' : ''}{overallChange}%
+                        </p>
+                        <p className="text-[10px] text-muted-foreground">Overall Change</p>
+                      </div>
+
+                      {/* Improved */}
+                      <div className="p-3 rounded-xl bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800 shadow-sm text-center">
+                        <div className="w-8 h-8 rounded-lg bg-emerald-100 dark:bg-emerald-900/50 flex items-center justify-center mx-auto mb-2">
+                          <span className="text-base">🚀</span>
+                        </div>
+                        <p className="text-lg font-bold text-emerald-600">{improvedSubjects.length}</p>
+                        <p className="text-[10px] text-muted-foreground font-medium">Improved</p>
+                        <p className="text-[9px] text-emerald-600 truncate">
+                          {improvedSubjects.slice(0, 2).map(s => shortenSubjectName(s.name)).join(', ')}
+                          {improvedSubjects.length > 2 && ` +${improvedSubjects.length - 2}`}
+                        </p>
+                      </div>
+
+                      {/* Declined */}
+                      <div className="p-3 rounded-xl bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-800 shadow-sm text-center">
+                        <div className="w-8 h-8 rounded-lg bg-red-100 dark:bg-red-900/50 flex items-center justify-center mx-auto mb-2">
+                          <span className="text-base">📉</span>
+                        </div>
+                        <p className="text-lg font-bold text-red-500">{declinedSubjects.length}</p>
+                        <p className="text-[10px] text-muted-foreground font-medium">Declined</p>
+                        <p className="text-[9px] text-red-500 truncate">
+                          {declinedSubjects.slice(0, 2).map(s => shortenSubjectName(s.name)).join(', ')}
+                          {declinedSubjects.length > 2 && ` +${declinedSubjects.length - 2}`}
+                        </p>
+                      </div>
+
+                      {/* Best Performing */}
+                      <div className="p-3 rounded-xl bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 shadow-sm text-center">
+                        <div className="w-8 h-8 rounded-lg bg-amber-100 dark:bg-amber-900/50 flex items-center justify-center mx-auto mb-2">
+                          <span className="text-base">🏆</span>
+                        </div>
+                        <p className="text-sm font-bold text-amber-600 truncate">{bestPerforming ? shortenSubjectName(bestPerforming.name) : '-'}</p>
+                        <p className="text-[10px] text-muted-foreground font-medium">Best Performing</p>
+                        <p className="text-[9px] text-amber-600">
+                          {bestPerforming && bestPerforming.delta > 0 ? `+${bestPerforming.delta} marks` : '-'}
+                        </p>
+                      </div>
+                    </div>
+                  );
+                })()}
 
                 {/* Top 5 Growth Leaders - Moomoo Style */}
                 <div className="p-4 rounded-xl bg-gradient-to-br from-emerald-500/10 to-emerald-600/5 border border-emerald-500/20">
