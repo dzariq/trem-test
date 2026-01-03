@@ -290,7 +290,7 @@ export function ReportCardDialog({
                   <span style={{ fontSize: '12px' }}>⭐</span>
                   <span style={{ fontSize: '10px', fontWeight: '700', color: '#065f46' }}>Attitude & Behaviour</span>
                 </div>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '6px' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '4px' }}>
                   {behavior.slice(0, 8).map((item) => {
                     const behaviorColor = behaviorGradeColors[item.grade] || behaviorGradeColors["C"];
                     const description = behaviorDescriptions[item.grade]?.[item.category] || "Good progress";
