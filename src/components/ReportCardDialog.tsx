@@ -388,17 +388,17 @@ export function ReportCardDialog({
                       if (grade === "B") return 'rgba(219, 234, 254, 0.4)';
                       if (grade === "C") return 'rgba(254, 243, 199, 0.4)';
                       if (grade === "D") return 'rgba(254, 215, 170, 0.4)';
+                      if (grade === "E") return 'rgba(254, 226, 226, 0.4)';
                       return index % 2 === 0 ? 'white' : '#f9fafb';
                     };
                     return (
                       <tr key={subject.name} style={{ position: 'relative', background: getRowBg(subject.grade) }}>
                         <td style={{ position: 'relative', padding: '6px', borderBottom: '1px solid #e5e7eb', fontWeight: '500', overflow: 'hidden' }}>
-                          {/* Grade watermark overlay - scaled up and cropped */}
+                          {/* Grade watermark overlay - scaled up and cropped at bottom only */}
                           <span style={{ 
                             position: 'absolute', 
-                            right: '-8px', 
-                            top: '50%', 
-                            transform: 'translateY(-50%)', 
+                            left: '80px', 
+                            bottom: '-12px', 
                             fontSize: '42px', 
                             fontWeight: '900', 
                             color: gradeColor.bg, 
