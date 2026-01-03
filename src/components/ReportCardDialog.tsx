@@ -219,19 +219,28 @@ export function ReportCardDialog({
                 padding: '14px',
                 overflow: 'hidden'
               }}>
-                {/* School Badge Watermark */}
-                <img 
-                  src={schoolBadge} 
-                  alt="" 
-                  style={{
-                    position: 'absolute',
-                    right: '-20px',
-                    top: '-20px',
-                    width: '210px',
-                    opacity: 0.15,
-                    pointerEvents: 'none'
-                  }} 
-                />
+                {/* School Badge Watermark with gradient fade */}
+                <div style={{
+                  position: 'absolute',
+                  right: '-20px',
+                  top: '-20px',
+                  width: '210px',
+                  height: '210px',
+                  pointerEvents: 'none',
+                  maskImage: 'linear-gradient(135deg, rgba(0,0,0,0.6) 0%, rgba(0,0,0,0.2) 100%)',
+                  WebkitMaskImage: 'linear-gradient(135deg, rgba(0,0,0,0.6) 0%, rgba(0,0,0,0.2) 100%)'
+                }}>
+                  <img 
+                    src={schoolBadge} 
+                    alt="" 
+                    style={{
+                      width: '100%',
+                      height: '100%',
+                      objectFit: 'contain',
+                      opacity: 0.25
+                    }} 
+                  />
+                </div>
                 <div style={{ position: 'relative', zIndex: 1 }}>
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '10px' }}>
                     <div style={{ fontSize: '18px', fontWeight: '700', color: '#065f46' }}>{studentName}</div>
