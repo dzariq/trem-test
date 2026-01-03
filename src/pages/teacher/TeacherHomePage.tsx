@@ -9,6 +9,7 @@ import { UpcomingEvents } from "@/components/home/UpcomingEvents";
 import { TeacherQuickLinks } from "@/components/home/TeacherQuickLinks";
 import TeacherWelcomeQuote from "@/components/home/TeacherWelcomeQuote";
 import { PDFViewerDialog } from "@/components/PDFViewerDialog";
+import { GeometricBackgroundPattern } from "@/components/home/GeometricBackgroundPattern";
 import { BookOpen, Users, Clock, FileText, Calendar, AlertTriangle, ClipboardList, Check, ChevronDown, ChevronUp } from "lucide-react";
 import schoolBadge from "@/assets/school-badge.png";
 import heroBanner from "@/assets/teacher-hero-banner.png";
@@ -112,10 +113,15 @@ export default function TeacherHomePage() {
         <TeacherWelcomeQuote />
       </div>
 
-      {/* Quick Links */}
-      <TeacherQuickLinks onTimetableClick={() => setTimetablePdfOpen(true)} />
+      {/* Content with Background Pattern */}
+      <div className="relative">
+        <GeometricBackgroundPattern />
+        
+        <div className="relative z-10">
+          {/* Quick Links */}
+          <TeacherQuickLinks onTimetableClick={() => setTimetablePdfOpen(true)} />
 
-      <div className="px-4 space-y-4 mt-4">
+          <div className="px-4 space-y-4 mt-4">
         {/* Class Selector */}
         <Select value={selectedClass} onValueChange={setSelectedClass}>
           <SelectTrigger className="w-full">
@@ -286,11 +292,13 @@ export default function TeacherHomePage() {
               })
             )}
           </CardContent>
-        </Card>
-      </div>
+          </Card>
+        </div>
 
-      <AnnouncementCarousel />
-      <UpcomingEvents />
+        <AnnouncementCarousel />
+        <UpcomingEvents />
+        </div>
+      </div>
 
       <PDFViewerDialog
         open={timetablePdfOpen}
