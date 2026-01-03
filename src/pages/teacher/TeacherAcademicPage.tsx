@@ -1067,11 +1067,11 @@ export default function TeacherAcademicPage() {
                   <SelectValue placeholder="Select Subject" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="Homeroom Behavior" className="font-semibold text-purple-600">
+                  <SelectItem value="Homeroom Behavior" className="font-medium text-purple-400">
                     Homeroom Behavior
                   </SelectItem>
-                  <SelectItem value="CCA Awards" className="font-semibold text-amber-600">
-                    CCA Awards
+                  <SelectItem value="Awards" className="font-medium text-amber-400">
+                    Awards
                   </SelectItem>
                   <div className="h-px bg-border my-1" />
                   {subjects.map(subject => <SelectItem key={subject} value={subject}>{subject}</SelectItem>)}
@@ -1225,7 +1225,7 @@ export default function TeacherAcademicPage() {
               >
                 <Save className="h-6 w-6" />
               </Button>
-            </> : selectedEntrySubject === "CCA Awards" ? <>
+            </> : selectedEntrySubject === "Awards" ? <>
               {/* Awards Header */}
               <Card 
                 className="border-amber-300 overflow-hidden"
@@ -1237,7 +1237,7 @@ export default function TeacherAcademicPage() {
                 <CardContent className="p-3">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="font-semibold text-amber-900">CCA Awards</p>
+                      <p className="font-semibold text-amber-900">Awards</p>
                       <p className="text-sm text-amber-800/70">Class {selectedClass} • {students.length} students</p>
                     </div>
                     <Badge className="bg-white/80 border-amber-400 text-amber-700">
@@ -1469,7 +1469,7 @@ export default function TeacherAcademicPage() {
                 onClick={() => {
                   toast({
                     title: "Awards Saved",
-                    description: `CCA Awards for ${selectedClass} have been saved.`,
+                    description: `Awards for ${selectedClass} have been saved.`,
                   });
                 }}
               >
