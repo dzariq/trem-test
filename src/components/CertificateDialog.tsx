@@ -244,202 +244,205 @@ export function CertificateDialog({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent 
-        className="max-w-[95vw] p-0 overflow-visible bg-transparent border-none flex flex-col items-center gap-4"
+        className="max-w-none w-auto p-4 sm:p-6 overflow-auto bg-background border-none flex flex-col items-center gap-4 max-h-[90vh]"
         hideClose
       >
         {/* Close button */}
         <button
           onClick={() => onOpenChange(false)}
-          className="absolute -top-2 -right-2 z-50 p-2 rounded-full bg-background shadow-lg hover:bg-accent transition-colors"
+          className="absolute top-2 right-2 z-50 p-2 rounded-full bg-muted hover:bg-accent transition-colors"
         >
           <X className="h-5 w-5" />
         </button>
 
-        {/* Certificate Container - Fixed A4 ratio (210mm x 297mm = 1:1.414) */}
-        <div 
-          ref={certificateRef}
-          className="relative overflow-hidden print:p-8"
-          style={{
-            width: '420px',
-            height: '594px', // A4 ratio: 420 * 1.414 = 594
-            background: 'linear-gradient(180deg, #1a3d2e 0%, #0f2318 100%)',
-            boxShadow: '0 25px 60px -12px rgba(0, 0, 0, 0.6)',
-            border: '3px solid #d4a537',
-            outline: '1px solid rgba(212, 165, 55, 0.3)',
-            outlineOffset: '4px',
-          }}
-        >
+        {/* Certificate Container Wrapper - keeps certificate centered and in portrait */}
+        <div className="flex items-center justify-center w-full overflow-auto py-4">
+          {/* Certificate Container - Fixed A4 ratio (210mm x 297mm = 1:1.414) */}
+          <div 
+            ref={certificateRef}
+            className="relative overflow-hidden flex-shrink-0 print:p-8"
+            style={{
+              width: '320px',
+              height: '453px', // A4 ratio: 320 * 1.414 = 453
+              background: 'linear-gradient(180deg, #1a3d2e 0%, #0f2318 100%)',
+              boxShadow: '0 25px 60px -12px rgba(0, 0, 0, 0.6)',
+              border: '3px solid #d4a537',
+              outline: '1px solid rgba(212, 165, 55, 0.3)',
+              outlineOffset: '4px',
+            }}
+          >
             {/* Single Large Logo Background */}
             <LargeLogoBackground />
 
-          {/* Top Geometric Layers - Green tones */}
-          <div className="absolute top-0 left-0 right-0 z-[1]">
-            <ChevronLayer 
-              className="w-full h-28" 
-              color="#2d5a47" 
-              opacity={0.3}
-              position="top"
-            />
-            <ChevronLayer 
-              className="w-full h-24 -mt-20" 
-              color="#24503e" 
-              opacity={0.5}
-              position="top"
-            />
-            <ChevronLayer 
-              className="w-full h-20 -mt-16" 
-              color="#1a4535" 
-              opacity={0.7}
-              position="top"
-            />
-          </div>
-
-          {/* Bottom Geometric Layers - Green tones */}
-          <div className="absolute bottom-0 left-0 right-0 z-[1]">
-            <ChevronLayer 
-              className="w-full h-20" 
-              color="#1a4535" 
-              opacity={0.7}
-              position="bottom"
-            />
-            <ChevronLayer 
-              className="w-full h-24 -mb-16 absolute bottom-0" 
-              color="#24503e" 
-              opacity={0.5}
-              position="bottom"
-            />
-          </div>
-
-          {/* Certificate Content */}
-          <div className="relative h-full flex flex-col items-center py-8 px-10 text-center z-10">
-            
-            {/* Header Section */}
-            <div className="flex flex-col items-center gap-1">
-              {/* Big Year at Top */}
-              <h1 
-                className="text-6xl font-bold tracking-wider font-certificate-title"
-                style={{ 
-                  color: '#d4a537',
-                  textShadow: '0 4px 8px rgba(0,0,0,0.3)'
-                }}
-              >
-                {year}
-              </h1>
-              
-              {/* Certificate Title */}
-              <h2 
-                className="text-3xl italic tracking-wide font-certificate-script mt-1"
-                style={{ color: '#e8c967' }}
-              >
-                Certificate
-              </h2>
-              <p 
-                className="text-sm uppercase tracking-[0.3em] font-medium"
-                style={{ color: '#d4a537' }}
-              >
-                of Achievement
-              </p>
+            {/* Top Geometric Layers - Green tones */}
+            <div className="absolute top-0 left-0 right-0 z-[1]">
+              <ChevronLayer 
+                className="w-full h-20" 
+                color="#2d5a47" 
+                opacity={0.3}
+                position="top"
+              />
+              <ChevronLayer 
+                className="w-full h-16 -mt-14" 
+                color="#24503e" 
+                opacity={0.5}
+                position="top"
+              />
+              <ChevronLayer 
+                className="w-full h-14 -mt-10" 
+                color="#1a4535" 
+                opacity={0.7}
+                position="top"
+              />
             </div>
 
-            {/* V-Shaped Gold Ribbon with Star Seal at the V-point */}
-            <div className="relative w-[140%] -mx-[20%] mt-4">
-              <VRibbon className="w-full h-16" />
-              {/* Star Seal positioned at the V-point of the ribbon */}
-              <div className="absolute left-1/2 -translate-x-1/2 top-[-15%]">
-                <StarSeal />
-              </div>
+            {/* Bottom Geometric Layers - Green tones */}
+            <div className="absolute bottom-0 left-0 right-0 z-[1]">
+              <ChevronLayer 
+                className="w-full h-14" 
+                color="#1a4535" 
+                opacity={0.7}
+                position="bottom"
+              />
+              <ChevronLayer 
+                className="w-full h-16 -mb-10 absolute bottom-0" 
+                color="#24503e" 
+                opacity={0.5}
+                position="bottom"
+              />
             </div>
 
-            {/* Spacer for the seal */}
-            <div className="h-20" />
-
-            {/* Proudly Presented - right after the seal */}
-            <p 
-              className="text-sm uppercase tracking-[0.2em] font-medium -mt-2"
-              style={{ color: '#d4a537' }}
-            >
-              Proudly Presented To
-            </p>
-
-            {/* Main Content */}
-            <div className="flex flex-col items-center gap-2 flex-1 justify-center">
+            {/* Certificate Content */}
+            <div className="relative h-full flex flex-col items-center py-6 px-6 text-center z-10">
               
-              {/* Student Name */}
-              <h3 
-                className="text-4xl font-certificate-script px-4"
-                style={{ 
-                  color: '#e8c967',
-                  textShadow: '0 2px 4px rgba(0,0,0,0.3)'
-                }}
-              >
-                {studentName}
-              </h3>
-              
-              {/* Decorative line under name */}
-              <div className="flex items-center gap-3">
-                <div className="w-16 h-[1px]" style={{ background: 'linear-gradient(to right, transparent, #d4a537)' }} />
-                <SmallStar className="text-[#d4a537]" size={8} />
-                <div className="w-16 h-[1px]" style={{ background: 'linear-gradient(to left, transparent, #d4a537)' }} />
-              </div>
-
-              {/* Role - Big and Prominent */}
-              <h4 
-                className="text-3xl font-bold font-certificate-title uppercase tracking-wide mt-1"
-                style={{ 
-                  color: '#e8c967',
-                  textShadow: '0 2px 4px rgba(0,0,0,0.3)'
-                }}
-              >
-                {role}
-              </h4>
-              
-              {/* Organization - Big and Prominent */}
-              <h5 
-                className="text-2xl font-semibold font-certificate-title"
-                style={{ color: '#d4a537' }}
-              >
-                {organization}
-              </h5>
-            </div>
-
-            {/* Footer Section - Two Signatures + Full Date */}
-            <div className="w-full flex flex-col items-center gap-3 mt-auto">
-              {/* Full Date centered above signatures */}
-              <p 
-                className="text-sm font-certificate-body"
-                style={{ color: 'rgba(212, 165, 55, 0.8)' }}
-              >
-                {fullDate}
-              </p>
-              
-              {/* Two Signatures */}
-              <div className="w-full flex items-end justify-between px-8">
-                {/* Signature 1 */}
-                <div className="text-center flex-1">
-                  <div 
-                    className="w-24 h-[1px] mb-2 mx-auto" 
-                    style={{ backgroundColor: 'rgba(212, 165, 55, 0.5)' }} 
-                  />
-                  <p 
-                    className="text-xs uppercase tracking-wider"
-                    style={{ color: 'rgba(212, 165, 55, 0.7)' }}
-                  >
-                    Principal
-                  </p>
-                </div>
+              {/* Header Section */}
+              <div className="flex flex-col items-center gap-0.5">
+                {/* Big Year at Top */}
+                <h1 
+                  className="text-4xl font-bold tracking-wider font-certificate-title"
+                  style={{ 
+                    color: '#d4a537',
+                    textShadow: '0 4px 8px rgba(0,0,0,0.3)'
+                  }}
+                >
+                  {year}
+                </h1>
                 
-                {/* Signature 2 */}
-                <div className="text-center flex-1">
-                  <div 
-                    className="w-24 h-[1px] mb-2 mx-auto" 
-                    style={{ backgroundColor: 'rgba(212, 165, 55, 0.5)' }} 
-                  />
-                  <p 
-                    className="text-xs uppercase tracking-wider"
-                    style={{ color: 'rgba(212, 165, 55, 0.7)' }}
-                  >
-                    Director
-                  </p>
+                {/* Certificate Title */}
+                <h2 
+                  className="text-2xl italic tracking-wide font-certificate-script mt-0.5"
+                  style={{ color: '#e8c967' }}
+                >
+                  Certificate
+                </h2>
+                <p 
+                  className="text-xs uppercase tracking-[0.3em] font-medium"
+                  style={{ color: '#d4a537' }}
+                >
+                  of Achievement
+                </p>
+              </div>
+
+              {/* V-Shaped Gold Ribbon with Star Seal at the V-point */}
+              <div className="relative w-[140%] -mx-[20%] mt-3">
+                <VRibbon className="w-full h-12" />
+                {/* Star Seal positioned at the V-point of the ribbon */}
+                <div className="absolute left-1/2 -translate-x-1/2 top-[-15%] scale-75">
+                  <StarSeal />
+                </div>
+              </div>
+
+              {/* Spacer for the seal */}
+              <div className="h-14" />
+
+              {/* Proudly Presented - right after the seal */}
+              <p 
+                className="text-xs uppercase tracking-[0.2em] font-medium -mt-2"
+                style={{ color: '#d4a537' }}
+              >
+                Proudly Presented To
+              </p>
+
+              {/* Main Content */}
+              <div className="flex flex-col items-center gap-1.5 flex-1 justify-center">
+                
+                {/* Student Name */}
+                <h3 
+                  className="text-2xl font-certificate-script px-2"
+                  style={{ 
+                    color: '#e8c967',
+                    textShadow: '0 2px 4px rgba(0,0,0,0.3)'
+                  }}
+                >
+                  {studentName}
+                </h3>
+                
+                {/* Decorative line under name */}
+                <div className="flex items-center gap-2">
+                  <div className="w-12 h-[1px]" style={{ background: 'linear-gradient(to right, transparent, #d4a537)' }} />
+                  <SmallStar className="text-[#d4a537]" size={6} />
+                  <div className="w-12 h-[1px]" style={{ background: 'linear-gradient(to left, transparent, #d4a537)' }} />
+                </div>
+
+                {/* Role - Big and Prominent */}
+                <h4 
+                  className="text-xl font-bold font-certificate-title uppercase tracking-wide mt-1"
+                  style={{ 
+                    color: '#e8c967',
+                    textShadow: '0 2px 4px rgba(0,0,0,0.3)'
+                  }}
+                >
+                  {role}
+                </h4>
+                
+                {/* Organization - Big and Prominent */}
+                <h5 
+                  className="text-lg font-semibold font-certificate-title"
+                  style={{ color: '#d4a537' }}
+                >
+                  {organization}
+                </h5>
+              </div>
+
+              {/* Footer Section - Two Signatures + Full Date */}
+              <div className="w-full flex flex-col items-center gap-2 mt-auto">
+                {/* Full Date centered above signatures */}
+                <p 
+                  className="text-xs font-certificate-body"
+                  style={{ color: 'rgba(212, 165, 55, 0.8)' }}
+                >
+                  {fullDate}
+                </p>
+                
+                {/* Two Signatures */}
+                <div className="w-full flex items-end justify-between px-4">
+                  {/* Signature 1 */}
+                  <div className="text-center flex-1">
+                    <div 
+                      className="w-16 h-[1px] mb-1.5 mx-auto" 
+                      style={{ backgroundColor: 'rgba(212, 165, 55, 0.5)' }} 
+                    />
+                    <p 
+                      className="text-[10px] uppercase tracking-wider"
+                      style={{ color: 'rgba(212, 165, 55, 0.7)' }}
+                    >
+                      Principal
+                    </p>
+                  </div>
+                  
+                  {/* Signature 2 */}
+                  <div className="text-center flex-1">
+                    <div 
+                      className="w-16 h-[1px] mb-1.5 mx-auto" 
+                      style={{ backgroundColor: 'rgba(212, 165, 55, 0.5)' }} 
+                    />
+                    <p 
+                      className="text-[10px] uppercase tracking-wider"
+                      style={{ color: 'rgba(212, 165, 55, 0.7)' }}
+                    >
+                      Director
+                    </p>
+                  </div>
                 </div>
               </div>
             </div>
@@ -449,7 +452,7 @@ export function CertificateDialog({
         {/* Download Button - Dark Green Theme */}
         <Button 
           onClick={handleDownload}
-          className="gap-2 shadow-xl print:hidden px-8 py-6 text-base hover:scale-105 transition-all duration-300 rounded-full font-medium"
+          className="gap-2 shadow-xl print:hidden px-6 py-5 text-sm hover:scale-105 transition-all duration-300 rounded-full font-medium"
           style={{ 
             background: 'linear-gradient(135deg, #1a3d2e 0%, #0f2318 100%)',
             color: '#e8c967',
@@ -457,7 +460,7 @@ export function CertificateDialog({
             boxShadow: '0 10px 30px -10px rgba(0, 0, 0, 0.5)'
           }}
         >
-          <Download className="h-5 w-5" />
+          <Download className="h-4 w-4" />
           Download Certificate
         </Button>
       </DialogContent>
