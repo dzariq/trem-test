@@ -1377,7 +1377,7 @@ export default function TeacherAcademicPage() {
                 {/* Subject Performance Bar Chart */}
                 <div className="space-y-2">
                   <h4 className="text-sm font-medium text-foreground">Subject Performance</h4>
-                  <div className="h-44">
+                  <div style={{ height: `${Math.max(176, subjectAverages.length * 40)}px` }}>
                     <ResponsiveContainer width="100%" height="100%">
                       <BarChart data={subjectAverages} layout="vertical">
                         <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" strokeOpacity={0.3} />
@@ -1388,7 +1388,7 @@ export default function TeacherAcademicPage() {
                         <YAxis type="category" dataKey="name" tick={{
                         fontSize: 10,
                         fill: "hsl(var(--muted-foreground))"
-                      }} width={70} />
+                      }} width={80} />
                         <Tooltip contentStyle={{
                         backgroundColor: "hsl(var(--card))",
                         border: "1px solid hsl(var(--border))",
@@ -1425,7 +1425,10 @@ export default function TeacherAcademicPage() {
                     <Award className="h-5 w-5 mb-1.5" style={{
                     color: '#f59e0b'
                   }} />
-                    <span className="text-sm font-bold text-foreground">
+                    <span className={cn(
+                      "font-bold text-foreground leading-tight",
+                      (subjectAverages[0]?.name || '').length > 8 ? "text-xs" : "text-sm"
+                    )}>
                       {subjectAverages[0]?.name || 'N/A'}
                     </span>
                     <span className="text-[10px] text-muted-foreground leading-tight">Best Subject</span>
@@ -1479,7 +1482,10 @@ export default function TeacherAcademicPage() {
                     <AlertTriangle className="h-5 w-5 mb-1.5" style={{
                     color: '#ef4444'
                   }} />
-                    <span className="text-lg font-bold text-foreground">
+                    <span className={cn(
+                      "font-bold text-foreground leading-tight",
+                      (subjectAverages[subjectAverages.length - 1]?.name || '').length > 8 ? "text-xs" : "text-sm"
+                    )}>
                       {subjectAverages[subjectAverages.length - 1]?.name || 'N/A'}
                     </span>
                     <span className="text-[10px] text-muted-foreground leading-tight">Needs Focus</span>
