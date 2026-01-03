@@ -91,7 +91,7 @@ const StarSeal = ({ className }: { className?: string }) => {
     >
       <svg 
         viewBox="0 0 100 100" 
-        className="w-28 h-28 sm:w-32 sm:h-32"
+        className="w-32 h-32"
       >
         <defs>
           <linearGradient id="sealGold" x1="0%" y1="0%" x2="100%" y2="100%">
@@ -119,7 +119,7 @@ const StarSeal = ({ className }: { className?: string }) => {
         <img 
           src={schoolLogo} 
           alt="School Logo" 
-          className="w-10 h-10 sm:w-12 sm:h-12 object-contain"
+          className="w-12 h-12 object-contain"
         />
       </div>
     </div>
@@ -147,7 +147,7 @@ const LargeLogoBackground = ({ className }: { className?: string }) => (
     <img 
       src={schoolLogo} 
       alt="" 
-      className="absolute -right-24 -bottom-24 w-[400px] h-[400px] sm:w-[480px] sm:h-[480px] object-contain"
+      className="absolute -right-24 -bottom-24 w-[480px] h-[480px] object-contain"
       style={{
         opacity: 0.10,
         maskImage: 'linear-gradient(135deg, transparent 0%, rgba(0,0,0,0.3) 30%, rgba(0,0,0,1) 100%)',
@@ -176,7 +176,7 @@ export function CertificateDialog({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent 
-        className="max-w-[95vw] w-[420px] sm:w-[480px] p-0 overflow-visible bg-transparent border-none flex flex-col items-center gap-4"
+        className="max-w-[95vw] p-0 overflow-visible bg-transparent border-none flex flex-col items-center gap-4"
         hideClose
       >
         {/* Close button */}
@@ -187,11 +187,12 @@ export function CertificateDialog({
           <X className="h-5 w-5" />
         </button>
 
-        {/* Certificate Container - Portrait - Dark Green with Gold Frame */}
+        {/* Certificate Container - Fixed A4 ratio (210mm x 297mm = 1:1.414) */}
         <div 
-          className="relative w-full overflow-hidden print:p-8"
+          className="relative overflow-hidden print:p-8"
           style={{
-            aspectRatio: '3/4',
+            width: '420px',
+            height: '594px', // A4 ratio: 420 * 1.414 = 594
             background: 'linear-gradient(180deg, #1a3d2e 0%, #0f2318 100%)',
             boxShadow: '0 25px 60px -12px rgba(0, 0, 0, 0.6)',
             border: '3px solid #d4a537',
@@ -205,19 +206,19 @@ export function CertificateDialog({
           {/* Top Geometric Layers - Green tones */}
           <div className="absolute top-0 left-0 right-0 z-[1]">
             <ChevronLayer 
-              className="w-full h-24 sm:h-28" 
+              className="w-full h-28" 
               color="#2d5a47" 
               opacity={0.3}
               position="top"
             />
             <ChevronLayer 
-              className="w-full h-20 sm:h-24 -mt-16 sm:-mt-20" 
+              className="w-full h-24 -mt-20" 
               color="#24503e" 
               opacity={0.5}
               position="top"
             />
             <ChevronLayer 
-              className="w-full h-16 sm:h-20 -mt-12 sm:-mt-16" 
+              className="w-full h-20 -mt-16" 
               color="#1a4535" 
               opacity={0.7}
               position="top"
@@ -227,13 +228,13 @@ export function CertificateDialog({
           {/* Bottom Geometric Layers - Green tones */}
           <div className="absolute bottom-0 left-0 right-0 z-[1]">
             <ChevronLayer 
-              className="w-full h-16 sm:h-20" 
+              className="w-full h-20" 
               color="#1a4535" 
               opacity={0.7}
               position="bottom"
             />
             <ChevronLayer 
-              className="w-full h-20 sm:h-24 -mb-12 sm:-mb-16 absolute bottom-0" 
+              className="w-full h-24 -mb-16 absolute bottom-0" 
               color="#24503e" 
               opacity={0.5}
               position="bottom"
@@ -241,13 +242,13 @@ export function CertificateDialog({
           </div>
 
           {/* Certificate Content */}
-          <div className="relative h-full flex flex-col items-center py-6 sm:py-8 px-6 sm:px-10 text-center z-10">
+          <div className="relative h-full flex flex-col items-center py-8 px-10 text-center z-10">
             
             {/* Header Section */}
             <div className="flex flex-col items-center gap-1">
               {/* Big Year at Top */}
               <h1 
-                className="text-5xl sm:text-6xl font-bold tracking-wider font-certificate-title"
+                className="text-6xl font-bold tracking-wider font-certificate-title"
                 style={{ 
                   color: '#d4a537',
                   textShadow: '0 4px 8px rgba(0,0,0,0.3)'
@@ -258,13 +259,13 @@ export function CertificateDialog({
               
               {/* Certificate Title */}
               <h2 
-                className="text-2xl sm:text-3xl italic tracking-wide font-certificate-script mt-1"
+                className="text-3xl italic tracking-wide font-certificate-script mt-1"
                 style={{ color: '#e8c967' }}
               >
                 Certificate
               </h2>
               <p 
-                className="text-xs sm:text-sm uppercase tracking-[0.3em] font-medium"
+                className="text-sm uppercase tracking-[0.3em] font-medium"
                 style={{ color: '#d4a537' }}
               >
                 of Achievement
@@ -273,7 +274,7 @@ export function CertificateDialog({
 
             {/* V-Shaped Gold Ribbon with Star Seal at the V-point */}
             <div className="relative w-[140%] -mx-[20%] mt-4">
-              <VRibbon className="w-full h-14 sm:h-16" />
+              <VRibbon className="w-full h-16" />
               {/* Star Seal positioned at the V-point of the ribbon */}
               <div className="absolute left-1/2 -translate-x-1/2 top-[-15%]">
                 <StarSeal />
@@ -281,22 +282,22 @@ export function CertificateDialog({
             </div>
 
             {/* Spacer for the seal */}
-            <div className="h-16 sm:h-20" />
+            <div className="h-20" />
 
             {/* Proudly Presented - right after the seal */}
             <p 
-              className="text-xs sm:text-sm uppercase tracking-[0.2em] font-medium -mt-2"
+              className="text-sm uppercase tracking-[0.2em] font-medium -mt-2"
               style={{ color: '#d4a537' }}
             >
               Proudly Presented To
             </p>
 
             {/* Main Content */}
-            <div className="flex flex-col items-center gap-1 sm:gap-2 flex-1 justify-center">
+            <div className="flex flex-col items-center gap-2 flex-1 justify-center">
               
               {/* Student Name */}
               <h3 
-                className="text-3xl sm:text-4xl font-certificate-script px-4"
+                className="text-4xl font-certificate-script px-4"
                 style={{ 
                   color: '#e8c967',
                   textShadow: '0 2px 4px rgba(0,0,0,0.3)'
@@ -307,14 +308,14 @@ export function CertificateDialog({
               
               {/* Decorative line under name */}
               <div className="flex items-center gap-3">
-                <div className="w-12 sm:w-16 h-[1px]" style={{ background: 'linear-gradient(to right, transparent, #d4a537)' }} />
+                <div className="w-16 h-[1px]" style={{ background: 'linear-gradient(to right, transparent, #d4a537)' }} />
                 <SmallStar className="text-[#d4a537]" size={8} />
-                <div className="w-12 sm:w-16 h-[1px]" style={{ background: 'linear-gradient(to left, transparent, #d4a537)' }} />
+                <div className="w-16 h-[1px]" style={{ background: 'linear-gradient(to left, transparent, #d4a537)' }} />
               </div>
 
               {/* Role - Big and Prominent */}
               <h4 
-                className="text-2xl sm:text-3xl font-bold font-certificate-title uppercase tracking-wide mt-1"
+                className="text-3xl font-bold font-certificate-title uppercase tracking-wide mt-1"
                 style={{ 
                   color: '#e8c967',
                   textShadow: '0 2px 4px rgba(0,0,0,0.3)'
@@ -325,7 +326,7 @@ export function CertificateDialog({
               
               {/* Organization - Big and Prominent */}
               <h5 
-                className="text-xl sm:text-2xl font-semibold font-certificate-title"
+                className="text-2xl font-semibold font-certificate-title"
                 style={{ color: '#d4a537' }}
               >
                 {organization}
@@ -336,22 +337,22 @@ export function CertificateDialog({
             <div className="w-full flex flex-col items-center gap-3 mt-auto">
               {/* Full Date centered above signatures */}
               <p 
-                className="text-xs sm:text-sm font-certificate-body"
+                className="text-sm font-certificate-body"
                 style={{ color: 'rgba(212, 165, 55, 0.8)' }}
               >
                 {fullDate}
               </p>
               
               {/* Two Signatures */}
-              <div className="w-full flex items-end justify-between px-4 sm:px-8">
+              <div className="w-full flex items-end justify-between px-8">
                 {/* Signature 1 */}
                 <div className="text-center flex-1">
                   <div 
-                    className="w-20 sm:w-24 h-[1px] mb-2 mx-auto" 
+                    className="w-24 h-[1px] mb-2 mx-auto" 
                     style={{ backgroundColor: 'rgba(212, 165, 55, 0.5)' }} 
                   />
                   <p 
-                    className="text-[10px] sm:text-xs uppercase tracking-wider"
+                    className="text-xs uppercase tracking-wider"
                     style={{ color: 'rgba(212, 165, 55, 0.7)' }}
                   >
                     Principal
@@ -361,11 +362,11 @@ export function CertificateDialog({
                 {/* Signature 2 */}
                 <div className="text-center flex-1">
                   <div 
-                    className="w-20 sm:w-24 h-[1px] mb-2 mx-auto" 
+                    className="w-24 h-[1px] mb-2 mx-auto" 
                     style={{ backgroundColor: 'rgba(212, 165, 55, 0.5)' }} 
                   />
                   <p 
-                    className="text-[10px] sm:text-xs uppercase tracking-wider"
+                    className="text-xs uppercase tracking-wider"
                     style={{ color: 'rgba(212, 165, 55, 0.7)' }}
                   >
                     Director
