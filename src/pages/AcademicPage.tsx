@@ -62,11 +62,10 @@ const getCategoryScore = (subject: typeof academicData.subjects[0], year: YearKe
 // Helper to shorten long subject names
 const shortenSubjectName = (name: string): string => {
   const abbreviations: Record<string, string> = {
+    "English (First Language)": "English",
+    "Chinese (Foreign Language)": "Chinese",
+    "Living Skills & Arts": "Living Skills",
     "Mathematics": "Math",
-    "Physical Education": "PE",
-    "Social Studies": "Social St.",
-    "Information Technology": "IT",
-    "Computer Science": "Comp Sci",
   };
   return abbreviations[name] || name;
 };
