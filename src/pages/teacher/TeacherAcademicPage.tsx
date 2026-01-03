@@ -40,10 +40,15 @@ const gradeCategories = [{
 }];
 
 // Import centralized subjects config
-import { allSubjects, getShortSubjectName } from "@/data/subjectsConfig";
+import { allSubjects, getShortSubjectName, subjectGroups } from "@/data/subjectsConfig";
+import { SubjectGroupPill } from "@/components/SubjectGroupPill";
 
 // Use centralized subjects list
 const subjects = allSubjects;
+
+// Get subjects that are not part of any variant group (standalone subjects)
+const groupedSubjectNames = subjectGroups.flatMap(g => g.variants?.map(v => v.name) || []);
+const standaloneSubjects = allSubjects.filter(s => !groupedSubjectNames.includes(s));
 
 // Academic years (past 6 years) and exam periods
 const academicYears = ["2026", "2025", "2024", "2023", "2022", "2021"];
@@ -1346,15 +1351,28 @@ export default function TeacherAcademicPage() {
                     </div>
                   </div>
                   <div className="flex flex-wrap gap-2 p-3 rounded-lg border border-border bg-background">
-                    {subjects.map(subject => {
-                    const isSelected = selectedSubjects.includes(subject);
-                    return <button key={subject} onClick={() => toggleSubjectFilter(subject)} className={cn("px-3 py-1.5 rounded-full text-xs font-medium transition-all flex items-center gap-1.5", isSelected ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground hover:bg-muted/80")}>
-                          {isSelected && <svg className="w-3 h-3" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                            </svg>}
-                          {subject.length > 12 ? subject.substring(0, 12) + "..." : subject}
-                        </button>;
-                  })}
+                    {/* Grouped subject pills with dropdowns */}
+                    {subjectGroups.map((group) => (
+                      <SubjectGroupPill
+                        key={group.baseName}
+                        baseName={group.baseName}
+                        shortName={group.shortName}
+                        variants={group.variants || []}
+                        selectedSubjects={selectedSubjects}
+                        onToggle={toggleSubjectFilter}
+                      />
+                    ))}
+                    
+                    {/* Standalone subjects (not in any group) */}
+                    {standaloneSubjects.map(subject => {
+                      const isSelected = selectedSubjects.includes(subject);
+                      return <button key={subject} onClick={() => toggleSubjectFilter(subject)} className={cn("px-3 py-1.5 rounded-full text-xs font-medium transition-all flex items-center gap-1.5", isSelected ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground hover:bg-muted/80")}>
+                            {isSelected && <svg className="w-3 h-3" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                              </svg>}
+                            {getShortSubjectName(subject)}
+                          </button>;
+                    })}
                   </div>
                 </div>
 
