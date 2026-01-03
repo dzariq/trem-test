@@ -1820,7 +1820,7 @@ export default function AcademicPage() {
                       <Badge 
                         key={item.name} 
                         variant={item.delta >= 0 ? "default" : "destructive"}
-                        className="text-[10px] px-2 py-0.5"
+                        className={`text-[10px] px-2 py-0.5 ${item.delta >= 0 ? "bg-[#3b82f6] hover:bg-[#3b82f6]/90" : ""}`}
                       >
                         {item.name}: {item.delta >= 0 ? "+" : ""}{item.delta}%
                       </Badge>
