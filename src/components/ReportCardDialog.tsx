@@ -393,17 +393,18 @@ export function ReportCardDialog({
                     return (
                       <tr key={subject.name} style={{ position: 'relative', background: getRowBg(subject.grade) }}>
                         <td style={{ position: 'relative', padding: '6px', borderBottom: '1px solid #e5e7eb', fontWeight: '500', overflow: 'hidden' }}>
-                          {/* Grade watermark overlay */}
+                          {/* Grade watermark overlay - scaled up and cropped */}
                           <span style={{ 
                             position: 'absolute', 
-                            right: '2px', 
+                            right: '-8px', 
                             top: '50%', 
                             transform: 'translateY(-50%)', 
-                            fontSize: '24px', 
-                            fontWeight: '800', 
+                            fontSize: '42px', 
+                            fontWeight: '900', 
                             color: gradeColor.bg, 
-                            opacity: 0.4,
-                            pointerEvents: 'none'
+                            opacity: 0.35,
+                            pointerEvents: 'none',
+                            lineHeight: 1
                           }}>
                             {subject.grade}
                           </span>
