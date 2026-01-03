@@ -76,7 +76,7 @@ export default function AcademicPage() {
   const [selectedYear, setSelectedYear] = useState<YearKey>("2025");
   const [selectedYears, setSelectedYears] = useState<string[]>(["2025"]);
   const [subjectFilter, setSubjectFilter] = useState("all");
-  const [trendPeriod, setTrendPeriod] = useState<"1year" | "2years" | "3years" | "all">("all");
+  const [trendPeriod, setTrendPeriod] = useState<"1year" | "2years" | "3years" | "4years" | "5years" | "6years">("6years");
   
   // Grades tab filters - exam selector and multi-select subjects
   const [gradesSelectedSubjects, setGradesSelectedSubjects] = useState<string[]>(
@@ -421,8 +421,13 @@ export default function AcademicPage() {
       filteredPeriods = periods.slice(-4); // Last 4 periods
     } else if (trendPeriod === "3years") {
       filteredPeriods = periods.slice(-6); // Last 6 periods
+    } else if (trendPeriod === "4years") {
+      filteredPeriods = periods.slice(-8); // Last 8 periods
+    } else if (trendPeriod === "5years") {
+      filteredPeriods = periods.slice(-10); // Last 10 periods
+    } else if (trendPeriod === "6years") {
+      filteredPeriods = periods; // All periods (6 years max)
     }
-    // "all" shows all periods
     
     return filteredPeriods.map(p => {
       const result: Record<string, number | string | null> = { period: p.label };
@@ -1405,7 +1410,9 @@ export default function AcademicPage() {
                       { key: "1year", label: "1Y" },
                       { key: "2years", label: "2Y" },
                       { key: "3years", label: "3Y" },
-                      { key: "all", label: "All" }
+                      { key: "4years", label: "4Y" },
+                      { key: "5years", label: "5Y" },
+                      { key: "6years", label: "6Y" },
                     ] as const).map(({ key, label }) => (
                       <button
                         key={key}
@@ -1422,25 +1429,62 @@ export default function AcademicPage() {
                   </div>
                 </div>
 
-                {/* Subject Filter Pills */}
-                <div className="flex gap-2 overflow-x-auto pb-2">
-                  <Badge 
-                    variant={subjectFilter === "all" ? "default" : "outline"}
-                    className="cursor-pointer whitespace-nowrap"
-                    onClick={() => setSubjectFilter("all")}
-                  >
-                    All Subjects
-                  </Badge>
-                  {academicData.subjects.map((subject) => (
-                    <Badge
-                      key={subject.name}
-                      variant={subjectFilter === subject.name ? "default" : "outline"}
-                      className="cursor-pointer whitespace-nowrap"
-                      onClick={() => setSubjectFilter(subject.name)}
+                {/* Subject Filter Pills - Standardized */}
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-medium text-foreground">Subjects:</span>
+                  </div>
+                  <div className="flex flex-wrap gap-1.5 p-2.5 rounded-lg border border-border bg-background">
+                    {/* All Subjects pill */}
+                    <button
+                      onClick={() => setSubjectFilter("all")}
+                      className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all flex items-center gap-1 ${
+                        subjectFilter === "all"
+                          ? "bg-primary text-primary-foreground"
+                          : "bg-muted text-muted-foreground hover:bg-muted/80"
+                      }`}
                     >
-                      {subject.name}
-                    </Badge>
-                  ))}
+                      All Subjects
+                      {subjectFilter === "all" && <Check className="h-3 w-3" />}
+                    </button>
+                    {/* Grouped subject pills */}
+                    {subjectGroups.map((group) => {
+                      const selectedVariant = group.variants?.find(v => subjectFilter === v.name);
+                      const hasSelection = !!selectedVariant;
+                      return (
+                        <div key={group.baseName} className="relative group">
+                          <button
+                            className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all flex items-center gap-1 ${
+                              hasSelection
+                                ? "bg-primary text-primary-foreground"
+                                : "bg-muted text-muted-foreground hover:bg-muted/80"
+                            }`}
+                          >
+                            {hasSelection ? shortenSubjectName(selectedVariant!.name) : group.shortName}
+                            {hasSelection && <Check className="h-3 w-3" />}
+                            <ChevronDown className="h-3 w-3" />
+                          </button>
+                          {/* Dropdown */}
+                          <div className="absolute top-full left-0 mt-1 z-50 min-w-[180px] bg-card border border-border rounded-lg shadow-lg py-1 hidden group-hover:block">
+                            {group.variants?.map((variant) => (
+                              <button
+                                key={variant.name}
+                                onClick={() => setSubjectFilter(variant.name)}
+                                className={`w-full px-3 py-2 text-left text-xs font-medium flex items-center justify-between transition-colors ${
+                                  subjectFilter === variant.name
+                                    ? "bg-primary/10 text-primary"
+                                    : "text-foreground hover:bg-accent"
+                                }`}
+                              >
+                                {variant.shortName}
+                                {subjectFilter === variant.name && <Check className="h-3.5 w-3.5" />}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
                 </div>
 
                 {/* Moomoo-Style Gradient Area Chart - Scrollable with Pinch-to-Zoom */}
@@ -1968,55 +2012,46 @@ export default function AcademicPage() {
                   </div>
                 </div>
 
-                {/* Subject Multi-Select */}
+                {/* Subject Multi-Select - Standardized */}
                 <div className="space-y-2">
-                  <label className="text-xs font-medium text-muted-foreground">Subjects</label>
-                  <div className="flex flex-wrap gap-1.5 p-2 rounded-lg border border-input bg-background min-h-[38px]">
-                    {academicData.subjects.map(s => {
-                      const isSelected = compareSubjects.includes(s.name);
-                      return (
-                        <Badge
-                          key={s.name}
-                          variant={isSelected ? "default" : "outline"}
-                          className={`cursor-pointer text-xs transition-colors ${
-                            isSelected 
-                              ? "bg-primary text-primary-foreground hover:bg-primary/80" 
-                              : "hover:bg-accent"
-                          }`}
-                          onClick={() => {
-                            if (isSelected) {
-                              // Don't allow deselecting all subjects
-                              if (compareSubjects.length > 1) {
-                                setCompareSubjects(prev => prev.filter(name => name !== s.name));
-                              }
-                            } else {
-                              setCompareSubjects(prev => [...prev, s.name]);
-                            }
-                          }}
-                        >
-                          {shortenSubjectName(s.name)}
-                          {isSelected && <Check className="h-3 w-3 ml-1" />}
-                        </Badge>
-                      );
-                    })}
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-medium text-foreground">Subjects</span>
+                    <div className="flex gap-2">
+                      <button
+                        className="text-sm font-medium text-foreground hover:text-primary transition-colors"
+                        onClick={() => setCompareSubjects(academicData.subjects.map(s => s.name))}
+                      >
+                        Select All
+                      </button>
+                      <button
+                        className="text-sm font-medium text-foreground hover:text-primary transition-colors"
+                        onClick={() => setCompareSubjects([academicData.subjects[0].name])}
+                      >
+                        Clear
+                      </button>
+                    </div>
                   </div>
-                  <div className="flex gap-2">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="text-xs h-7 px-2"
-                      onClick={() => setCompareSubjects(academicData.subjects.map(s => s.name))}
-                    >
-                      Select All
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="text-xs h-7 px-2"
-                      onClick={() => setCompareSubjects([academicData.subjects[0].name])}
-                    >
-                      Clear
-                    </Button>
+                  <div className="flex flex-wrap gap-1.5 p-2.5 rounded-lg border border-border bg-background">
+                    {/* Grouped subject pills with dropdowns */}
+                    {subjectGroups.map((group) => (
+                      <SubjectGroupPill
+                        key={group.baseName}
+                        baseName={group.baseName}
+                        shortName={group.shortName}
+                        variants={group.variants || []}
+                        selectedSubjects={compareSubjects}
+                        onToggle={(subjectName) => {
+                          if (compareSubjects.includes(subjectName)) {
+                            // Don't allow deselecting all subjects
+                            if (compareSubjects.length > 1) {
+                              setCompareSubjects(prev => prev.filter(s => s !== subjectName));
+                            }
+                          } else {
+                            setCompareSubjects(prev => [...prev, subjectName]);
+                          }
+                        }}
+                      />
+                    ))}
                   </div>
                 </div>
 
