@@ -185,31 +185,33 @@ export function ReportCardDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="w-[95vw] max-w-5xl h-[90vh] rounded-2xl overflow-hidden flex flex-col">
-        <DialogHeader className="flex flex-row items-center justify-between pr-12">
-          <DialogTitle>Report Card Preview</DialogTitle>
-          <Button onClick={handlePrint} className="gap-2 bg-emerald-600 hover:bg-emerald-700 text-white">
+      <DialogContent className="w-full max-w-none p-0 overflow-hidden flex flex-col max-h-[90vh]">
+        <DialogHeader className="flex flex-row items-center justify-between px-4 py-3 border-b border-border bg-background sticky top-0 z-10">
+          <DialogTitle className="text-sm sm:text-base">Report Card Preview</DialogTitle>
+          <Button onClick={handlePrint} className="gap-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs sm:text-sm px-3 py-2">
             <Printer className="h-4 w-4" />
-            Print / Save PDF
+            <span className="hidden sm:inline">Print / Save PDF</span>
+            <span className="sm:hidden">PDF</span>
           </Button>
         </DialogHeader>
         
-        <div className="flex-1 overflow-auto bg-muted/30 p-2 md:p-4">
-          <div className="overflow-x-auto">
-            <div ref={reportRef} className="bg-white rounded-lg shadow-lg mx-auto" style={{ width: '210mm', minWidth: '210mm', padding: '16px', fontSize: '11px' }}>
+        <div className="flex-1 overflow-auto bg-muted/30 p-2 sm:p-4">
+          {/* Portrait container wrapper */}
+          <div className="flex justify-center">
+            <div ref={reportRef} className="bg-white rounded-lg shadow-lg" style={{ width: 'min(100%, 210mm)', padding: '12px', fontSize: '10px' }}>
             
             {/* Header with both logos */}
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '3px solid #065f46', paddingBottom: '12px', marginBottom: '12px' }}>
-              <img src={collinzLogo} alt="Collinz School" style={{ height: '60px', objectFit: 'contain' }} />
-              <div style={{ background: 'linear-gradient(135deg, #065f46 0%, #10b981 100%)', color: 'white', padding: '10px 20px', borderRadius: '8px', textAlign: 'center' }}>
-                <div style={{ fontSize: '10px', fontWeight: '600', opacity: 0.9, letterSpacing: '0.5px' }}>ACADEMIC REPORT</div>
-                <div style={{ fontSize: '14px', fontWeight: '700' }}>{examType} {year}</div>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '3px solid #065f46', paddingBottom: '10px', marginBottom: '10px', gap: '8px', flexWrap: 'wrap' }}>
+              <img src={collinzLogo} alt="Collinz School" style={{ height: '40px', objectFit: 'contain' }} />
+              <div style={{ background: 'linear-gradient(135deg, #065f46 0%, #10b981 100%)', color: 'white', padding: '6px 12px', borderRadius: '6px', textAlign: 'center' }}>
+                <div style={{ fontSize: '8px', fontWeight: '600', opacity: 0.9, letterSpacing: '0.5px' }}>ACADEMIC REPORT</div>
+                <div style={{ fontSize: '11px', fontWeight: '700' }}>{examType} {year}</div>
               </div>
-              <img src={cambridgeLogo} alt="Cambridge Assessment" style={{ height: '50px', objectFit: 'contain' }} />
+              <img src={cambridgeLogo} alt="Cambridge Assessment" style={{ height: '35px', objectFit: 'contain' }} />
             </div>
 
-            {/* Student Info Row with Attitude & Behaviour side by side */}
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1.2fr', gap: '12px', marginBottom: '12px' }}>
+            {/* Student Info Row with Attitude & Behaviour - Stack on mobile */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '10px' }}>
               {/* Student Name, Class, Overall Average & Attendance - Green & Gold Gradient with Pattern */}
               <div style={{ 
                 position: 'relative',
@@ -288,7 +290,7 @@ export function ReportCardDialog({
                   <span style={{ fontSize: '12px' }}>⭐</span>
                   <span style={{ fontSize: '10px', fontWeight: '700', color: '#065f46' }}>Attitude & Behaviour</span>
                 </div>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '6px' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '6px' }}>
                   {behavior.slice(0, 8).map((item) => {
                     const behaviorColor = behaviorGradeColors[item.grade] || behaviorGradeColors["C"];
                     const description = behaviorDescriptions[item.grade]?.[item.category] || "Good progress";
@@ -490,7 +492,7 @@ export function ReportCardDialog({
             )}
 
             {/* Signatures */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px', marginTop: '20px', paddingTop: '16px', borderTop: '1px solid #e5e7eb' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '8px', marginTop: '16px', paddingTop: '12px', borderTop: '1px solid #e5e7eb' }}>
               <div style={{ textAlign: 'center' }}>
                 <div style={{ borderBottom: '1px solid #1a1a1a', height: '30px', marginBottom: '6px' }}></div>
                 <div style={{ fontSize: '10px', fontWeight: '600', color: '#1a1a1a' }}>{headOfSchoolName}</div>
