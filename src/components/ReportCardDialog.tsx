@@ -460,7 +460,7 @@ export function ReportCardDialog({
                             bottom: '-20px',
                             left: '50%',
                             transform: 'translateX(-50%)',
-                            fontSize: '56px',
+                            fontSize: '42px',
                             fontWeight: '900',
                             opacity: 0.15,
                             color: midYearGradeColor.bg,
@@ -480,7 +480,7 @@ export function ReportCardDialog({
                             bottom: '-20px',
                             left: '50%',
                             transform: 'translateX(-50%)',
-                            fontSize: '56px',
+                            fontSize: '42px',
                             fontWeight: '900',
                             opacity: 0.15,
                             color: derivedYearEndGradeColor.bg,
@@ -520,7 +520,7 @@ export function ReportCardDialog({
                     {displayedSubjects
                       .filter(s => s.classStudyRecommendation || s.studyRecommendation)
                       .map((subject, index) => (
-                        <tr key={subject.name} style={{ background: index % 2 === 0 ? '#fefce8' : '#fef9c3', borderBottom: '1px solid #fde047' }}>
+                        <tr key={subject.name} style={{ background: index % 2 === 0 ? '#fffbeb' : '#fef3c7', borderBottom: '1px solid #fcd34d' }}>
                           <td style={{ padding: '5px 8px', fontWeight: '600', color: '#1a1a1a', fontSize: '8px' }}>{subject.name}</td>
                           <td style={{ padding: '5px 8px', fontSize: '7px', color: '#374151', lineHeight: '1.4' }}>
                             {subject.classStudyRecommendation || '-'}
@@ -528,7 +528,7 @@ export function ReportCardDialog({
                               <div style={{ marginTop: '4px' }}>
                                 <span style={{ 
                                   display: 'inline-block',
-                                  background: '#b45309', 
+                                  background: '#065f46', 
                                   color: 'white', 
                                   padding: '1px 6px', 
                                   borderRadius: '8px', 
