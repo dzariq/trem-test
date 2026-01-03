@@ -401,12 +401,32 @@ export const academicData = {
   improvement: "+5%"
 };
 
-// Class averages for comparison
+// Class averages for comparison - now per subject
 export const classAverages = {
-  "2022": { midYear: 68, yearEnd: 72, attitude: 72, homework: 70, quiz: 66, exam: 68 },
-  "2023": { midYear: 72, yearEnd: 75, attitude: 76, homework: 74, quiz: 70, exam: 72 },
-  "2024": { midYear: 74, yearEnd: 77, attitude: 78, homework: 76, quiz: 73, exam: 74 },
-  "2025": { midYear: 76, yearEnd: null, attitude: 80, homework: 78, quiz: 75, exam: 76 }
+  "2022": { 
+    midYear: 68, yearEnd: 72, attitude: 72, homework: 70, quiz: 66, exam: 68,
+    bySubject: {
+      "Art": 70, "Computer Studies": 72, "Geography": 68, "Mandarin": 74, "Music": 66, "French": 62, "Physics": 70
+    }
+  },
+  "2023": { 
+    midYear: 72, yearEnd: 75, attitude: 76, homework: 74, quiz: 70, exam: 72,
+    bySubject: {
+      "Art": 74, "Computer Studies": 76, "Geography": 72, "Mandarin": 78, "Music": 70, "French": 66, "Physics": 74
+    }
+  },
+  "2024": { 
+    midYear: 74, yearEnd: 77, attitude: 78, homework: 76, quiz: 73, exam: 74,
+    bySubject: {
+      "Art": 78, "Computer Studies": 80, "Geography": 74, "Mandarin": 76, "Music": 68, "French": 70, "Physics": 72
+    }
+  },
+  "2025": { 
+    midYear: 76, yearEnd: null, attitude: 80, homework: 78, quiz: 75, exam: 76,
+    bySubject: {
+      "Art": 82, "Computer Studies": 78, "Geography": 76, "Mandarin": 74, "Music": 72, "French": 68, "Physics": 74
+    }
+  }
 };
 
 import type { CalendarEvent } from "@/types/calendarTags";
