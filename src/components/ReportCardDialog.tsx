@@ -185,7 +185,7 @@ export function ReportCardDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="w-[95vw] max-w-4xl h-[90vh] rounded-2xl overflow-hidden flex flex-col">
+      <DialogContent className="w-[95vw] max-w-5xl h-[90vh] rounded-2xl overflow-hidden flex flex-col">
         <DialogHeader className="flex flex-row items-center justify-between pr-12">
           <DialogTitle>Report Card Preview</DialogTitle>
           <Button onClick={handlePrint} className="gap-2 bg-emerald-600 hover:bg-emerald-700 text-white">
@@ -194,8 +194,9 @@ export function ReportCardDialog({
           </Button>
         </DialogHeader>
         
-        <div className="flex-1 overflow-auto bg-muted/30 p-4">
-          <div ref={reportRef} className="bg-white rounded-lg shadow-lg mx-auto" style={{ maxWidth: '210mm', padding: '16px', fontSize: '11px' }}>
+        <div className="flex-1 overflow-auto bg-muted/30 p-2 md:p-4">
+          <div className="overflow-x-auto">
+            <div ref={reportRef} className="bg-white rounded-lg shadow-lg mx-auto" style={{ width: '210mm', minWidth: '210mm', padding: '16px', fontSize: '11px' }}>
             
             {/* Header with both logos */}
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '3px solid #065f46', paddingBottom: '12px', marginBottom: '12px' }}>
@@ -482,6 +483,7 @@ export function ReportCardDialog({
             <div style={{ marginTop: '12px', textAlign: 'center', fontSize: '8px', color: '#9ca3af', paddingTop: '8px', borderTop: '1px solid #e5e7eb' }}>
               This is a computer-generated report. Generated on {new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}.
             </div>
+          </div>
           </div>
         </div>
       </DialogContent>
