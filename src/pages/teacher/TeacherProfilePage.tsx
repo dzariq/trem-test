@@ -36,7 +36,8 @@ import {
   MessageSquare,
   Check,
   X,
-  ChevronLeft
+  ChevronLeft,
+  Calendar
 } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useNavigate } from "react-router-dom";
@@ -465,13 +466,20 @@ export default function TeacherProfilePage() {
                     <h3 className="font-medium text-foreground truncate">{student.name}</h3>
                     <p className="text-xs text-muted-foreground">{student.id}</p>
                   </div>
-                  <div className="flex items-center gap-1.5 shrink-0">
+                  <div className="flex items-center gap-2 shrink-0">
+                    {student.outdoorCCA && (
+                      <TreePine className="h-4 w-4 text-green-500" />
+                    )}
                     {student.remarks && (
                       <MessageSquare className="h-4 w-4 text-amber-500" />
                     )}
-                    <Badge className={cn("text-xs px-1.5 py-0.5", sportsHouseColors[student.sportsHouse].bg, sportsHouseColors[student.sportsHouse].text)}>
-                      {student.sportsHouse.charAt(0).toUpperCase()}
-                    </Badge>
+                    <Flag className={cn(
+                      "h-4 w-4",
+                      student.sportsHouse === "red" ? "text-red-500" :
+                      student.sportsHouse === "blue" ? "text-blue-500" :
+                      student.sportsHouse === "green" ? "text-green-600" :
+                      "text-yellow-500"
+                    )} />
                   </div>
                   <ChevronRight className="h-5 w-5 text-muted-foreground shrink-0" />
                 </button>
@@ -564,6 +572,23 @@ export default function TeacherProfilePage() {
                       {sportsHouseColors[selectedStudent.sportsHouse].label.split(' ')[0]}
                     </Badge>
                   </div>
+                </div>
+              </div>
+
+              {/* Join Date */}
+              <div className="space-y-2">
+                <span className="font-medium text-foreground text-sm flex items-center gap-2">
+                  <Calendar className="h-4 w-4" />
+                  Date Joined
+                </span>
+                <div className="p-3 rounded-lg bg-muted/50 border border-border">
+                  <p className="text-sm text-foreground">
+                    {new Date(selectedStudent.joinDate).toLocaleDateString('en-GB', { 
+                      day: 'numeric', 
+                      month: 'long', 
+                      year: 'numeric' 
+                    })}
+                  </p>
                 </div>
               </div>
 
