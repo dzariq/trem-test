@@ -1129,13 +1129,13 @@ export default function TeacherAcademicPage() {
               <Card className="border-amber-300 bg-amber-50/50 dark:bg-amber-950/20">
                 <CardContent className="p-3">
                   <div className="flex items-center gap-2 mb-2">
-                    <div className="w-6 h-6 rounded-full bg-amber-100 dark:bg-amber-900/50 flex items-center justify-center">
+                    <div className="w-6 h-6 rounded-full bg-amber-100 dark:bg-amber-900/50 flex items-center justify-center flex-shrink-0">
                       <Users className="h-3.5 w-3.5 text-amber-600" />
                     </div>
-                    <label className="text-xs font-semibold text-amber-700 dark:text-amber-400">
+                    <label className="text-xs font-semibold text-amber-700 dark:text-amber-400 flex-1">
                       Class Study Recommendation
                     </label>
-                    <Badge variant="outline" className="text-[10px] border-amber-300 text-amber-600 ml-auto">
+                    <Badge variant="outline" className="text-[10px] border-amber-300 text-amber-600 whitespace-nowrap">
                       Applies to all
                     </Badge>
                   </div>
