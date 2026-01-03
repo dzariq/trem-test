@@ -132,6 +132,9 @@ export function ReportCardDialog({
     ? Math.round(validScores.reduce((a, b) => a + b, 0) / validScores.length) 
     : 0;
 
+  // Limit to 13 subjects
+  const displayedSubjects = subjects.slice(0, 13);
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="w-[95vw] max-w-4xl h-[90vh] rounded-2xl overflow-hidden flex flex-col">
@@ -156,60 +159,51 @@ export function ReportCardDialog({
               <img src={cambridgeLogo} alt="Cambridge Assessment" style={{ height: '50px', objectFit: 'contain' }} />
             </div>
 
-            {/* Grading Key - Now at top */}
-            <div style={{ marginBottom: '12px', padding: '10px', background: '#f0fdf4', borderRadius: '8px', border: '1px solid #bbf7d0' }}>
-              <div style={{ fontWeight: '600', marginBottom: '6px', color: '#065f46', fontSize: '10px' }}>Academic Grading Key:</div>
-              <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', justifyContent: 'center' }}>
-                {Object.entries(gradeColors).map(([grade, colors]) => (
-                  <div key={grade} style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                    <span style={{ 
-                      width: '22px', 
-                      height: '22px', 
-                      borderRadius: '4px', 
-                      display: 'flex', 
-                      alignItems: 'center', 
-                      justifyContent: 'center', 
-                      fontWeight: '700', 
-                      fontSize: '10px',
-                      backgroundColor: colors.bg,
-                      color: colors.text
-                    }}>
-                      {grade}
-                    </span>
-                    <span style={{ fontSize: '9px', color: '#374151' }}>{grade === "A*" ? "90-100%" : grade === "A" ? "80-89%" : grade === "B" ? "70-79%" : grade === "C" ? "60-69%" : grade === "D" ? "50-59%" : "0-49%"}</span>
+            {/* Student Info Row with Attitude & Behaviour side by side */}
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1.2fr', gap: '12px', marginBottom: '12px' }}>
+              {/* Student Name, Class, Overall Average & Attendance */}
+              <div style={{ background: 'linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%)', border: '1px solid #bbf7d0', borderRadius: '12px', padding: '14px' }}>
+                <div style={{ fontSize: '18px', fontWeight: '700', color: '#065f46', marginBottom: '2px' }}>{studentName}</div>
+                <div style={{ fontSize: '11px', color: '#6b7280', marginBottom: '10px' }}>Class: {studentClass}</div>
+                
+                {/* Overall Average & Attendance inside the name box */}
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
+                  <div style={{ textAlign: 'center', background: 'white', padding: '8px', borderRadius: '8px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
+                    <div style={{ fontSize: '22px', fontWeight: '700', color: '#065f46' }}>{overallAverage}%</div>
+                    <div style={{ fontSize: '9px', color: '#6b7280' }}>Overall Average</div>
                   </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Student Info Row with Attitude & Behaviour */}
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '12px' }}>
-              {/* Student Name & Class */}
-              <div style={{ background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: '10px', padding: '12px' }}>
-                <div style={{ fontSize: '16px', fontWeight: '700', color: '#065f46', marginBottom: '2px' }}>{studentName}</div>
-                <div style={{ fontSize: '11px', color: '#6b7280' }}>Class: {studentClass}</div>
+                  <div style={{ textAlign: 'center', background: 'white', padding: '8px', borderRadius: '8px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
+                    <div style={{ fontSize: '22px', fontWeight: '700', color: attendance.percentage >= 90 ? '#16a34a' : attendance.percentage >= 75 ? '#ca8a04' : '#dc2626' }}>{attendance.percentage}%</div>
+                    <div style={{ fontSize: '9px', color: '#6b7280' }}>Attendance</div>
+                  </div>
+                </div>
               </div>
               
-              {/* Attitude & Behaviour - Compact */}
-              <div style={{ background: '#f9fafb', border: '1px solid #e5e7eb', borderRadius: '10px', padding: '10px' }}>
-                <div style={{ fontSize: '10px', fontWeight: '600', color: '#065f46', marginBottom: '6px' }}>⭐ Attitude & Behaviour</div>
+              {/* Attitude & Behaviour - Styled nicer */}
+              <div style={{ background: 'linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%)', border: '1px solid #e2e8f0', borderRadius: '12px', padding: '12px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '10px' }}>
+                  <span style={{ fontSize: '14px' }}>⭐</span>
+                  <span style={{ fontSize: '11px', fontWeight: '700', color: '#065f46' }}>Attitude & Behaviour</span>
+                </div>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '6px' }}>
                   {behavior.slice(0, 4).map((item) => {
                     const behaviorColor = behaviorGradeColors[item.grade] || behaviorGradeColors["C"];
                     return (
                       <div key={item.category} style={{ textAlign: 'center' }}>
-                        <div style={{ fontSize: '8px', color: '#6b7280', marginBottom: '2px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{item.category}</div>
+                        <div style={{ fontSize: '8px', color: '#64748b', marginBottom: '4px', fontWeight: '500' }}>{item.category}</div>
                         <div style={{ 
                           display: 'inline-flex', 
                           alignItems: 'center', 
                           justifyContent: 'center', 
-                          width: '24px', 
-                          height: '24px', 
+                          width: '28px', 
+                          height: '28px', 
                           borderRadius: '50%', 
                           fontWeight: '700', 
-                          fontSize: '11px',
+                          fontSize: '12px',
                           backgroundColor: behaviorColor.bg,
-                          color: behaviorColor.text
+                          color: behaviorColor.text,
+                          border: `2px solid ${behaviorColor.text}20`,
+                          boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
                         }}>
                           {item.grade}
                         </div>
@@ -218,23 +212,25 @@ export function ReportCardDialog({
                   })}
                 </div>
                 {behavior.length > 4 && (
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '6px', marginTop: '6px' }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '6px', marginTop: '8px' }}>
                     {behavior.slice(4).map((item) => {
                       const behaviorColor = behaviorGradeColors[item.grade] || behaviorGradeColors["C"];
                       return (
                         <div key={item.category} style={{ textAlign: 'center' }}>
-                          <div style={{ fontSize: '8px', color: '#6b7280', marginBottom: '2px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{item.category}</div>
+                          <div style={{ fontSize: '8px', color: '#64748b', marginBottom: '4px', fontWeight: '500' }}>{item.category}</div>
                           <div style={{ 
                             display: 'inline-flex', 
                             alignItems: 'center', 
                             justifyContent: 'center', 
-                            width: '24px', 
-                            height: '24px', 
+                            width: '28px', 
+                            height: '28px', 
                             borderRadius: '50%', 
                             fontWeight: '700', 
-                            fontSize: '11px',
+                            fontSize: '12px',
                             backgroundColor: behaviorColor.bg,
-                            color: behaviorColor.text
+                            color: behaviorColor.text,
+                            border: `2px solid ${behaviorColor.text}20`,
+                            boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
                           }}>
                             {item.grade}
                           </div>
@@ -246,23 +242,35 @@ export function ReportCardDialog({
               </div>
             </div>
 
-            {/* Overall Average & Attendance Row */}
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '16px' }}>
-              <div style={{ textAlign: 'center', background: '#f0fdf4', padding: '12px', borderRadius: '10px', border: '1px solid #bbf7d0' }}>
-                <div style={{ fontSize: '28px', fontWeight: '700', color: '#065f46' }}>{overallAverage}%</div>
-                <div style={{ fontSize: '10px', color: '#6b7280' }}>Overall Average</div>
-              </div>
-              <div style={{ textAlign: 'center', background: '#f0fdf4', padding: '12px', borderRadius: '10px', border: '1px solid #bbf7d0' }}>
-                <div style={{ fontSize: '28px', fontWeight: '700', color: '#065f46' }}>{attendance.percentage}%</div>
-                <div style={{ fontSize: '10px', color: '#6b7280' }}>Attendance</div>
-              </div>
-            </div>
-
-            {/* Academic Grades Table */}
+            {/* Academic Grades Table with Grading Key */}
             <div style={{ marginBottom: '16px' }}>
-              <h3 style={{ fontSize: '12px', fontWeight: '700', color: '#065f46', marginBottom: '8px', paddingBottom: '4px', borderBottom: '2px solid #d1fae5' }}>
-                📚 Academic Grades
-              </h3>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px', paddingBottom: '6px', borderBottom: '2px solid #d1fae5' }}>
+                <h3 style={{ fontSize: '12px', fontWeight: '700', color: '#065f46', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  📚 Academic Grades
+                </h3>
+                {/* Compact Grading Key Legend */}
+                <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
+                  {Object.entries(gradeColors).map(([grade, colors]) => (
+                    <div key={grade} style={{ display: 'flex', alignItems: 'center', gap: '2px' }}>
+                      <span style={{ 
+                        width: '16px', 
+                        height: '16px', 
+                        borderRadius: '3px', 
+                        display: 'flex', 
+                        alignItems: 'center', 
+                        justifyContent: 'center', 
+                        fontWeight: '700', 
+                        fontSize: '8px',
+                        backgroundColor: colors.bg,
+                        color: colors.text
+                      }}>
+                        {grade}
+                      </span>
+                      <span style={{ fontSize: '7px', color: '#6b7280' }}>{grade === "A*" ? "90+" : grade === "A" ? "80+" : grade === "B" ? "70+" : grade === "C" ? "60+" : grade === "D" ? "50+" : "<50"}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
               <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '10px' }}>
                 <thead>
                   <tr>
@@ -273,7 +281,7 @@ export function ReportCardDialog({
                   </tr>
                 </thead>
                 <tbody>
-                  {subjects.map((subject, index) => {
+                  {displayedSubjects.map((subject, index) => {
                     const gradeColor = gradeColors[subject.grade] || gradeColors["C"];
                     return (
                       <tr key={subject.name} style={{ background: index % 2 === 0 ? 'white' : '#f9fafb' }}>
