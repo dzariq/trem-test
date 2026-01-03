@@ -1033,20 +1033,20 @@ export default function AcademicPage() {
                 )}
               </TabsContent>
             </Tabs>
-
-            {/* Download Button */}
-            <Button className="w-full gap-2" onClick={generateReport}>
-              <Download className="h-4 w-4" />
-              Download Report Card
-            </Button>
-
-            {reportGenerated && (
-              <div className="p-3 rounded-lg bg-primary/10 border border-primary/20 text-center">
-                <p className="text-sm text-foreground">Report Card for {getExamLabel()} downloaded!</p>
-              </div>
-            )}
           </CardContent>
         </Card>
+
+        {/* Download Button */}
+        <Button className="w-full gap-2 mt-4" onClick={generateReport}>
+          <Download className="h-4 w-4" />
+          Download Report Card
+        </Button>
+
+        {reportGenerated && (
+          <div className="p-3 rounded-lg bg-primary/10 border border-primary/20 text-center mt-2">
+            <p className="text-sm text-foreground">Report Card for {getExamLabel()} downloaded!</p>
+          </div>
+        )}
       </section>
       )}
 
