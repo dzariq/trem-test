@@ -790,6 +790,8 @@ export const studentProfile = {
   photo: null
 };
 
+export type SportsHouse = "red" | "blue" | "green" | "yellow";
+
 export const students = [
   {
     id: "GL-2025-001",
@@ -797,7 +799,10 @@ export const students = [
     grade: "Grade 5",
     class: "5A",
     photo: null,
-    subjects: ["English", "Mathematics", "Science", "History", "Art"]
+    subjects: ["English", "Mathematics", "Science", "History", "Art"],
+    mealPlan: true,
+    sportsHouse: "blue" as SportsHouse,
+    outdoorCCA: true
   },
   {
     id: "GL-2025-002",
@@ -805,7 +810,10 @@ export const students = [
     grade: "Grade 3",
     class: "3B",
     photo: null,
-    subjects: ["English", "Mathematics", "Science", "Music", "Physical Education"]
+    subjects: ["English", "Mathematics", "Science", "Music", "Physical Education"],
+    mealPlan: true,
+    sportsHouse: "red" as SportsHouse,
+    outdoorCCA: false
   },
   {
     id: "GL-2025-003",
@@ -813,7 +821,10 @@ export const students = [
     grade: "Grade 1",
     class: "1A",
     photo: null,
-    subjects: ["English", "Mathematics", "Art", "Music"]
+    subjects: ["English", "Mathematics", "Art", "Music"],
+    mealPlan: false,
+    sportsHouse: "green" as SportsHouse,
+    outdoorCCA: true
   },
   {
     id: "GL-2025-004",
@@ -821,7 +832,10 @@ export const students = [
     grade: "Grade 4",
     class: "4B",
     photo: null,
-    subjects: ["English", "Mathematics", "Science", "Geography", "Music"]
+    subjects: ["English", "Mathematics", "Science", "Geography", "Music"],
+    mealPlan: true,
+    sportsHouse: "yellow" as SportsHouse,
+    outdoorCCA: true
   },
   {
     id: "GL-2025-005",
@@ -829,7 +843,10 @@ export const students = [
     grade: "Grade 2",
     class: "2A",
     photo: null,
-    subjects: ["English", "Mathematics", "Art", "Physical Education"]
+    subjects: ["English", "Mathematics", "Art", "Physical Education"],
+    mealPlan: false,
+    sportsHouse: "blue" as SportsHouse,
+    outdoorCCA: false
   }
 ];
 
