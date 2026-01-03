@@ -816,12 +816,20 @@ export default function AcademicPage() {
                         
                         {/* Expanded Comment Box - Full Width */}
                         {expandedInRow && <div className="animate-fade-in">
-                            <div className="bg-primary/5 border border-primary/20 rounded-xl p-4 relative mt-1">
+                            <div className={`rounded-xl p-4 relative mt-1 transition-colors ${
+                              expandedSection === "tips" 
+                                ? "bg-amber-50 border border-amber-200" 
+                                : "bg-primary/5 border border-primary/20"
+                            }`}>
                               {/* Arrow pointer - clean triangle without bottom line */}
                               <div className="absolute -top-[10px] w-5 h-[10px] overflow-hidden" style={{
                             left: expandedInRow === rowSubjects[0] ? 'calc(25% - 10px)' : 'calc(75% - 10px)'
                           }}>
-                                <div className="w-[14px] h-[14px] rotate-45 bg-primary/5 border-l border-t border-primary/20" style={{
+                                <div className={`w-[14px] h-[14px] rotate-45 border-l border-t ${
+                                  expandedSection === "tips"
+                                    ? "bg-amber-50 border-amber-200"
+                                    : "bg-primary/5 border-primary/20"
+                                }`} style={{
                               position: 'absolute',
                               top: '5px',
                               left: '3px'
@@ -851,7 +859,7 @@ export default function AcademicPage() {
                                   }}
                                   className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
                                     expandedSection === "tips" 
-                                      ? "bg-primary text-primary-foreground" 
+                                      ? "bg-amber-500 text-white" 
                                       : "bg-muted text-muted-foreground hover:bg-muted/80"
                                   }`}
                                 >
@@ -888,9 +896,9 @@ export default function AcademicPage() {
                                       </div>
                                     )}
                                     {expandedInRow.studyRecommendation && (
-                                      <div className="pt-2 border-t border-border/50">
+                                      <div className="pt-2 border-t border-amber-200">
                                         <div className="flex items-center gap-2 mb-1">
-                                          <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-primary text-primary-foreground">
+                                          <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-amber-500 text-white">
                                             Individual Tips
                                           </span>
                                         </div>
