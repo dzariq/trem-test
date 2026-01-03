@@ -175,8 +175,10 @@ export function ReportCardDialog({
     ? Math.round(validScores.reduce((a, b) => a + b, 0) / validScores.length) 
     : 0;
 
-  // Limit to 13 subjects
-  const displayedSubjects = subjects.slice(0, 13);
+  // Sort by score (highest first) and limit to 13 subjects
+  const displayedSubjects = [...subjects]
+    .sort((a, b) => (b.score ?? 0) - (a.score ?? 0))
+    .slice(0, 13);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -204,20 +206,40 @@ export function ReportCardDialog({
 
             {/* Student Info Row with Attitude & Behaviour side by side */}
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1.2fr', gap: '12px', marginBottom: '12px' }}>
-              {/* Student Name, Class, Overall Average & Attendance */}
-              <div style={{ background: 'linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%)', border: '1px solid #bbf7d0', borderRadius: '12px', padding: '14px' }}>
-                <div style={{ fontSize: '18px', fontWeight: '700', color: '#065f46', marginBottom: '2px' }}>{studentName}</div>
-                <div style={{ fontSize: '11px', color: '#6b7280', marginBottom: '10px' }}>Class: {studentClass}</div>
-                
-                {/* Overall Average & Attendance inside the name box */}
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
-                  <div style={{ textAlign: 'center', background: 'white', padding: '8px', borderRadius: '8px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
-                    <div style={{ fontSize: '22px', fontWeight: '700', color: '#065f46' }}>{overallAverage}%</div>
-                    <div style={{ fontSize: '9px', color: '#6b7280' }}>Overall Average</div>
-                  </div>
-                  <div style={{ textAlign: 'center', background: 'white', padding: '8px', borderRadius: '8px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
-                    <div style={{ fontSize: '22px', fontWeight: '700', color: attendance.percentage >= 90 ? '#16a34a' : attendance.percentage >= 75 ? '#ca8a04' : '#dc2626' }}>{attendance.percentage}%</div>
-                    <div style={{ fontSize: '9px', color: '#6b7280' }}>Attendance</div>
+              {/* Student Name, Class, Overall Average & Attendance - Green & Gold Gradient with Pattern */}
+              <div style={{ 
+                position: 'relative',
+                background: 'linear-gradient(135deg, #dcfce7 0%, #fef9c3 50%, #fde68a 100%)', 
+                border: '1px solid #bbf7d0', 
+                borderRadius: '12px', 
+                padding: '14px',
+                overflow: 'hidden'
+              }}>
+                {/* Star Pattern Background */}
+                <div style={{
+                  position: 'absolute',
+                  top: 0,
+                  left: 0,
+                  right: 0,
+                  bottom: 0,
+                  opacity: 0.15,
+                  backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='40' viewBox='0 0 40 40'%3E%3Cpath fill='%23065f46' d='M20 2l2.5 7.5H30l-6 4.5 2.5 7.5-6.5-5-6.5 5 2.5-7.5-6-4.5h7.5z'/%3E%3C/svg%3E")`,
+                  backgroundSize: '40px 40px'
+                }} />
+                <div style={{ position: 'relative', zIndex: 1 }}>
+                  <div style={{ fontSize: '18px', fontWeight: '700', color: '#065f46', marginBottom: '2px' }}>{studentName}</div>
+                  <div style={{ fontSize: '11px', color: '#6b7280', marginBottom: '10px' }}>Class: {studentClass}</div>
+                  
+                  {/* Overall Average & Attendance inside the name box */}
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
+                    <div style={{ textAlign: 'center', background: 'rgba(255,255,255,0.85)', padding: '8px', borderRadius: '8px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
+                      <div style={{ fontSize: '22px', fontWeight: '700', color: '#065f46' }}>{overallAverage}%</div>
+                      <div style={{ fontSize: '9px', color: '#6b7280' }}>Overall Average</div>
+                    </div>
+                    <div style={{ textAlign: 'center', background: 'rgba(255,255,255,0.85)', padding: '8px', borderRadius: '8px', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }}>
+                      <div style={{ fontSize: '22px', fontWeight: '700', color: attendance.percentage >= 90 ? '#16a34a' : attendance.percentage >= 75 ? '#ca8a04' : '#dc2626' }}>{attendance.percentage}%</div>
+                      <div style={{ fontSize: '9px', color: '#6b7280' }}>Attendance</div>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -281,34 +303,47 @@ export function ReportCardDialog({
             </div>
 
             {/* Academic Grades Table with Grading Key */}
-            <div style={{ marginBottom: '16px' }}>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px', paddingBottom: '6px', borderBottom: '2px solid #d1fae5' }}>
-                <h3 style={{ fontSize: '12px', fontWeight: '700', color: '#065f46', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                  📚 Academic Grades
-                </h3>
-                {/* Compact Grading Key Legend */}
-                <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
-                  {Object.entries(gradeColors).map(([grade, colors]) => (
-                    <div key={grade} style={{ display: 'flex', alignItems: 'center', gap: '2px' }}>
-                      <span style={{ 
-                        width: '16px', 
-                        height: '16px', 
-                        borderRadius: '3px', 
-                        display: 'flex', 
-                        alignItems: 'center', 
-                        justifyContent: 'center', 
-                        fontWeight: '700', 
-                        fontSize: '8px',
-                        backgroundColor: colors.bg,
-                        color: colors.text
-                      }}>
-                        {grade}
-                      </span>
-                      <span style={{ fontSize: '7px', color: '#6b7280' }}>{grade === "A*" ? "90+" : grade === "A" ? "80+" : grade === "B" ? "70+" : grade === "C" ? "60+" : grade === "D" ? "50+" : "<50"}</span>
-                    </div>
-                  ))}
+            <div style={{ position: 'relative', marginBottom: '16px', overflow: 'hidden' }}>
+              {/* Stars Pattern Background */}
+              <div style={{
+                position: 'absolute',
+                top: 0,
+                left: 0,
+                right: 0,
+                bottom: 0,
+                opacity: 0.06,
+                backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='50' height='50' viewBox='0 0 50 50'%3E%3Cpath fill='%23065f46' d='M25 5l3.5 10.5H39l-8.5 6.5 3.5 10.5-9-7-9 7 3.5-10.5L11 15.5h10.5z'/%3E%3C/svg%3E")`,
+                backgroundSize: '50px 50px',
+                pointerEvents: 'none'
+              }} />
+              <div style={{ position: 'relative', zIndex: 1 }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px', paddingBottom: '6px', borderBottom: '2px solid #d1fae5' }}>
+                  <h3 style={{ fontSize: '12px', fontWeight: '700', color: '#065f46', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    📚 Academic Grades
+                  </h3>
+                  {/* Compact Grading Key Legend */}
+                  <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
+                    {Object.entries(gradeColors).map(([grade, colors]) => (
+                      <div key={grade} style={{ display: 'flex', alignItems: 'center', gap: '2px' }}>
+                        <span style={{ 
+                          width: '16px', 
+                          height: '16px', 
+                          borderRadius: '3px', 
+                          display: 'flex', 
+                          alignItems: 'center', 
+                          justifyContent: 'center', 
+                          fontWeight: '700', 
+                          fontSize: '8px',
+                          backgroundColor: colors.bg,
+                          color: colors.text
+                        }}>
+                          {grade}
+                        </span>
+                        <span style={{ fontSize: '7px', color: '#6b7280' }}>{grade === "A*" ? "90+" : grade === "A" ? "80+" : grade === "B" ? "70+" : grade === "C" ? "60+" : grade === "D" ? "50+" : "<50"}</span>
+                      </div>
+                    ))}
+                  </div>
                 </div>
-              </div>
               <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '10px' }}>
                 <thead>
                   <tr>
@@ -349,6 +384,7 @@ export function ReportCardDialog({
                   })}
                 </tbody>
               </table>
+              </div>
             </div>
 
             {/* Homeroom Comment */}
