@@ -115,6 +115,7 @@ export default function TeacherAcademicPage() {
   const [isAtBottom, setIsAtBottom] = useState(false);
   const gradeEntryRef = useRef<HTMLDivElement>(null);
   const [studentGrades, setStudentGrades] = useState<Record<string, Record<string, StudentGrades>>>({});
+  const [classStudyRecommendation, setClassStudyRecommendation] = useState<Record<string, Record<string, string>>>({}); // class -> subject -> recommendation
   const [selectedYears, setSelectedYears] = useState<string[]>([academicYears[0]]);
   const [selectedYear, setSelectedYear] = useState(academicYears[0]); // For single-select dropdowns
   const [selectedPeriod, setSelectedPeriod] = useState<"midYear" | "yearEnd">("midYear");
@@ -1123,6 +1124,42 @@ export default function TeacherAcademicPage() {
                   );
                 })()}
               </div>
+
+              {/* Class Study Recommendation - Master Field */}
+              <Card className="border-amber-300 bg-amber-50/50 dark:bg-amber-950/20">
+                <CardContent className="p-3">
+                  <div className="flex items-center gap-2 mb-2">
+                    <div className="w-6 h-6 rounded-full bg-amber-100 dark:bg-amber-900/50 flex items-center justify-center">
+                      <Users className="h-3.5 w-3.5 text-amber-600" />
+                    </div>
+                    <label className="text-xs font-semibold text-amber-700 dark:text-amber-400">
+                      Class Study Recommendation
+                    </label>
+                    <Badge variant="outline" className="text-[10px] border-amber-300 text-amber-600 ml-auto">
+                      Applies to all
+                    </Badge>
+                  </div>
+                  <Textarea 
+                    placeholder="Enter a study recommendation for all students in this subject..." 
+                    value={classStudyRecommendation[selectedClass]?.[selectedEntrySubject] || ""} 
+                    onChange={e => {
+                      const value = e.target.value;
+                      setClassStudyRecommendation(prev => ({
+                        ...prev,
+                        [selectedClass]: {
+                          ...prev[selectedClass],
+                          [selectedEntrySubject]: value
+                        }
+                      }));
+                      // Also update all students' study recommendation
+                      students.forEach(student => {
+                        updateGrade(student.id, selectedEntrySubject, "studyRecommendation", value);
+                      });
+                    }} 
+                    className="min-h-[60px] text-sm resize-none border-amber-200 bg-background" 
+                  />
+                </CardContent>
+              </Card>
 
               {/* Student List for Grade Entry */}
               <div className="space-y-2">
