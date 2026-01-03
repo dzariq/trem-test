@@ -1672,56 +1672,21 @@ export default function AcademicPage() {
                             stroke="#f59e0b" 
                             strokeDasharray="5 5" 
                             strokeOpacity={0.6}
-                            label={{ value: "Pass", fontSize: 9, fill: "#f59e0b" }}
+                            label={{ value: "Pass", fontSize: 9, fill: "#f59e0b", position: "right" }}
                           />
                           <ReferenceLine 
                             y={80} 
                             stroke="#22c55e" 
                             strokeDasharray="5 5" 
                             strokeOpacity={0.6}
-                            label={{ value: "A", fontSize: 9, fill: "#22c55e" }}
+                            label={{ value: "A", fontSize: 9, fill: "#22c55e", position: "right" }}
                           />
                           <ReferenceLine 
                             y={trendGoalValue} 
                             stroke="hsl(var(--foreground))" 
                             strokeDasharray="4 4" 
                             strokeWidth={2}
-                            label={(labelProps: any) => {
-                              const vb = labelProps?.viewBox;
-                              if (!vb) return null;
-                              const text = "Goal";
-                              const fontSize = 9;
-                              const x = (vb.x ?? 0) + 6;
-                              const y = vb.y ?? 0;
-                              const textWidth = text.length * (fontSize * 0.6);
-                              const padX = 4;
-                              const rectW = textWidth + padX * 2;
-                              const rectH = fontSize + 4;
-                              const rectX = x - padX;
-                              const rectY = y - rectH / 2;
-
-                              return (
-                                <g>
-                                  <rect
-                                    x={rectX}
-                                    y={rectY}
-                                    width={rectW}
-                                    height={rectH}
-                                    rx={3}
-                                    fill="hsl(var(--card))"
-                                  />
-                                  <text
-                                    x={x}
-                                    y={y}
-                                    fontSize={fontSize}
-                                    fill="hsl(var(--foreground))"
-                                    dominantBaseline="middle"
-                                  >
-                                    {text}
-                                  </text>
-                                </g>
-                              );
-                            }}
+                            label={{ value: "Goal", fontSize: 9, fill: "hsl(var(--foreground))", position: "right" }}
                           />
                           {subjectFilter === "all" ? (
                             <Area
