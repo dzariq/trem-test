@@ -535,7 +535,7 @@ export default function TeacherAcademicPage() {
   // Year-over-year trend data with period filtering (like student page)
   const trendData = useMemo(() => {
     const data = subjectYearlyData[selectedClass as keyof typeof subjectYearlyData] || subjectYearlyData["5A"];
-    const years = data.map(d => d.year);
+    const years = data.map(d => String(d.year));
 
     // Create periods array (mid-year and year-end for each year except current)
     const periods: {
@@ -568,7 +568,7 @@ export default function TeacherAcademicPage() {
       filteredPeriods = periods.slice(-6);
     }
     return filteredPeriods.map(p => {
-      const yearData = data.find(d => d.year === p.year);
+      const yearData = data.find(d => String(d.year) === p.year);
       if (!yearData) return {
         period: p.label,
         Average: 0
@@ -576,16 +576,20 @@ export default function TeacherAcademicPage() {
       const result: Record<string, number | string | null> = {
         period: p.label
       };
-      result["Mathematics"] = yearData.Mathematics;
-      result["Science"] = yearData.Science;
-      result["English"] = yearData.English;
-      result["Arts"] = yearData.Arts;
-      result["Physical Education"] = yearData["Physical Education"];
-      result["Chinese as a Second Language"] = yearData["Chinese as a Second Language"];
+      
+      // Add all subjects from yearData (except 'year')
+      let totalScore = 0;
+      let subjectCount = 0;
+      Object.entries(yearData).forEach(([key, value]) => {
+        if (key !== 'year' && typeof value === 'number') {
+          result[key] = value;
+          totalScore += value;
+          subjectCount++;
+        }
+      });
 
       // Calculate average
-      const scores = [yearData.Mathematics, yearData.Science, yearData.English, yearData.Arts, yearData["Physical Education"], yearData["Chinese as a Second Language"]];
-      result["Average"] = Math.round(scores.reduce((a, b) => a + b, 0) / scores.length);
+      result["Average"] = subjectCount > 0 ? Math.round(totalScore / subjectCount) : 0;
       return result;
     });
   }, [selectedClass, trendPeriod]);
@@ -616,10 +620,12 @@ export default function TeacherAcademicPage() {
   // Rising subjects - biggest improvement from first to last period (filtered by selectedSubjects)
   const risingSubjects = useMemo(() => {
     if (trendData.length < 2) return [];
-    const subjectNames = ["Mathematics", "Science", "English", "Arts", "Physical Education", "Chinese as a Second Language"];
+    // Get all subject keys from trendData (excluding 'period' and 'Average')
+    const firstEntry = trendData[0];
+    const subjectNames = Object.keys(firstEntry).filter(k => k !== 'period' && k !== 'Average');
     return subjectNames.filter(name => selectedSubjects.includes(name)).map(name => {
-      const first = trendData[0]?.[name] as number ?? 0;
-      const last = trendData[trendData.length - 1]?.[name] as number ?? 0;
+      const first = (trendData[0]?.[name] as number) ?? 0;
+      const last = (trendData[trendData.length - 1]?.[name] as number) ?? 0;
       return {
         name,
         first,
@@ -632,10 +638,11 @@ export default function TeacherAcademicPage() {
   // Falling subjects - biggest decline (filtered by selectedSubjects)
   const fallingSubjects = useMemo(() => {
     if (trendData.length < 2) return [];
-    const subjectNames = ["Mathematics", "Science", "English", "Arts", "Physical Education", "Chinese as a Second Language"];
+    const firstEntry = trendData[0];
+    const subjectNames = Object.keys(firstEntry).filter(k => k !== 'period' && k !== 'Average');
     return subjectNames.filter(name => selectedSubjects.includes(name)).map(name => {
-      const first = trendData[0]?.[name] as number ?? 0;
-      const last = trendData[trendData.length - 1]?.[name] as number ?? 0;
+      const first = (trendData[0]?.[name] as number) ?? 0;
+      const last = (trendData[trendData.length - 1]?.[name] as number) ?? 0;
       return {
         name,
         first,
@@ -649,45 +656,21 @@ export default function TeacherAcademicPage() {
   const radarData = useMemo(() => {
     const data = subjectYearlyData[selectedClass as keyof typeof subjectYearlyData] || subjectYearlyData["5A"];
     const latest = data[data.length - 1];
-    const shortNames: Record<string, string> = {
-      "Mathematics": "Math",
-      "Science": "Science",
-      "English": "English",
-      "Arts": "Arts",
-      "Physical Education": "PE",
-      "Chinese as a Second Language": "Chinese"
-    };
-    const allSubjects = [{
-      name: "Mathematics",
-      subject: shortNames["Mathematics"],
-      score: latest.Mathematics,
-      fullMark: 100
-    }, {
-      name: "Science",
-      subject: shortNames["Science"],
-      score: latest.Science,
-      fullMark: 100
-    }, {
-      name: "English",
-      subject: shortNames["English"],
-      score: latest.English,
-      fullMark: 100
-    }, {
-      name: "Arts",
-      subject: shortNames["Arts"],
-      score: latest.Arts,
-      fullMark: 100
-    }, {
-      name: "Physical Education",
-      subject: shortNames["Physical Education"],
-      score: latest["Physical Education"],
-      fullMark: 100
-    }, {
-      name: "Chinese as a Second Language",
-      subject: shortNames["Chinese as a Second Language"],
-      score: latest["Chinese as a Second Language"],
-      fullMark: 100
-    }];
+    
+    // Build radar data from all subjects in the data
+    const allSubjects: { name: string; subject: string; score: number; fullMark: number }[] = [];
+    Object.entries(latest).forEach(([key, value]) => {
+      if (key !== 'year' && typeof value === 'number') {
+        // Create short name
+        const shortName = getShortSubjectName(key);
+        allSubjects.push({
+          name: key,
+          subject: shortName.length > 8 ? shortName.substring(0, 8) : shortName,
+          score: value,
+          fullMark: 100
+        });
+      }
+    });
     return allSubjects.filter(s => selectedSubjects.includes(s.name));
   }, [selectedClass, selectedSubjects]);
 
@@ -702,72 +685,38 @@ export default function TeacherAcademicPage() {
     const data = subjectYearlyData[selectedClass as keyof typeof subjectYearlyData] || subjectYearlyData["5A"];
     const latest = data[data.length - 1];
     const schoolAvg = 72; // Mock school average
-    const shortNames: Record<string, string> = {
-      "Mathematics": "Math",
-      "Science": "Science",
-      "English": "English",
-      "Arts": "Arts",
-      "Physical Education": "PE",
-      "Chinese as a Second Language": "Chinese"
-    };
-    const allSubjects = [{
-      name: shortNames["Mathematics"],
-      fullName: "Mathematics",
-      classScore: latest.Mathematics,
-      schoolAvg,
-      delta: latest.Mathematics - schoolAvg
-    }, {
-      name: shortNames["Science"],
-      fullName: "Science",
-      classScore: latest.Science,
-      schoolAvg,
-      delta: latest.Science - schoolAvg
-    }, {
-      name: shortNames["English"],
-      fullName: "English",
-      classScore: latest.English,
-      schoolAvg,
-      delta: latest.English - schoolAvg
-    }, {
-      name: shortNames["Arts"],
-      fullName: "Arts",
-      classScore: latest.Arts,
-      schoolAvg,
-      delta: latest.Arts - schoolAvg
-    }, {
-      name: shortNames["Physical Education"],
-      fullName: "Physical Education",
-      classScore: latest["Physical Education"],
-      schoolAvg,
-      delta: latest["Physical Education"] - schoolAvg
-    }, {
-      name: shortNames["Chinese as a Second Language"],
-      fullName: "Chinese as a Second Language",
-      classScore: latest["Chinese as a Second Language"],
-      schoolAvg,
-      delta: latest["Chinese as a Second Language"] - schoolAvg
-    }];
+    
+    // Build from all subjects in latest data
+    const allSubjects: { name: string; fullName: string; classScore: number; schoolAvg: number; delta: number }[] = [];
+    Object.entries(latest).forEach(([key, value]) => {
+      if (key !== 'year' && typeof value === 'number') {
+        const shortName = getShortSubjectName(key);
+        allSubjects.push({
+          name: shortName.length > 8 ? shortName.substring(0, 8) : shortName,
+          fullName: key,
+          classScore: value,
+          schoolAvg,
+          delta: value - schoolAvg
+        });
+      }
+    });
     return allSubjects.filter(s => selectedSubjects.includes(s.fullName)).sort((a, b) => b.delta - a.delta);
   }, [selectedClass, selectedSubjects]);
 
   // Performance Heatmap data (filtered by selectedSubjects)
   const heatmapData = useMemo(() => {
     const data = subjectYearlyData[selectedClass as keyof typeof subjectYearlyData] || subjectYearlyData["5A"];
-    const subjectKeys = ["Mathematics", "Science", "English", "Arts", "Physical Education", "Chinese as a Second Language"] as const;
-    const shortNames: Record<string, string> = {
-      "Mathematics": "Math",
-      "Science": "Sci",
-      "English": "Eng",
-      "Arts": "Arts",
-      "Physical Education": "PE",
-      "Chinese as a Second Language": "Chi"
-    };
+    
+    // Get all subject keys from the first entry
+    const firstEntry = data[0];
+    const subjectKeys = Object.keys(firstEntry).filter(k => k !== 'year');
+    
     return subjectKeys.filter(subject => selectedSubjects.includes(subject)).map(subject => ({
-      subject: shortNames[subject],
+      subject: getShortSubjectName(subject).substring(0, 6),
       fullName: subject,
       scores: data.map(yearData => ({
-        period: yearData.year,
-        score: yearData[subject]
+        period: String(yearData.year),
+        score: typeof yearData[subject] === 'number' ? yearData[subject] as number : null
       }))
     }));
   }, [selectedClass, selectedSubjects]);
