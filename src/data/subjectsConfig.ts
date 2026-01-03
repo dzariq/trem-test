@@ -56,6 +56,36 @@ export const subjectGroups: SubjectGroup[] = [
       { name: "Chemistry", shortName: "Chemistry" },
       { name: "Physics", shortName: "Physics" }
     ]
+  },
+  {
+    baseName: "Humanities",
+    shortName: "Humanities",
+    variants: [
+      { name: "Business Studies", shortName: "Business" },
+      { name: "Accounting", shortName: "Accounting" },
+      { name: "Economics", shortName: "Economics" }
+    ]
+  },
+  {
+    baseName: "Social Studies",
+    shortName: "Social St.",
+    variants: [
+      { name: "Global Perspectives", shortName: "Global Persp" },
+      { name: "Geography", shortName: "Geography" },
+      { name: "History", shortName: "History" }
+    ]
+  },
+  {
+    baseName: "Others",
+    shortName: "Others",
+    variants: [
+      { name: "ICT", shortName: "ICT" },
+      { name: "Living Skills & Arts", shortName: "Living Skills" },
+      { name: "Art", shortName: "Art" },
+      { name: "Music", shortName: "Music" },
+      { name: "Moral", shortName: "Moral" },
+      { name: "Islamic Studies", shortName: "Islamic St." }
+    ]
   }
 ];
 
@@ -77,20 +107,19 @@ export const allSubjects: string[] = [
   // Mathematics
   "Mathematics",
   "Additional Mathematics",
-  // Technology
-  "ICT",
-  // Business & Commerce
+  // Humanities (Business)
   "Business Studies",
   "Accounting",
   "Economics",
-  // Humanities
+  // Social Studies
   "Global Perspectives",
-  "History",
   "Geography",
-  // Arts & Skills
+  "History",
+  // Others
+  "ICT",
   "Living Skills & Arts",
+  "Art",
   "Music",
-  // Values
   "Moral",
   "Islamic Studies"
 ];

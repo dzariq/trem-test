@@ -460,6 +460,16 @@ export const academicData = {
       }
     },
     { 
+      name: "Art", 
+      teacherComment: "Exceptional creativity and artistic talent! Emma's work is always inspiring and thoughtfully composed.",
+      scores: {
+        "2022": { midYear: 84, yearEnd: 86, attitude: 88, homework: 86, quiz: 82, exam: 84 },
+        "2023": { midYear: 88, yearEnd: 90, attitude: 92, homework: 90, quiz: 85, exam: 88 },
+        "2024": { midYear: 90, yearEnd: 92, attitude: 94, homework: 92, quiz: 88, exam: 90 },
+        "2025": { midYear: 95, yearEnd: null, attitude: 96, homework: 95, quiz: 92, exam: 95 }
+      }
+    },
+    { 
       name: "Music", 
       teacherComment: "Shows interest in music theory. Practice more on rhythm and timing.",
       scores: {
@@ -531,9 +541,9 @@ export const classAverages = {
       "Chinese (Foreign Language)": 70, "Chinese (Second Language)": 72, "Chinese (Beginner)": 58,
       "Science": 70, "Biology": 72, "Chemistry": 65, "Physics": 62,
       "Mathematics": 65, "Additional Mathematics": 68,
-      "ICT": 66, "Business Studies": 70, "Accounting": 75, "Economics": 68,
+      "Business Studies": 70, "Accounting": 75, "Economics": 68,
       "Global Perspectives": 72, "History": 62, "Geography": 70,
-      "Living Skills & Arts": 68, "Music": 60, "Moral": 72, "Islamic Studies": 78
+      "ICT": 66, "Living Skills & Arts": 68, "Art": 75, "Music": 60, "Moral": 72, "Islamic Studies": 78
     }
   },
   "2023": { 
@@ -544,9 +554,9 @@ export const classAverages = {
       "Chinese (Foreign Language)": 74, "Chinese (Second Language)": 76, "Chinese (Beginner)": 62,
       "Science": 74, "Biology": 76, "Chemistry": 68, "Physics": 65,
       "Mathematics": 70, "Additional Mathematics": 72,
-      "ICT": 70, "Business Studies": 74, "Accounting": 78, "Economics": 72,
+      "Business Studies": 74, "Accounting": 78, "Economics": 72,
       "Global Perspectives": 76, "History": 66, "Geography": 74,
-      "Living Skills & Arts": 72, "Music": 64, "Moral": 75, "Islamic Studies": 82
+      "ICT": 70, "Living Skills & Arts": 72, "Art": 78, "Music": 64, "Moral": 75, "Islamic Studies": 82
     }
   },
   "2024": { 
@@ -557,9 +567,9 @@ export const classAverages = {
       "Chinese (Foreign Language)": 76, "Chinese (Second Language)": 78, "Chinese (Beginner)": 66,
       "Science": 80, "Biology": 80, "Chemistry": 72, "Physics": 68,
       "Mathematics": 74, "Additional Mathematics": 76,
-      "ICT": 74, "Business Studies": 78, "Accounting": 82, "Economics": 76,
+      "Business Studies": 78, "Accounting": 82, "Economics": 76,
       "Global Perspectives": 80, "History": 70, "Geography": 78,
-      "Living Skills & Arts": 75, "Music": 68, "Moral": 78, "Islamic Studies": 86
+      "ICT": 74, "Living Skills & Arts": 75, "Art": 82, "Music": 68, "Moral": 78, "Islamic Studies": 86
     }
   },
   "2025": { 
@@ -570,9 +580,9 @@ export const classAverages = {
       "Chinese (Foreign Language)": 78, "Chinese (Second Language)": 80, "Chinese (Beginner)": 70,
       "Science": 84, "Biology": 84, "Chemistry": 76, "Physics": 72,
       "Mathematics": 78, "Additional Mathematics": 80,
-      "ICT": 78, "Business Studies": 82, "Accounting": 86, "Economics": 80,
+      "Business Studies": 82, "Accounting": 86, "Economics": 80,
       "Global Perspectives": 84, "History": 72, "Geography": 82,
-      "Living Skills & Arts": 76, "Music": 70, "Moral": 80, "Islamic Studies": 90
+      "ICT": 78, "Living Skills & Arts": 76, "Art": 88, "Music": 70, "Moral": 80, "Islamic Studies": 90
     }
   }
 };
