@@ -244,6 +244,8 @@ export const academicData = {
     { 
       name: "English (First Language)", 
       teacherComment: "Emma shows excellent reading comprehension and creative writing skills. Her vocabulary has expanded significantly this term, and she consistently demonstrates strong analytical thinking in her essays. She actively participates in class discussions and often helps her peers with their work. Keep up the great work!",
+      classStudyRecommendation: "Focus on literary analysis techniques and essay structure. Practice writing under timed conditions.",
+      studyRecommendation: "Read diverse literature genres. Practice daily journaling and vocabulary building exercises.",
       scores: {
         "2022": { midYear: 88, yearEnd: 90, attitude: 92, homework: 94, quiz: 86, exam: 88 },
         "2023": { midYear: 90, yearEnd: 92, attitude: 94, homework: 95, quiz: 88, exam: 90 },
@@ -255,6 +257,8 @@ export const academicData = {
     { 
       name: "Mathematics", 
       teacherComment: "Strong problem-solving skills with excellent work in algebra and geometry. Emma approaches complex mathematical challenges with confidence and perseverance. She shows remarkable ability to apply concepts to real-world problems and consistently submits high-quality homework assignments.",
+      classStudyRecommendation: "Practice advanced problem sets and participate in math olympiad training. Focus on algebraic manipulation.",
+      studyRecommendation: "Complete daily practice problems. Use online resources for additional challenging exercises.",
       scores: {
         "2022": { midYear: 82, yearEnd: 84, attitude: 86, homework: 85, quiz: 80, exam: 82 },
         "2023": { midYear: 84, yearEnd: 86, attitude: 88, homework: 87, quiz: 82, exam: 84 },
@@ -266,6 +270,8 @@ export const academicData = {
     { 
       name: "Science", 
       teacherComment: "Good understanding of scientific concepts with genuine enthusiasm shown during lab work. Emma demonstrates curiosity in exploring scientific phenomena and asks thoughtful questions. She collaborates well with lab partners and maintains detailed notes. Continued focus on theoretical concepts will help further improvement.",
+      classStudyRecommendation: "Review lab procedures before practical sessions. Focus on understanding scientific method and hypothesis testing.",
+      studyRecommendation: "Watch educational science videos. Conduct simple experiments at home to reinforce concepts.",
       scores: {
         "2022": { midYear: 72, yearEnd: 74, attitude: 78, homework: 76, quiz: 70, exam: 72 },
         "2023": { midYear: 74, yearEnd: 76, attitude: 80, homework: 78, quiz: 72, exam: 74 },
@@ -277,6 +283,8 @@ export const academicData = {
     { 
       name: "Geography", 
       teacherComment: "Outstanding map reading skills with excellent understanding of climate patterns and geographical phenomena. Emma consistently produces well-researched projects and demonstrates strong spatial awareness. Her fieldwork contributions are exemplary, and she often provides insightful observations during class discussions.",
+      classStudyRecommendation: "Lead group projects on environmental topics. Practice map interpretation and data analysis skills.",
+      studyRecommendation: "Explore geography documentaries. Create mind maps linking geographical concepts together.",
       scores: {
         "2022": { midYear: 90, yearEnd: 92, attitude: 94, homework: 93, quiz: 88, exam: 90 },
         "2023": { midYear: 92, yearEnd: 94, attitude: 95, homework: 94, quiz: 90, exam: 92 },
@@ -288,6 +296,8 @@ export const academicData = {
     { 
       name: "History", 
       teacherComment: "Needs to improve essay writing structure and source analysis skills. However, Emma shows good participation in class discussions and demonstrates genuine interest in historical events. With more focus on written work and regular revision of key dates and events, she has potential to improve significantly.",
+      classStudyRecommendation: "Attend essay writing workshops. Practice source analysis with peer feedback sessions.",
+      studyRecommendation: "Create timeline flashcards for key events. Practice essay plans before writing full responses.",
       scores: {
         "2022": { midYear: 60, yearEnd: 62, attitude: 68, homework: 65, quiz: 58, exam: 60 },
         "2023": { midYear: 62, yearEnd: 64, attitude: 70, homework: 67, quiz: 60, exam: 62 },
@@ -299,6 +309,8 @@ export const academicData = {
     { 
       name: "Art", 
       teacherComment: "Creative and expressive with good artistic potential. Emma experiments boldly with different mediums and techniques. Her portfolio shows consistent growth and originality. She takes constructive feedback well and applies it to improve her work. Encouraged to explore more contemporary art styles.",
+      classStudyRecommendation: "Participate in art club activities. Experiment with mixed media techniques in class projects.",
+      studyRecommendation: "Visit art galleries and museums. Keep a daily sketch journal to develop drawing skills.",
       scores: {
         "2022": { midYear: 74, yearEnd: 76, attitude: 82, homework: 80, quiz: 72, exam: 74 },
         "2023": { midYear: 76, yearEnd: 78, attitude: 84, homework: 82, quiz: 74, exam: 76 },
@@ -310,6 +322,8 @@ export const academicData = {
     { 
       name: "Physics", 
       teacherComment: "Struggles with complex concepts and requires additional support and practice. Emma needs to dedicate more time to understanding fundamental principles and practicing problem-solving. Recommended to attend extra help sessions and complete practice exercises regularly to build confidence.",
+      classStudyRecommendation: "Attend remedial classes and peer tutoring sessions. Focus on understanding basic formulas first.",
+      studyRecommendation: "Use visual learning aids and physics simulations. Practice with worked examples before attempting problems.",
       scores: {
         "2022": { midYear: 48, yearEnd: 50, attitude: 58, homework: 55, quiz: 46, exam: 48 },
         "2023": { midYear: 50, yearEnd: 52, attitude: 60, homework: 57, quiz: 48, exam: 50 },
@@ -321,6 +335,8 @@ export const academicData = {
     { 
       name: "Malay (First Language)", 
       teacherComment: "Excellent command of Bahasa Malaysia with outstanding essay writing skills. Emma demonstrates sophisticated vocabulary usage and excellent grammar. Her oral presentations are confident and well-prepared. She actively contributes to class discussions and shows appreciation for Malay literature and culture.",
+      classStudyRecommendation: "Lead oral presentation activities. Mentor peers in essay writing techniques.",
+      studyRecommendation: "Read Malay novels and newspapers. Practice creative writing and formal letter formats.",
       scores: {
         "2022": { midYear: 80, yearEnd: 82, attitude: 86, homework: 84, quiz: 78, exam: 80 },
         "2023": { midYear: 82, yearEnd: 84, attitude: 88, homework: 86, quiz: 80, exam: 82 },
@@ -332,6 +348,8 @@ export const academicData = {
     { 
       name: "Chemistry", 
       teacherComment: "Significant improvement needed in understanding equations and chemical formulas. Emma finds balancing equations and stoichiometry challenging. Consistent practice, regular revision, and attending remedial classes are strongly recommended. Parent support with homework review would be beneficial for progress.",
+      classStudyRecommendation: "Join chemistry study group. Attend all remedial sessions and laboratory practice.",
+      studyRecommendation: "Use flashcards for chemical formulas. Practice balancing equations daily with online tools.",
       scores: {
         "2022": { midYear: 38, yearEnd: 40, attitude: 52, homework: 48, quiz: 36, exam: 38 },
         "2023": { midYear: 40, yearEnd: 42, attitude: 54, homework: 50, quiz: 38, exam: 40 },
@@ -343,6 +361,8 @@ export const academicData = {
     { 
       name: "ICT", 
       teacherComment: "Shows genuine interest in programming and digital technology. Emma needs to focus more on completing practical assignments on time and applying theoretical knowledge to hands-on projects. With better time management and more practice, she can significantly improve her practical skills.",
+      classStudyRecommendation: "Complete all practical assignments on time. Participate in coding club activities.",
+      studyRecommendation: "Practice coding on online platforms. Build small projects to apply theoretical knowledge.",
       scores: {
         "2022": { midYear: 62, yearEnd: 64, attitude: 72, homework: 68, quiz: 60, exam: 62 },
         "2023": { midYear: 64, yearEnd: 66, attitude: 74, homework: 70, quiz: 62, exam: 64 },
@@ -354,6 +374,8 @@ export const academicData = {
     { 
       name: "Biology", 
       teacherComment: "Good understanding of biological concepts with strong lab work skills. Emma shows particular interest in ecology and human biology topics. Her dissection techniques and microscope work are commendable. Continued focus on memorizing terminology and biological processes will help achieve even better results.",
+      classStudyRecommendation: "Lead lab group activities. Focus on mastering biological diagrams and labeling.",
+      studyRecommendation: "Create revision cards for terminology. Watch biology documentaries for deeper understanding.",
       scores: {
         "2022": { midYear: 70, yearEnd: 72, attitude: 78, homework: 75, quiz: 68, exam: 70 },
         "2023": { midYear: 72, yearEnd: 74, attitude: 80, homework: 77, quiz: 70, exam: 72 },
@@ -365,6 +387,8 @@ export const academicData = {
     { 
       name: "Islamic Studies", 
       teacherComment: "Excellent understanding of Islamic principles with active participation in class discussions and activities. Emma demonstrates respectful and thoughtful approach to religious studies. Her recitation is improving steadily, and she shows genuine interest in applying Islamic values in daily life.",
+      classStudyRecommendation: "Lead class discussions on Islamic values. Help organize religious activities and events.",
+      studyRecommendation: "Practice daily recitation. Read Islamic literature and reflect on practical applications.",
       scores: {
         "2022": { midYear: 82, yearEnd: 84, attitude: 90, homework: 88, quiz: 80, exam: 82 },
         "2023": { midYear: 84, yearEnd: 86, attitude: 92, homework: 90, quiz: 82, exam: 84 },
@@ -376,6 +400,8 @@ export const academicData = {
     { 
       name: "Additional Mathematics", 
       teacherComment: "Finds advanced mathematical concepts challenging and needs consistent practice to build confidence. Emma should focus on mastering foundational topics before moving to complex problems. Regular practice with past papers and seeking help during consultation hours is recommended.",
+      classStudyRecommendation: "Attend all consultation sessions. Work with peer tutors on challenging topics.",
+      studyRecommendation: "Start with basic problems before advancing. Use step-by-step solution guides for practice.",
       scores: {
         "2022": { midYear: 50, yearEnd: 52, attitude: 60, homework: 56, quiz: 48, exam: 50 },
         "2023": { midYear: 52, yearEnd: 54, attitude: 62, homework: 58, quiz: 50, exam: 52 },
@@ -387,6 +413,8 @@ export const academicData = {
     { 
       name: "Chinese (Foreign Language)", 
       teacherComment: "Emma shows good progress in learning Chinese characters and pronunciation. Her conversational skills have improved significantly this term. She participates actively in class activities and shows genuine interest in Chinese culture.",
+      classStudyRecommendation: "Practice speaking with classmates. Participate in Chinese cultural activities.",
+      studyRecommendation: "Learn 5 new characters daily. Watch Chinese shows with subtitles for immersion.",
       scores: {
         "2022": { midYear: 70, yearEnd: 72, attitude: 78, homework: 75, quiz: 68, exam: 70 },
         "2023": { midYear: 72, yearEnd: 74, attitude: 80, homework: 77, quiz: 70, exam: 72 },
@@ -398,6 +426,8 @@ export const academicData = {
     { 
       name: "Business Studies", 
       teacherComment: "Emma demonstrates excellent understanding of business concepts and market dynamics. Her case study analyses are thorough and insightful. She shows strong analytical thinking and applies theoretical knowledge well to real-world business scenarios.",
+      classStudyRecommendation: "Lead case study presentations. Participate in business simulation activities.",
+      studyRecommendation: "Follow business news regularly. Analyze real company case studies for practice.",
       scores: {
         "2022": { midYear: 80, yearEnd: 82, attitude: 86, homework: 84, quiz: 78, exam: 80 },
         "2023": { midYear: 82, yearEnd: 84, attitude: 88, homework: 86, quiz: 80, exam: 82 },
@@ -409,6 +439,8 @@ export const academicData = {
     { 
       name: "Accounting", 
       teacherComment: "Good grasp of accounting principles and financial statements. Emma is meticulous with her calculations and maintains neat work. She needs to continue practicing journal entries and balance sheets to further strengthen her skills.",
+      classStudyRecommendation: "Practice ledger entries in class exercises. Help peers with basic calculations.",
+      studyRecommendation: "Complete practice questions daily. Use accounting software for hands-on experience.",
       scores: {
         "2022": { midYear: 72, yearEnd: 74, attitude: 80, homework: 78, quiz: 70, exam: 72 },
         "2023": { midYear: 74, yearEnd: 76, attitude: 82, homework: 80, quiz: 72, exam: 74 },
@@ -420,6 +452,8 @@ export const academicData = {
     { 
       name: "Economics", 
       teacherComment: "Emma shows developing understanding of economic principles. She grasps microeconomics concepts well but needs more focus on macroeconomic theories. Regular reading of economic news and current affairs will help improve her contextual understanding.",
+      classStudyRecommendation: "Participate in economics debates. Focus on current events discussions in class.",
+      studyRecommendation: "Read economic news daily. Create summary notes linking theory to real-world examples.",
       scores: {
         "2022": { midYear: 62, yearEnd: 64, attitude: 70, homework: 68, quiz: 60, exam: 62 },
         "2023": { midYear: 64, yearEnd: 66, attitude: 72, homework: 70, quiz: 62, exam: 64 },

@@ -1083,7 +1083,9 @@ export default function AcademicPage() {
       name: s.name,
       score: getScore(s, selectedYear, examType),
       grade: getScore(s, selectedYear, examType) !== null ? getGradeFromScore(getScore(s, selectedYear, examType)!) : "Pending",
-      teacherComment: s.teacherComment || "Good progress this term."
+      teacherComment: s.teacherComment || "Good progress this term.",
+      classStudyRecommendation: (s as any).classStudyRecommendation || "",
+      studyRecommendation: (s as any).studyRecommendation || ""
     }))} behavior={academicData.behavior} homeroomComment={academicData.behaviorComments?.homeroomComment || "The student shows good potential and continues to make progress."} attendance={{
       present: attendanceData.currentMonth?.present || 85,
       absent: attendanceData.currentMonth?.absent || 5,
