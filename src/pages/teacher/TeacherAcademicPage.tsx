@@ -1070,6 +1070,9 @@ export default function TeacherAcademicPage() {
                   <SelectItem value="Homeroom Behavior" className="font-semibold text-purple-600">
                     Homeroom Behavior
                   </SelectItem>
+                  <SelectItem value="CCA Awards" className="font-semibold text-amber-600">
+                    CCA Awards
+                  </SelectItem>
                   <div className="h-px bg-border my-1" />
                   {subjects.map(subject => <SelectItem key={subject} value={subject}>{subject}</SelectItem>)}
                 </SelectContent>
@@ -1217,6 +1220,226 @@ export default function TeacherAcademicPage() {
                   toast({
                     title: "Behavior Saved",
                     description: `Homeroom behavior for ${selectedClass} has been saved.`,
+                  });
+                }}
+              >
+                <Save className="h-6 w-6" />
+              </Button>
+            </> : selectedEntrySubject === "CCA Awards" ? <>
+              {/* Awards Header */}
+              <Card className="bg-amber-50 dark:bg-amber-950/20 border-amber-200">
+                <CardContent className="p-3">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="font-semibold text-foreground">CCA Awards</p>
+                      <p className="text-sm text-muted-foreground">Class {selectedClass} • {students.length} students</p>
+                    </div>
+                    <Badge variant="outline" className="bg-amber-100 border-amber-300 text-amber-600">
+                      <Award className="h-3 w-3 mr-1" />
+                      Awards
+                    </Badge>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Student List for Awards Entry */}
+              <div className="space-y-2">
+                {students.map(student => {
+                  const isExpanded = expandedStudents.includes(student.id);
+                  const awards = getStudentAwards(student.id);
+                  const totalEntries = awards.sportsHouse.length + awards.clubs.length + awards.leadership.length + awards.events.length + awards.achievements.length;
+                  const hasData = totalEntries > 0;
+                  
+                  return (
+                    <Collapsible key={student.id} open={isExpanded} onOpenChange={() => toggleStudent(student.id)}>
+                      <Card className={cn("overflow-hidden transition-colors", isExpanded ? "border-amber-400 shadow-md" : "")}>
+                        <CollapsibleTrigger asChild>
+                          <CardHeader className="p-3 cursor-pointer hover:bg-accent/30 transition-colors">
+                            <div className="flex items-center justify-between gap-3">
+                              <div className="flex items-center gap-3 flex-1 min-w-0">
+                                <div className="w-8 h-8 rounded-full bg-amber-100 flex items-center justify-center flex-shrink-0">
+                                  <span className="text-xs font-semibold text-amber-600">
+                                    {student.name.split(' ').map(n => n[0]).join('').slice(0, 2)}
+                                  </span>
+                                </div>
+                                <div className="min-w-0 flex-1">
+                                  <p className="text-sm font-semibold text-foreground truncate">{student.name}</p>
+                                  {hasData && !isExpanded && (
+                                    <p className="text-xs text-amber-600">{totalEntries} award(s) added</p>
+                                  )}
+                                  {!hasData && !isExpanded && (
+                                    <p className="text-xs text-muted-foreground">No awards yet</p>
+                                  )}
+                                </div>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                {hasData && (
+                                  <Badge variant="outline" className="text-xs px-2 py-0.5 border-amber-300 text-amber-600">
+                                    {totalEntries}
+                                  </Badge>
+                                )}
+                                {isExpanded ? <ChevronUp className="h-4 w-4 text-muted-foreground" /> : <ChevronDown className="h-4 w-4 text-muted-foreground" />}
+                              </div>
+                            </div>
+                          </CardHeader>
+                        </CollapsibleTrigger>
+                        
+                        <CollapsibleContent>
+                          <CardContent className="p-3 pt-0 space-y-3">
+                            {/* Sports House */}
+                            <div className="p-2 rounded-lg bg-orange-50 dark:bg-orange-950/20 border border-orange-200">
+                              <div className="flex items-center justify-between mb-2">
+                                <label className="text-xs font-semibold text-orange-700 uppercase">Sports House</label>
+                                <Button
+                                  size="sm"
+                                  variant="ghost"
+                                  className="h-6 px-2 text-orange-700 hover:bg-orange-100"
+                                  onClick={() => addAwardEntry(student.id, "sportsHouse")}
+                                >
+                                  <Plus className="h-3 w-3 mr-1" />
+                                  Add
+                                </Button>
+                              </div>
+                              {awards.sportsHouse.length === 0 ? (
+                                <p className="text-[10px] text-muted-foreground text-center py-1">No entries</p>
+                              ) : (
+                                <div className="space-y-2">
+                                  {awards.sportsHouse.map(entry => (
+                                    <div key={entry.id} className="grid grid-cols-[1fr_1fr_auto] gap-1.5 items-end">
+                                      <Select value={entry.organization} onValueChange={(v) => updateAwardEntry(student.id, "sportsHouse", entry.id, "organization", v)}>
+                                        <SelectTrigger className="h-8 text-xs bg-background"><SelectValue /></SelectTrigger>
+                                        <SelectContent>{sportsHouseOptions.map(opt => <SelectItem key={opt} value={opt}>{opt}</SelectItem>)}</SelectContent>
+                                      </Select>
+                                      <Select value={entry.role} onValueChange={(v) => updateAwardEntry(student.id, "sportsHouse", entry.id, "role", v)}>
+                                        <SelectTrigger className="h-8 text-xs bg-background"><SelectValue /></SelectTrigger>
+                                        <SelectContent>{roleOptions.map(opt => <SelectItem key={opt} value={opt}>{opt}</SelectItem>)}</SelectContent>
+                                      </Select>
+                                      <Button size="icon" variant="ghost" className="h-8 w-8 text-red-500" onClick={() => removeAwardEntry(student.id, "sportsHouse", entry.id)}><X className="h-3 w-3" /></Button>
+                                    </div>
+                                  ))}
+                                </div>
+                              )}
+                            </div>
+
+                            {/* Clubs */}
+                            <div className="p-2 rounded-lg bg-sky-50 dark:bg-sky-950/20 border border-sky-200">
+                              <div className="flex items-center justify-between mb-2">
+                                <label className="text-xs font-semibold text-sky-700 uppercase">Clubs</label>
+                                <Button
+                                  size="sm"
+                                  variant="ghost"
+                                  className="h-6 px-2 text-sky-700 hover:bg-sky-100"
+                                  onClick={() => addAwardEntry(student.id, "clubs")}
+                                >
+                                  <Plus className="h-3 w-3 mr-1" />
+                                  Add
+                                </Button>
+                              </div>
+                              {awards.clubs.length === 0 ? (
+                                <p className="text-[10px] text-muted-foreground text-center py-1">No entries</p>
+                              ) : (
+                                <div className="space-y-2">
+                                  {awards.clubs.map(entry => (
+                                    <div key={entry.id} className="grid grid-cols-[1fr_1fr_auto] gap-1.5 items-end">
+                                      <Select value={entry.organization} onValueChange={(v) => updateAwardEntry(student.id, "clubs", entry.id, "organization", v)}>
+                                        <SelectTrigger className="h-8 text-xs bg-background"><SelectValue /></SelectTrigger>
+                                        <SelectContent>{clubOptions.map(opt => <SelectItem key={opt} value={opt}>{opt}</SelectItem>)}</SelectContent>
+                                      </Select>
+                                      <Select value={entry.role} onValueChange={(v) => updateAwardEntry(student.id, "clubs", entry.id, "role", v)}>
+                                        <SelectTrigger className="h-8 text-xs bg-background"><SelectValue /></SelectTrigger>
+                                        <SelectContent>{roleOptions.map(opt => <SelectItem key={opt} value={opt}>{opt}</SelectItem>)}</SelectContent>
+                                      </Select>
+                                      <Button size="icon" variant="ghost" className="h-8 w-8 text-red-500" onClick={() => removeAwardEntry(student.id, "clubs", entry.id)}><X className="h-3 w-3" /></Button>
+                                    </div>
+                                  ))}
+                                </div>
+                              )}
+                            </div>
+
+                            {/* Leadership */}
+                            <div className="p-2 rounded-lg bg-emerald-50 dark:bg-emerald-950/20 border border-emerald-200">
+                              <div className="flex items-center justify-between mb-2">
+                                <label className="text-xs font-semibold text-emerald-700 uppercase">Leadership</label>
+                                <Button
+                                  size="sm"
+                                  variant="ghost"
+                                  className="h-6 px-2 text-emerald-700 hover:bg-emerald-100"
+                                  onClick={() => addAwardEntry(student.id, "leadership")}
+                                >
+                                  <Plus className="h-3 w-3 mr-1" />
+                                  Add
+                                </Button>
+                              </div>
+                              {awards.leadership.length === 0 ? (
+                                <p className="text-[10px] text-muted-foreground text-center py-1">No entries</p>
+                              ) : (
+                                <div className="space-y-2">
+                                  {awards.leadership.map(entry => (
+                                    <div key={entry.id} className="grid grid-cols-[1fr_1fr_auto] gap-1.5 items-end">
+                                      <Select value={entry.organization} onValueChange={(v) => updateAwardEntry(student.id, "leadership", entry.id, "organization", v)}>
+                                        <SelectTrigger className="h-8 text-xs bg-background"><SelectValue /></SelectTrigger>
+                                        <SelectContent>{leadershipOptions.map(opt => <SelectItem key={opt} value={opt}>{opt}</SelectItem>)}</SelectContent>
+                                      </Select>
+                                      <Select value={entry.role} onValueChange={(v) => updateAwardEntry(student.id, "leadership", entry.id, "role", v)}>
+                                        <SelectTrigger className="h-8 text-xs bg-background"><SelectValue /></SelectTrigger>
+                                        <SelectContent>{roleOptions.map(opt => <SelectItem key={opt} value={opt}>{opt}</SelectItem>)}</SelectContent>
+                                      </Select>
+                                      <Button size="icon" variant="ghost" className="h-8 w-8 text-red-500" onClick={() => removeAwardEntry(student.id, "leadership", entry.id)}><X className="h-3 w-3" /></Button>
+                                    </div>
+                                  ))}
+                                </div>
+                              )}
+                            </div>
+
+                            {/* Achievements */}
+                            <div className="p-2 rounded-lg bg-violet-50 dark:bg-violet-950/20 border border-violet-200">
+                              <div className="flex items-center justify-between mb-2">
+                                <label className="text-xs font-semibold text-violet-700 uppercase">Achievements</label>
+                                <Button
+                                  size="sm"
+                                  variant="ghost"
+                                  className="h-6 px-2 text-violet-700 hover:bg-violet-100"
+                                  onClick={() => addAchievementEntry(student.id)}
+                                >
+                                  <Plus className="h-3 w-3 mr-1" />
+                                  Add
+                                </Button>
+                              </div>
+                              {awards.achievements.length === 0 ? (
+                                <p className="text-[10px] text-muted-foreground text-center py-1">No entries</p>
+                              ) : (
+                                <div className="space-y-2">
+                                  {awards.achievements.map(entry => (
+                                    <div key={entry.id} className="grid grid-cols-[1fr_1fr_auto] gap-1.5 items-end">
+                                      <Select value={entry.event} onValueChange={(v) => updateAchievementEntry(student.id, entry.id, "event", v)}>
+                                        <SelectTrigger className="h-8 text-xs bg-background"><SelectValue /></SelectTrigger>
+                                        <SelectContent>{achievementEventOptions.map(opt => <SelectItem key={opt} value={opt}>{opt}</SelectItem>)}</SelectContent>
+                                      </Select>
+                                      <Select value={entry.award} onValueChange={(v) => updateAchievementEntry(student.id, entry.id, "award", v)}>
+                                        <SelectTrigger className="h-8 text-xs bg-background"><SelectValue /></SelectTrigger>
+                                        <SelectContent>{achievementAwardOptions.map(opt => <SelectItem key={opt} value={opt}>{opt}</SelectItem>)}</SelectContent>
+                                      </Select>
+                                      <Button size="icon" variant="ghost" className="h-8 w-8 text-red-500" onClick={() => removeAchievementEntry(student.id, entry.id)}><X className="h-3 w-3" /></Button>
+                                    </div>
+                                  ))}
+                                </div>
+                              )}
+                            </div>
+                          </CardContent>
+                        </CollapsibleContent>
+                      </Card>
+                    </Collapsible>
+                  );
+                })}
+              </div>
+
+              {/* Floating Save Button */}
+              <Button 
+                className="fixed z-50 shadow-xl bottom-24 right-4 h-14 w-14 rounded-full p-0 bg-amber-600 hover:bg-amber-700"
+                onClick={() => {
+                  toast({
+                    title: "Awards Saved",
+                    description: `CCA Awards for ${selectedClass} have been saved.`,
                   });
                 }}
               >
