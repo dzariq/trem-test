@@ -34,7 +34,7 @@ import {
   BookOpen,
   Utensils,
   Flag,
-  TreePine,
+  
   Check,
   X
 } from "lucide-react";
@@ -476,7 +476,7 @@ export default function ProfilePage() {
               {/* Student Options - Meal Plan, Sports House, Outdoor CCA */}
               <div className="space-y-3">
                 <span className="font-medium text-foreground">Student Options</span>
-                <div className="grid grid-cols-3 gap-3">
+                <div className="grid grid-cols-2 gap-3">
                   {/* Meal Plan */}
                   <div className="flex flex-col items-center gap-1.5 p-3 rounded-lg bg-muted/50 border border-border">
                     <Utensils className="w-5 h-5 text-muted-foreground" />
@@ -500,22 +500,6 @@ export default function ProfilePage() {
                     <Badge className={cn("text-xs px-2", sportsHouseColors[selectedStudent.sportsHouse].bg, sportsHouseColors[selectedStudent.sportsHouse].text)}>
                       {sportsHouseColors[selectedStudent.sportsHouse].label.split(' ')[0]}
                     </Badge>
-                  </div>
-                  
-                  {/* Outdoor CCA */}
-                  <div className="flex flex-col items-center gap-1.5 p-3 rounded-lg bg-muted/50 border border-border">
-                    <TreePine className="w-5 h-5 text-muted-foreground" />
-                    <span className="text-xs font-medium text-muted-foreground text-center">Outdoor CCA</span>
-                    <div className={cn(
-                      "w-6 h-6 rounded-full flex items-center justify-center",
-                      selectedStudent.outdoorCCA ? "bg-green-500" : "bg-muted"
-                    )}>
-                      {selectedStudent.outdoorCCA ? (
-                        <Check className="w-4 h-4 text-white" />
-                      ) : (
-                        <X className="w-4 h-4 text-muted-foreground" />
-                      )}
-                    </div>
                   </div>
                 </div>
               </div>
