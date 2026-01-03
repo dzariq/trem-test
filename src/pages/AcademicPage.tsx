@@ -3447,9 +3447,12 @@ export default function AcademicPage() {
               const avgA = comparisonData.length > 0 ? Math.round(comparisonData.reduce((sum, d) => sum + d.examA, 0) / comparisonData.length) : 0;
               const avgB = comparisonData.length > 0 ? Math.round(comparisonData.reduce((sum, d) => sum + d.examB, 0) / comparisonData.length) : 0;
               const avgDelta = avgA - avgB;
-              const improved = comparisonData.filter(d => d.delta > 0).length;
-              const declined = comparisonData.filter(d => d.delta < 0).length;
-              const unchanged = comparisonData.filter(d => d.delta === 0).length;
+              const improvedSubjects = comparisonData.filter(d => d.delta > 0);
+              const declinedSubjects = comparisonData.filter(d => d.delta < 0);
+              const maintainedSubjects = comparisonData.filter(d => Math.abs(d.delta) <= 15);
+              const improved = improvedSubjects.length;
+              const declined = declinedSubjects.length;
+              const maintained = maintainedSubjects.length;
 
               return (
                 <div className="space-y-4 p-2">
@@ -3490,7 +3493,7 @@ export default function AcademicPage() {
                     </div>
                   </div>
 
-                  {/* Change Summary */}
+                  {/* Change Summary with Subject Names */}
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '8px', marginBottom: '12px', pageBreakInside: 'avoid' }}>
                     <div style={{ padding: '10px', borderRadius: '6px', backgroundColor: avgDelta > 0 ? '#dcfce7' : avgDelta < 0 ? '#fee2e2' : '#f3f4f6', border: '1px solid #ddd', textAlign: 'center' }}>
                       <div style={{ fontSize: '16px', fontWeight: 700, color: avgDelta > 0 ? '#22c55e' : avgDelta < 0 ? '#ef4444' : '#6b7280' }}>
@@ -3501,14 +3504,26 @@ export default function AcademicPage() {
                     <div style={{ padding: '10px', borderRadius: '6px', backgroundColor: '#dcfce7', border: '1px solid #86efac', textAlign: 'center' }}>
                       <div style={{ fontSize: '16px', fontWeight: 700, color: '#22c55e' }}>{improved}</div>
                       <div style={{ fontSize: '8px', color: '#666' }}>Improved</div>
+                      {improvedSubjects.length > 0 && (
+                        <div style={{ fontSize: '7px', color: '#22c55e', marginTop: '4px', lineHeight: 1.3 }}>
+                          {improvedSubjects.slice(0, 3).map(s => shortenSubjectName(s.name)).join(', ')}
+                          {improvedSubjects.length > 3 && ` +${improvedSubjects.length - 3}`}
+                        </div>
+                      )}
                     </div>
                     <div style={{ padding: '10px', borderRadius: '6px', backgroundColor: '#fee2e2', border: '1px solid #fca5a5', textAlign: 'center' }}>
                       <div style={{ fontSize: '16px', fontWeight: 700, color: '#ef4444' }}>{declined}</div>
                       <div style={{ fontSize: '8px', color: '#666' }}>Declined</div>
+                      {declinedSubjects.length > 0 && (
+                        <div style={{ fontSize: '7px', color: '#ef4444', marginTop: '4px', lineHeight: 1.3 }}>
+                          {declinedSubjects.slice(0, 3).map(s => shortenSubjectName(s.name)).join(', ')}
+                          {declinedSubjects.length > 3 && ` +${declinedSubjects.length - 3}`}
+                        </div>
+                      )}
                     </div>
                     <div style={{ padding: '10px', borderRadius: '6px', backgroundColor: '#f3f4f6', border: '1px solid #ddd', textAlign: 'center' }}>
-                      <div style={{ fontSize: '16px', fontWeight: 700, color: '#6b7280' }}>{unchanged}</div>
-                      <div style={{ fontSize: '8px', color: '#666' }}>Unchanged</div>
+                      <div style={{ fontSize: '16px', fontWeight: 700, color: '#6b7280' }}>{maintained}</div>
+                      <div style={{ fontSize: '8px', color: '#666' }}>Maintained</div>
                     </div>
                   </div>
 
@@ -3544,10 +3559,10 @@ export default function AcademicPage() {
                     <p style={{ fontSize: '10px', color: '#1a1a1a' }}>
                       <strong>Insight:</strong>{' '}
                       {avgDelta > 0 
-                        ? `Overall improvement of +${avgDelta}% from ${examBLabel} to ${examALabel}. ${improved} subjects improved, ${declined} declined.`
+                        ? `Overall improvement of +${avgDelta}% from ${examBLabel} to ${examALabel}. ${improved} subjects improved, ${declined} declined, ${maintained} maintained.`
                         : avgDelta < 0 
                           ? `Overall decline of ${avgDelta}% from ${examBLabel} to ${examALabel}. Focus needed on declining subjects.`
-                          : 'Performance remained stable between the two periods.'}
+                          : `Performance remained stable between the two periods. ${maintained} subjects maintained within ±15 marks.`}
                     </p>
                   </div>
 
