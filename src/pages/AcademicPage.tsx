@@ -1883,7 +1883,30 @@ export default function AcademicPage() {
                           wrapperStyle={{ fontSize: 10 }} 
                           formatter={(value) => value === "student" ? "Your Score" : "Class Avg"}
                         />
-                        <Bar dataKey="student" fill="#3b82f6" radius={[0, 4, 4, 0]} barSize={12} />
+                        <Bar dataKey="student" radius={[0, 4, 4, 0]} barSize={12}>
+                          {subjectVsClassData.map((entry, index) => {
+                            const subjectColors: Record<string, string> = {
+                              "English": "#22c55e",
+                              "English 1L": "#22c55e",
+                              "English 2L": "#16a34a",
+                              "Math": "#f59e0b",
+                              "Mathematics": "#f59e0b",
+                              "Science": "#3b82f6",
+                              "Physics": "#06b6d4",
+                              "Chemistry": "#8b5cf6",
+                              "Biology": "#10b981",
+                              "History": "#ef4444",
+                              "Geography": "#f97316",
+                              "Art": "#ec4899",
+                              "ICT": "#6366f1",
+                              "Islamic St.": "#14b8a6",
+                              "Add Math": "#a855f7",
+                            };
+                            const fallbackColors = ["#3b82f6", "#f59e0b", "#22c55e", "#ef4444", "#8b5cf6", "#f97316", "#06b6d4", "#ec4899", "#10b981", "#6366f1"];
+                            const color = subjectColors[entry.name] || subjectColors[entry.fullName] || fallbackColors[index % fallbackColors.length];
+                            return <Cell key={`cell-${index}`} fill={color} />;
+                          })}
+                        </Bar>
                         {/* Class Average as dots on top of bars */}
                         {subjectVsClassData.map((entry) => (
                           <ReferenceDot
