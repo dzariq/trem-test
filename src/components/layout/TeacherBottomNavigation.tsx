@@ -58,7 +58,7 @@ export function TeacherBottomNavigation() {
               <>
                 {item.isHeart ? (
                   <Heart 
-                    className="h-5 w-5 mb-1" 
+                    className="h-5 w-5 mb-1 animate-heartbeat" 
                     fill="#ef4444" 
                     color="#ef4444"
                     style={{
