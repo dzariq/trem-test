@@ -182,7 +182,7 @@ export default function TeacherAcademicPage() {
   const [compareSubjects, setCompareSubjects] = useState<string[]>([...subjects]);
 
   // Trends tab state - like student page
-  const [trendPeriod, setTrendPeriod] = useState<"1year" | "2years" | "3years" | "6years">("6years");
+  const [trendPeriod, setTrendPeriod] = useState<"1year" | "2years" | "3years" | "4years" | "5years" | "6years">("6years");
   const [trendsSelectedSubjects, setTrendsSelectedSubjects] = useState<string[]>([...subjects]);
 
   // Pinch-to-zoom state for chart
@@ -783,6 +783,10 @@ export default function TeacherAcademicPage() {
       filteredPeriods = periods.slice(-4);
     } else if (trendPeriod === "3years") {
       filteredPeriods = periods.slice(-6);
+    } else if (trendPeriod === "4years") {
+      filteredPeriods = periods.slice(-8);
+    } else if (trendPeriod === "5years") {
+      filteredPeriods = periods.slice(-10);
     } else if (trendPeriod === "6years") {
       filteredPeriods = periods.slice(-12);
     }
@@ -3225,6 +3229,12 @@ export default function TeacherAcademicPage() {
                     key: "3years",
                     label: "3Y"
                   }, {
+                    key: "4years",
+                    label: "4Y"
+                  }, {
+                    key: "5years",
+                    label: "5Y"
+                  }, {
                     key: "6years",
                     label: "6Y"
                   }] as const).map(({
@@ -4327,7 +4337,7 @@ export default function TeacherAcademicPage() {
                   <p style={{ fontSize: '10px', color: '#666', margin: 0 }}>Class {selectedClass} - Historical Performance Analysis</p>
                   <p style={{ fontSize: '9px', color: '#888', margin: '2px 0 0 0' }}>
                     Generated on {new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}
-                    {' • '}Period: {trendPeriod === '1year' ? 'Last 1 Year' : trendPeriod === '2years' ? 'Last 2 Years' : trendPeriod === '3years' ? 'Last 3 Years' : 'Last 6 Years'}
+                    {' • '}Period: {trendPeriod === '1year' ? 'Last 1 Year' : trendPeriod === '2years' ? 'Last 2 Years' : trendPeriod === '3years' ? 'Last 3 Years' : trendPeriod === '4years' ? 'Last 4 Years' : trendPeriod === '5years' ? 'Last 5 Years' : 'Last 6 Years'}
                   </p>
                 </div>
               </div>
