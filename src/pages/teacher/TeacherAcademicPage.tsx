@@ -113,7 +113,12 @@ export default function TeacherAcademicPage() {
   const [selectedPeriod, setSelectedPeriod] = useState<"midYear" | "yearEnd">("midYear");
   const [selectedPeriods, setSelectedPeriods] = useState<string[]>(["midYear"]);
   const [selectedSubjects, setSelectedSubjects] = useState<string[]>([...subjects]);
-  const [bandsSelectedSubject, setBandsSelectedSubject] = useState<string>("all"); // Single subject for Bands tab
+  const [bandsSelectedSubject, setBandsSelectedSubject] = useState<string>("Mathematics"); // Single subject for Bands tab
+  const [bandsCompareMode, setBandsCompareMode] = useState(false);
+  const [bandsCompareClass, setBandsCompareClass] = useState(teacherProfile.classes[1] || teacherProfile.classes[0]);
+  const [bandsCompareYear, setBandsCompareYear] = useState(academicYears[0]);
+  const [bandsComparePeriod, setBandsComparePeriod] = useState<"midYear" | "yearEnd">("midYear");
+  const [bandsCompareSubject, setBandsCompareSubject] = useState<string>("Mathematics");
   const [selectedCategory, setSelectedCategory] = useState<"attitude" | "homework" | "quiz" | "exam">("quiz");
 
   // Grade Entry category state (Grades, Behavior, Awards)
@@ -483,6 +488,77 @@ export default function TeacherAcademicPage() {
   const bandsTopPerformers = bandsRankedStudents.filter(s => s.score >= 80);
   const bandsMiddlePerformers = bandsRankedStudents.filter(s => s.score >= 60 && s.score < 80);
   const bandsAtRiskStudents = bandsRankedStudents.filter(s => s.score < 60);
+
+  // ===== BANDS COMPARISON: Calculate comparison data =====
+  const bandsCompareGradesForClass = detailedClassGrades[bandsCompareClass as keyof typeof detailedClassGrades] || {};
+  const bandsCompareStudents = classRosters[bandsCompareClass as keyof typeof classRosters] || [];
+
+  const bandsCompareFilteredScores = useMemo(() => {
+    const scores: { studentId: string; score: number }[] = [];
+    const subjectsToInclude = bandsCompareSubject === "all" ? subjects : [bandsCompareSubject];
+    
+    Object.entries(bandsCompareGradesForClass).forEach(([studentId, studentGrades]) => {
+      let studentTotal = 0;
+      let subjectCount = 0;
+      Object.entries(studentGrades).forEach(([subject, grades]) => {
+        if (subjectsToInclude.includes(subject)) {
+          const total = grades.attitude + grades.homework + grades.quiz + grades.exam;
+          studentTotal += total;
+          subjectCount++;
+        }
+      });
+      if (subjectCount > 0) {
+        scores.push({ studentId, score: Math.round(studentTotal / subjectCount) });
+      }
+    });
+    return scores;
+  }, [bandsCompareGradesForClass, bandsCompareSubject, subjects]);
+
+  const bandsCompareGradeDistribution = useMemo(() => {
+    const scores = bandsCompareFilteredScores.map(s => s.score);
+    return [{
+      range: "A*",
+      count: scores.filter(g => g >= 90).length
+    }, {
+      range: "A",
+      count: scores.filter(g => g >= 80 && g < 90).length
+    }, {
+      range: "B",
+      count: scores.filter(g => g >= 70 && g < 80).length
+    }, {
+      range: "C",
+      count: scores.filter(g => g >= 60 && g < 70).length
+    }, {
+      range: "D",
+      count: scores.filter(g => g >= 50 && g < 60).length
+    }, {
+      range: "E",
+      count: scores.filter(g => g < 50).length
+    }];
+  }, [bandsCompareFilteredScores]);
+
+  const bandsCompareRankedStudents = useMemo(() => {
+    return bandsCompareFilteredScores
+      .map(({ studentId, score }) => {
+        const student = bandsCompareStudents.find(s => s.id === studentId);
+        return student ? { ...student, score } : null;
+      })
+      .filter((s): s is { id: string; name: string; photo: null; score: number } => s !== null)
+      .sort((a, b) => b.score - a.score);
+  }, [bandsCompareFilteredScores, bandsCompareStudents]);
+
+  const bandsCompareTopPerformers = bandsCompareRankedStudents.filter(s => s.score >= 80);
+  const bandsCompareMiddlePerformers = bandsCompareRankedStudents.filter(s => s.score >= 60 && s.score < 80);
+  const bandsCompareAtRiskStudents = bandsCompareRankedStudents.filter(s => s.score < 60);
+
+  // Comparison chart data
+  const bandsComparisonChartData = useMemo(() => {
+    return bandsGradeDistribution.map((item, index) => ({
+      grade: item.range,
+      primary: item.count,
+      compare: bandsCompareGradeDistribution[index]?.count || 0
+    }));
+  }, [bandsGradeDistribution, bandsCompareGradeDistribution]);
 
   // Calculate category averages from detailed grades
   const categoryTotals = {
@@ -1615,109 +1691,310 @@ export default function TeacherAcademicPage() {
 
               {/* ==================== DISTRIBUTION SUB-TAB ==================== */}
               <TabsContent value="distribution" className="space-y-4">
-                {/* Filters Section */}
-                <div className="space-y-3 pb-2 border-b border-border">
-                  {/* Row 1: Class + Year + Exam Period */}
+                {/* Comparison Mode Toggle */}
+                <div className="flex items-center justify-between p-3 rounded-lg bg-accent/30 border border-border">
                   <div className="flex items-center gap-2">
-                    <Select value={selectedClass} onValueChange={setSelectedClass}>
-                      <SelectTrigger className="w-[80px]">
-                        <SelectValue placeholder="Class" />
-                      </SelectTrigger>
-                      <SelectContent className="bg-card">
-                        {teacherProfile.classes.map((cls) => (
-                          <SelectItem key={cls} value={cls}>{cls}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <Select value={selectedYear} onValueChange={setSelectedYear}>
-                      <SelectTrigger className="w-[90px]">
-                        <SelectValue placeholder="Year" />
-                      </SelectTrigger>
-                      <SelectContent className="bg-card">
-                        {academicYears.map((year) => (
-                          <SelectItem key={year} value={year}>{year}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <Select value={selectedPeriod} onValueChange={(v) => setSelectedPeriod(v as "midYear" | "yearEnd")}>
-                      <SelectTrigger className="flex-1">
-                        <SelectValue placeholder="Period" />
-                      </SelectTrigger>
-                      <SelectContent className="bg-card">
-                        {examPeriods.map((period) => (
-                          <SelectItem key={period.value} value={period.value}>{period.label}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                    <Scale className="h-4 w-4 text-primary" />
+                    <span className="text-sm font-medium text-foreground">Compare Mode</span>
                   </div>
-                  
-                  {/* Row 2: Subject Filter - Single Select for Bands */}
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm font-medium text-foreground">Subject:</span>
-                      <button
-                        className={`text-sm font-medium transition-colors ${bandsSelectedSubject === "all" ? "text-primary" : "text-foreground hover:text-primary"}`}
-                        onClick={() => setBandsSelectedSubject("all")}
-                      >
-                        All Subjects
-                      </button>
-                    </div>
-                    <div className="flex flex-wrap gap-1.5 p-2.5 rounded-lg border border-border bg-background">
-                      {subjectGroups.map((group) => (
-                        <SubjectGroupPill
-                          key={group.baseName}
-                          baseName={group.baseName}
-                          shortName={group.shortName}
-                          variants={group.variants || []}
-                          selectedSubjects={bandsSelectedSubject === "all" ? [] : [bandsSelectedSubject]}
-                          onToggle={(subjectName) => {
-                            if (bandsSelectedSubject === subjectName) {
-                              setBandsSelectedSubject("all");
-                            } else {
-                              setBandsSelectedSubject(subjectName);
-                            }
-                          }}
-                          singleSelect={true}
-                        />
-                      ))}
-                    </div>
-                  </div>
-                </div>
-
-                {/* Grade Distribution Cards */}
-                <div className="space-y-2">
-                  <h4 className="text-sm font-medium text-foreground">
-                    Grade Distribution
-                    {bandsSelectedSubject !== "all" && (
-                      <span className="text-xs text-muted-foreground ml-2">({bandsSelectedSubject})</span>
+                  <button
+                    onClick={() => setBandsCompareMode(!bandsCompareMode)}
+                    className={cn(
+                      "relative w-12 h-6 rounded-full transition-colors",
+                      bandsCompareMode ? "bg-primary" : "bg-muted"
                     )}
-                  </h4>
-                  <div className="grid grid-cols-6 gap-1.5">
-                    {bandsGradeDistribution.map(g => {
-                      const total = bandsGradeDistribution.reduce((sum, d) => sum + d.count, 0);
-                      const percentage = total > 0 ? Math.round(g.count / total * 100) : 0;
-                      return (
-                        <div 
-                          key={g.range} 
-                          className="flex flex-col items-center p-2 rounded-lg border border-border/50" 
-                          style={{
-                            backgroundColor: `${GRADE_COLORS[g.range as keyof typeof GRADE_COLORS]}15`
-                          }}
-                        >
-                          <span className="text-sm font-bold" style={{
-                            color: GRADE_COLORS[g.range as keyof typeof GRADE_COLORS]
-                          }}>
-                            {g.range}
-                          </span>
-                          <span className="text-lg font-semibold text-foreground">{g.count}</span>
-                          <span className="text-[10px] text-muted-foreground">{percentage}%</span>
-                        </div>
-                      );
-                    })}
-                  </div>
+                  >
+                    <span
+                      className={cn(
+                        "absolute top-0.5 w-5 h-5 rounded-full bg-background shadow-sm transition-transform",
+                        bandsCompareMode ? "translate-x-6" : "translate-x-0.5"
+                      )}
+                    />
+                  </button>
                 </div>
 
-                {/* Student Performance Cards - stacked vertically */}
+                {/* Filters Section - Stacked for mobile when comparing */}
+                <div className={cn(
+                  "space-y-4",
+                  bandsCompareMode ? "grid grid-cols-1 md:grid-cols-2 gap-4" : ""
+                )}>
+                  {/* Primary Selection */}
+                  <div className={cn(
+                    "space-y-3 pb-3 border-b border-border",
+                    bandsCompareMode && "p-3 rounded-lg bg-blue-50/50 border border-blue-200"
+                  )}>
+                    {bandsCompareMode && (
+                      <div className="flex items-center gap-2 mb-2">
+                        <div className="w-3 h-3 rounded-full bg-blue-500" />
+                        <span className="text-xs font-semibold text-blue-700">Selection A</span>
+                      </div>
+                    )}
+                    {/* Row 1: Class + Year + Exam Period */}
+                    <div className="flex items-center gap-2">
+                      <Select value={selectedClass} onValueChange={setSelectedClass}>
+                        <SelectTrigger className="w-[80px]">
+                          <SelectValue placeholder="Class" />
+                        </SelectTrigger>
+                        <SelectContent className="bg-card">
+                          {teacherProfile.classes.map((cls) => (
+                            <SelectItem key={cls} value={cls}>{cls}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <Select value={selectedYear} onValueChange={setSelectedYear}>
+                        <SelectTrigger className="w-[90px]">
+                          <SelectValue placeholder="Year" />
+                        </SelectTrigger>
+                        <SelectContent className="bg-card">
+                          {academicYears.map((year) => (
+                            <SelectItem key={year} value={year}>{year}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <Select value={selectedPeriod} onValueChange={(v) => setSelectedPeriod(v as "midYear" | "yearEnd")}>
+                        <SelectTrigger className="flex-1">
+                          <SelectValue placeholder="Period" />
+                        </SelectTrigger>
+                        <SelectContent className="bg-card">
+                          {examPeriods.map((period) => (
+                            <SelectItem key={period.value} value={period.value}>{period.label}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    
+                    {/* Subject Filter */}
+                    <div className="space-y-2">
+                      <span className="text-sm font-medium text-foreground">Subject:</span>
+                      <div className="flex flex-wrap gap-1.5 p-2.5 rounded-lg border border-border bg-background">
+                        {subjectGroups.map((group) => (
+                          <SubjectGroupPill
+                            key={group.baseName}
+                            baseName={group.baseName}
+                            shortName={group.shortName}
+                            variants={group.variants || []}
+                            selectedSubjects={[bandsSelectedSubject]}
+                            onToggle={(subjectName) => {
+                              setBandsSelectedSubject(subjectName);
+                            }}
+                            singleSelect={true}
+                          />
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Comparison Selection - Only show when compare mode is on */}
+                  {bandsCompareMode && (
+                    <div className="space-y-3 p-3 rounded-lg bg-amber-50/50 border border-amber-200">
+                      <div className="flex items-center gap-2 mb-2">
+                        <div className="w-3 h-3 rounded-full bg-amber-500" />
+                        <span className="text-xs font-semibold text-amber-700">Selection B</span>
+                      </div>
+                      {/* Row 1: Class + Year + Exam Period */}
+                      <div className="flex items-center gap-2">
+                        <Select value={bandsCompareClass} onValueChange={setBandsCompareClass}>
+                          <SelectTrigger className="w-[80px]">
+                            <SelectValue placeholder="Class" />
+                          </SelectTrigger>
+                          <SelectContent className="bg-card">
+                            {teacherProfile.classes.map((cls) => (
+                              <SelectItem key={cls} value={cls}>{cls}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <Select value={bandsCompareYear} onValueChange={setBandsCompareYear}>
+                          <SelectTrigger className="w-[90px]">
+                            <SelectValue placeholder="Year" />
+                          </SelectTrigger>
+                          <SelectContent className="bg-card">
+                            {academicYears.map((year) => (
+                              <SelectItem key={year} value={year}>{year}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <Select value={bandsComparePeriod} onValueChange={(v) => setBandsComparePeriod(v as "midYear" | "yearEnd")}>
+                          <SelectTrigger className="flex-1">
+                            <SelectValue placeholder="Period" />
+                          </SelectTrigger>
+                          <SelectContent className="bg-card">
+                            {examPeriods.map((period) => (
+                              <SelectItem key={period.value} value={period.value}>{period.label}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      
+                      {/* Subject Filter */}
+                      <div className="space-y-2">
+                        <span className="text-sm font-medium text-foreground">Subject:</span>
+                        <div className="flex flex-wrap gap-1.5 p-2.5 rounded-lg border border-border bg-background">
+                          {subjectGroups.map((group) => (
+                            <SubjectGroupPill
+                              key={group.baseName}
+                              baseName={group.baseName}
+                              shortName={group.shortName}
+                              variants={group.variants || []}
+                              selectedSubjects={[bandsCompareSubject]}
+                              onToggle={(subjectName) => {
+                                setBandsCompareSubject(subjectName);
+                              }}
+                              singleSelect={true}
+                            />
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* Grade Distribution - Normal or Comparison View */}
+                {!bandsCompareMode ? (
+                  /* Normal Grade Distribution Cards */
+                  <div className="space-y-2">
+                    <h4 className="text-sm font-medium text-foreground">
+                      Grade Distribution
+                      <span className="text-xs text-muted-foreground ml-2">({bandsSelectedSubject})</span>
+                    </h4>
+                    <div className="grid grid-cols-6 gap-1.5">
+                      {bandsGradeDistribution.map(g => {
+                        const total = bandsGradeDistribution.reduce((sum, d) => sum + d.count, 0);
+                        const percentage = total > 0 ? Math.round(g.count / total * 100) : 0;
+                        return (
+                          <div 
+                            key={g.range} 
+                            className="flex flex-col items-center p-2 rounded-lg border border-border/50" 
+                            style={{
+                              backgroundColor: `${GRADE_COLORS[g.range as keyof typeof GRADE_COLORS]}15`
+                            }}
+                          >
+                            <span className="text-sm font-bold" style={{
+                              color: GRADE_COLORS[g.range as keyof typeof GRADE_COLORS]
+                            }}>
+                              {g.range}
+                            </span>
+                            <span className="text-lg font-semibold text-foreground">{g.count}</span>
+                            <span className="text-[10px] text-muted-foreground">{percentage}%</span>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                ) : (
+                  /* Comparison View - Mobile Friendly Stacked Charts */
+                  <div className="space-y-4">
+                    {/* Comparison Bar Chart - Mobile Optimized */}
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between">
+                        <h4 className="text-sm font-medium text-foreground">Grade Comparison</h4>
+                        <div className="flex items-center gap-3">
+                          <div className="flex items-center gap-1">
+                            <div className="w-3 h-3 rounded-full bg-blue-500" />
+                            <span className="text-[10px] text-muted-foreground">{selectedClass} - {bandsSelectedSubject}</span>
+                          </div>
+                          <div className="flex items-center gap-1">
+                            <div className="w-3 h-3 rounded-full bg-amber-500" />
+                            <span className="text-[10px] text-muted-foreground">{bandsCompareClass} - {bandsCompareSubject}</span>
+                          </div>
+                        </div>
+                      </div>
+                      <div className="h-[200px]">
+                        <ResponsiveContainer width="100%" height="100%">
+                          <BarChart data={bandsComparisonChartData} barGap={2}>
+                            <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" strokeOpacity={0.3} vertical={false} />
+                            <XAxis dataKey="grade" tick={{ fontSize: 12, fill: "hsl(var(--foreground))" }} />
+                            <YAxis tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }} />
+                            <Tooltip
+                              contentStyle={{
+                                backgroundColor: "hsl(var(--card))",
+                                border: "1px solid hsl(var(--border))",
+                                borderRadius: "8px"
+                              }}
+                              formatter={(value: number, name: string) => [
+                                `${value} students`,
+                                name === "primary" ? `${selectedClass} - ${bandsSelectedSubject}` : `${bandsCompareClass} - ${bandsCompareSubject}`
+                              ]}
+                            />
+                            <Bar dataKey="primary" fill="#3b82f6" radius={[4, 4, 0, 0]} name="primary" />
+                            <Bar dataKey="compare" fill="#f59e0b" radius={[4, 4, 0, 0]} name="compare" />
+                          </BarChart>
+                        </ResponsiveContainer>
+                      </div>
+                    </div>
+
+                    {/* Stacked Comparison Cards for Mobile */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                      {/* Selection A Distribution */}
+                      <div className="space-y-2 p-3 rounded-lg bg-blue-50/50 border border-blue-200">
+                        <div className="flex items-center gap-2">
+                          <div className="w-3 h-3 rounded-full bg-blue-500" />
+                          <span className="text-xs font-semibold text-blue-700">{selectedClass} - {bandsSelectedSubject}</span>
+                        </div>
+                        <div className="grid grid-cols-6 gap-1">
+                          {bandsGradeDistribution.map(g => {
+                            const total = bandsGradeDistribution.reduce((sum, d) => sum + d.count, 0);
+                            const percentage = total > 0 ? Math.round(g.count / total * 100) : 0;
+                            return (
+                              <div 
+                                key={g.range} 
+                                className="flex flex-col items-center p-1.5 rounded-md border border-blue-200/50 bg-background"
+                              >
+                                <span className="text-xs font-bold" style={{
+                                  color: GRADE_COLORS[g.range as keyof typeof GRADE_COLORS]
+                                }}>
+                                  {g.range}
+                                </span>
+                                <span className="text-sm font-semibold text-foreground">{g.count}</span>
+                                <span className="text-[9px] text-muted-foreground">{percentage}%</span>
+                              </div>
+                            );
+                          })}
+                        </div>
+                        <div className="flex justify-between text-[10px] text-muted-foreground pt-1 border-t border-blue-200/50">
+                          <span>Top: {bandsTopPerformers.length}</span>
+                          <span>Middle: {bandsMiddlePerformers.length}</span>
+                          <span>At-Risk: {bandsAtRiskStudents.length}</span>
+                        </div>
+                      </div>
+
+                      {/* Selection B Distribution */}
+                      <div className="space-y-2 p-3 rounded-lg bg-amber-50/50 border border-amber-200">
+                        <div className="flex items-center gap-2">
+                          <div className="w-3 h-3 rounded-full bg-amber-500" />
+                          <span className="text-xs font-semibold text-amber-700">{bandsCompareClass} - {bandsCompareSubject}</span>
+                        </div>
+                        <div className="grid grid-cols-6 gap-1">
+                          {bandsCompareGradeDistribution.map(g => {
+                            const total = bandsCompareGradeDistribution.reduce((sum, d) => sum + d.count, 0);
+                            const percentage = total > 0 ? Math.round(g.count / total * 100) : 0;
+                            return (
+                              <div 
+                                key={g.range} 
+                                className="flex flex-col items-center p-1.5 rounded-md border border-amber-200/50 bg-background"
+                              >
+                                <span className="text-xs font-bold" style={{
+                                  color: GRADE_COLORS[g.range as keyof typeof GRADE_COLORS]
+                                }}>
+                                  {g.range}
+                                </span>
+                                <span className="text-sm font-semibold text-foreground">{g.count}</span>
+                                <span className="text-[9px] text-muted-foreground">{percentage}%</span>
+                              </div>
+                            );
+                          })}
+                        </div>
+                        <div className="flex justify-between text-[10px] text-muted-foreground pt-1 border-t border-amber-200/50">
+                          <span>Top: {bandsCompareTopPerformers.length}</span>
+                          <span>Middle: {bandsCompareMiddlePerformers.length}</span>
+                          <span>At-Risk: {bandsCompareAtRiskStudents.length}</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Student Performance Cards - Only show in non-compare mode */}
+                {!bandsCompareMode && (
                 <div className="space-y-3">
                   {/* Top Performers */}
                   <Card className="border-amber-200 bg-amber-50/30">
@@ -1847,6 +2124,7 @@ export default function TeacherAcademicPage() {
                     </CardContent>
                   </Card>
                 </div>
+                )}
 
                 {/* Performance Dialog */}
                 <Dialog open={performanceDialogOpen} onOpenChange={setPerformanceDialogOpen}>
