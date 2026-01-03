@@ -280,9 +280,9 @@ export function ReportCardDialog({
             {/* Header with both logos */}
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid #d1d5db', paddingBottom: '10px', marginBottom: '10px', gap: '8px', flexWrap: 'wrap' }}>
               <img src={collinzLogo} alt="Collinz School" style={{ height: '40px', objectFit: 'contain' }} />
-              <div style={{ textAlign: 'center' }}>
-                <div style={{ fontWeight: '400', color: '#d4a537', fontFamily: "'Great Vibes', cursive", fontSize: '22px' }}>Academic Report</div>
-                <div style={{ fontSize: '13px', fontWeight: '700', color: '#065f46' }}>{examType} {year}</div>
+              <div style={{ background: '#065f46', color: 'white', padding: '6px 12px', borderRadius: '6px', textAlign: 'center', border: '2px solid #047857' }}>
+                <div style={{ fontSize: '8px', fontWeight: '600', opacity: 0.9, letterSpacing: '0.5px' }}>ACADEMIC REPORT</div>
+                <div style={{ fontSize: '11px', fontWeight: '700' }}>{examType} {year}</div>
               </div>
               <img src={cambridgeLogo} alt="Cambridge Assessment" style={{ height: '35px', objectFit: 'contain' }} />
             </div>
@@ -448,10 +448,10 @@ export function ReportCardDialog({
                     const derivedYearEndGradeColor = gradeColors[derivedYearEndGrade] || gradeColors["C"];
                     const midYearBgColor = gradeCardBgColors[subject.grade] || 'white';
                     const yearEndBgColor = gradeCardBgColors[derivedYearEndGrade] || 'white';
-                    const rowAltBg = index % 2 === 0 ? '#fffbeb' : '#fef3c7';
+                    const rowAltBg = index % 2 === 0 ? 'white' : '#f9fafb';
                     
                     return (
-                      <tr key={subject.name} style={{ borderBottom: '1px solid #fcd34d' }}>
+                      <tr key={subject.name} style={{ borderBottom: '1px solid #e5e7eb' }}>
                         <td style={{ padding: '6px 8px', fontWeight: '600', color: '#1a1a1a', fontSize: '8px', background: rowAltBg }}>{subject.name}</td>
                         <td style={{ padding: '6px 8px', textAlign: 'center', position: 'relative', background: midYearBgColor, overflow: 'hidden' }}>
                           {/* Watermark Grade */}
