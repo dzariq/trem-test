@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { students, SportsHouse } from "@/data/mockData";
 import { cn } from "@/lib/utils";
-import { ChevronRight, ChevronDown, Utensils, Flag, TreePine, Check, X } from "lucide-react";
+import { ChevronRight, ChevronDown, Utensils, Flag, Check, X } from "lucide-react";
 import {
   Drawer,
   DrawerContent,
@@ -122,7 +122,7 @@ export function StudentPillSelector({ onStudentChange }: StudentPillSelectorProp
                   <div className="px-4 pb-4 pt-2 border-t border-border bg-muted/20">
                     <div className="space-y-4">
                       {/* Student Options */}
-                      <div className="grid grid-cols-3 gap-2">
+                      <div className="grid grid-cols-2 gap-2">
                         {/* Meal Plan */}
                         <div className="flex flex-col items-center gap-1.5 p-2 rounded-lg bg-background border border-border">
                           <Utensils className="w-5 h-5 text-muted-foreground" />
@@ -146,22 +146,6 @@ export function StudentPillSelector({ onStudentChange }: StudentPillSelectorProp
                           <Badge className={cn("text-xs px-2", houseInfo.bg, houseInfo.text)}>
                             {houseInfo.label.split(' ')[0]}
                           </Badge>
-                        </div>
-                        
-                        {/* Outdoor CCA */}
-                        <div className="flex flex-col items-center gap-1.5 p-2 rounded-lg bg-background border border-border">
-                          <TreePine className="w-5 h-5 text-muted-foreground" />
-                          <span className="text-xs font-medium text-muted-foreground">Outdoor CCA</span>
-                          <div className={cn(
-                            "w-6 h-6 rounded-full flex items-center justify-center",
-                            student.outdoorCCA ? "bg-green-500" : "bg-muted"
-                          )}>
-                            {student.outdoorCCA ? (
-                              <Check className="w-4 h-4 text-white" />
-                            ) : (
-                              <X className="w-4 h-4 text-muted-foreground" />
-                            )}
-                          </div>
                         </div>
                       </div>
                       
