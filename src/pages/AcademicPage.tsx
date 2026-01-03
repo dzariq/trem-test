@@ -1063,6 +1063,8 @@ export default function AcademicPage() {
           present: attendanceData.currentMonth?.present || 85,
           absent: attendanceData.currentMonth?.absent || 5,
           late: attendanceData.currentMonth?.late || 3,
+          excused: 2,
+          totalDays: (attendanceData.currentMonth?.present || 85) + (attendanceData.currentMonth?.absent || 5) + 2,
           percentage: Math.round((attendanceData.currentMonth?.present || 85) / ((attendanceData.currentMonth?.present || 85) + (attendanceData.currentMonth?.absent || 5)) * 100)
         }}
         achievements={academicData.coCurriculum?.map(c => `${c.activity}: ${c.achievement}`) || []}
