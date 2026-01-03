@@ -119,14 +119,14 @@ const gradeColors: Record<string, { bg: string; text: string; border: string }> 
   "E": { bg: "#ef4444", text: "#ffffff", border: "#dc2626" },
 };
 
-// Ultra-light background colors for grade-based card coloring
+// More visible background colors for grade-based card coloring
 const gradeCardBgColors: Record<string, string> = {
-  "A*": "rgba(5, 150, 105, 0.12)",
-  "A": "rgba(34, 197, 94, 0.12)",
-  "B": "rgba(59, 130, 246, 0.12)",
-  "C": "rgba(234, 179, 8, 0.12)",
-  "D": "rgba(249, 115, 22, 0.12)",
-  "E": "rgba(239, 68, 68, 0.12)",
+  "A*": "rgba(5, 150, 105, 0.18)",
+  "A": "rgba(34, 197, 94, 0.18)",
+  "B": "rgba(59, 130, 246, 0.18)",
+  "C": "rgba(234, 179, 8, 0.18)",
+  "D": "rgba(249, 115, 22, 0.18)",
+  "E": "rgba(239, 68, 68, 0.18)",
 };
 
 const behaviorGradeColors: Record<string, { bg: string; text: string; cardBg: string }> = {
@@ -280,7 +280,7 @@ export function ReportCardDialog({
             {/* Header with both logos */}
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid #d1d5db', paddingBottom: '10px', marginBottom: '10px', gap: '8px', flexWrap: 'wrap' }}>
               <img src={collinzLogo} alt="Collinz School" style={{ height: '40px', objectFit: 'contain' }} />
-              <div style={{ background: 'linear-gradient(135deg, #065f46 0%, #10b981 100%)', color: 'white', padding: '6px 12px', borderRadius: '6px', textAlign: 'center' }}>
+              <div style={{ background: '#065f46', color: 'white', padding: '6px 12px', borderRadius: '6px', textAlign: 'center', border: '2px solid #047857' }}>
                 <div style={{ fontSize: '8px', fontWeight: '600', opacity: 0.9, letterSpacing: '0.5px' }}>ACADEMIC REPORT</div>
                 <div style={{ fontSize: '11px', fontWeight: '700' }}>{examType} {year}</div>
               </div>
@@ -300,7 +300,7 @@ export function ReportCardDialog({
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1.5fr', gap: '8px' }}>
                   {/* Overall Average */}
                   <div style={{ borderRadius: '10px', overflow: 'hidden', border: '1px solid #d1d5db', display: 'flex', flexDirection: 'column' }}>
-                    <div style={{ background: 'linear-gradient(135deg, #065f46 0%, #10b981 100%)', padding: '4px 8px' }}>
+                    <div style={{ background: '#065f46', padding: '4px 8px' }}>
                       <div style={{ fontSize: '7px', fontWeight: '600', color: 'white', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Overall Average</div>
                     </div>
                     <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'white', padding: '8px 8px' }}>
@@ -309,7 +309,7 @@ export function ReportCardDialog({
                   </div>
                   {/* Attendance */}
                   <div style={{ borderRadius: '10px', overflow: 'hidden', border: '1px solid #d1d5db' }}>
-                    <div style={{ background: 'linear-gradient(135deg, #065f46 0%, #10b981 100%)', padding: '4px 8px' }}>
+                    <div style={{ background: '#065f46', padding: '4px 8px' }}>
                       <div style={{ fontSize: '7px', fontWeight: '600', color: 'white', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Attendance</div>
                     </div>
                     <div style={{ background: 'white', padding: '6px 10px' }}>
@@ -450,7 +450,7 @@ export function ReportCardDialog({
                     }}>
                       {/* Subject Header */}
                       <div style={{ 
-                        background: 'linear-gradient(135deg, #065f46 0%, #059669 100%)', 
+                        background: '#065f46', 
                         padding: '6px 10px',
                         display: 'flex',
                         alignItems: 'center',
@@ -518,21 +518,18 @@ export function ReportCardDialog({
                       
                       {/* Teacher Comment */}
                       {subject.teacherComment && (
-                        <div style={{ padding: '6px 10px', borderBottom: hasLearningTips ? '1px solid #e5e7eb' : 'none', background: '#fafafa', borderLeft: '3px solid #10b981' }}>
-                          <div style={{ display: 'flex', alignItems: 'flex-start', gap: '4px' }}>
-                            <span style={{ color: '#6b7280', flexShrink: 0, marginTop: '1px' }}><IconMessage /></span>
-                            <p style={{ fontSize: '7px', color: '#374151', lineHeight: '1.4', margin: 0 }}>{subject.teacherComment}</p>
+                        <div style={{ padding: '6px 10px', borderBottom: hasLearningTips ? '1px solid #e5e7eb' : 'none', background: '#fafafa' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '4px', marginBottom: '3px' }}>
+                            <span style={{ color: '#6b7280', flexShrink: 0 }}><IconMessage /></span>
+                            <span style={{ fontSize: '7px', fontWeight: '600', color: '#374151' }}>Teacher Comments</span>
                           </div>
+                          <p style={{ fontSize: '7px', color: '#374151', lineHeight: '1.4', margin: 0 }}>{subject.teacherComment}</p>
                         </div>
                       )}
                       
                       {/* Learning Tips with Pill Badges */}
                       {hasLearningTips && (
                         <div style={{ padding: '6px 10px', background: '#fafafa' }}>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '2px', marginBottom: '4px' }}>
-                            <span style={{ color: '#6b7280', flexShrink: 0 }}><IconBookMarked /></span>
-                            <span style={{ fontSize: '7px', fontWeight: '600', color: '#374151' }}>Learning Tips</span>
-                          </div>
                           <div style={{ display: 'flex', flexDirection: 'column', gap: '3px' }}>
                             {subject.classStudyRecommendation && (
                               <div style={{ display: 'flex', alignItems: 'flex-start', gap: '4px' }}>
