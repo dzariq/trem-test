@@ -2285,26 +2285,91 @@ export default function TeacherAcademicPage() {
                                   <head>
                                     <title>Grade Distribution Report</title>
                                     <style>
-                                      body { font-family: system-ui, -apple-system, sans-serif; padding: 20px; }
-                                      .report-header { text-align: center; margin-bottom: 20px; border-bottom: 2px solid #333; padding-bottom: 10px; }
-                                      .report-header h1 { margin: 0 0 5px 0; font-size: 24px; }
-                                      .report-header p { margin: 0; color: #666; font-size: 14px; }
-                                      .section { margin-bottom: 20px; }
-                                      .section h3 { font-size: 16px; margin: 0 0 10px 0; padding-bottom: 5px; border-bottom: 1px solid #ddd; }
-                                      .grade-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 8px; margin-bottom: 15px; }
-                                      .grade-card { text-align: center; padding: 10px; border: 1px solid #ddd; border-radius: 8px; }
-                                      .grade-card .grade { font-size: 18px; font-weight: bold; }
-                                      .grade-card .count { font-size: 24px; font-weight: bold; }
-                                      .grade-card .percent { font-size: 12px; color: #666; }
-                                      .student-list { margin-top: 10px; }
-                                      .student-row { display: flex; justify-content: space-between; padding: 6px 10px; border-bottom: 1px solid #eee; }
+                                      @page { 
+                                        size: A4; 
+                                        margin: 15mm 10mm;
+                                      }
+                                      * { box-sizing: border-box; }
+                                      body { 
+                                        font-family: system-ui, -apple-system, sans-serif; 
+                                        padding: 0;
+                                        margin: 0;
+                                        font-size: 11px;
+                                        line-height: 1.4;
+                                        -webkit-print-color-adjust: exact;
+                                        print-color-adjust: exact;
+                                      }
+                                      .report-header { 
+                                        text-align: center; 
+                                        margin-bottom: 15px; 
+                                        border-bottom: 2px solid #333; 
+                                        padding-bottom: 10px; 
+                                      }
+                                      .report-header h1 { margin: 0 0 5px 0; font-size: 20px; }
+                                      .report-header p { margin: 0; color: #666; font-size: 11px; }
+                                      .section { margin-bottom: 15px; page-break-inside: avoid; }
+                                      .section h3 { font-size: 14px; margin: 0 0 8px 0; padding-bottom: 4px; border-bottom: 1px solid #ddd; }
+                                      .section h4 { font-size: 12px; margin: 0 0 6px 0; }
+                                      .grade-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 6px; margin-bottom: 12px; }
+                                      .grade-card { text-align: center; padding: 8px 4px; border: 1px solid #ddd; border-radius: 6px; }
+                                      .grade-card .grade { font-size: 14px; font-weight: bold; }
+                                      .grade-card .count { font-size: 18px; font-weight: bold; }
+                                      .grade-card .percent { font-size: 10px; color: #666; }
+                                      .student-section { page-break-inside: avoid; margin-bottom: 12px; }
+                                      .student-list { margin-top: 6px; }
+                                      .student-row { 
+                                        display: flex; 
+                                        justify-content: space-between; 
+                                        padding: 4px 8px; 
+                                        border-bottom: 1px solid #eee; 
+                                        font-size: 10px;
+                                      }
                                       .student-row:nth-child(odd) { background: #f9f9f9; }
-                                      .comparison-section { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
-                                      .comparison-box { padding: 15px; border: 1px solid #ddd; border-radius: 8px; }
+                                      .performers-grid { 
+                                        display: grid; 
+                                        grid-template-columns: repeat(3, 1fr); 
+                                        gap: 10px; 
+                                        page-break-inside: avoid;
+                                      }
+                                      .performer-box { 
+                                        padding: 10px; 
+                                        border-radius: 8px; 
+                                        page-break-inside: avoid;
+                                      }
+                                      .performer-box.top { background: #fef3c7; border: 1px solid #fcd34d; }
+                                      .performer-box.middle { background: #dbeafe; border: 1px solid #93c5fd; }
+                                      .performer-box.risk { background: #fee2e2; border: 1px solid #fca5a5; }
+                                      .comparison-grid { 
+                                        display: grid; 
+                                        grid-template-columns: 1fr 1fr; 
+                                        gap: 15px; 
+                                        page-break-inside: avoid;
+                                      }
+                                      .comparison-box { padding: 12px; border: 1px solid #ddd; border-radius: 8px; }
                                       .comparison-box.blue { border-color: #3b82f6; background: #eff6ff; }
                                       .comparison-box.amber { border-color: #f59e0b; background: #fffbeb; }
-                                      .stats-row { display: flex; justify-content: space-between; margin-top: 10px; padding-top: 10px; border-top: 1px solid #ddd; }
-                                      @media print { body { padding: 0; } }
+                                      .stats-box { 
+                                        padding: 10px; 
+                                        background: #f5f5f5; 
+                                        border-radius: 8px; 
+                                        page-break-inside: avoid;
+                                      }
+                                      .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; text-align: center; }
+                                      table { width: 100%; border-collapse: collapse; font-size: 10px; }
+                                      th, td { padding: 6px 8px; border-bottom: 1px solid #ddd; }
+                                      th { background: #f5f5f5; font-weight: 600; }
+                                      .footer { 
+                                        text-align: center; 
+                                        font-size: 9px; 
+                                        color: #666; 
+                                        margin-top: 15px; 
+                                        padding-top: 10px; 
+                                        border-top: 1px solid #ddd; 
+                                      }
+                                      @media print { 
+                                        body { padding: 0; } 
+                                        .no-print { display: none; }
+                                      }
                                     </style>
                                   </head>
                                   <body>
@@ -2370,15 +2435,15 @@ export default function TeacherAcademicPage() {
                               </div>
                             </div>
 
-                            {/* Student Lists */}
-                            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                              <div className="p-3 rounded-lg bg-amber-50 border border-amber-200">
+                            {/* Student Lists - All students shown for printing */}
+                            <div className="performers-grid grid grid-cols-1 md:grid-cols-3 gap-3">
+                              <div className="performer-box top p-3 rounded-lg bg-amber-50 border border-amber-200">
                                 <h4 className="text-xs font-semibold text-amber-700 mb-2 flex items-center gap-1">
                                   <Award className="h-3 w-3" /> Top Performers ({bandsTopPerformers.length})
                                 </h4>
-                                <div className="space-y-1 max-h-32 overflow-y-auto">
-                                  {bandsTopPerformers.slice(0, 10).map((s, i) => (
-                                    <div key={s.id} className="flex justify-between text-xs py-1 border-b border-amber-100">
+                                <div className="student-list space-y-1">
+                                  {bandsTopPerformers.map((s, i) => (
+                                    <div key={s.id} className="student-row flex justify-between text-xs py-1 border-b border-amber-100">
                                       <span>{i + 1}. {s.name}</span>
                                       <span className="font-semibold">{s.score}%</span>
                                     </div>
@@ -2387,13 +2452,13 @@ export default function TeacherAcademicPage() {
                                 </div>
                               </div>
                               
-                              <div className="p-3 rounded-lg bg-blue-50 border border-blue-200">
+                              <div className="performer-box middle p-3 rounded-lg bg-blue-50 border border-blue-200">
                                 <h4 className="text-xs font-semibold text-blue-700 mb-2 flex items-center gap-1">
                                   <UserCheck className="h-3 w-3" /> Middle Performers ({bandsMiddlePerformers.length})
                                 </h4>
-                                <div className="space-y-1 max-h-32 overflow-y-auto">
-                                  {bandsMiddlePerformers.slice(0, 10).map((s, i) => (
-                                    <div key={s.id} className="flex justify-between text-xs py-1 border-b border-blue-100">
+                                <div className="student-list space-y-1">
+                                  {bandsMiddlePerformers.map((s, i) => (
+                                    <div key={s.id} className="student-row flex justify-between text-xs py-1 border-b border-blue-100">
                                       <span>{i + 1}. {s.name}</span>
                                       <span className="font-semibold">{s.score}%</span>
                                     </div>
@@ -2402,13 +2467,13 @@ export default function TeacherAcademicPage() {
                                 </div>
                               </div>
                               
-                              <div className="p-3 rounded-lg bg-red-50 border border-red-200">
+                              <div className="performer-box risk p-3 rounded-lg bg-red-50 border border-red-200">
                                 <h4 className="text-xs font-semibold text-red-700 mb-2 flex items-center gap-1">
                                   <AlertTriangle className="h-3 w-3" /> At-Risk ({bandsAtRiskStudents.length})
                                 </h4>
-                                <div className="space-y-1 max-h-32 overflow-y-auto">
-                                  {bandsAtRiskStudents.slice(0, 10).map((s, i) => (
-                                    <div key={s.id} className="flex justify-between text-xs py-1 border-b border-red-100">
+                                <div className="student-list space-y-1">
+                                  {bandsAtRiskStudents.map((s, i) => (
+                                    <div key={s.id} className="student-row flex justify-between text-xs py-1 border-b border-red-100">
                                       <span>{i + 1}. {s.name}</span>
                                       <span className="font-semibold">{s.score}%</span>
                                     </div>
@@ -2419,9 +2484,9 @@ export default function TeacherAcademicPage() {
                             </div>
 
                             {/* Summary Stats */}
-                            <div className="p-3 rounded-lg bg-muted/50 border border-border">
+                            <div className="stats-box p-3 rounded-lg bg-muted/50 border border-border">
                               <h4 className="text-xs font-semibold text-foreground mb-2">Summary Statistics</h4>
-                              <div className="grid grid-cols-4 gap-2 text-center">
+                              <div className="stats-grid grid grid-cols-4 gap-2 text-center">
                                 <div>
                                   <div className="text-lg font-bold text-foreground">{bandsRankedStudents.length}</div>
                                   <div className="text-[10px] text-muted-foreground">Total Students</div>
@@ -2444,26 +2509,26 @@ export default function TeacherAcademicPage() {
                         ) : (
                           /* Comparison Report */
                           <>
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div className="comparison-grid grid grid-cols-1 md:grid-cols-2 gap-4">
                               {/* Selection A */}
-                              <div className="p-3 rounded-lg bg-blue-50 border border-blue-200">
+                              <div className="comparison-box blue p-3 rounded-lg bg-blue-50 border border-blue-200">
                                 <div className="flex items-center gap-2 mb-3">
                                   <div className="w-3 h-3 rounded-full bg-blue-500" />
                                   <span className="text-sm font-semibold text-blue-700">
                                     {selectedClass} - {bandsSelectedSubject}
                                   </span>
                                 </div>
-                                <div className="grid grid-cols-6 gap-1 mb-3">
+                                <div className="grade-grid grid grid-cols-6 gap-1 mb-3">
                                   {bandsGradeDistribution.map(g => {
                                     const total = bandsGradeDistribution.reduce((sum, d) => sum + d.count, 0);
                                     const percentage = total > 0 ? Math.round(g.count / total * 100) : 0;
                                     return (
-                                      <div key={g.range} className="text-center p-1.5 border rounded bg-background">
-                                        <div className="text-xs font-bold" style={{ color: GRADE_COLORS[g.range as keyof typeof GRADE_COLORS] }}>
+                                      <div key={g.range} className="grade-card text-center p-1.5 border rounded bg-background">
+                                        <div className="grade text-xs font-bold" style={{ color: GRADE_COLORS[g.range as keyof typeof GRADE_COLORS] }}>
                                           {g.range}
                                         </div>
-                                        <div className="text-sm font-bold text-foreground">{g.count}</div>
-                                        <div className="text-[9px] text-muted-foreground">{percentage}%</div>
+                                        <div className="count text-sm font-bold text-foreground">{g.count}</div>
+                                        <div className="percent text-[9px] text-muted-foreground">{percentage}%</div>
                                       </div>
                                     );
                                   })}
@@ -2473,27 +2538,39 @@ export default function TeacherAcademicPage() {
                                   <span>Middle: {bandsMiddlePerformers.length}</span>
                                   <span>At-Risk: {bandsAtRiskStudents.length}</span>
                                 </div>
+                                {/* Full student list for Selection A */}
+                                <div className="student-section mt-3 pt-3 border-t border-blue-200 space-y-2">
+                                  <div className="text-[10px] font-semibold text-blue-700">All Students:</div>
+                                  <div className="student-list space-y-0.5">
+                                    {bandsRankedStudents.map((s, i) => (
+                                      <div key={s.id} className="student-row flex justify-between text-[10px] py-0.5">
+                                        <span>{i + 1}. {s.name}</span>
+                                        <span className="font-semibold">{s.score}%</span>
+                                      </div>
+                                    ))}
+                                  </div>
+                                </div>
                               </div>
 
                               {/* Selection B */}
-                              <div className="p-3 rounded-lg bg-amber-50 border border-amber-200">
+                              <div className="comparison-box amber p-3 rounded-lg bg-amber-50 border border-amber-200">
                                 <div className="flex items-center gap-2 mb-3">
                                   <div className="w-3 h-3 rounded-full bg-amber-500" />
                                   <span className="text-sm font-semibold text-amber-700">
                                     {bandsCompareClass} - {bandsCompareSubject}
                                   </span>
                                 </div>
-                                <div className="grid grid-cols-6 gap-1 mb-3">
+                                <div className="grade-grid grid grid-cols-6 gap-1 mb-3">
                                   {bandsCompareGradeDistribution.map(g => {
                                     const total = bandsCompareGradeDistribution.reduce((sum, d) => sum + d.count, 0);
                                     const percentage = total > 0 ? Math.round(g.count / total * 100) : 0;
                                     return (
-                                      <div key={g.range} className="text-center p-1.5 border rounded bg-background">
-                                        <div className="text-xs font-bold" style={{ color: GRADE_COLORS[g.range as keyof typeof GRADE_COLORS] }}>
+                                      <div key={g.range} className="grade-card text-center p-1.5 border rounded bg-background">
+                                        <div className="grade text-xs font-bold" style={{ color: GRADE_COLORS[g.range as keyof typeof GRADE_COLORS] }}>
                                           {g.range}
                                         </div>
-                                        <div className="text-sm font-bold text-foreground">{g.count}</div>
-                                        <div className="text-[9px] text-muted-foreground">{percentage}%</div>
+                                        <div className="count text-sm font-bold text-foreground">{g.count}</div>
+                                        <div className="percent text-[9px] text-muted-foreground">{percentage}%</div>
                                       </div>
                                     );
                                   })}
@@ -2503,11 +2580,23 @@ export default function TeacherAcademicPage() {
                                   <span>Middle: {bandsCompareMiddlePerformers.length}</span>
                                   <span>At-Risk: {bandsCompareAtRiskStudents.length}</span>
                                 </div>
+                                {/* Full student list for Selection B */}
+                                <div className="student-section mt-3 pt-3 border-t border-amber-200 space-y-2">
+                                  <div className="text-[10px] font-semibold text-amber-700">All Students:</div>
+                                  <div className="student-list space-y-0.5">
+                                    {bandsCompareRankedStudents.map((s, i) => (
+                                      <div key={s.id} className="student-row flex justify-between text-[10px] py-0.5">
+                                        <span>{i + 1}. {s.name}</span>
+                                        <span className="font-semibold">{s.score}%</span>
+                                      </div>
+                                    ))}
+                                  </div>
+                                </div>
                               </div>
                             </div>
 
                             {/* Comparison Summary */}
-                            <div className="p-3 rounded-lg bg-muted/50 border border-border">
+                            <div className="stats-box p-3 rounded-lg bg-muted/50 border border-border">
                               <h4 className="text-xs font-semibold text-foreground mb-3">Comparison Summary</h4>
                               <div className="overflow-x-auto">
                                 <table className="w-full text-xs">
@@ -2556,7 +2645,7 @@ export default function TeacherAcademicPage() {
                         )}
 
                         {/* Footer */}
-                        <div className="text-center text-[10px] text-muted-foreground pt-3 border-t border-border">
+                        <div className="footer text-center text-[10px] text-muted-foreground pt-3 border-t border-border">
                           <p>Prepared by: {teacherProfile.name} • {teacherProfile.email}</p>
                         </div>
                       </div>
