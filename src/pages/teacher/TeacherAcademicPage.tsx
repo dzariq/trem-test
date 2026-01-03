@@ -1773,6 +1773,50 @@ export default function TeacherAcademicPage() {
                     </div>
                   </div>}
 
+                {/* At-Risk Subjects */}
+                {fallingSubjects.length > 0 && <div className="space-y-2">
+                    <h4 className="text-sm font-medium text-foreground flex items-center gap-1.5">
+                      <TrendingDown className="h-4 w-4" style={{ color: '#dc2626' }} /> At-Risk Subjects
+                    </h4>
+                    <p className="text-[10px] text-muted-foreground -mt-1">Subjects that need extra attention</p>
+                    <div className="grid grid-cols-3 gap-2">
+                      {fallingSubjects.slice(0, 3).map(item => <div key={item.name} className="relative flex flex-col items-center p-2.5 rounded-lg border overflow-hidden" style={{
+                    background: 'linear-gradient(135deg, #fee2e2 0%, #fecaca 50%, #f87171 100%)',
+                    borderColor: 'rgba(248, 113, 113, 0.5)'
+                  }}>
+                          {/* Inner shine effect */}
+                          <div className="absolute inset-0 pointer-events-none" style={{
+                      background: 'radial-gradient(ellipse at 30% 20%, rgba(255, 255, 255, 0.2) 0%, transparent 40%)'
+                    }} />
+                          {/* Warning pattern background */}
+                          <div className="absolute inset-0 pointer-events-none">
+                            <AlertTriangle className="absolute top-1 -left-1 w-7 h-7 opacity-20" style={{ color: '#dc2626' }} />
+                            <AlertTriangle className="absolute bottom-1 -right-1 w-6 h-6 opacity-15" style={{ color: '#ef4444' }} />
+                          </div>
+                          <span className="text-xs font-medium text-foreground text-center relative z-10">{item.name.length > 10 ? item.name.substring(0, 10) + "..." : item.name}</span>
+                          <div className="flex items-center gap-1 mt-1 relative z-10">
+                            <ArrowDownRight className="h-3 w-3" style={{ color: '#dc2626' }} />
+                            <span className="text-sm font-bold" style={{ color: '#dc2626' }}>-{item.decline}%</span>
+                          </div>
+                          <div className="flex items-center gap-1 mt-1 relative z-10">
+                            <span className="text-[10px] font-medium px-2 py-0.5 rounded-full" style={{
+                        backgroundColor: '#fef2f2',
+                        color: '#991b1b'
+                      }}>
+                              {item.first}%
+                            </span>
+                            <span className="text-[10px] text-muted-foreground">→</span>
+                            <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full" style={{
+                        backgroundColor: '#ef4444',
+                        color: '#ffffff'
+                      }}>
+                              {item.last}%
+                            </span>
+                          </div>
+                        </div>)}
+                    </div>
+                  </div>}
+
                 {/* Subject Performance Bar Chart */}
                 <div className="space-y-2">
                   <h4 className="text-sm font-medium text-foreground">Subject Performance</h4>
@@ -4131,33 +4175,54 @@ export default function TeacherAcademicPage() {
                 </div>
               </div>
 
-              {/* Summary Statistics */}
-              <div className="section" style={{ marginBottom: '12px', pageBreakInside: 'avoid' }}>
-                <h3 style={{ fontSize: '12px', fontWeight: 600, marginBottom: '8px', paddingBottom: '4px', borderBottom: '1px solid #ddd' }}>Summary Statistics</h3>
-                <div className="stats-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: '6px', textAlign: 'center' }}>
-                  <div className="stat-card" style={{ padding: '8px 4px', border: '1px solid #ddd', borderRadius: '6px', backgroundColor: '#eff6ff' }}>
-                    <div className="stat-value" style={{ fontSize: '14px', fontWeight: 700, color: '#3b82f6' }}>{classAverage}%</div>
-                    <div className="stat-label" style={{ fontSize: '8px', color: '#666' }}>Average</div>
+              {/* Summary Statistics Cards */}
+              <div style={{ marginBottom: '12px', pageBreakInside: 'avoid' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '8px' }}>
+                  {/* Average */}
+                  <div style={{ padding: '12px 8px', borderRadius: '10px', backgroundColor: '#dcfce7', textAlign: 'center' }}>
+                    <div style={{ fontSize: '14px', marginBottom: '4px' }}>📖</div>
+                    <div style={{ fontSize: '18px', fontWeight: 700, color: '#22c55e' }}>{classAverage}%</div>
+                    <div style={{ fontSize: '10px', color: '#166534', fontWeight: 600 }}>Class Average</div>
+                    <div style={{ fontSize: '8px', color: '#166534', marginTop: '2px' }}>
+                      {classAverage >= 80 ? 'Excellent' : classAverage >= 60 ? 'Above Average' : 'Needs Improvement'}
+                    </div>
                   </div>
-                  <div className="stat-card" style={{ padding: '8px 4px', border: '1px solid #ddd', borderRadius: '6px', backgroundColor: '#fef3c7' }}>
-                    <div className="stat-value" style={{ fontSize: '14px', fontWeight: 700, color: '#f59e0b' }}>{highestScore}%</div>
-                    <div className="stat-label" style={{ fontSize: '8px', color: '#666' }}>Highest</div>
+                  {/* Highest */}
+                  <div style={{ padding: '12px 8px', borderRadius: '10px', backgroundColor: '#fef3c7', textAlign: 'center' }}>
+                    <div style={{ fontSize: '14px', marginBottom: '4px' }}>🏆</div>
+                    <div style={{ fontSize: '18px', fontWeight: 700, color: '#d97706' }}>{highestScore}%</div>
+                    <div style={{ fontSize: '10px', color: '#92400e', fontWeight: 600 }}>Highest Score</div>
+                    <div style={{ fontSize: '8px', color: '#92400e', marginTop: '2px' }}>Top Student</div>
                   </div>
-                  <div className="stat-card" style={{ padding: '8px 4px', border: '1px solid #ddd', borderRadius: '6px', backgroundColor: '#fee2e2' }}>
-                    <div className="stat-value" style={{ fontSize: '14px', fontWeight: 700, color: '#ef4444' }}>{lowestScore}%</div>
-                    <div className="stat-label" style={{ fontSize: '8px', color: '#666' }}>Lowest</div>
+                  {/* Pass Rate */}
+                  <div style={{ padding: '12px 8px', borderRadius: '10px', backgroundColor: '#ccfbf1', textAlign: 'center' }}>
+                    <div style={{ fontSize: '14px', marginBottom: '4px' }}>📈</div>
+                    <div style={{ fontSize: '18px', fontWeight: 700, color: '#0d9488' }}>{passRate}%</div>
+                    <div style={{ fontSize: '10px', color: '#115e59', fontWeight: 600 }}>Pass Rate</div>
+                    <div style={{ fontSize: '8px', color: '#115e59', marginTop: '2px' }}>
+                      {passRate >= 90 ? 'Excellent' : passRate >= 70 ? 'Good' : 'Needs Focus'}
+                    </div>
                   </div>
-                  <div className="stat-card" style={{ padding: '8px 4px', border: '1px solid #ddd', borderRadius: '6px', backgroundColor: '#dcfce7' }}>
-                    <div className="stat-value" style={{ fontSize: '14px', fontWeight: 700, color: '#22c55e' }}>{passRate}%</div>
-                    <div className="stat-label" style={{ fontSize: '8px', color: '#666' }}>Pass Rate</div>
+                  {/* Students */}
+                  <div style={{ padding: '12px 8px', borderRadius: '10px', backgroundColor: '#eff6ff', textAlign: 'center' }}>
+                    <div style={{ fontSize: '14px', marginBottom: '4px' }}>👥</div>
+                    <div style={{ fontSize: '18px', fontWeight: 700, color: '#3b82f6' }}>{students.length}</div>
+                    <div style={{ fontSize: '10px', color: '#1d4ed8', fontWeight: 600 }}>Students</div>
+                    <div style={{ fontSize: '8px', color: '#1d4ed8', marginTop: '2px' }}>In Class</div>
                   </div>
-                  <div className="stat-card" style={{ padding: '8px 4px', border: '1px solid #ddd', borderRadius: '6px', backgroundColor: '#f3e8ff' }}>
-                    <div className="stat-value" style={{ fontSize: '14px', fontWeight: 700, color: '#a855f7' }}>{students.length}</div>
-                    <div className="stat-label" style={{ fontSize: '8px', color: '#666' }}>Students</div>
+                  {/* A Grade Rate */}
+                  <div style={{ padding: '12px 8px', borderRadius: '10px', backgroundColor: '#f3e8ff', textAlign: 'center' }}>
+                    <div style={{ fontSize: '14px', marginBottom: '4px' }}>🎯</div>
+                    <div style={{ fontSize: '18px', fontWeight: 700, color: '#9333ea' }}>{aGradeRate}%</div>
+                    <div style={{ fontSize: '10px', color: '#6b21a8', fontWeight: 600 }}>A Grade</div>
+                    <div style={{ fontSize: '8px', color: '#6b21a8', marginTop: '2px' }}>Excellence Rate</div>
                   </div>
-                  <div className="stat-card" style={{ padding: '8px 4px', border: '1px solid #ddd', borderRadius: '6px', backgroundColor: '#ecfdf5' }}>
-                    <div className="stat-value" style={{ fontSize: '14px', fontWeight: 700, color: '#10b981' }}>{aGradeRate}%</div>
-                    <div className="stat-label" style={{ fontSize: '8px', color: '#666' }}>A Grade</div>
+                  {/* Lowest */}
+                  <div style={{ padding: '12px 8px', borderRadius: '10px', backgroundColor: '#fee2e2', textAlign: 'center' }}>
+                    <div style={{ fontSize: '14px', marginBottom: '4px' }}>⚠️</div>
+                    <div style={{ fontSize: '18px', fontWeight: 700, color: '#dc2626' }}>{lowestScore}%</div>
+                    <div style={{ fontSize: '10px', color: '#991b1b', fontWeight: 600 }}>Lowest Score</div>
+                    <div style={{ fontSize: '8px', color: '#991b1b', marginTop: '2px' }}>Needs Support</div>
                   </div>
                 </div>
               </div>
@@ -4199,6 +4264,75 @@ export default function TeacherAcademicPage() {
                   })}
                 </div>
               </div>
+
+              {/* Rising Subjects & At-Risk Subjects - Side by Side */}
+              {(risingSubjects.length > 0 || fallingSubjects.length > 0) && (
+                <div style={{ display: 'grid', gridTemplateColumns: risingSubjects.length > 0 && fallingSubjects.length > 0 ? 'repeat(2, 1fr)' : '1fr', gap: '12px', marginBottom: '12px', pageBreakInside: 'avoid' }}>
+                  {/* Rising Subjects */}
+                  {risingSubjects.length > 0 && (
+                    <div style={{ padding: '10px', borderRadius: '8px', background: 'linear-gradient(135deg, #fef9c3 0%, #fef3c7 100%)', border: '1px solid #fde047' }}>
+                      <h4 style={{ fontSize: '11px', fontWeight: 600, color: '#ca8a04', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                        ⭐ Rising Subjects
+                      </h4>
+                      <p style={{ fontSize: '8px', color: '#a16207', marginBottom: '8px' }}>Top performing subjects</p>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                        {risingSubjects.slice(0, 3).map((item) => (
+                          <div 
+                            key={item.name}
+                            style={{ 
+                              padding: '8px 10px', 
+                              borderRadius: '6px', 
+                              background: 'linear-gradient(135deg, #fef08a 0%, #fde047 100%)',
+                              border: '1px solid rgba(253, 224, 71, 0.6)',
+                              display: 'flex',
+                              justifyContent: 'space-between',
+                              alignItems: 'center'
+                            }}
+                          >
+                            <div style={{ fontSize: '9px', fontWeight: 600, color: '#713f12' }}>{shortenSubjectName(item.name)}</div>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                              <div style={{ fontSize: '11px', fontWeight: 700, color: '#a16207' }}>+{item.improvement}%</div>
+                              <div style={{ fontSize: '7px', color: '#854d0e' }}>{item.first}%→{item.last}%</div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                  
+                  {/* At-Risk Subjects */}
+                  {fallingSubjects.length > 0 && (
+                    <div style={{ padding: '10px', borderRadius: '8px', background: 'linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%)', border: '1px solid #fca5a5' }}>
+                      <h4 style={{ fontSize: '11px', fontWeight: 600, color: '#dc2626', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                        ⚠️ At-Risk Subjects
+                      </h4>
+                      <p style={{ fontSize: '8px', color: '#b91c1c', marginBottom: '8px' }}>Needs extra attention</p>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                        {fallingSubjects.slice(0, 3).map((item) => (
+                          <div 
+                            key={item.name}
+                            style={{ 
+                              padding: '8px 10px', 
+                              borderRadius: '6px', 
+                              background: 'linear-gradient(135deg, #fecaca 0%, #fca5a5 100%)',
+                              border: '1px solid rgba(252, 165, 165, 0.6)',
+                              display: 'flex',
+                              justifyContent: 'space-between',
+                              alignItems: 'center'
+                            }}
+                          >
+                            <div style={{ fontSize: '9px', fontWeight: 600, color: '#991b1b' }}>{shortenSubjectName(item.name)}</div>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                              <div style={{ fontSize: '11px', fontWeight: 700, color: '#dc2626' }}>-{item.decline}%</div>
+                              <div style={{ fontSize: '7px', color: '#b91c1c' }}>{item.first}%→{item.last}%</div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
 
               {/* Top Performers & At-Risk */}
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '12px', marginBottom: '12px', pageBreakInside: 'avoid' }}>
