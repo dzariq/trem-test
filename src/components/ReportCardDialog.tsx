@@ -1,10 +1,62 @@
 import { useRef } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Printer } from "lucide-react";
+import { Printer, Star, BookOpen, MessageSquare, Trophy, Award, BookMarked, Target } from "lucide-react";
 import collinzLogo from "@/assets/collinz-school-logo.png";
 import schoolBadge from "@/assets/school-badge.png";
 import cambridgeLogo from "@/assets/cambridge-logo.jpg";
+
+// SVG Icon components for print compatibility
+const IconStar = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+  </svg>
+);
+
+const IconBook = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20" />
+  </svg>
+);
+
+const IconMessage = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+  </svg>
+);
+
+const IconTrophy = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6" />
+    <path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18" />
+    <path d="M4 22h16" />
+    <path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22" />
+    <path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22" />
+    <path d="M18 2H6v7a6 6 0 0 0 12 0V2Z" />
+  </svg>
+);
+
+const IconTarget = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <circle cx="12" cy="12" r="10" />
+    <circle cx="12" cy="12" r="6" />
+    <circle cx="12" cy="12" r="2" />
+  </svg>
+);
+
+const IconBookMarked = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20" />
+    <polyline points="10 2 10 10 13 7 16 10 16 2" />
+  </svg>
+);
+
+const IconAward = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <circle cx="12" cy="8" r="6" />
+    <path d="M15.477 12.89 17 22l-5-3-5 3 1.523-9.11" />
+  </svg>
+);
 
 interface Subject {
   name: string;
@@ -260,8 +312,8 @@ export function ReportCardDialog({
             {/* Attitude & Behaviour - Card Style */}
               <div style={{ borderRadius: '12px', padding: '10px' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '8px' }}>
-                  <span style={{ fontSize: '12px' }}>⭐</span>
-                  <span style={{ fontSize: '10px', fontWeight: '700', color: '#065f46' }}>Attitude & Behaviour</span>
+                  <span style={{ color: '#065f46' }}><IconStar /></span>
+                  <span style={{ fontSize: '11px', fontWeight: '700', color: '#065f46' }}>Attitude & Behaviour</span>
                 </div>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '4px' }}>
                   {behavior.slice(0, 8).map((item) => {
@@ -320,8 +372,9 @@ export function ReportCardDialog({
             <div style={{ marginBottom: '16px' }}>
               <div style={{ position: 'relative', zIndex: 1 }}>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '10px', paddingBottom: '8px', borderBottom: '1px solid #d1d5db' }}>
-                  <h3 style={{ fontSize: '14px', fontWeight: '700', color: '#065f46', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                    📚 Academic Grades
+                  <h3 style={{ fontSize: '11px', fontWeight: '700', color: '#065f46', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <span style={{ color: '#065f46' }}><IconBook /></span>
+                    Academic Grades
                   </h3>
                   {/* Compact Grading Key Legend */}
                   <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
@@ -380,16 +433,16 @@ export function ReportCardDialog({
                             {subject.name}
                           </td>
                           {/* Mid-Year Score with Grade Watermark */}
-                          <td style={{ position: 'relative', padding: '4px', borderBottom: hasLearningTips ? 'none' : '1px solid #d1d5db', borderRight: '1px solid #d1d5db', textAlign: 'center', fontWeight: '600', overflow: 'hidden', fontSize: '10px' }}>
+                          <td style={{ position: 'relative', padding: '6px 4px', borderBottom: hasLearningTips ? 'none' : '1px solid #d1d5db', borderRight: '1px solid #d1d5db', textAlign: 'center', fontWeight: '800', overflow: 'hidden', fontSize: '13px' }}>
                             <span style={{ 
                               position: 'absolute', 
                               left: '50%', 
-                              bottom: '-8px', 
+                              bottom: '-10px', 
                               transform: 'translateX(-50%)',
-                              fontSize: '32px', 
+                              fontSize: '36px', 
                               fontWeight: '900', 
                               color: midYearGradeColor.bg, 
-                              opacity: 0.35,
+                              opacity: 0.15,
                               pointerEvents: 'none',
                               lineHeight: 1
                             }}>
@@ -398,16 +451,16 @@ export function ReportCardDialog({
                             <span style={{ position: 'relative', zIndex: 1 }}>{subject.score !== null ? `${subject.score}%` : '-'}</span>
                           </td>
                           {/* Year-End Score with Grade Watermark */}
-                          <td style={{ position: 'relative', padding: '4px', borderBottom: hasLearningTips ? 'none' : '1px solid #d1d5db', borderRight: '1px solid #d1d5db', textAlign: 'center', fontWeight: '600', overflow: 'hidden', fontSize: '10px' }}>
+                          <td style={{ position: 'relative', padding: '6px 4px', borderBottom: hasLearningTips ? 'none' : '1px solid #d1d5db', borderRight: '1px solid #d1d5db', textAlign: 'center', fontWeight: '800', overflow: 'hidden', fontSize: '13px' }}>
                             <span style={{ 
                               position: 'absolute', 
                               left: '50%', 
-                              bottom: '-8px', 
+                              bottom: '-10px', 
                               transform: 'translateX(-50%)',
-                              fontSize: '32px', 
+                              fontSize: '36px', 
                               fontWeight: '900', 
                               color: derivedYearEndGradeColor.bg, 
-                              opacity: 0.35,
+                              opacity: 0.15,
                               pointerEvents: 'none',
                               lineHeight: 1
                             }}>
@@ -426,15 +479,21 @@ export function ReportCardDialog({
                             <td colSpan={4} style={{ padding: '4px 6px 6px 6px', borderBottom: '1px solid #d1d5db' }}>
                               <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
                                 {subject.classStudyRecommendation && (
-                                  <div style={{ flex: 1, minWidth: '200px' }}>
-                                    <span style={{ fontSize: '7px', fontWeight: '600', color: '#065f46', textTransform: 'uppercase', letterSpacing: '0.3px' }}>📚 Class Learning Tips: </span>
-                                    <span style={{ fontSize: '7px', color: '#374151' }}>{subject.classStudyRecommendation}</span>
+                                  <div style={{ flex: 1, minWidth: '200px', display: 'flex', alignItems: 'flex-start', gap: '4px' }}>
+                                    <span style={{ color: '#065f46', flexShrink: 0, marginTop: '1px' }}><IconBookMarked /></span>
+                                    <div>
+                                      <span style={{ fontSize: '7px', fontWeight: '600', color: '#065f46', textTransform: 'uppercase', letterSpacing: '0.3px' }}>Class Learning Tips: </span>
+                                      <span style={{ fontSize: '7px', color: '#374151' }}>{subject.classStudyRecommendation}</span>
+                                    </div>
                                   </div>
                                 )}
                                 {subject.studyRecommendation && (
-                                  <div style={{ flex: 1, minWidth: '200px' }}>
-                                    <span style={{ fontSize: '7px', fontWeight: '600', color: '#0369a1', textTransform: 'uppercase', letterSpacing: '0.3px' }}>🎯 Individual Learning Tips: </span>
-                                    <span style={{ fontSize: '7px', color: '#374151' }}>{subject.studyRecommendation}</span>
+                                  <div style={{ flex: 1, minWidth: '200px', display: 'flex', alignItems: 'flex-start', gap: '4px' }}>
+                                    <span style={{ color: '#0369a1', flexShrink: 0, marginTop: '1px' }}><IconTarget /></span>
+                                    <div>
+                                      <span style={{ fontSize: '7px', fontWeight: '600', color: '#0369a1', textTransform: 'uppercase', letterSpacing: '0.3px' }}>Individual Learning Tips: </span>
+                                      <span style={{ fontSize: '7px', color: '#374151' }}>{subject.studyRecommendation}</span>
+                                    </div>
                                   </div>
                                 )}
                               </div>
@@ -449,24 +508,31 @@ export function ReportCardDialog({
               </div>
             </div>
 
-            {/* Homeroom Comment - Force page break before */}
-            <div className="page-break" style={{ position: 'relative', background: '#fffbeb', border: '1px solid #d1d5db', borderRadius: '10px', padding: '14px', marginBottom: '12px', overflow: 'hidden', pageBreakBefore: 'always' }}>
-              {/* Chat bubble pattern at right corner */}
+            {/* Homeroom Comment - Continues after academic grades */}
+            <div style={{ position: 'relative', background: '#fffbeb', border: '1px solid #d1d5db', borderRadius: '10px', padding: '14px', marginBottom: '12px', overflow: 'hidden' }}>
+              {/* Message icon pattern at right corner */}
               <div style={{ 
                 position: 'absolute', 
-                right: '8px', 
-                bottom: '6px', 
-                fontSize: '32px', 
-                opacity: 0.1, 
+                right: '12px', 
+                bottom: '10px', 
+                opacity: 0.08, 
                 pointerEvents: 'none',
                 display: 'flex',
-                gap: '4px'
+                gap: '8px',
+                alignItems: 'flex-end'
               }}>
-                <span>💬</span>
-                <span style={{ fontSize: '20px', marginTop: '8px' }}>💬</span>
+                <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#92400e" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+                </svg>
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#92400e" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+                </svg>
               </div>
-              <h4 style={{ fontSize: '13px', fontWeight: '600', color: '#92400e', marginBottom: '8px' }}>💬 Homeroom Teacher&apos;s Comment</h4>
-              <p style={{ fontSize: '12px', color: '#78350f', lineHeight: '1.6', position: 'relative', zIndex: 1 }}>{homeroomComment}</p>
+              <h4 style={{ fontSize: '11px', fontWeight: '700', color: '#92400e', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <span style={{ color: '#92400e' }}><IconMessage /></span>
+                Homeroom Teacher&apos;s Comment
+              </h4>
+              <p style={{ fontSize: '11px', color: '#78350f', lineHeight: '1.6', position: 'relative', zIndex: 1 }}>{homeroomComment}</p>
             </div>
 
             {/* Achievements */}
@@ -475,23 +541,39 @@ export function ReportCardDialog({
                 {/* Trophy pattern at right corner */}
                 <div style={{ 
                   position: 'absolute', 
-                  right: '10px', 
+                  right: '12px', 
                   bottom: '10px', 
-                  fontSize: '48px', 
-                  opacity: 0.2, 
+                  opacity: 0.08, 
                   pointerEvents: 'none',
                   display: 'flex',
                   gap: '8px',
                   alignItems: 'flex-end'
                 }}>
-                  <span>🏆</span>
-                  <span style={{ fontSize: '32px' }}>🏆</span>
+                  <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#92400e" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6" />
+                    <path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18" />
+                    <path d="M4 22h16" />
+                    <path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22" />
+                    <path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22" />
+                    <path d="M18 2H6v7a6 6 0 0 0 12 0V2Z" />
+                  </svg>
+                  <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#92400e" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6" />
+                    <path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18" />
+                    <path d="M4 22h16" />
+                    <path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22" />
+                    <path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22" />
+                    <path d="M18 2H6v7a6 6 0 0 0 12 0V2Z" />
+                  </svg>
                 </div>
-                <h4 style={{ fontSize: '11px', fontWeight: '600', color: '#92400e', marginBottom: '8px', position: 'relative', zIndex: 1 }}>🏆 Academic Achievements</h4>
+                <h4 style={{ fontSize: '11px', fontWeight: '700', color: '#92400e', marginBottom: '8px', position: 'relative', zIndex: 1, display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <span style={{ color: '#92400e' }}><IconTrophy /></span>
+                  Academic Achievements
+                </h4>
                 <div style={{ display: 'grid', gap: '4px', position: 'relative', zIndex: 1 }}>
                   {achievements.map((achievement, index) => (
                     <div key={index} style={{ background: 'white', padding: '6px 10px', borderRadius: '6px', fontSize: '10px', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                      <span>⭐</span>
+                      <span style={{ color: '#ca8a04' }}><IconAward /></span>
                       {achievement}
                     </div>
                   ))}
