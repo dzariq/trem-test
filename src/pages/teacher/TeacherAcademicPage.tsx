@@ -3466,10 +3466,33 @@ export default function TeacherAcademicPage() {
                         border: "1px solid hsl(var(--border))",
                         borderRadius: "8px"
                       }} formatter={(value: number, name: string) => [`${value}%`, name === "classScore" ? "Class Score" : "Cohort Average"]} />
-                        <Legend wrapperStyle={{
-                        fontSize: 10
-                      }} formatter={value => value === "classScore" ? "Class Score" : "Cohort Avg"} />
-                        <Bar dataKey="classScore" fill="#3b82f6" radius={[0, 4, 4, 0]} barSize={12} />
+                        <Bar dataKey="classScore" radius={[0, 4, 4, 0]} barSize={12}>
+                          {subjectVsCohortData.map((entry, index) => {
+                            // Subject colors for visual distinction
+                            const subjectColors: Record<string, string> = {
+                              "English": "#22c55e",
+                              "Math": "#f59e0b",
+                              "Malay": "#3b82f6",
+                              "Science": "#ef4444",
+                              "ICT": "#8b5cf6",
+                              "Add Math": "#f97316",
+                              "Chemistry": "#06b6d4",
+                              "Physics": "#ec4899",
+                              "Biology": "#10b981",
+                              "Account": "#6366f1",
+                              "Econs": "#14b8a6",
+                              "Biz Stud": "#a855f7",
+                              "Moral": "#84cc16",
+                              "Islamic": "#0ea5e9",
+                              "Art": "#f43f5e",
+                              "Living S": "#facc15",
+                              "Chinese": "#64748b",
+                            };
+                            const fallbackColors = ["#3b82f6", "#f59e0b", "#22c55e", "#ef4444", "#8b5cf6", "#f97316", "#06b6d4", "#ec4899", "#10b981", "#6366f1"];
+                            const color = subjectColors[entry.name] || fallbackColors[index % fallbackColors.length];
+                            return <Cell key={index} fill={color} />;
+                          })}
+                        </Bar>
                         {/* Cohort Average as dots */}
                         {subjectVsCohortData.map((entry) => (
                           <ReferenceDot
@@ -3484,6 +3507,17 @@ export default function TeacherAcademicPage() {
                         ))}
                       </BarChart>
                     </ResponsiveContainer>
+                  </div>
+                  {/* Legend for dots */}
+                  <div className="flex items-center justify-center gap-3 text-[10px] text-muted-foreground">
+                    <div className="flex items-center gap-1">
+                      <div className="w-3 h-3 rounded-sm bg-primary" />
+                      <span>Class Score</span>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <div className="w-2 h-2 rounded-full bg-foreground" />
+                      <span>Cohort Avg</span>
+                    </div>
                   </div>
                   {/* Delta badges */}
                   <div className="flex flex-wrap gap-1.5 justify-center">
@@ -4296,7 +4330,8 @@ export default function TeacherAcademicPage() {
                         <path
                           d={`M ${trendData.map((d, i) => {
                             const x = 40 + (i / (trendData.length - 1 || 1)) * 440;
-                            const y = 100 - ((d.Average - 30) / 70) * 80;
+                            const avg = typeof d.Average === 'number' ? d.Average : 0;
+                            const y = 100 - ((avg - 30) / 70) * 80;
                             return `${i === 0 ? 'M' : 'L'} ${x} ${y}`;
                           }).join(' ')} L ${40 + 440} 100 L 40 100 Z`}
                           fill="url(#trendGradient)"
@@ -4304,7 +4339,8 @@ export default function TeacherAcademicPage() {
                         <path
                           d={trendData.map((d, i) => {
                             const x = 40 + (i / (trendData.length - 1 || 1)) * 440;
-                            const y = 100 - ((d.Average - 30) / 70) * 80;
+                            const avg = typeof d.Average === 'number' ? d.Average : 0;
+                            const y = 100 - ((avg - 30) / 70) * 80;
                             return `${i === 0 ? 'M' : 'L'} ${x} ${y}`;
                           }).join(' ')}
                           fill="none"
@@ -4314,12 +4350,14 @@ export default function TeacherAcademicPage() {
                         {/* Data points */}
                         {trendData.map((d, i) => {
                           const x = 40 + (i / (trendData.length - 1 || 1)) * 440;
-                          const y = 100 - ((d.Average - 30) / 70) * 80;
+                          const avg = typeof d.Average === 'number' ? d.Average : 0;
+                          const y = 100 - ((avg - 30) / 70) * 80;
+                          const periodStr = typeof d.period === 'string' ? d.period : String(d.period);
                           return (
                             <g key={i}>
                               <circle cx={x} cy={y} r="4" fill={trendDirection.direction === 'up' ? '#22c55e' : trendDirection.direction === 'down' ? '#ef4444' : '#3b82f6'} />
-                              <text x={x} y={y - 8} fontSize="8" fill="#374151" textAnchor="middle" fontWeight="600">{d.Average}%</text>
-                              <text x={x} y="115" fontSize="7" fill="#6b7280" textAnchor="middle">{d.period.split(' ')[0]}</text>
+                              <text x={x} y={y - 8} fontSize="8" fill="#374151" textAnchor="middle" fontWeight="600">{avg}%</text>
+                              <text x={x} y="115" fontSize="7" fill="#6b7280" textAnchor="middle">{periodStr.split(' ')[0]}</text>
                             </g>
                           );
                         })}
