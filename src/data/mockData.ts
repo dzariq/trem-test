@@ -269,8 +269,8 @@ export const academicData = {
       scores: {
         "2022": { midYear: 72, yearEnd: 74, attitude: 78, homework: 76, quiz: 70, exam: 72 },
         "2023": { midYear: 74, yearEnd: 76, attitude: 80, homework: 78, quiz: 72, exam: 74 },
-        "2024": { midYear: 76, yearEnd: 78, attitude: 82, homework: 80, quiz: 74, exam: 76 },
-        "2025": { midYear: 78, yearEnd: null, attitude: 84, homework: 82, quiz: 76, exam: 78 }
+        "2024": { midYear: 76, yearEnd: 77, attitude: 82, homework: 80, quiz: 74, exam: 76 },
+        "2025": { midYear: 80, yearEnd: null, attitude: 84, homework: 82, quiz: 78, exam: 80 }
       }
     },
     // Subject 4 - A*
