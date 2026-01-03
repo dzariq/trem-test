@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { CalendarIcon, Check, X, Clock, AlertCircle, Save, ChevronLeft, ChevronRight as ChevronRightIcon } from "lucide-react";
+import { CalendarIcon, Check, X, Clock, AlertCircle, Save, ChevronLeft, ChevronRight as ChevronRightIcon, Users } from "lucide-react";
 import { format, startOfWeek, endOfWeek, isToday, parseISO } from "date-fns";
 import { cn } from "@/lib/utils";
 import { toast } from "@/hooks/use-toast";
@@ -549,8 +549,11 @@ export default function TeacherAttendancePage() {
                     
                     {/* Student List by Status */}
                     {selectedDayStats.students && selectedDayStats.students.length > 0 && (
-                      <Tabs defaultValue="absent" className="w-full">
-                        <TabsList className="w-full grid grid-cols-4 h-9 bg-muted/50">
+                      <Tabs defaultValue="all" className="w-full">
+                        <TabsList className="w-full grid grid-cols-5 h-9 bg-muted/50">
+                          <TabsTrigger value="all" className="text-xs px-1">
+                            <Users className="h-3 w-3 mr-1" />All
+                          </TabsTrigger>
                           <TabsTrigger value="present" className="text-xs px-1">
                             <Check className="h-3 w-3 mr-1" />{studentsByStatus.present.length}
                           </TabsTrigger>
@@ -564,6 +567,31 @@ export default function TeacherAttendancePage() {
                             <AlertCircle className="h-3 w-3 mr-1" />{studentsByStatus.excused.length}
                           </TabsTrigger>
                         </TabsList>
+                        
+                        <TabsContent value="all" className="mt-3">
+                          <div className="space-y-1.5">
+                            {selectedDayStats.students.map((student, idx) => {
+                              const statusConfig = {
+                                present: { bg: "bg-emerald-50/50 dark:bg-emerald-950/20", iconBg: "bg-emerald-100 dark:bg-emerald-900/50", iconColor: "text-emerald-600", Icon: Check },
+                                absent: { bg: "bg-red-50/50 dark:bg-red-950/20", iconBg: "bg-red-100 dark:bg-red-900/50", iconColor: "text-red-600", Icon: X },
+                                late: { bg: "bg-amber-50/50 dark:bg-amber-950/20", iconBg: "bg-amber-100 dark:bg-amber-900/50", iconColor: "text-amber-600", Icon: Clock },
+                                excused: { bg: "bg-purple-50/50 dark:bg-purple-950/20", iconBg: "bg-purple-100 dark:bg-purple-900/50", iconColor: "text-purple-600", Icon: AlertCircle },
+                              };
+                              const config = statusConfig[student.status as keyof typeof statusConfig] || statusConfig.present;
+                              const StatusIcon = config.Icon;
+                              return (
+                                <div key={student.id} className={`flex items-center gap-2 p-2 rounded-lg ${config.bg}`}>
+                                  <span className="text-xs text-muted-foreground w-5">{idx + 1}</span>
+                                  <div className={`h-6 w-6 rounded-full ${config.iconBg} flex items-center justify-center`}>
+                                    <StatusIcon className={`h-3 w-3 ${config.iconColor}`} />
+                                  </div>
+                                  <span className="text-sm text-foreground flex-1">{student.name}</span>
+                                  <span className={`text-xs capitalize ${config.iconColor}`}>{student.status}</span>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </TabsContent>
                         
                         <TabsContent value="present" className="mt-3">
                           <div className="space-y-1.5">
