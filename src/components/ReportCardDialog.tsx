@@ -354,8 +354,8 @@ export function ReportCardDialog({
                         <div style={{
                           position: 'absolute',
                           right: '4px',
-                          bottom: '-4px',
-                          fontSize: '36px',
+                          bottom: '-12px',
+                          fontSize: '50px',
                           fontWeight: '800',
                           color: behaviorColor.text,
                           opacity: 0.2,
@@ -457,10 +457,10 @@ export function ReportCardDialog({
                           {/* Watermark Grade */}
                           <span style={{
                             position: 'absolute',
-                            bottom: '2px',
+                            bottom: '-8px',
                             left: '50%',
                             transform: 'translateX(-50%)',
-                            fontSize: '30px',
+                            fontSize: '42px',
                             fontWeight: '900',
                             opacity: 0.15,
                             color: midYearGradeColor.bg,
@@ -477,10 +477,10 @@ export function ReportCardDialog({
                           {/* Watermark Grade */}
                           <span style={{
                             position: 'absolute',
-                            bottom: '2px',
+                            bottom: '-8px',
                             left: '50%',
                             transform: 'translateX(-50%)',
-                            fontSize: '30px',
+                            fontSize: '42px',
                             fontWeight: '900',
                             opacity: 0.15,
                             color: derivedYearEndGradeColor.bg,
