@@ -7,8 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Progress } from "@/components/ui/progress";
-import { MapPin, Clock, User, ChevronDown, Users, CalendarDays, ClipboardList, FileText } from "lucide-react";
+import { MapPin, Clock, User, ChevronDown, CalendarDays, ClipboardList, FileText } from "lucide-react";
 import schoolLogo from "@/assets/school-badge.png";
 import { calendarEvents, ccaActivities } from "@/data/mockData";
 import { format, isSameDay, parseISO } from "date-fns";
@@ -390,7 +389,7 @@ export default function TeacherCalendarPage() {
                 <p className="text-sm text-muted-foreground">{selectedCCA.description}</p>
 
                 {/* Schedule Info */}
-                <Card className="bg-muted/30 border-0">
+                <Card className="bg-gradient-to-br from-green-100/60 to-yellow-100/60 dark:from-green-900/20 dark:to-yellow-900/20 border-0">
                   <CardContent className="p-4 space-y-3">
                     <div className="flex items-center gap-3">
                       <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
@@ -424,26 +423,6 @@ export default function TeacherCalendarPage() {
                   </CardContent>
                 </Card>
 
-                {/* Enrollment */}
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <Users className="h-4 w-4 text-muted-foreground" />
-                      <span className="text-sm font-medium">Enrollment</span>
-                    </div>
-                    <span className="text-sm text-muted-foreground">
-                      {selectedCCA.currentEnrollment} / {selectedCCA.maxCapacity} students
-                    </span>
-                  </div>
-                  <Progress 
-                    value={(selectedCCA.currentEnrollment / selectedCCA.maxCapacity) * 100} 
-                    className="h-2"
-                  />
-                  {selectedCCA.currentEnrollment >= selectedCCA.maxCapacity && (
-                    <p className="text-xs text-destructive">This activity is at full capacity</p>
-                  )}
-                </div>
-
                 {/* Requirements */}
                 <div className="space-y-2">
                   <div className="flex items-center gap-2">
@@ -463,14 +442,6 @@ export default function TeacherCalendarPage() {
                     <p className="text-sm text-amber-700 dark:text-amber-400 pl-6">{selectedCCA.operationalNotes}</p>
                   </div>
                 )}
-
-                {/* Next Session */}
-                <div className="p-3 rounded-lg bg-primary/10 border border-primary/20">
-                  <p className="text-xs text-primary/80">Next Session</p>
-                  <p className="text-sm font-medium text-primary">
-                    {format(parseISO(selectedCCA.upcomingSession), "EEEE, MMMM d, yyyy")}
-                  </p>
-                </div>
               </div>
             </>
           )}
