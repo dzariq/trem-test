@@ -250,11 +250,11 @@ export function ReportCardDialog({
                   {/* Overall Average & Attendance inside the name box */}
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1.5fr', gap: '8px' }}>
                     {/* Overall Average - Liquid Glass Style */}
-                    <div style={{ borderRadius: '10px', overflow: 'hidden', boxShadow: '0 4px 16px rgba(0,0,0,0.1)', border: '1px solid rgba(255,255,255,0.4)' }}>
+                    <div style={{ borderRadius: '10px', overflow: 'hidden', boxShadow: '0 4px 16px rgba(0,0,0,0.1)', border: '1px solid rgba(255,255,255,0.4)', display: 'flex', flexDirection: 'column' }}>
                       <div style={{ background: 'linear-gradient(135deg, #065f46 0%, #10b981 100%)', padding: '4px 8px' }}>
                         <div style={{ fontSize: '7px', fontWeight: '600', color: 'white', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Overall Average</div>
                       </div>
-                      <div style={{ textAlign: 'center', background: 'rgba(255, 255, 255, 0.6)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)', padding: '8px 8px' }}>
+                      <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(255, 255, 255, 0.6)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)', padding: '8px 8px' }}>
                         <div style={{ fontSize: '22px', fontWeight: '700', color: '#065f46' }}>{overallAverage}%</div>
                       </div>
                     </div>
@@ -393,12 +393,16 @@ export function ReportCardDialog({
                     };
                     return (
                       <tr key={subject.name} style={{ position: 'relative', background: getRowBg(subject.grade) }}>
-                        <td style={{ position: 'relative', padding: '6px', borderBottom: '1px solid #e5e7eb', fontWeight: '500', overflow: 'hidden' }}>
-                          {/* Grade watermark overlay - scaled up and cropped at bottom only */}
+                        <td style={{ padding: '6px', borderBottom: '1px solid #e5e7eb', fontWeight: '500' }}>
+                          <span style={{ position: 'relative', zIndex: 1 }}>{subject.name}</span>
+                        </td>
+                        <td style={{ position: 'relative', padding: '6px', borderBottom: '1px solid #e5e7eb', textAlign: 'center', fontWeight: '600', overflow: 'hidden' }}>
+                          {/* Grade watermark overlay - in Score column, cropped at bottom only */}
                           <span style={{ 
                             position: 'absolute', 
-                            left: '80px', 
-                            bottom: '-12px', 
+                            left: '50%', 
+                            bottom: '-10px', 
+                            transform: 'translateX(-50%)',
                             fontSize: '42px', 
                             fontWeight: '900', 
                             color: gradeColor.bg, 
@@ -408,10 +412,7 @@ export function ReportCardDialog({
                           }}>
                             {subject.grade}
                           </span>
-                          <span style={{ position: 'relative', zIndex: 1 }}>{subject.name}</span>
-                        </td>
-                        <td style={{ padding: '6px', borderBottom: '1px solid #e5e7eb', textAlign: 'center', fontWeight: '600' }}>
-                          {subject.score !== null ? `${subject.score}%` : 'Pending'}
+                          <span style={{ position: 'relative', zIndex: 1 }}>{subject.score !== null ? `${subject.score}%` : 'Pending'}</span>
                         </td>
                         <td style={{ padding: '6px', borderBottom: '1px solid #e5e7eb', textAlign: 'center' }}>
                           <span style={{ 
