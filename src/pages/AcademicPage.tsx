@@ -1429,7 +1429,7 @@ export default function AcademicPage() {
                   </div>
                 </div>
 
-                {/* Subject Filter Pills - Standardized */}
+                {/* Subject Filter Pills - Standardized with mobile-friendly dropdowns */}
                 <div className="space-y-2">
                   <div className="flex items-center justify-between">
                     <span className="text-sm font-medium text-foreground">Subjects:</span>
@@ -1438,7 +1438,7 @@ export default function AcademicPage() {
                     {/* All Subjects pill */}
                     <button
                       onClick={() => setSubjectFilter("all")}
-                      className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all flex items-center gap-1 ${
+                      className={`px-2.5 py-1 rounded-full text-xs font-medium transition-all flex items-center gap-1 ${
                         subjectFilter === "all"
                           ? "bg-primary text-primary-foreground"
                           : "bg-muted text-muted-foreground hover:bg-muted/80"
@@ -1447,43 +1447,18 @@ export default function AcademicPage() {
                       All Subjects
                       {subjectFilter === "all" && <Check className="h-3 w-3" />}
                     </button>
-                    {/* Grouped subject pills */}
-                    {subjectGroups.map((group) => {
-                      const selectedVariant = group.variants?.find(v => subjectFilter === v.name);
-                      const hasSelection = !!selectedVariant;
-                      return (
-                        <div key={group.baseName} className="relative group">
-                          <button
-                            className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all flex items-center gap-1 ${
-                              hasSelection
-                                ? "bg-primary text-primary-foreground"
-                                : "bg-muted text-muted-foreground hover:bg-muted/80"
-                            }`}
-                          >
-                            {hasSelection ? shortenSubjectName(selectedVariant!.name) : group.shortName}
-                            {hasSelection && <Check className="h-3 w-3" />}
-                            <ChevronDown className="h-3 w-3" />
-                          </button>
-                          {/* Dropdown */}
-                          <div className="absolute top-full left-0 mt-1 z-50 min-w-[180px] bg-card border border-border rounded-lg shadow-lg py-1 hidden group-hover:block">
-                            {group.variants?.map((variant) => (
-                              <button
-                                key={variant.name}
-                                onClick={() => setSubjectFilter(variant.name)}
-                                className={`w-full px-3 py-2 text-left text-xs font-medium flex items-center justify-between transition-colors ${
-                                  subjectFilter === variant.name
-                                    ? "bg-primary/10 text-primary"
-                                    : "text-foreground hover:bg-accent"
-                                }`}
-                              >
-                                {variant.shortName}
-                                {subjectFilter === variant.name && <Check className="h-3.5 w-3.5" />}
-                              </button>
-                            ))}
-                          </div>
-                        </div>
-                      );
-                    })}
+                    {/* Grouped subject pills with mobile-friendly drawers */}
+                    {subjectGroups.map((group) => (
+                      <SubjectGroupPill
+                        key={group.baseName}
+                        baseName={group.baseName}
+                        shortName={group.shortName}
+                        variants={group.variants || []}
+                        selectedSubjects={subjectFilter === "all" ? [] : [subjectFilter]}
+                        onToggle={(subjectName) => setSubjectFilter(subjectName)}
+                        singleSelect
+                      />
+                    ))}
                   </div>
                 </div>
 
