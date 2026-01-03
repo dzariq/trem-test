@@ -1700,14 +1700,14 @@ export default function TeacherAcademicPage() {
                   <button
                     onClick={() => setBandsCompareMode(!bandsCompareMode)}
                     className={cn(
-                      "relative w-12 h-6 rounded-full transition-colors",
+                      "relative w-11 h-6 rounded-full transition-colors shrink-0",
                       bandsCompareMode ? "bg-primary" : "bg-muted"
                     )}
                   >
                     <span
                       className={cn(
-                        "absolute top-0.5 w-5 h-5 rounded-full bg-background shadow-sm transition-transform",
-                        bandsCompareMode ? "translate-x-6" : "translate-x-0.5"
+                        "absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-background shadow-sm transition-transform duration-200",
+                        bandsCompareMode ? "translate-x-5" : "translate-x-0"
                       )}
                     />
                   </button>
