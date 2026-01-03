@@ -1,7 +1,7 @@
 import { useState } from "react";
-import { students } from "@/data/mockData";
+import { students, SportsHouse } from "@/data/mockData";
 import { cn } from "@/lib/utils";
-import { ChevronRight, ChevronDown } from "lucide-react";
+import { ChevronRight, ChevronDown, Utensils, Flag, TreePine, Check, X } from "lucide-react";
 import {
   Drawer,
   DrawerContent,
@@ -22,6 +22,13 @@ const avatarColors = [
   "bg-gradient-to-br from-pink-400 to-pink-600",
   "bg-gradient-to-br from-orange-400 to-orange-600",
 ];
+
+const sportsHouseColors: Record<SportsHouse, { bg: string; text: string; label: string }> = {
+  red: { bg: "bg-red-500", text: "text-white", label: "Red House" },
+  blue: { bg: "bg-blue-500", text: "text-white", label: "Blue House" },
+  green: { bg: "bg-green-500", text: "text-white", label: "Green House" },
+  yellow: { bg: "bg-yellow-400", text: "text-yellow-900", label: "Yellow House" },
+};
 
 export function StudentPillSelector({ onStudentChange }: StudentPillSelectorProps) {
   const [open, setOpen] = useState(false);
@@ -76,6 +83,8 @@ export function StudentPillSelector({ onStudentChange }: StudentPillSelectorProp
         <div className="px-4 pb-6 space-y-2 overflow-y-auto">
           {students.map((student, index) => {
             const isExpanded = student.id === expandedId;
+            const houseInfo = sportsHouseColors[student.sportsHouse];
+            
             return (
               <div
                 key={student.id}
@@ -111,7 +120,52 @@ export function StudentPillSelector({ onStudentChange }: StudentPillSelectorProp
                 
                 {isExpanded && (
                   <div className="px-4 pb-4 pt-2 border-t border-border bg-muted/20">
-                    <div className="space-y-3">
+                    <div className="space-y-4">
+                      {/* Student Options */}
+                      <div className="grid grid-cols-3 gap-2">
+                        {/* Meal Plan */}
+                        <div className="flex flex-col items-center gap-1.5 p-2 rounded-lg bg-background border border-border">
+                          <Utensils className="w-5 h-5 text-muted-foreground" />
+                          <span className="text-xs font-medium text-muted-foreground">Meal Plan</span>
+                          <div className={cn(
+                            "w-6 h-6 rounded-full flex items-center justify-center",
+                            student.mealPlan ? "bg-green-500" : "bg-muted"
+                          )}>
+                            {student.mealPlan ? (
+                              <Check className="w-4 h-4 text-white" />
+                            ) : (
+                              <X className="w-4 h-4 text-muted-foreground" />
+                            )}
+                          </div>
+                        </div>
+                        
+                        {/* Sports House */}
+                        <div className="flex flex-col items-center gap-1.5 p-2 rounded-lg bg-background border border-border">
+                          <Flag className="w-5 h-5 text-muted-foreground" />
+                          <span className="text-xs font-medium text-muted-foreground">Sports House</span>
+                          <Badge className={cn("text-xs px-2", houseInfo.bg, houseInfo.text)}>
+                            {houseInfo.label.split(' ')[0]}
+                          </Badge>
+                        </div>
+                        
+                        {/* Outdoor CCA */}
+                        <div className="flex flex-col items-center gap-1.5 p-2 rounded-lg bg-background border border-border">
+                          <TreePine className="w-5 h-5 text-muted-foreground" />
+                          <span className="text-xs font-medium text-muted-foreground">Outdoor CCA</span>
+                          <div className={cn(
+                            "w-6 h-6 rounded-full flex items-center justify-center",
+                            student.outdoorCCA ? "bg-green-500" : "bg-muted"
+                          )}>
+                            {student.outdoorCCA ? (
+                              <Check className="w-4 h-4 text-white" />
+                            ) : (
+                              <X className="w-4 h-4 text-muted-foreground" />
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                      
+                      {/* Subjects */}
                       <div>
                         <p className="text-xs font-medium text-muted-foreground mb-2">Subjects</p>
                         <div className="flex flex-wrap gap-2">
