@@ -1164,7 +1164,7 @@ export default function TeacherAcademicPage() {
                                           )}
                                         </SelectValue>
                                       </SelectTrigger>
-                                      <SelectContent>
+                                      <SelectContent className="bg-white dark:bg-card">
                                         {gradeOptions.map(grade => (
                                           <SelectItem key={grade} value={grade}>
                                             <Badge className={cn("font-bold", getGradeColor(grade))}>
@@ -1320,11 +1320,11 @@ export default function TeacherAcademicPage() {
                                     <div key={entry.id} className="grid grid-cols-[1fr_1fr_auto] gap-1.5 items-end">
                                       <Select value={entry.organization} onValueChange={(v) => updateAwardEntry(student.id, "sportsHouse", entry.id, "organization", v)}>
                                         <SelectTrigger className="h-8 text-xs bg-white/80 border-amber-300"><SelectValue /></SelectTrigger>
-                                        <SelectContent>{sportsHouseOptions.map(opt => <SelectItem key={opt} value={opt}>{opt}</SelectItem>)}</SelectContent>
+                                        <SelectContent className="bg-white dark:bg-card">{sportsHouseOptions.map(opt => <SelectItem key={opt} value={opt}>{opt}</SelectItem>)}</SelectContent>
                                       </Select>
                                       <Select value={entry.role} onValueChange={(v) => updateAwardEntry(student.id, "sportsHouse", entry.id, "role", v)}>
                                         <SelectTrigger className="h-8 text-xs bg-white/80 border-amber-300"><SelectValue /></SelectTrigger>
-                                        <SelectContent>{roleOptions.map(opt => <SelectItem key={opt} value={opt}>{opt}</SelectItem>)}</SelectContent>
+                                        <SelectContent className="bg-white dark:bg-card">{roleOptions.map(opt => <SelectItem key={opt} value={opt}>{opt}</SelectItem>)}</SelectContent>
                                       </Select>
                                       <Button size="icon" variant="ghost" className="h-8 w-8 text-red-600 hover:bg-white/30" onClick={() => removeAwardEntry(student.id, "sportsHouse", entry.id)}><X className="h-3 w-3" /></Button>
                                     </div>
@@ -1361,11 +1361,11 @@ export default function TeacherAcademicPage() {
                                     <div key={entry.id} className="grid grid-cols-[1fr_1fr_auto] gap-1.5 items-end">
                                       <Select value={entry.organization} onValueChange={(v) => updateAwardEntry(student.id, "clubs", entry.id, "organization", v)}>
                                         <SelectTrigger className="h-8 text-xs bg-white/80 border-amber-300"><SelectValue /></SelectTrigger>
-                                        <SelectContent>{clubOptions.map(opt => <SelectItem key={opt} value={opt}>{opt}</SelectItem>)}</SelectContent>
+                                        <SelectContent className="bg-white dark:bg-card">{clubOptions.map(opt => <SelectItem key={opt} value={opt}>{opt}</SelectItem>)}</SelectContent>
                                       </Select>
                                       <Select value={entry.role} onValueChange={(v) => updateAwardEntry(student.id, "clubs", entry.id, "role", v)}>
                                         <SelectTrigger className="h-8 text-xs bg-white/80 border-amber-300"><SelectValue /></SelectTrigger>
-                                        <SelectContent>{roleOptions.map(opt => <SelectItem key={opt} value={opt}>{opt}</SelectItem>)}</SelectContent>
+                                        <SelectContent className="bg-white dark:bg-card">{roleOptions.map(opt => <SelectItem key={opt} value={opt}>{opt}</SelectItem>)}</SelectContent>
                                       </Select>
                                       <Button size="icon" variant="ghost" className="h-8 w-8 text-red-600 hover:bg-white/30" onClick={() => removeAwardEntry(student.id, "clubs", entry.id)}><X className="h-3 w-3" /></Button>
                                     </div>
@@ -1402,11 +1402,11 @@ export default function TeacherAcademicPage() {
                                     <div key={entry.id} className="grid grid-cols-[1fr_1fr_auto] gap-1.5 items-end">
                                       <Select value={entry.organization} onValueChange={(v) => updateAwardEntry(student.id, "leadership", entry.id, "organization", v)}>
                                         <SelectTrigger className="h-8 text-xs bg-white/80 border-amber-300"><SelectValue /></SelectTrigger>
-                                        <SelectContent>{leadershipOptions.map(opt => <SelectItem key={opt} value={opt}>{opt}</SelectItem>)}</SelectContent>
+                                        <SelectContent className="bg-white dark:bg-card">{leadershipOptions.map(opt => <SelectItem key={opt} value={opt}>{opt}</SelectItem>)}</SelectContent>
                                       </Select>
                                       <Select value={entry.role} onValueChange={(v) => updateAwardEntry(student.id, "leadership", entry.id, "role", v)}>
                                         <SelectTrigger className="h-8 text-xs bg-white/80 border-amber-300"><SelectValue /></SelectTrigger>
-                                        <SelectContent>{roleOptions.map(opt => <SelectItem key={opt} value={opt}>{opt}</SelectItem>)}</SelectContent>
+                                        <SelectContent className="bg-white dark:bg-card">{roleOptions.map(opt => <SelectItem key={opt} value={opt}>{opt}</SelectItem>)}</SelectContent>
                                       </Select>
                                       <Button size="icon" variant="ghost" className="h-8 w-8 text-red-600 hover:bg-white/30" onClick={() => removeAwardEntry(student.id, "leadership", entry.id)}><X className="h-3 w-3" /></Button>
                                     </div>
@@ -1443,11 +1443,11 @@ export default function TeacherAcademicPage() {
                                     <div key={entry.id} className="grid grid-cols-[1fr_1fr_auto] gap-1.5 items-end">
                                       <Select value={entry.event} onValueChange={(v) => updateAchievementEntry(student.id, entry.id, "event", v)}>
                                         <SelectTrigger className="h-8 text-xs bg-white/80 border-amber-300"><SelectValue /></SelectTrigger>
-                                        <SelectContent>{achievementEventOptions.map(opt => <SelectItem key={opt} value={opt}>{opt}</SelectItem>)}</SelectContent>
+                                        <SelectContent className="bg-white dark:bg-card">{achievementEventOptions.map(opt => <SelectItem key={opt} value={opt}>{opt}</SelectItem>)}</SelectContent>
                                       </Select>
                                       <Select value={entry.award} onValueChange={(v) => updateAchievementEntry(student.id, entry.id, "award", v)}>
                                         <SelectTrigger className="h-8 text-xs bg-white/80 border-amber-300"><SelectValue /></SelectTrigger>
-                                        <SelectContent>{achievementAwardOptions.map(opt => <SelectItem key={opt} value={opt}>{opt}</SelectItem>)}</SelectContent>
+                                        <SelectContent className="bg-white dark:bg-card">{achievementAwardOptions.map(opt => <SelectItem key={opt} value={opt}>{opt}</SelectItem>)}</SelectContent>
                                       </Select>
                                       <Button size="icon" variant="ghost" className="h-8 w-8 text-red-600 hover:bg-white/30" onClick={() => removeAchievementEntry(student.id, entry.id)}><X className="h-3 w-3" /></Button>
                                     </div>
