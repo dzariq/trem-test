@@ -4563,27 +4563,74 @@ export default function TeacherAcademicPage() {
                 </div>
               </div>
 
-              {/* Rising & Falling Subjects */}
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '12px', marginBottom: '12px', pageBreakInside: 'avoid' }}>
-                <div style={{ padding: '10px', borderRadius: '6px', backgroundColor: '#dcfce7', border: '1px solid #86efac' }}>
-                  <h4 style={{ fontSize: '11px', fontWeight: 600, color: '#16a34a', marginBottom: '6px' }}>Rising Subjects</h4>
-                  {risingSubjects.length > 0 ? risingSubjects.map((item, i) => (
-                    <div key={i} style={{ display: 'flex', justifyContent: 'space-between', padding: '4px 6px', fontSize: '9px', borderBottom: '1px solid #86efac40' }}>
-                      <span>{item.name}</span>
-                      <span style={{ fontWeight: 600, color: '#22c55e' }}>+{item.improvement}% ({item.first}% → {item.last}%)</span>
+              {/* Rising Subjects & At-Risk Subjects - Side by Side */}
+              {(risingSubjects.length > 0 || fallingSubjects.length > 0) && (
+                <div style={{ display: 'grid', gridTemplateColumns: risingSubjects.length > 0 && fallingSubjects.length > 0 ? 'repeat(2, 1fr)' : '1fr', gap: '12px', marginBottom: '12px', pageBreakInside: 'avoid' }}>
+                  {/* Rising Subjects */}
+                  {risingSubjects.length > 0 && (
+                    <div style={{ padding: '10px', borderRadius: '8px', background: 'linear-gradient(135deg, #fef9c3 0%, #fef3c7 100%)', border: '1px solid #fde047' }}>
+                      <h4 style={{ fontSize: '11px', fontWeight: 600, color: '#ca8a04', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                        ⭐ Rising Subjects
+                      </h4>
+                      <p style={{ fontSize: '8px', color: '#a16207', marginBottom: '8px' }}>Top performing subjects</p>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                        {risingSubjects.slice(0, 3).map((item) => (
+                          <div 
+                            key={item.name}
+                            style={{ 
+                              padding: '8px 10px', 
+                              borderRadius: '6px', 
+                              background: 'linear-gradient(135deg, #fef08a 0%, #fde047 100%)',
+                              border: '1px solid rgba(253, 224, 71, 0.6)',
+                              display: 'flex',
+                              justifyContent: 'space-between',
+                              alignItems: 'center'
+                            }}
+                          >
+                            <div style={{ fontSize: '9px', fontWeight: 600, color: '#713f12' }}>{shortenSubjectName(item.name)}</div>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                              <div style={{ fontSize: '11px', fontWeight: 700, color: '#a16207' }}>+{item.improvement}%</div>
+                              <div style={{ fontSize: '7px', color: '#854d0e' }}>{item.first}%→{item.last}%</div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
                     </div>
-                  )) : <p style={{ fontSize: '9px', color: '#666' }}>No improving subjects</p>}
-                </div>
-                <div style={{ padding: '10px', borderRadius: '6px', backgroundColor: '#fee2e2', border: '1px solid #fca5a5' }}>
-                  <h4 style={{ fontSize: '11px', fontWeight: 600, color: '#dc2626', marginBottom: '6px' }}>Needs Focus</h4>
-                  {fallingSubjects.length > 0 ? fallingSubjects.map((item, i) => (
-                    <div key={i} style={{ display: 'flex', justifyContent: 'space-between', padding: '4px 6px', fontSize: '9px', borderBottom: '1px solid #fca5a540' }}>
-                      <span>{item.name}</span>
-                      <span style={{ fontWeight: 600, color: '#ef4444' }}>-{item.decline}% ({item.first}% → {item.last}%)</span>
+                  )}
+                  
+                  {/* At-Risk Subjects */}
+                  {fallingSubjects.length > 0 && (
+                    <div style={{ padding: '10px', borderRadius: '8px', background: 'linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%)', border: '1px solid #fca5a5' }}>
+                      <h4 style={{ fontSize: '11px', fontWeight: 600, color: '#dc2626', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                        ⚠️ At-Risk Subjects
+                      </h4>
+                      <p style={{ fontSize: '8px', color: '#b91c1c', marginBottom: '8px' }}>Needs extra attention</p>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                        {fallingSubjects.slice(0, 3).map((item) => (
+                          <div 
+                            key={item.name}
+                            style={{ 
+                              padding: '8px 10px', 
+                              borderRadius: '6px', 
+                              background: 'linear-gradient(135deg, #fecaca 0%, #fca5a5 100%)',
+                              border: '1px solid rgba(252, 165, 165, 0.6)',
+                              display: 'flex',
+                              justifyContent: 'space-between',
+                              alignItems: 'center'
+                            }}
+                          >
+                            <div style={{ fontSize: '9px', fontWeight: 600, color: '#991b1b' }}>{shortenSubjectName(item.name)}</div>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                              <div style={{ fontSize: '11px', fontWeight: 700, color: '#dc2626' }}>-{item.decline}%</div>
+                              <div style={{ fontSize: '7px', color: '#b91c1c' }}>{item.first}%→{item.last}%</div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
                     </div>
-                  )) : <p style={{ fontSize: '9px', color: '#666' }}>All subjects stable</p>}
+                  )}
                 </div>
-              </div>
+              )}
 
               {/* Historical Data Table */}
               <div className="section" style={{ marginBottom: '12px', pageBreakInside: 'avoid' }}>
