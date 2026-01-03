@@ -12,6 +12,7 @@ import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import schoolLogo from "@/assets/school-badge.png";
 import { CertificateDialog } from "@/components/CertificateDialog";
+import { ReportCardDialog } from "@/components/ReportCardDialog";
 import { EnvelopeAwardCard } from "@/components/EnvelopeAwardCard";
 import {
   Select,
@@ -85,6 +86,7 @@ export default function AcademicPage() {
     academicData.subjects.map(s => s.name)
   );
   const [reportGenerated, setReportGenerated] = useState(false);
+  const [reportCardDialogOpen, setReportCardDialogOpen] = useState(false);
   const [expandedSubject, setExpandedSubject] = useState<string | null>(null);
   
   // Pinch-to-zoom state for chart
@@ -212,7 +214,7 @@ export default function AcademicPage() {
   };
 
   const generateReport = () => {
-    setReportGenerated(true);
+    setReportCardDialogOpen(true);
   };
 
   const getExamLabel = () => {
@@ -1040,6 +1042,31 @@ export default function AcademicPage() {
 
       </section>
       )}
+
+      {/* Report Card Dialog */}
+      <ReportCardDialog
+        open={reportCardDialogOpen}
+        onOpenChange={setReportCardDialogOpen}
+        studentName={students[0]?.name || "Emma Johnson"}
+        studentClass="Year 10 - International"
+        examType={examType === "midYear" ? "Mid-Year Exam" : "Year-End Exam"}
+        year={selectedYear}
+        subjects={academicData.subjects.map(s => ({
+          name: s.name,
+          score: getScore(s, selectedYear, examType),
+          grade: getScore(s, selectedYear, examType) !== null ? getGradeFromScore(getScore(s, selectedYear, examType)!) : "Pending",
+          teacherComment: s.teacherComment || "Good progress this term."
+        }))}
+        behavior={academicData.behavior}
+        homeroomComment={academicData.behaviorComments?.homeroomComment || "The student shows good potential and continues to make progress."}
+        attendance={{
+          present: attendanceData.currentMonth?.present || 85,
+          absent: attendanceData.currentMonth?.absent || 5,
+          late: attendanceData.currentMonth?.late || 3,
+          percentage: Math.round((attendanceData.currentMonth?.present || 85) / ((attendanceData.currentMonth?.present || 85) + (attendanceData.currentMonth?.absent || 5)) * 100)
+        }}
+        achievements={academicData.coCurriculum?.map(c => `${c.activity}: ${c.achievement}`) || []}
+      />
 
       {/* Grade Analysis Section */}
       {mainSection === "analysis" && (
