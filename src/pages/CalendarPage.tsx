@@ -113,7 +113,7 @@ export default function CalendarPage() {
       <AppHeader 
         leftContent={
           <div className="flex items-center gap-2">
-            <img src={schoolLogo} alt="School Logo" className="h-12 w-auto -my-2 drop-shadow-md" />
+            <img src={schoolLogo} alt="School Logo" className="h-16 w-auto -my-3 drop-shadow-md" />
             <h1 className="text-xl font-semibold text-foreground">Calendar</h1>
           </div>
         }
