@@ -51,14 +51,12 @@ export function SubjectGroupPill({
     };
   }, [isOpen]);
 
-  // Get display text
+  // Get display text - compact format with count
   const getDisplayText = () => {
     if (selectedVariants.length === 0) {
       return shortName;
     }
-    if (selectedVariants.length === 1) {
-      return selectedVariants[0].shortName;
-    }
+    // Always show base name with count to save space
     return `${shortName} (${selectedVariants.length})`;
   };
 
@@ -67,13 +65,12 @@ export function SubjectGroupPill({
       <button
         onClick={() => setIsOpen(!isOpen)}
         className={cn(
-          "px-3 py-1.5 rounded-full text-xs font-medium transition-all flex items-center gap-1",
+          "px-2.5 py-1 rounded-full text-xs font-medium transition-all flex items-center gap-1",
           hasSelection
             ? "bg-primary text-primary-foreground"
             : "bg-muted text-muted-foreground hover:bg-muted/80"
         )}
       >
-        {hasSelection && <Check className="h-3 w-3" />}
         {getDisplayText()}
         <ChevronDown
           className={cn(
