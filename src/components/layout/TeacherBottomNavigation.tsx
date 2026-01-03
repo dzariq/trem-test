@@ -2,12 +2,12 @@ import { useState, useEffect } from "react";
 import { Home, UserCheck, GraduationCap, Calendar } from "lucide-react";
 import { NavLink } from "react-router-dom";
 import { cn } from "@/lib/utils";
-import dnaHeartIcon from "@/assets/dna-heart-icon.png";
+import dnaIcon from "@/assets/dna-icon.jpg";
 
 const navItems = [
   { to: "/teacher", icon: Home, label: "Home" },
   { to: "/teacher/attendance", icon: UserCheck, label: "Attendance" },
-  { to: "/teacher/dna", icon: null, label: "DNA", customIcon: dnaHeartIcon },
+  { to: "/teacher/dna", icon: null, label: "DNA", customIcon: dnaIcon },
   { to: "/teacher/academic", icon: GraduationCap, label: "Academic" },
   { to: "/teacher/calendar", icon: Calendar, label: "Calendar" },
 ];
