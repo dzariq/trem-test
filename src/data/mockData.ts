@@ -502,13 +502,14 @@ export const academicData = {
     }
   ],
   behavior: [
-    { category: "Attendance", grade: "A" },
-    { category: "Punctuality", grade: "B" },
-    { category: "Cooperation", grade: "A" },
-    { category: "Self Control", grade: "C" },
-    { category: "Responsibility", grade: "A" },
-    { category: "Initiative", grade: "B" },
-    { category: "Leadership", grade: "A" }
+    { category: "Initiative to Assist", grade: "B" },
+    { category: "Homework Submission", grade: "C" },
+    { category: "Passion to Learn", grade: "B" },
+    { category: "Communication Skills", grade: "C" },
+    { category: "Participation", grade: "C" },
+    { category: "Leadership Skills", grade: "C" },
+    { category: "Punctuality", grade: "D" },
+    { category: "Self-Discipline", grade: "B" }
   ],
   behaviorComments: {
     homeroomComment: "Emma is a wonderful student who always shows kindness to her classmates. She has made excellent progress this semester and continues to be a positive influence in the classroom.",
