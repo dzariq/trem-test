@@ -1894,36 +1894,36 @@ export default function TeacherAcademicPage() {
 
               {/* ==================== DISTRIBUTION SUB-TAB ==================== */}
               <TabsContent value="distribution" className="space-y-4">
-                {/* Comparison Mode Toggle + Download Button */}
+                {/* Report Button - Standalone */}
+                <Button
+                  size="sm"
+                  className="w-full gap-2 bg-emerald-600 hover:bg-emerald-700 text-white"
+                  onClick={() => setBandsReportDialogOpen(true)}
+                >
+                  <FileText className="h-4 w-4" />
+                  Generate Report
+                </Button>
+
+                {/* Comparison Mode Toggle */}
                 <div className="flex items-center justify-between p-3 rounded-lg bg-accent/30 border border-border">
                   <div className="flex items-center gap-2">
                     <Scale className="h-4 w-4 text-primary" />
                     <span className="text-sm font-medium text-foreground">Compare Mode</span>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <Button
-                      size="sm"
-                      className="h-8 px-3 gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white"
-                      onClick={() => setBandsReportDialogOpen(true)}
-                    >
-                      <FileText className="h-3.5 w-3.5" />
-                      <span className="text-xs">Report</span>
-                    </Button>
-                    <button
-                      onClick={() => setBandsCompareMode(!bandsCompareMode)}
+                  <button
+                    onClick={() => setBandsCompareMode(!bandsCompareMode)}
+                    className={cn(
+                      "relative w-11 h-6 rounded-full transition-colors shrink-0",
+                      bandsCompareMode ? "bg-primary" : "bg-muted"
+                    )}
+                  >
+                    <span
                       className={cn(
-                        "relative w-11 h-6 rounded-full transition-colors shrink-0",
-                        bandsCompareMode ? "bg-primary" : "bg-muted"
+                        "absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-background shadow-sm transition-transform duration-200",
+                        bandsCompareMode ? "translate-x-5" : "translate-x-0"
                       )}
-                    >
-                      <span
-                        className={cn(
-                          "absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-background shadow-sm transition-transform duration-200",
-                          bandsCompareMode ? "translate-x-5" : "translate-x-0"
-                        )}
-                      />
-                    </button>
-                  </div>
+                    />
+                  </button>
                 </div>
 
                 {/* Filters Section - Stacked for mobile when comparing */}
