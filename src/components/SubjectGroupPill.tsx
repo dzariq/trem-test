@@ -21,6 +21,8 @@ interface SubjectGroupPillProps {
   variants: SubjectVariant[];
   selectedSubjects: string[];
   onToggle: (subjectName: string) => void;
+  /** Single-select mode - only one subject can be selected at a time, closes after selection */
+  singleSelect?: boolean;
 }
 
 export function SubjectGroupPill({
@@ -29,6 +31,7 @@ export function SubjectGroupPill({
   variants,
   selectedSubjects,
   onToggle,
+  singleSelect = false,
 }: SubjectGroupPillProps) {
   const [isOpen, setIsOpen] = useState(false);
   const isMobile = useIsMobile();
@@ -39,12 +42,22 @@ export function SubjectGroupPill({
   );
   const hasSelection = selectedVariants.length > 0;
 
-  // Get display text - compact format with count
+  // Get display text - compact format with count for multi-select, or selected name for single-select
   const getDisplayText = () => {
     if (selectedVariants.length === 0) {
       return shortName;
     }
+    if (singleSelect) {
+      return selectedVariants[0].shortName;
+    }
     return `${shortName} (${selectedVariants.length})`;
+  };
+
+  const handleSelect = (variantName: string) => {
+    onToggle(variantName);
+    if (singleSelect) {
+      setIsOpen(false);
+    }
   };
 
   const PillButton = (
@@ -74,7 +87,7 @@ export function SubjectGroupPill({
         return (
           <button
             key={variant.name}
-            onClick={() => onToggle(variant.name)}
+            onClick={() => handleSelect(variant.name)}
             className={cn(
               "w-full px-4 py-3 text-left text-sm font-medium flex items-center gap-3 transition-colors",
               isSelected
@@ -82,48 +95,65 @@ export function SubjectGroupPill({
                 : "text-foreground hover:bg-accent"
             )}
           >
-            <div
-              className={cn(
-                "w-5 h-5 rounded border-2 flex items-center justify-center transition-colors",
-                isSelected
-                  ? "bg-primary border-primary"
-                  : "border-muted-foreground"
-              )}
-            >
-              {isSelected && <Check className="h-3.5 w-3.5 text-primary-foreground" />}
-            </div>
+            {singleSelect ? (
+              // Radio button style for single select
+              <div
+                className={cn(
+                  "w-5 h-5 rounded-full border-2 flex items-center justify-center transition-colors",
+                  isSelected
+                    ? "border-primary"
+                    : "border-muted-foreground"
+                )}
+              >
+                {isSelected && <div className="w-2.5 h-2.5 rounded-full bg-primary" />}
+              </div>
+            ) : (
+              // Checkbox style for multi select
+              <div
+                className={cn(
+                  "w-5 h-5 rounded border-2 flex items-center justify-center transition-colors",
+                  isSelected
+                    ? "bg-primary border-primary"
+                    : "border-muted-foreground"
+                )}
+              >
+                {isSelected && <Check className="h-3.5 w-3.5 text-primary-foreground" />}
+              </div>
+            )}
             {variant.shortName}
           </button>
         );
       })}
       
-      {/* Select All / Clear for this group */}
-      <div className="border-t border-border mt-2 pt-3 px-4 flex gap-4">
-        <button
-          onClick={() => {
-            variants.forEach((v) => {
-              if (!selectedSubjects.includes(v.name)) {
-                onToggle(v.name);
-              }
-            });
-          }}
-          className="text-sm text-muted-foreground hover:text-primary font-medium"
-        >
-          Select All
-        </button>
-        <button
-          onClick={() => {
-            variants.forEach((v) => {
-              if (selectedSubjects.includes(v.name)) {
-                onToggle(v.name);
-              }
-            });
-          }}
-          className="text-sm text-muted-foreground hover:text-primary font-medium"
-        >
-          Clear
-        </button>
-      </div>
+      {/* Select All / Clear for this group - only show for multi-select */}
+      {!singleSelect && (
+        <div className="border-t border-border mt-2 pt-3 px-4 flex gap-4">
+          <button
+            onClick={() => {
+              variants.forEach((v) => {
+                if (!selectedSubjects.includes(v.name)) {
+                  onToggle(v.name);
+                }
+              });
+            }}
+            className="text-sm text-muted-foreground hover:text-primary font-medium"
+          >
+            Select All
+          </button>
+          <button
+            onClick={() => {
+              variants.forEach((v) => {
+                if (selectedSubjects.includes(v.name)) {
+                  onToggle(v.name);
+                }
+              });
+            }}
+            className="text-sm text-muted-foreground hover:text-primary font-medium"
+          >
+            Clear
+          </button>
+        </div>
+      )}
     </>
   );
 
