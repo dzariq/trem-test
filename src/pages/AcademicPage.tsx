@@ -1148,7 +1148,7 @@ export default function AcademicPage() {
                         </button>
                       </div>
                     </div>
-                    <div className="flex flex-wrap gap-1.5 p-2.5 rounded-lg border border-border bg-background">
+                    <div className="flex flex-wrap gap-1.5 p-2.5 rounded-lg border border-border bg-background items-center">
                       {/* Grouped subject pills with dropdowns */}
                       {subjectGroups.map((group) => (
                         <SubjectGroupPill
@@ -1166,6 +1166,10 @@ export default function AcademicPage() {
                           }}
                         />
                       ))}
+                      {/* Subject count badge */}
+                      <span className="ml-auto px-2 py-0.5 text-xs font-medium bg-primary/10 text-primary rounded-full">
+                        {gradesSelectedSubjects.length}/{academicData.subjects.length}
+                      </span>
                     </div>
                   </div>
 
@@ -1574,7 +1578,7 @@ export default function AcademicPage() {
                       </button>
                     </div>
                   </div>
-                  <div className="flex flex-wrap gap-1.5 p-2.5 rounded-lg border border-border bg-background">
+                  <div className="flex flex-wrap gap-1.5 p-2.5 rounded-lg border border-border bg-background items-center">
                     {/* Grouped subject pills with mobile-friendly drawers */}
                     {subjectGroups.map((group) => (
                       <SubjectGroupPill
@@ -1587,6 +1591,10 @@ export default function AcademicPage() {
                         singleSelect
                       />
                     ))}
+                    {/* Subject count badge */}
+                    <span className="ml-auto px-2 py-0.5 text-xs font-medium bg-primary/10 text-primary rounded-full">
+                      {subjectFilter === "all" ? academicData.subjects.length : 1}/{academicData.subjects.length}
+                    </span>
                   </div>
                 </div>
 
@@ -2143,7 +2151,7 @@ export default function AcademicPage() {
                       </button>
                     </div>
                   </div>
-                  <div className="flex flex-wrap gap-1.5 p-2.5 rounded-lg border border-border bg-background">
+                  <div className="flex flex-wrap gap-1.5 p-2.5 rounded-lg border border-border bg-background items-center">
                     {/* Grouped subject pills with dropdowns */}
                     {subjectGroups.map((group) => (
                       <SubjectGroupPill
@@ -2164,6 +2172,10 @@ export default function AcademicPage() {
                         }}
                       />
                     ))}
+                    {/* Subject count badge */}
+                    <span className="ml-auto px-2 py-0.5 text-xs font-medium bg-primary/10 text-primary rounded-full">
+                      {compareSubjects.length}/{academicData.subjects.length}
+                    </span>
                   </div>
                 </div>
 
