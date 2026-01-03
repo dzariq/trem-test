@@ -3061,11 +3061,17 @@ export default function AcademicPage() {
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '10px' }}>
                   {/* Overall Average */}
                   <div style={{ padding: '10px', borderRadius: '6px', backgroundColor: '#eff6ff', border: '1px solid #bfdbfe', textAlign: 'center' }}>
+                    <div style={{ marginBottom: '4px' }}>
+                      <span style={{ fontSize: '12px' }}>📊</span>
+                    </div>
                     <div style={{ fontSize: '18px', fontWeight: 700, color: '#3b82f6' }}>{currentAverage}%</div>
                     <div style={{ fontSize: '9px', color: '#666' }}>Overall Average</div>
                   </div>
                   {/* Improvement */}
                   <div style={{ padding: '10px', borderRadius: '6px', backgroundColor: trendDirection.direction === 'up' ? '#dcfce7' : trendDirection.direction === 'down' ? '#fee2e2' : '#f3f4f6', border: `1px solid ${trendDirection.direction === 'up' ? '#86efac' : trendDirection.direction === 'down' ? '#fca5a5' : '#d1d5db'}`, textAlign: 'center' }}>
+                    <div style={{ marginBottom: '4px' }}>
+                      <span style={{ fontSize: '12px' }}>{trendDirection.direction === 'up' ? '📈' : trendDirection.direction === 'down' ? '📉' : '➡️'}</span>
+                    </div>
                     <div style={{ fontSize: '18px', fontWeight: 700, color: trendDirection.direction === 'up' ? '#22c55e' : trendDirection.direction === 'down' ? '#ef4444' : '#6b7280' }}>
                       {trendDirection.direction === 'up' ? '+' : trendDirection.direction === 'down' ? '-' : ''}{trendDirection.change}%
                     </div>
@@ -3073,6 +3079,9 @@ export default function AcademicPage() {
                   </div>
                   {/* Rising Subjects with names */}
                   <div style={{ padding: '10px', borderRadius: '6px', backgroundColor: '#dcfce7', border: '1px solid #86efac', textAlign: 'center' }}>
+                    <div style={{ marginBottom: '4px' }}>
+                      <span style={{ fontSize: '12px' }}>🚀</span>
+                    </div>
                     <div style={{ fontSize: '18px', fontWeight: 700, color: '#22c55e' }}>{risingStars.length}</div>
                     <div style={{ fontSize: '9px', color: '#666', marginBottom: '4px' }}>Rising Subjects</div>
                     {risingStars.length > 0 && (
@@ -3083,6 +3092,9 @@ export default function AcademicPage() {
                   </div>
                   {/* Needs Focus with names */}
                   <div style={{ padding: '10px', borderRadius: '6px', backgroundColor: '#fee2e2', border: '1px solid #fca5a5', textAlign: 'center' }}>
+                    <div style={{ marginBottom: '4px' }}>
+                      <span style={{ fontSize: '12px' }}>⚠️</span>
+                    </div>
                     <div style={{ fontSize: '18px', fontWeight: 700, color: '#ef4444' }}>{fallingBehind.length}</div>
                     <div style={{ fontSize: '9px', color: '#666', marginBottom: '4px' }}>Needs Focus</div>
                     {fallingBehind.length > 0 && (
