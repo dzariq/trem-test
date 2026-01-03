@@ -225,8 +225,8 @@ export function ReportCardDialog({
                   alt="" 
                   style={{
                     position: 'absolute',
-                    right: '-30px',
-                    bottom: '-40px',
+                    right: '-20px',
+                    top: '-20px',
                     width: '210px',
                     opacity: 0.15,
                     pointerEvents: 'none'
@@ -238,21 +238,21 @@ export function ReportCardDialog({
                   
                   {/* Overall Average & Attendance inside the name box */}
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1.5fr', gap: '10px' }}>
-                    {/* Overall Average - Browser Style */}
+                    {/* Overall Average - Browser Style with Green Gradient */}
                     <div style={{ borderRadius: '10px', overflow: 'hidden', boxShadow: '0 2px 8px rgba(0,0,0,0.08)' }}>
-                      <div style={{ background: '#4b5563', padding: '6px 10px' }}>
+                      <div style={{ background: 'linear-gradient(135deg, #065f46 0%, #10b981 100%)', padding: '6px 10px' }}>
                         <div style={{ fontSize: '8px', fontWeight: '600', color: 'white', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Overall Average</div>
                       </div>
-                      <div style={{ textAlign: 'center', background: 'rgba(255, 255, 255, 0.85)', padding: '14px 10px' }}>
+                      <div style={{ textAlign: 'center', background: 'white', padding: '14px 10px' }}>
                         <div style={{ fontSize: '28px', fontWeight: '700', color: '#065f46' }}>{overallAverage}%</div>
                       </div>
                     </div>
-                    {/* Attendance - Browser Style */}
+                    {/* Attendance - Browser Style with Green Gradient */}
                     <div style={{ borderRadius: '10px', overflow: 'hidden', boxShadow: '0 2px 8px rgba(0,0,0,0.08)' }}>
-                      <div style={{ background: '#4b5563', padding: '6px 10px' }}>
+                      <div style={{ background: 'linear-gradient(135deg, #065f46 0%, #10b981 100%)', padding: '6px 10px' }}>
                         <div style={{ fontSize: '8px', fontWeight: '600', color: 'white', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Attendance</div>
                       </div>
-                      <div style={{ background: 'rgba(255, 255, 255, 0.85)', padding: '10px 12px' }}>
+                      <div style={{ background: 'white', padding: '10px 12px' }}>
                         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
                           <span style={{ fontSize: '22px', fontWeight: '700', color: attendance.percentage >= 90 ? '#16a34a' : attendance.percentage >= 75 ? '#ca8a04' : '#dc2626' }}>{attendance.percentage}%</span>
                           <div style={{ fontSize: '10px', color: '#374151', fontWeight: '600', background: 'rgba(255,255,255,0.9)', padding: '4px 10px', borderRadius: '8px', border: '1px solid #e5e7eb' }}>
@@ -370,10 +370,10 @@ export function ReportCardDialog({
               <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '10px' }}>
                 <thead>
                   <tr>
-                    <th style={{ background: '#065f46', color: 'white', padding: '8px 6px', textAlign: 'left', fontWeight: '600', borderRadius: '6px 0 0 0' }}>Subject</th>
-                    <th style={{ background: '#065f46', color: 'white', padding: '8px 6px', textAlign: 'center', fontWeight: '600', width: '60px' }}>Score</th>
-                    <th style={{ background: '#065f46', color: 'white', padding: '8px 6px', textAlign: 'center', fontWeight: '600', width: '50px' }}>Grade</th>
-                    <th style={{ background: '#065f46', color: 'white', padding: '8px 6px', textAlign: 'left', fontWeight: '600', borderRadius: '0 6px 0 0' }}>Teacher's Comment</th>
+                    <th style={{ background: 'linear-gradient(135deg, #065f46 0%, #10b981 100%)', color: 'white', padding: '8px 6px', textAlign: 'left', fontWeight: '600', borderRadius: '6px 0 0 0' }}>Subject</th>
+                    <th style={{ background: 'linear-gradient(135deg, #065f46 0%, #10b981 100%)', color: 'white', padding: '8px 6px', textAlign: 'center', fontWeight: '600', width: '60px' }}>Score</th>
+                    <th style={{ background: 'linear-gradient(135deg, #065f46 0%, #10b981 100%)', color: 'white', padding: '8px 6px', textAlign: 'center', fontWeight: '600', width: '50px' }}>Grade</th>
+                    <th style={{ background: 'linear-gradient(135deg, #065f46 0%, #10b981 100%)', color: 'white', padding: '8px 6px', textAlign: 'left', fontWeight: '600', borderRadius: '0 6px 0 0' }}>Teacher&apos;s Comment</th>
                   </tr>
                 </thead>
                 <tbody>
