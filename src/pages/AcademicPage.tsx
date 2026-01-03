@@ -89,6 +89,11 @@ export default function AcademicPage() {
   const [subjectFilter, setSubjectFilter] = useState("all");
   const [trendPeriod, setTrendPeriod] = useState<"1year" | "2years" | "3years" | "4years" | "5years" | "6years">("6years");
   
+  // Trends tab filters - multi-select subjects (like Overview)
+  const [trendsSelectedSubjects, setTrendsSelectedSubjects] = useState<string[]>(
+    academicData.subjects.map(s => s.name)
+  );
+  
   // Grades tab filters - exam selector and multi-select subjects
   const [gradesSelectedSubjects, setGradesSelectedSubjects] = useState<string[]>(
     academicData.subjects.map(s => s.name)
@@ -1566,13 +1571,13 @@ export default function AcademicPage() {
                     <div className="flex gap-2">
                       <button
                         className="text-sm font-medium text-foreground hover:text-primary transition-colors"
-                        onClick={() => setSubjectFilter("all")}
+                        onClick={() => setTrendsSelectedSubjects(academicData.subjects.map(s => s.name))}
                       >
                         Select All
                       </button>
                       <button
                         className="text-sm font-medium text-foreground hover:text-primary transition-colors"
-                        onClick={() => setSubjectFilter(academicData.subjects[0]?.name || "all")}
+                        onClick={() => setTrendsSelectedSubjects([])}
                       >
                         Clear
                       </button>
@@ -1586,14 +1591,19 @@ export default function AcademicPage() {
                         baseName={group.baseName}
                         shortName={group.shortName}
                         variants={group.variants || []}
-                        selectedSubjects={subjectFilter === "all" ? academicData.subjects.map(s => s.name) : [subjectFilter]}
-                        onToggle={(subjectName) => setSubjectFilter(subjectName)}
-                        singleSelect
+                        selectedSubjects={trendsSelectedSubjects}
+                        onToggle={(subjectName) => {
+                          if (trendsSelectedSubjects.includes(subjectName)) {
+                            setTrendsSelectedSubjects(prev => prev.filter(s => s !== subjectName));
+                          } else {
+                            setTrendsSelectedSubjects(prev => [...prev, subjectName]);
+                          }
+                        }}
                       />
                     ))}
                     {/* Subject count badge */}
                     <span className="ml-auto px-2 py-0.5 text-xs font-medium bg-primary/10 text-primary rounded-full">
-                      {subjectFilter === "all" ? academicData.subjects.length : 1}/{academicData.subjects.length}
+                      {trendsSelectedSubjects.length}/{academicData.subjects.length}
                     </span>
                   </div>
                 </div>
