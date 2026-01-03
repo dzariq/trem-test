@@ -1564,7 +1564,7 @@ export default function AcademicPage() {
                         className="text-sm font-medium text-foreground hover:text-primary transition-colors"
                         onClick={() => setSubjectFilter("all")}
                       >
-                        All
+                        Select All
                       </button>
                       <button
                         className="text-sm font-medium text-foreground hover:text-primary transition-colors"
@@ -1575,18 +1575,16 @@ export default function AcademicPage() {
                     </div>
                   </div>
                   <div className="flex flex-wrap gap-1.5 p-2.5 rounded-lg border border-border bg-background">
-                    {/* All Subjects pill */}
-                    <button
-                      onClick={() => setSubjectFilter("all")}
-                      className={`px-2.5 py-1 rounded-full text-xs font-medium transition-all flex items-center gap-1 ${
-                        subjectFilter === "all"
-                          ? "bg-primary text-primary-foreground"
-                          : "bg-muted text-muted-foreground hover:bg-muted/80"
-                      }`}
-                    >
-                      All Subjects
-                      {subjectFilter === "all" && <Check className="h-3 w-3" />}
-                    </button>
+                    {/* All Subjects pill - only show when "all" is selected */}
+                    {subjectFilter === "all" && (
+                      <button
+                        onClick={() => setSubjectFilter("all")}
+                        className="px-2.5 py-1 rounded-full text-xs font-medium transition-all flex items-center gap-1 bg-primary text-primary-foreground"
+                      >
+                        All Subjects
+                        <Check className="h-3 w-3" />
+                      </button>
+                    )}
                     {/* Grouped subject pills with mobile-friendly drawers */}
                     {subjectGroups.map((group) => (
                       <SubjectGroupPill
