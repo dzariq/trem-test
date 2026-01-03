@@ -1266,18 +1266,24 @@ export default function AcademicPage() {
                       iconColor: "#ef4444",
                       bgColor: "rgba(239, 68, 68, 0.08)"
                     },
-                  ].map((stat, index) => (
-                    <div 
-                      key={index} 
-                      className="flex flex-col items-center p-3 rounded-xl border"
-                      style={{ backgroundColor: stat.bgColor, borderColor: 'transparent' }}
-                    >
-                      <stat.icon className="h-5 w-5 mb-1" style={{ color: stat.iconColor }} />
-                      <span className="text-lg font-bold text-foreground">{stat.value}</span>
-                      <span className="text-[10px] text-muted-foreground">{stat.label}</span>
-                      <span className="text-[9px] text-muted-foreground/70">{stat.subtext}</span>
-                    </div>
-                  ))}
+                  ].map((stat, index) => {
+                    // Determine text size based on value length
+                    const valueLength = String(stat.value).length;
+                    const textSizeClass = valueLength > 12 ? "text-xs" : valueLength > 8 ? "text-sm" : "text-lg";
+                    
+                    return (
+                      <div 
+                        key={index} 
+                        className="flex flex-col items-center justify-center p-3 rounded-xl border min-h-[100px]"
+                        style={{ backgroundColor: stat.bgColor, borderColor: 'transparent' }}
+                      >
+                        <stat.icon className="h-5 w-5 mb-1" style={{ color: stat.iconColor }} />
+                        <span className={`${textSizeClass} font-bold text-foreground text-center leading-tight line-clamp-2`}>{stat.value}</span>
+                        <span className="text-[10px] text-muted-foreground mt-0.5">{stat.label}</span>
+                        <span className="text-[9px] text-muted-foreground/70">{stat.subtext}</span>
+                      </div>
+                    );
+                  })}
                 </div>
 
                 {/* Top 3 Performers & Bottom 3 to Focus */}
