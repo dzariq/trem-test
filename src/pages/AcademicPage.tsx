@@ -1245,7 +1245,61 @@ export default function AcademicPage() {
                   </div>
                 )}
 
-                {/* Grade Distribution Cards */}
+                {/* At-Risk Subjects */}
+                {fallingBehind.length > 0 && (
+                  <div className="space-y-2">
+                    <h4 className="text-sm font-medium text-foreground flex items-center gap-1.5">
+                      <TrendingDown className="h-4 w-4" style={{ color: '#dc2626' }} /> At-Risk Subjects
+                    </h4>
+                    <p className="text-[10px] text-muted-foreground -mt-1">Subjects that need extra attention</p>
+                    <div className="grid grid-cols-3 gap-2">
+                      {fallingBehind.slice(0, 3).map((item) => (
+                        <div 
+                          key={item.subject.name} 
+                          className="relative flex flex-col items-center p-2.5 rounded-lg border overflow-hidden"
+                          style={{ 
+                            background: 'linear-gradient(135deg, #fee2e2 0%, #fecaca 50%, #f87171 100%)', 
+                            borderColor: 'rgba(248, 113, 113, 0.5)'
+                          }}
+                        >
+                          {/* Inner shine effect */}
+                          <div 
+                            className="absolute inset-0 pointer-events-none"
+                            style={{
+                              background: 'radial-gradient(ellipse at 30% 20%, rgba(255, 255, 255, 0.2) 0%, transparent 40%)',
+                            }}
+                          />
+                          {/* Warning pattern background */}
+                          <div className="absolute inset-0 pointer-events-none">
+                            <AlertTriangle className="absolute -top-1 -left-1 w-6 h-6 opacity-20" style={{ color: '#dc2626' }} />
+                            <AlertTriangle className="absolute -bottom-1 -right-1 w-5 h-5 opacity-15" style={{ color: '#ef4444' }} />
+                          </div>
+                          <span className="text-xs font-medium text-foreground text-center relative z-10">{shortenSubjectName(item.subject.name)}</span>
+                          <div className="flex items-center gap-1 mt-1 relative z-10">
+                            <ArrowDown className="h-3 w-3" style={{ color: '#dc2626' }} />
+                            <span className="text-sm font-bold" style={{ color: '#dc2626' }}>-{item.decline}%</span>
+                          </div>
+                          <div className="flex items-center gap-1 mt-1 relative z-10">
+                            <span 
+                              className="text-[10px] font-medium px-2 py-0.5 rounded-full"
+                              style={{ backgroundColor: '#fef2f2', color: '#991b1b' }}
+                            >
+                              {item.prev}%
+                            </span>
+                            <span className="text-[10px] text-muted-foreground">→</span>
+                            <span 
+                              className="text-[10px] font-semibold px-2 py-0.5 rounded-full"
+                              style={{ backgroundColor: '#ef4444', color: '#ffffff' }}
+                            >
+                              {item.current}%
+                            </span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
                 <div className="space-y-2">
                   <h4 className="text-sm font-medium text-foreground">Grade Distribution</h4>
                   <div className="grid grid-cols-6 gap-2">
