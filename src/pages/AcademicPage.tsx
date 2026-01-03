@@ -71,6 +71,7 @@ const groupedSubjectNames = subjectGroups.flatMap(g => g.variants?.map(v => v.na
 const standaloneSubjects = allSubjects.filter(s => !groupedSubjectNames.includes(s));
 
 export default function AcademicPage() {
+  const [mainSection, setMainSection] = useState<"report" | "analysis">("report");
   const [activeTab, setActiveTab] = useState("grades");
   const [examType, setExamType] = useState<ExamType>("midYear");
   const [selectedYear, setSelectedYear] = useState<YearKey>("2025");
@@ -636,7 +637,28 @@ export default function AcademicPage() {
         }
       />
 
+      {/* Main Tab Switcher - Report Card / Grade Analysis */}
+      <section className="px-4 pt-4">
+        <Tabs value={mainSection} onValueChange={(v) => setMainSection(v as "report" | "analysis")} className="w-full">
+          <TabsList className="grid w-full grid-cols-2 bg-muted/80 p-1 h-12">
+            <TabsTrigger 
+              value="report" 
+              className="text-sm font-medium data-[state=active]:bg-background data-[state=active]:shadow-sm rounded-md"
+            >
+              Report Card
+            </TabsTrigger>
+            <TabsTrigger 
+              value="analysis" 
+              className="text-sm font-medium data-[state=active]:bg-background data-[state=active]:shadow-sm rounded-md"
+            >
+              Grade Analysis
+            </TabsTrigger>
+          </TabsList>
+        </Tabs>
+      </section>
+
       {/* Report Card Section */}
+      {mainSection === "report" && (
       <section className="px-4 py-4">
         <Card className="bg-card border-border shadow-sm">
           <CardHeader className="pb-3">
@@ -1017,9 +1039,11 @@ export default function AcademicPage() {
           </CardContent>
         </Card>
       </section>
+      )}
 
       {/* Grade Analysis Section */}
-      <section className="px-4 pb-4">
+      {mainSection === "analysis" && (
+      <section className="px-4 py-4">
         <Card className="bg-card border-border shadow-sm">
           <CardHeader className="pb-2">
             <CardTitle className="text-lg font-semibold flex items-center gap-2">
@@ -2552,6 +2576,7 @@ export default function AcademicPage() {
           </CardContent>
         </Card>
       </section>
+      )}
     </AppLayout>
   );
 }
