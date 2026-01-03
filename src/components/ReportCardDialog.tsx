@@ -233,8 +233,10 @@ export function ReportCardDialog({
                   }} 
                 />
                 <div style={{ position: 'relative', zIndex: 1 }}>
-                  <div style={{ fontSize: '18px', fontWeight: '700', color: '#065f46', marginBottom: '2px' }}>{studentName}</div>
-                  <div style={{ fontSize: '11px', color: '#6b7280', marginBottom: '10px' }}>Class: {studentClass}</div>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '10px' }}>
+                    <div style={{ fontSize: '18px', fontWeight: '700', color: '#065f46' }}>{studentName}</div>
+                    <div style={{ fontSize: '14px', fontWeight: '600', color: '#065f46', background: 'rgba(255,255,255,0.7)', padding: '4px 10px', borderRadius: '6px' }}>Y10I</div>
+                  </div>
                   
                   {/* Overall Average & Attendance inside the name box */}
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1.5fr', gap: '10px' }}>
