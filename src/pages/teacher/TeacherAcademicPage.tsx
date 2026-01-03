@@ -2923,17 +2923,56 @@ export default function TeacherAcademicPage() {
                                   <span>Middle: {bandsMiddlePerformers.length}</span>
                                   <span>At-Risk: {bandsAtRiskStudents.length}</span>
                                 </div>
-                                {/* Full student list for Selection A */}
+                                {/* Categorized student lists for Selection A */}
                                 <div className="student-section" style={{ marginTop: '10px', paddingTop: '8px', borderTop: '1px solid #3b82f640' }}>
-                                  <div style={{ fontSize: '9px', fontWeight: 600, color: '#1d4ed8', marginBottom: '4px' }}>All Students:</div>
-                                  <div className="student-list">
-                                    {bandsRankedStudents.map((s, i) => (
-                                      <div key={s.id} className="student-row" style={{ display: 'flex', justifyContent: 'space-between', padding: '2px 4px', fontSize: '8px', borderBottom: '1px solid #3b82f620' }}>
-                                        <span>{i + 1}. {s.name}</span>
-                                        <span style={{ fontWeight: 600 }}>{s.score}%</span>
+                                  {/* Top Performers */}
+                                  {bandsTopPerformers.length > 0 && (
+                                    <div style={{ marginBottom: '8px' }}>
+                                      <div style={{ fontSize: '9px', fontWeight: 600, color: '#059669', marginBottom: '4px', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                        <Award className="h-3 w-3" /> Top (A*/A): {bandsTopPerformers.length}
                                       </div>
-                                    ))}
-                                  </div>
+                                      <div className="student-list" style={{ backgroundColor: '#dcfce7', borderRadius: '4px', padding: '4px' }}>
+                                        {bandsTopPerformers.map((s, i) => (
+                                          <div key={s.id} className="student-row" style={{ display: 'flex', justifyContent: 'space-between', padding: '2px 4px', fontSize: '8px', borderBottom: i < bandsTopPerformers.length - 1 ? '1px solid #bbf7d020' : 'none' }}>
+                                            <span>{i + 1}. {s.name}</span>
+                                            <span style={{ fontWeight: 600, color: '#059669' }}>{s.score}%</span>
+                                          </div>
+                                        ))}
+                                      </div>
+                                    </div>
+                                  )}
+                                  {/* Middle Performers */}
+                                  {bandsMiddlePerformers.length > 0 && (
+                                    <div style={{ marginBottom: '8px' }}>
+                                      <div style={{ fontSize: '9px', fontWeight: 600, color: '#2563eb', marginBottom: '4px', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                        <Users className="h-3 w-3" /> Middle (B/C): {bandsMiddlePerformers.length}
+                                      </div>
+                                      <div className="student-list" style={{ backgroundColor: '#dbeafe', borderRadius: '4px', padding: '4px' }}>
+                                        {bandsMiddlePerformers.map((s, i) => (
+                                          <div key={s.id} className="student-row" style={{ display: 'flex', justifyContent: 'space-between', padding: '2px 4px', fontSize: '8px', borderBottom: i < bandsMiddlePerformers.length - 1 ? '1px solid #bfdbfe20' : 'none' }}>
+                                            <span>{i + 1}. {s.name}</span>
+                                            <span style={{ fontWeight: 600, color: '#2563eb' }}>{s.score}%</span>
+                                          </div>
+                                        ))}
+                                      </div>
+                                    </div>
+                                  )}
+                                  {/* At-Risk Students */}
+                                  {bandsAtRiskStudents.length > 0 && (
+                                    <div>
+                                      <div style={{ fontSize: '9px', fontWeight: 600, color: '#dc2626', marginBottom: '4px', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                        <AlertTriangle className="h-3 w-3" /> At-Risk (D/E): {bandsAtRiskStudents.length}
+                                      </div>
+                                      <div className="student-list" style={{ backgroundColor: '#fee2e2', borderRadius: '4px', padding: '4px' }}>
+                                        {bandsAtRiskStudents.map((s, i) => (
+                                          <div key={s.id} className="student-row" style={{ display: 'flex', justifyContent: 'space-between', padding: '2px 4px', fontSize: '8px', borderBottom: i < bandsAtRiskStudents.length - 1 ? '1px solid #fecaca20' : 'none' }}>
+                                            <span>{i + 1}. {s.name}</span>
+                                            <span style={{ fontWeight: 600, color: '#dc2626' }}>{s.score}%</span>
+                                          </div>
+                                        ))}
+                                      </div>
+                                    </div>
+                                  )}
                                 </div>
                               </div>
 
@@ -2965,17 +3004,56 @@ export default function TeacherAcademicPage() {
                                   <span>Middle: {bandsCompareMiddlePerformers.length}</span>
                                   <span>At-Risk: {bandsCompareAtRiskStudents.length}</span>
                                 </div>
-                                {/* Full student list for Selection B */}
+                                {/* Categorized student lists for Selection B */}
                                 <div className="student-section" style={{ marginTop: '10px', paddingTop: '8px', borderTop: '1px solid #f59e0b40' }}>
-                                  <div style={{ fontSize: '9px', fontWeight: 600, color: '#b45309', marginBottom: '4px' }}>All Students:</div>
-                                  <div className="student-list">
-                                    {bandsCompareRankedStudents.map((s, i) => (
-                                      <div key={s.id} className="student-row" style={{ display: 'flex', justifyContent: 'space-between', padding: '2px 4px', fontSize: '8px', borderBottom: '1px solid #f59e0b20' }}>
-                                        <span>{i + 1}. {s.name}</span>
-                                        <span style={{ fontWeight: 600 }}>{s.score}%</span>
+                                  {/* Top Performers */}
+                                  {bandsCompareTopPerformers.length > 0 && (
+                                    <div style={{ marginBottom: '8px' }}>
+                                      <div style={{ fontSize: '9px', fontWeight: 600, color: '#059669', marginBottom: '4px', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                        <Award className="h-3 w-3" /> Top (A*/A): {bandsCompareTopPerformers.length}
                                       </div>
-                                    ))}
-                                  </div>
+                                      <div className="student-list" style={{ backgroundColor: '#dcfce7', borderRadius: '4px', padding: '4px' }}>
+                                        {bandsCompareTopPerformers.map((s, i) => (
+                                          <div key={s.id} className="student-row" style={{ display: 'flex', justifyContent: 'space-between', padding: '2px 4px', fontSize: '8px', borderBottom: i < bandsCompareTopPerformers.length - 1 ? '1px solid #bbf7d020' : 'none' }}>
+                                            <span>{i + 1}. {s.name}</span>
+                                            <span style={{ fontWeight: 600, color: '#059669' }}>{s.score}%</span>
+                                          </div>
+                                        ))}
+                                      </div>
+                                    </div>
+                                  )}
+                                  {/* Middle Performers */}
+                                  {bandsCompareMiddlePerformers.length > 0 && (
+                                    <div style={{ marginBottom: '8px' }}>
+                                      <div style={{ fontSize: '9px', fontWeight: 600, color: '#2563eb', marginBottom: '4px', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                        <Users className="h-3 w-3" /> Middle (B/C): {bandsCompareMiddlePerformers.length}
+                                      </div>
+                                      <div className="student-list" style={{ backgroundColor: '#dbeafe', borderRadius: '4px', padding: '4px' }}>
+                                        {bandsCompareMiddlePerformers.map((s, i) => (
+                                          <div key={s.id} className="student-row" style={{ display: 'flex', justifyContent: 'space-between', padding: '2px 4px', fontSize: '8px', borderBottom: i < bandsCompareMiddlePerformers.length - 1 ? '1px solid #bfdbfe20' : 'none' }}>
+                                            <span>{i + 1}. {s.name}</span>
+                                            <span style={{ fontWeight: 600, color: '#2563eb' }}>{s.score}%</span>
+                                          </div>
+                                        ))}
+                                      </div>
+                                    </div>
+                                  )}
+                                  {/* At-Risk Students */}
+                                  {bandsCompareAtRiskStudents.length > 0 && (
+                                    <div>
+                                      <div style={{ fontSize: '9px', fontWeight: 600, color: '#dc2626', marginBottom: '4px', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                        <AlertTriangle className="h-3 w-3" /> At-Risk (D/E): {bandsCompareAtRiskStudents.length}
+                                      </div>
+                                      <div className="student-list" style={{ backgroundColor: '#fee2e2', borderRadius: '4px', padding: '4px' }}>
+                                        {bandsCompareAtRiskStudents.map((s, i) => (
+                                          <div key={s.id} className="student-row" style={{ display: 'flex', justifyContent: 'space-between', padding: '2px 4px', fontSize: '8px', borderBottom: i < bandsCompareAtRiskStudents.length - 1 ? '1px solid #fecaca20' : 'none' }}>
+                                            <span>{i + 1}. {s.name}</span>
+                                            <span style={{ fontWeight: 600, color: '#dc2626' }}>{s.score}%</span>
+                                          </div>
+                                        ))}
+                                      </div>
+                                    </div>
+                                  )}
                                 </div>
                               </div>
                             </div>
