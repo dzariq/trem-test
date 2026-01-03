@@ -243,7 +243,7 @@ export const academicData = {
     // Subject 1 - A*
     { 
       name: "English (First Language)", 
-      teacherComment: "Emma shows excellent reading comprehension and creative writing skills. Keep up the great work!",
+      teacherComment: "Emma shows excellent reading comprehension and creative writing skills. Her vocabulary has expanded significantly this term, and she consistently demonstrates strong analytical thinking in her essays. She actively participates in class discussions and often helps her peers with their work. Keep up the great work!",
       scores: {
         "2022": { midYear: 88, yearEnd: 90, attitude: 92, homework: 94, quiz: 86, exam: 88 },
         "2023": { midYear: 90, yearEnd: 92, attitude: 94, homework: 95, quiz: 88, exam: 90 },
@@ -254,7 +254,7 @@ export const academicData = {
     // Subject 2 - A
     { 
       name: "Mathematics", 
-      teacherComment: "Strong problem-solving skills. Excellent work in algebra and geometry.",
+      teacherComment: "Strong problem-solving skills with excellent work in algebra and geometry. Emma approaches complex mathematical challenges with confidence and perseverance. She shows remarkable ability to apply concepts to real-world problems and consistently submits high-quality homework assignments.",
       scores: {
         "2022": { midYear: 82, yearEnd: 84, attitude: 86, homework: 85, quiz: 80, exam: 82 },
         "2023": { midYear: 84, yearEnd: 86, attitude: 88, homework: 87, quiz: 82, exam: 84 },
@@ -265,7 +265,7 @@ export const academicData = {
     // Subject 3 - B
     { 
       name: "Science", 
-      teacherComment: "Good understanding of scientific concepts. Shows enthusiasm in lab work.",
+      teacherComment: "Good understanding of scientific concepts with genuine enthusiasm shown during lab work. Emma demonstrates curiosity in exploring scientific phenomena and asks thoughtful questions. She collaborates well with lab partners and maintains detailed notes. Continued focus on theoretical concepts will help further improvement.",
       scores: {
         "2022": { midYear: 72, yearEnd: 74, attitude: 78, homework: 76, quiz: 70, exam: 72 },
         "2023": { midYear: 74, yearEnd: 76, attitude: 80, homework: 78, quiz: 72, exam: 74 },
@@ -276,7 +276,7 @@ export const academicData = {
     // Subject 4 - A*
     { 
       name: "Geography", 
-      teacherComment: "Outstanding map reading skills. Excellent understanding of climate patterns.",
+      teacherComment: "Outstanding map reading skills with excellent understanding of climate patterns and geographical phenomena. Emma consistently produces well-researched projects and demonstrates strong spatial awareness. Her fieldwork contributions are exemplary, and she often provides insightful observations during class discussions.",
       scores: {
         "2022": { midYear: 90, yearEnd: 92, attitude: 94, homework: 93, quiz: 88, exam: 90 },
         "2023": { midYear: 92, yearEnd: 94, attitude: 95, homework: 94, quiz: 90, exam: 92 },
@@ -287,7 +287,7 @@ export const academicData = {
     // Subject 5 - C
     { 
       name: "History", 
-      teacherComment: "Needs to improve essay writing. Good participation in class discussions.",
+      teacherComment: "Needs to improve essay writing structure and source analysis skills. However, Emma shows good participation in class discussions and demonstrates genuine interest in historical events. With more focus on written work and regular revision of key dates and events, she has potential to improve significantly.",
       scores: {
         "2022": { midYear: 60, yearEnd: 62, attitude: 68, homework: 65, quiz: 58, exam: 60 },
         "2023": { midYear: 62, yearEnd: 64, attitude: 70, homework: 67, quiz: 60, exam: 62 },
@@ -298,7 +298,7 @@ export const academicData = {
     // Subject 6 - B
     { 
       name: "Art", 
-      teacherComment: "Creative and expressive. Shows good artistic potential.",
+      teacherComment: "Creative and expressive with good artistic potential. Emma experiments boldly with different mediums and techniques. Her portfolio shows consistent growth and originality. She takes constructive feedback well and applies it to improve her work. Encouraged to explore more contemporary art styles.",
       scores: {
         "2022": { midYear: 74, yearEnd: 76, attitude: 82, homework: 80, quiz: 72, exam: 74 },
         "2023": { midYear: 76, yearEnd: 78, attitude: 84, homework: 82, quiz: 74, exam: 76 },
@@ -309,7 +309,7 @@ export const academicData = {
     // Subject 7 - D
     { 
       name: "Physics", 
-      teacherComment: "Struggles with complex concepts. Requires additional support and practice.",
+      teacherComment: "Struggles with complex concepts and requires additional support and practice. Emma needs to dedicate more time to understanding fundamental principles and practicing problem-solving. Recommended to attend extra help sessions and complete practice exercises regularly to build confidence.",
       scores: {
         "2022": { midYear: 48, yearEnd: 50, attitude: 58, homework: 55, quiz: 46, exam: 48 },
         "2023": { midYear: 50, yearEnd: 52, attitude: 60, homework: 57, quiz: 48, exam: 50 },
@@ -320,7 +320,7 @@ export const academicData = {
     // Subject 8 - A
     { 
       name: "Malay (First Language)", 
-      teacherComment: "Excellent command of Bahasa Malaysia. Outstanding essay writing skills.",
+      teacherComment: "Excellent command of Bahasa Malaysia with outstanding essay writing skills. Emma demonstrates sophisticated vocabulary usage and excellent grammar. Her oral presentations are confident and well-prepared. She actively contributes to class discussions and shows appreciation for Malay literature and culture.",
       scores: {
         "2022": { midYear: 80, yearEnd: 82, attitude: 86, homework: 84, quiz: 78, exam: 80 },
         "2023": { midYear: 82, yearEnd: 84, attitude: 88, homework: 86, quiz: 80, exam: 82 },
@@ -331,7 +331,7 @@ export const academicData = {
     // Subject 9 - E
     { 
       name: "Chemistry", 
-      teacherComment: "Significant improvement needed. Struggles with equations and formulas.",
+      teacherComment: "Significant improvement needed in understanding equations and chemical formulas. Emma finds balancing equations and stoichiometry challenging. Consistent practice, regular revision, and attending remedial classes are strongly recommended. Parent support with homework review would be beneficial for progress.",
       scores: {
         "2022": { midYear: 38, yearEnd: 40, attitude: 52, homework: 48, quiz: 36, exam: 38 },
         "2023": { midYear: 40, yearEnd: 42, attitude: 54, homework: 50, quiz: 38, exam: 40 },
@@ -342,7 +342,7 @@ export const academicData = {
     // Subject 10 - C
     { 
       name: "ICT", 
-      teacherComment: "Shows interest in programming. Needs to focus more on practical assignments.",
+      teacherComment: "Shows genuine interest in programming and digital technology. Emma needs to focus more on completing practical assignments on time and applying theoretical knowledge to hands-on projects. With better time management and more practice, she can significantly improve her practical skills.",
       scores: {
         "2022": { midYear: 62, yearEnd: 64, attitude: 72, homework: 68, quiz: 60, exam: 62 },
         "2023": { midYear: 64, yearEnd: 66, attitude: 74, homework: 70, quiz: 62, exam: 64 },
@@ -353,7 +353,7 @@ export const academicData = {
     // Subject 11 - B
     { 
       name: "Biology", 
-      teacherComment: "Good understanding of biological concepts. Strong lab work skills.",
+      teacherComment: "Good understanding of biological concepts with strong lab work skills. Emma shows particular interest in ecology and human biology topics. Her dissection techniques and microscope work are commendable. Continued focus on memorizing terminology and biological processes will help achieve even better results.",
       scores: {
         "2022": { midYear: 70, yearEnd: 72, attitude: 78, homework: 75, quiz: 68, exam: 70 },
         "2023": { midYear: 72, yearEnd: 74, attitude: 80, homework: 77, quiz: 70, exam: 72 },
@@ -364,7 +364,7 @@ export const academicData = {
     // Subject 12 - A
     { 
       name: "Islamic Studies", 
-      teacherComment: "Excellent understanding of Islamic principles. Active participation in class.",
+      teacherComment: "Excellent understanding of Islamic principles with active participation in class discussions and activities. Emma demonstrates respectful and thoughtful approach to religious studies. Her recitation is improving steadily, and she shows genuine interest in applying Islamic values in daily life.",
       scores: {
         "2022": { midYear: 82, yearEnd: 84, attitude: 90, homework: 88, quiz: 80, exam: 82 },
         "2023": { midYear: 84, yearEnd: 86, attitude: 92, homework: 90, quiz: 82, exam: 84 },
@@ -375,7 +375,7 @@ export const academicData = {
     // Subject 13 - D
     { 
       name: "Additional Mathematics", 
-      teacherComment: "Finds advanced concepts challenging. Needs consistent practice.",
+      teacherComment: "Finds advanced mathematical concepts challenging and needs consistent practice to build confidence. Emma should focus on mastering foundational topics before moving to complex problems. Regular practice with past papers and seeking help during consultation hours is recommended.",
       scores: {
         "2022": { midYear: 50, yearEnd: 52, attitude: 60, homework: 56, quiz: 48, exam: 50 },
         "2023": { midYear: 52, yearEnd: 54, attitude: 62, homework: 58, quiz: 50, exam: 52 },
@@ -395,7 +395,7 @@ export const academicData = {
     { category: "Self-Discipline", grade: "B" }
   ],
   behaviorComments: {
-    homeroomComment: "Emma is a wonderful student who always shows kindness to her classmates. She has made excellent progress this semester and continues to be a positive influence in the classroom.",
+    homeroomComment: "Emma is a wonderful student who always shows kindness to her classmates. She has made excellent progress this semester and continues to be a positive influence in the classroom. Her willingness to help others and her cheerful attitude make her a joy to teach. Emma has shown remarkable growth in her organizational skills and time management this term. She takes her responsibilities seriously and can always be counted on to complete tasks with care and dedication. We are proud of her achievements and look forward to seeing her continue to flourish.",
     responsibilityComment: "Emma consistently completes her assigned duties and takes ownership of her responsibilities. She is reliable and can be counted on to help others."
   },
   awards: {
@@ -408,7 +408,10 @@ export const academicData = {
   coCurriculum: [
     { activity: "Basketball Team", achievement: "1st Place - Inter-School Tournament" },
     { activity: "Science Club", achievement: "Gold Award - Science Fair" },
-    { activity: "Debate Club", achievement: "Best Speaker - Regional Competition" }
+    { activity: "Debate Club", achievement: "Best Speaker - Regional Competition" },
+    { activity: "Art Club", achievement: "Silver Medal - National Art Competition" },
+    { activity: "Robotics Team", achievement: "Innovation Award - Tech Challenge" },
+    { activity: "Environmental Club", achievement: "Community Service Excellence Award" }
   ],
   averageScore: 85,
   bestSubject: "Geography",
