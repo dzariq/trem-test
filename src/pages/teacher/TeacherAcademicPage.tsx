@@ -908,38 +908,55 @@ export default function TeacherAcademicPage() {
     return scores.reduce((a, b) => a + b, 0) / scores.length;
   }, [radarData]);
 
+  // Calculate cohort average from all classes in the same year level
+  const cohortAverages = useMemo(() => {
+    // Determine the year level from selected class (e.g., "5A" -> "5")
+    const yearLevel = selectedClass.charAt(0);
+    
+    // Get all classes in the same year level
+    const cohortClasses = Object.keys(subjectYearlyData).filter(cls => cls.charAt(0) === yearLevel);
+    
+    // Get the latest year data for each class
+    const latestDataPerClass = cohortClasses.map(cls => {
+      const data = subjectYearlyData[cls as keyof typeof subjectYearlyData];
+      return data ? data[data.length - 1] : null;
+    }).filter(Boolean) as Record<string, number | string>[];
+    
+    // Calculate average for each subject across all classes in the cohort
+    const subjectTotals: Record<string, { sum: number; count: number }> = {};
+    
+    latestDataPerClass.forEach(classData => {
+      Object.entries(classData).forEach(([key, value]) => {
+        if (key !== 'year' && typeof value === 'number') {
+          if (!subjectTotals[key]) {
+            subjectTotals[key] = { sum: 0, count: 0 };
+          }
+          subjectTotals[key].sum += value;
+          subjectTotals[key].count += 1;
+        }
+      });
+    });
+    
+    // Convert to averages
+    const averages: Record<string, number> = {};
+    Object.entries(subjectTotals).forEach(([subject, { sum, count }]) => {
+      averages[subject] = Math.round(sum / count);
+    });
+    
+    return averages;
+  }, [selectedClass]);
+
   // Subject vs Cohort Average data
   const subjectVsCohortData = useMemo(() => {
     const data = subjectYearlyData[selectedClass as keyof typeof subjectYearlyData] || subjectYearlyData["5A"];
     const latest = data[data.length - 1];
-    
-    // Mock cohort averages per subject (varies by subject)
-    const cohortAverages: Record<string, number> = {
-      "Mathematics": 68,
-      "English (First Language)": 72,
-      "Malay (First Language)": 70,
-      "Science": 65,
-      "ICT": 74,
-      "Additional Mathematics": 62,
-      "Chemistry": 66,
-      "Physics": 64,
-      "Biology": 69,
-      "Accounting": 71,
-      "Economics": 67,
-      "Business Studies": 73,
-      "Moral Studies": 78,
-      "Islamic Studies": 75,
-      "Art": 76,
-      "Living Skills": 77,
-      "Chinese": 63,
-    };
     
     // Build from all subjects in latest data
     const allSubjects: { name: string; fullName: string; classScore: number; cohortAvg: number; delta: number }[] = [];
     Object.entries(latest).forEach(([key, value]) => {
       if (key !== 'year' && typeof value === 'number') {
         const shortName = getShortSubjectName(key);
-        const subjectCohortAvg = cohortAverages[key] || 70; // Default to 70 if not found
+        const subjectCohortAvg = cohortAverages[key] || 70; // Use calculated cohort avg
         allSubjects.push({
           name: shortName.length > 8 ? shortName.substring(0, 8) : shortName,
           fullName: key,
@@ -950,7 +967,7 @@ export default function TeacherAcademicPage() {
       }
     });
     return allSubjects.filter(s => selectedSubjects.includes(s.fullName)).sort((a, b) => b.delta - a.delta);
-  }, [selectedClass, selectedSubjects]);
+  }, [selectedClass, selectedSubjects, cohortAverages]);
 
   // Performance Heatmap data (filtered by selectedSubjects)
   const heatmapData = useMemo(() => {
