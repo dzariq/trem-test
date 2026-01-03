@@ -997,13 +997,6 @@ export default function AcademicPage() {
                         <p className="text-sm text-muted-foreground">{academicData.behaviorComments.homeroomComment}</p>
                       </CardContent>
                     </Card>
-                    
-                    <Card className="bg-purple-50 border-purple-200">
-                      <CardContent className="p-3">
-                        <p className="text-xs font-semibold uppercase text-purple-700 mb-2">Responsibility Comment</p>
-                        <p className="text-sm text-muted-foreground">{academicData.behaviorComments.responsibilityComment}</p>
-                      </CardContent>
-                    </Card>
                   </div>}
               </TabsContent>
 
