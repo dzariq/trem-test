@@ -392,9 +392,9 @@ export function ReportCardDialog({
             {/* Academic Grades - Table Layout */}
             <div style={{ marginBottom: '12px' }}>
               {/* Header with Grading Key */}
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px', paddingBottom: '6px', borderBottom: '1px solid #b45309' }}>
-                <h3 style={{ fontSize: '11px', fontWeight: '700', color: '#b45309', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                  <span style={{ color: '#b45309' }}><IconBook /></span>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px', paddingBottom: '6px', borderBottom: '1px solid #065f46' }}>
+                <h3 style={{ fontSize: '11px', fontWeight: '700', color: '#065f46', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <span style={{ color: '#065f46' }}><IconBook /></span>
                   Academic Grades
                 </h3>
                 {/* Compact Grading Key Legend */}
@@ -424,7 +424,7 @@ export function ReportCardDialog({
               {/* Academic Grades Table */}
               <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '8px' }}>
                 <thead>
-                  <tr style={{ background: '#b45309', color: 'white' }}>
+                  <tr style={{ background: '#065f46', color: 'white' }}>
                     <th style={{ padding: '6px 8px', textAlign: 'left', fontWeight: '600', fontSize: '8px', borderRadius: '4px 0 0 0' }}>Subject</th>
                     <th style={{ padding: '6px 8px', textAlign: 'center', fontWeight: '600', fontSize: '8px', width: '70px' }}>Mid-Year</th>
                     <th style={{ padding: '6px 8px', textAlign: 'center', fontWeight: '600', fontSize: '8px', width: '70px' }}>Year-End</th>
@@ -470,14 +470,6 @@ export function ReportCardDialog({
                           </span>
                           <div style={{ position: 'relative', zIndex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2px' }}>
                             <span style={{ fontSize: '12px', fontWeight: '800', color: '#1a1a1a' }}>{subject.score !== null ? `${subject.score}%` : '-'}</span>
-                            <span style={{ 
-                              fontSize: '7px', 
-                              fontWeight: '700', 
-                              color: midYearGradeColor.text, 
-                              background: midYearGradeColor.bg, 
-                              padding: '1px 6px', 
-                              borderRadius: '3px' 
-                            }}>{subject.grade}</span>
                           </div>
                         </td>
                         <td style={{ padding: '6px 8px', textAlign: 'center', position: 'relative', background: yearEndBgColor, overflow: 'hidden' }}>
@@ -498,14 +490,6 @@ export function ReportCardDialog({
                           </span>
                           <div style={{ position: 'relative', zIndex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2px' }}>
                             <span style={{ fontSize: '12px', fontWeight: '800', color: '#1a1a1a' }}>{yearEndScore !== null ? `${yearEndScore}%` : '-'}</span>
-                            <span style={{ 
-                              fontSize: '7px', 
-                              fontWeight: '700', 
-                              color: derivedYearEndGradeColor.text, 
-                              background: derivedYearEndGradeColor.bg, 
-                              padding: '1px 6px', 
-                              borderRadius: '3px' 
-                            }}>{derivedYearEndGrade}</span>
                           </div>
                         </td>
                         <td style={{ padding: '6px 8px', fontSize: '7px', color: '#374151', lineHeight: '1.4', background: 'white' }}>{subject.teacherComment || '-'}</td>
