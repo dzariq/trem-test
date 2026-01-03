@@ -649,19 +649,9 @@ export default function AcademicPage() {
       {/* Main Tab Switcher - Report Card / Grade Analysis */}
       <section className="px-4 pt-4">
         <Tabs value={mainSection} onValueChange={(v) => setMainSection(v as "report" | "analysis")} className="w-full">
-          <TabsList className="grid w-full grid-cols-2 bg-muted/80 p-1 h-12 rounded-xl">
-            <TabsTrigger 
-              value="report" 
-              className="text-sm font-medium data-[state=active]:bg-background data-[state=active]:shadow-sm rounded-lg"
-            >
-              Report Card
-            </TabsTrigger>
-            <TabsTrigger 
-              value="analysis" 
-              className="text-sm font-medium data-[state=active]:bg-background data-[state=active]:shadow-sm rounded-lg"
-            >
-              Grade Analysis
-            </TabsTrigger>
+          <TabsList className="grid w-full grid-cols-2 bg-muted/50">
+            <TabsTrigger value="report">Report Card</TabsTrigger>
+            <TabsTrigger value="analysis">Grade Analysis</TabsTrigger>
           </TabsList>
         </Tabs>
       </section>
