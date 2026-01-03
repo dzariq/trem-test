@@ -402,16 +402,44 @@ export function ReportCardDialog({
             </div>
 
             {/* Homeroom Comment */}
-            <div style={{ background: '#fef3c7', border: '1px solid #fcd34d', borderRadius: '10px', padding: '12px', marginBottom: '12px' }}>
-              <h4 style={{ fontSize: '11px', fontWeight: '600', color: '#92400e', marginBottom: '6px' }}>💬 Homeroom Teacher's Comment</h4>
-              <p style={{ fontSize: '11px', color: '#78350f', lineHeight: '1.5' }}>{homeroomComment}</p>
+            <div style={{ position: 'relative', background: '#fef3c7', border: '1px solid #fcd34d', borderRadius: '10px', padding: '12px', marginBottom: '12px', overflow: 'hidden' }}>
+              {/* Chat bubble pattern at right corner */}
+              <div style={{ 
+                position: 'absolute', 
+                right: '8px', 
+                bottom: '6px', 
+                fontSize: '32px', 
+                opacity: 0.1, 
+                pointerEvents: 'none',
+                display: 'flex',
+                gap: '4px'
+              }}>
+                <span>💬</span>
+                <span style={{ fontSize: '20px', marginTop: '8px' }}>💬</span>
+              </div>
+              <h4 style={{ fontSize: '11px', fontWeight: '600', color: '#92400e', marginBottom: '6px' }}>💬 Homeroom Teacher&apos;s Comment</h4>
+              <p style={{ fontSize: '11px', color: '#78350f', lineHeight: '1.5', position: 'relative', zIndex: 1 }}>{homeroomComment}</p>
             </div>
 
             {/* Achievements */}
             {achievements.length > 0 && (
-              <div style={{ background: 'linear-gradient(135deg, #fef3c7 0%, #fde68a 50%, #fbbf24 100%)', borderRadius: '10px', padding: '12px', marginBottom: '12px' }}>
-                <h4 style={{ fontSize: '11px', fontWeight: '600', color: '#92400e', marginBottom: '8px' }}>🏆 Academic Achievements</h4>
-                <div style={{ display: 'grid', gap: '4px' }}>
+              <div style={{ position: 'relative', background: 'linear-gradient(135deg, #fef3c7 0%, #fde68a 50%, #fbbf24 100%)', borderRadius: '10px', padding: '12px', marginBottom: '12px', overflow: 'hidden' }}>
+                {/* Trophy pattern at right corner */}
+                <div style={{ 
+                  position: 'absolute', 
+                  right: '8px', 
+                  bottom: '8px', 
+                  fontSize: '36px', 
+                  opacity: 0.12, 
+                  pointerEvents: 'none',
+                  display: 'flex',
+                  gap: '6px'
+                }}>
+                  <span>🏆</span>
+                  <span style={{ fontSize: '24px', marginTop: '10px' }}>🏆</span>
+                </div>
+                <h4 style={{ fontSize: '11px', fontWeight: '600', color: '#92400e', marginBottom: '8px', position: 'relative', zIndex: 1 }}>🏆 Academic Achievements</h4>
+                <div style={{ display: 'grid', gap: '4px', position: 'relative', zIndex: 1 }}>
                   {achievements.map((achievement, index) => (
                     <div key={index} style={{ background: 'white', padding: '6px 10px', borderRadius: '6px', fontSize: '10px', display: 'flex', alignItems: 'center', gap: '6px' }}>
                       <span>⭐</span>
