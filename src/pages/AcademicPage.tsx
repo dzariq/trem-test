@@ -2749,68 +2749,63 @@ export default function AcademicPage() {
                 </div>
               </div>
 
-              {/* Rising Stars & Falling Behind */}
-              {(risingStars.length > 0 || fallingBehind.length > 0) && (
-                <div style={{ display: 'grid', gridTemplateColumns: risingStars.length > 0 && fallingBehind.length > 0 ? 'repeat(2, 1fr)' : '1fr', gap: '12px', marginBottom: '12px', pageBreakInside: 'avoid' }}>
-                  {/* Rising Stars */}
-                  {risingStars.length > 0 && (
-                    <div style={{ padding: '10px', borderRadius: '8px', background: 'linear-gradient(135deg, #fef3c7 0%, #fde68a 100%)', border: '1px solid #fbbf24' }}>
-                      <h4 style={{ fontSize: '11px', fontWeight: 600, color: '#d97706', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                        ⭐ Rising Stars
-                      </h4>
-                      <p style={{ fontSize: '8px', color: '#92400e', marginBottom: '8px' }}>Biggest improvements from previous exam</p>
-                      <div style={{ display: 'grid', gridTemplateColumns: `repeat(${Math.min(risingStars.length, 3)}, 1fr)`, gap: '6px' }}>
-                        {risingStars.map((item) => (
-                          <div 
-                            key={item.subject.name}
-                            style={{ 
-                              padding: '8px 6px', 
-                              borderRadius: '6px', 
-                              background: 'linear-gradient(135deg, #fcd34d 0%, #f59e0b 100%)',
-                              textAlign: 'center',
-                              border: '1px solid rgba(251, 191, 36, 0.5)'
-                            }}
-                          >
-                            <div style={{ fontSize: '9px', fontWeight: 600, color: '#78350f', marginBottom: '3px' }}>{shortenSubjectName(item.subject.name)}</div>
-                            <div style={{ fontSize: '12px', fontWeight: 700, color: '#92400e' }}>+{item.improvement}%</div>
-                            <div style={{ fontSize: '8px', color: '#92400e', marginTop: '2px' }}>
-                              {item.prev}% → {item.current}%
-                            </div>
-                          </div>
-                        ))}
+              {/* Rising Stars */}
+              {risingStars.length > 0 && (
+                <div style={{ padding: '10px', borderRadius: '8px', background: 'linear-gradient(135deg, #fef3c7 0%, #fde68a 100%)', border: '1px solid #fbbf24', marginBottom: '12px', pageBreakInside: 'avoid' }}>
+                  <h4 style={{ fontSize: '11px', fontWeight: 600, color: '#d97706', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                    ⭐ Rising Stars
+                  </h4>
+                  <p style={{ fontSize: '8px', color: '#92400e', marginBottom: '8px' }}>Top performing subjects with biggest improvements</p>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '6px' }}>
+                    {risingStars.slice(0, 3).map((item) => (
+                      <div 
+                        key={item.subject.name}
+                        style={{ 
+                          padding: '8px 6px', 
+                          borderRadius: '6px', 
+                          background: 'linear-gradient(135deg, #fcd34d 0%, #f59e0b 100%)',
+                          textAlign: 'center',
+                          border: '1px solid rgba(251, 191, 36, 0.5)'
+                        }}
+                      >
+                        <div style={{ fontSize: '9px', fontWeight: 600, color: '#78350f', marginBottom: '3px' }}>{shortenSubjectName(item.subject.name)}</div>
+                        <div style={{ fontSize: '12px', fontWeight: 700, color: '#92400e' }}>+{item.improvement}%</div>
+                        <div style={{ fontSize: '8px', color: '#92400e', marginTop: '2px' }}>
+                          {item.prev}% → {item.current}%
+                        </div>
                       </div>
-                    </div>
-                  )}
-                  
-                  {/* Falling Behind */}
-                  {fallingBehind.length > 0 && (
-                    <div style={{ padding: '10px', borderRadius: '8px', background: 'linear-gradient(135deg, #fee2e2 0%, #fecaca 100%)', border: '1px solid #f87171' }}>
-                      <h4 style={{ fontSize: '11px', fontWeight: 600, color: '#dc2626', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                        📉 Needs Attention
-                      </h4>
-                      <p style={{ fontSize: '8px', color: '#991b1b', marginBottom: '8px' }}>Areas requiring extra focus</p>
-                      <div style={{ display: 'grid', gridTemplateColumns: `repeat(${Math.min(fallingBehind.length, 3)}, 1fr)`, gap: '6px' }}>
-                        {fallingBehind.map((item) => (
-                          <div 
-                            key={item.subject.name}
-                            style={{ 
-                              padding: '8px 6px', 
-                              borderRadius: '6px', 
-                              background: 'linear-gradient(135deg, #fca5a5 0%, #ef4444 100%)',
-                              textAlign: 'center',
-                              border: '1px solid rgba(248, 113, 113, 0.5)'
-                            }}
-                          >
-                            <div style={{ fontSize: '9px', fontWeight: 600, color: '#7f1d1d', marginBottom: '3px' }}>{shortenSubjectName(item.subject.name)}</div>
-                            <div style={{ fontSize: '12px', fontWeight: 700, color: '#991b1b' }}>-{item.decline}%</div>
-                            <div style={{ fontSize: '8px', color: '#991b1b', marginTop: '2px' }}>
-                              {item.prev}% → {item.current}%
-                            </div>
-                          </div>
-                        ))}
+                    ))}
+                  </div>
+                </div>
+              )}
+              
+              {/* At-Risk Subjects */}
+              {fallingBehind.length > 0 && (
+                <div style={{ padding: '10px', borderRadius: '8px', background: 'linear-gradient(135deg, #fee2e2 0%, #fecaca 100%)', border: '1px solid #f87171', marginBottom: '12px', pageBreakInside: 'avoid' }}>
+                  <h4 style={{ fontSize: '11px', fontWeight: 600, color: '#dc2626', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                    ⚠️ At-Risk Subjects
+                  </h4>
+                  <p style={{ fontSize: '8px', color: '#991b1b', marginBottom: '8px' }}>Subjects that dropped significantly and need attention</p>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '6px' }}>
+                    {fallingBehind.slice(0, 3).map((item) => (
+                      <div 
+                        key={item.subject.name}
+                        style={{ 
+                          padding: '8px 6px', 
+                          borderRadius: '6px', 
+                          background: 'linear-gradient(135deg, #fca5a5 0%, #ef4444 100%)',
+                          textAlign: 'center',
+                          border: '1px solid rgba(248, 113, 113, 0.5)'
+                        }}
+                      >
+                        <div style={{ fontSize: '9px', fontWeight: 600, color: '#7f1d1d', marginBottom: '3px' }}>{shortenSubjectName(item.subject.name)}</div>
+                        <div style={{ fontSize: '12px', fontWeight: 700, color: '#991b1b' }}>-{item.decline}%</div>
+                        <div style={{ fontSize: '8px', color: '#991b1b', marginTop: '2px' }}>
+                          {item.prev}% → {item.current}%
+                        </div>
                       </div>
-                    </div>
-                  )}
+                    ))}
+                  </div>
                 </div>
               )}
 
