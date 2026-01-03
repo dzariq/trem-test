@@ -240,6 +240,7 @@ export const attendanceData = {
 
 export const academicData = {
   subjects: [
+    // Languages - English
     { 
       name: "English (First Language)", 
       teacherComment: "Emma shows excellent reading comprehension and creative writing skills. Keep up the great work!",
@@ -251,28 +252,29 @@ export const academicData = {
       }
     },
     { 
-      name: "Mathematics", 
-      teacherComment: "Good progress in problem-solving. Would benefit from more practice with algebraic expressions.",
+      name: "English (Second Language)", 
+      teacherComment: "Good progress in language acquisition. Continue building vocabulary.",
       scores: {
-        "2022": { midYear: 62, yearEnd: 66, attitude: 70, homework: 65, quiz: 60, exam: 62 },
-        "2023": { midYear: 68, yearEnd: 72, attitude: 75, homework: 70, quiz: 65, exam: 68 },
-        "2024": { midYear: 72, yearEnd: 75, attitude: 78, homework: 75, quiz: 70, exam: 72 },
-        "2025": { midYear: 80, yearEnd: null, attitude: 85, homework: 82, quiz: 78, exam: 80 }
+        "2022": { midYear: 65, yearEnd: 68, attitude: 70, homework: 72, quiz: 64, exam: 66 },
+        "2023": { midYear: 70, yearEnd: 74, attitude: 74, homework: 76, quiz: 68, exam: 70 },
+        "2024": { midYear: 74, yearEnd: 78, attitude: 78, homework: 80, quiz: 72, exam: 74 },
+        "2025": { midYear: 80, yearEnd: null, attitude: 82, homework: 85, quiz: 78, exam: 80 }
+      }
+    },
+    // Languages - Malay
+    { 
+      name: "Malay (First Language)", 
+      teacherComment: "Excellent command of Bahasa Malaysia. Outstanding essay writing skills.",
+      scores: {
+        "2022": { midYear: 72, yearEnd: 75, attitude: 78, homework: 76, quiz: 70, exam: 72 },
+        "2023": { midYear: 76, yearEnd: 80, attitude: 82, homework: 80, quiz: 74, exam: 76 },
+        "2024": { midYear: 80, yearEnd: 84, attitude: 85, homework: 83, quiz: 78, exam: 80 },
+        "2025": { midYear: 85, yearEnd: null, attitude: 88, homework: 86, quiz: 82, exam: 85 }
       }
     },
     { 
-      name: "Science", 
-      teacherComment: "Outstanding performance! Emma demonstrates strong analytical skills and enthusiasm for experiments.",
-      scores: {
-        "2022": { midYear: 76, yearEnd: 78, attitude: 82, homework: 80, quiz: 74, exam: 76 },
-        "2023": { midYear: 80, yearEnd: 84, attitude: 88, homework: 85, quiz: 78, exam: 80 },
-        "2024": { midYear: 85, yearEnd: 88, attitude: 90, homework: 88, quiz: 84, exam: 85 },
-        "2025": { midYear: 90, yearEnd: null, attitude: 92, homework: 94, quiz: 88, exam: 90 }
-      }
-    },
-    { 
-      name: "Malay", 
-      teacherComment: "Shows good understanding of Bahasa Malaysia. Could improve on essay structure and vocabulary.",
+      name: "Malay (Foreign Language)", 
+      teacherComment: "Shows good understanding of Bahasa Malaysia. Could improve on essay structure.",
       scores: {
         "2022": { midYear: 60, yearEnd: 64, attitude: 66, homework: 62, quiz: 58, exam: 60 },
         "2023": { midYear: 66, yearEnd: 70, attitude: 72, homework: 68, quiz: 64, exam: 66 },
@@ -280,6 +282,7 @@ export const academicData = {
         "2025": { midYear: 72, yearEnd: null, attitude: 74, homework: 70, quiz: 68, exam: 72 }
       }
     },
+    // Languages - Chinese
     { 
       name: "Chinese (Foreign Language)", 
       teacherComment: "Good pronunciation and character recognition. Continue practicing writing strokes.",
@@ -291,6 +294,89 @@ export const academicData = {
       }
     },
     { 
+      name: "Chinese (Second Language)", 
+      teacherComment: "Strong foundation in Chinese language. Excellent reading comprehension.",
+      scores: {
+        "2022": { midYear: 70, yearEnd: 73, attitude: 75, homework: 73, quiz: 68, exam: 70 },
+        "2023": { midYear: 74, yearEnd: 78, attitude: 80, homework: 77, quiz: 72, exam: 74 },
+        "2024": { midYear: 78, yearEnd: 84, attitude: 84, homework: 80, quiz: 76, exam: 78 },
+        "2025": { midYear: 82, yearEnd: null, attitude: 85, homework: 82, quiz: 78, exam: 82 }
+      }
+    },
+    { 
+      name: "Chinese (Beginner)", 
+      teacherComment: "Making good progress for a beginner. Keep practicing characters daily.",
+      scores: {
+        "2022": { midYear: 55, yearEnd: 58, attitude: 65, homework: 60, quiz: 52, exam: 55 },
+        "2023": { midYear: 60, yearEnd: 65, attitude: 70, homework: 65, quiz: 58, exam: 60 },
+        "2024": { midYear: 65, yearEnd: 70, attitude: 72, homework: 68, quiz: 62, exam: 65 },
+        "2025": { midYear: 70, yearEnd: null, attitude: 75, homework: 72, quiz: 68, exam: 70 }
+      }
+    },
+    // Sciences
+    { 
+      name: "Science", 
+      teacherComment: "Outstanding performance! Emma demonstrates strong analytical skills and enthusiasm for experiments.",
+      scores: {
+        "2022": { midYear: 76, yearEnd: 78, attitude: 82, homework: 80, quiz: 74, exam: 76 },
+        "2023": { midYear: 80, yearEnd: 84, attitude: 88, homework: 85, quiz: 78, exam: 80 },
+        "2024": { midYear: 85, yearEnd: 88, attitude: 90, homework: 88, quiz: 84, exam: 85 },
+        "2025": { midYear: 90, yearEnd: null, attitude: 92, homework: 94, quiz: 88, exam: 90 }
+      }
+    },
+    { 
+      name: "Biology", 
+      teacherComment: "Excellent understanding of biological concepts. Strong lab work skills.",
+      scores: {
+        "2022": { midYear: 74, yearEnd: 77, attitude: 80, homework: 78, quiz: 72, exam: 74 },
+        "2023": { midYear: 78, yearEnd: 82, attitude: 85, homework: 82, quiz: 76, exam: 78 },
+        "2024": { midYear: 82, yearEnd: 86, attitude: 88, homework: 85, quiz: 80, exam: 82 },
+        "2025": { midYear: 88, yearEnd: null, attitude: 90, homework: 88, quiz: 85, exam: 88 }
+      }
+    },
+    { 
+      name: "Chemistry", 
+      teacherComment: "Good understanding of chemical equations. Keep practicing balancing equations.",
+      scores: {
+        "2022": { midYear: 62, yearEnd: 65, attitude: 68, homework: 65, quiz: 60, exam: 62 },
+        "2023": { midYear: 66, yearEnd: 70, attitude: 72, homework: 68, quiz: 64, exam: 66 },
+        "2024": { midYear: 70, yearEnd: 74, attitude: 76, homework: 72, quiz: 68, exam: 70 },
+        "2025": { midYear: 75, yearEnd: null, attitude: 78, homework: 76, quiz: 72, exam: 75 }
+      }
+    },
+    { 
+      name: "Physics", 
+      teacherComment: "Finds concepts challenging. Would benefit from visual learning aids.",
+      scores: {
+        "2022": { midYear: 58, yearEnd: 62, attitude: 65, homework: 62, quiz: 56, exam: 58 },
+        "2023": { midYear: 62, yearEnd: 66, attitude: 70, homework: 66, quiz: 60, exam: 62 },
+        "2024": { midYear: 66, yearEnd: 70, attitude: 72, homework: 68, quiz: 64, exam: 66 },
+        "2025": { midYear: 72, yearEnd: null, attitude: 75, homework: 72, quiz: 68, exam: 72 }
+      }
+    },
+    // Mathematics
+    { 
+      name: "Mathematics", 
+      teacherComment: "Good progress in problem-solving. Would benefit from more practice with algebraic expressions.",
+      scores: {
+        "2022": { midYear: 62, yearEnd: 66, attitude: 70, homework: 65, quiz: 60, exam: 62 },
+        "2023": { midYear: 68, yearEnd: 72, attitude: 75, homework: 70, quiz: 65, exam: 68 },
+        "2024": { midYear: 72, yearEnd: 75, attitude: 78, homework: 75, quiz: 70, exam: 72 },
+        "2025": { midYear: 80, yearEnd: null, attitude: 85, homework: 82, quiz: 78, exam: 80 }
+      }
+    },
+    { 
+      name: "Additional Mathematics", 
+      teacherComment: "Strong analytical skills in advanced math. Excellent problem-solving abilities.",
+      scores: {
+        "2022": { midYear: 65, yearEnd: 68, attitude: 72, homework: 68, quiz: 62, exam: 65 },
+        "2023": { midYear: 70, yearEnd: 74, attitude: 77, homework: 72, quiz: 68, exam: 70 },
+        "2024": { midYear: 74, yearEnd: 78, attitude: 80, homework: 76, quiz: 72, exam: 74 },
+        "2025": { midYear: 82, yearEnd: null, attitude: 86, homework: 84, quiz: 80, exam: 82 }
+      }
+    },
+    // Technology
+    { 
       name: "ICT", 
       teacherComment: "Excellent understanding of programming concepts. Shows great potential in coding projects.",
       scores: {
@@ -298,6 +384,48 @@ export const academicData = {
         "2023": { midYear: 78, yearEnd: 82, attitude: 85, homework: 80, quiz: 76, exam: 78 },
         "2024": { midYear: 82, yearEnd: 86, attitude: 88, homework: 85, quiz: 80, exam: 82 },
         "2025": { midYear: 88, yearEnd: null, attitude: 90, homework: 88, quiz: 85, exam: 88 }
+      }
+    },
+    // Business & Commerce
+    { 
+      name: "Business Studies", 
+      teacherComment: "Good understanding of business concepts. Strong analytical skills.",
+      scores: {
+        "2022": { midYear: 70, yearEnd: 73, attitude: 75, homework: 72, quiz: 68, exam: 70 },
+        "2023": { midYear: 74, yearEnd: 78, attitude: 80, homework: 76, quiz: 72, exam: 74 },
+        "2024": { midYear: 78, yearEnd: 82, attitude: 84, homework: 80, quiz: 76, exam: 78 },
+        "2025": { midYear: 84, yearEnd: null, attitude: 87, homework: 85, quiz: 82, exam: 84 }
+      }
+    },
+    { 
+      name: "Accounting", 
+      teacherComment: "Excellent with numbers and financial statements. Very accurate work.",
+      scores: {
+        "2022": { midYear: 75, yearEnd: 78, attitude: 80, homework: 78, quiz: 73, exam: 75 },
+        "2023": { midYear: 80, yearEnd: 84, attitude: 85, homework: 82, quiz: 78, exam: 80 },
+        "2024": { midYear: 84, yearEnd: 88, attitude: 90, homework: 86, quiz: 82, exam: 84 },
+        "2025": { midYear: 90, yearEnd: null, attitude: 92, homework: 90, quiz: 88, exam: 90 }
+      }
+    },
+    { 
+      name: "Economics", 
+      teacherComment: "Strong grasp of economic principles. Good analytical thinking.",
+      scores: {
+        "2022": { midYear: 68, yearEnd: 72, attitude: 74, homework: 70, quiz: 66, exam: 68 },
+        "2023": { midYear: 72, yearEnd: 76, attitude: 78, homework: 74, quiz: 70, exam: 72 },
+        "2024": { midYear: 76, yearEnd: 80, attitude: 82, homework: 78, quiz: 74, exam: 76 },
+        "2025": { midYear: 82, yearEnd: null, attitude: 85, homework: 83, quiz: 80, exam: 82 }
+      }
+    },
+    // Humanities
+    { 
+      name: "Global Perspectives", 
+      teacherComment: "Excellent critical thinking and research skills. Strong presentation abilities.",
+      scores: {
+        "2022": { midYear: 72, yearEnd: 75, attitude: 78, homework: 74, quiz: 70, exam: 72 },
+        "2023": { midYear: 76, yearEnd: 80, attitude: 82, homework: 78, quiz: 74, exam: 76 },
+        "2024": { midYear: 80, yearEnd: 84, attitude: 86, homework: 82, quiz: 78, exam: 80 },
+        "2025": { midYear: 86, yearEnd: null, attitude: 88, homework: 86, quiz: 84, exam: 86 }
       }
     },
     { 
@@ -312,7 +440,7 @@ export const academicData = {
     },
     { 
       name: "Geography", 
-      teacherComment: "Good map reading skills. Needs to work on understanding climate patterns and geographical processes.",
+      teacherComment: "Good map reading skills. Needs to work on understanding climate patterns.",
       scores: {
         "2022": { midYear: 84, yearEnd: 86, attitude: 88, homework: 86, quiz: 82, exam: 84 },
         "2023": { midYear: 88, yearEnd: 90, attitude: 92, homework: 90, quiz: 85, exam: 88 },
@@ -320,34 +448,46 @@ export const academicData = {
         "2025": { midYear: 95, yearEnd: null, attitude: 96, homework: 95, quiz: 92, exam: 95 }
       }
     },
+    // Arts & Skills
     { 
       name: "Living Skills & Arts", 
-      teacherComment: "Exceptional creativity and artistic talent! Emma's work is always inspiring and thoughtfully composed.",
+      teacherComment: "Exceptional creativity and artistic talent! Emma's work is always inspiring.",
       scores: {
-        "2022": { midYear: 58, yearEnd: 60, attitude: 62, homework: 55, quiz: 54, exam: 58 },
-        "2023": { midYear: 62, yearEnd: 65, attitude: 68, homework: 60, quiz: 58, exam: 62 },
-        "2024": { midYear: 65, yearEnd: 72, attitude: 70, homework: 65, quiz: 62, exam: 65 },
-        "2025": { midYear: 65, yearEnd: null, attitude: 68, homework: 62, quiz: 60, exam: 65 }
+        "2022": { midYear: 78, yearEnd: 80, attitude: 82, homework: 78, quiz: 76, exam: 78 },
+        "2023": { midYear: 82, yearEnd: 85, attitude: 88, homework: 82, quiz: 80, exam: 82 },
+        "2024": { midYear: 85, yearEnd: 88, attitude: 90, homework: 86, quiz: 84, exam: 85 },
+        "2025": { midYear: 90, yearEnd: null, attitude: 92, homework: 90, quiz: 88, exam: 90 }
       }
     },
     { 
       name: "Music", 
-      teacherComment: "Shows interest in music theory. Practice more on rhythm and timing to improve performance.",
+      teacherComment: "Shows interest in music theory. Practice more on rhythm and timing.",
       scores: {
-        "2022": { midYear: 50, yearEnd: 53, attitude: 55, homework: 50, quiz: 48, exam: 50 },
-        "2023": { midYear: 55, yearEnd: 58, attitude: 60, homework: 55, quiz: 52, exam: 55 },
-        "2024": { midYear: 58, yearEnd: 62, attitude: 65, homework: 60, quiz: 55, exam: 58 },
-        "2025": { midYear: 65, yearEnd: null, attitude: 68, homework: 62, quiz: 60, exam: 65 }
+        "2022": { midYear: 68, yearEnd: 70, attitude: 72, homework: 68, quiz: 66, exam: 68 },
+        "2023": { midYear: 72, yearEnd: 75, attitude: 78, homework: 72, quiz: 70, exam: 72 },
+        "2024": { midYear: 75, yearEnd: 78, attitude: 80, homework: 76, quiz: 74, exam: 75 },
+        "2025": { midYear: 80, yearEnd: null, attitude: 82, homework: 80, quiz: 78, exam: 80 }
       }
     },
+    // Values
     { 
       name: "Moral", 
       teacherComment: "Demonstrates good moral values and participates well in class discussions.",
       scores: {
-        "2022": { midYear: 30, yearEnd: 33, attitude: 40, homework: 35, quiz: 28, exam: 30 },
-        "2023": { midYear: 35, yearEnd: 38, attitude: 45, homework: 40, quiz: 32, exam: 35 },
-        "2024": { midYear: 38, yearEnd: 42, attitude: 48, homework: 42, quiz: 35, exam: 38 },
-        "2025": { midYear: 45, yearEnd: null, attitude: 50, homework: 48, quiz: 42, exam: 45 }
+        "2022": { midYear: 75, yearEnd: 78, attitude: 80, homework: 76, quiz: 74, exam: 75 },
+        "2023": { midYear: 78, yearEnd: 82, attitude: 85, homework: 80, quiz: 76, exam: 78 },
+        "2024": { midYear: 82, yearEnd: 86, attitude: 88, homework: 84, quiz: 80, exam: 82 },
+        "2025": { midYear: 88, yearEnd: null, attitude: 90, homework: 88, quiz: 86, exam: 88 }
+      }
+    },
+    { 
+      name: "Islamic Studies", 
+      teacherComment: "Good understanding of Islamic principles and values. Active participation in class.",
+      scores: {
+        "2022": { midYear: 80, yearEnd: 83, attitude: 85, homework: 82, quiz: 78, exam: 80 },
+        "2023": { midYear: 84, yearEnd: 88, attitude: 90, homework: 86, quiz: 82, exam: 84 },
+        "2024": { midYear: 88, yearEnd: 90, attitude: 92, homework: 88, quiz: 86, exam: 88 },
+        "2025": { midYear: 92, yearEnd: null, attitude: 94, homework: 92, quiz: 90, exam: 92 }
       }
     }
   ],
@@ -377,7 +517,7 @@ export const academicData = {
     { activity: "Debate Club", achievement: "Best Speaker - Regional Competition" }
   ],
   averageScore: 85,
-  bestSubject: "Science",
+  bestSubject: "Geography",
   improvement: "+5%"
 };
 
@@ -386,29 +526,53 @@ export const classAverages = {
   "2022": { 
     midYear: 68, yearEnd: 72, attitude: 72, homework: 70, quiz: 66, exam: 68,
     bySubject: {
-      "English (First Language)": 72, "Mathematics": 65, "Science": 70, "Malay": 68, "Chinese (Foreign Language)": 74, 
-      "ICT": 66, "History": 62, "Geography": 70, "Living Skills & Arts": 68, "Music": 60, "Moral": 72
+      "English (First Language)": 72, "English (Second Language)": 68, 
+      "Malay (First Language)": 74, "Malay (Foreign Language)": 65,
+      "Chinese (Foreign Language)": 70, "Chinese (Second Language)": 72, "Chinese (Beginner)": 58,
+      "Science": 70, "Biology": 72, "Chemistry": 65, "Physics": 62,
+      "Mathematics": 65, "Additional Mathematics": 68,
+      "ICT": 66, "Business Studies": 70, "Accounting": 75, "Economics": 68,
+      "Global Perspectives": 72, "History": 62, "Geography": 70,
+      "Living Skills & Arts": 68, "Music": 60, "Moral": 72, "Islamic Studies": 78
     }
   },
   "2023": { 
     midYear: 72, yearEnd: 75, attitude: 76, homework: 74, quiz: 70, exam: 72,
     bySubject: {
-      "English (First Language)": 76, "Mathematics": 70, "Science": 74, "Malay": 72, "Chinese (Foreign Language)": 78, 
-      "ICT": 70, "History": 66, "Geography": 74, "Living Skills & Arts": 72, "Music": 64, "Moral": 75
+      "English (First Language)": 76, "English (Second Language)": 72, 
+      "Malay (First Language)": 78, "Malay (Foreign Language)": 68,
+      "Chinese (Foreign Language)": 74, "Chinese (Second Language)": 76, "Chinese (Beginner)": 62,
+      "Science": 74, "Biology": 76, "Chemistry": 68, "Physics": 65,
+      "Mathematics": 70, "Additional Mathematics": 72,
+      "ICT": 70, "Business Studies": 74, "Accounting": 78, "Economics": 72,
+      "Global Perspectives": 76, "History": 66, "Geography": 74,
+      "Living Skills & Arts": 72, "Music": 64, "Moral": 75, "Islamic Studies": 82
     }
   },
   "2024": { 
     midYear: 74, yearEnd: 77, attitude: 78, homework: 76, quiz: 73, exam: 74,
     bySubject: {
-      "English (First Language)": 78, "Mathematics": 74, "Science": 80, "Malay": 74, "Chinese (Foreign Language)": 76, 
-      "ICT": 74, "History": 70, "Geography": 78, "Living Skills & Arts": 75, "Music": 68, "Moral": 78
+      "English (First Language)": 78, "English (Second Language)": 74, 
+      "Malay (First Language)": 80, "Malay (Foreign Language)": 72,
+      "Chinese (Foreign Language)": 76, "Chinese (Second Language)": 78, "Chinese (Beginner)": 66,
+      "Science": 80, "Biology": 80, "Chemistry": 72, "Physics": 68,
+      "Mathematics": 74, "Additional Mathematics": 76,
+      "ICT": 74, "Business Studies": 78, "Accounting": 82, "Economics": 76,
+      "Global Perspectives": 80, "History": 70, "Geography": 78,
+      "Living Skills & Arts": 75, "Music": 68, "Moral": 78, "Islamic Studies": 86
     }
   },
   "2025": { 
     midYear: 76, yearEnd: null, attitude: 80, homework: 78, quiz: 75, exam: 76,
     bySubject: {
-      "English (First Language)": 82, "Mathematics": 78, "Science": 84, "Malay": 76, "Chinese (Foreign Language)": 74, 
-      "ICT": 78, "History": 72, "Geography": 82, "Living Skills & Arts": 76, "Music": 70, "Moral": 80
+      "English (First Language)": 82, "English (Second Language)": 78, 
+      "Malay (First Language)": 84, "Malay (Foreign Language)": 74,
+      "Chinese (Foreign Language)": 78, "Chinese (Second Language)": 80, "Chinese (Beginner)": 70,
+      "Science": 84, "Biology": 84, "Chemistry": 76, "Physics": 72,
+      "Mathematics": 78, "Additional Mathematics": 80,
+      "ICT": 78, "Business Studies": 82, "Accounting": 86, "Economics": 80,
+      "Global Perspectives": 84, "History": 72, "Geography": 82,
+      "Living Skills & Arts": 76, "Music": 70, "Moral": 80, "Islamic Studies": 90
     }
   }
 };

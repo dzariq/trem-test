@@ -59,16 +59,11 @@ const getCategoryScore = (subject: typeof academicData.subjects[0], year: YearKe
   return yearData ? yearData[category] : null;
 };
 
-// Helper to shorten long subject names
-const shortenSubjectName = (name: string): string => {
-  const abbreviations: Record<string, string> = {
-    "English (First Language)": "English",
-    "Chinese (Foreign Language)": "Chinese",
-    "Living Skills & Arts": "Living Skills",
-    "Mathematics": "Math",
-  };
-  return abbreviations[name] || name;
-};
+// Import centralized subjects config
+import { getShortSubjectName } from "@/data/subjectsConfig";
+
+// Use centralized short name function
+const shortenSubjectName = getShortSubjectName;
 
 export default function AcademicPage() {
   const [activeTab, setActiveTab] = useState("grades");
