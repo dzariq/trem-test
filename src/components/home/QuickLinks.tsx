@@ -3,13 +3,15 @@ import {
   BookMarked, 
   Trophy, 
   Dumbbell,
-  BarChart3 
+  BarChart3,
+  Award
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const quickLinks = [
   { icon: BookMarked, label: "Handbook", path: "/parent/handbook", bgColor: "bg-emerald-100", iconColor: "text-emerald-600" },
   { icon: Trophy, label: "Student Awards", path: "/parent/awards", bgColor: "bg-blue-100", iconColor: "text-blue-600" },
+  { icon: Award, label: "Awards", path: "/parent/academic?tab=cocurriculum", bgColor: "bg-purple-100", iconColor: "text-purple-600" },
   { icon: Dumbbell, label: "CCA Activities", path: "/parent/calendar?tab=cca", bgColor: "bg-amber-100", iconColor: "text-amber-600" },
   { icon: BarChart3, label: "Grade Analysis", path: "/parent/academic?section=analysis", bgColor: "bg-rose-100", iconColor: "text-rose-600" },
 ];
@@ -20,7 +22,7 @@ export function QuickLinks() {
   return (
     <section className="px-4 -mt-6 relative z-10">
       <div className="bg-card/80 backdrop-blur-sm rounded-2xl px-3 py-2.5 shadow-md border border-border">
-        <div className="grid grid-cols-4 gap-0.5">
+        <div className="grid grid-cols-5 gap-0.5">
           {quickLinks.map((link) => (
             <button
               key={link.label}
