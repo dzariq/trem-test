@@ -39,11 +39,11 @@ const gradeCategories = [{
   max: 70
 }];
 
-// Subjects for grade entry - standardized list
-const subjects = [
-  "English (First Language)", "Mathematics", "Science", "Malay", "Chinese (Foreign Language)", 
-  "ICT", "History", "Geography", "Living Skills & Arts", "Music", "Moral"
-];
+// Import centralized subjects config
+import { allSubjects, getShortSubjectName } from "@/data/subjectsConfig";
+
+// Use centralized subjects list
+const subjects = allSubjects;
 
 // Academic years (past 6 years) and exam periods
 const academicYears = ["2026", "2025", "2024", "2023", "2022", "2021"];
@@ -55,16 +55,8 @@ const examPeriods = [{
   label: "Year-End"
 }];
 
-// Helper to shorten long subject names
-const shortenSubjectName = (name: string): string => {
-  const abbreviations: Record<string, string> = {
-    "English (First Language)": "English",
-    "Chinese (Foreign Language)": "Chinese",
-    "Living Skills & Arts": "Living Skills",
-    "Mathematics": "Math",
-  };
-  return abbreviations[name] || name;
-};
+// Use centralized short name function
+const shortenSubjectName = getShortSubjectName;
 interface StudentGrades {
   attitude: string;
   homework: string;
