@@ -470,7 +470,7 @@ export function ReportCardDialog({
                             {subject.grade}
                           </span>
                           <div style={{ position: 'relative', zIndex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2px' }}>
-                            <span style={{ fontSize: '12px', fontWeight: '800', color: '#1a1a1a' }}>{subject.score !== null ? `${subject.score}%` : '-'}</span>
+                            <span style={{ fontSize: '13px', fontWeight: '800', color: '#1a1a1a' }}>{subject.score !== null ? `${subject.score}%` : '-'}</span>
                           </div>
                         </td>
                         <td style={{ padding: '6px 8px', textAlign: 'center', position: 'relative', background: yearEndBgColor, overflow: 'hidden' }}>
@@ -490,7 +490,7 @@ export function ReportCardDialog({
                             {derivedYearEndGrade}
                           </span>
                           <div style={{ position: 'relative', zIndex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2px' }}>
-                            <span style={{ fontSize: '12px', fontWeight: '800', color: '#1a1a1a' }}>{yearEndScore !== null ? `${yearEndScore}%` : '-'}</span>
+                            <span style={{ fontSize: '13px', fontWeight: '800', color: '#1a1a1a' }}>{yearEndScore !== null ? `${yearEndScore}%` : '-'}</span>
                           </div>
                         </td>
                         <td style={{ padding: '6px 8px', fontSize: '10px', color: '#374151', lineHeight: '1.5', background: rowAltBg }}>{subject.teacherComment || '-'}</td>
