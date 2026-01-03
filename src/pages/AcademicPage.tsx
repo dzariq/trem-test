@@ -2777,6 +2777,7 @@ export default function AcademicPage() {
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '8px' }}>
                   {/* Average */}
                   <div style={{ padding: '12px 8px', borderRadius: '10px', backgroundColor: '#dcfce7', textAlign: 'center' }}>
+                    <div style={{ fontSize: '14px', marginBottom: '4px' }}>📖</div>
                     <div style={{ fontSize: '18px', fontWeight: 700, color: '#22c55e' }}>{currentAverage}%</div>
                     <div style={{ fontSize: '10px', color: '#166534', fontWeight: 600 }}>Average</div>
                     <div style={{ fontSize: '8px', color: '#166534', marginTop: '2px' }}>
@@ -2785,12 +2786,14 @@ export default function AcademicPage() {
                   </div>
                   {/* Best Subject */}
                   <div style={{ padding: '12px 8px', borderRadius: '10px', backgroundColor: '#fef3c7', textAlign: 'center' }}>
+                    <div style={{ fontSize: '14px', marginBottom: '4px' }}>🏆</div>
                     <div style={{ fontSize: '14px', fontWeight: 700, color: '#d97706' }}>{shortenSubjectName(bestSubjectInfo.name)}</div>
                     <div style={{ fontSize: '10px', color: '#92400e', fontWeight: 600 }}>Best Subject</div>
                     <div style={{ fontSize: '8px', color: '#92400e', marginTop: '2px' }}>{bestSubjectInfo.score}%</div>
                   </div>
                   {/* Improvement */}
                   <div style={{ padding: '12px 8px', borderRadius: '10px', backgroundColor: '#ccfbf1', textAlign: 'center' }}>
+                    <div style={{ fontSize: '14px', marginBottom: '4px' }}>📈</div>
                     <div style={{ fontSize: '18px', fontWeight: 700, color: '#0d9488' }}>{improvementStats.text}</div>
                     <div style={{ fontSize: '10px', color: '#115e59', fontWeight: 600 }}>Improvement</div>
                     <div style={{ fontSize: '8px', color: '#115e59', marginTop: '2px' }}>
@@ -2799,18 +2802,21 @@ export default function AcademicPage() {
                   </div>
                   {/* Attendance */}
                   <div style={{ padding: '12px 8px', borderRadius: '10px', backgroundColor: '#eff6ff', textAlign: 'center' }}>
+                    <div style={{ fontSize: '14px', marginBottom: '4px' }}>📅</div>
                     <div style={{ fontSize: '18px', fontWeight: 700, color: '#3b82f6' }}>{attendanceStats.attendanceRate}%</div>
                     <div style={{ fontSize: '10px', color: '#1d4ed8', fontWeight: 600 }}>Attendance</div>
                     <div style={{ fontSize: '8px', color: '#1d4ed8', marginTop: '2px' }}>This Term</div>
                   </div>
                   {/* Passing */}
                   <div style={{ padding: '12px 8px', borderRadius: '10px', backgroundColor: '#f3e8ff', textAlign: 'center' }}>
+                    <div style={{ fontSize: '14px', marginBottom: '4px' }}>🎯</div>
                     <div style={{ fontSize: '18px', fontWeight: 700, color: '#9333ea' }}>{passingStats.passingCount}/{passingStats.totalSubjects}</div>
                     <div style={{ fontSize: '10px', color: '#6b21a8', fontWeight: 600 }}>Passing</div>
                     <div style={{ fontSize: '8px', color: '#6b21a8', marginTop: '2px' }}>{passingStats.passingPercentage}%</div>
                   </div>
                   {/* Needs Focus */}
                   <div style={{ padding: '12px 8px', borderRadius: '10px', backgroundColor: '#fee2e2', textAlign: 'center' }}>
+                    <div style={{ fontSize: '14px', marginBottom: '4px' }}>⚠️</div>
                     <div style={{ fontSize: '14px', fontWeight: 700, color: '#dc2626' }}>{shortenSubjectName(weakestSubjectInfo.name)}</div>
                     <div style={{ fontSize: '10px', color: '#991b1b', fontWeight: 600 }}>Needs Focus</div>
                     <div style={{ fontSize: '8px', color: '#991b1b', marginTop: '2px' }}>{weakestSubjectInfo.score}%</div>
@@ -2823,29 +2829,29 @@ export default function AcademicPage() {
                 <div style={{ display: 'grid', gridTemplateColumns: risingStars.length > 0 && fallingBehind.length > 0 ? 'repeat(2, 1fr)' : '1fr', gap: '12px', marginBottom: '12px', pageBreakInside: 'avoid' }}>
                   {/* Rising Stars */}
                   {risingStars.length > 0 && (
-                    <div style={{ padding: '10px', borderRadius: '8px', background: 'linear-gradient(135deg, #fef3c7 0%, #fde68a 100%)', border: '1px solid #fbbf24' }}>
-                      <h4 style={{ fontSize: '11px', fontWeight: 600, color: '#d97706', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                    <div style={{ padding: '10px', borderRadius: '8px', background: 'linear-gradient(135deg, #fef9c3 0%, #fef3c7 100%)', border: '1px solid #fde047' }}>
+                      <h4 style={{ fontSize: '11px', fontWeight: 600, color: '#ca8a04', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '4px' }}>
                         ⭐ Rising Stars
                       </h4>
-                      <p style={{ fontSize: '8px', color: '#92400e', marginBottom: '8px' }}>Top performing subjects</p>
+                      <p style={{ fontSize: '8px', color: '#a16207', marginBottom: '8px' }}>Top performing subjects</p>
                       <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
                         {risingStars.slice(0, 3).map((item) => (
                           <div 
                             key={item.subject.name}
                             style={{ 
-                              padding: '8px 6px', 
+                              padding: '8px 10px', 
                               borderRadius: '6px', 
-                              background: 'linear-gradient(135deg, #fcd34d 0%, #f59e0b 100%)',
-                              border: '1px solid rgba(251, 191, 36, 0.5)',
+                              background: 'linear-gradient(135deg, #fef08a 0%, #fde047 100%)',
+                              border: '1px solid rgba(253, 224, 71, 0.6)',
                               display: 'flex',
                               justifyContent: 'space-between',
                               alignItems: 'center'
                             }}
                           >
-                            <div style={{ fontSize: '9px', fontWeight: 600, color: '#78350f' }}>{shortenSubjectName(item.subject.name)}</div>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                              <div style={{ fontSize: '11px', fontWeight: 700, color: '#92400e' }}>+{item.improvement}%</div>
-                              <div style={{ fontSize: '7px', color: '#78350f' }}>{item.prev}%→{item.current}%</div>
+                            <div style={{ fontSize: '9px', fontWeight: 600, color: '#713f12' }}>{shortenSubjectName(item.subject.name)}</div>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                              <div style={{ fontSize: '11px', fontWeight: 700, color: '#a16207' }}>+{item.improvement}%</div>
+                              <div style={{ fontSize: '7px', color: '#854d0e' }}>{item.prev}%→{item.current}%</div>
                             </div>
                           </div>
                         ))}
@@ -2855,29 +2861,29 @@ export default function AcademicPage() {
                   
                   {/* At-Risk Subjects */}
                   {fallingBehind.length > 0 && (
-                    <div style={{ padding: '10px', borderRadius: '8px', background: 'linear-gradient(135deg, #fee2e2 0%, #fecaca 100%)', border: '1px solid #f87171' }}>
+                    <div style={{ padding: '10px', borderRadius: '8px', background: 'linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%)', border: '1px solid #fca5a5' }}>
                       <h4 style={{ fontSize: '11px', fontWeight: 600, color: '#dc2626', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '4px' }}>
                         ⚠️ At-Risk Subjects
                       </h4>
-                      <p style={{ fontSize: '8px', color: '#991b1b', marginBottom: '8px' }}>Needs extra attention</p>
+                      <p style={{ fontSize: '8px', color: '#b91c1c', marginBottom: '8px' }}>Needs extra attention</p>
                       <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
                         {fallingBehind.slice(0, 3).map((item) => (
                           <div 
                             key={item.subject.name}
                             style={{ 
-                              padding: '8px 6px', 
+                              padding: '8px 10px', 
                               borderRadius: '6px', 
-                              background: 'linear-gradient(135deg, #fca5a5 0%, #ef4444 100%)',
-                              border: '1px solid rgba(248, 113, 113, 0.5)',
+                              background: 'linear-gradient(135deg, #fecaca 0%, #fca5a5 100%)',
+                              border: '1px solid rgba(252, 165, 165, 0.6)',
                               display: 'flex',
                               justifyContent: 'space-between',
                               alignItems: 'center'
                             }}
                           >
-                            <div style={{ fontSize: '9px', fontWeight: 600, color: '#7f1d1d' }}>{shortenSubjectName(item.subject.name)}</div>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                              <div style={{ fontSize: '11px', fontWeight: 700, color: '#991b1b' }}>-{item.decline}%</div>
-                              <div style={{ fontSize: '7px', color: '#7f1d1d' }}>{item.prev}%→{item.current}%</div>
+                            <div style={{ fontSize: '9px', fontWeight: 600, color: '#991b1b' }}>{shortenSubjectName(item.subject.name)}</div>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                              <div style={{ fontSize: '11px', fontWeight: 700, color: '#dc2626' }}>-{item.decline}%</div>
+                              <div style={{ fontSize: '7px', color: '#b91c1c' }}>{item.prev}%→{item.current}%</div>
                             </div>
                           </div>
                         ))}
