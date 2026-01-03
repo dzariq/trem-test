@@ -2287,88 +2287,229 @@ export default function TeacherAcademicPage() {
                                     <style>
                                       @page { 
                                         size: A4; 
-                                        margin: 15mm 10mm;
+                                        margin: 12mm 15mm;
                                       }
-                                      * { box-sizing: border-box; }
+                                      * { 
+                                        box-sizing: border-box; 
+                                        margin: 0;
+                                        padding: 0;
+                                      }
                                       body { 
-                                        font-family: system-ui, -apple-system, sans-serif; 
+                                        font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; 
                                         padding: 0;
                                         margin: 0;
-                                        font-size: 11px;
-                                        line-height: 1.4;
-                                        -webkit-print-color-adjust: exact;
-                                        print-color-adjust: exact;
+                                        font-size: 10px;
+                                        line-height: 1.3;
+                                        color: #1a1a1a;
+                                        -webkit-print-color-adjust: exact !important;
+                                        print-color-adjust: exact !important;
+                                        background: white;
                                       }
+                                      
+                                      /* Report Header - Compact */
                                       .report-header { 
+                                        display: flex;
+                                        align-items: center;
+                                        justify-content: center;
+                                        gap: 12px;
                                         text-align: center; 
-                                        margin-bottom: 15px; 
-                                        border-bottom: 2px solid #333; 
+                                        margin-bottom: 12px; 
+                                        border-bottom: 2px solid #1a1a1a; 
                                         padding-bottom: 10px; 
                                       }
-                                      .report-header h1 { margin: 0 0 5px 0; font-size: 20px; }
-                                      .report-header p { margin: 0; color: #666; font-size: 11px; }
-                                      .section { margin-bottom: 15px; page-break-inside: avoid; }
-                                      .section h3 { font-size: 14px; margin: 0 0 8px 0; padding-bottom: 4px; border-bottom: 1px solid #ddd; }
-                                      .section h4 { font-size: 12px; margin: 0 0 6px 0; }
-                                      .grade-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 6px; margin-bottom: 12px; }
-                                      .grade-card { text-align: center; padding: 8px 4px; border: 1px solid #ddd; border-radius: 6px; }
-                                      .grade-card .grade { font-size: 14px; font-weight: bold; }
-                                      .grade-card .count { font-size: 18px; font-weight: bold; }
-                                      .grade-card .percent { font-size: 10px; color: #666; }
-                                      .student-section { page-break-inside: avoid; margin-bottom: 12px; }
-                                      .student-list { margin-top: 6px; }
-                                      .student-row { 
-                                        display: flex; 
-                                        justify-content: space-between; 
-                                        padding: 4px 8px; 
-                                        border-bottom: 1px solid #eee; 
-                                        font-size: 10px;
+                                      .report-header img,
+                                      .report-header .school-logo {
+                                        width: 40px !important;
+                                        height: 40px !important;
+                                        max-width: 40px !important;
+                                        max-height: 40px !important;
+                                        object-fit: contain !important;
+                                        flex-shrink: 0;
                                       }
-                                      .student-row:nth-child(odd) { background: #f9f9f9; }
+                                      .report-header h1 { 
+                                        margin: 0 0 2px 0; 
+                                        font-size: 16px; 
+                                        font-weight: 700;
+                                        color: #1a1a1a;
+                                      }
+                                      .report-header p { 
+                                        margin: 0; 
+                                        color: #666; 
+                                        font-size: 9px; 
+                                      }
+                                      
+                                      /* Section Styling */
+                                      .section { 
+                                        margin-bottom: 12px; 
+                                        page-break-inside: avoid; 
+                                      }
+                                      .section h3 { 
+                                        font-size: 11px; 
+                                        font-weight: 600;
+                                        margin: 0 0 6px 0; 
+                                        padding-bottom: 3px; 
+                                        border-bottom: 1px solid #ddd; 
+                                        color: #1a1a1a;
+                                      }
+                                      .section h4 { 
+                                        font-size: 10px; 
+                                        font-weight: 600;
+                                        margin: 0 0 4px 0; 
+                                        display: flex;
+                                        align-items: center;
+                                        gap: 4px;
+                                      }
+                                      
+                                      /* Grade Distribution Grid */
+                                      .grade-grid { 
+                                        display: grid !important; 
+                                        grid-template-columns: repeat(6, 1fr) !important; 
+                                        gap: 4px !important; 
+                                        margin-bottom: 10px !important; 
+                                      }
+                                      .grade-card { 
+                                        text-align: center !important; 
+                                        padding: 6px 2px !important; 
+                                        border: 1px solid #ddd !important; 
+                                        border-radius: 4px !important; 
+                                        background: white !important;
+                                      }
+                                      .grade-card .grade { 
+                                        font-size: 11px !important; 
+                                        font-weight: 700 !important; 
+                                      }
+                                      .grade-card .count { 
+                                        font-size: 14px !important; 
+                                        font-weight: 700 !important; 
+                                        color: #1a1a1a !important;
+                                      }
+                                      .grade-card .percent { 
+                                        font-size: 8px !important; 
+                                        color: #666 !important; 
+                                      }
+                                      
+                                      /* Performers Grid */
                                       .performers-grid { 
-                                        display: grid; 
-                                        grid-template-columns: repeat(3, 1fr); 
-                                        gap: 10px; 
-                                        page-break-inside: avoid;
+                                        display: grid !important; 
+                                        grid-template-columns: repeat(3, 1fr) !important; 
+                                        gap: 8px !important; 
+                                        margin-bottom: 10px !important;
                                       }
                                       .performer-box { 
-                                        padding: 10px; 
-                                        border-radius: 8px; 
-                                        page-break-inside: avoid;
+                                        padding: 8px !important; 
+                                        border-radius: 6px !important; 
+                                        page-break-inside: avoid !important;
                                       }
-                                      .performer-box.top { background: #fef3c7; border: 1px solid #fcd34d; }
-                                      .performer-box.middle { background: #dbeafe; border: 1px solid #93c5fd; }
-                                      .performer-box.risk { background: #fee2e2; border: 1px solid #fca5a5; }
+                                      .performer-box.top { 
+                                        background: #fef3c7 !important; 
+                                        border: 1px solid #fcd34d !important; 
+                                      }
+                                      .performer-box.middle { 
+                                        background: #dbeafe !important; 
+                                        border: 1px solid #93c5fd !important; 
+                                      }
+                                      .performer-box.risk { 
+                                        background: #fee2e2 !important; 
+                                        border: 1px solid #fca5a5 !important; 
+                                      }
+                                      
+                                      /* Student Lists */
+                                      .student-section { 
+                                        page-break-inside: avoid; 
+                                        margin-bottom: 8px; 
+                                      }
+                                      .student-list { 
+                                        margin-top: 4px; 
+                                      }
+                                      .student-row { 
+                                        display: flex !important; 
+                                        justify-content: space-between !important; 
+                                        padding: 2px 6px !important; 
+                                        border-bottom: 1px solid #eee !important; 
+                                        font-size: 9px !important;
+                                      }
+                                      .student-row:nth-child(odd) { 
+                                        background: #f9f9f9 !important; 
+                                      }
+                                      
+                                      /* Comparison Layout */
                                       .comparison-grid { 
-                                        display: grid; 
-                                        grid-template-columns: 1fr 1fr; 
-                                        gap: 15px; 
-                                        page-break-inside: avoid;
+                                        display: grid !important; 
+                                        grid-template-columns: 1fr 1fr !important; 
+                                        gap: 10px !important; 
                                       }
-                                      .comparison-box { padding: 12px; border: 1px solid #ddd; border-radius: 8px; }
-                                      .comparison-box.blue { border-color: #3b82f6; background: #eff6ff; }
-                                      .comparison-box.amber { border-color: #f59e0b; background: #fffbeb; }
+                                      .comparison-box { 
+                                        padding: 8px !important; 
+                                        border: 1px solid #ddd !important; 
+                                        border-radius: 6px !important; 
+                                        page-break-inside: avoid !important;
+                                      }
+                                      .comparison-box.blue { 
+                                        border-color: #3b82f6 !important; 
+                                        background: #eff6ff !important; 
+                                      }
+                                      .comparison-box.amber { 
+                                        border-color: #f59e0b !important; 
+                                        background: #fffbeb !important; 
+                                      }
+                                      
+                                      /* Stats Box */
                                       .stats-box { 
-                                        padding: 10px; 
-                                        background: #f5f5f5; 
-                                        border-radius: 8px; 
-                                        page-break-inside: avoid;
+                                        padding: 8px !important; 
+                                        background: #f5f5f5 !important; 
+                                        border-radius: 6px !important; 
+                                        page-break-inside: avoid !important;
+                                        margin-top: 10px !important;
                                       }
-                                      .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; text-align: center; }
-                                      table { width: 100%; border-collapse: collapse; font-size: 10px; }
-                                      th, td { padding: 6px 8px; border-bottom: 1px solid #ddd; }
-                                      th { background: #f5f5f5; font-weight: 600; }
+                                      .stats-grid { 
+                                        display: grid !important; 
+                                        grid-template-columns: repeat(4, 1fr) !important; 
+                                        gap: 6px !important; 
+                                        text-align: center !important; 
+                                      }
+                                      
+                                      /* Tables */
+                                      table { 
+                                        width: 100% !important; 
+                                        border-collapse: collapse !important; 
+                                        font-size: 9px !important; 
+                                      }
+                                      th, td { 
+                                        padding: 4px 6px !important; 
+                                        border-bottom: 1px solid #ddd !important; 
+                                      }
+                                      th { 
+                                        background: #f5f5f5 !important; 
+                                        font-weight: 600 !important; 
+                                      }
+                                      
+                                      /* Footer */
                                       .footer { 
-                                        text-align: center; 
-                                        font-size: 9px; 
-                                        color: #666; 
-                                        margin-top: 15px; 
-                                        padding-top: 10px; 
-                                        border-top: 1px solid #ddd; 
+                                        text-align: center !important; 
+                                        font-size: 8px !important; 
+                                        color: #666 !important; 
+                                        margin-top: 12px !important; 
+                                        padding-top: 8px !important; 
+                                        border-top: 1px solid #ddd !important; 
                                       }
+                                      
+                                      /* Hide Tailwind/React specific classes that don't print well */
+                                      svg { display: none !important; }
+                                      .lucide { display: none !important; }
+                                      
+                                      /* Utility colors for printing */
+                                      .text-emerald-600 { color: #059669 !important; }
+                                      .text-blue-600 { color: #2563eb !important; }
+                                      .text-red-600 { color: #dc2626 !important; }
+                                      .text-amber-700 { color: #b45309 !important; }
+                                      .text-blue-700 { color: #1d4ed8 !important; }
+                                      
                                       @media print { 
-                                        body { padding: 0; } 
-                                        .no-print { display: none; }
+                                        body { 
+                                          padding: 0 !important; 
+                                          margin: 0 !important;
+                                        }
+                                        .no-print { display: none !important; }
                                       }
                                     </style>
                                   </head>
@@ -2392,43 +2533,49 @@ export default function TeacherAcademicPage() {
                       {/* Report Content */}
                       <div className="space-y-4 p-2">
                         {/* Report Header */}
-                        <div className="report-header text-center pb-3 border-b-2 border-foreground">
-                          <div className="flex items-center justify-center gap-3 mb-2">
-                            <img src={schoolLogo} alt="School Logo" className="h-12 w-12 object-contain" />
-                            <div>
-                              <h1 className="text-xl font-bold text-foreground">Grade Distribution Report</h1>
-                              <p className="text-sm text-muted-foreground">
-                                {bandsCompareMode ? "Comparison Report" : `Class ${selectedClass} - ${bandsSelectedSubject}`}
-                              </p>
-                            </div>
+                        <div className="report-header">
+                          <img 
+                            src={schoolLogo} 
+                            alt="School Logo" 
+                            className="school-logo"
+                            style={{ width: '40px', height: '40px', objectFit: 'contain' }}
+                          />
+                          <div style={{ textAlign: 'left' }}>
+                            <h1 style={{ fontSize: '16px', fontWeight: 700, margin: '0 0 2px 0' }}>Grade Distribution Report</h1>
+                            <p style={{ fontSize: '10px', color: '#666', margin: 0 }}>
+                              {bandsCompareMode ? "Comparison Report" : `Class ${selectedClass} - ${bandsSelectedSubject}`}
+                            </p>
+                            <p style={{ fontSize: '9px', color: '#888', margin: '2px 0 0 0' }}>
+                              Generated on {new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}
+                              {' • '}{selectedYear} {selectedPeriod === 'midYear' ? 'Mid-Year' : 'Year-End'} Examination
+                            </p>
                           </div>
-                          <p className="text-xs text-muted-foreground">
-                            Generated on {new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}
-                            {' • '}{selectedYear} {selectedPeriod === 'midYear' ? 'Mid-Year' : 'Year-End'} Examination
-                          </p>
                         </div>
 
                         {!bandsCompareMode ? (
                           /* Normal Report */
                           <>
-                            <div className="section">
-                              <h3 className="text-sm font-semibold text-foreground mb-3 pb-1 border-b border-border">
+                            <div className="section" style={{ marginBottom: '12px', pageBreakInside: 'avoid' }}>
+                              <h3 style={{ fontSize: '12px', fontWeight: 600, marginBottom: '8px', paddingBottom: '4px', borderBottom: '1px solid #ddd' }}>
                                 Grade Distribution - {bandsSelectedSubject}
                               </h3>
-                              <div className="grid grid-cols-6 gap-2">
+                              <div className="grade-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: '6px' }}>
                                 {bandsGradeDistribution.map(g => {
                                   const total = bandsGradeDistribution.reduce((sum, d) => sum + d.count, 0);
                                   const percentage = total > 0 ? Math.round(g.count / total * 100) : 0;
                                   return (
-                                    <div key={g.range} className="text-center p-2 border rounded-lg" style={{
-                                      backgroundColor: `${GRADE_COLORS[g.range as keyof typeof GRADE_COLORS]}15`,
-                                      borderColor: `${GRADE_COLORS[g.range as keyof typeof GRADE_COLORS]}40`
+                                    <div key={g.range} className="grade-card" style={{
+                                      textAlign: 'center',
+                                      padding: '8px 4px',
+                                      border: '1px solid #ddd',
+                                      borderRadius: '6px',
+                                      backgroundColor: '#fff'
                                     }}>
-                                      <div className="text-sm font-bold" style={{ color: GRADE_COLORS[g.range as keyof typeof GRADE_COLORS] }}>
+                                      <div className="grade" style={{ fontSize: '12px', fontWeight: 700, color: GRADE_COLORS[g.range as keyof typeof GRADE_COLORS] }}>
                                         {g.range}
                                       </div>
-                                      <div className="text-lg font-bold text-foreground">{g.count}</div>
-                                      <div className="text-[10px] text-muted-foreground">{percentage}%</div>
+                                      <div className="count" style={{ fontSize: '16px', fontWeight: 700, color: '#1a1a1a' }}>{g.count}</div>
+                                      <div className="percent" style={{ fontSize: '9px', color: '#666' }}>{percentage}%</div>
                                     </div>
                                   );
                                 })}
@@ -2436,72 +2583,72 @@ export default function TeacherAcademicPage() {
                             </div>
 
                             {/* Student Lists - All students shown for printing */}
-                            <div className="performers-grid grid grid-cols-1 md:grid-cols-3 gap-3">
-                              <div className="performer-box top p-3 rounded-lg bg-amber-50 border border-amber-200">
-                                <h4 className="text-xs font-semibold text-amber-700 mb-2 flex items-center gap-1">
-                                  <Award className="h-3 w-3" /> Top Performers ({bandsTopPerformers.length})
+                            <div className="performers-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '10px', marginBottom: '12px' }}>
+                              <div className="performer-box top" style={{ padding: '10px', borderRadius: '6px', backgroundColor: '#fef3c7', border: '1px solid #fcd34d' }}>
+                                <h4 style={{ fontSize: '10px', fontWeight: 600, color: '#b45309', marginBottom: '6px' }}>
+                                  Top Performers ({bandsTopPerformers.length})
                                 </h4>
-                                <div className="student-list space-y-1">
+                                <div className="student-list">
                                   {bandsTopPerformers.map((s, i) => (
-                                    <div key={s.id} className="student-row flex justify-between text-xs py-1 border-b border-amber-100">
+                                    <div key={s.id} className="student-row" style={{ display: 'flex', justifyContent: 'space-between', padding: '3px 6px', fontSize: '9px', borderBottom: '1px solid #fcd34d40' }}>
                                       <span>{i + 1}. {s.name}</span>
-                                      <span className="font-semibold">{s.score}%</span>
+                                      <span style={{ fontWeight: 600 }}>{s.score}%</span>
                                     </div>
                                   ))}
-                                  {bandsTopPerformers.length === 0 && <p className="text-xs text-muted-foreground">No students</p>}
+                                  {bandsTopPerformers.length === 0 && <p style={{ fontSize: '9px', color: '#666' }}>No students</p>}
                                 </div>
                               </div>
                               
-                              <div className="performer-box middle p-3 rounded-lg bg-blue-50 border border-blue-200">
-                                <h4 className="text-xs font-semibold text-blue-700 mb-2 flex items-center gap-1">
-                                  <UserCheck className="h-3 w-3" /> Middle Performers ({bandsMiddlePerformers.length})
+                              <div className="performer-box middle" style={{ padding: '10px', borderRadius: '6px', backgroundColor: '#dbeafe', border: '1px solid #93c5fd' }}>
+                                <h4 style={{ fontSize: '10px', fontWeight: 600, color: '#1d4ed8', marginBottom: '6px' }}>
+                                  Middle Performers ({bandsMiddlePerformers.length})
                                 </h4>
-                                <div className="student-list space-y-1">
+                                <div className="student-list">
                                   {bandsMiddlePerformers.map((s, i) => (
-                                    <div key={s.id} className="student-row flex justify-between text-xs py-1 border-b border-blue-100">
+                                    <div key={s.id} className="student-row" style={{ display: 'flex', justifyContent: 'space-between', padding: '3px 6px', fontSize: '9px', borderBottom: '1px solid #93c5fd40' }}>
                                       <span>{i + 1}. {s.name}</span>
-                                      <span className="font-semibold">{s.score}%</span>
+                                      <span style={{ fontWeight: 600 }}>{s.score}%</span>
                                     </div>
                                   ))}
-                                  {bandsMiddlePerformers.length === 0 && <p className="text-xs text-muted-foreground">No students</p>}
+                                  {bandsMiddlePerformers.length === 0 && <p style={{ fontSize: '9px', color: '#666' }}>No students</p>}
                                 </div>
                               </div>
                               
-                              <div className="performer-box risk p-3 rounded-lg bg-red-50 border border-red-200">
-                                <h4 className="text-xs font-semibold text-red-700 mb-2 flex items-center gap-1">
-                                  <AlertTriangle className="h-3 w-3" /> At-Risk ({bandsAtRiskStudents.length})
+                              <div className="performer-box risk" style={{ padding: '10px', borderRadius: '6px', backgroundColor: '#fee2e2', border: '1px solid #fca5a5' }}>
+                                <h4 style={{ fontSize: '10px', fontWeight: 600, color: '#dc2626', marginBottom: '6px' }}>
+                                  At-Risk ({bandsAtRiskStudents.length})
                                 </h4>
-                                <div className="student-list space-y-1">
+                                <div className="student-list">
                                   {bandsAtRiskStudents.map((s, i) => (
-                                    <div key={s.id} className="student-row flex justify-between text-xs py-1 border-b border-red-100">
+                                    <div key={s.id} className="student-row" style={{ display: 'flex', justifyContent: 'space-between', padding: '3px 6px', fontSize: '9px', borderBottom: '1px solid #fca5a540' }}>
                                       <span>{i + 1}. {s.name}</span>
-                                      <span className="font-semibold">{s.score}%</span>
+                                      <span style={{ fontWeight: 600 }}>{s.score}%</span>
                                     </div>
                                   ))}
-                                  {bandsAtRiskStudents.length === 0 && <p className="text-xs text-muted-foreground">No students</p>}
+                                  {bandsAtRiskStudents.length === 0 && <p style={{ fontSize: '9px', color: '#666' }}>No students</p>}
                                 </div>
                               </div>
                             </div>
 
                             {/* Summary Stats */}
-                            <div className="stats-box p-3 rounded-lg bg-muted/50 border border-border">
-                              <h4 className="text-xs font-semibold text-foreground mb-2">Summary Statistics</h4>
-                              <div className="stats-grid grid grid-cols-4 gap-2 text-center">
+                            <div className="stats-box" style={{ padding: '10px', backgroundColor: '#f5f5f5', borderRadius: '6px', marginTop: '12px' }}>
+                              <h4 style={{ fontSize: '11px', fontWeight: 600, marginBottom: '8px' }}>Summary Statistics</h4>
+                              <div className="stats-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '8px', textAlign: 'center' }}>
                                 <div>
-                                  <div className="text-lg font-bold text-foreground">{bandsRankedStudents.length}</div>
-                                  <div className="text-[10px] text-muted-foreground">Total Students</div>
+                                  <div style={{ fontSize: '14px', fontWeight: 700, color: '#1a1a1a' }}>{bandsRankedStudents.length}</div>
+                                  <div style={{ fontSize: '9px', color: '#666' }}>Total Students</div>
                                 </div>
                                 <div>
-                                  <div className="text-lg font-bold text-emerald-600">{bandsTopPerformers.length}</div>
-                                  <div className="text-[10px] text-muted-foreground">Top (A*/A)</div>
+                                  <div style={{ fontSize: '14px', fontWeight: 700, color: '#059669' }}>{bandsTopPerformers.length}</div>
+                                  <div style={{ fontSize: '9px', color: '#666' }}>Top (A*/A)</div>
                                 </div>
                                 <div>
-                                  <div className="text-lg font-bold text-blue-600">{bandsMiddlePerformers.length}</div>
-                                  <div className="text-[10px] text-muted-foreground">Middle (B/C)</div>
+                                  <div style={{ fontSize: '14px', fontWeight: 700, color: '#2563eb' }}>{bandsMiddlePerformers.length}</div>
+                                  <div style={{ fontSize: '9px', color: '#666' }}>Middle (B/C)</div>
                                 </div>
                                 <div>
-                                  <div className="text-lg font-bold text-red-600">{bandsAtRiskStudents.length}</div>
-                                  <div className="text-[10px] text-muted-foreground">At-Risk (D/E)</div>
+                                  <div style={{ fontSize: '14px', fontWeight: 700, color: '#dc2626' }}>{bandsAtRiskStudents.length}</div>
+                                  <div style={{ fontSize: '9px', color: '#666' }}>At-Risk (D/E)</div>
                                 </div>
                               </div>
                             </div>
@@ -2509,43 +2656,43 @@ export default function TeacherAcademicPage() {
                         ) : (
                           /* Comparison Report */
                           <>
-                            <div className="comparison-grid grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div className="comparison-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '12px' }}>
                               {/* Selection A */}
-                              <div className="comparison-box blue p-3 rounded-lg bg-blue-50 border border-blue-200">
-                                <div className="flex items-center gap-2 mb-3">
-                                  <div className="w-3 h-3 rounded-full bg-blue-500" />
-                                  <span className="text-sm font-semibold text-blue-700">
+                              <div className="comparison-box blue" style={{ padding: '10px', borderRadius: '6px', backgroundColor: '#eff6ff', border: '1px solid #3b82f6' }}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '10px' }}>
+                                  <div style={{ width: '10px', height: '10px', borderRadius: '50%', backgroundColor: '#3b82f6' }} />
+                                  <span style={{ fontSize: '11px', fontWeight: 600, color: '#1d4ed8' }}>
                                     {selectedClass} - {bandsSelectedSubject}
                                   </span>
                                 </div>
-                                <div className="grade-grid grid grid-cols-6 gap-1 mb-3">
+                                <div className="grade-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: '4px', marginBottom: '10px' }}>
                                   {bandsGradeDistribution.map(g => {
                                     const total = bandsGradeDistribution.reduce((sum, d) => sum + d.count, 0);
                                     const percentage = total > 0 ? Math.round(g.count / total * 100) : 0;
                                     return (
-                                      <div key={g.range} className="grade-card text-center p-1.5 border rounded bg-background">
-                                        <div className="grade text-xs font-bold" style={{ color: GRADE_COLORS[g.range as keyof typeof GRADE_COLORS] }}>
+                                      <div key={g.range} className="grade-card" style={{ textAlign: 'center', padding: '4px 2px', border: '1px solid #ddd', borderRadius: '4px', backgroundColor: '#fff' }}>
+                                        <div className="grade" style={{ fontSize: '10px', fontWeight: 700, color: GRADE_COLORS[g.range as keyof typeof GRADE_COLORS] }}>
                                           {g.range}
                                         </div>
-                                        <div className="count text-sm font-bold text-foreground">{g.count}</div>
-                                        <div className="percent text-[9px] text-muted-foreground">{percentage}%</div>
+                                        <div className="count" style={{ fontSize: '12px', fontWeight: 700, color: '#1a1a1a' }}>{g.count}</div>
+                                        <div className="percent" style={{ fontSize: '8px', color: '#666' }}>{percentage}%</div>
                                       </div>
                                     );
                                   })}
                                 </div>
-                                <div className="flex justify-between text-xs text-muted-foreground pt-2 border-t border-blue-200">
+                                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '9px', color: '#666', paddingTop: '6px', borderTop: '1px solid #3b82f640' }}>
                                   <span>Top: {bandsTopPerformers.length}</span>
                                   <span>Middle: {bandsMiddlePerformers.length}</span>
                                   <span>At-Risk: {bandsAtRiskStudents.length}</span>
                                 </div>
                                 {/* Full student list for Selection A */}
-                                <div className="student-section mt-3 pt-3 border-t border-blue-200 space-y-2">
-                                  <div className="text-[10px] font-semibold text-blue-700">All Students:</div>
-                                  <div className="student-list space-y-0.5">
+                                <div className="student-section" style={{ marginTop: '10px', paddingTop: '8px', borderTop: '1px solid #3b82f640' }}>
+                                  <div style={{ fontSize: '9px', fontWeight: 600, color: '#1d4ed8', marginBottom: '4px' }}>All Students:</div>
+                                  <div className="student-list">
                                     {bandsRankedStudents.map((s, i) => (
-                                      <div key={s.id} className="student-row flex justify-between text-[10px] py-0.5">
+                                      <div key={s.id} className="student-row" style={{ display: 'flex', justifyContent: 'space-between', padding: '2px 4px', fontSize: '8px', borderBottom: '1px solid #3b82f620' }}>
                                         <span>{i + 1}. {s.name}</span>
-                                        <span className="font-semibold">{s.score}%</span>
+                                        <span style={{ fontWeight: 600 }}>{s.score}%</span>
                                       </div>
                                     ))}
                                   </div>
@@ -2553,41 +2700,41 @@ export default function TeacherAcademicPage() {
                               </div>
 
                               {/* Selection B */}
-                              <div className="comparison-box amber p-3 rounded-lg bg-amber-50 border border-amber-200">
-                                <div className="flex items-center gap-2 mb-3">
-                                  <div className="w-3 h-3 rounded-full bg-amber-500" />
-                                  <span className="text-sm font-semibold text-amber-700">
+                              <div className="comparison-box amber" style={{ padding: '10px', borderRadius: '6px', backgroundColor: '#fffbeb', border: '1px solid #f59e0b' }}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '10px' }}>
+                                  <div style={{ width: '10px', height: '10px', borderRadius: '50%', backgroundColor: '#f59e0b' }} />
+                                  <span style={{ fontSize: '11px', fontWeight: 600, color: '#b45309' }}>
                                     {bandsCompareClass} - {bandsCompareSubject}
                                   </span>
                                 </div>
-                                <div className="grade-grid grid grid-cols-6 gap-1 mb-3">
+                                <div className="grade-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: '4px', marginBottom: '10px' }}>
                                   {bandsCompareGradeDistribution.map(g => {
                                     const total = bandsCompareGradeDistribution.reduce((sum, d) => sum + d.count, 0);
                                     const percentage = total > 0 ? Math.round(g.count / total * 100) : 0;
                                     return (
-                                      <div key={g.range} className="grade-card text-center p-1.5 border rounded bg-background">
-                                        <div className="grade text-xs font-bold" style={{ color: GRADE_COLORS[g.range as keyof typeof GRADE_COLORS] }}>
+                                      <div key={g.range} className="grade-card" style={{ textAlign: 'center', padding: '4px 2px', border: '1px solid #ddd', borderRadius: '4px', backgroundColor: '#fff' }}>
+                                        <div className="grade" style={{ fontSize: '10px', fontWeight: 700, color: GRADE_COLORS[g.range as keyof typeof GRADE_COLORS] }}>
                                           {g.range}
                                         </div>
-                                        <div className="count text-sm font-bold text-foreground">{g.count}</div>
-                                        <div className="percent text-[9px] text-muted-foreground">{percentage}%</div>
+                                        <div className="count" style={{ fontSize: '12px', fontWeight: 700, color: '#1a1a1a' }}>{g.count}</div>
+                                        <div className="percent" style={{ fontSize: '8px', color: '#666' }}>{percentage}%</div>
                                       </div>
                                     );
                                   })}
                                 </div>
-                                <div className="flex justify-between text-xs text-muted-foreground pt-2 border-t border-amber-200">
+                                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '9px', color: '#666', paddingTop: '6px', borderTop: '1px solid #f59e0b40' }}>
                                   <span>Top: {bandsCompareTopPerformers.length}</span>
                                   <span>Middle: {bandsCompareMiddlePerformers.length}</span>
                                   <span>At-Risk: {bandsCompareAtRiskStudents.length}</span>
                                 </div>
                                 {/* Full student list for Selection B */}
-                                <div className="student-section mt-3 pt-3 border-t border-amber-200 space-y-2">
-                                  <div className="text-[10px] font-semibold text-amber-700">All Students:</div>
-                                  <div className="student-list space-y-0.5">
+                                <div className="student-section" style={{ marginTop: '10px', paddingTop: '8px', borderTop: '1px solid #f59e0b40' }}>
+                                  <div style={{ fontSize: '9px', fontWeight: 600, color: '#b45309', marginBottom: '4px' }}>All Students:</div>
+                                  <div className="student-list">
                                     {bandsCompareRankedStudents.map((s, i) => (
-                                      <div key={s.id} className="student-row flex justify-between text-[10px] py-0.5">
+                                      <div key={s.id} className="student-row" style={{ display: 'flex', justifyContent: 'space-between', padding: '2px 4px', fontSize: '8px', borderBottom: '1px solid #f59e0b20' }}>
                                         <span>{i + 1}. {s.name}</span>
-                                        <span className="font-semibold">{s.score}%</span>
+                                        <span style={{ fontWeight: 600 }}>{s.score}%</span>
                                       </div>
                                     ))}
                                   </div>
@@ -2596,57 +2743,55 @@ export default function TeacherAcademicPage() {
                             </div>
 
                             {/* Comparison Summary */}
-                            <div className="stats-box p-3 rounded-lg bg-muted/50 border border-border">
-                              <h4 className="text-xs font-semibold text-foreground mb-3">Comparison Summary</h4>
-                              <div className="overflow-x-auto">
-                                <table className="w-full text-xs">
-                                  <thead>
-                                    <tr className="border-b border-border">
-                                      <th className="text-left py-2 px-2">Metric</th>
-                                      <th className="text-center py-2 px-2 text-blue-700">{selectedClass}</th>
-                                      <th className="text-center py-2 px-2 text-amber-700">{bandsCompareClass}</th>
-                                      <th className="text-center py-2 px-2">Difference</th>
-                                    </tr>
-                                  </thead>
-                                  <tbody>
-                                    <tr className="border-b border-border/50">
-                                      <td className="py-2 px-2">Total Students</td>
-                                      <td className="text-center py-2 px-2 font-semibold">{bandsRankedStudents.length}</td>
-                                      <td className="text-center py-2 px-2 font-semibold">{bandsCompareRankedStudents.length}</td>
-                                      <td className="text-center py-2 px-2">{bandsRankedStudents.length - bandsCompareRankedStudents.length}</td>
-                                    </tr>
-                                    <tr className="border-b border-border/50">
-                                      <td className="py-2 px-2">Top Performers (A*/A)</td>
-                                      <td className="text-center py-2 px-2 font-semibold text-emerald-600">{bandsTopPerformers.length}</td>
-                                      <td className="text-center py-2 px-2 font-semibold text-emerald-600">{bandsCompareTopPerformers.length}</td>
-                                      <td className={cn("text-center py-2 px-2 font-semibold", bandsTopPerformers.length > bandsCompareTopPerformers.length ? "text-emerald-600" : bandsTopPerformers.length < bandsCompareTopPerformers.length ? "text-red-600" : "")}>
-                                        {bandsTopPerformers.length > bandsCompareTopPerformers.length ? "+" : ""}{bandsTopPerformers.length - bandsCompareTopPerformers.length}
-                                      </td>
-                                    </tr>
-                                    <tr className="border-b border-border/50">
-                                      <td className="py-2 px-2">Middle Performers (B/C)</td>
-                                      <td className="text-center py-2 px-2 font-semibold text-blue-600">{bandsMiddlePerformers.length}</td>
-                                      <td className="text-center py-2 px-2 font-semibold text-blue-600">{bandsCompareMiddlePerformers.length}</td>
-                                      <td className="text-center py-2 px-2">{bandsMiddlePerformers.length - bandsCompareMiddlePerformers.length}</td>
-                                    </tr>
-                                    <tr>
-                                      <td className="py-2 px-2">At-Risk (D/E)</td>
-                                      <td className="text-center py-2 px-2 font-semibold text-red-600">{bandsAtRiskStudents.length}</td>
-                                      <td className="text-center py-2 px-2 font-semibold text-red-600">{bandsCompareAtRiskStudents.length}</td>
-                                      <td className={cn("text-center py-2 px-2 font-semibold", bandsAtRiskStudents.length < bandsCompareAtRiskStudents.length ? "text-emerald-600" : bandsAtRiskStudents.length > bandsCompareAtRiskStudents.length ? "text-red-600" : "")}>
-                                        {bandsAtRiskStudents.length > bandsCompareAtRiskStudents.length ? "+" : ""}{bandsAtRiskStudents.length - bandsCompareAtRiskStudents.length}
-                                      </td>
-                                    </tr>
-                                  </tbody>
-                                </table>
-                              </div>
+                            <div className="stats-box" style={{ padding: '10px', backgroundColor: '#f5f5f5', borderRadius: '6px', marginTop: '12px' }}>
+                              <h4 style={{ fontSize: '11px', fontWeight: 600, marginBottom: '8px' }}>Comparison Summary</h4>
+                              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '9px' }}>
+                                <thead>
+                                  <tr style={{ borderBottom: '1px solid #ddd' }}>
+                                    <th style={{ textAlign: 'left', padding: '4px 6px', backgroundColor: '#e5e5e5' }}>Metric</th>
+                                    <th style={{ textAlign: 'center', padding: '4px 6px', backgroundColor: '#e5e5e5', color: '#1d4ed8' }}>{selectedClass}</th>
+                                    <th style={{ textAlign: 'center', padding: '4px 6px', backgroundColor: '#e5e5e5', color: '#b45309' }}>{bandsCompareClass}</th>
+                                    <th style={{ textAlign: 'center', padding: '4px 6px', backgroundColor: '#e5e5e5' }}>Difference</th>
+                                  </tr>
+                                </thead>
+                                <tbody>
+                                  <tr style={{ borderBottom: '1px solid #eee' }}>
+                                    <td style={{ padding: '4px 6px' }}>Total Students</td>
+                                    <td style={{ textAlign: 'center', padding: '4px 6px', fontWeight: 600 }}>{bandsRankedStudents.length}</td>
+                                    <td style={{ textAlign: 'center', padding: '4px 6px', fontWeight: 600 }}>{bandsCompareRankedStudents.length}</td>
+                                    <td style={{ textAlign: 'center', padding: '4px 6px' }}>{bandsRankedStudents.length - bandsCompareRankedStudents.length}</td>
+                                  </tr>
+                                  <tr style={{ borderBottom: '1px solid #eee' }}>
+                                    <td style={{ padding: '4px 6px' }}>Top Performers (A*/A)</td>
+                                    <td style={{ textAlign: 'center', padding: '4px 6px', fontWeight: 600, color: '#059669' }}>{bandsTopPerformers.length}</td>
+                                    <td style={{ textAlign: 'center', padding: '4px 6px', fontWeight: 600, color: '#059669' }}>{bandsCompareTopPerformers.length}</td>
+                                    <td style={{ textAlign: 'center', padding: '4px 6px', fontWeight: 600, color: bandsTopPerformers.length > bandsCompareTopPerformers.length ? '#059669' : bandsTopPerformers.length < bandsCompareTopPerformers.length ? '#dc2626' : '#1a1a1a' }}>
+                                      {bandsTopPerformers.length > bandsCompareTopPerformers.length ? "+" : ""}{bandsTopPerformers.length - bandsCompareTopPerformers.length}
+                                    </td>
+                                  </tr>
+                                  <tr style={{ borderBottom: '1px solid #eee' }}>
+                                    <td style={{ padding: '4px 6px' }}>Middle Performers (B/C)</td>
+                                    <td style={{ textAlign: 'center', padding: '4px 6px', fontWeight: 600, color: '#2563eb' }}>{bandsMiddlePerformers.length}</td>
+                                    <td style={{ textAlign: 'center', padding: '4px 6px', fontWeight: 600, color: '#2563eb' }}>{bandsCompareMiddlePerformers.length}</td>
+                                    <td style={{ textAlign: 'center', padding: '4px 6px' }}>{bandsMiddlePerformers.length - bandsCompareMiddlePerformers.length}</td>
+                                  </tr>
+                                  <tr>
+                                    <td style={{ padding: '4px 6px' }}>At-Risk (D/E)</td>
+                                    <td style={{ textAlign: 'center', padding: '4px 6px', fontWeight: 600, color: '#dc2626' }}>{bandsAtRiskStudents.length}</td>
+                                    <td style={{ textAlign: 'center', padding: '4px 6px', fontWeight: 600, color: '#dc2626' }}>{bandsCompareAtRiskStudents.length}</td>
+                                    <td style={{ textAlign: 'center', padding: '4px 6px', fontWeight: 600, color: bandsAtRiskStudents.length < bandsCompareAtRiskStudents.length ? '#059669' : bandsAtRiskStudents.length > bandsCompareAtRiskStudents.length ? '#dc2626' : '#1a1a1a' }}>
+                                      {bandsAtRiskStudents.length > bandsCompareAtRiskStudents.length ? "+" : ""}{bandsAtRiskStudents.length - bandsCompareAtRiskStudents.length}
+                                    </td>
+                                  </tr>
+                                </tbody>
+                              </table>
                             </div>
                           </>
                         )}
 
                         {/* Footer */}
-                        <div className="footer text-center text-[10px] text-muted-foreground pt-3 border-t border-border">
-                          <p>Prepared by: {teacherProfile.name} • {teacherProfile.email}</p>
+                        <div className="footer" style={{ textAlign: 'center', fontSize: '9px', color: '#666', marginTop: '15px', paddingTop: '10px', borderTop: '1px solid #ddd' }}>
+                          <p style={{ margin: 0 }}>Prepared by: {teacherProfile.name} • {teacherProfile.email}</p>
                         </div>
                       </div>
                     </div>
