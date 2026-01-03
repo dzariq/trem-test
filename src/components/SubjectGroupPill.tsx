@@ -67,7 +67,7 @@ export function SubjectGroupPill({
         "px-2.5 py-1 rounded-full text-xs font-medium transition-all flex items-center gap-1",
         hasSelection
           ? "bg-primary text-primary-foreground"
-          : "bg-muted text-muted-foreground hover:bg-muted/80"
+          : "bg-background text-muted-foreground border border-border hover:bg-accent"
       )}
     >
       {getDisplayText()}
