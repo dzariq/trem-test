@@ -1575,16 +1575,6 @@ export default function AcademicPage() {
                     </div>
                   </div>
                   <div className="flex flex-wrap gap-1.5 p-2.5 rounded-lg border border-border bg-background">
-                    {/* All Subjects pill - only show when "all" is selected */}
-                    {subjectFilter === "all" && (
-                      <button
-                        onClick={() => setSubjectFilter("all")}
-                        className="px-2.5 py-1 rounded-full text-xs font-medium transition-all flex items-center gap-1 bg-primary text-primary-foreground"
-                      >
-                        All Subjects
-                        <Check className="h-3 w-3" />
-                      </button>
-                    )}
                     {/* Grouped subject pills with mobile-friendly drawers */}
                     {subjectGroups.map((group) => (
                       <SubjectGroupPill
