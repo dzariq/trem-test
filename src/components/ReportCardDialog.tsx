@@ -331,10 +331,10 @@ export function ReportCardDialog({
               </div>
               
             {/* Attitude & Behaviour - Card Style */}
-              <div style={{ borderRadius: '12px', padding: '10px' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '4px', marginBottom: '8px' }}>
+              <div style={{ padding: '10px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '8px', paddingBottom: '6px', borderBottom: '1px solid #065f46' }}>
                   <span style={{ color: '#065f46' }}><IconBookApple /></span>
-                  <span style={{ fontSize: '11px', fontWeight: '700', color: '#065f46' }}>Attitude & Behaviour</span>
+                  <h3 style={{ fontSize: '11px', fontWeight: '700', color: '#065f46' }}>Attitude & Behaviour</h3>
                 </div>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '4px' }}>
                   {behavior.slice(0, 8).map((item) => {
@@ -547,71 +547,27 @@ export function ReportCardDialog({
               </div>
             )}
 
-            {/* Homeroom Comment - Continues after academic grades */}
-            <div style={{ position: 'relative', background: '#fffbeb', border: '1px solid #d1d5db', borderRadius: '10px', padding: '14px', marginBottom: '12px', overflow: 'hidden' }}>
-              {/* Message icon pattern at right corner */}
-              <div style={{ 
-                position: 'absolute', 
-                right: '12px', 
-                bottom: '10px', 
-                opacity: 0.08, 
-                pointerEvents: 'none',
-                display: 'flex',
-                gap: '8px',
-                alignItems: 'flex-end'
-              }}>
-                <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#92400e" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
-                </svg>
-                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#92400e" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
-                </svg>
+            {/* Homeroom Comment */}
+            <div style={{ marginBottom: '12px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '8px', paddingBottom: '6px', borderBottom: '1px solid #065f46' }}>
+                <span style={{ color: '#065f46' }}><IconMessage /></span>
+                <h3 style={{ fontSize: '11px', fontWeight: '700', color: '#065f46' }}>Homeroom Teacher's Comment</h3>
               </div>
-              <h4 style={{ fontSize: '11px', fontWeight: '700', color: '#92400e', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                <span style={{ color: '#92400e' }}><IconMessage /></span>
-                Homeroom Teacher&apos;s Comment
-              </h4>
-              <p style={{ fontSize: '11px', color: '#78350f', lineHeight: '1.6', position: 'relative', zIndex: 1 }}>{homeroomComment}</p>
+              <div style={{ background: '#fffbeb', border: '1px solid #fcd34d', borderRadius: '8px', padding: '10px' }}>
+                <p style={{ fontSize: '10px', color: '#78350f', lineHeight: '1.6', margin: 0 }}>{homeroomComment}</p>
+              </div>
             </div>
 
             {/* Achievements */}
             {achievements.length > 0 && (
-              <div style={{ position: 'relative', background: '#fffbeb', borderRadius: '10px', padding: '12px', marginBottom: '12px', overflow: 'hidden', border: '1px solid #d1d5db' }}>
-                {/* Trophy pattern at right corner */}
-                <div style={{ 
-                  position: 'absolute', 
-                  right: '12px', 
-                  bottom: '10px', 
-                  opacity: 0.08, 
-                  pointerEvents: 'none',
-                  display: 'flex',
-                  gap: '8px',
-                  alignItems: 'flex-end'
-                }}>
-                  <svg xmlns="http://www.w3.org/2000/svg" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#92400e" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6" />
-                    <path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18" />
-                    <path d="M4 22h16" />
-                    <path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22" />
-                    <path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22" />
-                    <path d="M18 2H6v7a6 6 0 0 0 12 0V2Z" />
-                  </svg>
-                  <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#92400e" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6" />
-                    <path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18" />
-                    <path d="M4 22h16" />
-                    <path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22" />
-                    <path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22" />
-                    <path d="M18 2H6v7a6 6 0 0 0 12 0V2Z" />
-                  </svg>
+              <div style={{ marginBottom: '12px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '8px', paddingBottom: '6px', borderBottom: '1px solid #065f46' }}>
+                  <span style={{ color: '#065f46' }}><IconTrophy /></span>
+                  <h3 style={{ fontSize: '11px', fontWeight: '700', color: '#065f46' }}>Academic Achievements</h3>
                 </div>
-                <h4 style={{ fontSize: '11px', fontWeight: '700', color: '#92400e', marginBottom: '8px', position: 'relative', zIndex: 1, display: 'flex', alignItems: 'center', gap: '6px' }}>
-                  <span style={{ color: '#92400e' }}><IconTrophy /></span>
-                  Academic Achievements
-                </h4>
-                <div style={{ display: 'grid', gap: '4px', position: 'relative', zIndex: 1 }}>
+                <div style={{ display: 'grid', gap: '4px' }}>
                   {achievements.map((achievement, index) => (
-                    <div key={index} style={{ background: 'white', padding: '6px 10px', borderRadius: '6px', fontSize: '10px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <div key={index} style={{ background: '#fffbeb', border: '1px solid #fcd34d', padding: '6px 10px', borderRadius: '6px', fontSize: '10px', display: 'flex', alignItems: 'center', gap: '6px' }}>
                       <span style={{ color: '#ca8a04' }}><IconAward /></span>
                       {achievement}
                     </div>
