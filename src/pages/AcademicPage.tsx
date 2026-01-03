@@ -489,12 +489,16 @@ export default function AcademicPage() {
     }));
   }, [selectedYear, examType]);
 
-  // Subject vs Class Average data
+  // Subject vs Class Average data - now uses per-subject class averages
   const subjectVsClassData = useMemo(() => {
-    const classAvg = classAverages[selectedYear]?.[examType] ?? 75;
+    const yearData = classAverages[selectedYear];
+    const subjectAverages = yearData?.bySubject as Record<string, number> | undefined;
+    const fallbackAvg = yearData?.[examType] ?? 75;
+    
     return academicData.subjects
       .map(s => {
         const studentScore = getScore(s, selectedYear, examType) ?? 0;
+        const classAvg = subjectAverages?.[s.name] ?? fallbackAvg;
         return {
           name: shortenSubjectName(s.name),
           fullName: s.name,
