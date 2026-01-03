@@ -108,6 +108,16 @@ const gradeColors: Record<string, { bg: string; text: string; border: string }> 
   "E": { bg: "#ef4444", text: "#ffffff", border: "#dc2626" },
 };
 
+// Ultra-light background colors for grade-based card coloring
+const gradeCardBgColors: Record<string, string> = {
+  "A*": "rgba(5, 150, 105, 0.06)",
+  "A": "rgba(34, 197, 94, 0.06)",
+  "B": "rgba(59, 130, 246, 0.06)",
+  "C": "rgba(234, 179, 8, 0.06)",
+  "D": "rgba(249, 115, 22, 0.06)",
+  "E": "rgba(239, 68, 68, 0.06)",
+};
+
 const behaviorGradeColors: Record<string, { bg: string; text: string; cardBg: string }> = {
   "A": { bg: "#dcfce7", text: "#16a34a", cardBg: "#dcfce7" },
   "B": { bg: "#dbeafe", text: "#2563eb", cardBg: "#dbeafe" },
@@ -417,13 +427,15 @@ export function ReportCardDialog({
                   const derivedYearEndGrade = subject.yearEndGrade || getGradeFromScore(yearEndScore);
                   const derivedYearEndGradeColor = gradeColors[derivedYearEndGrade] || gradeColors["C"];
                   const hasLearningTips = subject.classStudyRecommendation || subject.studyRecommendation;
+                  const primaryGrade = derivedYearEndGrade || subject.grade;
+                  const cardBgColor = gradeCardBgColors[primaryGrade] || 'white';
                   
                   return (
                     <div key={subject.name} style={{ 
                       border: '1px solid #e5e7eb', 
                       borderRadius: '8px', 
                       overflow: 'hidden',
-                      background: 'white'
+                      background: cardBgColor
                     }}>
                       {/* Subject Header */}
                       <div style={{ 
@@ -503,26 +515,44 @@ export function ReportCardDialog({
                         </div>
                       )}
                       
-                      {/* Learning Tips */}
+                      {/* Learning Tips with Pill Badges */}
                       {hasLearningTips && (
-                        <div style={{ padding: '6px 10px', background: '#f0fdf4' }}>
-                          <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                        <div style={{ padding: '6px 10px', background: '#fafafa' }}>
+                          <div style={{ display: 'flex', alignItems: 'flex-start', gap: '4px', marginBottom: '4px' }}>
+                            <span style={{ color: '#6b7280', flexShrink: 0, marginTop: '1px' }}><IconBookMarked /></span>
+                            <span style={{ fontSize: '7px', fontWeight: '600', color: '#374151' }}>Learning Tips</span>
+                          </div>
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '3px', paddingLeft: '16px' }}>
                             {subject.classStudyRecommendation && (
                               <div style={{ display: 'flex', alignItems: 'flex-start', gap: '4px' }}>
-                                <span style={{ color: '#065f46', flexShrink: 0, marginTop: '1px' }}><IconBookMarked /></span>
-                                <div>
-                                  <span style={{ fontSize: '6px', fontWeight: '700', color: '#065f46', textTransform: 'uppercase' }}>Class Tips: </span>
-                                  <span style={{ fontSize: '6px', color: '#374151' }}>{subject.classStudyRecommendation}</span>
-                                </div>
+                                <span style={{ 
+                                  fontSize: '5px', 
+                                  fontWeight: '700', 
+                                  color: '#166534', 
+                                  background: '#dcfce7', 
+                                  padding: '2px 6px', 
+                                  borderRadius: '10px',
+                                  flexShrink: 0,
+                                  textTransform: 'uppercase',
+                                  letterSpacing: '0.3px'
+                                }}>Class</span>
+                                <span style={{ fontSize: '6px', color: '#374151', lineHeight: '1.4' }}>{subject.classStudyRecommendation}</span>
                               </div>
                             )}
                             {subject.studyRecommendation && (
                               <div style={{ display: 'flex', alignItems: 'flex-start', gap: '4px' }}>
-                                <span style={{ color: '#0369a1', flexShrink: 0, marginTop: '1px' }}><IconTarget /></span>
-                                <div>
-                                  <span style={{ fontSize: '6px', fontWeight: '700', color: '#0369a1', textTransform: 'uppercase' }}>Individual Tips: </span>
-                                  <span style={{ fontSize: '6px', color: '#374151' }}>{subject.studyRecommendation}</span>
-                                </div>
+                                <span style={{ 
+                                  fontSize: '5px', 
+                                  fontWeight: '700', 
+                                  color: '#1e40af', 
+                                  background: '#dbeafe', 
+                                  padding: '2px 6px', 
+                                  borderRadius: '10px',
+                                  flexShrink: 0,
+                                  textTransform: 'uppercase',
+                                  letterSpacing: '0.3px'
+                                }}>Individual</span>
+                                <span style={{ fontSize: '6px', color: '#374151', lineHeight: '1.4' }}>{subject.studyRecommendation}</span>
                               </div>
                             )}
                           </div>
