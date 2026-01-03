@@ -186,6 +186,10 @@ export default function TeacherAcademicPage() {
   // Student performance dialog state
   const [performanceDialogOpen, setPerformanceDialogOpen] = useState(false);
   const [performanceDialogTab, setPerformanceDialogTab] = useState<"top" | "middle" | "atRisk">("top");
+  
+  // PDF Report dialog state
+  const [bandsReportDialogOpen, setBandsReportDialogOpen] = useState(false);
+  const bandsReportRef = useRef<HTMLDivElement>(null);
   const handleTouchStart = useCallback((e: React.TouchEvent) => {
     if (e.touches.length === 2) {
       const touch1 = e.touches[0];
@@ -1691,26 +1695,37 @@ export default function TeacherAcademicPage() {
 
               {/* ==================== DISTRIBUTION SUB-TAB ==================== */}
               <TabsContent value="distribution" className="space-y-4">
-                {/* Comparison Mode Toggle */}
+                {/* Comparison Mode Toggle + Download Button */}
                 <div className="flex items-center justify-between p-3 rounded-lg bg-accent/30 border border-border">
                   <div className="flex items-center gap-2">
                     <Scale className="h-4 w-4 text-primary" />
                     <span className="text-sm font-medium text-foreground">Compare Mode</span>
                   </div>
-                  <button
-                    onClick={() => setBandsCompareMode(!bandsCompareMode)}
-                    className={cn(
-                      "relative w-11 h-6 rounded-full transition-colors shrink-0",
-                      bandsCompareMode ? "bg-primary" : "bg-muted"
-                    )}
-                  >
-                    <span
+                  <div className="flex items-center gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="h-8 px-3 gap-1.5"
+                      onClick={() => setBandsReportDialogOpen(true)}
+                    >
+                      <FileText className="h-3.5 w-3.5" />
+                      <span className="text-xs">Report</span>
+                    </Button>
+                    <button
+                      onClick={() => setBandsCompareMode(!bandsCompareMode)}
                       className={cn(
-                        "absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-background shadow-sm transition-transform duration-200",
-                        bandsCompareMode ? "translate-x-5" : "translate-x-0"
+                        "relative w-11 h-6 rounded-full transition-colors shrink-0",
+                        bandsCompareMode ? "bg-primary" : "bg-muted"
                       )}
-                    />
-                  </button>
+                    >
+                      <span
+                        className={cn(
+                          "absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-background shadow-sm transition-transform duration-200",
+                          bandsCompareMode ? "translate-x-5" : "translate-x-0"
+                        )}
+                      />
+                    </button>
+                  </div>
                 </div>
 
                 {/* Filters Section - Stacked for mobile when comparing */}
@@ -2245,6 +2260,306 @@ export default function TeacherAcademicPage() {
                       {performanceDialogTab === "atRisk" && bandsAtRiskStudents.length === 0 && (
                         <p className="text-sm text-muted-foreground text-center py-8">No at-risk students</p>
                       )}
+                    </div>
+                  </DialogContent>
+                </Dialog>
+
+                {/* Bands Report Dialog */}
+                <Dialog open={bandsReportDialogOpen} onOpenChange={setBandsReportDialogOpen}>
+                  <DialogContent className="w-[95vw] max-w-2xl max-h-[90vh] rounded-2xl overflow-hidden flex flex-col">
+                    <DialogHeader className="flex flex-row items-center justify-between">
+                      <DialogTitle className="flex items-center gap-2">
+                        <FileText className="h-5 w-5 text-primary" />
+                        Grade Distribution Report
+                      </DialogTitle>
+                      <Button
+                        variant="default"
+                        size="sm"
+                        className="gap-1.5"
+                        onClick={() => {
+                          if (bandsReportRef.current) {
+                            const printWindow = window.open('', '_blank');
+                            if (printWindow) {
+                              printWindow.document.write(`
+                                <html>
+                                  <head>
+                                    <title>Grade Distribution Report</title>
+                                    <style>
+                                      body { font-family: system-ui, -apple-system, sans-serif; padding: 20px; }
+                                      .report-header { text-align: center; margin-bottom: 20px; border-bottom: 2px solid #333; padding-bottom: 10px; }
+                                      .report-header h1 { margin: 0 0 5px 0; font-size: 24px; }
+                                      .report-header p { margin: 0; color: #666; font-size: 14px; }
+                                      .section { margin-bottom: 20px; }
+                                      .section h3 { font-size: 16px; margin: 0 0 10px 0; padding-bottom: 5px; border-bottom: 1px solid #ddd; }
+                                      .grade-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 8px; margin-bottom: 15px; }
+                                      .grade-card { text-align: center; padding: 10px; border: 1px solid #ddd; border-radius: 8px; }
+                                      .grade-card .grade { font-size: 18px; font-weight: bold; }
+                                      .grade-card .count { font-size: 24px; font-weight: bold; }
+                                      .grade-card .percent { font-size: 12px; color: #666; }
+                                      .student-list { margin-top: 10px; }
+                                      .student-row { display: flex; justify-content: space-between; padding: 6px 10px; border-bottom: 1px solid #eee; }
+                                      .student-row:nth-child(odd) { background: #f9f9f9; }
+                                      .comparison-section { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+                                      .comparison-box { padding: 15px; border: 1px solid #ddd; border-radius: 8px; }
+                                      .comparison-box.blue { border-color: #3b82f6; background: #eff6ff; }
+                                      .comparison-box.amber { border-color: #f59e0b; background: #fffbeb; }
+                                      .stats-row { display: flex; justify-content: space-between; margin-top: 10px; padding-top: 10px; border-top: 1px solid #ddd; }
+                                      @media print { body { padding: 0; } }
+                                    </style>
+                                  </head>
+                                  <body>
+                                    ${bandsReportRef.current.innerHTML}
+                                  </body>
+                                </html>
+                              `);
+                              printWindow.document.close();
+                              printWindow.print();
+                            }
+                          }
+                        }}
+                      >
+                        <Printer className="h-4 w-4" />
+                        Print / Save PDF
+                      </Button>
+                    </DialogHeader>
+                    
+                    <div className="flex-1 overflow-y-auto" ref={bandsReportRef}>
+                      {/* Report Content */}
+                      <div className="space-y-4 p-2">
+                        {/* Report Header */}
+                        <div className="report-header text-center pb-3 border-b-2 border-foreground">
+                          <div className="flex items-center justify-center gap-3 mb-2">
+                            <img src={schoolLogo} alt="School Logo" className="h-12 w-12 object-contain" />
+                            <div>
+                              <h1 className="text-xl font-bold text-foreground">Grade Distribution Report</h1>
+                              <p className="text-sm text-muted-foreground">
+                                {bandsCompareMode ? "Comparison Report" : `Class ${selectedClass} - ${bandsSelectedSubject}`}
+                              </p>
+                            </div>
+                          </div>
+                          <p className="text-xs text-muted-foreground">
+                            Generated on {new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}
+                            {' • '}{selectedYear} {selectedPeriod === 'midYear' ? 'Mid-Year' : 'Year-End'} Examination
+                          </p>
+                        </div>
+
+                        {!bandsCompareMode ? (
+                          /* Normal Report */
+                          <>
+                            <div className="section">
+                              <h3 className="text-sm font-semibold text-foreground mb-3 pb-1 border-b border-border">
+                                Grade Distribution - {bandsSelectedSubject}
+                              </h3>
+                              <div className="grid grid-cols-6 gap-2">
+                                {bandsGradeDistribution.map(g => {
+                                  const total = bandsGradeDistribution.reduce((sum, d) => sum + d.count, 0);
+                                  const percentage = total > 0 ? Math.round(g.count / total * 100) : 0;
+                                  return (
+                                    <div key={g.range} className="text-center p-2 border rounded-lg" style={{
+                                      backgroundColor: `${GRADE_COLORS[g.range as keyof typeof GRADE_COLORS]}15`,
+                                      borderColor: `${GRADE_COLORS[g.range as keyof typeof GRADE_COLORS]}40`
+                                    }}>
+                                      <div className="text-sm font-bold" style={{ color: GRADE_COLORS[g.range as keyof typeof GRADE_COLORS] }}>
+                                        {g.range}
+                                      </div>
+                                      <div className="text-lg font-bold text-foreground">{g.count}</div>
+                                      <div className="text-[10px] text-muted-foreground">{percentage}%</div>
+                                    </div>
+                                  );
+                                })}
+                              </div>
+                            </div>
+
+                            {/* Student Lists */}
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                              <div className="p-3 rounded-lg bg-amber-50 border border-amber-200">
+                                <h4 className="text-xs font-semibold text-amber-700 mb-2 flex items-center gap-1">
+                                  <Award className="h-3 w-3" /> Top Performers ({bandsTopPerformers.length})
+                                </h4>
+                                <div className="space-y-1 max-h-32 overflow-y-auto">
+                                  {bandsTopPerformers.slice(0, 10).map((s, i) => (
+                                    <div key={s.id} className="flex justify-between text-xs py-1 border-b border-amber-100">
+                                      <span>{i + 1}. {s.name}</span>
+                                      <span className="font-semibold">{s.score}%</span>
+                                    </div>
+                                  ))}
+                                  {bandsTopPerformers.length === 0 && <p className="text-xs text-muted-foreground">No students</p>}
+                                </div>
+                              </div>
+                              
+                              <div className="p-3 rounded-lg bg-blue-50 border border-blue-200">
+                                <h4 className="text-xs font-semibold text-blue-700 mb-2 flex items-center gap-1">
+                                  <UserCheck className="h-3 w-3" /> Middle Performers ({bandsMiddlePerformers.length})
+                                </h4>
+                                <div className="space-y-1 max-h-32 overflow-y-auto">
+                                  {bandsMiddlePerformers.slice(0, 10).map((s, i) => (
+                                    <div key={s.id} className="flex justify-between text-xs py-1 border-b border-blue-100">
+                                      <span>{i + 1}. {s.name}</span>
+                                      <span className="font-semibold">{s.score}%</span>
+                                    </div>
+                                  ))}
+                                  {bandsMiddlePerformers.length === 0 && <p className="text-xs text-muted-foreground">No students</p>}
+                                </div>
+                              </div>
+                              
+                              <div className="p-3 rounded-lg bg-red-50 border border-red-200">
+                                <h4 className="text-xs font-semibold text-red-700 mb-2 flex items-center gap-1">
+                                  <AlertTriangle className="h-3 w-3" /> At-Risk ({bandsAtRiskStudents.length})
+                                </h4>
+                                <div className="space-y-1 max-h-32 overflow-y-auto">
+                                  {bandsAtRiskStudents.slice(0, 10).map((s, i) => (
+                                    <div key={s.id} className="flex justify-between text-xs py-1 border-b border-red-100">
+                                      <span>{i + 1}. {s.name}</span>
+                                      <span className="font-semibold">{s.score}%</span>
+                                    </div>
+                                  ))}
+                                  {bandsAtRiskStudents.length === 0 && <p className="text-xs text-muted-foreground">No students</p>}
+                                </div>
+                              </div>
+                            </div>
+
+                            {/* Summary Stats */}
+                            <div className="p-3 rounded-lg bg-muted/50 border border-border">
+                              <h4 className="text-xs font-semibold text-foreground mb-2">Summary Statistics</h4>
+                              <div className="grid grid-cols-4 gap-2 text-center">
+                                <div>
+                                  <div className="text-lg font-bold text-foreground">{bandsRankedStudents.length}</div>
+                                  <div className="text-[10px] text-muted-foreground">Total Students</div>
+                                </div>
+                                <div>
+                                  <div className="text-lg font-bold text-emerald-600">{bandsTopPerformers.length}</div>
+                                  <div className="text-[10px] text-muted-foreground">Top (A*/A)</div>
+                                </div>
+                                <div>
+                                  <div className="text-lg font-bold text-blue-600">{bandsMiddlePerformers.length}</div>
+                                  <div className="text-[10px] text-muted-foreground">Middle (B/C)</div>
+                                </div>
+                                <div>
+                                  <div className="text-lg font-bold text-red-600">{bandsAtRiskStudents.length}</div>
+                                  <div className="text-[10px] text-muted-foreground">At-Risk (D/E)</div>
+                                </div>
+                              </div>
+                            </div>
+                          </>
+                        ) : (
+                          /* Comparison Report */
+                          <>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                              {/* Selection A */}
+                              <div className="p-3 rounded-lg bg-blue-50 border border-blue-200">
+                                <div className="flex items-center gap-2 mb-3">
+                                  <div className="w-3 h-3 rounded-full bg-blue-500" />
+                                  <span className="text-sm font-semibold text-blue-700">
+                                    {selectedClass} - {bandsSelectedSubject}
+                                  </span>
+                                </div>
+                                <div className="grid grid-cols-6 gap-1 mb-3">
+                                  {bandsGradeDistribution.map(g => {
+                                    const total = bandsGradeDistribution.reduce((sum, d) => sum + d.count, 0);
+                                    const percentage = total > 0 ? Math.round(g.count / total * 100) : 0;
+                                    return (
+                                      <div key={g.range} className="text-center p-1.5 border rounded bg-background">
+                                        <div className="text-xs font-bold" style={{ color: GRADE_COLORS[g.range as keyof typeof GRADE_COLORS] }}>
+                                          {g.range}
+                                        </div>
+                                        <div className="text-sm font-bold text-foreground">{g.count}</div>
+                                        <div className="text-[9px] text-muted-foreground">{percentage}%</div>
+                                      </div>
+                                    );
+                                  })}
+                                </div>
+                                <div className="flex justify-between text-xs text-muted-foreground pt-2 border-t border-blue-200">
+                                  <span>Top: {bandsTopPerformers.length}</span>
+                                  <span>Middle: {bandsMiddlePerformers.length}</span>
+                                  <span>At-Risk: {bandsAtRiskStudents.length}</span>
+                                </div>
+                              </div>
+
+                              {/* Selection B */}
+                              <div className="p-3 rounded-lg bg-amber-50 border border-amber-200">
+                                <div className="flex items-center gap-2 mb-3">
+                                  <div className="w-3 h-3 rounded-full bg-amber-500" />
+                                  <span className="text-sm font-semibold text-amber-700">
+                                    {bandsCompareClass} - {bandsCompareSubject}
+                                  </span>
+                                </div>
+                                <div className="grid grid-cols-6 gap-1 mb-3">
+                                  {bandsCompareGradeDistribution.map(g => {
+                                    const total = bandsCompareGradeDistribution.reduce((sum, d) => sum + d.count, 0);
+                                    const percentage = total > 0 ? Math.round(g.count / total * 100) : 0;
+                                    return (
+                                      <div key={g.range} className="text-center p-1.5 border rounded bg-background">
+                                        <div className="text-xs font-bold" style={{ color: GRADE_COLORS[g.range as keyof typeof GRADE_COLORS] }}>
+                                          {g.range}
+                                        </div>
+                                        <div className="text-sm font-bold text-foreground">{g.count}</div>
+                                        <div className="text-[9px] text-muted-foreground">{percentage}%</div>
+                                      </div>
+                                    );
+                                  })}
+                                </div>
+                                <div className="flex justify-between text-xs text-muted-foreground pt-2 border-t border-amber-200">
+                                  <span>Top: {bandsCompareTopPerformers.length}</span>
+                                  <span>Middle: {bandsCompareMiddlePerformers.length}</span>
+                                  <span>At-Risk: {bandsCompareAtRiskStudents.length}</span>
+                                </div>
+                              </div>
+                            </div>
+
+                            {/* Comparison Summary */}
+                            <div className="p-3 rounded-lg bg-muted/50 border border-border">
+                              <h4 className="text-xs font-semibold text-foreground mb-3">Comparison Summary</h4>
+                              <div className="overflow-x-auto">
+                                <table className="w-full text-xs">
+                                  <thead>
+                                    <tr className="border-b border-border">
+                                      <th className="text-left py-2 px-2">Metric</th>
+                                      <th className="text-center py-2 px-2 text-blue-700">{selectedClass}</th>
+                                      <th className="text-center py-2 px-2 text-amber-700">{bandsCompareClass}</th>
+                                      <th className="text-center py-2 px-2">Difference</th>
+                                    </tr>
+                                  </thead>
+                                  <tbody>
+                                    <tr className="border-b border-border/50">
+                                      <td className="py-2 px-2">Total Students</td>
+                                      <td className="text-center py-2 px-2 font-semibold">{bandsRankedStudents.length}</td>
+                                      <td className="text-center py-2 px-2 font-semibold">{bandsCompareRankedStudents.length}</td>
+                                      <td className="text-center py-2 px-2">{bandsRankedStudents.length - bandsCompareRankedStudents.length}</td>
+                                    </tr>
+                                    <tr className="border-b border-border/50">
+                                      <td className="py-2 px-2">Top Performers (A*/A)</td>
+                                      <td className="text-center py-2 px-2 font-semibold text-emerald-600">{bandsTopPerformers.length}</td>
+                                      <td className="text-center py-2 px-2 font-semibold text-emerald-600">{bandsCompareTopPerformers.length}</td>
+                                      <td className={cn("text-center py-2 px-2 font-semibold", bandsTopPerformers.length > bandsCompareTopPerformers.length ? "text-emerald-600" : bandsTopPerformers.length < bandsCompareTopPerformers.length ? "text-red-600" : "")}>
+                                        {bandsTopPerformers.length > bandsCompareTopPerformers.length ? "+" : ""}{bandsTopPerformers.length - bandsCompareTopPerformers.length}
+                                      </td>
+                                    </tr>
+                                    <tr className="border-b border-border/50">
+                                      <td className="py-2 px-2">Middle Performers (B/C)</td>
+                                      <td className="text-center py-2 px-2 font-semibold text-blue-600">{bandsMiddlePerformers.length}</td>
+                                      <td className="text-center py-2 px-2 font-semibold text-blue-600">{bandsCompareMiddlePerformers.length}</td>
+                                      <td className="text-center py-2 px-2">{bandsMiddlePerformers.length - bandsCompareMiddlePerformers.length}</td>
+                                    </tr>
+                                    <tr>
+                                      <td className="py-2 px-2">At-Risk (D/E)</td>
+                                      <td className="text-center py-2 px-2 font-semibold text-red-600">{bandsAtRiskStudents.length}</td>
+                                      <td className="text-center py-2 px-2 font-semibold text-red-600">{bandsCompareAtRiskStudents.length}</td>
+                                      <td className={cn("text-center py-2 px-2 font-semibold", bandsAtRiskStudents.length < bandsCompareAtRiskStudents.length ? "text-emerald-600" : bandsAtRiskStudents.length > bandsCompareAtRiskStudents.length ? "text-red-600" : "")}>
+                                        {bandsAtRiskStudents.length > bandsCompareAtRiskStudents.length ? "+" : ""}{bandsAtRiskStudents.length - bandsCompareAtRiskStudents.length}
+                                      </td>
+                                    </tr>
+                                  </tbody>
+                                </table>
+                              </div>
+                            </div>
+                          </>
+                        )}
+
+                        {/* Footer */}
+                        <div className="text-center text-[10px] text-muted-foreground pt-3 border-t border-border">
+                          <p>Prepared by: {teacherProfile.name} • {teacherProfile.email}</p>
+                        </div>
+                      </div>
                     </div>
                   </DialogContent>
                 </Dialog>
