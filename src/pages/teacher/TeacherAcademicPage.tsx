@@ -908,14 +908,14 @@ export default function TeacherAcademicPage() {
     return scores.reduce((a, b) => a + b, 0) / scores.length;
   }, [radarData]);
 
-  // Subject vs School Average data
-  const subjectVsSchoolData = useMemo(() => {
+  // Subject vs Cohort Average data
+  const subjectVsCohortData = useMemo(() => {
     const data = subjectYearlyData[selectedClass as keyof typeof subjectYearlyData] || subjectYearlyData["5A"];
     const latest = data[data.length - 1];
-    const schoolAvg = 72; // Mock school average
+    const cohortAvg = 72; // Mock cohort average
     
     // Build from all subjects in latest data
-    const allSubjects: { name: string; fullName: string; classScore: number; schoolAvg: number; delta: number }[] = [];
+    const allSubjects: { name: string; fullName: string; classScore: number; cohortAvg: number; delta: number }[] = [];
     Object.entries(latest).forEach(([key, value]) => {
       if (key !== 'year' && typeof value === 'number') {
         const shortName = getShortSubjectName(key);
@@ -923,8 +923,8 @@ export default function TeacherAcademicPage() {
           name: shortName.length > 8 ? shortName.substring(0, 8) : shortName,
           fullName: key,
           classScore: value,
-          schoolAvg,
-          delta: value - schoolAvg
+          cohortAvg,
+          delta: value - cohortAvg
         });
       }
     });
@@ -3443,15 +3443,15 @@ export default function TeacherAcademicPage() {
                   </p>
                 </div>
 
-                {/* Subject vs School Average Horizontal Bar Chart */}
+                {/* Class vs Cohort Average Horizontal Bar Chart */}
                 <div className="space-y-2">
                   <h4 className="text-sm font-medium text-foreground flex items-center gap-1.5">
                     <BarChart3 className="h-4 w-4 text-primary" />
-                    vs School Average
+                    Class VS Cohort Average
                   </h4>
                   <div className="h-64">
                     <ResponsiveContainer width="100%" height="100%">
-                      <BarChart data={subjectVsSchoolData} layout="vertical" barGap={2}>
+                      <BarChart data={subjectVsCohortData} layout="vertical" barGap={2}>
                         <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" strokeOpacity={0.3} horizontal={false} />
                         <XAxis type="number" domain={[0, 100]} tick={{
                         fontSize: 10,
@@ -3465,18 +3465,29 @@ export default function TeacherAcademicPage() {
                         backgroundColor: "hsl(var(--card))",
                         border: "1px solid hsl(var(--border))",
                         borderRadius: "8px"
-                      }} formatter={(value: number, name: string) => [`${value}%`, name === "classScore" ? "Class Score" : "School Average"]} />
+                      }} formatter={(value: number, name: string) => [`${value}%`, name === "classScore" ? "Class Score" : "Cohort Average"]} />
                         <Legend wrapperStyle={{
                         fontSize: 10
-                      }} formatter={value => value === "classScore" ? "Class Score" : "School Avg"} />
-                        <Bar dataKey="classScore" fill="#3b82f6" radius={[0, 4, 4, 0]} barSize={10} />
-                        <Bar dataKey="schoolAvg" fill="hsl(var(--muted-foreground))" radius={[0, 4, 4, 0]} barSize={10} opacity={0.5} />
+                      }} formatter={value => value === "classScore" ? "Class Score" : "Cohort Avg"} />
+                        <Bar dataKey="classScore" fill="#3b82f6" radius={[0, 4, 4, 0]} barSize={12} />
+                        {/* Cohort Average as dots */}
+                        {subjectVsCohortData.map((entry) => (
+                          <ReferenceDot
+                            key={`cohortAvg-${entry.name}`}
+                            x={entry.cohortAvg}
+                            y={entry.name}
+                            r={4}
+                            fill="hsl(var(--foreground))"
+                            stroke="hsl(var(--background))"
+                            strokeWidth={1}
+                          />
+                        ))}
                       </BarChart>
                     </ResponsiveContainer>
                   </div>
                   {/* Delta badges */}
                   <div className="flex flex-wrap gap-1.5 justify-center">
-                    {subjectVsSchoolData.slice(0, 4).map(item => <Badge key={item.name} variant={item.delta >= 0 ? "default" : "destructive"} className="text-[10px] px-2 py-0.5">
+                    {subjectVsCohortData.slice(0, 4).map(item => <Badge key={item.name} variant={item.delta >= 0 ? "default" : "destructive"} className="text-[10px] px-2 py-0.5">
                         {item.name}: {item.delta >= 0 ? "+" : ""}{item.delta}%
                       </Badge>)}
                   </div>
@@ -4415,9 +4426,9 @@ export default function TeacherAcademicPage() {
                 </div>
               </div>
 
-              {/* Class vs School Average Bar Chart (SVG for print) */}
+              {/* Class vs Cohort Average Bar Chart (SVG for print) */}
               <div className="section" style={{ marginBottom: '12px', pageBreakInside: 'avoid' }}>
-                <h3 style={{ fontSize: '12px', fontWeight: 600, marginBottom: '8px', paddingBottom: '4px', borderBottom: '1px solid #ddd' }}>Class vs School Average</h3>
+                <h3 style={{ fontSize: '12px', fontWeight: 600, marginBottom: '8px', paddingBottom: '4px', borderBottom: '1px solid #ddd' }}>Class VS Cohort Average</h3>
                 <div style={{ padding: '10px', backgroundColor: '#f9fafb', borderRadius: '6px', border: '1px solid #e5e7eb' }}>
                   <svg width="100%" height="160" viewBox="0 0 500 160" preserveAspectRatio="xMidYMid meet">
                     {/* Grid lines */}
@@ -4427,34 +4438,34 @@ export default function TeacherAcademicPage() {
                     <text x="75" y="25" fontSize="8" fill="#6b7280" textAnchor="end">100%</text>
                     <text x="75" y="77" fontSize="8" fill="#6b7280" textAnchor="end">50%</text>
                     <text x="75" y="130" fontSize="8" fill="#6b7280" textAnchor="end">0%</text>
-                    {/* Bars */}
-                    {subjectVsSchoolData.slice(0, 6).map((item, i) => {
-                      const barWidth = 25;
+                    {/* Bars and dots */}
+                    {subjectVsCohortData.slice(0, 6).map((item, i) => {
+                      const barWidth = 35;
                       const groupWidth = 60;
                       const x = 90 + i * groupWidth;
                       const classHeight = (item.classScore / 100) * 110;
-                      const schoolHeight = (item.schoolAvg / 100) * 110;
+                      const cohortY = 130 - (item.cohortAvg / 100) * 110;
                       return (
                         <g key={i}>
                           {/* Class bar */}
                           <rect x={x} y={130 - classHeight} width={barWidth} height={classHeight} fill="#3b82f6" rx="2" />
                           <text x={x + barWidth/2} y={125 - classHeight} fontSize="7" fill="#3b82f6" textAnchor="middle" fontWeight="600">{item.classScore}%</text>
-                          {/* School bar */}
-                          <rect x={x + barWidth + 2} y={130 - schoolHeight} width={barWidth} height={schoolHeight} fill="#9ca3af" rx="2" opacity="0.6" />
+                          {/* Cohort dot */}
+                          <circle cx={x + barWidth/2} cy={cohortY} r="4" fill="#374151" stroke="#fff" strokeWidth="1" />
                           {/* Subject label */}
-                          <text x={x + barWidth} y="145" fontSize="8" fill="#374151" textAnchor="middle">{item.name}</text>
+                          <text x={x + barWidth/2} y="145" fontSize="8" fill="#374151" textAnchor="middle">{item.name}</text>
                           {/* Delta badge */}
-                          <text x={x + barWidth} y="155" fontSize="7" fill={item.delta >= 0 ? '#22c55e' : '#ef4444'} textAnchor="middle" fontWeight="600">
+                          <text x={x + barWidth/2} y="155" fontSize="7" fill={item.delta >= 0 ? '#22c55e' : '#ef4444'} textAnchor="middle" fontWeight="600">
                             {item.delta >= 0 ? '+' : ''}{item.delta}%
                           </text>
                         </g>
                       );
                     })}
                     {/* Legend */}
-                    <rect x="380" y="10" width="12" height="8" fill="#3b82f6" rx="1" />
-                    <text x="395" y="17" fontSize="8" fill="#374151">Class</text>
-                    <rect x="430" y="10" width="12" height="8" fill="#9ca3af" rx="1" opacity="0.6" />
-                    <text x="445" y="17" fontSize="8" fill="#374151">School</text>
+                    <rect x="370" y="10" width="12" height="8" fill="#3b82f6" rx="1" />
+                    <text x="385" y="17" fontSize="8" fill="#374151">Class</text>
+                    <circle cx="436" cy="14" r="4" fill="#374151" />
+                    <text x="445" y="17" fontSize="8" fill="#374151">Cohort</text>
                   </svg>
                 </div>
               </div>
