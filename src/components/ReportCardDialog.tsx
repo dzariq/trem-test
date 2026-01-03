@@ -3,6 +3,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Button } from "@/components/ui/button";
 import { Printer } from "lucide-react";
 import collinzLogo from "@/assets/collinz-school-logo.png";
+import collinzLogoBW from "@/assets/collinz-logo-bw.png";
 import cambridgeLogo from "@/assets/cambridge-logo.jpg";
 
 interface Subject {
@@ -217,17 +218,19 @@ export function ReportCardDialog({
                 padding: '14px',
                 overflow: 'hidden'
               }}>
-                {/* Star Pattern Background */}
-                <div style={{
-                  position: 'absolute',
-                  top: 0,
-                  left: 0,
-                  right: 0,
-                  bottom: 0,
-                  opacity: 0.15,
-                  backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='40' viewBox='0 0 40 40'%3E%3Cpath fill='%23065f46' d='M20 2l2.5 7.5H30l-6 4.5 2.5 7.5-6.5-5-6.5 5 2.5-7.5-6-4.5h7.5z'/%3E%3C/svg%3E")`,
-                  backgroundSize: '40px 40px'
-                }} />
+                {/* Oversized Logo Watermark */}
+                <img 
+                  src={collinzLogoBW} 
+                  alt="" 
+                  style={{
+                    position: 'absolute',
+                    right: '-40px',
+                    bottom: '-20px',
+                    width: '180px',
+                    opacity: 0.08,
+                    pointerEvents: 'none'
+                  }} 
+                />
                 <div style={{ position: 'relative', zIndex: 1 }}>
                   <div style={{ fontSize: '18px', fontWeight: '700', color: '#065f46', marginBottom: '2px' }}>{studentName}</div>
                   <div style={{ fontSize: '11px', color: '#6b7280', marginBottom: '10px' }}>Class: {studentClass}</div>
@@ -326,19 +329,7 @@ export function ReportCardDialog({
             </div>
 
             {/* Academic Grades Table with Grading Key */}
-            <div style={{ position: 'relative', marginBottom: '16px', overflow: 'hidden' }}>
-              {/* Stars Pattern Background */}
-              <div style={{
-                position: 'absolute',
-                top: 0,
-                left: 0,
-                right: 0,
-                bottom: 0,
-                opacity: 0.06,
-                backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='50' height='50' viewBox='0 0 50 50'%3E%3Cpath fill='%23065f46' d='M25 5l3.5 10.5H39l-8.5 6.5 3.5 10.5-9-7-9 7 3.5-10.5L11 15.5h10.5z'/%3E%3C/svg%3E")`,
-                backgroundSize: '50px 50px',
-                pointerEvents: 'none'
-              }} />
+            <div style={{ marginBottom: '16px' }}>
               <div style={{ position: 'relative', zIndex: 1 }}>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px', paddingBottom: '6px', borderBottom: '2px solid #d1fae5' }}>
                   <h3 style={{ fontSize: '12px', fontWeight: '700', color: '#065f46', display: 'flex', alignItems: 'center', gap: '6px' }}>
