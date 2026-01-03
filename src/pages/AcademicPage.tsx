@@ -79,7 +79,10 @@ export default function AcademicPage() {
     const section = searchParams.get("section");
     return section === "analysis" ? "analysis" : "report";
   });
-  const [activeTab, setActiveTab] = useState("grades");
+  const [activeTab, setActiveTab] = useState(() => {
+    const tab = searchParams.get("tab");
+    return tab === "cocurriculum" ? "cocurriculum" : "grades";
+  });
   const [examType, setExamType] = useState<ExamType>("midYear");
   const [selectedYear, setSelectedYear] = useState<YearKey>("2025");
   const [selectedYears, setSelectedYears] = useState<string[]>(["2025"]);
