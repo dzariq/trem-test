@@ -1335,15 +1335,31 @@ export default function TeacherAcademicPage() {
 
                 {/* Subject Selector - Toggle Chips */}
                 <div className="space-y-2">
-                  <h4 className="text-sm font-medium text-foreground">Subjects</h4>
-                  <div className="flex flex-wrap gap-2 p-3 rounded-lg border border-border bg-accent/20">
+                  <div className="flex items-center justify-between">
+                    <h4 className="text-sm font-medium text-foreground">Subjects</h4>
+                    <div className="flex gap-2">
+                      <button
+                        className="text-sm font-medium text-foreground hover:text-primary transition-colors"
+                        onClick={() => setSelectedSubjects([...subjects])}
+                      >
+                        Select All
+                      </button>
+                      <button
+                        className="text-sm font-medium text-foreground hover:text-primary transition-colors"
+                        onClick={() => setSelectedSubjects([])}
+                      >
+                        Clear
+                      </button>
+                    </div>
+                  </div>
+                  <div className="flex flex-wrap gap-2 p-3 rounded-lg border border-border bg-background">
                     {subjects.map(subject => {
                     const isSelected = selectedSubjects.includes(subject);
                     return <button key={subject} onClick={() => toggleSubjectFilter(subject)} className={cn("px-3 py-1.5 rounded-full text-xs font-medium transition-all flex items-center gap-1.5", isSelected ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground hover:bg-muted/80")}>
-                          {subject.length > 12 ? subject.substring(0, 12) + "..." : subject}
                           {isSelected && <svg className="w-3 h-3" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                             </svg>}
+                          {subject.length > 12 ? subject.substring(0, 12) + "..." : subject}
                         </button>;
                   })}
                   </div>

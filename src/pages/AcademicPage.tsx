@@ -1066,37 +1066,32 @@ export default function AcademicPage() {
                   {/* Multi-Select Subject Filter */}
                   <div className="space-y-2">
                     <div className="flex items-center justify-between">
-                      <span className="text-sm font-medium text-muted-foreground">Subjects:</span>
+                      <span className="text-sm font-medium text-foreground">Subjects:</span>
                       <div className="flex gap-2">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="h-7 px-3 text-sm font-medium"
+                        <button
+                          className="text-sm font-medium text-foreground hover:text-primary transition-colors"
                           onClick={() => setGradesSelectedSubjects(academicData.subjects.map(s => s.name))}
                         >
                           Select All
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="h-7 px-3 text-sm font-medium"
+                        </button>
+                        <button
+                          className="text-sm font-medium text-foreground hover:text-primary transition-colors"
                           onClick={() => setGradesSelectedSubjects([])}
                         >
                           Clear
-                        </Button>
+                        </button>
                       </div>
                     </div>
-                    <div className="flex flex-wrap gap-2">
+                    <div className="flex flex-wrap gap-2 p-3 rounded-lg border border-border bg-background">
                       {academicData.subjects.map((subject) => {
                         const isSelected = gradesSelectedSubjects.includes(subject.name);
                         return (
-                          <Badge
+                          <button
                             key={subject.name}
-                            variant={isSelected ? "default" : "outline"}
-                            className={`cursor-pointer text-sm px-3 py-1.5 rounded-full transition-colors ${
+                            className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all flex items-center gap-1.5 ${
                               isSelected 
-                                ? "bg-primary text-primary-foreground hover:bg-primary/90" 
-                                : "hover:bg-accent"
+                                ? "bg-primary text-primary-foreground" 
+                                : "bg-muted text-muted-foreground hover:bg-muted/80"
                             }`}
                             onClick={() => {
                               if (isSelected) {
@@ -1106,9 +1101,9 @@ export default function AcademicPage() {
                               }
                             }}
                           >
-                            {isSelected && <Check className="h-3 w-3 mr-1" />}
+                            {isSelected && <Check className="h-3 w-3" />}
                             {shortenSubjectName(subject.name)}
-                          </Badge>
+                          </button>
                         );
                       })}
                     </div>
