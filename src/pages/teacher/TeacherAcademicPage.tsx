@@ -113,6 +113,7 @@ export default function TeacherAcademicPage() {
   const [selectedPeriod, setSelectedPeriod] = useState<"midYear" | "yearEnd">("midYear");
   const [selectedPeriods, setSelectedPeriods] = useState<string[]>(["midYear"]);
   const [selectedSubjects, setSelectedSubjects] = useState<string[]>([...subjects]);
+  const [bandsSelectedSubject, setBandsSelectedSubject] = useState<string>("all"); // Single subject for Bands tab
   const [selectedCategory, setSelectedCategory] = useState<"attitude" | "homework" | "quiz" | "exam">("quiz");
 
   // Grade Entry category state (Grades, Behavior, Awards)
@@ -423,6 +424,65 @@ export default function TeacherAcademicPage() {
   
   // Top performers (A*, A grades: 80%+)
   const topPerformers = rankedStudents.filter(s => s.score !== null && s.score >= 80);
+
+  // ===== BANDS TAB: Single subject filter calculations =====
+  const bandsFilteredScores = useMemo(() => {
+    const scores: { studentId: string; score: number }[] = [];
+    const subjectsToInclude = bandsSelectedSubject === "all" ? subjects : [bandsSelectedSubject];
+    
+    Object.entries(detailedGradesForClass).forEach(([studentId, studentGrades]) => {
+      let studentTotal = 0;
+      let subjectCount = 0;
+      Object.entries(studentGrades).forEach(([subject, grades]) => {
+        if (subjectsToInclude.includes(subject)) {
+          const total = grades.attitude + grades.homework + grades.quiz + grades.exam;
+          studentTotal += total;
+          subjectCount++;
+        }
+      });
+      if (subjectCount > 0) {
+        scores.push({ studentId, score: Math.round(studentTotal / subjectCount) });
+      }
+    });
+    return scores;
+  }, [detailedGradesForClass, bandsSelectedSubject, subjects]);
+
+  const bandsGradeDistribution = useMemo(() => {
+    const scores = bandsFilteredScores.map(s => s.score);
+    return [{
+      range: "A*",
+      count: scores.filter(g => g >= 90).length
+    }, {
+      range: "A",
+      count: scores.filter(g => g >= 80 && g < 90).length
+    }, {
+      range: "B",
+      count: scores.filter(g => g >= 70 && g < 80).length
+    }, {
+      range: "C",
+      count: scores.filter(g => g >= 60 && g < 70).length
+    }, {
+      range: "D",
+      count: scores.filter(g => g >= 50 && g < 60).length
+    }, {
+      range: "E",
+      count: scores.filter(g => g < 50).length
+    }];
+  }, [bandsFilteredScores]);
+
+  const bandsRankedStudents = useMemo(() => {
+    return bandsFilteredScores
+      .map(({ studentId, score }) => {
+        const student = students.find(s => s.id === studentId);
+        return student ? { ...student, score } : null;
+      })
+      .filter((s): s is { id: string; name: string; photo: null; score: number } => s !== null)
+      .sort((a, b) => b.score - a.score);
+  }, [bandsFilteredScores, students]);
+
+  const bandsTopPerformers = bandsRankedStudents.filter(s => s.score >= 80);
+  const bandsMiddlePerformers = bandsRankedStudents.filter(s => s.score >= 60 && s.score < 80);
+  const bandsAtRiskStudents = bandsRankedStudents.filter(s => s.score < 60);
 
   // Calculate category averages from detailed grades
   const categoryTotals = {
@@ -1591,27 +1651,16 @@ export default function TeacherAcademicPage() {
                     </Select>
                   </div>
                   
-                  {/* Row 2: Subject Filter Pills */}
+                  {/* Row 2: Subject Filter - Single Select for Bands */}
                   <div className="space-y-2">
                     <div className="flex items-center justify-between">
-                      <span className="text-sm font-medium text-foreground">Subjects:</span>
-                      <div className="flex gap-2">
-                        <button
-                          className="text-sm font-medium text-foreground hover:text-primary transition-colors"
-                          onClick={() => setSelectedSubjects([...subjects])}
-                        >
-                          Select All
-                        </button>
-                        <button
-                          className="text-sm font-medium text-foreground hover:text-primary transition-colors"
-                          onClick={() => {
-                            // Keep at least one subject
-                            if (subjects.length > 0) setSelectedSubjects([subjects[0]]);
-                          }}
-                        >
-                          Clear
-                        </button>
-                      </div>
+                      <span className="text-sm font-medium text-foreground">Subject:</span>
+                      <button
+                        className={`text-sm font-medium transition-colors ${bandsSelectedSubject === "all" ? "text-primary" : "text-foreground hover:text-primary"}`}
+                        onClick={() => setBandsSelectedSubject("all")}
+                      >
+                        All Subjects
+                      </button>
                     </div>
                     <div className="flex flex-wrap gap-1.5 p-2.5 rounded-lg border border-border bg-background">
                       {subjectGroups.map((group) => (
@@ -1620,16 +1669,15 @@ export default function TeacherAcademicPage() {
                           baseName={group.baseName}
                           shortName={group.shortName}
                           variants={group.variants || []}
-                          selectedSubjects={selectedSubjects}
+                          selectedSubjects={bandsSelectedSubject === "all" ? [] : [bandsSelectedSubject]}
                           onToggle={(subjectName) => {
-                            if (selectedSubjects.includes(subjectName)) {
-                              if (selectedSubjects.length > 1) {
-                                setSelectedSubjects(prev => prev.filter(s => s !== subjectName));
-                              }
+                            if (bandsSelectedSubject === subjectName) {
+                              setBandsSelectedSubject("all");
                             } else {
-                              setSelectedSubjects(prev => [...prev, subjectName]);
+                              setBandsSelectedSubject(subjectName);
                             }
                           }}
+                          singleSelect={true}
                         />
                       ))}
                     </div>
@@ -1638,10 +1686,15 @@ export default function TeacherAcademicPage() {
 
                 {/* Grade Distribution Cards */}
                 <div className="space-y-2">
-                  <h4 className="text-sm font-medium text-foreground">Grade Distribution</h4>
+                  <h4 className="text-sm font-medium text-foreground">
+                    Grade Distribution
+                    {bandsSelectedSubject !== "all" && (
+                      <span className="text-xs text-muted-foreground ml-2">({bandsSelectedSubject})</span>
+                    )}
+                  </h4>
                   <div className="grid grid-cols-6 gap-1.5">
-                    {gradeDistribution.map(g => {
-                      const total = gradeDistribution.reduce((sum, d) => sum + d.count, 0);
+                    {bandsGradeDistribution.map(g => {
+                      const total = bandsGradeDistribution.reduce((sum, d) => sum + d.count, 0);
                       const percentage = total > 0 ? Math.round(g.count / total * 100) : 0;
                       return (
                         <div 
@@ -1671,7 +1724,7 @@ export default function TeacherAcademicPage() {
                     <CardHeader className="pb-2">
                       <CardTitle className="text-sm flex items-center gap-2 text-amber-700">
                         <Award className="h-4 w-4" />
-                        Top Performers ({topPerformers.length})
+                        Top Performers ({bandsTopPerformers.length})
                         <span className="ml-auto flex gap-1">
                           <span className="px-1.5 py-0.5 text-[10px] font-semibold rounded-full bg-amber-500 text-white">A*</span>
                           <span className="px-1.5 py-0.5 text-[10px] font-semibold rounded-full bg-amber-500 text-white">A</span>
@@ -1679,7 +1732,7 @@ export default function TeacherAcademicPage() {
                       </CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-2">
-                      {topPerformers.slice(0, 3).map((student, index) => (
+                      {bandsTopPerformers.slice(0, 3).map((student, index) => (
                         <div key={student.id} className={cn(
                           "flex items-center justify-between p-2 rounded-lg bg-background",
                           index === 0 ? "border border-amber-300" : index === 1 ? "border border-slate-300" : "border border-orange-300"
@@ -1695,7 +1748,7 @@ export default function TeacherAcademicPage() {
                           </Badge>
                         </div>
                       ))}
-                      {topPerformers.length > 3 && (
+                      {bandsTopPerformers.length > 3 && (
                         <Button 
                           variant="ghost" 
                           size="sm" 
@@ -1705,10 +1758,10 @@ export default function TeacherAcademicPage() {
                             setPerformanceDialogOpen(true);
                           }}
                         >
-                          View More ({topPerformers.length - 3} more)
+                          View More ({bandsTopPerformers.length - 3} more)
                         </Button>
                       )}
-                      {topPerformers.length === 0 && (
+                      {bandsTopPerformers.length === 0 && (
                         <p className="text-xs text-muted-foreground text-center py-2">No students</p>
                       )}
                     </CardContent>
@@ -1719,7 +1772,7 @@ export default function TeacherAcademicPage() {
                     <CardHeader className="pb-2">
                       <CardTitle className="text-sm flex items-center gap-2 text-blue-700">
                         <UserCheck className="h-4 w-4" />
-                        Middle Performers ({middlePerformers.length})
+                        Middle Performers ({bandsMiddlePerformers.length})
                         <span className="ml-auto flex gap-1">
                           <span className="px-1.5 py-0.5 text-[10px] font-semibold rounded-full bg-blue-500 text-white">B</span>
                           <span className="px-1.5 py-0.5 text-[10px] font-semibold rounded-full bg-blue-500 text-white">C</span>
@@ -1727,7 +1780,7 @@ export default function TeacherAcademicPage() {
                       </CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-2">
-                      {middlePerformers.slice(0, 3).map((student) => (
+                      {bandsMiddlePerformers.slice(0, 3).map((student) => (
                         <div key={student.id} className="flex items-center justify-between p-2 rounded-lg bg-background border border-blue-200">
                           <span className="text-sm font-medium truncate">{student.name}</span>
                           <Badge className="text-xs bg-blue-100 text-blue-700 shrink-0">
@@ -1735,7 +1788,7 @@ export default function TeacherAcademicPage() {
                           </Badge>
                         </div>
                       ))}
-                      {middlePerformers.length > 3 && (
+                      {bandsMiddlePerformers.length > 3 && (
                         <Button 
                           variant="ghost" 
                           size="sm" 
@@ -1745,10 +1798,10 @@ export default function TeacherAcademicPage() {
                             setPerformanceDialogOpen(true);
                           }}
                         >
-                          View More ({middlePerformers.length - 3} more)
+                          View More ({bandsMiddlePerformers.length - 3} more)
                         </Button>
                       )}
-                      {middlePerformers.length === 0 && (
+                      {bandsMiddlePerformers.length === 0 && (
                         <p className="text-xs text-muted-foreground text-center py-2">No students</p>
                       )}
                     </CardContent>
@@ -1759,7 +1812,7 @@ export default function TeacherAcademicPage() {
                     <CardHeader className="pb-2">
                       <CardTitle className="text-sm flex items-center gap-2 text-red-700">
                         <AlertTriangle className="h-4 w-4" />
-                        At-Risk Students ({atRiskStudents.length})
+                        At-Risk Students ({bandsAtRiskStudents.length})
                         <span className="ml-auto flex gap-1">
                           <span className="px-1.5 py-0.5 text-[10px] font-semibold rounded-full bg-red-500 text-white">D</span>
                           <span className="px-1.5 py-0.5 text-[10px] font-semibold rounded-full bg-red-500 text-white">E</span>
@@ -1767,7 +1820,7 @@ export default function TeacherAcademicPage() {
                       </CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-2">
-                      {atRiskStudents.slice(0, 3).map((student) => (
+                      {bandsAtRiskStudents.slice(0, 3).map((student) => (
                         <div key={student.id} className="flex items-center justify-between p-2 rounded-lg bg-background border border-red-200">
                           <span className="text-sm font-medium truncate">{student.name}</span>
                           <Badge variant="destructive" className="text-xs shrink-0">
@@ -1775,7 +1828,7 @@ export default function TeacherAcademicPage() {
                           </Badge>
                         </div>
                       ))}
-                      {atRiskStudents.length > 3 && (
+                      {bandsAtRiskStudents.length > 3 && (
                         <Button 
                           variant="ghost" 
                           size="sm" 
@@ -1785,10 +1838,10 @@ export default function TeacherAcademicPage() {
                             setPerformanceDialogOpen(true);
                           }}
                         >
-                          View More ({atRiskStudents.length - 3} more)
+                          View More ({bandsAtRiskStudents.length - 3} more)
                         </Button>
                       )}
-                      {atRiskStudents.length === 0 && (
+                      {bandsAtRiskStudents.length === 0 && (
                         <p className="text-xs text-muted-foreground text-center py-2">No students</p>
                       )}
                     </CardContent>
@@ -1817,7 +1870,7 @@ export default function TeacherAcademicPage() {
                           <Award className="h-3 w-3" />
                           <span>Top</span>
                         </div>
-                        <span className="text-[10px] opacity-90">({topPerformers.length})</span>
+                        <span className="text-[10px] opacity-90">({bandsTopPerformers.length})</span>
                       </button>
                       <button
                         onClick={() => setPerformanceDialogTab("middle")}
@@ -1832,7 +1885,7 @@ export default function TeacherAcademicPage() {
                           <UserCheck className="h-3 w-3" />
                           <span>Middle</span>
                         </div>
-                        <span className="text-[10px] opacity-90">({middlePerformers.length})</span>
+                        <span className="text-[10px] opacity-90">({bandsMiddlePerformers.length})</span>
                       </button>
                       <button
                         onClick={() => setPerformanceDialogTab("atRisk")}
@@ -1847,13 +1900,13 @@ export default function TeacherAcademicPage() {
                           <AlertTriangle className="h-3 w-3" />
                           <span>At-Risk</span>
                         </div>
-                        <span className="text-[10px] opacity-90">({atRiskStudents.length})</span>
+                        <span className="text-[10px] opacity-90">({bandsAtRiskStudents.length})</span>
                       </button>
                     </div>
 
                     {/* Student list */}
                     <div className="flex-1 overflow-y-auto space-y-2 pr-1">
-                      {performanceDialogTab === "top" && topPerformers.map((student, index) => (
+                      {performanceDialogTab === "top" && bandsTopPerformers.map((student, index) => (
                         <div key={student.id} className={cn(
                           "flex items-center justify-between p-3 rounded-lg",
                           index === 0 ? "bg-amber-50 border border-amber-200" 
@@ -1876,7 +1929,7 @@ export default function TeacherAcademicPage() {
                         </div>
                       ))}
 
-                      {performanceDialogTab === "middle" && middlePerformers.map((student, index) => (
+                      {performanceDialogTab === "middle" && bandsMiddlePerformers.map((student, index) => (
                         <div key={student.id} className="flex items-center justify-between p-3 rounded-lg bg-blue-50/50 border border-blue-200">
                           <div className="flex items-center gap-3">
                             <span className="text-sm font-bold w-8 text-center text-muted-foreground">
@@ -1890,7 +1943,7 @@ export default function TeacherAcademicPage() {
                         </div>
                       ))}
 
-                      {performanceDialogTab === "atRisk" && atRiskStudents.map((student, index) => (
+                      {performanceDialogTab === "atRisk" && bandsAtRiskStudents.map((student, index) => (
                         <div key={student.id} className="flex items-center justify-between p-3 rounded-lg bg-red-50/50 border border-red-200">
                           <div className="flex items-center gap-3">
                             <span className="text-sm font-bold w-8 text-center text-muted-foreground">
@@ -1905,13 +1958,13 @@ export default function TeacherAcademicPage() {
                       ))}
 
                       {/* Empty state */}
-                      {performanceDialogTab === "top" && topPerformers.length === 0 && (
+                      {performanceDialogTab === "top" && bandsTopPerformers.length === 0 && (
                         <p className="text-sm text-muted-foreground text-center py-8">No top performers</p>
                       )}
-                      {performanceDialogTab === "middle" && middlePerformers.length === 0 && (
+                      {performanceDialogTab === "middle" && bandsMiddlePerformers.length === 0 && (
                         <p className="text-sm text-muted-foreground text-center py-8">No middle performers</p>
                       )}
-                      {performanceDialogTab === "atRisk" && atRiskStudents.length === 0 && (
+                      {performanceDialogTab === "atRisk" && bandsAtRiskStudents.length === 0 && (
                         <p className="text-sm text-muted-foreground text-center py-8">No at-risk students</p>
                       )}
                     </div>
