@@ -15,7 +15,7 @@ export default function AwardsPage() {
   const earnedAwards = getStudentAwards(selectedStudentId);
   return <AppLayout>
       <AppHeader leftContent={<div className="flex items-center gap-2">
-            <img src={schoolLogo} alt="School Logo" className="h-12 w-auto -my-2 drop-shadow-md" />
+            <img src={schoolLogo} alt="School Logo" className="h-16 w-auto -my-3 drop-shadow-md" />
             <h1 className="text-lg font-semibold text-foreground">Students Award</h1>
           </div>} rightContent={<Select value={selectedStudentId} onValueChange={setSelectedStudentId}>
             <SelectTrigger className="w-32 h-8 text-sm">
