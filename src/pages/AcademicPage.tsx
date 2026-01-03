@@ -73,17 +73,6 @@ const shortenSubjectName = getShortSubjectName;
 const groupedSubjectNames = subjectGroups.flatMap(g => g.variants?.map(v => v.name) || []);
 const standaloneSubjects = allSubjects.filter(s => !groupedSubjectNames.includes(s));
 
-// Get the actual subject names from academic data
-const actualSubjectNames = academicData.subjects.map(s => s.name);
-
-// Filter subject groups to only show those with at least one variant in the actual data
-const availableSubjectGroups = subjectGroups
-  .map(group => ({
-    ...group,
-    variants: group.variants?.filter(v => actualSubjectNames.includes(v.name)) || []
-  }))
-  .filter(group => group.variants.length > 0);
-
 export default function AcademicPage() {
   const [searchParams] = useSearchParams();
   const [mainSection, setMainSection] = useState<"report" | "analysis">(() => {
@@ -1161,7 +1150,7 @@ export default function AcademicPage() {
                     </div>
                     <div className="flex flex-wrap gap-1.5 p-2.5 rounded-lg border border-border bg-background">
                       {/* Grouped subject pills with dropdowns */}
-                      {availableSubjectGroups.map((group) => (
+                      {subjectGroups.map((group) => (
                         <SubjectGroupPill
                           key={group.baseName}
                           baseName={group.baseName}
@@ -1587,7 +1576,7 @@ export default function AcademicPage() {
                   </div>
                   <div className="flex flex-wrap gap-1.5 p-2.5 rounded-lg border border-border bg-background">
                     {/* Grouped subject pills with mobile-friendly drawers */}
-                    {availableSubjectGroups.map((group) => (
+                    {subjectGroups.map((group) => (
                       <SubjectGroupPill
                         key={group.baseName}
                         baseName={group.baseName}
@@ -2156,7 +2145,7 @@ export default function AcademicPage() {
                   </div>
                   <div className="flex flex-wrap gap-1.5 p-2.5 rounded-lg border border-border bg-background">
                     {/* Grouped subject pills with dropdowns */}
-                    {availableSubjectGroups.map((group) => (
+                    {subjectGroups.map((group) => (
                       <SubjectGroupPill
                         key={group.baseName}
                         baseName={group.baseName}
