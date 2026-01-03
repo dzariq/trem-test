@@ -368,143 +368,169 @@ export function ReportCardDialog({
               </div>
             </div>
 
-            {/* Academic Grades Table with Grading Key */}
+            {/* Academic Grades - Card Layout */}
             <div style={{ marginBottom: '16px' }}>
-              <div style={{ position: 'relative', zIndex: 1 }}>
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '10px', paddingBottom: '8px', borderBottom: '1px solid #d1d5db' }}>
-                  <h3 style={{ fontSize: '11px', fontWeight: '700', color: '#065f46', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                    <span style={{ color: '#065f46' }}><IconBook /></span>
-                    Academic Grades
-                  </h3>
-                  {/* Compact Grading Key Legend */}
-                  <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
-                    {Object.entries(gradeColors).map(([grade, colors]) => (
-                      <div key={grade} style={{ display: 'flex', alignItems: 'center', gap: '2px' }}>
-                        <span style={{ 
-                          width: '18px', 
-                          height: '18px', 
-                          borderRadius: '3px', 
-                          display: 'flex', 
-                          alignItems: 'center', 
-                          justifyContent: 'center', 
-                          fontWeight: '700', 
-                          fontSize: '9px',
-                          backgroundColor: colors.bg,
-                          color: colors.text
-                        }}>
-                          {grade}
-                        </span>
-                        <span style={{ fontSize: '8px', color: '#374151' }}>{grade === "A*" ? "90+" : grade === "A" ? "80+" : grade === "B" ? "70+" : grade === "C" ? "60+" : grade === "D" ? "50+" : "<50"}</span>
-                      </div>
-                    ))}
-                  </div>
+              {/* Header with Grading Key */}
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '10px', paddingBottom: '8px', borderBottom: '1px solid #d1d5db' }}>
+                <h3 style={{ fontSize: '11px', fontWeight: '700', color: '#065f46', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <span style={{ color: '#065f46' }}><IconBook /></span>
+                  Academic Grades
+                </h3>
+                {/* Compact Grading Key Legend */}
+                <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
+                  {Object.entries(gradeColors).map(([grade, colors]) => (
+                    <div key={grade} style={{ display: 'flex', alignItems: 'center', gap: '2px' }}>
+                      <span style={{ 
+                        width: '16px', 
+                        height: '16px', 
+                        borderRadius: '3px', 
+                        display: 'flex', 
+                        alignItems: 'center', 
+                        justifyContent: 'center', 
+                        fontWeight: '700', 
+                        fontSize: '8px',
+                        backgroundColor: colors.bg,
+                        color: colors.text
+                      }}>
+                        {grade}
+                      </span>
+                      <span style={{ fontSize: '7px', color: '#6b7280' }}>{grade === "A*" ? "90+" : grade === "A" ? "80+" : grade === "B" ? "70+" : grade === "C" ? "60+" : grade === "D" ? "50+" : "<50"}</span>
+                    </div>
+                  ))}
                 </div>
-              <table style={{ width: '100%', borderCollapse: 'separate', borderSpacing: '0', fontSize: '11px', borderRadius: '8px', overflow: 'hidden', border: '1px solid #d1d5db', background: 'white' }}>
-                <thead>
-                  <tr style={{ background: 'linear-gradient(90deg, #065f46 0%, #047857 25%, #059669 50%, #10b981 75%, #34d399 100%)' }}>
-                    <th style={{ color: 'white', padding: '8px 6px', textAlign: 'left', fontWeight: '600', fontSize: '10px', borderRight: '1px solid rgba(255,255,255,0.3)' }}>Subject</th>
-                    <th style={{ color: 'white', padding: '8px 4px', textAlign: 'center', fontWeight: '600', fontSize: '10px', borderRight: '1px solid rgba(255,255,255,0.3)', width: '55px' }}>Mid-Year</th>
-                    <th style={{ color: 'white', padding: '8px 4px', textAlign: 'center', fontWeight: '600', fontSize: '10px', borderRight: '1px solid rgba(255,255,255,0.3)', width: '55px' }}>Year-End</th>
-                    <th style={{ color: 'white', padding: '8px 6px', textAlign: 'left', fontWeight: '600', fontSize: '10px' }}>Teacher's Comment</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {displayedSubjects.map((subject, index) => {
-                    const midYearGradeColor = gradeColors[subject.grade] || gradeColors["C"];
-                    const yearEndScore = subject.yearEndScore !== undefined ? subject.yearEndScore : (subject.score !== null ? Math.min(100, Math.max(0, subject.score + Math.floor(Math.random() * 15) - 5)) : null);
-                    // Derive year-end grade from score if not provided
-                    const getGradeFromScore = (score: number | null): string => {
-                      if (score === null) return 'C';
-                      if (score >= 90) return 'A*';
-                      if (score >= 80) return 'A';
-                      if (score >= 70) return 'B';
-                      if (score >= 60) return 'C';
-                      if (score >= 50) return 'D';
-                      return 'E';
-                    };
-                    const derivedYearEndGrade = subject.yearEndGrade || getGradeFromScore(yearEndScore);
-                    const derivedYearEndGradeColor = gradeColors[derivedYearEndGrade] || gradeColors["C"];
-                    const hasLearningTips = subject.classStudyRecommendation || subject.studyRecommendation;
-                    return (
-                      <>
-                        {/* Main subject row */}
-                        <tr key={subject.name} style={{ position: 'relative', background: index % 2 === 0 ? 'white' : '#f9fafb' }}>
-                          <td style={{ padding: '5px 6px', borderBottom: hasLearningTips ? 'none' : '1px solid #d1d5db', borderRight: '1px solid #d1d5db', fontWeight: '500', fontSize: '9px' }}>
-                            {subject.name}
-                          </td>
-                          {/* Mid-Year Score with Grade Watermark */}
-                          <td style={{ position: 'relative', padding: '6px 4px', borderBottom: hasLearningTips ? 'none' : '1px solid #d1d5db', borderRight: '1px solid #d1d5db', textAlign: 'center', fontWeight: '800', overflow: 'hidden', fontSize: '13px' }}>
-                            <span style={{ 
-                              position: 'absolute', 
-                              left: '50%', 
-                              bottom: '-10px', 
-                              transform: 'translateX(-50%)',
-                              fontSize: '36px', 
-                              fontWeight: '900', 
-                              color: midYearGradeColor.bg, 
-                              opacity: 0.15,
-                              pointerEvents: 'none',
-                              lineHeight: 1
-                            }}>
-                              {subject.grade}
-                            </span>
-                            <span style={{ position: 'relative', zIndex: 1 }}>{subject.score !== null ? `${subject.score}%` : '-'}</span>
-                          </td>
-                          {/* Year-End Score with Grade Watermark */}
-                          <td style={{ position: 'relative', padding: '6px 4px', borderBottom: hasLearningTips ? 'none' : '1px solid #d1d5db', borderRight: '1px solid #d1d5db', textAlign: 'center', fontWeight: '800', overflow: 'hidden', fontSize: '13px' }}>
-                            <span style={{ 
-                              position: 'absolute', 
-                              left: '50%', 
-                              bottom: '-10px', 
-                              transform: 'translateX(-50%)',
-                              fontSize: '36px', 
-                              fontWeight: '900', 
-                              color: derivedYearEndGradeColor.bg, 
-                              opacity: 0.15,
-                              pointerEvents: 'none',
-                              lineHeight: 1
-                            }}>
-                              {derivedYearEndGrade}
-                            </span>
-                            <span style={{ position: 'relative', zIndex: 1 }}>{yearEndScore !== null ? `${yearEndScore}%` : '-'}</span>
-                          </td>
-                          {/* Teacher's Comment */}
-                          <td style={{ padding: '5px 6px', borderBottom: hasLearningTips ? 'none' : '1px solid #d1d5db', fontSize: '8px', color: '#374151', lineHeight: '1.3' }}>
-                            {subject.teacherComment || '-'}
-                          </td>
-                        </tr>
-                        {/* Learning Tips row - below each subject */}
-                        {hasLearningTips && (
-                          <tr key={`${subject.name}-tips`} style={{ background: index % 2 === 0 ? '#f0fdf4' : '#ecfdf5' }}>
-                            <td colSpan={4} style={{ padding: '4px 6px 6px 6px', borderBottom: '1px solid #d1d5db' }}>
-                              <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-                                {subject.classStudyRecommendation && (
-                                  <div style={{ flex: 1, minWidth: '200px', display: 'flex', alignItems: 'flex-start', gap: '4px' }}>
-                                    <span style={{ color: '#065f46', flexShrink: 0, marginTop: '1px' }}><IconBookMarked /></span>
-                                    <div>
-                                      <span style={{ fontSize: '7px', fontWeight: '600', color: '#065f46', textTransform: 'uppercase', letterSpacing: '0.3px' }}>Class Learning Tips: </span>
-                                      <span style={{ fontSize: '7px', color: '#374151' }}>{subject.classStudyRecommendation}</span>
-                                    </div>
-                                  </div>
-                                )}
-                                {subject.studyRecommendation && (
-                                  <div style={{ flex: 1, minWidth: '200px', display: 'flex', alignItems: 'flex-start', gap: '4px' }}>
-                                    <span style={{ color: '#0369a1', flexShrink: 0, marginTop: '1px' }}><IconTarget /></span>
-                                    <div>
-                                      <span style={{ fontSize: '7px', fontWeight: '600', color: '#0369a1', textTransform: 'uppercase', letterSpacing: '0.3px' }}>Individual Learning Tips: </span>
-                                      <span style={{ fontSize: '7px', color: '#374151' }}>{subject.studyRecommendation}</span>
-                                    </div>
-                                  </div>
-                                )}
+              </div>
+
+              {/* Subject Cards Grid */}
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '8px' }}>
+                {displayedSubjects.map((subject) => {
+                  const midYearGradeColor = gradeColors[subject.grade] || gradeColors["C"];
+                  const yearEndScore = subject.yearEndScore !== undefined ? subject.yearEndScore : (subject.score !== null ? Math.min(100, Math.max(0, subject.score + Math.floor(Math.random() * 15) - 5)) : null);
+                  const getGradeFromScore = (score: number | null): string => {
+                    if (score === null) return 'C';
+                    if (score >= 90) return 'A*';
+                    if (score >= 80) return 'A';
+                    if (score >= 70) return 'B';
+                    if (score >= 60) return 'C';
+                    if (score >= 50) return 'D';
+                    return 'E';
+                  };
+                  const derivedYearEndGrade = subject.yearEndGrade || getGradeFromScore(yearEndScore);
+                  const derivedYearEndGradeColor = gradeColors[derivedYearEndGrade] || gradeColors["C"];
+                  const hasLearningTips = subject.classStudyRecommendation || subject.studyRecommendation;
+                  
+                  return (
+                    <div key={subject.name} style={{ 
+                      border: '1px solid #e5e7eb', 
+                      borderRadius: '8px', 
+                      overflow: 'hidden',
+                      background: 'white'
+                    }}>
+                      {/* Subject Header */}
+                      <div style={{ 
+                        background: 'linear-gradient(135deg, #065f46 0%, #059669 100%)', 
+                        padding: '6px 10px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between'
+                      }}>
+                        <span style={{ fontSize: '9px', fontWeight: '600', color: 'white' }}>{subject.name}</span>
+                      </div>
+                      
+                      {/* Scores Section */}
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', borderBottom: '1px solid #e5e7eb' }}>
+                        {/* Mid-Year Score */}
+                        <div style={{ 
+                          position: 'relative', 
+                          padding: '8px', 
+                          textAlign: 'center',
+                          borderRight: '1px solid #e5e7eb',
+                          overflow: 'hidden'
+                        }}>
+                          <div style={{ fontSize: '6px', fontWeight: '600', color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.3px', marginBottom: '2px' }}>Mid-Year</div>
+                          <span style={{ 
+                            position: 'absolute', 
+                            left: '50%', 
+                            bottom: '-6px', 
+                            transform: 'translateX(-50%)',
+                            fontSize: '42px', 
+                            fontWeight: '900', 
+                            color: midYearGradeColor.bg, 
+                            opacity: 0.12,
+                            pointerEvents: 'none',
+                            lineHeight: 1
+                          }}>
+                            {subject.grade}
+                          </span>
+                          <div style={{ fontSize: '16px', fontWeight: '800', color: '#1a1a1a', position: 'relative', zIndex: 1 }}>
+                            {subject.score !== null ? `${subject.score}%` : '-'}
+                          </div>
+                        </div>
+                        {/* Year-End Score */}
+                        <div style={{ 
+                          position: 'relative', 
+                          padding: '8px', 
+                          textAlign: 'center',
+                          overflow: 'hidden'
+                        }}>
+                          <div style={{ fontSize: '6px', fontWeight: '600', color: '#6b7280', textTransform: 'uppercase', letterSpacing: '0.3px', marginBottom: '2px' }}>Year-End</div>
+                          <span style={{ 
+                            position: 'absolute', 
+                            left: '50%', 
+                            bottom: '-6px', 
+                            transform: 'translateX(-50%)',
+                            fontSize: '42px', 
+                            fontWeight: '900', 
+                            color: derivedYearEndGradeColor.bg, 
+                            opacity: 0.12,
+                            pointerEvents: 'none',
+                            lineHeight: 1
+                          }}>
+                            {derivedYearEndGrade}
+                          </span>
+                          <div style={{ fontSize: '16px', fontWeight: '800', color: '#1a1a1a', position: 'relative', zIndex: 1 }}>
+                            {yearEndScore !== null ? `${yearEndScore}%` : '-'}
+                          </div>
+                        </div>
+                      </div>
+                      
+                      {/* Teacher Comment */}
+                      {subject.teacherComment && (
+                        <div style={{ padding: '6px 10px', borderBottom: hasLearningTips ? '1px solid #e5e7eb' : 'none', background: '#fafafa' }}>
+                          <div style={{ display: 'flex', alignItems: 'flex-start', gap: '4px' }}>
+                            <span style={{ color: '#6b7280', flexShrink: 0, marginTop: '1px' }}><IconMessage /></span>
+                            <p style={{ fontSize: '7px', color: '#374151', lineHeight: '1.4', margin: 0 }}>{subject.teacherComment}</p>
+                          </div>
+                        </div>
+                      )}
+                      
+                      {/* Learning Tips */}
+                      {hasLearningTips && (
+                        <div style={{ padding: '6px 10px', background: '#f0fdf4' }}>
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                            {subject.classStudyRecommendation && (
+                              <div style={{ display: 'flex', alignItems: 'flex-start', gap: '4px' }}>
+                                <span style={{ color: '#065f46', flexShrink: 0, marginTop: '1px' }}><IconBookMarked /></span>
+                                <div>
+                                  <span style={{ fontSize: '6px', fontWeight: '700', color: '#065f46', textTransform: 'uppercase' }}>Class Tips: </span>
+                                  <span style={{ fontSize: '6px', color: '#374151' }}>{subject.classStudyRecommendation}</span>
+                                </div>
                               </div>
-                            </td>
-                          </tr>
-                        )}
-                      </>
-                    );
-                  })}
-                </tbody>
-              </table>
+                            )}
+                            {subject.studyRecommendation && (
+                              <div style={{ display: 'flex', alignItems: 'flex-start', gap: '4px' }}>
+                                <span style={{ color: '#0369a1', flexShrink: 0, marginTop: '1px' }}><IconTarget /></span>
+                                <div>
+                                  <span style={{ fontSize: '6px', fontWeight: '700', color: '#0369a1', textTransform: 'uppercase' }}>Individual Tips: </span>
+                                  <span style={{ fontSize: '6px', color: '#374151' }}>{subject.studyRecommendation}</span>
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
               </div>
             </div>
 
