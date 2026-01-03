@@ -190,6 +190,12 @@ export default function TeacherAcademicPage() {
   // PDF Report dialog state
   const [bandsReportDialogOpen, setBandsReportDialogOpen] = useState(false);
   const bandsReportRef = useRef<HTMLDivElement>(null);
+  const [overviewReportDialogOpen, setOverviewReportDialogOpen] = useState(false);
+  const overviewReportRef = useRef<HTMLDivElement>(null);
+  const [trendsReportDialogOpen, setTrendsReportDialogOpen] = useState(false);
+  const trendsReportRef = useRef<HTMLDivElement>(null);
+  const [comparisonReportDialogOpen, setComparisonReportDialogOpen] = useState(false);
+  const comparisonReportRef = useRef<HTMLDivElement>(null);
   const handleTouchStart = useCallback((e: React.TouchEvent) => {
     if (e.touches.length === 2) {
       const touch1 = e.touches[0];
@@ -1420,6 +1426,17 @@ export default function TeacherAcademicPage() {
                       {examPeriods.find(p => p.value === period)?.label}
                     </Badge>)}
                 </div>
+
+                {/* Report Button for Overview */}
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="w-full gap-2"
+                  onClick={() => setOverviewReportDialogOpen(true)}
+                >
+                  <FileText className="h-4 w-4" />
+                  Generate Overview Report
+                </Button>
 
                 {/* Subject Selector - Toggle Chips */}
                 <div className="space-y-2">
@@ -2851,6 +2868,17 @@ export default function TeacherAcademicPage() {
                   </div>
                 </div>
 
+                {/* Report Button for Trends */}
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="w-full gap-2"
+                  onClick={() => setTrendsReportDialogOpen(true)}
+                >
+                  <FileText className="h-4 w-4" />
+                  Generate Trends Report
+                </Button>
+
                 {/* Subject Filter - Standardized Pills */}
                 <div className="space-y-2">
                   <div className="flex items-center justify-between">
@@ -3247,6 +3275,17 @@ export default function TeacherAcademicPage() {
                   </div>
                 </div>
 
+                {/* Report Button for Comparison */}
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="w-full gap-2"
+                  onClick={() => setComparisonReportDialogOpen(true)}
+                >
+                  <FileText className="h-4 w-4" />
+                  Generate Comparison Report
+                </Button>
+
                 {/* Subject Multi-Select */}
                 <div className="space-y-2">
                   <label className="text-xs font-medium text-muted-foreground">Subjects</label>
@@ -3542,6 +3581,614 @@ export default function TeacherAcademicPage() {
           </TabsContent>
         </Tabs>
       </div>
+
+      {/* Overview Report Dialog */}
+      <Dialog open={overviewReportDialogOpen} onOpenChange={setOverviewReportDialogOpen}>
+        <DialogContent className="w-[95vw] max-w-3xl h-[90vh] rounded-2xl overflow-hidden flex flex-col">
+          <DialogHeader className="flex flex-row items-center justify-between pr-12">
+            <DialogTitle>Overview Report</DialogTitle>
+            <Button
+              variant="outline"
+              size="sm"
+              className="gap-2"
+              onClick={() => {
+                if (overviewReportRef.current) {
+                  const printWindow = window.open('', '_blank');
+                  if (printWindow) {
+                    printWindow.document.write(`
+                      <!DOCTYPE html>
+                      <html>
+                        <head>
+                          <title>Overview Report - Class ${selectedClass}</title>
+                          <style>
+                            @page { size: A4 portrait; margin: 15mm; }
+                            * { box-sizing: border-box; margin: 0; padding: 0; }
+                            body { 
+                              font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; 
+                              font-size: 10px; 
+                              line-height: 1.4; 
+                              color: #1a1a1a;
+                              padding: 10px;
+                            }
+                            .report-header { 
+                              display: flex !important; 
+                              align-items: center !important; 
+                              gap: 12px !important; 
+                              margin-bottom: 15px !important; 
+                              padding-bottom: 10px !important; 
+                              border-bottom: 2px solid #3b82f6 !important; 
+                            }
+                            .school-logo { width: 40px !important; height: 40px !important; object-fit: contain !important; }
+                            .section { margin-bottom: 12px; page-break-inside: avoid; }
+                            .section-title { font-size: 12px; font-weight: 600; margin-bottom: 8px; padding-bottom: 4px; border-bottom: 1px solid #ddd; }
+                            .stats-grid { display: grid !important; grid-template-columns: repeat(6, 1fr) !important; gap: 6px !important; text-align: center !important; }
+                            .stat-card { padding: 8px 4px; border: 1px solid #ddd; border-radius: 6px; background: #f9f9f9; }
+                            .stat-value { font-size: 14px; font-weight: 700; color: #1a1a1a; }
+                            .stat-label { font-size: 8px; color: #666; }
+                            .subject-grid { display: grid !important; grid-template-columns: repeat(2, 1fr) !important; gap: 8px !important; }
+                            .subject-item { display: flex; justify-content: space-between; padding: 6px 10px; background: #f5f5f5; border-radius: 4px; font-size: 10px; }
+                            .grade-grid { display: grid !important; grid-template-columns: repeat(6, 1fr) !important; gap: 6px !important; }
+                            .grade-card { text-align: center; padding: 8px 4px; border: 1px solid #ddd; border-radius: 6px; background: #fff; }
+                            .footer { text-align: center !important; font-size: 8px !important; color: #666 !important; margin-top: 15px !important; padding-top: 8px !important; border-top: 1px solid #ddd !important; }
+                            @media print { body { padding: 0 !important; margin: 0 !important; } .no-print { display: none !important; } }
+                          </style>
+                        </head>
+                        <body>
+                          ${overviewReportRef.current.innerHTML}
+                        </body>
+                      </html>
+                    `);
+                    printWindow.document.close();
+                    printWindow.print();
+                  }
+                }
+              }}
+            >
+              <Printer className="h-4 w-4" />
+              Print / Save PDF
+            </Button>
+          </DialogHeader>
+          
+          <div className="flex-1 overflow-y-auto" ref={overviewReportRef}>
+            <div className="space-y-4 p-2">
+              {/* Report Header */}
+              <div className="report-header" style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '15px', paddingBottom: '10px', borderBottom: '2px solid #3b82f6' }}>
+                <img src={schoolLogo} alt="School Logo" className="school-logo" style={{ width: '40px', height: '40px', objectFit: 'contain' }} />
+                <div style={{ textAlign: 'left' }}>
+                  <h1 style={{ fontSize: '16px', fontWeight: 700, margin: '0 0 2px 0' }}>Class Overview Report</h1>
+                  <p style={{ fontSize: '10px', color: '#666', margin: 0 }}>Class {selectedClass} - Academic Performance Overview</p>
+                  <p style={{ fontSize: '9px', color: '#888', margin: '2px 0 0 0' }}>
+                    Generated on {new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}
+                    {' • '}{selectedYear} {selectedPeriod === 'midYear' ? 'Mid-Year' : 'Year-End'} Examination
+                  </p>
+                </div>
+              </div>
+
+              {/* Summary Statistics */}
+              <div className="section" style={{ marginBottom: '12px', pageBreakInside: 'avoid' }}>
+                <h3 style={{ fontSize: '12px', fontWeight: 600, marginBottom: '8px', paddingBottom: '4px', borderBottom: '1px solid #ddd' }}>Summary Statistics</h3>
+                <div className="stats-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: '6px', textAlign: 'center' }}>
+                  <div className="stat-card" style={{ padding: '8px 4px', border: '1px solid #ddd', borderRadius: '6px', backgroundColor: '#eff6ff' }}>
+                    <div className="stat-value" style={{ fontSize: '14px', fontWeight: 700, color: '#3b82f6' }}>{classAverage}%</div>
+                    <div className="stat-label" style={{ fontSize: '8px', color: '#666' }}>Average</div>
+                  </div>
+                  <div className="stat-card" style={{ padding: '8px 4px', border: '1px solid #ddd', borderRadius: '6px', backgroundColor: '#fef3c7' }}>
+                    <div className="stat-value" style={{ fontSize: '14px', fontWeight: 700, color: '#f59e0b' }}>{highestScore}%</div>
+                    <div className="stat-label" style={{ fontSize: '8px', color: '#666' }}>Highest</div>
+                  </div>
+                  <div className="stat-card" style={{ padding: '8px 4px', border: '1px solid #ddd', borderRadius: '6px', backgroundColor: '#fee2e2' }}>
+                    <div className="stat-value" style={{ fontSize: '14px', fontWeight: 700, color: '#ef4444' }}>{lowestScore}%</div>
+                    <div className="stat-label" style={{ fontSize: '8px', color: '#666' }}>Lowest</div>
+                  </div>
+                  <div className="stat-card" style={{ padding: '8px 4px', border: '1px solid #ddd', borderRadius: '6px', backgroundColor: '#dcfce7' }}>
+                    <div className="stat-value" style={{ fontSize: '14px', fontWeight: 700, color: '#22c55e' }}>{passRate}%</div>
+                    <div className="stat-label" style={{ fontSize: '8px', color: '#666' }}>Pass Rate</div>
+                  </div>
+                  <div className="stat-card" style={{ padding: '8px 4px', border: '1px solid #ddd', borderRadius: '6px', backgroundColor: '#f3e8ff' }}>
+                    <div className="stat-value" style={{ fontSize: '14px', fontWeight: 700, color: '#a855f7' }}>{students.length}</div>
+                    <div className="stat-label" style={{ fontSize: '8px', color: '#666' }}>Students</div>
+                  </div>
+                  <div className="stat-card" style={{ padding: '8px 4px', border: '1px solid #ddd', borderRadius: '6px', backgroundColor: '#ecfdf5' }}>
+                    <div className="stat-value" style={{ fontSize: '14px', fontWeight: 700, color: '#10b981' }}>{aGradeRate}%</div>
+                    <div className="stat-label" style={{ fontSize: '8px', color: '#666' }}>A Grade</div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Subject Performance */}
+              <div className="section" style={{ marginBottom: '12px', pageBreakInside: 'avoid' }}>
+                <h3 style={{ fontSize: '12px', fontWeight: 600, marginBottom: '8px', paddingBottom: '4px', borderBottom: '1px solid #ddd' }}>Subject Performance</h3>
+                <div className="subject-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '6px' }}>
+                  {subjectAverages.map((sub, idx) => (
+                    <div key={sub.fullName} className="subject-item" style={{ 
+                      display: 'flex', 
+                      justifyContent: 'space-between', 
+                      padding: '6px 10px', 
+                      backgroundColor: idx < 3 ? '#dcfce7' : idx >= subjectAverages.length - 3 ? '#fee2e2' : '#f5f5f5',
+                      borderRadius: '4px',
+                      fontSize: '10px'
+                    }}>
+                      <span style={{ fontWeight: 500 }}>{idx + 1}. {sub.fullName}</span>
+                      <span style={{ fontWeight: 700, color: sub.average >= 80 ? '#22c55e' : sub.average >= 50 ? '#3b82f6' : '#ef4444' }}>{sub.average.toFixed(0)}%</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Grade Distribution */}
+              <div className="section" style={{ marginBottom: '12px', pageBreakInside: 'avoid' }}>
+                <h3 style={{ fontSize: '12px', fontWeight: 600, marginBottom: '8px', paddingBottom: '4px', borderBottom: '1px solid #ddd' }}>Grade Distribution</h3>
+                <div className="grade-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: '6px' }}>
+                  {gradeDistribution.map(g => {
+                    const total = gradeDistribution.reduce((sum, d) => sum + d.count, 0);
+                    const percentage = total > 0 ? Math.round(g.count / total * 100) : 0;
+                    return (
+                      <div key={g.range} className="grade-card" style={{ textAlign: 'center', padding: '8px 4px', border: '1px solid #ddd', borderRadius: '6px', backgroundColor: '#fff' }}>
+                        <div style={{ fontSize: '12px', fontWeight: 700, color: GRADE_COLORS[g.range as keyof typeof GRADE_COLORS] }}>{g.range}</div>
+                        <div style={{ fontSize: '16px', fontWeight: 700, color: '#1a1a1a' }}>{g.count}</div>
+                        <div style={{ fontSize: '9px', color: '#666' }}>{percentage}%</div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Top Performers & At-Risk */}
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '12px', marginBottom: '12px', pageBreakInside: 'avoid' }}>
+                <div style={{ padding: '10px', borderRadius: '6px', backgroundColor: '#dcfce7', border: '1px solid #86efac' }}>
+                  <h4 style={{ fontSize: '11px', fontWeight: 600, color: '#16a34a', marginBottom: '6px' }}>Top Performers ({topPerformers.length})</h4>
+                  {topPerformers.map((s, i) => (
+                    <div key={s.id} style={{ display: 'flex', justifyContent: 'space-between', padding: '3px 6px', fontSize: '9px', borderBottom: '1px solid #86efac40' }}>
+                      <span>{i + 1}. {s.name}</span>
+                      <span style={{ fontWeight: 600 }}>{s.score}%</span>
+                    </div>
+                  ))}
+                  {topPerformers.length === 0 && <p style={{ fontSize: '9px', color: '#666' }}>No students</p>}
+                </div>
+                <div style={{ padding: '10px', borderRadius: '6px', backgroundColor: '#fee2e2', border: '1px solid #fca5a5' }}>
+                  <h4 style={{ fontSize: '11px', fontWeight: 600, color: '#dc2626', marginBottom: '6px' }}>At-Risk Students ({atRiskStudents.length})</h4>
+                  {atRiskStudents.map((s, i) => (
+                    <div key={s.id} style={{ display: 'flex', justifyContent: 'space-between', padding: '3px 6px', fontSize: '9px', borderBottom: '1px solid #fca5a540' }}>
+                      <span>{i + 1}. {s.name}</span>
+                      <span style={{ fontWeight: 600 }}>{s.score}%</span>
+                    </div>
+                  ))}
+                  {atRiskStudents.length === 0 && <p style={{ fontSize: '9px', color: '#666' }}>No students</p>}
+                </div>
+              </div>
+
+              {/* Footer */}
+              <div className="footer" style={{ textAlign: 'center', fontSize: '8px', color: '#666', marginTop: '15px', paddingTop: '8px', borderTop: '1px solid #ddd' }}>
+                <p>This report was generated automatically by the School Management System</p>
+                <p>© {new Date().getFullYear()} All Rights Reserved</p>
+              </div>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Trends Report Dialog */}
+      <Dialog open={trendsReportDialogOpen} onOpenChange={setTrendsReportDialogOpen}>
+        <DialogContent className="w-[95vw] max-w-3xl h-[90vh] rounded-2xl overflow-hidden flex flex-col">
+          <DialogHeader className="flex flex-row items-center justify-between pr-12">
+            <DialogTitle>Trends Report</DialogTitle>
+            <Button
+              variant="outline"
+              size="sm"
+              className="gap-2"
+              onClick={() => {
+                if (trendsReportRef.current) {
+                  const printWindow = window.open('', '_blank');
+                  if (printWindow) {
+                    printWindow.document.write(`
+                      <!DOCTYPE html>
+                      <html>
+                        <head>
+                          <title>Trends Report - Class ${selectedClass}</title>
+                          <style>
+                            @page { size: A4 portrait; margin: 15mm; }
+                            * { box-sizing: border-box; margin: 0; padding: 0; }
+                            body { 
+                              font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; 
+                              font-size: 10px; 
+                              line-height: 1.4; 
+                              color: #1a1a1a;
+                              padding: 10px;
+                            }
+                            .report-header { 
+                              display: flex !important; 
+                              align-items: center !important; 
+                              gap: 12px !important; 
+                              margin-bottom: 15px !important; 
+                              padding-bottom: 10px !important; 
+                              border-bottom: 2px solid #22c55e !important; 
+                            }
+                            .school-logo { width: 40px !important; height: 40px !important; object-fit: contain !important; }
+                            .section { margin-bottom: 12px; page-break-inside: avoid; }
+                            .section-title { font-size: 12px; font-weight: 600; margin-bottom: 8px; padding-bottom: 4px; border-bottom: 1px solid #ddd; }
+                            .trend-grid { display: grid !important; grid-template-columns: repeat(2, 1fr) !important; gap: 10px !important; }
+                            .trend-card { padding: 10px; border: 1px solid #ddd; border-radius: 6px; background: #fff; }
+                            .subject-row { display: flex; justify-content: space-between; padding: 4px 8px; border-bottom: 1px solid #eee; font-size: 10px; }
+                            .heatmap-row { display: flex; gap: 4px; margin-bottom: 4px; }
+                            .heatmap-cell { width: 40px; height: 24px; display: flex; align-items: center; justify-content: center; font-size: 9px; font-weight: 600; color: white; border-radius: 3px; }
+                            .footer { text-align: center !important; font-size: 8px !important; color: #666 !important; margin-top: 15px !important; padding-top: 8px !important; border-top: 1px solid #ddd !important; }
+                            @media print { body { padding: 0 !important; margin: 0 !important; } .no-print { display: none !important; } }
+                          </style>
+                        </head>
+                        <body>
+                          ${trendsReportRef.current.innerHTML}
+                        </body>
+                      </html>
+                    `);
+                    printWindow.document.close();
+                    printWindow.print();
+                  }
+                }
+              }}
+            >
+              <Printer className="h-4 w-4" />
+              Print / Save PDF
+            </Button>
+          </DialogHeader>
+          
+          <div className="flex-1 overflow-y-auto" ref={trendsReportRef}>
+            <div className="space-y-4 p-2">
+              {/* Report Header */}
+              <div className="report-header" style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '15px', paddingBottom: '10px', borderBottom: '2px solid #22c55e' }}>
+                <img src={schoolLogo} alt="School Logo" className="school-logo" style={{ width: '40px', height: '40px', objectFit: 'contain' }} />
+                <div style={{ textAlign: 'left' }}>
+                  <h1 style={{ fontSize: '16px', fontWeight: 700, margin: '0 0 2px 0' }}>Performance Trends Report</h1>
+                  <p style={{ fontSize: '10px', color: '#666', margin: 0 }}>Class {selectedClass} - Historical Performance Analysis</p>
+                  <p style={{ fontSize: '9px', color: '#888', margin: '2px 0 0 0' }}>
+                    Generated on {new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}
+                    {' • '}Period: {trendPeriod === '1year' ? 'Last 1 Year' : trendPeriod === '2years' ? 'Last 2 Years' : trendPeriod === '3years' ? 'Last 3 Years' : 'All Years'}
+                  </p>
+                </div>
+              </div>
+
+              {/* Current Performance Summary */}
+              <div className="section" style={{ marginBottom: '12px', pageBreakInside: 'avoid' }}>
+                <h3 style={{ fontSize: '12px', fontWeight: 600, marginBottom: '8px', paddingBottom: '4px', borderBottom: '1px solid #ddd' }}>Current Performance</h3>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '10px' }}>
+                  <div style={{ padding: '10px', borderRadius: '6px', backgroundColor: trendDirection.direction === 'up' ? '#dcfce7' : trendDirection.direction === 'down' ? '#fee2e2' : '#f3f4f6', border: '1px solid #ddd', textAlign: 'center' }}>
+                    <div style={{ fontSize: '20px', fontWeight: 700, color: '#1a1a1a' }}>{trendDirection.currentValue}%</div>
+                    <div style={{ fontSize: '9px', color: '#666' }}>{subjectFilter === 'all' ? 'Class Average' : subjectFilter}</div>
+                    <div style={{ fontSize: '10px', fontWeight: 600, color: trendDirection.direction === 'up' ? '#22c55e' : trendDirection.direction === 'down' ? '#ef4444' : '#6b7280', marginTop: '4px' }}>
+                      {trendDirection.direction === 'up' ? '↑' : trendDirection.direction === 'down' ? '↓' : '→'} {trendDirection.change}%
+                    </div>
+                  </div>
+                  <div style={{ padding: '10px', borderRadius: '6px', backgroundColor: '#dcfce7', border: '1px solid #86efac', textAlign: 'center' }}>
+                    <div style={{ fontSize: '14px', fontWeight: 700, color: '#22c55e' }}>{risingSubjects.length}</div>
+                    <div style={{ fontSize: '9px', color: '#666' }}>Rising Subjects</div>
+                  </div>
+                  <div style={{ padding: '10px', borderRadius: '6px', backgroundColor: '#fee2e2', border: '1px solid #fca5a5', textAlign: 'center' }}>
+                    <div style={{ fontSize: '14px', fontWeight: 700, color: '#ef4444' }}>{fallingSubjects.length}</div>
+                    <div style={{ fontSize: '9px', color: '#666' }}>Needs Focus</div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Rising & Falling Subjects */}
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '12px', marginBottom: '12px', pageBreakInside: 'avoid' }}>
+                <div style={{ padding: '10px', borderRadius: '6px', backgroundColor: '#dcfce7', border: '1px solid #86efac' }}>
+                  <h4 style={{ fontSize: '11px', fontWeight: 600, color: '#16a34a', marginBottom: '6px' }}>Rising Subjects</h4>
+                  {risingSubjects.length > 0 ? risingSubjects.map((item, i) => (
+                    <div key={i} style={{ display: 'flex', justifyContent: 'space-between', padding: '4px 6px', fontSize: '9px', borderBottom: '1px solid #86efac40' }}>
+                      <span>{item.name}</span>
+                      <span style={{ fontWeight: 600, color: '#22c55e' }}>+{item.improvement}% ({item.first}% → {item.last}%)</span>
+                    </div>
+                  )) : <p style={{ fontSize: '9px', color: '#666' }}>No improving subjects</p>}
+                </div>
+                <div style={{ padding: '10px', borderRadius: '6px', backgroundColor: '#fee2e2', border: '1px solid #fca5a5' }}>
+                  <h4 style={{ fontSize: '11px', fontWeight: 600, color: '#dc2626', marginBottom: '6px' }}>Needs Focus</h4>
+                  {fallingSubjects.length > 0 ? fallingSubjects.map((item, i) => (
+                    <div key={i} style={{ display: 'flex', justifyContent: 'space-between', padding: '4px 6px', fontSize: '9px', borderBottom: '1px solid #fca5a540' }}>
+                      <span>{item.name}</span>
+                      <span style={{ fontWeight: 600, color: '#ef4444' }}>-{item.decline}% ({item.first}% → {item.last}%)</span>
+                    </div>
+                  )) : <p style={{ fontSize: '9px', color: '#666' }}>All subjects stable</p>}
+                </div>
+              </div>
+
+              {/* Historical Data Table */}
+              <div className="section" style={{ marginBottom: '12px', pageBreakInside: 'avoid' }}>
+                <h3 style={{ fontSize: '12px', fontWeight: 600, marginBottom: '8px', paddingBottom: '4px', borderBottom: '1px solid #ddd' }}>Historical Performance Data</h3>
+                <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '9px' }}>
+                  <thead>
+                    <tr style={{ backgroundColor: '#f5f5f5' }}>
+                      <th style={{ padding: '6px 8px', borderBottom: '1px solid #ddd', textAlign: 'left' }}>Period</th>
+                      <th style={{ padding: '6px 8px', borderBottom: '1px solid #ddd', textAlign: 'right' }}>Average</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {trendData.map((item, idx) => (
+                      <tr key={idx} style={{ backgroundColor: idx % 2 === 0 ? '#fff' : '#f9f9f9' }}>
+                        <td style={{ padding: '5px 8px', borderBottom: '1px solid #eee' }}>{item.period}</td>
+                        <td style={{ padding: '5px 8px', borderBottom: '1px solid #eee', textAlign: 'right', fontWeight: 600 }}>{item.Average}%</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Performance Heatmap */}
+              <div className="section" style={{ marginBottom: '12px', pageBreakInside: 'avoid' }}>
+                <h3 style={{ fontSize: '12px', fontWeight: 600, marginBottom: '8px', paddingBottom: '4px', borderBottom: '1px solid #ddd' }}>Performance Heatmap</h3>
+                <div style={{ overflowX: 'auto' }}>
+                  <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '9px' }}>
+                    <thead>
+                      <tr style={{ backgroundColor: '#f5f5f5' }}>
+                        <th style={{ padding: '4px 6px', borderBottom: '1px solid #ddd', textAlign: 'left', minWidth: '80px' }}>Subject</th>
+                        {heatmapData[0]?.scores.map(s => (
+                          <th key={s.period} style={{ padding: '4px 6px', borderBottom: '1px solid #ddd', textAlign: 'center', minWidth: '40px' }}>{s.period}</th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {heatmapData.map((row, idx) => (
+                        <tr key={row.subject} style={{ backgroundColor: idx % 2 === 0 ? '#fff' : '#f9f9f9' }}>
+                          <td style={{ padding: '4px 6px', borderBottom: '1px solid #eee', fontWeight: 500 }}>{row.fullName}</td>
+                          {row.scores.map((cell, cellIdx) => (
+                            <td 
+                              key={cellIdx} 
+                              style={{ 
+                                padding: '4px 6px', 
+                                borderBottom: '1px solid #eee', 
+                                textAlign: 'center',
+                                fontWeight: 600,
+                                color: cell.score ? (cell.score >= 80 ? '#22c55e' : cell.score >= 50 ? '#3b82f6' : '#ef4444') : '#999'
+                              }}
+                            >
+                              {cell.score ?? '-'}
+                            </td>
+                          ))}
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              {/* Insight */}
+              <div style={{ padding: '10px', borderRadius: '6px', backgroundColor: '#f3f4f6', border: '1px solid #ddd', marginBottom: '12px' }}>
+                <p style={{ fontSize: '10px', color: '#1a1a1a' }}>
+                  <strong>Insight:</strong>{' '}
+                  {risingSubjects.length > 0 && <>{risingSubjects[0].name} shows great improvement (+{risingSubjects[0].improvement}%). </>}
+                  {fallingSubjects.length > 0 && <>Focus more on {fallingSubjects[0].name} which dropped {fallingSubjects[0].decline}%. </>}
+                  {risingSubjects.length === 0 && fallingSubjects.length === 0 && <>Performance is stable across all subjects for Class {selectedClass}.</>}
+                </p>
+              </div>
+
+              {/* Footer */}
+              <div className="footer" style={{ textAlign: 'center', fontSize: '8px', color: '#666', marginTop: '15px', paddingTop: '8px', borderTop: '1px solid #ddd' }}>
+                <p>This report was generated automatically by the School Management System</p>
+                <p>© {new Date().getFullYear()} All Rights Reserved</p>
+              </div>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Comparison Report Dialog */}
+      <Dialog open={comparisonReportDialogOpen} onOpenChange={setComparisonReportDialogOpen}>
+        <DialogContent className="w-[95vw] max-w-3xl h-[90vh] rounded-2xl overflow-hidden flex flex-col">
+          <DialogHeader className="flex flex-row items-center justify-between pr-12">
+            <DialogTitle>Comparison Report</DialogTitle>
+            <Button
+              variant="outline"
+              size="sm"
+              className="gap-2"
+              onClick={() => {
+                if (comparisonReportRef.current) {
+                  const printWindow = window.open('', '_blank');
+                  if (printWindow) {
+                    printWindow.document.write(`
+                      <!DOCTYPE html>
+                      <html>
+                        <head>
+                          <title>Comparison Report</title>
+                          <style>
+                            @page { size: A4 portrait; margin: 15mm; }
+                            * { box-sizing: border-box; margin: 0; padding: 0; }
+                            body { 
+                              font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; 
+                              font-size: 10px; 
+                              line-height: 1.4; 
+                              color: #1a1a1a;
+                              padding: 10px;
+                            }
+                            .report-header { 
+                              display: flex !important; 
+                              align-items: center !important; 
+                              gap: 12px !important; 
+                              margin-bottom: 15px !important; 
+                              padding-bottom: 10px !important; 
+                              border-bottom: 2px solid #8b5cf6 !important; 
+                            }
+                            .school-logo { width: 40px !important; height: 40px !important; object-fit: contain !important; }
+                            .section { margin-bottom: 12px; page-break-inside: avoid; }
+                            .section-title { font-size: 12px; font-weight: 600; margin-bottom: 8px; padding-bottom: 4px; border-bottom: 1px solid #ddd; }
+                            .comparison-grid { display: grid !important; grid-template-columns: repeat(2, 1fr) !important; gap: 10px !important; }
+                            .comparison-box { padding: 10px; border: 1px solid #ddd; border-radius: 6px; }
+                            .comparison-box.blue { border-color: #3b82f6; background: #eff6ff; }
+                            .comparison-box.red { border-color: #ef4444; background: #fef2f2; }
+                            table { width: 100% !important; border-collapse: collapse !important; font-size: 9px !important; }
+                            th, td { padding: 5px 8px !important; border-bottom: 1px solid #ddd !important; }
+                            th { background: #f5f5f5 !important; font-weight: 600 !important; }
+                            .footer { text-align: center !important; font-size: 8px !important; color: #666 !important; margin-top: 15px !important; padding-top: 8px !important; border-top: 1px solid #ddd !important; }
+                            @media print { body { padding: 0 !important; margin: 0 !important; } .no-print { display: none !important; } }
+                          </style>
+                        </head>
+                        <body>
+                          ${comparisonReportRef.current.innerHTML}
+                        </body>
+                      </html>
+                    `);
+                    printWindow.document.close();
+                    printWindow.print();
+                  }
+                }
+              }}
+            >
+              <Printer className="h-4 w-4" />
+              Print / Save PDF
+            </Button>
+          </DialogHeader>
+          
+          <div className="flex-1 overflow-y-auto" ref={comparisonReportRef}>
+            {(() => {
+              const examAKey = `${examAYear}-${examAPeriod}`;
+              const examBKey = `${examBYear}-${examBPeriod}`;
+              const subjectDataA = subjectExamData[examAClass as keyof typeof subjectExamData]?.[examAKey];
+              const subjectDataB = subjectExamData[examBClass as keyof typeof subjectExamData]?.[examBKey];
+              
+              const getExamLabelForReport = (cls: string, year: string, period: string) => {
+                const periodLabel = period === "midYear" ? "Mid-Year" : "Year-End";
+                return `${cls} ${periodLabel} ${year}`;
+              };
+              
+              const examALabel = getExamLabelForReport(examAClass, examAYear, examAPeriod);
+              const examBLabel = getExamLabelForReport(examBClass, examBYear, examBPeriod);
+              
+              if (!subjectDataA || !subjectDataB) {
+                return (
+                  <div className="p-8 text-center">
+                    <p className="text-muted-foreground">No data available for the selected exam periods</p>
+                  </div>
+                );
+              }
+              
+              const comparisonData = compareSubjects.map(subjectName => {
+                const scoreA = subjectDataA[subjectName] ?? 0;
+                const scoreB = subjectDataB[subjectName] ?? 0;
+                const delta = scoreA - scoreB;
+                return { name: subjectName, examA: scoreA, examB: scoreB, delta, improved: delta > 0 };
+              });
+              
+              const avgA = comparisonData.length > 0 ? Math.round(comparisonData.reduce((sum, d) => sum + d.examA, 0) / comparisonData.length) : 0;
+              const avgB = comparisonData.length > 0 ? Math.round(comparisonData.reduce((sum, d) => sum + d.examB, 0) / comparisonData.length) : 0;
+              const avgDelta = avgA - avgB;
+              const improved = comparisonData.filter(d => d.delta > 0).length;
+              const declined = comparisonData.filter(d => d.delta < 0).length;
+              const unchanged = comparisonData.filter(d => d.delta === 0).length;
+              
+              return (
+                <div className="space-y-4 p-2">
+                  {/* Report Header */}
+                  <div className="report-header" style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '15px', paddingBottom: '10px', borderBottom: '2px solid #8b5cf6' }}>
+                    <img src={schoolLogo} alt="School Logo" className="school-logo" style={{ width: '40px', height: '40px', objectFit: 'contain' }} />
+                    <div style={{ textAlign: 'left' }}>
+                      <h1 style={{ fontSize: '16px', fontWeight: 700, margin: '0 0 2px 0' }}>Exam Comparison Report</h1>
+                      <p style={{ fontSize: '10px', color: '#666', margin: 0 }}>{examALabel} vs {examBLabel}</p>
+                      <p style={{ fontSize: '9px', color: '#888', margin: '2px 0 0 0' }}>
+                        Generated on {new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Summary Comparison */}
+                  <div className="section" style={{ marginBottom: '12px', pageBreakInside: 'avoid' }}>
+                    <h3 style={{ fontSize: '12px', fontWeight: 600, marginBottom: '8px', paddingBottom: '4px', borderBottom: '1px solid #ddd' }}>Summary Comparison</h3>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '12px' }}>
+                      <div style={{ padding: '12px', borderRadius: '6px', backgroundColor: '#eff6ff', border: '1px solid #3b82f6' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '8px' }}>
+                          <div style={{ width: '10px', height: '10px', borderRadius: '50%', backgroundColor: '#3b82f6' }} />
+                          <span style={{ fontSize: '10px', fontWeight: 600, color: '#1d4ed8' }}>Exam A</span>
+                        </div>
+                        <p style={{ fontSize: '9px', color: '#666', marginBottom: '4px' }}>{examALabel}</p>
+                        <div style={{ fontSize: '24px', fontWeight: 700, color: '#1a1a1a' }}>{avgA}%</div>
+                        <p style={{ fontSize: '9px', color: '#666' }}>Average Score</p>
+                      </div>
+                      <div style={{ padding: '12px', borderRadius: '6px', backgroundColor: '#fef2f2', border: '1px solid #ef4444' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '8px' }}>
+                          <div style={{ width: '10px', height: '10px', borderRadius: '50%', backgroundColor: '#ef4444' }} />
+                          <span style={{ fontSize: '10px', fontWeight: 600, color: '#dc2626' }}>Exam B</span>
+                        </div>
+                        <p style={{ fontSize: '9px', color: '#666', marginBottom: '4px' }}>{examBLabel}</p>
+                        <div style={{ fontSize: '24px', fontWeight: 700, color: '#1a1a1a' }}>{avgB}%</div>
+                        <p style={{ fontSize: '9px', color: '#666' }}>Average Score</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Change Summary */}
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '8px', marginBottom: '12px', pageBreakInside: 'avoid' }}>
+                    <div style={{ padding: '10px', borderRadius: '6px', backgroundColor: avgDelta > 0 ? '#dcfce7' : avgDelta < 0 ? '#fee2e2' : '#f3f4f6', border: '1px solid #ddd', textAlign: 'center' }}>
+                      <div style={{ fontSize: '16px', fontWeight: 700, color: avgDelta > 0 ? '#22c55e' : avgDelta < 0 ? '#ef4444' : '#6b7280' }}>
+                        {avgDelta > 0 ? '+' : ''}{avgDelta}%
+                      </div>
+                      <div style={{ fontSize: '8px', color: '#666' }}>Overall Change</div>
+                    </div>
+                    <div style={{ padding: '10px', borderRadius: '6px', backgroundColor: '#dcfce7', border: '1px solid #86efac', textAlign: 'center' }}>
+                      <div style={{ fontSize: '16px', fontWeight: 700, color: '#22c55e' }}>{improved}</div>
+                      <div style={{ fontSize: '8px', color: '#666' }}>Improved</div>
+                    </div>
+                    <div style={{ padding: '10px', borderRadius: '6px', backgroundColor: '#fee2e2', border: '1px solid #fca5a5', textAlign: 'center' }}>
+                      <div style={{ fontSize: '16px', fontWeight: 700, color: '#ef4444' }}>{declined}</div>
+                      <div style={{ fontSize: '8px', color: '#666' }}>Declined</div>
+                    </div>
+                    <div style={{ padding: '10px', borderRadius: '6px', backgroundColor: '#f3f4f6', border: '1px solid #ddd', textAlign: 'center' }}>
+                      <div style={{ fontSize: '16px', fontWeight: 700, color: '#6b7280' }}>{unchanged}</div>
+                      <div style={{ fontSize: '8px', color: '#666' }}>Unchanged</div>
+                    </div>
+                  </div>
+
+                  {/* Subject-by-Subject Comparison */}
+                  <div className="section" style={{ marginBottom: '12px', pageBreakInside: 'avoid' }}>
+                    <h3 style={{ fontSize: '12px', fontWeight: 600, marginBottom: '8px', paddingBottom: '4px', borderBottom: '1px solid #ddd' }}>Subject Comparison</h3>
+                    <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '9px' }}>
+                      <thead>
+                        <tr style={{ backgroundColor: '#f5f5f5' }}>
+                          <th style={{ padding: '6px 8px', borderBottom: '1px solid #ddd', textAlign: 'left' }}>Subject</th>
+                          <th style={{ padding: '6px 8px', borderBottom: '1px solid #ddd', textAlign: 'center' }}>Exam A</th>
+                          <th style={{ padding: '6px 8px', borderBottom: '1px solid #ddd', textAlign: 'center' }}>Exam B</th>
+                          <th style={{ padding: '6px 8px', borderBottom: '1px solid #ddd', textAlign: 'center' }}>Change</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {comparisonData.map((item, idx) => (
+                          <tr key={item.name} style={{ backgroundColor: idx % 2 === 0 ? '#fff' : '#f9f9f9' }}>
+                            <td style={{ padding: '5px 8px', borderBottom: '1px solid #eee', fontWeight: 500 }}>{item.name}</td>
+                            <td style={{ padding: '5px 8px', borderBottom: '1px solid #eee', textAlign: 'center' }}>{item.examA}%</td>
+                            <td style={{ padding: '5px 8px', borderBottom: '1px solid #eee', textAlign: 'center' }}>{item.examB}%</td>
+                            <td style={{ 
+                              padding: '5px 8px', 
+                              borderBottom: '1px solid #eee', 
+                              textAlign: 'center', 
+                              fontWeight: 600,
+                              color: item.delta > 0 ? '#22c55e' : item.delta < 0 ? '#ef4444' : '#6b7280'
+                            }}>
+                              {item.delta > 0 ? '+' : ''}{item.delta}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+
+                  {/* Insight */}
+                  <div style={{ padding: '10px', borderRadius: '6px', backgroundColor: '#f3f4f6', border: '1px solid #ddd', marginBottom: '12px' }}>
+                    <p style={{ fontSize: '10px', color: '#1a1a1a' }}>
+                      <strong>Insight:</strong>{' '}
+                      {avgDelta > 0 
+                        ? `Overall improvement of +${avgDelta}% from ${examBLabel} to ${examALabel}. ${improved} subjects improved, ${declined} declined.`
+                        : avgDelta < 0 
+                          ? `Overall decline of ${avgDelta}% from ${examBLabel} to ${examALabel}. Focus needed on declining subjects.`
+                          : 'Performance remained stable between the two periods.'}
+                    </p>
+                  </div>
+
+                  {/* Footer */}
+                  <div className="footer" style={{ textAlign: 'center', fontSize: '8px', color: '#666', marginTop: '15px', paddingTop: '8px', borderTop: '1px solid #ddd' }}>
+                    <p>This report was generated automatically by the School Management System</p>
+                    <p>© {new Date().getFullYear()} All Rights Reserved</p>
+                  </div>
+                </div>
+              );
+            })()}
+          </div>
+        </DialogContent>
+      </Dialog>
     </TeacherAppLayout>;
 }
 
