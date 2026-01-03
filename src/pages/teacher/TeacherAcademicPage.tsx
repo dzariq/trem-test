@@ -9,7 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Save, TrendingUp, TrendingDown, Minus, ChevronDown, ChevronUp, Users, Target, Award, AlertTriangle, BookOpen, BarChart3, FileText, CheckCircle, XCircle, Lightbulb, Copy, Printer, ArrowRight, ArrowUpRight, ArrowDownRight, Scale, Download, FileSpreadsheet, Check, Calendar, UserCheck } from "lucide-react";
+import { Save, TrendingUp, TrendingDown, Minus, ChevronDown, ChevronUp, Users, Target, Award, AlertTriangle, BookOpen, BarChart3, FileText, CheckCircle, XCircle, Lightbulb, Copy, Printer, ArrowRight, ArrowUpRight, ArrowDownRight, Scale, Download, FileSpreadsheet, Check, Calendar, UserCheck, Plus, X } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { toast } from "@/hooks/use-toast";
 import schoolLogo from "@/assets/school-badge.png";
@@ -137,19 +137,28 @@ export default function TeacherAcademicPage() {
     responsibilityComment: string;
   }>>({});
   
-  // Awards state
-  const [awardsData, setAwardsData] = useState<Record<string, {
-    sportsHouseOrg: string;
-    sportsHouseRole: string;
-    clubOrg: string;
-    clubRole: string;
-    leadershipOrg: string;
-    leadershipRole: string;
-    eventsOrg: string;
-    eventsRole: string;
-    achievementEvent: string;
-    achievementAward: string;
-  }>>({}); 
+  // Awards state - now supporting multiple entries per category
+  interface AwardEntry {
+    id: string;
+    organization: string;
+    role: string;
+  }
+  
+  interface AchievementEntry {
+    id: string;
+    event: string;
+    award: string;
+  }
+  
+  interface StudentAwardsData {
+    sportsHouse: AwardEntry[];
+    clubs: AwardEntry[];
+    leadership: AwardEntry[];
+    events: AwardEntry[];
+    achievements: AchievementEntry[];
+  }
+  
+  const [awardsData, setAwardsData] = useState<Record<string, StudentAwardsData>>({});
 
   // Award dropdown options
   const sportsHouseOptions = ["None", "Basketball", "Football", "Volleyball", "Badminton", "Swimming", "Track & Field", "Tennis"];
@@ -319,27 +328,86 @@ export default function TeacherAcademicPage() {
     }));
   };
   
-  const getStudentAwards = (studentId: string) => {
+  const getStudentAwards = (studentId: string): StudentAwardsData => {
     return awardsData[studentId] || { 
-      sportsHouseOrg: "",
-      sportsHouseRole: "",
-      clubOrg: "",
-      clubRole: "",
-      leadershipOrg: "",
-      leadershipRole: "",
-      eventsOrg: "",
-      eventsRole: "",
-      achievementEvent: "",
-      achievementAward: ""
+      sportsHouse: [],
+      clubs: [],
+      leadership: [],
+      events: [],
+      achievements: []
     };
   };
   
-  const updateAwards = (studentId: string, field: string, value: string) => {
+  const generateId = () => Math.random().toString(36).substr(2, 9);
+  
+  const addAwardEntry = (studentId: string, category: keyof Omit<StudentAwardsData, 'achievements'>) => {
+    const currentAwards = getStudentAwards(studentId);
+    const newEntry: AwardEntry = { id: generateId(), organization: "None", role: "None" };
     setAwardsData(prev => ({
       ...prev,
       [studentId]: {
-        ...getStudentAwards(studentId),
-        [field]: value
+        ...currentAwards,
+        [category]: [...currentAwards[category], newEntry]
+      }
+    }));
+  };
+  
+  const addAchievementEntry = (studentId: string) => {
+    const currentAwards = getStudentAwards(studentId);
+    const newEntry: AchievementEntry = { id: generateId(), event: "None", award: "None" };
+    setAwardsData(prev => ({
+      ...prev,
+      [studentId]: {
+        ...currentAwards,
+        achievements: [...currentAwards.achievements, newEntry]
+      }
+    }));
+  };
+  
+  const updateAwardEntry = (studentId: string, category: keyof Omit<StudentAwardsData, 'achievements'>, entryId: string, field: 'organization' | 'role', value: string) => {
+    const currentAwards = getStudentAwards(studentId);
+    setAwardsData(prev => ({
+      ...prev,
+      [studentId]: {
+        ...currentAwards,
+        [category]: currentAwards[category].map(entry => 
+          entry.id === entryId ? { ...entry, [field]: value } : entry
+        )
+      }
+    }));
+  };
+  
+  const updateAchievementEntry = (studentId: string, entryId: string, field: 'event' | 'award', value: string) => {
+    const currentAwards = getStudentAwards(studentId);
+    setAwardsData(prev => ({
+      ...prev,
+      [studentId]: {
+        ...currentAwards,
+        achievements: currentAwards.achievements.map(entry => 
+          entry.id === entryId ? { ...entry, [field]: value } : entry
+        )
+      }
+    }));
+  };
+  
+  const removeAwardEntry = (studentId: string, category: keyof Omit<StudentAwardsData, 'achievements'>, entryId: string) => {
+    const currentAwards = getStudentAwards(studentId);
+    setAwardsData(prev => ({
+      ...prev,
+      [studentId]: {
+        ...currentAwards,
+        [category]: currentAwards[category].filter(entry => entry.id !== entryId)
+      }
+    }));
+  };
+  
+  const removeAchievementEntry = (studentId: string, entryId: string) => {
+    const currentAwards = getStudentAwards(studentId);
+    setAwardsData(prev => ({
+      ...prev,
+      [studentId]: {
+        ...currentAwards,
+        achievements: currentAwards.achievements.filter(entry => entry.id !== entryId)
       }
     }));
   };
@@ -1120,216 +1188,331 @@ export default function TeacherAcademicPage() {
                   <div className="space-y-3">
                     {/* Sports House */}
                     <Card className="bg-amber-50 border-amber-200 overflow-hidden">
-                      <CardHeader className="p-3 pb-2" style={{ background: 'linear-gradient(135deg, #fef3c7 0%, #fcd34d 50%, #f59e0b 100%)' }}>
+                      <CardHeader className="p-3 pb-2 flex flex-row items-center justify-between" style={{ background: 'linear-gradient(135deg, #fef3c7 0%, #fcd34d 50%, #f59e0b 100%)' }}>
                         <CardTitle className="text-sm font-semibold text-amber-800">Sports House</CardTitle>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          className="h-7 px-2 text-amber-800 hover:bg-amber-200/50"
+                          onClick={() => addAwardEntry(selectedStudent, "sportsHouse")}
+                        >
+                          <Plus className="h-4 w-4 mr-1" />
+                          Add
+                        </Button>
                       </CardHeader>
-                      <CardContent className="p-3">
-                        <div className="grid grid-cols-2 gap-3">
-                          <div className="space-y-1">
-                            <label className="text-xs text-amber-700 font-medium">Organization</label>
-                            <Select 
-                              value={getStudentAwards(selectedStudent).sportsHouseOrg || "None"} 
-                              onValueChange={(v) => updateAwards(selectedStudent, "sportsHouseOrg", v)}
-                            >
-                              <SelectTrigger className="bg-background/80 border-amber-200">
-                                <SelectValue />
-                              </SelectTrigger>
-                              <SelectContent className="bg-background z-50">
-                                {sportsHouseOptions.map(opt => (
-                                  <SelectItem key={opt} value={opt}>{opt}</SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
-                          </div>
-                          <div className="space-y-1">
-                            <label className="text-xs text-amber-700 font-medium">Role & Responsibility</label>
-                            <Select 
-                              value={getStudentAwards(selectedStudent).sportsHouseRole || "None"} 
-                              onValueChange={(v) => updateAwards(selectedStudent, "sportsHouseRole", v)}
-                            >
-                              <SelectTrigger className="bg-background/80 border-amber-200">
-                                <SelectValue />
-                              </SelectTrigger>
-                              <SelectContent className="bg-background z-50">
-                                {roleOptions.map(opt => (
-                                  <SelectItem key={opt} value={opt}>{opt}</SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
-                          </div>
-                        </div>
+                      <CardContent className="p-3 space-y-2">
+                        {getStudentAwards(selectedStudent).sportsHouse.length === 0 ? (
+                          <p className="text-xs text-muted-foreground text-center py-2">No entries. Click "Add" to add one.</p>
+                        ) : (
+                          getStudentAwards(selectedStudent).sportsHouse.map((entry, index) => (
+                            <div key={entry.id} className="grid grid-cols-[1fr_1fr_auto] gap-2 items-end">
+                              <div className="space-y-1">
+                                <label className="text-xs text-amber-700 font-medium">Organization</label>
+                                <Select 
+                                  value={entry.organization} 
+                                  onValueChange={(v) => updateAwardEntry(selectedStudent, "sportsHouse", entry.id, "organization", v)}
+                                >
+                                  <SelectTrigger className="bg-background/80 border-amber-200">
+                                    <SelectValue />
+                                  </SelectTrigger>
+                                  <SelectContent className="bg-background z-50">
+                                    {sportsHouseOptions.map(opt => (
+                                      <SelectItem key={opt} value={opt}>{opt}</SelectItem>
+                                    ))}
+                                  </SelectContent>
+                                </Select>
+                              </div>
+                              <div className="space-y-1">
+                                <label className="text-xs text-amber-700 font-medium">Role</label>
+                                <Select 
+                                  value={entry.role} 
+                                  onValueChange={(v) => updateAwardEntry(selectedStudent, "sportsHouse", entry.id, "role", v)}
+                                >
+                                  <SelectTrigger className="bg-background/80 border-amber-200">
+                                    <SelectValue />
+                                  </SelectTrigger>
+                                  <SelectContent className="bg-background z-50">
+                                    {roleOptions.map(opt => (
+                                      <SelectItem key={opt} value={opt}>{opt}</SelectItem>
+                                    ))}
+                                  </SelectContent>
+                                </Select>
+                              </div>
+                              <Button
+                                size="icon"
+                                variant="ghost"
+                                className="h-9 w-9 text-red-500 hover:bg-red-100"
+                                onClick={() => removeAwardEntry(selectedStudent, "sportsHouse", entry.id)}
+                              >
+                                <X className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          ))
+                        )}
                       </CardContent>
                     </Card>
 
                     {/* Club */}
                     <Card className="bg-amber-50 border-amber-200 overflow-hidden">
-                      <CardHeader className="p-3 pb-2" style={{ background: 'linear-gradient(135deg, #fef3c7 0%, #fcd34d 50%, #f59e0b 100%)' }}>
+                      <CardHeader className="p-3 pb-2 flex flex-row items-center justify-between" style={{ background: 'linear-gradient(135deg, #fef3c7 0%, #fcd34d 50%, #f59e0b 100%)' }}>
                         <CardTitle className="text-sm font-semibold text-amber-800">Club</CardTitle>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          className="h-7 px-2 text-amber-800 hover:bg-amber-200/50"
+                          onClick={() => addAwardEntry(selectedStudent, "clubs")}
+                        >
+                          <Plus className="h-4 w-4 mr-1" />
+                          Add
+                        </Button>
                       </CardHeader>
-                      <CardContent className="p-3">
-                        <div className="grid grid-cols-2 gap-3">
-                          <div className="space-y-1">
-                            <label className="text-xs text-amber-700 font-medium">Organization</label>
-                            <Select 
-                              value={getStudentAwards(selectedStudent).clubOrg || "None"} 
-                              onValueChange={(v) => updateAwards(selectedStudent, "clubOrg", v)}
-                            >
-                              <SelectTrigger className="bg-background/80 border-amber-200">
-                                <SelectValue />
-                              </SelectTrigger>
-                              <SelectContent className="bg-background z-50">
-                                {clubOptions.map(opt => (
-                                  <SelectItem key={opt} value={opt}>{opt}</SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
-                          </div>
-                          <div className="space-y-1">
-                            <label className="text-xs text-amber-700 font-medium">Role & Responsibility</label>
-                            <Select 
-                              value={getStudentAwards(selectedStudent).clubRole || "None"} 
-                              onValueChange={(v) => updateAwards(selectedStudent, "clubRole", v)}
-                            >
-                              <SelectTrigger className="bg-background/80 border-amber-200">
-                                <SelectValue />
-                              </SelectTrigger>
-                              <SelectContent className="bg-background z-50">
-                                {roleOptions.map(opt => (
-                                  <SelectItem key={opt} value={opt}>{opt}</SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
-                          </div>
-                        </div>
+                      <CardContent className="p-3 space-y-2">
+                        {getStudentAwards(selectedStudent).clubs.length === 0 ? (
+                          <p className="text-xs text-muted-foreground text-center py-2">No entries. Click "Add" to add one.</p>
+                        ) : (
+                          getStudentAwards(selectedStudent).clubs.map((entry, index) => (
+                            <div key={entry.id} className="grid grid-cols-[1fr_1fr_auto] gap-2 items-end">
+                              <div className="space-y-1">
+                                <label className="text-xs text-amber-700 font-medium">Organization</label>
+                                <Select 
+                                  value={entry.organization} 
+                                  onValueChange={(v) => updateAwardEntry(selectedStudent, "clubs", entry.id, "organization", v)}
+                                >
+                                  <SelectTrigger className="bg-background/80 border-amber-200">
+                                    <SelectValue />
+                                  </SelectTrigger>
+                                  <SelectContent className="bg-background z-50">
+                                    {clubOptions.map(opt => (
+                                      <SelectItem key={opt} value={opt}>{opt}</SelectItem>
+                                    ))}
+                                  </SelectContent>
+                                </Select>
+                              </div>
+                              <div className="space-y-1">
+                                <label className="text-xs text-amber-700 font-medium">Role</label>
+                                <Select 
+                                  value={entry.role} 
+                                  onValueChange={(v) => updateAwardEntry(selectedStudent, "clubs", entry.id, "role", v)}
+                                >
+                                  <SelectTrigger className="bg-background/80 border-amber-200">
+                                    <SelectValue />
+                                  </SelectTrigger>
+                                  <SelectContent className="bg-background z-50">
+                                    {roleOptions.map(opt => (
+                                      <SelectItem key={opt} value={opt}>{opt}</SelectItem>
+                                    ))}
+                                  </SelectContent>
+                                </Select>
+                              </div>
+                              <Button
+                                size="icon"
+                                variant="ghost"
+                                className="h-9 w-9 text-red-500 hover:bg-red-100"
+                                onClick={() => removeAwardEntry(selectedStudent, "clubs", entry.id)}
+                              >
+                                <X className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          ))
+                        )}
                       </CardContent>
                     </Card>
 
                     {/* Student Leadership */}
                     <Card className="bg-amber-50 border-amber-200 overflow-hidden">
-                      <CardHeader className="p-3 pb-2" style={{ background: 'linear-gradient(135deg, #fef3c7 0%, #fcd34d 50%, #f59e0b 100%)' }}>
+                      <CardHeader className="p-3 pb-2 flex flex-row items-center justify-between" style={{ background: 'linear-gradient(135deg, #fef3c7 0%, #fcd34d 50%, #f59e0b 100%)' }}>
                         <CardTitle className="text-sm font-semibold text-amber-800">Student Leadership</CardTitle>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          className="h-7 px-2 text-amber-800 hover:bg-amber-200/50"
+                          onClick={() => addAwardEntry(selectedStudent, "leadership")}
+                        >
+                          <Plus className="h-4 w-4 mr-1" />
+                          Add
+                        </Button>
                       </CardHeader>
-                      <CardContent className="p-3">
-                        <div className="grid grid-cols-2 gap-3">
-                          <div className="space-y-1">
-                            <label className="text-xs text-amber-700 font-medium">Organization</label>
-                            <Select 
-                              value={getStudentAwards(selectedStudent).leadershipOrg || "None"} 
-                              onValueChange={(v) => updateAwards(selectedStudent, "leadershipOrg", v)}
-                            >
-                              <SelectTrigger className="bg-background/80 border-amber-200">
-                                <SelectValue />
-                              </SelectTrigger>
-                              <SelectContent className="bg-background z-50">
-                                {leadershipOptions.map(opt => (
-                                  <SelectItem key={opt} value={opt}>{opt}</SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
-                          </div>
-                          <div className="space-y-1">
-                            <label className="text-xs text-amber-700 font-medium">Role & Responsibility</label>
-                            <Select 
-                              value={getStudentAwards(selectedStudent).leadershipRole || "None"} 
-                              onValueChange={(v) => updateAwards(selectedStudent, "leadershipRole", v)}
-                            >
-                              <SelectTrigger className="bg-background/80 border-amber-200">
-                                <SelectValue />
-                              </SelectTrigger>
-                              <SelectContent className="bg-background z-50">
-                                {roleOptions.map(opt => (
-                                  <SelectItem key={opt} value={opt}>{opt}</SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
-                          </div>
-                        </div>
+                      <CardContent className="p-3 space-y-2">
+                        {getStudentAwards(selectedStudent).leadership.length === 0 ? (
+                          <p className="text-xs text-muted-foreground text-center py-2">No entries. Click "Add" to add one.</p>
+                        ) : (
+                          getStudentAwards(selectedStudent).leadership.map((entry, index) => (
+                            <div key={entry.id} className="grid grid-cols-[1fr_1fr_auto] gap-2 items-end">
+                              <div className="space-y-1">
+                                <label className="text-xs text-amber-700 font-medium">Organization</label>
+                                <Select 
+                                  value={entry.organization} 
+                                  onValueChange={(v) => updateAwardEntry(selectedStudent, "leadership", entry.id, "organization", v)}
+                                >
+                                  <SelectTrigger className="bg-background/80 border-amber-200">
+                                    <SelectValue />
+                                  </SelectTrigger>
+                                  <SelectContent className="bg-background z-50">
+                                    {leadershipOptions.map(opt => (
+                                      <SelectItem key={opt} value={opt}>{opt}</SelectItem>
+                                    ))}
+                                  </SelectContent>
+                                </Select>
+                              </div>
+                              <div className="space-y-1">
+                                <label className="text-xs text-amber-700 font-medium">Role</label>
+                                <Select 
+                                  value={entry.role} 
+                                  onValueChange={(v) => updateAwardEntry(selectedStudent, "leadership", entry.id, "role", v)}
+                                >
+                                  <SelectTrigger className="bg-background/80 border-amber-200">
+                                    <SelectValue />
+                                  </SelectTrigger>
+                                  <SelectContent className="bg-background z-50">
+                                    {roleOptions.map(opt => (
+                                      <SelectItem key={opt} value={opt}>{opt}</SelectItem>
+                                    ))}
+                                  </SelectContent>
+                                </Select>
+                              </div>
+                              <Button
+                                size="icon"
+                                variant="ghost"
+                                className="h-9 w-9 text-red-500 hover:bg-red-100"
+                                onClick={() => removeAwardEntry(selectedStudent, "leadership", entry.id)}
+                              >
+                                <X className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          ))
+                        )}
                       </CardContent>
                     </Card>
 
                     {/* Events */}
                     <Card className="bg-amber-50 border-amber-200 overflow-hidden">
-                      <CardHeader className="p-3 pb-2" style={{ background: 'linear-gradient(135deg, #fef3c7 0%, #fcd34d 50%, #f59e0b 100%)' }}>
+                      <CardHeader className="p-3 pb-2 flex flex-row items-center justify-between" style={{ background: 'linear-gradient(135deg, #fef3c7 0%, #fcd34d 50%, #f59e0b 100%)' }}>
                         <CardTitle className="text-sm font-semibold text-amber-800">Events</CardTitle>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          className="h-7 px-2 text-amber-800 hover:bg-amber-200/50"
+                          onClick={() => addAwardEntry(selectedStudent, "events")}
+                        >
+                          <Plus className="h-4 w-4 mr-1" />
+                          Add
+                        </Button>
                       </CardHeader>
-                      <CardContent className="p-3">
-                        <div className="grid grid-cols-2 gap-3">
-                          <div className="space-y-1">
-                            <label className="text-xs text-amber-700 font-medium">Organization</label>
-                            <Select 
-                              value={getStudentAwards(selectedStudent).eventsOrg || "None"} 
-                              onValueChange={(v) => updateAwards(selectedStudent, "eventsOrg", v)}
-                            >
-                              <SelectTrigger className="bg-background/80 border-amber-200">
-                                <SelectValue />
-                              </SelectTrigger>
-                              <SelectContent className="bg-background z-50">
-                                {eventsOptions.map(opt => (
-                                  <SelectItem key={opt} value={opt}>{opt}</SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
-                          </div>
-                          <div className="space-y-1">
-                            <label className="text-xs text-amber-700 font-medium">Role & Responsibility</label>
-                            <Select 
-                              value={getStudentAwards(selectedStudent).eventsRole || "None"} 
-                              onValueChange={(v) => updateAwards(selectedStudent, "eventsRole", v)}
-                            >
-                              <SelectTrigger className="bg-background/80 border-amber-200">
-                                <SelectValue />
-                              </SelectTrigger>
-                              <SelectContent className="bg-background z-50">
-                                {roleOptions.map(opt => (
-                                  <SelectItem key={opt} value={opt}>{opt}</SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
-                          </div>
-                        </div>
+                      <CardContent className="p-3 space-y-2">
+                        {getStudentAwards(selectedStudent).events.length === 0 ? (
+                          <p className="text-xs text-muted-foreground text-center py-2">No entries. Click "Add" to add one.</p>
+                        ) : (
+                          getStudentAwards(selectedStudent).events.map((entry, index) => (
+                            <div key={entry.id} className="grid grid-cols-[1fr_1fr_auto] gap-2 items-end">
+                              <div className="space-y-1">
+                                <label className="text-xs text-amber-700 font-medium">Event</label>
+                                <Select 
+                                  value={entry.organization} 
+                                  onValueChange={(v) => updateAwardEntry(selectedStudent, "events", entry.id, "organization", v)}
+                                >
+                                  <SelectTrigger className="bg-background/80 border-amber-200">
+                                    <SelectValue />
+                                  </SelectTrigger>
+                                  <SelectContent className="bg-background z-50">
+                                    {eventsOptions.map(opt => (
+                                      <SelectItem key={opt} value={opt}>{opt}</SelectItem>
+                                    ))}
+                                  </SelectContent>
+                                </Select>
+                              </div>
+                              <div className="space-y-1">
+                                <label className="text-xs text-amber-700 font-medium">Role</label>
+                                <Select 
+                                  value={entry.role} 
+                                  onValueChange={(v) => updateAwardEntry(selectedStudent, "events", entry.id, "role", v)}
+                                >
+                                  <SelectTrigger className="bg-background/80 border-amber-200">
+                                    <SelectValue />
+                                  </SelectTrigger>
+                                  <SelectContent className="bg-background z-50">
+                                    {roleOptions.map(opt => (
+                                      <SelectItem key={opt} value={opt}>{opt}</SelectItem>
+                                    ))}
+                                  </SelectContent>
+                                </Select>
+                              </div>
+                              <Button
+                                size="icon"
+                                variant="ghost"
+                                className="h-9 w-9 text-red-500 hover:bg-red-100"
+                                onClick={() => removeAwardEntry(selectedStudent, "events", entry.id)}
+                              >
+                                <X className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          ))
+                        )}
                       </CardContent>
                     </Card>
 
                     {/* Achievements */}
                     <Card className="bg-amber-50 border-amber-200 overflow-hidden">
-                      <CardHeader className="p-3 pb-2" style={{ background: 'linear-gradient(135deg, #fef3c7 0%, #fcd34d 50%, #f59e0b 100%)' }}>
+                      <CardHeader className="p-3 pb-2 flex flex-row items-center justify-between" style={{ background: 'linear-gradient(135deg, #fef3c7 0%, #fcd34d 50%, #f59e0b 100%)' }}>
                         <CardTitle className="text-sm font-semibold text-amber-800">Achievements</CardTitle>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          className="h-7 px-2 text-amber-800 hover:bg-amber-200/50"
+                          onClick={() => addAchievementEntry(selectedStudent)}
+                        >
+                          <Plus className="h-4 w-4 mr-1" />
+                          Add
+                        </Button>
                       </CardHeader>
-                      <CardContent className="p-3">
-                        <div className="grid grid-cols-2 gap-3">
-                          <div className="space-y-1">
-                            <label className="text-xs text-amber-700 font-medium">Event</label>
-                            <Select 
-                              value={getStudentAwards(selectedStudent).achievementEvent || "None"} 
-                              onValueChange={(v) => updateAwards(selectedStudent, "achievementEvent", v)}
-                            >
-                              <SelectTrigger className="bg-background/80 border-amber-200">
-                                <SelectValue />
-                              </SelectTrigger>
-                              <SelectContent className="bg-background z-50">
-                                {achievementEventOptions.map(opt => (
-                                  <SelectItem key={opt} value={opt}>{opt}</SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
-                          </div>
-                          <div className="space-y-1">
-                            <label className="text-xs text-amber-700 font-medium">Award</label>
-                            <Select 
-                              value={getStudentAwards(selectedStudent).achievementAward || "None"} 
-                              onValueChange={(v) => updateAwards(selectedStudent, "achievementAward", v)}
-                            >
-                              <SelectTrigger className="bg-background/80 border-amber-200">
-                                <SelectValue />
-                              </SelectTrigger>
-                              <SelectContent className="bg-background z-50">
-                                {achievementAwardOptions.map(opt => (
-                                  <SelectItem key={opt} value={opt}>{opt}</SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
-                          </div>
-                        </div>
+                      <CardContent className="p-3 space-y-2">
+                        {getStudentAwards(selectedStudent).achievements.length === 0 ? (
+                          <p className="text-xs text-muted-foreground text-center py-2">No entries. Click "Add" to add one.</p>
+                        ) : (
+                          getStudentAwards(selectedStudent).achievements.map((entry, index) => (
+                            <div key={entry.id} className="grid grid-cols-[1fr_1fr_auto] gap-2 items-end">
+                              <div className="space-y-1">
+                                <label className="text-xs text-amber-700 font-medium">Event</label>
+                                <Select 
+                                  value={entry.event} 
+                                  onValueChange={(v) => updateAchievementEntry(selectedStudent, entry.id, "event", v)}
+                                >
+                                  <SelectTrigger className="bg-background/80 border-amber-200">
+                                    <SelectValue />
+                                  </SelectTrigger>
+                                  <SelectContent className="bg-background z-50">
+                                    {achievementEventOptions.map(opt => (
+                                      <SelectItem key={opt} value={opt}>{opt}</SelectItem>
+                                    ))}
+                                  </SelectContent>
+                                </Select>
+                              </div>
+                              <div className="space-y-1">
+                                <label className="text-xs text-amber-700 font-medium">Award</label>
+                                <Select 
+                                  value={entry.award} 
+                                  onValueChange={(v) => updateAchievementEntry(selectedStudent, entry.id, "award", v)}
+                                >
+                                  <SelectTrigger className="bg-background/80 border-amber-200">
+                                    <SelectValue />
+                                  </SelectTrigger>
+                                  <SelectContent className="bg-background z-50">
+                                    {achievementAwardOptions.map(opt => (
+                                      <SelectItem key={opt} value={opt}>{opt}</SelectItem>
+                                    ))}
+                                  </SelectContent>
+                                </Select>
+                              </div>
+                              <Button
+                                size="icon"
+                                variant="ghost"
+                                className="h-9 w-9 text-red-500 hover:bg-red-100"
+                                onClick={() => removeAchievementEntry(selectedStudent, entry.id)}
+                              >
+                                <X className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          ))
+                        )}
                       </CardContent>
                     </Card>
                   </div>
