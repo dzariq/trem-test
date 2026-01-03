@@ -2871,10 +2871,16 @@ export default function TeacherAcademicPage() {
                             {/* Summary Stats */}
                             <div className="stats-box" style={{ padding: '10px', backgroundColor: '#f5f5f5', borderRadius: '6px', marginTop: '12px' }}>
                               <h4 style={{ fontSize: '11px', fontWeight: 600, marginBottom: '8px' }}>Summary Statistics</h4>
-                              <div className="stats-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '8px', textAlign: 'center' }}>
+                              <div className="stats-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '8px', textAlign: 'center' }}>
                                 <div>
                                   <div style={{ fontSize: '14px', fontWeight: 700, color: '#1a1a1a' }}>{bandsRankedStudents.length}</div>
                                   <div style={{ fontSize: '9px', color: '#666' }}>Total Students</div>
+                                </div>
+                                <div>
+                                  <div style={{ fontSize: '14px', fontWeight: 700, color: '#7c3aed' }}>
+                                    {bandsRankedStudents.length > 0 ? Math.round((bandsRankedStudents.filter(s => s.score >= 50).length / bandsRankedStudents.length) * 100) : 0}%
+                                  </div>
+                                  <div style={{ fontSize: '9px', color: '#666' }}>Passing Rate</div>
                                 </div>
                                 <div>
                                   <div style={{ fontSize: '14px', fontWeight: 700, color: '#059669' }}>{bandsTopPerformers.length}</div>
@@ -3091,12 +3097,33 @@ export default function TeacherAcademicPage() {
                                     <td style={{ textAlign: 'center', padding: '4px 6px', fontWeight: 600, color: '#2563eb' }}>{bandsCompareMiddlePerformers.length}</td>
                                     <td style={{ textAlign: 'center', padding: '4px 6px' }}>{bandsMiddlePerformers.length - bandsCompareMiddlePerformers.length}</td>
                                   </tr>
-                                  <tr>
+                                  <tr style={{ borderBottom: '1px solid #eee' }}>
                                     <td style={{ padding: '4px 6px' }}>At-Risk (D/E)</td>
                                     <td style={{ textAlign: 'center', padding: '4px 6px', fontWeight: 600, color: '#dc2626' }}>{bandsAtRiskStudents.length}</td>
                                     <td style={{ textAlign: 'center', padding: '4px 6px', fontWeight: 600, color: '#dc2626' }}>{bandsCompareAtRiskStudents.length}</td>
                                     <td style={{ textAlign: 'center', padding: '4px 6px', fontWeight: 600, color: bandsAtRiskStudents.length < bandsCompareAtRiskStudents.length ? '#059669' : bandsAtRiskStudents.length > bandsCompareAtRiskStudents.length ? '#dc2626' : '#1a1a1a' }}>
                                       {bandsAtRiskStudents.length > bandsCompareAtRiskStudents.length ? "+" : ""}{bandsAtRiskStudents.length - bandsCompareAtRiskStudents.length}
+                                    </td>
+                                  </tr>
+                                  <tr style={{ backgroundColor: '#f0f0f0' }}>
+                                    <td style={{ padding: '4px 6px', fontWeight: 600 }}>Passing Rate (≥50%)</td>
+                                    <td style={{ textAlign: 'center', padding: '4px 6px', fontWeight: 700, color: '#7c3aed' }}>
+                                      {bandsRankedStudents.length > 0 ? Math.round((bandsRankedStudents.filter(s => s.score >= 50).length / bandsRankedStudents.length) * 100) : 0}%
+                                    </td>
+                                    <td style={{ textAlign: 'center', padding: '4px 6px', fontWeight: 700, color: '#7c3aed' }}>
+                                      {bandsCompareRankedStudents.length > 0 ? Math.round((bandsCompareRankedStudents.filter(s => s.score >= 50).length / bandsCompareRankedStudents.length) * 100) : 0}%
+                                    </td>
+                                    <td style={{ textAlign: 'center', padding: '4px 6px', fontWeight: 600, color: (() => {
+                                      const passRateA = bandsRankedStudents.length > 0 ? Math.round((bandsRankedStudents.filter(s => s.score >= 50).length / bandsRankedStudents.length) * 100) : 0;
+                                      const passRateB = bandsCompareRankedStudents.length > 0 ? Math.round((bandsCompareRankedStudents.filter(s => s.score >= 50).length / bandsCompareRankedStudents.length) * 100) : 0;
+                                      return passRateA > passRateB ? '#059669' : passRateA < passRateB ? '#dc2626' : '#1a1a1a';
+                                    })() }}>
+                                      {(() => {
+                                        const passRateA = bandsRankedStudents.length > 0 ? Math.round((bandsRankedStudents.filter(s => s.score >= 50).length / bandsRankedStudents.length) * 100) : 0;
+                                        const passRateB = bandsCompareRankedStudents.length > 0 ? Math.round((bandsCompareRankedStudents.filter(s => s.score >= 50).length / bandsCompareRankedStudents.length) * 100) : 0;
+                                        const diff = passRateA - passRateB;
+                                        return `${diff > 0 ? '+' : ''}${diff}%`;
+                                      })()}
                                     </td>
                                   </tr>
                                 </tbody>
