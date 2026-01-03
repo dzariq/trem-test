@@ -2774,36 +2774,46 @@ export default function AcademicPage() {
 
               {/* Summary Statistics Cards */}
               <div style={{ marginBottom: '12px', pageBreakInside: 'avoid' }}>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: '8px' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '8px' }}>
                   {/* Average */}
-                  <div style={{ padding: '10px 6px', borderRadius: '8px', backgroundColor: '#dcfce7', textAlign: 'center' }}>
-                    <div style={{ fontSize: '16px', fontWeight: 700, color: '#22c55e' }}>{currentAverage}%</div>
-                    <div style={{ fontSize: '9px', color: '#166534', fontWeight: 500 }}>Average</div>
+                  <div style={{ padding: '12px 8px', borderRadius: '10px', backgroundColor: '#dcfce7', textAlign: 'center' }}>
+                    <div style={{ fontSize: '18px', fontWeight: 700, color: '#22c55e' }}>{currentAverage}%</div>
+                    <div style={{ fontSize: '10px', color: '#166534', fontWeight: 600 }}>Average</div>
+                    <div style={{ fontSize: '8px', color: '#166534', marginTop: '2px' }}>
+                      {currentAverage >= 80 ? 'Excellent' : currentAverage >= 60 ? 'Above Average' : 'Needs Improvement'}
+                    </div>
                   </div>
-                  {/* Highest */}
-                  <div style={{ padding: '10px 6px', borderRadius: '8px', backgroundColor: '#fef3c7', textAlign: 'center' }}>
-                    <div style={{ fontSize: '16px', fontWeight: 700, color: '#d97706' }}>{bestSubjectInfo.score}%</div>
-                    <div style={{ fontSize: '9px', color: '#92400e', fontWeight: 500 }}>Highest</div>
-                  </div>
-                  {/* Lowest */}
-                  <div style={{ padding: '10px 6px', borderRadius: '8px', backgroundColor: '#fee2e2', textAlign: 'center' }}>
-                    <div style={{ fontSize: '16px', fontWeight: 700, color: '#dc2626' }}>{weakestSubjectInfo.score}%</div>
-                    <div style={{ fontSize: '9px', color: '#991b1b', fontWeight: 500 }}>Lowest</div>
-                  </div>
-                  {/* Passing */}
-                  <div style={{ padding: '10px 6px', borderRadius: '8px', backgroundColor: '#f3e8ff', textAlign: 'center' }}>
-                    <div style={{ fontSize: '16px', fontWeight: 700, color: '#9333ea' }}>{passingStats.passingPercentage}%</div>
-                    <div style={{ fontSize: '9px', color: '#6b21a8', fontWeight: 500 }}>Passing</div>
-                  </div>
-                  {/* Attendance */}
-                  <div style={{ padding: '10px 6px', borderRadius: '8px', backgroundColor: '#fce7f3', textAlign: 'center' }}>
-                    <div style={{ fontSize: '16px', fontWeight: 700, color: '#db2777' }}>{attendanceStats.attendanceRate}%</div>
-                    <div style={{ fontSize: '9px', color: '#9d174d', fontWeight: 500 }}>Attendance</div>
+                  {/* Best Subject */}
+                  <div style={{ padding: '12px 8px', borderRadius: '10px', backgroundColor: '#fef3c7', textAlign: 'center' }}>
+                    <div style={{ fontSize: '14px', fontWeight: 700, color: '#d97706' }}>{shortenSubjectName(bestSubjectInfo.name)}</div>
+                    <div style={{ fontSize: '10px', color: '#92400e', fontWeight: 600 }}>Best Subject</div>
+                    <div style={{ fontSize: '8px', color: '#92400e', marginTop: '2px' }}>{bestSubjectInfo.score}%</div>
                   </div>
                   {/* Improvement */}
-                  <div style={{ padding: '10px 6px', borderRadius: '8px', backgroundColor: '#ccfbf1', textAlign: 'center' }}>
-                    <div style={{ fontSize: '16px', fontWeight: 700, color: '#0d9488' }}>{improvementStats.text}</div>
-                    <div style={{ fontSize: '9px', color: '#115e59', fontWeight: 500 }}>Improvement</div>
+                  <div style={{ padding: '12px 8px', borderRadius: '10px', backgroundColor: '#ccfbf1', textAlign: 'center' }}>
+                    <div style={{ fontSize: '18px', fontWeight: 700, color: '#0d9488' }}>{improvementStats.text}</div>
+                    <div style={{ fontSize: '10px', color: '#115e59', fontWeight: 600 }}>Improvement</div>
+                    <div style={{ fontSize: '8px', color: '#115e59', marginTop: '2px' }}>
+                      {improvementStats.points > 0 ? 'Improved' : improvementStats.points < 0 ? 'Declined' : 'Stable'}
+                    </div>
+                  </div>
+                  {/* Attendance */}
+                  <div style={{ padding: '12px 8px', borderRadius: '10px', backgroundColor: '#eff6ff', textAlign: 'center' }}>
+                    <div style={{ fontSize: '18px', fontWeight: 700, color: '#3b82f6' }}>{attendanceStats.attendanceRate}%</div>
+                    <div style={{ fontSize: '10px', color: '#1d4ed8', fontWeight: 600 }}>Attendance</div>
+                    <div style={{ fontSize: '8px', color: '#1d4ed8', marginTop: '2px' }}>This Term</div>
+                  </div>
+                  {/* Passing */}
+                  <div style={{ padding: '12px 8px', borderRadius: '10px', backgroundColor: '#f3e8ff', textAlign: 'center' }}>
+                    <div style={{ fontSize: '18px', fontWeight: 700, color: '#9333ea' }}>{passingStats.passingCount}/{passingStats.totalSubjects}</div>
+                    <div style={{ fontSize: '10px', color: '#6b21a8', fontWeight: 600 }}>Passing</div>
+                    <div style={{ fontSize: '8px', color: '#6b21a8', marginTop: '2px' }}>{passingStats.passingPercentage}%</div>
+                  </div>
+                  {/* Needs Focus */}
+                  <div style={{ padding: '12px 8px', borderRadius: '10px', backgroundColor: '#fee2e2', textAlign: 'center' }}>
+                    <div style={{ fontSize: '14px', fontWeight: 700, color: '#dc2626' }}>{shortenSubjectName(weakestSubjectInfo.name)}</div>
+                    <div style={{ fontSize: '10px', color: '#991b1b', fontWeight: 600 }}>Needs Focus</div>
+                    <div style={{ fontSize: '8px', color: '#991b1b', marginTop: '2px' }}>{weakestSubjectInfo.score}%</div>
                   </div>
                 </div>
               </div>
