@@ -1084,17 +1084,6 @@ export default function AcademicPage() {
       score: getScore(s, selectedYear, examType),
       grade: getScore(s, selectedYear, examType) !== null ? getGradeFromScore(getScore(s, selectedYear, examType)!) : "Pending",
       teacherComment: s.teacherComment || "Good progress this term."
-    }))} subjectsComparison={academicData.subjects.map(s => ({
-      name: s.name,
-      midYear: {
-        score: getScore(s, selectedYear, "midYear"),
-        grade: getScore(s, selectedYear, "midYear") !== null ? getGradeFromScore(getScore(s, selectedYear, "midYear")!) : "-"
-      },
-      yearEnd: {
-        score: getScore(s, selectedYear, "yearEnd"),
-        grade: getScore(s, selectedYear, "yearEnd") !== null ? getGradeFromScore(getScore(s, selectedYear, "yearEnd")!) : "-"
-      },
-      teacherComment: s.teacherComment || "Good progress this term."
     }))} behavior={academicData.behavior} homeroomComment={academicData.behaviorComments?.homeroomComment || "The student shows good potential and continues to make progress."} attendance={{
       present: attendanceData.currentMonth?.present || 85,
       absent: attendanceData.currentMonth?.absent || 5,

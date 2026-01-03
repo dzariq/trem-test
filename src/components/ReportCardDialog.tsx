@@ -13,13 +13,6 @@ interface Subject {
   teacherComment: string;
 }
 
-interface SubjectComparison {
-  name: string;
-  midYear: { score: number | null; grade: string };
-  yearEnd: { score: number | null; grade: string };
-  teacherComment: string;
-}
-
 interface BehaviorItem {
   category: string;
   grade: string;
@@ -33,7 +26,6 @@ interface ReportCardDialogProps {
   examType: string;
   year: string;
   subjects: Subject[];
-  subjectsComparison?: SubjectComparison[];
   behavior: BehaviorItem[];
   homeroomComment: string;
   attendance: {
@@ -118,7 +110,6 @@ export function ReportCardDialog({
   examType,
   year,
   subjects,
-  subjectsComparison,
   behavior,
   homeroomComment,
   attendance,
@@ -381,139 +372,72 @@ export function ReportCardDialog({
                     ))}
                   </div>
                 </div>
-              {subjectsComparison && subjectsComparison.length > 0 ? (
-                <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '9px', borderRadius: '6px', overflow: 'hidden' }}>
-                  <thead>
-                    <tr style={{ background: 'linear-gradient(135deg, #065f46 0%, #10b981 100%)' }}>
-                      <th rowSpan={2} style={{ color: 'white', padding: '6px 4px', textAlign: 'left', fontWeight: '600', borderRight: '1px solid rgba(255,255,255,0.2)' }}>Subject</th>
-                      <th colSpan={2} style={{ color: 'white', padding: '4px', textAlign: 'center', fontWeight: '600', borderRight: '1px solid rgba(255,255,255,0.2)', borderBottom: '1px solid rgba(255,255,255,0.2)' }}>MID-YEAR</th>
-                      <th colSpan={2} style={{ color: 'white', padding: '4px', textAlign: 'center', fontWeight: '600' }}>YEAR-END</th>
-                    </tr>
-                    <tr style={{ background: 'linear-gradient(135deg, #065f46 0%, #10b981 100%)' }}>
-                      <th style={{ color: 'white', padding: '4px', textAlign: 'center', fontWeight: '500', fontSize: '7px', borderRight: '1px solid rgba(255,255,255,0.1)' }}>MARK%</th>
-                      <th style={{ color: 'white', padding: '4px', textAlign: 'center', fontWeight: '500', fontSize: '7px', borderRight: '1px solid rgba(255,255,255,0.2)' }}>GRADE</th>
-                      <th style={{ color: 'white', padding: '4px', textAlign: 'center', fontWeight: '500', fontSize: '7px', borderRight: '1px solid rgba(255,255,255,0.1)' }}>MARK%</th>
-                      <th style={{ color: 'white', padding: '4px', textAlign: 'center', fontWeight: '500', fontSize: '7px' }}>GRADE</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {subjectsComparison.slice(0, 13).map((subject, index) => {
-                      const midGradeColor = gradeColors[subject.midYear.grade] || gradeColors["C"];
-                      const yearGradeColor = gradeColors[subject.yearEnd.grade] || gradeColors["C"];
-                      return (
-                        <tr key={subject.name} style={{ background: index % 2 === 0 ? '#fef9c3' : 'white' }}>
-                          <td style={{ padding: '5px 4px', borderBottom: '1px solid #e5e7eb', fontWeight: '500', borderRight: '1px solid #e5e7eb' }}>
-                            {subject.name}
-                          </td>
-                          <td style={{ padding: '5px 4px', borderBottom: '1px solid #e5e7eb', textAlign: 'center', fontWeight: '600', borderRight: '1px solid #f3f4f6' }}>
-                            {subject.midYear.score !== null ? subject.midYear.score : '-'}
-                          </td>
-                          <td style={{ padding: '5px 4px', borderBottom: '1px solid #e5e7eb', textAlign: 'center', borderRight: '1px solid #e5e7eb' }}>
-                            <span style={{ 
-                              display: 'inline-flex', 
-                              alignItems: 'center', 
-                              justifyContent: 'center', 
-                              minWidth: '24px', 
-                              padding: '2px 6px', 
-                              borderRadius: '3px', 
-                              fontWeight: '600', 
-                              fontSize: '9px',
-                              backgroundColor: midGradeColor.bg,
-                              color: midGradeColor.text
-                            }}>
-                              {subject.midYear.grade || '-'}
-                            </span>
-                          </td>
-                          <td style={{ padding: '5px 4px', borderBottom: '1px solid #e5e7eb', textAlign: 'center', fontWeight: '600', borderRight: '1px solid #f3f4f6' }}>
-                            {subject.yearEnd.score !== null ? subject.yearEnd.score : '-'}
-                          </td>
-                          <td style={{ padding: '5px 4px', borderBottom: '1px solid #e5e7eb', textAlign: 'center' }}>
-                            <span style={{ 
-                              display: 'inline-flex', 
-                              alignItems: 'center', 
-                              justifyContent: 'center', 
-                              minWidth: '24px', 
-                              padding: '2px 6px', 
-                              borderRadius: '3px', 
-                              fontWeight: '600', 
-                              fontSize: '9px',
-                              backgroundColor: yearGradeColor.bg,
-                              color: yearGradeColor.text
-                            }}>
-                              {subject.yearEnd.grade || '-'}
-                            </span>
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              ) : (
-                <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '10px', borderRadius: '6px', overflow: 'hidden' }}>
-                  <thead>
-                    <tr style={{ background: 'linear-gradient(135deg, #065f46 0%, #10b981 100%)' }}>
-                      <th style={{ color: 'white', padding: '8px 6px', textAlign: 'left', fontWeight: '600' }}>Subject</th>
-                      <th style={{ color: 'white', padding: '8px 6px', textAlign: 'center', fontWeight: '600', width: '60px' }}>Score</th>
-                      <th style={{ color: 'white', padding: '8px 6px', textAlign: 'center', fontWeight: '600', width: '50px' }}>Grade</th>
-                      <th style={{ color: 'white', padding: '8px 6px', textAlign: 'left', fontWeight: '600' }}>Teacher&apos;s Comment</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {displayedSubjects.map((subject, index) => {
-                      const gradeColor = gradeColors[subject.grade] || gradeColors["C"];
-                      const getRowBg = (grade: string) => {
-                        if (grade === "A*" || grade === "A") return 'rgba(220, 252, 231, 0.5)';
-                        if (grade === "B") return 'rgba(219, 234, 254, 0.4)';
-                        if (grade === "C") return 'rgba(254, 243, 199, 0.4)';
-                        if (grade === "D") return 'rgba(254, 215, 170, 0.4)';
-                        if (grade === "E") return 'rgba(254, 226, 226, 0.4)';
-                        return index % 2 === 0 ? 'white' : '#f9fafb';
-                      };
-                      return (
-                        <tr key={subject.name} style={{ position: 'relative', background: getRowBg(subject.grade) }}>
-                          <td style={{ padding: '6px', borderBottom: '1px solid #e5e7eb', fontWeight: '500' }}>
-                            <span style={{ position: 'relative', zIndex: 1 }}>{subject.name}</span>
-                          </td>
-                          <td style={{ position: 'relative', padding: '6px', borderBottom: '1px solid #e5e7eb', textAlign: 'center', fontWeight: '600', overflow: 'hidden' }}>
-                            <span style={{ 
-                              position: 'absolute', 
-                              left: '50%', 
-                              bottom: '-10px', 
-                              transform: 'translateX(-50%)',
-                              fontSize: '42px', 
-                              fontWeight: '900', 
-                              color: gradeColor.bg, 
-                              opacity: 0.35,
-                              pointerEvents: 'none',
-                              lineHeight: 1
-                            }}>
-                              {subject.grade}
-                            </span>
-                            <span style={{ position: 'relative', zIndex: 1 }}>{subject.score !== null ? `${subject.score}%` : 'Pending'}</span>
-                          </td>
-                          <td style={{ padding: '6px', borderBottom: '1px solid #e5e7eb', textAlign: 'center' }}>
-                            <span style={{ 
-                              display: 'inline-flex', 
-                              alignItems: 'center', 
-                              justifyContent: 'center', 
-                              minWidth: '30px', 
-                              padding: '3px 8px', 
-                              borderRadius: '4px', 
-                              fontWeight: '600', 
-                              fontSize: '10px',
-                              backgroundColor: gradeColor.bg,
-                              color: gradeColor.text
-                            }}>
-                              {subject.grade}
-                            </span>
-                          </td>
-                          <td style={{ padding: '6px', borderBottom: '1px solid #e5e7eb', fontSize: '9px', color: '#6b7280' }}>{subject.teacherComment}</td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              )}
+              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '10px', borderRadius: '6px', overflow: 'hidden' }}>
+                <thead>
+                  <tr style={{ background: 'linear-gradient(135deg, #065f46 0%, #10b981 100%)' }}>
+                    <th style={{ color: 'white', padding: '8px 6px', textAlign: 'left', fontWeight: '600' }}>Subject</th>
+                    <th style={{ color: 'white', padding: '8px 6px', textAlign: 'center', fontWeight: '600', width: '60px' }}>Score</th>
+                    <th style={{ color: 'white', padding: '8px 6px', textAlign: 'center', fontWeight: '600', width: '50px' }}>Grade</th>
+                    <th style={{ color: 'white', padding: '8px 6px', textAlign: 'left', fontWeight: '600' }}>Teacher&apos;s Comment</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {displayedSubjects.map((subject, index) => {
+                    const gradeColor = gradeColors[subject.grade] || gradeColors["C"];
+                    // Determine row background based on grade
+                    const getRowBg = (grade: string) => {
+                      if (grade === "A*" || grade === "A") return 'rgba(220, 252, 231, 0.5)';
+                      if (grade === "B") return 'rgba(219, 234, 254, 0.4)';
+                      if (grade === "C") return 'rgba(254, 243, 199, 0.4)';
+                      if (grade === "D") return 'rgba(254, 215, 170, 0.4)';
+                      if (grade === "E") return 'rgba(254, 226, 226, 0.4)';
+                      return index % 2 === 0 ? 'white' : '#f9fafb';
+                    };
+                    return (
+                      <tr key={subject.name} style={{ position: 'relative', background: getRowBg(subject.grade) }}>
+                        <td style={{ padding: '6px', borderBottom: '1px solid #e5e7eb', fontWeight: '500' }}>
+                          <span style={{ position: 'relative', zIndex: 1 }}>{subject.name}</span>
+                        </td>
+                        <td style={{ position: 'relative', padding: '6px', borderBottom: '1px solid #e5e7eb', textAlign: 'center', fontWeight: '600', overflow: 'hidden' }}>
+                          {/* Grade watermark overlay - in Score column, cropped at bottom only */}
+                          <span style={{ 
+                            position: 'absolute', 
+                            left: '50%', 
+                            bottom: '-10px', 
+                            transform: 'translateX(-50%)',
+                            fontSize: '42px', 
+                            fontWeight: '900', 
+                            color: gradeColor.bg, 
+                            opacity: 0.35,
+                            pointerEvents: 'none',
+                            lineHeight: 1
+                          }}>
+                            {subject.grade}
+                          </span>
+                          <span style={{ position: 'relative', zIndex: 1 }}>{subject.score !== null ? `${subject.score}%` : 'Pending'}</span>
+                        </td>
+                        <td style={{ padding: '6px', borderBottom: '1px solid #e5e7eb', textAlign: 'center' }}>
+                          <span style={{ 
+                            display: 'inline-flex', 
+                            alignItems: 'center', 
+                            justifyContent: 'center', 
+                            minWidth: '30px', 
+                            padding: '3px 8px', 
+                            borderRadius: '4px', 
+                            fontWeight: '600', 
+                            fontSize: '10px',
+                            backgroundColor: gradeColor.bg,
+                            color: gradeColor.text
+                          }}>
+                            {subject.grade}
+                          </span>
+                        </td>
+                        <td style={{ padding: '6px', borderBottom: '1px solid #e5e7eb', fontSize: '9px', color: '#6b7280' }}>{subject.teacherComment}</td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
               </div>
             </div>
 
