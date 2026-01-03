@@ -111,7 +111,7 @@ interface ReportCardDialogProps {
 }
 
 const gradeColors: Record<string, { bg: string; text: string; border: string }> = {
-  "A*": { bg: "#4ade80", text: "#166534", border: "#22c55e" },
+  "A*": { bg: "#22c55e", text: "#ffffff", border: "#16a34a" },
   "A": { bg: "#059669", text: "#ffffff", border: "#047857" },
   "B": { bg: "#3b82f6", text: "#ffffff", border: "#2563eb" },
   "C": { bg: "#eab308", text: "#000000", border: "#ca8a04" },
@@ -121,7 +121,7 @@ const gradeColors: Record<string, { bg: string; text: string; border: string }> 
 
 // More visible background colors for grade-based card coloring
 const gradeCardBgColors: Record<string, string> = {
-  "A*": "rgba(74, 222, 128, 0.22)",
+  "A*": "rgba(34, 197, 94, 0.20)",
   "A": "rgba(5, 150, 105, 0.18)",
   "B": "rgba(59, 130, 246, 0.18)",
   "C": "rgba(234, 179, 8, 0.18)",
@@ -457,7 +457,7 @@ export function ReportCardDialog({
                           {/* Watermark Grade */}
                           <span style={{
                             position: 'absolute',
-                            bottom: '-12px',
+                            bottom: '2px',
                             left: '50%',
                             transform: 'translateX(-50%)',
                             fontSize: '30px',
@@ -477,7 +477,7 @@ export function ReportCardDialog({
                           {/* Watermark Grade */}
                           <span style={{
                             position: 'absolute',
-                            bottom: '-12px',
+                            bottom: '2px',
                             left: '50%',
                             transform: 'translateX(-50%)',
                             fontSize: '30px',
