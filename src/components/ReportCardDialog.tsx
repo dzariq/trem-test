@@ -224,9 +224,9 @@ export function ReportCardDialog({
                   alt="" 
                   style={{
                     position: 'absolute',
-                    right: '-20px',
-                    top: '-10px',
-                    width: '140px',
+                    right: '-30px',
+                    bottom: '-40px',
+                    width: '210px',
                     opacity: 0.15,
                     pointerEvents: 'none'
                   }} 
