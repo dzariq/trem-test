@@ -912,19 +912,40 @@ export default function TeacherAcademicPage() {
   const subjectVsCohortData = useMemo(() => {
     const data = subjectYearlyData[selectedClass as keyof typeof subjectYearlyData] || subjectYearlyData["5A"];
     const latest = data[data.length - 1];
-    const cohortAvg = 72; // Mock cohort average
+    
+    // Mock cohort averages per subject (varies by subject)
+    const cohortAverages: Record<string, number> = {
+      "Mathematics": 68,
+      "English (First Language)": 72,
+      "Malay (First Language)": 70,
+      "Science": 65,
+      "ICT": 74,
+      "Additional Mathematics": 62,
+      "Chemistry": 66,
+      "Physics": 64,
+      "Biology": 69,
+      "Accounting": 71,
+      "Economics": 67,
+      "Business Studies": 73,
+      "Moral Studies": 78,
+      "Islamic Studies": 75,
+      "Art": 76,
+      "Living Skills": 77,
+      "Chinese": 63,
+    };
     
     // Build from all subjects in latest data
     const allSubjects: { name: string; fullName: string; classScore: number; cohortAvg: number; delta: number }[] = [];
     Object.entries(latest).forEach(([key, value]) => {
       if (key !== 'year' && typeof value === 'number') {
         const shortName = getShortSubjectName(key);
+        const subjectCohortAvg = cohortAverages[key] || 70; // Default to 70 if not found
         allSubjects.push({
           name: shortName.length > 8 ? shortName.substring(0, 8) : shortName,
           fullName: key,
           classScore: value,
-          cohortAvg,
-          delta: value - cohortAvg
+          cohortAvg: subjectCohortAvg,
+          delta: value - subjectCohortAvg
         });
       }
     });
