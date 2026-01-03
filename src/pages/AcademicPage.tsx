@@ -2772,33 +2772,38 @@ export default function AcademicPage() {
                 </div>
               </div>
 
-              {/* Summary Statistics */}
+              {/* Summary Statistics Cards */}
               <div style={{ marginBottom: '12px', pageBreakInside: 'avoid' }}>
-                <h3 style={{ fontSize: '12px', fontWeight: 600, marginBottom: '8px', paddingBottom: '4px', borderBottom: '1px solid #ddd' }}>Summary Statistics</h3>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: '6px', textAlign: 'center' }}>
-                  <div style={{ padding: '8px 4px', border: '1px solid #ddd', borderRadius: '6px', backgroundColor: '#eff6ff' }}>
-                    <div style={{ fontSize: '14px', fontWeight: 700, color: '#3b82f6' }}>{currentAverage}%</div>
-                    <div style={{ fontSize: '8px', color: '#666' }}>Average</div>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: '8px' }}>
+                  {/* Average */}
+                  <div style={{ padding: '10px 6px', borderRadius: '8px', backgroundColor: '#dcfce7', textAlign: 'center' }}>
+                    <div style={{ fontSize: '16px', fontWeight: 700, color: '#22c55e' }}>{currentAverage}%</div>
+                    <div style={{ fontSize: '9px', color: '#166534', fontWeight: 500 }}>Average</div>
                   </div>
-                  <div style={{ padding: '8px 4px', border: '1px solid #ddd', borderRadius: '6px', backgroundColor: '#fef3c7' }}>
-                    <div style={{ fontSize: '14px', fontWeight: 700, color: '#f59e0b' }}>{bestSubjectInfo.score}%</div>
-                    <div style={{ fontSize: '8px', color: '#666' }}>Highest</div>
+                  {/* Highest */}
+                  <div style={{ padding: '10px 6px', borderRadius: '8px', backgroundColor: '#fef3c7', textAlign: 'center' }}>
+                    <div style={{ fontSize: '16px', fontWeight: 700, color: '#d97706' }}>{bestSubjectInfo.score}%</div>
+                    <div style={{ fontSize: '9px', color: '#92400e', fontWeight: 500 }}>Highest</div>
                   </div>
-                  <div style={{ padding: '8px 4px', border: '1px solid #ddd', borderRadius: '6px', backgroundColor: '#fee2e2' }}>
-                    <div style={{ fontSize: '14px', fontWeight: 700, color: '#ef4444' }}>{weakestSubjectInfo.score}%</div>
-                    <div style={{ fontSize: '8px', color: '#666' }}>Lowest</div>
+                  {/* Lowest */}
+                  <div style={{ padding: '10px 6px', borderRadius: '8px', backgroundColor: '#fee2e2', textAlign: 'center' }}>
+                    <div style={{ fontSize: '16px', fontWeight: 700, color: '#dc2626' }}>{weakestSubjectInfo.score}%</div>
+                    <div style={{ fontSize: '9px', color: '#991b1b', fontWeight: 500 }}>Lowest</div>
                   </div>
-                  <div style={{ padding: '8px 4px', border: '1px solid #ddd', borderRadius: '6px', backgroundColor: '#dcfce7' }}>
-                    <div style={{ fontSize: '14px', fontWeight: 700, color: '#22c55e' }}>{passingStats.passingPercentage}%</div>
-                    <div style={{ fontSize: '8px', color: '#666' }}>Passing</div>
+                  {/* Passing */}
+                  <div style={{ padding: '10px 6px', borderRadius: '8px', backgroundColor: '#f3e8ff', textAlign: 'center' }}>
+                    <div style={{ fontSize: '16px', fontWeight: 700, color: '#9333ea' }}>{passingStats.passingPercentage}%</div>
+                    <div style={{ fontSize: '9px', color: '#6b21a8', fontWeight: 500 }}>Passing</div>
                   </div>
-                  <div style={{ padding: '8px 4px', border: '1px solid #ddd', borderRadius: '6px', backgroundColor: '#f3e8ff' }}>
-                    <div style={{ fontSize: '14px', fontWeight: 700, color: '#a855f7' }}>{attendanceStats.attendanceRate}%</div>
-                    <div style={{ fontSize: '8px', color: '#666' }}>Attendance</div>
+                  {/* Attendance */}
+                  <div style={{ padding: '10px 6px', borderRadius: '8px', backgroundColor: '#fce7f3', textAlign: 'center' }}>
+                    <div style={{ fontSize: '16px', fontWeight: 700, color: '#db2777' }}>{attendanceStats.attendanceRate}%</div>
+                    <div style={{ fontSize: '9px', color: '#9d174d', fontWeight: 500 }}>Attendance</div>
                   </div>
-                  <div style={{ padding: '8px 4px', border: '1px solid #ddd', borderRadius: '6px', backgroundColor: '#ecfdf5' }}>
-                    <div style={{ fontSize: '14px', fontWeight: 700, color: '#10b981' }}>{improvementStats.text}</div>
-                    <div style={{ fontSize: '8px', color: '#666' }}>Improvement</div>
+                  {/* Improvement */}
+                  <div style={{ padding: '10px 6px', borderRadius: '8px', backgroundColor: '#ccfbf1', textAlign: 'center' }}>
+                    <div style={{ fontSize: '16px', fontWeight: 700, color: '#0d9488' }}>{improvementStats.text}</div>
+                    <div style={{ fontSize: '9px', color: '#115e59', fontWeight: 500 }}>Improvement</div>
                   </div>
                 </div>
               </div>
