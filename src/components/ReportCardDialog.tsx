@@ -235,37 +235,37 @@ export function ReportCardDialog({
                 <div style={{ position: 'relative', zIndex: 1 }}>
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '10px' }}>
                     <div style={{ fontSize: '18px', fontWeight: '700', color: '#065f46' }}>{studentName}</div>
-                    <div style={{ fontSize: '14px', fontWeight: '600', color: '#065f46', background: 'rgba(255,255,255,0.7)', padding: '4px 10px', borderRadius: '6px' }}>Y10I</div>
+                    <div style={{ fontSize: '14px', fontWeight: '600', color: '#065f46', background: 'rgba(255,255,255,0.5)', backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)', padding: '4px 12px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.6)', boxShadow: '0 2px 8px rgba(0,0,0,0.06)' }}>Y10I</div>
                   </div>
                   
                   {/* Overall Average & Attendance inside the name box */}
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1.5fr', gap: '10px' }}>
-                    {/* Overall Average - Browser Style with Green Gradient */}
-                    <div style={{ borderRadius: '10px', overflow: 'hidden', boxShadow: '0 2px 8px rgba(0,0,0,0.08)' }}>
+                    {/* Overall Average - Liquid Glass Style */}
+                    <div style={{ borderRadius: '12px', overflow: 'hidden', boxShadow: '0 4px 16px rgba(0,0,0,0.1)', border: '1px solid rgba(255,255,255,0.4)' }}>
                       <div style={{ background: 'linear-gradient(135deg, #065f46 0%, #10b981 100%)', padding: '6px 10px' }}>
                         <div style={{ fontSize: '8px', fontWeight: '600', color: 'white', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Overall Average</div>
                       </div>
-                      <div style={{ textAlign: 'center', background: 'white', padding: '14px 10px' }}>
+                      <div style={{ textAlign: 'center', background: 'rgba(255, 255, 255, 0.6)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)', padding: '14px 10px' }}>
                         <div style={{ fontSize: '28px', fontWeight: '700', color: '#065f46' }}>{overallAverage}%</div>
                       </div>
                     </div>
-                    {/* Attendance - Browser Style with Green Gradient */}
-                    <div style={{ borderRadius: '10px', overflow: 'hidden', boxShadow: '0 2px 8px rgba(0,0,0,0.08)' }}>
+                    {/* Attendance - Liquid Glass Style */}
+                    <div style={{ borderRadius: '12px', overflow: 'hidden', boxShadow: '0 4px 16px rgba(0,0,0,0.1)', border: '1px solid rgba(255,255,255,0.4)' }}>
                       <div style={{ background: 'linear-gradient(135deg, #065f46 0%, #10b981 100%)', padding: '6px 10px' }}>
                         <div style={{ fontSize: '8px', fontWeight: '600', color: 'white', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Attendance</div>
                       </div>
-                      <div style={{ background: 'white', padding: '10px 12px' }}>
+                      <div style={{ background: 'rgba(255, 255, 255, 0.6)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)', padding: '10px 12px' }}>
                         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '6px' }}>
                           <span style={{ fontSize: '22px', fontWeight: '700', color: attendance.percentage >= 90 ? '#16a34a' : attendance.percentage >= 75 ? '#ca8a04' : '#dc2626' }}>{attendance.percentage}%</span>
-                          <div style={{ fontSize: '10px', color: '#374151', fontWeight: '600', background: '#f3f4f6', padding: '4px 10px', borderRadius: '8px', border: '1px solid #e5e7eb' }}>
+                          <div style={{ fontSize: '10px', color: '#374151', fontWeight: '600', background: 'rgba(255,255,255,0.7)', backdropFilter: 'blur(4px)', WebkitBackdropFilter: 'blur(4px)', padding: '4px 10px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.5)' }}>
                             {attendance.present}/{attendance.totalDays} days
                           </div>
                         </div>
                         <div style={{ display: 'flex', gap: '4px' }}>
-                          <div style={{ fontSize: '7px', color: '#16a34a', background: '#dcfce7', padding: '3px 6px', borderRadius: '10px', fontWeight: '600' }}>P: {attendance.present}</div>
-                          <div style={{ fontSize: '7px', color: '#dc2626', background: '#fee2e2', padding: '3px 6px', borderRadius: '10px', fontWeight: '600' }}>A: {attendance.absent}</div>
-                          <div style={{ fontSize: '7px', color: '#ca8a04', background: '#fef3c7', padding: '3px 6px', borderRadius: '10px', fontWeight: '600' }}>L: {attendance.late}</div>
-                          <div style={{ fontSize: '7px', color: '#7c3aed', background: '#ede9fe', padding: '3px 6px', borderRadius: '10px', fontWeight: '600' }}>E: {attendance.excused}</div>
+                          <div style={{ fontSize: '7px', color: '#16a34a', background: 'rgba(220, 252, 231, 0.8)', padding: '3px 6px', borderRadius: '10px', fontWeight: '600' }}>P: {attendance.present}</div>
+                          <div style={{ fontSize: '7px', color: '#dc2626', background: 'rgba(254, 226, 226, 0.8)', padding: '3px 6px', borderRadius: '10px', fontWeight: '600' }}>A: {attendance.absent}</div>
+                          <div style={{ fontSize: '7px', color: '#ca8a04', background: 'rgba(254, 243, 199, 0.8)', padding: '3px 6px', borderRadius: '10px', fontWeight: '600' }}>L: {attendance.late}</div>
+                          <div style={{ fontSize: '7px', color: '#7c3aed', background: 'rgba(237, 233, 254, 0.8)', padding: '3px 6px', borderRadius: '10px', fontWeight: '600' }}>E: {attendance.excused}</div>
                         </div>
                       </div>
                     </div>
