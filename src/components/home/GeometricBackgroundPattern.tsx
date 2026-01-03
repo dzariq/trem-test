@@ -19,50 +19,55 @@ export function GeometricBackgroundPattern({ className }: GeometricBackgroundPat
         xmlns="http://www.w3.org/2000/svg"
       >
         <defs>
-          {/* Light pastel gradient with multiple color stops for organic feel */}
+          {/* Very light pastel base */}
           <linearGradient id="bgGradient1" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stopColor="hsl(195, 80%, 92%)" />
-            <stop offset="35%" stopColor="hsl(185, 70%, 88%)" />
-            <stop offset="65%" stopColor="hsl(190, 75%, 90%)" />
-            <stop offset="100%" stopColor="hsl(180, 65%, 86%)" />
+            <stop offset="0%" stopColor="hsl(190, 40%, 97%)" />
+            <stop offset="50%" stopColor="hsl(180, 35%, 96%)" />
+            <stop offset="100%" stopColor="hsl(175, 30%, 95%)" />
           </linearGradient>
 
-          {/* Overlay gradient for more variation */}
-          <radialGradient id="bgGradient2" cx="30%" cy="20%" r="60%">
-            <stop offset="0%" stopColor="hsl(200, 85%, 94%)" stopOpacity="0.8" />
-            <stop offset="100%" stopColor="hsl(185, 70%, 90%)" stopOpacity="0" />
+          {/* Subtle color patches for organic variation */}
+          <radialGradient id="patch1" cx="20%" cy="30%" r="40%">
+            <stop offset="0%" stopColor="hsl(195, 50%, 94%)" stopOpacity="0.5" />
+            <stop offset="100%" stopColor="transparent" stopOpacity="0" />
           </radialGradient>
 
-          <radialGradient id="bgGradient3" cx="80%" cy="70%" r="50%">
-            <stop offset="0%" stopColor="hsl(175, 60%, 88%)" stopOpacity="0.6" />
-            <stop offset="100%" stopColor="hsl(190, 70%, 92%)" stopOpacity="0" />
+          <radialGradient id="patch2" cx="75%" cy="60%" r="35%">
+            <stop offset="0%" stopColor="hsl(175, 45%, 93%)" stopOpacity="0.4" />
+            <stop offset="100%" stopColor="transparent" stopOpacity="0" />
           </radialGradient>
 
-          {/* Fine noise filter */}
+          <radialGradient id="patch3" cx="50%" cy="80%" r="45%">
+            <stop offset="0%" stopColor="hsl(185, 40%, 95%)" stopOpacity="0.3" />
+            <stop offset="100%" stopColor="transparent" stopOpacity="0" />
+          </radialGradient>
+
+          {/* Very fine noise */}
           <filter id="noise">
             <feTurbulence 
               type="fractalNoise" 
-              baseFrequency="1.2" 
-              numOctaves="4" 
+              baseFrequency="1.5" 
+              numOctaves="3" 
               stitchTiles="stitch"
             />
             <feColorMatrix type="saturate" values="0" />
             <feComponentTransfer>
-              <feFuncA type="linear" slope="0.04" />
+              <feFuncA type="linear" slope="0.02" />
             </feComponentTransfer>
             <feBlend in="SourceGraphic" mode="overlay" />
           </filter>
         </defs>
 
-        {/* Base gradient */}
+        {/* Base gradient - very light */}
         <rect width="100%" height="100%" fill="url(#bgGradient1)" />
         
-        {/* Random overlay gradients */}
-        <rect width="100%" height="100%" fill="url(#bgGradient2)" />
-        <rect width="100%" height="100%" fill="url(#bgGradient3)" />
+        {/* Subtle color patches */}
+        <rect width="100%" height="100%" fill="url(#patch1)" />
+        <rect width="100%" height="100%" fill="url(#patch2)" />
+        <rect width="100%" height="100%" fill="url(#patch3)" />
         
-        {/* Fine noise overlay */}
-        <rect width="100%" height="100%" filter="url(#noise)" opacity="0.4" />
+        {/* Very fine noise */}
+        <rect width="100%" height="100%" filter="url(#noise)" opacity="0.3" />
       </svg>
     </div>
   );
