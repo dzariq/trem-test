@@ -70,6 +70,7 @@ interface StudentGrades {
   exam: string;
   comment: string;
   reportComment: string;
+  studyRecommendation: string;
 }
 const calculateTotal = (grades: StudentGrades): number => {
   return (parseInt(grades.attitude) || 0) + (parseInt(grades.homework) || 0) + (parseInt(grades.quiz) || 0) + (parseInt(grades.exam) || 0);
@@ -263,7 +264,8 @@ export default function TeacherAcademicPage() {
       quiz: "",
       exam: "",
       comment: "",
-      reportComment: ""
+      reportComment: "",
+      studyRecommendation: ""
     };
   };
   const updateGrade = (studentId: string, subject: string, field: keyof StudentGrades, value: string) => {
@@ -1188,27 +1190,43 @@ export default function TeacherAcademicPage() {
                             </div>
 
                             {/* Comments Section */}
-                            <div className="space-y-2">
-                              <div>
-                                <label className="text-xs font-medium text-muted-foreground mb-1 block">
-                                  Authentic Comments
-                                </label>
-                                <Textarea 
-                                  placeholder="e.g., Shows excellent problem-solving skills..." 
-                                  value={grades.comment} 
-                                  onChange={e => updateGrade(student.id, selectedEntrySubject, "comment", e.target.value)} 
-                                  className={cn("min-h-[70px] text-sm resize-none", total >= 80 ? "border-emerald-200 bg-emerald-50/50 dark:bg-emerald-950/20" : total < 50 && hasData ? "border-red-200 bg-red-50/50 dark:bg-red-950/20" : "")} 
-                                />
-                              </div>
+                            <div className="space-y-3">
+                              {/* Report Card Comments */}
                               <div>
                                 <label className="text-xs font-medium text-muted-foreground mb-1 block">
                                   Report Card Comments
                                 </label>
                                 <Textarea 
-                                  placeholder="Comments for report card..." 
+                                  placeholder="Comments visible on report card..." 
                                   value={grades.reportComment} 
                                   onChange={e => updateGrade(student.id, selectedEntrySubject, "reportComment", e.target.value)} 
                                   className="min-h-[70px] text-sm resize-none" 
+                                />
+                              </div>
+                              
+                              {/* Study Recommendations */}
+                              <div>
+                                <label className="text-xs font-medium text-muted-foreground mb-1 block">
+                                  Study Recommendations
+                                </label>
+                                <Textarea 
+                                  placeholder="e.g., Focus on Chapter 5, practice more word problems..." 
+                                  value={grades.studyRecommendation} 
+                                  onChange={e => updateGrade(student.id, selectedEntrySubject, "studyRecommendation", e.target.value)} 
+                                  className="min-h-[70px] text-sm resize-none border-blue-200 bg-blue-50/50 dark:bg-blue-950/20" 
+                                />
+                              </div>
+                              
+                              {/* Authentic Comments (Internal) */}
+                              <div>
+                                <label className="text-xs font-medium text-red-600 mb-1 flex items-center gap-1">
+                                  Authentic Comments <span className="text-[10px] text-red-400">(Internal)</span>
+                                </label>
+                                <Textarea 
+                                  placeholder="Internal notes - not visible to parents..." 
+                                  value={grades.comment} 
+                                  onChange={e => updateGrade(student.id, selectedEntrySubject, "comment", e.target.value)} 
+                                  className="min-h-[70px] text-sm resize-none border-red-200 bg-red-50/50 dark:bg-red-950/20" 
                                 />
                               </div>
                             </div>
