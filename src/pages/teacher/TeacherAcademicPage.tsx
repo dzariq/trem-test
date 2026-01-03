@@ -3466,7 +3466,29 @@ export default function TeacherAcademicPage() {
                         border: "1px solid hsl(var(--border))",
                         borderRadius: "8px"
                       }} formatter={(value: number, name: string) => [`${value}%`, name === "classScore" ? "Class Score" : "Cohort Average"]} />
-                        <Bar dataKey="classScore" radius={[0, 4, 4, 0]} barSize={12}>
+                        <Bar 
+                          dataKey="classScore" 
+                          radius={[0, 4, 4, 0]} 
+                          barSize={12}
+                          label={({ x, y, width, height, index }) => {
+                            const entry = subjectVsCohortData[index];
+                            if (!entry) return null;
+                            // Calculate dot position based on cohort average
+                            const chartWidth = width / (entry.classScore / 100);
+                            const dotX = x + (entry.cohortAvg / 100) * chartWidth;
+                            const dotY = y + height / 2;
+                            return (
+                              <circle
+                                cx={dotX}
+                                cy={dotY}
+                                r={5}
+                                fill="#1f2937"
+                                stroke="#ffffff"
+                                strokeWidth={2}
+                              />
+                            );
+                          }}
+                        >
                           {subjectVsCohortData.map((entry, index) => {
                             // Subject colors for visual distinction
                             const subjectColors: Record<string, string> = {
@@ -3490,21 +3512,9 @@ export default function TeacherAcademicPage() {
                             };
                             const fallbackColors = ["#3b82f6", "#f59e0b", "#22c55e", "#ef4444", "#8b5cf6", "#f97316", "#06b6d4", "#ec4899", "#10b981", "#6366f1"];
                             const color = subjectColors[entry.name] || fallbackColors[index % fallbackColors.length];
-                            return <Cell key={index} fill={color} />;
+                            return <Cell key={`cell-${index}`} fill={color} />;
                           })}
                         </Bar>
-                        {/* Cohort Average as dots */}
-                        {subjectVsCohortData.map((entry) => (
-                          <ReferenceDot
-                            key={`cohortAvg-${entry.name}`}
-                            x={entry.cohortAvg}
-                            y={entry.name}
-                            r={4}
-                            fill="hsl(var(--foreground))"
-                            stroke="hsl(var(--background))"
-                            strokeWidth={1}
-                          />
-                        ))}
                       </BarChart>
                     </ResponsiveContainer>
                   </div>
