@@ -111,8 +111,8 @@ interface ReportCardDialogProps {
 }
 
 const gradeColors: Record<string, { bg: string; text: string; border: string }> = {
-  "A*": { bg: "#059669", text: "#ffffff", border: "#047857" },
-  "A": { bg: "#22c55e", text: "#ffffff", border: "#16a34a" },
+  "A*": { bg: "#4ade80", text: "#166534", border: "#22c55e" },
+  "A": { bg: "#059669", text: "#ffffff", border: "#047857" },
   "B": { bg: "#3b82f6", text: "#ffffff", border: "#2563eb" },
   "C": { bg: "#eab308", text: "#000000", border: "#ca8a04" },
   "D": { bg: "#f97316", text: "#ffffff", border: "#ea580c" },
@@ -121,8 +121,8 @@ const gradeColors: Record<string, { bg: string; text: string; border: string }> 
 
 // More visible background colors for grade-based card coloring
 const gradeCardBgColors: Record<string, string> = {
-  "A*": "rgba(5, 150, 105, 0.18)",
-  "A": "rgba(34, 197, 94, 0.18)",
+  "A*": "rgba(74, 222, 128, 0.22)",
+  "A": "rgba(5, 150, 105, 0.18)",
   "B": "rgba(59, 130, 246, 0.18)",
   "C": "rgba(234, 179, 8, 0.18)",
   "D": "rgba(249, 115, 22, 0.18)",
@@ -457,10 +457,10 @@ export function ReportCardDialog({
                           {/* Watermark Grade */}
                           <span style={{
                             position: 'absolute',
-                            bottom: '-20px',
+                            bottom: '-12px',
                             left: '50%',
                             transform: 'translateX(-50%)',
-                            fontSize: '42px',
+                            fontSize: '30px',
                             fontWeight: '900',
                             opacity: 0.15,
                             color: midYearGradeColor.bg,
@@ -477,10 +477,10 @@ export function ReportCardDialog({
                           {/* Watermark Grade */}
                           <span style={{
                             position: 'absolute',
-                            bottom: '-20px',
+                            bottom: '-12px',
                             left: '50%',
                             transform: 'translateX(-50%)',
-                            fontSize: '42px',
+                            fontSize: '30px',
                             fontWeight: '900',
                             opacity: 0.15,
                             color: derivedYearEndGradeColor.bg,
