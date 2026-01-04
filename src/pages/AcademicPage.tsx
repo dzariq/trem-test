@@ -34,7 +34,7 @@ const getCategoryScore = (subject: typeof academicData.subjects[0], year: YearKe
 };
 
 // Import centralized subjects config
-import { getShortSubjectName, getTinySubjectCode, subjectGroups, allSubjects } from "@/data/subjectsConfig";
+import { getShortSubjectName, getTinySubjectCode, subjectGroups, allSubjects, getSubjectColor } from "@/data/subjectsConfig";
 import { SubjectGroupPill } from "@/components/SubjectGroupPill";
 
 // Use centralized short name function
@@ -167,19 +167,9 @@ export default function AcademicPage() {
   const [heatmapExpanded, setHeatmapExpanded] = useState(false);
   const [chartViewMode, setChartViewMode] = useState<"single" | "multiple">("single");
 
-  // Subject color palette for multiple lines mode (design tokens)
-  const subjectStrokePalette = [
-    "hsl(var(--chart-1))",
-    "hsl(var(--chart-2))",
-    "hsl(var(--chart-3))",
-    "hsl(var(--chart-4))",
-    "hsl(var(--chart-5))"
-  ];
-
-  const getSubjectStroke = (subject: string, indexHint = 0) => {
-    const idx = academicData.subjects.findIndex((s) => s.name === subject);
-    const resolvedIndex = idx >= 0 ? idx : indexHint;
-    return subjectStrokePalette[resolvedIndex % subjectStrokePalette.length];
+  // Use centralized subject colors for chart strokes
+  const getSubjectStroke = (subject: string) => {
+    return getSubjectColor(subject);
   };
   const isActivitiesTab = activeTab === "cocurriculum";
   const toggleYear = (year: string) => {
@@ -1923,8 +1913,8 @@ export default function AcademicPage() {
                               <ReferenceLine y={80} stroke="#22c55e" strokeDasharray="5 5" strokeOpacity={0.6} label={{ value: "A", fontSize: 9, fill: "#22c55e", position: "insideTopLeft" }} />
                               <ReferenceLine y={trendGoalValue} stroke="hsl(var(--foreground))" strokeDasharray="4 4" strokeWidth={2} label={{ value: "Goal", fontSize: 9, fill: "hsl(var(--foreground))", position: "insideTopLeft" }} />
 
-                              {trendsSelectedSubjects.map((subject, i) => {
-                                const stroke = getSubjectStroke(subject, i);
+                              {trendsSelectedSubjects.map((subject) => {
+                                const stroke = getSubjectStroke(subject);
                                 return (
                                   <Line
                                     key={subject}
@@ -1947,11 +1937,11 @@ export default function AcademicPage() {
                   {/* Color Legend for Multiple Lines Mode */}
                   {chartViewMode === "multiple" && trendsSelectedSubjects.length > 1 && (
                     <div className="flex flex-wrap gap-x-3 gap-y-1.5 mt-2 px-1">
-                      {trendsSelectedSubjects.map((subject, i) => (
+                      {trendsSelectedSubjects.map((subject) => (
                         <div key={subject} className="flex items-center gap-1">
                           <div
                             className="w-2.5 h-2.5 rounded-full shrink-0"
-                            style={{ backgroundColor: getSubjectStroke(subject, i) }}
+                            style={{ backgroundColor: getSubjectStroke(subject) }}
                           />
                           <span className="text-[10px] text-muted-foreground">
                             {getTinySubjectCode(subject)}
@@ -3791,29 +3781,9 @@ export default function AcademicPage() {
                   flexDirection: 'column',
                   gap: '6px'
                 }}>
-                    {subjectVsClassData.slice(0, 6).map((item, i) => {
-                    const subjectTinyColors: Record<string, string> = {
-                      "Eng": "hsl(var(--chart-3))",
-                      "Math": "hsl(var(--chart-2))",
-                      "Sci": "hsl(var(--chart-1))",
-                      "Phy": "hsl(var(--chart-4))",
-                      "Chem": "hsl(var(--chart-5))",
-                      "Bio": "hsl(var(--chart-3))",
-                      "Hist": "hsl(var(--chart-4))",
-                      "Geo": "hsl(var(--chart-2))",
-                      "Art": "hsl(var(--chart-5))",
-                      "ICT": "hsl(var(--chart-1))",
-                      "Islam": "hsl(var(--chart-3))",
-                      "Add M": "hsl(var(--chart-2))"
-                    };
-                    const fallbackColors = [
-                      "hsl(var(--chart-1))",
-                      "hsl(var(--chart-2))",
-                      "hsl(var(--chart-3))",
-                      "hsl(var(--chart-4))",
-                      "hsl(var(--chart-5))"
-                    ];
-                    const barColor = subjectTinyColors[item.name] || fallbackColors[i % fallbackColors.length];
+                    {subjectVsClassData.slice(0, 6).map((item) => {
+                    // Use centralized subject color - look up by full name
+                    const barColor = getSubjectColor(item.fullName);
                     return <div key={item.name} style={{
                       display: 'flex',
                       alignItems: 'center',
