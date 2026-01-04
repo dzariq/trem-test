@@ -2193,16 +2193,16 @@ export default function AcademicPage() {
                     <span className="text-xs font-bold text-muted-foreground">vs</span>
                   </div>
                   
-                  {/* Exam B - Light Orange Box */}
+                  {/* Exam B - Light Purple Box */}
                   <div className="flex-1 space-y-2 p-3 rounded-xl border" style={{
-                  backgroundColor: 'rgba(249, 115, 22, 0.08)',
-                  borderColor: 'rgba(249, 115, 22, 0.25)'
+                  backgroundColor: 'rgba(139, 92, 246, 0.08)',
+                  borderColor: 'rgba(139, 92, 246, 0.25)'
                 }}>
                     <label className="text-xs font-semibold flex items-center gap-1.5" style={{
-                    color: '#f97316'
+                    color: '#8b5cf6'
                   }}>
                       <div className="w-2 h-2 rounded-full" style={{
-                      backgroundColor: '#f97316'
+                      backgroundColor: '#8b5cf6'
                     }} />
                       Exam B
                     </label>
@@ -2295,10 +2295,10 @@ export default function AcademicPage() {
                     <span className="text-xs font-bold text-muted-foreground">vs</span>
                   </div>
                   
-                  <div className="flex-1 p-4 rounded-xl bg-gradient-to-br from-orange-500/10 to-orange-600/5 border border-orange-500/20">
+                  <div className="flex-1 p-4 rounded-xl bg-gradient-to-br from-violet-500/10 to-violet-600/5 border border-violet-500/20">
                     <div className="flex items-center gap-2 mb-2">
-                      <div className="w-8 h-8 rounded-lg bg-orange-500/20 flex items-center justify-center">
-                        <BarChart3 className="h-4 w-4 text-orange-500" />
+                      <div className="w-8 h-8 rounded-lg bg-violet-500/20 flex items-center justify-center">
+                        <BarChart3 className="h-4 w-4 text-violet-500" />
                       </div>
                       <div>
                         <span className="text-xs font-semibold text-foreground">Exam B</span>
@@ -2390,7 +2390,7 @@ export default function AcademicPage() {
                                                 <div className="flex items-center gap-2 mt-1">
                                                   <span className="text-[10px] text-blue-500">A: {data.examA}</span>
                                                   <span className="text-[10px] text-muted-foreground">vs</span>
-                                                  <span className="text-[10px] text-orange-400">B: {data.examB}</span>
+                                                  <span className="text-[10px] text-violet-400">B: {data.examB}</span>
                                                 </div>
                                                 <p className="text-xs text-emerald-500 font-bold mt-1">+{data.delta} pts</p>
                                               </div>
@@ -2398,8 +2398,8 @@ export default function AcademicPage() {
                                           }
                                           return null;
                                         }} />
+                                        <Bar dataKey="examB" fill="hsl(263, 70%, 75%)" stroke="hsl(263, 70%, 55%)" strokeWidth={1.5} radius={[4, 4, 0, 0]} name="Exam B" />
                                         <Bar dataKey="examA" fill="hsl(217, 91%, 75%)" stroke="hsl(217, 91%, 50%)" strokeWidth={1.5} radius={[4, 4, 0, 0]} name="Exam A" />
-                                        <Bar dataKey="examB" fill="hsl(25, 95%, 75%)" stroke="hsl(25, 95%, 55%)" strokeWidth={1.5} radius={[4, 4, 0, 0]} name="Exam B" />
                                       </BarChart>
                                     </ResponsiveContainer>
                                   </div>
@@ -2407,12 +2407,12 @@ export default function AcademicPage() {
                                   {/* Legend */}
                                   <div className="flex items-center justify-center gap-4 text-[10px]">
                                     <div className="flex items-center gap-1">
-                                      <div className="w-3 h-3 rounded-sm bg-blue-300 border border-blue-500" />
-                                      <span className="text-muted-foreground">Exam A</span>
+                                      <div className="w-3 h-3 rounded-sm bg-violet-300 border border-violet-500" />
+                                      <span className="text-muted-foreground">Exam B</span>
                                     </div>
                                     <div className="flex items-center gap-1">
-                                      <div className="w-3 h-3 rounded-sm bg-orange-200 border border-orange-400" />
-                                      <span className="text-muted-foreground">Exam B</span>
+                                      <div className="w-3 h-3 rounded-sm bg-blue-300 border border-blue-500" />
+                                      <span className="text-muted-foreground">Exam A</span>
                                     </div>
                                   </div>
                                   
@@ -2509,7 +2509,7 @@ export default function AcademicPage() {
                                                 <div className="flex items-center gap-2 mt-1">
                                                   <span className="text-[10px] text-blue-500">A: {data.examA}</span>
                                                   <span className="text-[10px] text-muted-foreground">vs</span>
-                                                  <span className="text-[10px] text-orange-400">B: {data.examB}</span>
+                                                  <span className="text-[10px] text-violet-400">B: {data.examB}</span>
                                                 </div>
                                                 <p className="text-xs text-red-500 font-bold mt-1">{data.delta} pts</p>
                                               </div>
@@ -2517,8 +2517,8 @@ export default function AcademicPage() {
                                           }
                                           return null;
                                         }} />
+                                        <Bar dataKey="examB" fill="hsl(263, 70%, 75%)" stroke="hsl(263, 70%, 55%)" strokeWidth={1.5} radius={[4, 4, 0, 0]} name="Exam B" />
                                         <Bar dataKey="examA" fill="hsl(217, 91%, 75%)" stroke="hsl(217, 91%, 50%)" strokeWidth={1.5} radius={[4, 4, 0, 0]} name="Exam A" />
-                                        <Bar dataKey="examB" fill="hsl(25, 95%, 75%)" stroke="hsl(25, 95%, 55%)" strokeWidth={1.5} radius={[4, 4, 0, 0]} name="Exam B" />
                                       </BarChart>
                                     </ResponsiveContainer>
                                   </div>
@@ -2526,12 +2526,12 @@ export default function AcademicPage() {
                                   {/* Legend */}
                                   <div className="flex items-center justify-center gap-4 text-[10px]">
                                     <div className="flex items-center gap-1">
-                                      <div className="w-3 h-3 rounded-sm bg-blue-300 border border-blue-500" />
-                                      <span className="text-muted-foreground">Exam A</span>
+                                      <div className="w-3 h-3 rounded-sm bg-violet-300 border border-violet-500" />
+                                      <span className="text-muted-foreground">Exam B</span>
                                     </div>
                                     <div className="flex items-center gap-1">
-                                      <div className="w-3 h-3 rounded-sm bg-orange-200 border border-orange-400" />
-                                      <span className="text-muted-foreground">Exam B</span>
+                                      <div className="w-3 h-3 rounded-sm bg-blue-300 border border-blue-500" />
+                                      <span className="text-muted-foreground">Exam A</span>
                                     </div>
                                   </div>
                                   
