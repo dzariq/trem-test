@@ -1952,6 +1952,23 @@ export default function AcademicPage() {
                   )}
                 </div>
 
+                {/* Exam List for Selected Period */}
+                <div className="space-y-2">
+                  <h4 className="text-xs font-medium text-muted-foreground">
+                    Exams in selected period ({trendData.length} exams)
+                  </h4>
+                  <div className="flex flex-wrap gap-1.5">
+                    {trendData.map((item, idx) => (
+                      <div
+                        key={idx}
+                        className="px-2.5 py-1.5 rounded-md bg-muted/50 border border-border/50 text-xs font-medium text-foreground"
+                      >
+                        {item.period}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
                 {/* Rising & Falling Subjects */}
                 <div className="grid grid-cols-2 gap-3 items-start">
                   {/* Rising Subjects */}
