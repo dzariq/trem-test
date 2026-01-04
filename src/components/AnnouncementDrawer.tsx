@@ -170,12 +170,13 @@ export function AnnouncementDrawer({
       setActiveSnapPoint={setSnap}
     >
       <DrawerPrimitive.Portal>
-        <DrawerPrimitive.Overlay className="fixed inset-0 z-50 bg-black/80" />
+        <DrawerPrimitive.Overlay className="fixed inset-0 z-50 bg-black/50" />
         <DrawerPrimitive.Content
           className={cn(
-            "fixed inset-x-0 bottom-0 z-50 flex flex-col rounded-t-[24px] border-t bg-background shadow-2xl",
-            snap === 1 ? "h-[100dvh]" : "h-auto max-h-[90vh]"
+            "fixed inset-x-0 bottom-0 z-50 flex flex-col rounded-t-[24px] border-t bg-background shadow-2xl outline-none",
+            snap === 1 ? "h-[100dvh] rounded-none" : "h-auto max-h-[90vh]"
           )}
+          style={{ left: 0, right: 0 }}
         >
           {/* Drag Handle */}
           <div className="mx-auto mt-3 h-1.5 w-14 rounded-full bg-muted-foreground/30 flex-shrink-0" />
