@@ -1958,7 +1958,7 @@ export default function AcademicPage() {
                   <h4 className="text-xs font-medium text-muted-foreground">
                     Exams in selected period ({trendData.length} exams)
                   </h4>
-                  <div className="flex flex-wrap gap-1.5">
+                  <div className="flex gap-1.5 overflow-x-auto pb-1 scrollbar-thin">
                     {trendData.map((item, idx) => (
                       <div
                         key={idx}
