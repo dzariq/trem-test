@@ -144,33 +144,33 @@ export const subjectShortNames: Record<string, string> = {
   "Chemistry": "Chem"
 };
 
-// Super short 3-letter codes for radar charts and compact displays
+// Super short codes for charts and compact displays
 export const subjectTinyCodes: Record<string, string> = {
-  "English (First Language)": "E1L",
-  "English (Second Language)": "E2L",
-  "Malay (First Language)": "M1L",
-  "Malay (Foreign Language)": "MFL",
-  "Chinese (Foreign Language)": "CFL",
-  "Chinese (Second Language)": "C2L",
-  "Chinese (Beginner)": "CB",
-  "Science": "SCI",
-  "Biology": "BIO",
-  "Chemistry": "CHE",
-  "Physics": "PHY",
-  "Mathematics": "MTH",
-  "Additional Mathematics": "AMT",
-  "Business Studies": "BUS",
-  "Accounting": "ACC",
-  "Economics": "ECO",
+  "English (First Language)": "Eng 1L",
+  "English (Second Language)": "Eng 2L",
+  "Malay (First Language)": "Mly 1L",
+  "Malay (Foreign Language)": "Mly FL",
+  "Chinese (Foreign Language)": "Chi FL",
+  "Chinese (Second Language)": "Chi 2L",
+  "Chinese (Beginner)": "Chi B",
+  "Science": "Sci",
+  "Biology": "Bio",
+  "Chemistry": "Chem",
+  "Physics": "Phys",
+  "Mathematics": "Math",
+  "Additional Mathematics": "A.Math",
+  "Business Studies": "Biz",
+  "Accounting": "Acct",
+  "Economics": "Econ",
   "Global Perspectives": "GP",
-  "Geography": "GEO",
-  "History": "HIS",
+  "Geography": "Geo",
+  "History": "Hist",
   "ICT": "ICT",
   "Living Skills & Arts": "LSA",
-  "Art": "ART",
-  "Music": "MUS",
-  "Moral": "MOR",
-  "Islamic Studies": "ISL"
+  "Art": "Art",
+  "Music": "Music",
+  "Moral": "Moral",
+  "Islamic Studies": "Islam"
 };
 
 // Helper function to get short name
