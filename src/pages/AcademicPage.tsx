@@ -1098,6 +1098,29 @@ export default function AcademicPage() {
               </TabsContent>
 
               <TabsContent value="cocurriculum" className="mt-4 space-y-3">
+                {/* Year Selection */}
+                <div className="space-y-2 pb-3 mb-3 border-b border-border">
+                  <div className="flex gap-2">
+                    {(["2025", "2024", "2023"] as const).map(year => (
+                      <button 
+                        key={year} 
+                        onClick={() => toggleYear(year)} 
+                        className={`flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-md border text-sm font-medium transition-colors ${
+                          selectedYears.includes(year) 
+                            ? "bg-primary text-primary-foreground border-primary" 
+                            : "bg-card border-border text-foreground hover:bg-accent"
+                        }`}
+                      >
+                        {selectedYears.includes(year) && <Check className="h-3.5 w-3.5" />}
+                        {year}
+                      </button>
+                    ))}
+                  </div>
+                  <Badge variant="secondary" className="text-xs">
+                    Viewing: {selectedYears.sort().reverse().join(", ")}
+                  </Badge>
+                </div>
+
                 {/* Awards displayed as trophy-style cards with category tags */}
                 {academicData.awards && <>
                     {/* Sports House */}
@@ -1165,29 +1188,6 @@ export default function AcademicPage() {
                   setCertificateOpen(true);
                 }} />}
                   </>}
-
-                {/* Year Selection */}
-                <div className="space-y-2 mt-4 pt-3 border-t border-border">
-                  <div className="flex gap-2">
-                    {(["2025", "2024", "2023"] as const).map(year => (
-                      <button 
-                        key={year} 
-                        onClick={() => toggleYear(year)} 
-                        className={`flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-md border text-sm font-medium transition-colors ${
-                          selectedYears.includes(year) 
-                            ? "bg-primary text-primary-foreground border-primary" 
-                            : "bg-card border-border text-foreground hover:bg-accent"
-                        }`}
-                      >
-                        {selectedYears.includes(year) && <Check className="h-3.5 w-3.5" />}
-                        {year}
-                      </button>
-                    ))}
-                  </div>
-                  <Badge variant="secondary" className="text-xs">
-                    Viewing: {selectedYears.sort().reverse().join(", ")}
-                  </Badge>
-                </div>
 
                 {/* Certificate Dialog */}
                 {selectedAward && <CertificateDialog open={certificateOpen} onOpenChange={setCertificateOpen} category={selectedAward.category} organization={selectedAward.organization} role={selectedAward.role} studentName={students[0]?.name || "Student Name"} />}
