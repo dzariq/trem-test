@@ -2532,9 +2532,7 @@ export default function AcademicPage() {
 
                       {/* Individual Subject Goals */}
                       <div className="space-y-3">
-                        {goalsData.map(item => <div key={item.name} className="p-4 rounded-xl bg-accent/30 border border-border/50 transition-all">
-                            {/* Card Header - Tappable */}
-                            <div className="flex items-center justify-between cursor-pointer active:opacity-70 min-h-[44px]" onClick={() => {
+                        {goalsData.map(item => <div key={item.name} className="p-4 rounded-xl bg-accent/30 border border-border/50 transition-all cursor-pointer active:opacity-70" onClick={() => {
                         if (editingGoal === item.name) {
                           setEditingGoal(null);
                         } else {
@@ -2542,10 +2540,12 @@ export default function AcademicPage() {
                           setTempGoalValue(item.target.toString());
                         }
                       }}>
+                            {/* Card Header */}
+                            <div className="flex items-center justify-between min-h-[44px]">
                               <div className="flex items-center gap-3">
-                                {item.achieved ? <CheckCircle2 className="h-5 w-5" style={{
+                                {item.achieved ? <CheckCircle2 className="h-7 w-7" style={{
                             color: '#22c55e'
-                          }} /> : item.gap <= 30 ? <Circle className="h-5 w-5 text-chart-2" /> : <Circle className="h-5 w-5 text-chart-4" />}
+                          }} /> : item.gap <= 30 ? <Circle className="h-7 w-7 text-chart-2" /> : <Circle className="h-7 w-7 text-chart-4" />}
                                 <span className="font-medium text-foreground">{item.name}</span>
                               </div>
                               <div className="flex items-center gap-2">
@@ -2557,7 +2557,7 @@ export default function AcademicPage() {
                             </div>
 
                             {/* Expanded Slider Section */}
-                            {editingGoal === item.name && <div className="mt-4 pt-4 border-t border-border/50 space-y-4 animate-in slide-in-from-top-2 duration-200">
+                            {editingGoal === item.name && <div className="mt-4 pt-4 border-t border-border/50 space-y-4 animate-in slide-in-from-top-2 duration-200" onClick={(e) => e.stopPropagation()}>
                                 <div className="flex items-center justify-between">
                                   <span className="text-sm text-muted-foreground">Set Target Goal</span>
                                   <span className="text-lg font-bold text-primary">{tempGoalValue}%</span>
