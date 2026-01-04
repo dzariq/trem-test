@@ -1656,8 +1656,8 @@ export default function AcademicPage() {
                         <span className="text-3xl font-bold text-foreground">
                           {trendDirection.currentValue ?? currentAverage}%
                         </span>
-                        {trendDirection.direction !== "stable" && <span className={`flex items-center text-sm font-semibold ${trendDirection.direction === "up" ? "text-green-500" : "text-red-500"}`}>
-                            {trendDirection.direction === "up" ? <TrendingUp className="h-4 w-4 mr-0.5" /> : <TrendingDown className="h-4 w-4 mr-0.5" />}
+                        {trendDirection.direction !== "stable" && <span className={`flex items-center text-sm font-bold px-2 py-1 rounded ${trendDirection.direction === "up" ? "bg-green-500 text-white" : "bg-red-500 text-white"}`}>
+                            {trendDirection.direction === "up" ? <TrendingUp className="h-4 w-4 mr-1" /> : <TrendingDown className="h-4 w-4 mr-1" />}
                             {trendDirection.direction === "up" ? "+" : "-"}{trendDirection.change}%
                           </span>}
                       </div>
