@@ -72,29 +72,54 @@ export default function AcademicPage() {
   const [chartZoom, setChartZoom] = useState(1);
   const chartContainerRef = useRef<HTMLDivElement>(null);
   const lastTouchDistance = useRef<number | null>(null);
+  const [isPinching, setIsPinching] = useState(false);
+
+  // Haptic feedback helper
+  const triggerHaptic = useCallback(() => {
+    if ('vibrate' in navigator) {
+      navigator.vibrate(10);
+    }
+  }, []);
+
   const handleTouchStart = useCallback((e: React.TouchEvent) => {
     if (e.touches.length === 2) {
+      e.preventDefault();
+      setIsPinching(true);
       const touch1 = e.touches[0];
       const touch2 = e.touches[1];
       lastTouchDistance.current = Math.hypot(touch2.clientX - touch1.clientX, touch2.clientY - touch1.clientY);
     }
   }, []);
+
   const handleTouchMove = useCallback((e: React.TouchEvent) => {
     if (e.touches.length === 2 && lastTouchDistance.current !== null) {
+      e.preventDefault();
       const touch1 = e.touches[0];
       const touch2 = e.touches[1];
       const currentDistance = Math.hypot(touch2.clientX - touch1.clientX, touch2.clientY - touch1.clientY);
       const scale = currentDistance / lastTouchDistance.current;
-      setChartZoom(prev => Math.min(3, Math.max(0.5, prev * scale)));
+      const newZoom = Math.min(3, Math.max(0.5, chartZoom * scale));
+      
+      // Trigger haptic at zoom thresholds
+      if ((chartZoom < 1.5 && newZoom >= 1.5) || (chartZoom >= 1.5 && newZoom < 1.5) ||
+          (chartZoom < 2 && newZoom >= 2) || (chartZoom >= 2 && newZoom < 2)) {
+        triggerHaptic();
+      }
+      
+      setChartZoom(newZoom);
       lastTouchDistance.current = currentDistance;
     }
-  }, []);
+  }, [chartZoom, triggerHaptic]);
+
   const handleTouchEnd = useCallback(() => {
+    setIsPinching(false);
     lastTouchDistance.current = null;
   }, []);
+
   const resetZoom = useCallback(() => {
+    triggerHaptic();
     setChartZoom(1);
-  }, []);
+  }, [triggerHaptic]);
 
   // Grade Analysis sub-tabs
   const [analysisTab, setAnalysisTab] = useState("overview");
@@ -1444,39 +1469,71 @@ export default function AcademicPage() {
                 </div>
 
                 <div className="space-y-2">
-                  <h4 className="text-sm font-medium text-foreground flex items-center gap-2">
-                    Subject Performance
-                    <Badge variant="outline" className="text-[10px] px-1.5 py-0">
-                      <span className="w-2 h-2 rounded-full mr-1" style={{
-                      backgroundColor: "hsl(var(--foreground))"
-                    }} />
-                      Goal
-                    </Badge>
-                  </h4>
-                  <div className="h-52">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <BarChart data={subjectPerformance} layout="vertical">
-                        <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" strokeOpacity={0.3} />
-                        <XAxis type="number" domain={[0, 100]} tick={{
-                        fontSize: 10,
-                        fill: "hsl(var(--muted-foreground))"
+                  <div className="flex items-center justify-between">
+                    <h4 className="text-sm font-medium text-foreground flex items-center gap-2">
+                      Subject Performance
+                      <Badge variant="outline" className="text-[10px] px-1.5 py-0">
+                        <span className="w-2 h-2 rounded-full mr-1" style={{
+                        backgroundColor: "hsl(var(--foreground))"
                       }} />
-                        <YAxis type="category" dataKey="name" tick={{
-                        fontSize: 10,
-                        fill: "hsl(var(--muted-foreground))"
-                      }} width={70} />
-                        <Tooltip contentStyle={{
-                        backgroundColor: "hsl(var(--card))",
-                        border: "1px solid hsl(var(--border))",
-                        borderRadius: "8px"
-                      }} formatter={(value: number, name: string) => [`${value}%`, name === "score" ? "Score" : name === "goal" ? "Goal" : name]} />
-                        <Bar dataKey="score" radius={[0, 4, 4, 0]}>
-                          {subjectPerformance.map((entry, index) => <Cell key={index} fill={lineColors[index % lineColors.length]} />)}
-                        </Bar>
+                        Goal
+                      </Badge>
+                    </h4>
+                    {chartZoom !== 1 && (
+                      <Button variant="ghost" size="sm" className="h-6 text-xs px-2" onClick={resetZoom}>
+                        Reset
+                      </Button>
+                    )}
+                  </div>
+                  <div 
+                    ref={chartContainerRef}
+                    className="overflow-auto select-none transition-all duration-200 ease-out rounded-lg"
+                    style={{ 
+                      height: Math.max(208, 208 * chartZoom),
+                      WebkitTapHighlightColor: 'transparent',
+                      touchAction: isPinching ? 'none' : 'pan-x pan-y'
+                    }}
+                    onTouchStart={handleTouchStart}
+                    onTouchMove={handleTouchMove}
+                    onTouchEnd={handleTouchEnd}
+                  >
+                    <div 
+                      className="transition-transform duration-200 ease-out origin-top-left"
+                      style={{ 
+                        width: `${100 * chartZoom}%`,
+                        height: `${100 * chartZoom}%`,
+                        minHeight: 208
+                      }}
+                    >
+                      <ResponsiveContainer width="100%" height="100%">
+                        <BarChart data={subjectPerformance} layout="vertical">
+                          <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" strokeOpacity={0.3} />
+                          <XAxis type="number" domain={[0, 100]} tick={{
+                          fontSize: 10,
+                          fill: "hsl(var(--muted-foreground))"
+                        }} />
+                          <YAxis type="category" dataKey="name" tick={{
+                          fontSize: 10,
+                          fill: "hsl(var(--muted-foreground))"
+                        }} width={70} />
+                          <Tooltip 
+                            contentStyle={{
+                              backgroundColor: "hsl(var(--card))",
+                              border: "1px solid hsl(var(--border))",
+                              borderRadius: "8px"
+                            }} 
+                            formatter={(value: number, name: string) => [`${value}%`, name === "score" ? "Score" : name === "goal" ? "Goal" : name]}
+                            trigger="click"
+                            cursor={false}
+                          />
+                          <Bar dataKey="score" radius={[0, 4, 4, 0]}>
+                            {subjectPerformance.map((entry, index) => <Cell key={index} fill={lineColors[index % lineColors.length]} />)}
+                          </Bar>
 
-                        {subjectPerformance.map(entry => <ReferenceDot key={`goal-${entry.name}`} x={entry.goal} y={entry.name} r={4} fill="hsl(var(--foreground))" stroke="hsl(var(--background))" strokeWidth={1} />)}
-                      </BarChart>
-                    </ResponsiveContainer>
+                          {subjectPerformance.map(entry => <ReferenceDot key={`goal-${entry.name}`} x={entry.goal} y={entry.name} r={4} fill="hsl(var(--foreground))" stroke="hsl(var(--background))" strokeWidth={1} />)}
+                        </BarChart>
+                      </ResponsiveContainer>
+                    </div>
                   </div>
                 </div>
 
