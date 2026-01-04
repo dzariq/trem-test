@@ -2003,6 +2003,53 @@ export default function AcademicPage() {
                   </p>
                 </div>
 
+                {/* Strengths Profile Radar Chart */}
+                <div className="space-y-2">
+                  <h4 className="text-sm font-medium text-foreground flex items-center gap-1.5">
+                    <Target className="h-4 w-4 text-primary" />
+                    Strengths Profile
+                  </h4>
+                  <p className="text-[10px] text-muted-foreground -mt-1">
+                    This chart shows your child's performance across all subjects at a glance. The further the colored area extends towards the edge, the stronger the performance in that subject. Use this to quickly identify areas of strength and subjects that may need more attention.
+                  </p>
+                  <div className="h-56">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <RadarChart data={radarData} cx="50%" cy="50%" outerRadius="65%">
+                        <PolarGrid stroke="hsl(var(--border))" strokeOpacity={0.5} />
+                        <PolarAngleAxis 
+                          dataKey="subject" 
+                          tick={{ fontSize: 9, fill: "hsl(var(--muted-foreground))" }} 
+                          tickLine={false} 
+                        />
+                        <PolarRadiusAxis 
+                          angle={30} 
+                          domain={[0, 100]} 
+                          tick={{ fontSize: 8, fill: "hsl(var(--muted-foreground))" }} 
+                          tickCount={5} 
+                          axisLine={false} 
+                        />
+                        <Radar 
+                          name="Score" 
+                          dataKey="score" 
+                          stroke={radarAverage >= 70 ? "#22c55e" : radarAverage >= 50 ? "#f59e0b" : "#ef4444"} 
+                          fill={radarAverage >= 70 ? "#22c55e" : radarAverage >= 50 ? "#f59e0b" : "#ef4444"} 
+                          fillOpacity={0.3} 
+                          strokeWidth={2} 
+                        />
+                        <Tooltip 
+                          contentStyle={{
+                            backgroundColor: "hsl(var(--card))",
+                            border: "1px solid hsl(var(--border))",
+                            borderRadius: "8px",
+                            fontSize: 12
+                          }} 
+                          formatter={(value: number) => [`${value}%`, "Score"]} 
+                        />
+                      </RadarChart>
+                    </ResponsiveContainer>
+                  </div>
+                </div>
+
                 {/* Performance Heatmap */}
                 <div className="space-y-2">
                   <h4 className="text-sm font-medium text-foreground flex items-center gap-1.5">
