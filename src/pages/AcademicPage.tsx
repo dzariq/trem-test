@@ -166,6 +166,7 @@ export default function AcademicPage() {
   const comparisonReportRef = useRef<HTMLDivElement>(null);
   const [heatmapExpanded, setHeatmapExpanded] = useState(false);
   const [chartViewMode, setChartViewMode] = useState<"single" | "multiple">("single");
+  const [trendSubjectsView, setTrendSubjectsView] = useState<"growth" | "decline">("growth");
 
   // Use centralized subject colors for chart strokes
   const getSubjectStroke = (subject: string) => {
@@ -465,7 +466,7 @@ export default function AcademicPage() {
         improvement: current - prev
       };
     }).filter(item => item.improvement > 0 && item.current > 0 && item.prev > 0);
-    return improvements.sort((a, b) => b.improvement - a.improvement).slice(0, 3);
+    return improvements.sort((a, b) => b.improvement - a.improvement).slice(0, 5);
   }, [selectedYear, examType, filteredGradesSubjects]);
 
   // Falling behind - subjects with biggest decline from previous exam
@@ -495,7 +496,7 @@ export default function AcademicPage() {
         decline: prev - current
       };
     }).filter(item => item.decline > 0 && item.current > 0 && item.prev > 0);
-    return declines.sort((a, b) => b.decline - a.decline).slice(0, 3);
+    return declines.sort((a, b) => b.decline - a.decline).slice(0, 5);
   }, [selectedYear, examType, filteredGradesSubjects]);
 
   // Year-over-year trend data with period filtering (3 years of data)
@@ -1969,45 +1970,112 @@ export default function AcademicPage() {
                   </div>
                 </div>
 
-                {/* Rising & Falling Subjects */}
-                <div className="grid grid-cols-2 gap-3 items-start">
-                  {/* Rising Subjects */}
-                  <div className="space-y-2">
-                    <h4 className="text-sm font-medium text-foreground flex items-center gap-1.5 min-h-[20px]">
-                      <TrendingUp className="h-4 w-4 text-green-500 flex-shrink-0" />
-                      <span>Rising Subjects</span>
+                {/* Top Growth / Decline Subjects - Swipeable */}
+                <div className="space-y-3">
+                  {/* Header with toggle */}
+                  <div className="flex items-center justify-between">
+                    <h4 className="text-sm font-medium text-foreground flex items-center gap-1.5">
+                      {trendSubjectsView === "growth" ? (
+                        <>
+                          <TrendingUp className="h-4 w-4 text-green-500" />
+                          <span>Top Growth</span>
+                        </>
+                      ) : (
+                        <>
+                          <TrendingDown className="h-4 w-4 text-red-500" />
+                          <span>Top Decline</span>
+                        </>
+                      )}
                     </h4>
-                    <div className="space-y-2">
-                      {risingStars.length > 0 ? risingStars.map((item, idx) => <div key={idx} className="p-2.5 rounded-lg border border-green-500/30 bg-green-500/10 min-h-[72px] flex flex-col justify-between">
-                          <div className="flex items-start justify-between gap-2">
-                            <span className="text-xs font-medium text-foreground line-clamp-2 flex-1">{item.subject.name}</span>
-                            <span className="text-xs font-bold text-green-600 flex-shrink-0">+{item.improvement}%</span>
-                          </div>
-                          <p className="text-[10px] text-muted-foreground">
-                            {item.prev}% → {item.current}%
-                          </p>
-                        </div>) : <p className="text-xs text-muted-foreground p-2">No improving subjects</p>}
+                    {/* Indicator dots */}
+                    <div className="flex items-center gap-1.5">
+                      <button
+                        onClick={() => setTrendSubjectsView("growth")}
+                        className={`w-2 h-2 rounded-full transition-all ${
+                          trendSubjectsView === "growth" ? "bg-green-500 w-4" : "bg-muted-foreground/30"
+                        }`}
+                      />
+                      <button
+                        onClick={() => setTrendSubjectsView("decline")}
+                        className={`w-2 h-2 rounded-full transition-all ${
+                          trendSubjectsView === "decline" ? "bg-red-500 w-4" : "bg-muted-foreground/30"
+                        }`}
+                      />
                     </div>
                   </div>
-
-                  {/* Falling Behind */}
-                  <div className="space-y-2">
-                    <h4 className="text-sm font-medium text-foreground flex items-center gap-1.5 min-h-[20px]">
-                      <TrendingDown className="h-4 w-4 text-red-500 flex-shrink-0" />
-                      <span>Needs Focus</span>
-                    </h4>
-                    <div className="space-y-2">
-                      {fallingBehind.length > 0 ? fallingBehind.map((item, idx) => <div key={idx} className="p-2.5 rounded-lg border border-red-500/30 bg-red-500/10 min-h-[72px] flex flex-col justify-between">
-                          <div className="flex items-start justify-between gap-2">
-                            <span className="text-xs font-medium text-foreground line-clamp-2 flex-1">{item.subject.name}</span>
-                            <span className="text-xs font-bold text-red-600 flex-shrink-0">-{item.decline}%</span>
+                  
+                  {/* Swipeable container */}
+                  <div 
+                    className="overflow-hidden relative"
+                    onTouchStart={(e) => {
+                      const touch = e.touches[0];
+                      (e.currentTarget as HTMLElement).dataset.startX = touch.clientX.toString();
+                    }}
+                    onTouchEnd={(e) => {
+                      const startX = parseFloat((e.currentTarget as HTMLElement).dataset.startX || "0");
+                      const endX = e.changedTouches[0].clientX;
+                      const diff = startX - endX;
+                      if (Math.abs(diff) > 50) {
+                        if (diff > 0 && trendSubjectsView === "growth") {
+                          setTrendSubjectsView("decline");
+                        } else if (diff < 0 && trendSubjectsView === "decline") {
+                          setTrendSubjectsView("growth");
+                        }
+                      }
+                    }}
+                  >
+                    <div 
+                      className="flex transition-transform duration-300 ease-out"
+                      style={{ transform: `translateX(${trendSubjectsView === "growth" ? "0" : "-100"}%)` }}
+                    >
+                      {/* Growth Panel */}
+                      <div className="w-full flex-shrink-0 space-y-2">
+                        {risingStars.length > 0 ? risingStars.map((item, idx) => (
+                          <div 
+                            key={idx} 
+                            className="p-2.5 rounded-lg border border-green-500/30 bg-green-500/10 flex items-center justify-between gap-3"
+                          >
+                            <div className="flex items-center gap-2 min-w-0 flex-1">
+                              <span className="text-xs font-bold text-green-600 flex-shrink-0">#{idx + 1}</span>
+                              <span className="text-xs font-medium text-foreground truncate">{item.subject.name}</span>
+                            </div>
+                            <div className="flex items-center gap-2 flex-shrink-0">
+                              <span className="text-[10px] text-muted-foreground">{item.prev}% → {item.current}%</span>
+                              <span className="text-xs font-bold text-green-600">+{item.improvement}%</span>
+                            </div>
                           </div>
-                          <p className="text-[10px] text-muted-foreground">
-                            {item.prev}% → {item.current}%
-                          </p>
-                        </div>) : <p className="text-xs text-muted-foreground p-2">All subjects stable!</p>}
+                        )) : (
+                          <p className="text-xs text-muted-foreground p-2 text-center">No improving subjects</p>
+                        )}
+                      </div>
+                      
+                      {/* Decline Panel */}
+                      <div className="w-full flex-shrink-0 space-y-2">
+                        {fallingBehind.length > 0 ? fallingBehind.map((item, idx) => (
+                          <div 
+                            key={idx} 
+                            className="p-2.5 rounded-lg border border-red-500/30 bg-red-500/10 flex items-center justify-between gap-3"
+                          >
+                            <div className="flex items-center gap-2 min-w-0 flex-1">
+                              <span className="text-xs font-bold text-red-600 flex-shrink-0">#{idx + 1}</span>
+                              <span className="text-xs font-medium text-foreground truncate">{item.subject.name}</span>
+                            </div>
+                            <div className="flex items-center gap-2 flex-shrink-0">
+                              <span className="text-[10px] text-muted-foreground">{item.prev}% → {item.current}%</span>
+                              <span className="text-xs font-bold text-red-600">-{item.decline}%</span>
+                            </div>
+                          </div>
+                        )) : (
+                          <p className="text-xs text-muted-foreground p-2 text-center">All subjects stable!</p>
+                        )}
+                      </div>
                     </div>
                   </div>
+                  
+                  {/* Swipe hint */}
+                  <p className="text-[10px] text-muted-foreground text-center">
+                    ← Swipe to see {trendSubjectsView === "growth" ? "declining" : "growing"} subjects →
+                  </p>
                 </div>
 
                 {/* Dynamic Trend Insights */}
