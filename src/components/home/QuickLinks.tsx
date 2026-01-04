@@ -34,10 +34,10 @@ export function QuickLinks() {
               )}
             >
               <div className={cn(
-                "w-10 h-10 rounded-xl flex items-center justify-center mb-1.5",
+                "w-11 h-11 rounded-xl flex items-center justify-center mb-1.5",
                 link.bgColor
               )}>
-                <link.icon className={cn("h-5 w-5", link.iconColor)} strokeWidth={1.75} />
+                <link.icon className={cn("h-6 w-6", link.iconColor)} strokeWidth={2} />
               </div>
               <span className="text-[9px] font-medium text-foreground text-center leading-tight">{link.label}</span>
             </button>
