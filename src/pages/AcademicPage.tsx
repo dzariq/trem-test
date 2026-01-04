@@ -2147,9 +2147,9 @@ export default function AcademicPage() {
               {/* COMPARISON TAB */}
               <TabsContent value="comparison" className="space-y-4">
                 {/* Exam Selectors */}
-                <div className="grid grid-cols-2 gap-4">
+                <div className="flex items-center gap-2">
                   {/* Exam A - Light Blue Box */}
-                  <div className="space-y-3 p-3 rounded-xl border" style={{
+                  <div className="flex-1 space-y-2 p-3 rounded-xl border" style={{
                   backgroundColor: 'rgba(59, 130, 246, 0.08)',
                   borderColor: 'rgba(59, 130, 246, 0.25)'
                 }}>
@@ -2165,7 +2165,7 @@ export default function AcademicPage() {
                     ...prev,
                     year: v as YearKey
                   }))}>
-                      <SelectTrigger className="w-full h-9 text-sm bg-background/80">
+                      <SelectTrigger className="w-full h-8 text-xs bg-background/80">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent className="bg-card">
@@ -2178,7 +2178,7 @@ export default function AcademicPage() {
                     ...prev,
                     type: v as ExamType
                   }))}>
-                      <SelectTrigger className="w-full h-9 text-sm bg-background/80">
+                      <SelectTrigger className="w-full h-8 text-xs bg-background/80">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent className="bg-card">
@@ -2188,8 +2188,13 @@ export default function AcademicPage() {
                     </Select>
                   </div>
                   
+                  {/* VS Divider */}
+                  <div className="flex flex-col items-center justify-center">
+                    <span className="text-xs font-bold text-muted-foreground">vs</span>
+                  </div>
+                  
                   {/* Exam B - Light Red Box */}
-                  <div className="space-y-3 p-3 rounded-xl border" style={{
+                  <div className="flex-1 space-y-2 p-3 rounded-xl border" style={{
                   backgroundColor: 'rgba(239, 68, 68, 0.08)',
                   borderColor: 'rgba(239, 68, 68, 0.25)'
                 }}>
@@ -2205,7 +2210,7 @@ export default function AcademicPage() {
                     ...prev,
                     year: v as YearKey
                   }))}>
-                      <SelectTrigger className="w-full h-9 text-sm bg-background/80">
+                      <SelectTrigger className="w-full h-8 text-xs bg-background/80">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent className="bg-card">
@@ -2218,7 +2223,7 @@ export default function AcademicPage() {
                     ...prev,
                     type: v as ExamType
                   }))}>
-                      <SelectTrigger className="w-full h-9 text-sm bg-background/80">
+                      <SelectTrigger className="w-full h-8 text-xs bg-background/80">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent className="bg-card">
