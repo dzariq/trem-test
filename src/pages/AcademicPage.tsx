@@ -2353,14 +2353,18 @@ export default function AcademicPage() {
                                 </div>
                               ) : (
                                 <div className="space-y-3">
-                                  {/* Difference Badge */}
-                                  <div className="flex justify-center">
-                                    <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-500/10 border border-emerald-500/20">
-                                      <TrendingUp className="h-3.5 w-3.5 text-emerald-500" />
-                                      <span className="text-xs font-semibold text-emerald-600">
-                                        +{(top5Growth.reduce((sum, t) => sum + t.delta, 0) / top5Growth.length).toFixed(1)} pts avg improvement
-                                      </span>
-                                    </div>
+                                  {/* Individual Subject Badges */}
+                                  <div className="flex flex-wrap justify-center gap-1.5">
+                                    {top5Growth.map(item => {
+                                      const percentChange = item.examB > 0 ? (item.delta / item.examB * 100).toFixed(0) : '0';
+                                      return (
+                                        <div key={item.name} className="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-emerald-500/10 border border-emerald-500/20">
+                                          <ArrowUp className="h-3 w-3 text-emerald-500" />
+                                          <span className="text-[10px] font-medium text-foreground">{shortenSubjectName(item.name)}</span>
+                                          <span className="text-[10px] font-bold text-emerald-600">+{percentChange}%</span>
+                                        </div>
+                                      );
+                                    })}
                                   </div>
                                   
                                   {/* Bar Chart - Before/After Comparison */}
@@ -2391,8 +2395,8 @@ export default function AcademicPage() {
                                           }
                                           return null;
                                         }} />
-                                        <Bar dataKey="examA" fill="hsl(217, 91%, 70%)" radius={[4, 4, 0, 0]} name="Exam A" />
-                                        <Bar dataKey="examB" fill="hsl(0, 72%, 75%)" radius={[4, 4, 0, 0]} name="Exam B" />
+                                        <Bar dataKey="examA" fill="hsl(217, 91%, 75%)" stroke="hsl(217, 91%, 50%)" strokeWidth={1.5} radius={[4, 4, 0, 0]} name="Exam A" />
+                                        <Bar dataKey="examB" fill="hsl(0, 72%, 80%)" stroke="hsl(0, 72%, 55%)" strokeWidth={1.5} radius={[4, 4, 0, 0]} name="Exam B" />
                                       </BarChart>
                                     </ResponsiveContainer>
                                   </div>
@@ -2400,11 +2404,11 @@ export default function AcademicPage() {
                                   {/* Legend */}
                                   <div className="flex items-center justify-center gap-4 text-[10px]">
                                     <div className="flex items-center gap-1">
-                                      <div className="w-3 h-3 rounded-sm bg-blue-400" />
+                                      <div className="w-3 h-3 rounded-sm bg-blue-300 border border-blue-500" />
                                       <span className="text-muted-foreground">Exam A</span>
                                     </div>
                                     <div className="flex items-center gap-1">
-                                      <div className="w-3 h-3 rounded-sm bg-red-300" />
+                                      <div className="w-3 h-3 rounded-sm bg-red-200 border border-red-400" />
                                       <span className="text-muted-foreground">Exam B</span>
                                     </div>
                                   </div>
@@ -2471,14 +2475,18 @@ export default function AcademicPage() {
                                 </div>
                               ) : (
                                 <div className="space-y-3">
-                                  {/* Difference Badge */}
-                                  <div className="flex justify-center">
-                                    <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-red-500/10 border border-red-500/20">
-                                      <TrendingDown className="h-3.5 w-3.5 text-red-500" />
-                                      <span className="text-xs font-semibold text-red-600">
-                                        {(top5Decline.reduce((sum, t) => sum + t.delta, 0) / top5Decline.length).toFixed(1)} pts avg decline
-                                      </span>
-                                    </div>
+                                  {/* Individual Subject Badges */}
+                                  <div className="flex flex-wrap justify-center gap-1.5">
+                                    {top5Decline.map(item => {
+                                      const percentChange = item.examB > 0 ? (Math.abs(item.delta) / item.examB * 100).toFixed(0) : '0';
+                                      return (
+                                        <div key={item.name} className="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-red-500/10 border border-red-500/20">
+                                          <ArrowDown className="h-3 w-3 text-red-500" />
+                                          <span className="text-[10px] font-medium text-foreground">{shortenSubjectName(item.name)}</span>
+                                          <span className="text-[10px] font-bold text-red-600">-{percentChange}%</span>
+                                        </div>
+                                      );
+                                    })}
                                   </div>
                                   
                                   {/* Bar Chart - Before/After Comparison */}
@@ -2509,8 +2517,8 @@ export default function AcademicPage() {
                                           }
                                           return null;
                                         }} />
-                                        <Bar dataKey="examA" fill="hsl(217, 91%, 70%)" radius={[4, 4, 0, 0]} name="Exam A" />
-                                        <Bar dataKey="examB" fill="hsl(0, 72%, 75%)" radius={[4, 4, 0, 0]} name="Exam B" />
+                                        <Bar dataKey="examA" fill="hsl(217, 91%, 75%)" stroke="hsl(217, 91%, 50%)" strokeWidth={1.5} radius={[4, 4, 0, 0]} name="Exam A" />
+                                        <Bar dataKey="examB" fill="hsl(0, 72%, 80%)" stroke="hsl(0, 72%, 55%)" strokeWidth={1.5} radius={[4, 4, 0, 0]} name="Exam B" />
                                       </BarChart>
                                     </ResponsiveContainer>
                                   </div>
@@ -2518,11 +2526,11 @@ export default function AcademicPage() {
                                   {/* Legend */}
                                   <div className="flex items-center justify-center gap-4 text-[10px]">
                                     <div className="flex items-center gap-1">
-                                      <div className="w-3 h-3 rounded-sm bg-blue-400" />
+                                      <div className="w-3 h-3 rounded-sm bg-blue-300 border border-blue-500" />
                                       <span className="text-muted-foreground">Exam A</span>
                                     </div>
                                     <div className="flex items-center gap-1">
-                                      <div className="w-3 h-3 rounded-sm bg-red-300" />
+                                      <div className="w-3 h-3 rounded-sm bg-red-200 border border-red-400" />
                                       <span className="text-muted-foreground">Exam B</span>
                                     </div>
                                   </div>
