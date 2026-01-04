@@ -2457,12 +2457,12 @@ export default function AcademicPage() {
                           {/* Slide 2: Top Declined Subjects */}
                           <CarouselItem className="pl-2">
                             <div className="p-4 rounded-xl bg-gradient-to-br from-red-500/10 to-red-600/5 border border-red-500/20">
-                              <div className="flex items-center justify-between mb-3">
+                              <div className="flex flex-col items-center justify-center mb-3">
                                 <div className="flex items-center gap-2">
                                   <div className="w-8 h-8 rounded-lg bg-red-500/20 flex items-center justify-center">
                                     <TrendingDown className="h-4 w-4 text-red-500" />
                                   </div>
-                                  <div>
+                                  <div className="text-center">
                                     <h4 className="text-sm font-semibold text-foreground">Top Declined Subjects</h4>
                                     <p className="text-[10px] text-muted-foreground">Needs attention</p>
                                   </div>
