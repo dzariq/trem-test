@@ -2292,57 +2292,7 @@ export default function AcademicPage() {
                   </div>
                 </div>
 
-                {/* Comparison Stats Cards */}
-                {(() => {
-                  const avgA = Math.round(comparisonData.reduce((sum, d) => sum + d.examA, 0) / comparisonData.length);
-                  const avgB = Math.round(comparisonData.reduce((sum, d) => sum + d.examB, 0) / comparisonData.length);
-                  const overallChange = avgA - avgB;
-                  const improvedSubjects = comparisonData.filter(d => d.delta > 0);
-                  const declinedSubjects = comparisonData.filter(d => d.delta < 0);
-                  const bestPerforming = [...comparisonData].sort((a, b) => b.delta - a.delta)[0];
-                  
-                  return (
-                    <div className="grid grid-cols-3 gap-1.5">
-                      {/* Improved */}
-                      <div className="p-2 rounded-xl bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800 shadow-sm">
-                        <div className="flex items-center gap-1.5 mb-0.5">
-                          <span className="text-xs">🚀</span>
-                          <p className="text-sm font-bold text-emerald-600">{improvedSubjects.length}</p>
-                          <p className="text-[9px] text-muted-foreground">Improved</p>
-                        </div>
-                        <p className="text-[8px] text-emerald-600 truncate">
-                          {improvedSubjects.slice(0, 2).map(s => shortenSubjectName(s.name)).join(', ')}
-                          {improvedSubjects.length > 2 && ` +${improvedSubjects.length - 2}`}
-                        </p>
-                      </div>
 
-                      {/* Declined */}
-                      <div className="p-2 rounded-xl bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-800 shadow-sm">
-                        <div className="flex items-center gap-1.5 mb-0.5">
-                          <span className="text-xs">📉</span>
-                          <p className="text-sm font-bold text-red-500">{declinedSubjects.length}</p>
-                          <p className="text-[9px] text-muted-foreground">Declined</p>
-                        </div>
-                        <p className="text-[8px] text-red-500 truncate">
-                          {declinedSubjects.slice(0, 2).map(s => shortenSubjectName(s.name)).join(', ')}
-                          {declinedSubjects.length > 2 && ` +${declinedSubjects.length - 2}`}
-                        </p>
-                      </div>
-
-                      {/* Best Performing */}
-                      <div className="p-2 rounded-xl bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 shadow-sm">
-                        <div className="flex items-center gap-1 mb-0.5">
-                          <span className="text-xs">🏆</span>
-                          <p className="text-xs font-bold text-amber-600 truncate">{bestPerforming ? shortenSubjectName(bestPerforming.name) : '-'}</p>
-                        </div>
-                        <p className="text-[9px] text-muted-foreground">Best Performing</p>
-                        <p className="text-[8px] text-amber-600">
-                          {bestPerforming && bestPerforming.delta > 0 ? `+${bestPerforming.delta} marks` : '-'}
-                        </p>
-                      </div>
-                    </div>
-                  );
-                })()}
 
                 {/* Top 5 Growth/Decline Leaders - Swipeable Carousel */}
                 {(() => {
