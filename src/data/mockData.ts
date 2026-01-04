@@ -1,4 +1,5 @@
 // Mock data for the parent portal
+import sportsDayBanner from "@/assets/sports-day-banner.png";
 
 export const announcements = [
   {
@@ -29,7 +30,7 @@ Parents are warmly invited to attend and cheer for their children. Please ensure
 For any queries, please contact the PE Department.`,
     date: "2026-01-05",
     category: "Event",
-    image: "https://images.unsplash.com/photo-1571019614242-c5c5dee9f50b?w=400&h=200&fit=crop",
+    image: sportsDayBanner,
     attachments: [
       { name: "Sports Day Schedule.pdf", url: "/documents/student-handbook.pdf" },
       { name: "Participation Form.pdf", url: "/documents/student-handbook.pdf" }
