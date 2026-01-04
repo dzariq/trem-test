@@ -311,10 +311,54 @@ export function AnnouncementDrawer({
             </ScrollArea>
           </div>
 
-          {/* Navigation Footer */}
-          <div className="absolute bottom-0 left-0 right-0 bg-background/98 backdrop-blur-md border-t border-border/50 px-4 py-4 pb-6">
+          {/* Navigation Footer with Thumbnail Strip */}
+          <div className="absolute bottom-0 left-0 right-0 bg-background/98 backdrop-blur-md border-t border-border/50 px-4 pt-3 pb-6">
+            {/* Thumbnail Strip */}
+            <div className="flex items-center gap-2 mb-3 overflow-x-auto pb-2 scrollbar-hide">
+              {announcements.map((announcement, idx) => {
+                const readIds = getReadAnnouncementIds();
+                const isItemRead = readIds.includes(announcement.id);
+                
+                return (
+                  <button
+                    key={announcement.id}
+                    onClick={() => onNavigate(idx)}
+                    className={cn(
+                      "relative flex-shrink-0 w-14 h-14 rounded-lg overflow-hidden transition-all duration-200",
+                      "border-2",
+                      idx === currentIndex
+                        ? "border-primary ring-2 ring-primary/30 scale-105"
+                        : "border-transparent hover:border-muted-foreground/30"
+                    )}
+                  >
+                    {announcement.image ? (
+                      <img
+                        src={announcement.image}
+                        alt={announcement.title}
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <div className="w-full h-full bg-gradient-to-br from-primary/20 to-secondary/20 flex items-center justify-center">
+                        <Megaphone className="h-5 w-5 text-primary/50" />
+                      </div>
+                    )}
+                    {/* Read indicator */}
+                    {isItemRead && (
+                      <div className="absolute top-0.5 right-0.5 w-3 h-3 rounded-full bg-green-500 flex items-center justify-center">
+                        <Check className="h-2 w-2 text-white" />
+                      </div>
+                    )}
+                    {/* Current indicator overlay */}
+                    {idx === currentIndex && (
+                      <div className="absolute inset-0 bg-primary/10" />
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* Navigation Buttons */}
             <div className="flex items-center justify-between">
-              {/* Previous Button */}
               <Button
                 variant="outline"
                 size="sm"
@@ -326,23 +370,11 @@ export function AnnouncementDrawer({
                 Prev
               </Button>
 
-              {/* Dots Indicator */}
-              <div className="flex items-center gap-2">
-                {announcements.map((_, idx) => (
-                  <button
-                    key={idx}
-                    onClick={() => onNavigate(idx)}
-                    className={cn(
-                      "rounded-full transition-all duration-200",
-                      idx === currentIndex
-                        ? "w-7 h-2.5 bg-primary"
-                        : "w-2.5 h-2.5 bg-muted-foreground/25 hover:bg-muted-foreground/40"
-                    )}
-                  />
-                ))}
-              </div>
+              {/* Counter */}
+              <span className="text-sm text-muted-foreground font-medium">
+                {currentIndex + 1} / {announcements.length}
+              </span>
 
-              {/* Next Button */}
               <Button
                 variant="outline"
                 size="sm"
