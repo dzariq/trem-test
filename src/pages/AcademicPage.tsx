@@ -3060,6 +3060,73 @@ export default function AcademicPage() {
                 </div>
               </div>
 
+              {/* Subject Performance Bar Chart */}
+              <div style={{
+                marginBottom: '12px',
+                pageBreakInside: 'avoid'
+              }}>
+                <h3 style={{
+                  fontSize: '12px',
+                  fontWeight: 600,
+                  marginBottom: '8px',
+                  paddingBottom: '4px',
+                  borderBottom: '1px solid #ddd',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px'
+                }}>
+                  📊 Performance Chart
+                </h3>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                  {subjectPerformance.map((sub, index) => {
+                    const barColors = ['#3b82f6', '#f59e0b', '#10b981', '#8b5cf6', '#ef4444', '#06b6d4', '#ec4899', '#84cc16'];
+                    const barColor = barColors[index % barColors.length];
+                    return (
+                      <div key={sub.name} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <div style={{ width: '80px', fontSize: '8px', fontWeight: 500, color: '#374151', textAlign: 'right', flexShrink: 0 }}>
+                          {shortenSubjectName(sub.name)}
+                        </div>
+                        <div style={{ flex: 1, height: '14px', background: '#f3f4f6', borderRadius: '4px', position: 'relative', overflow: 'hidden' }}>
+                          {/* Score bar */}
+                          <div style={{ 
+                            width: `${sub.score}%`, 
+                            height: '100%', 
+                            background: barColor,
+                            borderRadius: '4px'
+                          }} />
+                          {/* Goal marker */}
+                          <div style={{
+                            position: 'absolute',
+                            left: `${sub.goal}%`,
+                            top: '50%',
+                            transform: 'translate(-50%, -50%)',
+                            width: '8px',
+                            height: '8px',
+                            background: '#1a1a1a',
+                            borderRadius: '50%',
+                            border: '1.5px solid white'
+                          }} />
+                        </div>
+                        <div style={{ width: '35px', fontSize: '9px', fontWeight: 600, color: '#1a1a1a', textAlign: 'right', flexShrink: 0 }}>
+                          {sub.score}%
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+                {/* Legend */}
+                <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px', marginTop: '6px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                    <div style={{ width: '20px', height: '8px', background: '#3b82f6', borderRadius: '2px' }} />
+                    <span style={{ fontSize: '7px', color: '#6b7280' }}>Score</span>
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                    <div style={{ width: '8px', height: '8px', background: '#1a1a1a', borderRadius: '50%', border: '1px solid #d1d5db' }} />
+                    <span style={{ fontSize: '7px', color: '#6b7280' }}>Goal</span>
+                  </div>
+                </div>
+              </div>
+
               {/* Grade Distribution */}
               <div style={{
               marginBottom: '12px',
