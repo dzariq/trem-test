@@ -39,6 +39,7 @@ export default function AttendancePage() {
   const [scrollPosition, setScrollPosition] = useState(100);
   const [isPinching, setIsPinching] = useState(false);
   const lastPinchDistance = useRef<number | null>(null);
+  const [activeTooltip, setActiveTooltip] = useState<string | null>(null);
 
   const yearOptions = ["2025", "2024", "2023"];
   const zoomOptions: { value: ZoomLevel; label: string }[] = [
@@ -279,6 +280,13 @@ export default function AttendancePage() {
               onTouchStart={handleTouchStart}
               onTouchMove={handleTouchMove}
               onTouchEnd={handleTouchEnd}
+              onClick={(e) => {
+                // Dismiss tooltip when clicking on empty space
+                const target = e.target as HTMLElement;
+                if (!target.closest('.recharts-bar-rectangle')) {
+                  setActiveTooltip(null);
+                }
+              }}
             >
               <div 
                 className="transition-all duration-300 ease-out"
@@ -289,7 +297,15 @@ export default function AttendancePage() {
                 }}
               >
                 <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={chartData} barCategoryGap={zoomLevel === 3 ? "20%" : zoomLevel === 6 ? "15%" : "10%"}>
+                  <BarChart 
+                    data={chartData} 
+                    barCategoryGap={zoomLevel === 3 ? "20%" : zoomLevel === 6 ? "15%" : "10%"}
+                    onClick={(data) => {
+                      if (data && data.activeLabel) {
+                        setActiveTooltip(prev => prev === data.activeLabel ? null : data.activeLabel);
+                      }
+                    }}
+                  >
                     <XAxis 
                       dataKey="month" 
                       tick={{ fontSize: zoomLevel === 12 ? 9 : 11, fill: "hsl(var(--muted-foreground))" }}
@@ -306,10 +322,18 @@ export default function AttendancePage() {
                       contentStyle={{ 
                         backgroundColor: "hsl(var(--card))",
                         border: "1px solid hsl(var(--border))",
-                        borderRadius: "8px"
+                        borderRadius: "8px",
+                        boxShadow: "0 4px 12px rgba(0,0,0,0.15)"
                       }}
-                      trigger="click"
-                      cursor={false}
+                      cursor={{ fill: 'hsl(var(--muted)/0.3)' }}
+                      active={activeTooltip !== null}
+                      payload={activeTooltip ? chartData.filter(d => d.month === activeTooltip).map(d => [
+                        { name: 'Present', value: d.present, color: 'hsl(160, 84%, 39%)' },
+                        { name: 'Absent', value: d.absent, color: 'hsl(var(--destructive))' },
+                        { name: 'Late', value: d.late, color: 'hsl(38, 92%, 50%)' },
+                        { name: 'Excused', value: d.excused, color: 'hsl(271, 91%, 65%)' }
+                      ]).flat() : undefined}
+                      label={activeTooltip || undefined}
                     />
                     <Legend 
                       wrapperStyle={{ fontSize: 10, paddingTop: 8 }}
