@@ -1983,9 +1983,11 @@ export default function AcademicPage() {
                             <span className="text-xs font-medium text-foreground line-clamp-2 flex-1">{item.subject.name}</span>
                             <span className="text-xs font-bold text-green-600 flex-shrink-0">+{item.improvement}%</span>
                           </div>
-                          <p className="text-[10px] text-muted-foreground">
-                            {item.prev}% → {item.current}%
-                          </p>
+                          <div className="flex items-center gap-1.5 mt-1">
+                            <span className="text-base font-bold text-muted-foreground">{item.prev}%</span>
+                            <span className="text-xs text-muted-foreground">→</span>
+                            <span className="text-base font-bold text-green-600">{item.current}%</span>
+                          </div>
                         </div>) : <p className="text-xs text-muted-foreground p-2">No improving subjects</p>}
                     </div>
                   </div>
@@ -2002,9 +2004,11 @@ export default function AcademicPage() {
                             <span className="text-xs font-medium text-foreground line-clamp-2 flex-1">{item.subject.name}</span>
                             <span className="text-xs font-bold text-red-600 flex-shrink-0">-{item.decline}%</span>
                           </div>
-                          <p className="text-[10px] text-muted-foreground">
-                            {item.prev}% → {item.current}%
-                          </p>
+                          <div className="flex items-center gap-1.5 mt-1">
+                            <span className="text-base font-bold text-muted-foreground">{item.prev}%</span>
+                            <span className="text-xs text-muted-foreground">→</span>
+                            <span className="text-base font-bold text-red-600">{item.current}%</span>
+                          </div>
                         </div>) : <p className="text-xs text-muted-foreground p-2">All subjects stable!</p>}
                     </div>
                   </div>
