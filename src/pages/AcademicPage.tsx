@@ -1953,15 +1953,15 @@ export default function AcademicPage() {
                 </div>
 
                 {/* Rising & Falling Subjects */}
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-2 gap-3 items-start">
                   {/* Rising Subjects */}
                   <div className="space-y-2">
-                    <h4 className="text-sm font-medium text-foreground flex items-center gap-1.5">
-                      <TrendingUp className="h-4 w-4 text-green-500" />
-                      Rising Subjects
+                    <h4 className="text-sm font-medium text-foreground flex items-center gap-1.5 min-h-[20px]">
+                      <TrendingUp className="h-4 w-4 text-green-500 flex-shrink-0" />
+                      <span>Rising Subjects</span>
                     </h4>
                     <div className="space-y-2">
-                      {risingStars.length > 0 ? risingStars.map((item, idx) => <div key={idx} className="p-2.5 rounded-lg border border-green-500/30 bg-green-500/10 h-[72px] flex flex-col justify-between">
+                      {risingStars.length > 0 ? risingStars.map((item, idx) => <div key={idx} className="p-2.5 rounded-lg border border-green-500/30 bg-green-500/10 min-h-[72px] flex flex-col justify-between">
                           <div className="flex items-start justify-between gap-2">
                             <span className="text-xs font-medium text-foreground line-clamp-2 flex-1">{item.subject.name}</span>
                             <span className="text-xs font-bold text-green-600 flex-shrink-0">+{item.improvement}%</span>
@@ -1975,12 +1975,12 @@ export default function AcademicPage() {
 
                   {/* Falling Behind */}
                   <div className="space-y-2">
-                    <h4 className="text-sm font-medium text-foreground flex items-center gap-1.5">
-                      <TrendingDown className="h-4 w-4 text-red-500" />
-                      Needs Focus
+                    <h4 className="text-sm font-medium text-foreground flex items-center gap-1.5 min-h-[20px]">
+                      <TrendingDown className="h-4 w-4 text-red-500 flex-shrink-0" />
+                      <span>Needs Focus</span>
                     </h4>
                     <div className="space-y-2">
-                      {fallingBehind.length > 0 ? fallingBehind.map((item, idx) => <div key={idx} className="p-2.5 rounded-lg border border-red-500/30 bg-red-500/10 h-[72px] flex flex-col justify-between">
+                      {fallingBehind.length > 0 ? fallingBehind.map((item, idx) => <div key={idx} className="p-2.5 rounded-lg border border-red-500/30 bg-red-500/10 min-h-[72px] flex flex-col justify-between">
                           <div className="flex items-start justify-between gap-2">
                             <span className="text-xs font-medium text-foreground line-clamp-2 flex-1">{item.subject.name}</span>
                             <span className="text-xs font-bold text-red-600 flex-shrink-0">-{item.decline}%</span>
