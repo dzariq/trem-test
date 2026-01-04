@@ -2353,13 +2353,23 @@ export default function AcademicPage() {
                                 </div>
                               ) : (
                                 <div className="space-y-3">
+                                  {/* Difference Badge */}
+                                  <div className="flex justify-center">
+                                    <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-500/10 border border-emerald-500/20">
+                                      <TrendingUp className="h-3.5 w-3.5 text-emerald-500" />
+                                      <span className="text-xs font-semibold text-emerald-600">
+                                        +{(top5Growth.reduce((sum, t) => sum + t.delta, 0) / top5Growth.length).toFixed(1)} pts avg improvement
+                                      </span>
+                                    </div>
+                                  </div>
+                                  
                                   {/* Bar Chart - Before/After Comparison */}
                                   <div className="h-36 -mx-2">
                                     <ResponsiveContainer width="100%" height="100%">
                                       <BarChart data={top5Growth.map(item => ({
                                         name: shortenSubjectName(item.name),
-                                        examB: item.examB,
                                         examA: item.examA,
+                                        examB: item.examB,
                                         delta: item.delta
                                       }))} margin={{ top: 10, right: 10, left: 10, bottom: 0 }} barGap={2} barCategoryGap="20%">
                                         <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 9, fill: 'hsl(var(--muted-foreground))' }} interval={0} height={30} />
@@ -2371,9 +2381,9 @@ export default function AcademicPage() {
                                               <div className="bg-popover border border-border rounded-lg shadow-lg p-2">
                                                 <p className="text-xs font-medium text-foreground">{data.name}</p>
                                                 <div className="flex items-center gap-2 mt-1">
-                                                  <span className="text-[10px] text-red-500">B: {data.examB}</span>
-                                                  <span className="text-[10px] text-muted-foreground">→</span>
                                                   <span className="text-[10px] text-blue-500">A: {data.examA}</span>
+                                                  <span className="text-[10px] text-muted-foreground">vs</span>
+                                                  <span className="text-[10px] text-red-400">B: {data.examB}</span>
                                                 </div>
                                                 <p className="text-xs text-emerald-500 font-bold mt-1">+{data.delta} pts</p>
                                               </div>
@@ -2381,8 +2391,8 @@ export default function AcademicPage() {
                                           }
                                           return null;
                                         }} />
-                                        <Bar dataKey="examB" fill="hsl(0, 72%, 51%)" radius={[4, 4, 0, 0]} name="Exam B" />
-                                        <Bar dataKey="examA" fill="hsl(217, 91%, 60%)" radius={[4, 4, 0, 0]} name="Exam A" />
+                                        <Bar dataKey="examA" fill="hsl(217, 91%, 70%)" radius={[4, 4, 0, 0]} name="Exam A" />
+                                        <Bar dataKey="examB" fill="hsl(0, 72%, 75%)" radius={[4, 4, 0, 0]} name="Exam B" />
                                       </BarChart>
                                     </ResponsiveContainer>
                                   </div>
@@ -2390,12 +2400,12 @@ export default function AcademicPage() {
                                   {/* Legend */}
                                   <div className="flex items-center justify-center gap-4 text-[10px]">
                                     <div className="flex items-center gap-1">
-                                      <div className="w-3 h-3 rounded-sm bg-red-500" />
-                                      <span className="text-muted-foreground">Exam B (Before)</span>
+                                      <div className="w-3 h-3 rounded-sm bg-blue-400" />
+                                      <span className="text-muted-foreground">Exam A</span>
                                     </div>
                                     <div className="flex items-center gap-1">
-                                      <div className="w-3 h-3 rounded-sm bg-blue-500" />
-                                      <span className="text-muted-foreground">Exam A (After)</span>
+                                      <div className="w-3 h-3 rounded-sm bg-red-300" />
+                                      <span className="text-muted-foreground">Exam B</span>
                                     </div>
                                   </div>
                                   
@@ -2461,13 +2471,23 @@ export default function AcademicPage() {
                                 </div>
                               ) : (
                                 <div className="space-y-3">
+                                  {/* Difference Badge */}
+                                  <div className="flex justify-center">
+                                    <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-red-500/10 border border-red-500/20">
+                                      <TrendingDown className="h-3.5 w-3.5 text-red-500" />
+                                      <span className="text-xs font-semibold text-red-600">
+                                        {(top5Decline.reduce((sum, t) => sum + t.delta, 0) / top5Decline.length).toFixed(1)} pts avg decline
+                                      </span>
+                                    </div>
+                                  </div>
+                                  
                                   {/* Bar Chart - Before/After Comparison */}
                                   <div className="h-36 -mx-2">
                                     <ResponsiveContainer width="100%" height="100%">
                                       <BarChart data={top5Decline.map(item => ({
                                         name: shortenSubjectName(item.name),
-                                        examB: item.examB,
                                         examA: item.examA,
+                                        examB: item.examB,
                                         delta: item.delta
                                       }))} margin={{ top: 10, right: 10, left: 10, bottom: 0 }} barGap={2} barCategoryGap="20%">
                                         <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 9, fill: 'hsl(var(--muted-foreground))' }} interval={0} height={30} />
@@ -2479,9 +2499,9 @@ export default function AcademicPage() {
                                               <div className="bg-popover border border-border rounded-lg shadow-lg p-2">
                                                 <p className="text-xs font-medium text-foreground">{data.name}</p>
                                                 <div className="flex items-center gap-2 mt-1">
-                                                  <span className="text-[10px] text-red-500">B: {data.examB}</span>
-                                                  <span className="text-[10px] text-muted-foreground">→</span>
                                                   <span className="text-[10px] text-blue-500">A: {data.examA}</span>
+                                                  <span className="text-[10px] text-muted-foreground">vs</span>
+                                                  <span className="text-[10px] text-red-400">B: {data.examB}</span>
                                                 </div>
                                                 <p className="text-xs text-red-500 font-bold mt-1">{data.delta} pts</p>
                                               </div>
@@ -2489,8 +2509,8 @@ export default function AcademicPage() {
                                           }
                                           return null;
                                         }} />
-                                        <Bar dataKey="examB" fill="hsl(0, 72%, 51%)" radius={[4, 4, 0, 0]} name="Exam B" />
-                                        <Bar dataKey="examA" fill="hsl(217, 91%, 60%)" radius={[4, 4, 0, 0]} name="Exam A" />
+                                        <Bar dataKey="examA" fill="hsl(217, 91%, 70%)" radius={[4, 4, 0, 0]} name="Exam A" />
+                                        <Bar dataKey="examB" fill="hsl(0, 72%, 75%)" radius={[4, 4, 0, 0]} name="Exam B" />
                                       </BarChart>
                                     </ResponsiveContainer>
                                   </div>
@@ -2498,12 +2518,12 @@ export default function AcademicPage() {
                                   {/* Legend */}
                                   <div className="flex items-center justify-center gap-4 text-[10px]">
                                     <div className="flex items-center gap-1">
-                                      <div className="w-3 h-3 rounded-sm bg-red-500" />
-                                      <span className="text-muted-foreground">Exam B (Before)</span>
+                                      <div className="w-3 h-3 rounded-sm bg-blue-400" />
+                                      <span className="text-muted-foreground">Exam A</span>
                                     </div>
                                     <div className="flex items-center gap-1">
-                                      <div className="w-3 h-3 rounded-sm bg-blue-500" />
-                                      <span className="text-muted-foreground">Exam A (After)</span>
+                                      <div className="w-3 h-3 rounded-sm bg-red-300" />
+                                      <span className="text-muted-foreground">Exam B</span>
                                     </div>
                                   </div>
                                   
