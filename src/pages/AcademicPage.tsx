@@ -1654,7 +1654,7 @@ export default function AcademicPage() {
                     </div>
                   </div>
                   {/* Period Toggle */}
-                  <div className="flex items-center gap-1 bg-muted/50 p-1 rounded-lg">
+                  <div className="flex items-center gap-1 bg-muted/50 p-1 rounded-lg w-fit">
                     {([{
                     key: "1year",
                     label: "1Y"
