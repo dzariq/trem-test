@@ -2273,8 +2273,8 @@ export default function AcademicPage() {
                 </Button>
 
                 {/* Comparison Summary Cards */}
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="p-4 rounded-xl bg-gradient-to-br from-blue-500/10 to-blue-600/5 border border-blue-500/20">
+                <div className="flex items-center gap-2">
+                  <div className="flex-1 p-4 rounded-xl bg-gradient-to-br from-blue-500/10 to-blue-600/5 border border-blue-500/20">
                     <div className="flex items-center gap-2 mb-2">
                       <div className="w-8 h-8 rounded-lg bg-blue-500/20 flex items-center justify-center">
                         <BarChart3 className="h-4 w-4 text-blue-500" />
@@ -2289,7 +2289,13 @@ export default function AcademicPage() {
                     </p>
                     <p className="text-[10px] text-muted-foreground">Average Score</p>
                   </div>
-                  <div className="p-4 rounded-xl bg-gradient-to-br from-red-500/10 to-red-600/5 border border-red-500/20">
+                  
+                  {/* VS Divider */}
+                  <div className="flex flex-col items-center justify-center">
+                    <span className="text-xs font-bold text-muted-foreground">vs</span>
+                  </div>
+                  
+                  <div className="flex-1 p-4 rounded-xl bg-gradient-to-br from-red-500/10 to-red-600/5 border border-red-500/20">
                     <div className="flex items-center gap-2 mb-2">
                       <div className="w-8 h-8 rounded-lg bg-red-500/20 flex items-center justify-center">
                         <BarChart3 className="h-4 w-4 text-red-500" />
