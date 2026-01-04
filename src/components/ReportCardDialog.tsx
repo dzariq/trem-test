@@ -513,6 +513,69 @@ export function ReportCardDialog({
               </table>
             </div>
 
+            {/* Subject Performance Chart - Static for Print */}
+            <div style={{ marginBottom: '12px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '8px', paddingBottom: '6px', borderBottom: '1px solid #065f46' }}>
+                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#065f46" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <line x1="18" y1="20" x2="18" y2="10" />
+                  <line x1="12" y1="20" x2="12" y2="4" />
+                  <line x1="6" y1="20" x2="6" y2="14" />
+                </svg>
+                <h3 style={{ fontSize: '11px', fontWeight: '700', color: '#065f46' }}>Subject Performance</h3>
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                {displayedSubjects.map((subject, index) => {
+                  const barColors = ['#3b82f6', '#f59e0b', '#10b981', '#8b5cf6', '#ef4444', '#06b6d4', '#ec4899', '#84cc16'];
+                  const barColor = barColors[index % barColors.length];
+                  const score = subject.score ?? 0;
+                  const goal = Math.min((subject.score ?? 70) + 5, 100);
+                  return (
+                    <div key={subject.name} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <div style={{ width: '70px', fontSize: '8px', fontWeight: '500', color: '#374151', textAlign: 'right', flexShrink: 0 }}>
+                        {subject.name.length > 12 ? subject.name.slice(0, 12) + '...' : subject.name}
+                      </div>
+                      <div style={{ flex: 1, height: '14px', background: '#f3f4f6', borderRadius: '4px', position: 'relative', overflow: 'hidden' }}>
+                        {/* Score bar */}
+                        <div style={{ 
+                          width: `${score}%`, 
+                          height: '100%', 
+                          background: barColor,
+                          borderRadius: '4px',
+                          transition: 'width 0.3s ease'
+                        }} />
+                        {/* Goal marker */}
+                        <div style={{
+                          position: 'absolute',
+                          left: `${goal}%`,
+                          top: '50%',
+                          transform: 'translate(-50%, -50%)',
+                          width: '8px',
+                          height: '8px',
+                          background: '#1a1a1a',
+                          borderRadius: '50%',
+                          border: '1.5px solid white'
+                        }} />
+                      </div>
+                      <div style={{ width: '35px', fontSize: '9px', fontWeight: '600', color: '#1a1a1a', textAlign: 'right', flexShrink: 0 }}>
+                        {score}%
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+              {/* Legend */}
+              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px', marginTop: '6px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                  <div style={{ width: '20px', height: '8px', background: '#3b82f6', borderRadius: '2px' }} />
+                  <span style={{ fontSize: '7px', color: '#6b7280' }}>Score</span>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                  <div style={{ width: '8px', height: '8px', background: '#1a1a1a', borderRadius: '50%', border: '1px solid #d1d5db' }} />
+                  <span style={{ fontSize: '7px', color: '#6b7280' }}>Goal</span>
+                </div>
+              </div>
+            </div>
+
             {/* Learning Tips - Separate Table */}
             {displayedSubjects.some(s => s.classStudyRecommendation || s.studyRecommendation) && (
               <div style={{ marginBottom: '12px' }}>
