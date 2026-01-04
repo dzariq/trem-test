@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   Drawer,
   DrawerContent,
@@ -19,10 +20,35 @@ import {
   Trash2,
   Check,
   Users,
-  BookOpen
+  BookOpen,
+  Trophy,
+  Megaphone,
+  CreditCard,
+  Bus,
+  Utensils,
+  Camera,
+  ClipboardCheck,
+  MessageSquare,
+  ChevronRight,
+  GraduationCap
 } from "lucide-react";
 
-type NotificationType = "announcement" | "event" | "academic" | "alert" | "attendance" | "grade";
+type NotificationType = 
+  | "announcement" 
+  | "event" 
+  | "academic" 
+  | "alert" 
+  | "attendance" 
+  | "grade"
+  | "report_card"
+  | "award"
+  | "payment"
+  | "transport"
+  | "meal"
+  | "photo"
+  | "permission"
+  | "ptm"
+  | "message";
 
 interface Notification {
   id: string;
@@ -31,6 +57,8 @@ interface Notification {
   message: string;
   time: string;
   isRead: boolean;
+  linkTo?: string; // Navigation path when clicked
+  linkParams?: Record<string, string>; // Optional params like announcement ID
 }
 
 const parentNotifications: Notification[] = [
@@ -40,7 +68,8 @@ const parentNotifications: Notification[] = [
     title: "School Holiday Notice",
     message: "School will be closed on 29th January for Chinese New Year.",
     time: "2 hours ago",
-    isRead: false
+    isRead: false,
+    linkTo: "/parent/announcements/1"
   },
   {
     id: "2",
@@ -48,31 +77,98 @@ const parentNotifications: Notification[] = [
     title: "Sports Day Reminder",
     message: "Don't forget! Sports Day is on 15th January. Please prepare sports attire.",
     time: "5 hours ago",
-    isRead: false
+    isRead: false,
+    linkTo: "/parent/calendar"
   },
   {
     id: "3",
-    type: "academic",
+    type: "report_card",
     title: "Report Card Available",
     message: "Mid-Year 2025 report card is now available for download.",
     time: "1 day ago",
-    isRead: false
+    isRead: false,
+    linkTo: "/parent/academic"
   },
   {
     id: "4",
-    type: "alert",
+    type: "payment",
     title: "Fee Payment Reminder",
     message: "Term 2 school fees are due by 31st January.",
     time: "2 days ago",
-    isRead: true
+    isRead: true,
+    linkTo: "/parent/support"
   },
   {
     id: "5",
-    type: "event",
+    type: "ptm",
     title: "Parent-Teacher Meeting",
     message: "PTM scheduled for 20th January. Please book your slot.",
     time: "3 days ago",
-    isRead: true
+    isRead: true,
+    linkTo: "/parent/calendar"
+  },
+  {
+    id: "6",
+    type: "award",
+    title: "New Award Earned! 🏆",
+    message: "Emma has received the Science Fair Gold Award. View certificate now!",
+    time: "4 days ago",
+    isRead: false,
+    linkTo: "/parent/academic?tab=cocurriculum"
+  },
+  {
+    id: "7",
+    type: "attendance",
+    title: "Attendance Update",
+    message: "Emma was marked late today at 8:15 AM.",
+    time: "Today",
+    isRead: false,
+    linkTo: "/parent/attendance"
+  },
+  {
+    id: "8",
+    type: "grade",
+    title: "New Grade Posted",
+    message: "Mathematics mid-year exam grade has been updated.",
+    time: "5 days ago",
+    isRead: true,
+    linkTo: "/parent/academic"
+  },
+  {
+    id: "9",
+    type: "meal",
+    title: "Meal Plan Renewal",
+    message: "Your child's meal plan expires on 31st January. Renew now to avoid interruption.",
+    time: "1 week ago",
+    isRead: true,
+    linkTo: "/parent"
+  },
+  {
+    id: "10",
+    type: "announcement",
+    title: "New School Uniform Policy",
+    message: "Updated uniform guidelines effective from February 2026. Read the full announcement.",
+    time: "1 week ago",
+    isRead: true,
+    linkTo: "/parent/announcements/2"
+  },
+  {
+    id: "11",
+    type: "permission",
+    title: "Permission Slip Required",
+    message: "Please sign the field trip permission slip for the Zoo visit on 25th January.",
+    time: "2 weeks ago",
+    isRead: true,
+    linkTo: "/parent/support"
+  },
+  {
+    id: "12",
+    type: "photo",
+    title: "New Photos Available",
+    message: "Class photos from the Art Exhibition are now available to view.",
+    time: "2 weeks ago",
+    isRead: true,
+    linkTo: "/parent"
   }
 ];
 
@@ -83,7 +179,8 @@ const teacherNotifications: Notification[] = [
     title: "Attendance Reminder",
     message: "Please submit attendance for Class 5A before 9:00 AM.",
     time: "30 mins ago",
-    isRead: false
+    isRead: false,
+    linkTo: "/teacher/attendance"
   },
   {
     id: "2",
@@ -91,7 +188,8 @@ const teacherNotifications: Notification[] = [
     title: "Grade Submission Due",
     message: "Mid-Year exam grades for Class 5A are due by January 10th.",
     time: "2 hours ago",
-    isRead: false
+    isRead: false,
+    linkTo: "/teacher/academic"
   },
   {
     id: "3",
@@ -99,7 +197,8 @@ const teacherNotifications: Notification[] = [
     title: "Staff Meeting",
     message: "Weekly staff meeting scheduled for Friday at 3:00 PM in the conference room.",
     time: "5 hours ago",
-    isRead: false
+    isRead: false,
+    linkTo: "/teacher/calendar"
   },
   {
     id: "4",
@@ -107,7 +206,8 @@ const teacherNotifications: Notification[] = [
     title: "School Holiday Notice",
     message: "School will be closed on 29th January for Chinese New Year.",
     time: "1 day ago",
-    isRead: true
+    isRead: true,
+    linkTo: "/teacher"
   },
   {
     id: "5",
@@ -115,7 +215,8 @@ const teacherNotifications: Notification[] = [
     title: "New Curriculum Update",
     message: "Updated Science curriculum materials are now available for download.",
     time: "2 days ago",
-    isRead: true
+    isRead: true,
+    linkTo: "/teacher/academic"
   },
   {
     id: "6",
@@ -123,7 +224,26 @@ const teacherNotifications: Notification[] = [
     title: "Student Absence Alert",
     message: "Ahmad bin Ali (5A) has been absent for 3 consecutive days.",
     time: "2 days ago",
-    isRead: true
+    isRead: true,
+    linkTo: "/teacher/attendance"
+  },
+  {
+    id: "7",
+    type: "message",
+    title: "Parent Message",
+    message: "Mrs. Johnson has sent you a message regarding Emma's progress.",
+    time: "3 days ago",
+    isRead: false,
+    linkTo: "/teacher"
+  },
+  {
+    id: "8",
+    type: "ptm",
+    title: "PTM Slot Booked",
+    message: "Mr. & Mrs. Ahmad have booked a slot for 20th January at 2:00 PM.",
+    time: "4 days ago",
+    isRead: true,
+    linkTo: "/teacher/calendar"
   }
 ];
 
@@ -134,17 +254,28 @@ interface NotificationsDrawerProps {
 }
 
 export function NotificationsDrawer({ open, onOpenChange, isTeacher = false }: NotificationsDrawerProps) {
+  const navigate = useNavigate();
   const [notifications, setNotifications] = useState(isTeacher ? teacherNotifications : parentNotifications);
   const [filter, setFilter] = useState<"all" | "unread">("all");
 
   const getTypeIcon = (type: NotificationType) => {
     switch (type) {
-      case "announcement": return Bell;
+      case "announcement": return Megaphone;
       case "event": return Calendar;
-      case "academic": return FileText;
+      case "academic": return GraduationCap;
       case "alert": return AlertCircle;
       case "attendance": return Users;
       case "grade": return BookOpen;
+      case "report_card": return FileText;
+      case "award": return Trophy;
+      case "payment": return CreditCard;
+      case "transport": return Bus;
+      case "meal": return Utensils;
+      case "photo": return Camera;
+      case "permission": return ClipboardCheck;
+      case "ptm": return MessageSquare;
+      case "message": return MessageSquare;
+      default: return Bell;
     }
   };
 
@@ -152,10 +283,31 @@ export function NotificationsDrawer({ open, onOpenChange, isTeacher = false }: N
     switch (type) {
       case "announcement": return "bg-primary text-primary-foreground";
       case "event": return "bg-blue-500 text-white";
-      case "academic": return "bg-amber-500 text-white";
+      case "academic": return "bg-indigo-500 text-white";
       case "alert": return "bg-destructive text-destructive-foreground";
       case "attendance": return "bg-emerald-500 text-white";
       case "grade": return "bg-purple-500 text-white";
+      case "report_card": return "bg-amber-500 text-white";
+      case "award": return "bg-yellow-500 text-white";
+      case "payment": return "bg-rose-500 text-white";
+      case "transport": return "bg-cyan-500 text-white";
+      case "meal": return "bg-orange-500 text-white";
+      case "photo": return "bg-pink-500 text-white";
+      case "permission": return "bg-teal-500 text-white";
+      case "ptm": return "bg-violet-500 text-white";
+      case "message": return "bg-sky-500 text-white";
+      default: return "bg-muted text-muted-foreground";
+    }
+  };
+
+  const handleNotificationClick = (notification: Notification) => {
+    // Mark as read
+    markAsRead(notification.id);
+    
+    // Navigate if there's a link
+    if (notification.linkTo) {
+      onOpenChange(false); // Close drawer
+      navigate(notification.linkTo);
     }
   };
 
@@ -169,8 +321,14 @@ export function NotificationsDrawer({ open, onOpenChange, isTeacher = false }: N
     setNotifications(prev => prev.map(n => ({ ...n, isRead: true })));
   };
 
-  const deleteNotification = (id: string) => {
+  const deleteNotification = (id: string, e: React.MouseEvent) => {
+    e.stopPropagation(); // Prevent card click
     setNotifications(prev => prev.filter(n => n.id !== id));
+  };
+
+  const handleMarkAsRead = (id: string, e: React.MouseEvent) => {
+    e.stopPropagation(); // Prevent card click
+    markAsRead(id);
   };
 
   const filteredNotifications = filter === "all" 
@@ -222,12 +380,15 @@ export function NotificationsDrawer({ open, onOpenChange, isTeacher = false }: N
           <div className="space-y-3">
             {filteredNotifications.map((notification) => {
               const Icon = getTypeIcon(notification.type);
+              const hasLink = !!notification.linkTo;
+              
               return (
                 <Card 
                   key={notification.id} 
                   className={`bg-card border-border shadow-sm transition-all ${
                     !notification.isRead ? "border-l-4 border-l-primary" : ""
-                  }`}
+                  } ${hasLink ? "cursor-pointer hover:bg-accent/50 active:scale-[0.99]" : ""}`}
+                  onClick={() => hasLink && handleNotificationClick(notification)}
                 >
                   <CardContent className="p-4">
                     <div className="flex gap-3">
@@ -239,9 +400,14 @@ export function NotificationsDrawer({ open, onOpenChange, isTeacher = false }: N
                           <h3 className={`font-medium text-foreground ${!notification.isRead ? "font-semibold" : ""}`}>
                             {notification.title}
                           </h3>
-                          {!notification.isRead && (
-                            <div className="w-2 h-2 rounded-full bg-primary flex-shrink-0 mt-2" />
-                          )}
+                          <div className="flex items-center gap-1 flex-shrink-0">
+                            {!notification.isRead && (
+                              <div className="w-2 h-2 rounded-full bg-primary" />
+                            )}
+                            {hasLink && (
+                              <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                            )}
+                          </div>
                         </div>
                         <p className="text-sm text-muted-foreground mt-1 line-clamp-2">
                           {notification.message}
@@ -257,7 +423,7 @@ export function NotificationsDrawer({ open, onOpenChange, isTeacher = false }: N
                                 variant="ghost" 
                                 size="sm" 
                                 className="h-7 px-2 text-xs"
-                                onClick={() => markAsRead(notification.id)}
+                                onClick={(e) => handleMarkAsRead(notification.id, e)}
                               >
                                 <CheckCircle2 className="h-3 w-3 mr-1" />
                                 Read
@@ -267,7 +433,7 @@ export function NotificationsDrawer({ open, onOpenChange, isTeacher = false }: N
                               variant="ghost" 
                               size="sm" 
                               className="h-7 px-2 text-xs text-destructive hover:text-destructive"
-                              onClick={() => deleteNotification(notification.id)}
+                              onClick={(e) => deleteNotification(notification.id, e)}
                             >
                               <Trash2 className="h-3 w-3" />
                             </Button>
