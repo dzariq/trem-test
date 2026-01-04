@@ -173,6 +173,47 @@ export const subjectTinyCodes: Record<string, string> = {
   "Islamic Studies": "ISL. ST."
 };
 
+// Subject colors - unique color per subject for charts, legends, badges
+// These are used globally across the app for consistency
+export const subjectColors: Record<string, string> = {
+  // Languages - Blues & Purples
+  "English (First Language)": "#3b82f6",    // blue-500
+  "English (Second Language)": "#60a5fa",   // blue-400
+  "Malay (First Language)": "#8b5cf6",      // violet-500
+  "Malay (Foreign Language)": "#a78bfa",    // violet-400
+  "Chinese (Foreign Language)": "#c084fc",  // purple-400
+  "Chinese (Second Language)": "#d8b4fe",   // purple-300
+  "Chinese (Beginner)": "#e9d5ff",          // purple-200
+  
+  // Sciences - Greens & Teals
+  "Science": "#22c55e",                     // green-500
+  "Biology": "#10b981",                     // emerald-500
+  "Chemistry": "#14b8a6",                   // teal-500
+  "Physics": "#06b6d4",                     // cyan-500
+  
+  // Mathematics - Oranges & Yellows
+  "Mathematics": "#f59e0b",                 // amber-500
+  "Additional Mathematics": "#eab308",      // yellow-500
+  
+  // Humanities (Business) - Warm colors
+  "Business Studies": "#64748b",            // slate-500
+  "Accounting": "#4ade80",                  // green-400
+  "Economics": "#fbbf24",                   // amber-400
+  
+  // Social Studies - Earth tones
+  "Global Perspectives": "#0ea5e9",         // sky-500
+  "Geography": "#84cc16",                   // lime-500
+  "History": "#f97316",                     // orange-500
+  
+  // Others - Various
+  "ICT": "#6366f1",                         // indigo-500
+  "Living Skills & Arts": "#ec4899",        // pink-500
+  "Art": "#f472b6",                         // pink-400
+  "Music": "#a855f7",                       // purple-500
+  "Moral": "#2dd4bf",                       // teal-400
+  "Islamic Studies": "#fb923c"              // orange-400
+};
+
 // Helper function to get short name
 export const getShortSubjectName = (name: string): string => {
   return subjectShortNames[name] || name;
@@ -181,6 +222,11 @@ export const getShortSubjectName = (name: string): string => {
 // Helper function to get tiny 3-letter code
 export const getTinySubjectCode = (name: string): string => {
   return subjectTinyCodes[name] || name.substring(0, 3).toUpperCase();
+};
+
+// Helper function to get subject color
+export const getSubjectColor = (name: string): string => {
+  return subjectColors[name] || "#6b7280"; // fallback to gray-500
 };
 
 // Get all variants for a base subject name
