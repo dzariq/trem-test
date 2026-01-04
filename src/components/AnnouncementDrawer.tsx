@@ -4,7 +4,8 @@ import { Drawer as DrawerPrimitive } from "vaul";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Calendar, Check, ChevronLeft, ChevronRight, Download, FileText, Megaphone, X } from "lucide-react";
+import { Calendar, Check, ChevronLeft, ChevronRight, Download, FileText, Megaphone, X, List } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 const READ_ANNOUNCEMENTS_KEY = "readAnnouncementIds";
 
@@ -52,12 +53,18 @@ export function AnnouncementDrawer({
   onOpenChange,
   onNavigate,
 }: AnnouncementDrawerProps) {
+  const navigate = useNavigate();
   const [snap, setSnap] = useState<number | string | null>(0.85);
   const [slideDirection, setSlideDirection] = useState<"left" | "right" | null>(null);
   const [isRead, setIsRead] = useState(false);
   const touchStartX = useRef<number>(0);
   const touchEndX = useRef<number>(0);
   const contentRef = useRef<HTMLDivElement>(null);
+
+  const handleSeeAll = () => {
+    onOpenChange(false);
+    navigate("/announcements");
+  };
 
   const currentAnnouncement = announcements[currentIndex];
 
@@ -203,14 +210,25 @@ export function AnnouncementDrawer({
                 </Badge>
               )}
             </div>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-8 w-8 rounded-full hover:bg-muted"
-              onClick={() => onOpenChange(false)}
-            >
-              <X className="h-4 w-4" />
-            </Button>
+            <div className="flex items-center gap-2">
+              <Button
+                variant="ghost"
+                size="sm"
+                className="text-xs text-primary hover:bg-primary/10 rounded-full px-3 gap-1"
+                onClick={handleSeeAll}
+              >
+                <List className="h-3.5 w-3.5" />
+                See All
+              </Button>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8 rounded-full hover:bg-muted"
+                onClick={() => onOpenChange(false)}
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
           </div>
 
           {/* Content with swipe detection */}
