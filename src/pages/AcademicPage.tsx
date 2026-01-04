@@ -3480,7 +3480,7 @@ export default function AcademicPage() {
                     month: 'long',
                     year: 'numeric'
                   })}
-                    {' • '}Period: {trendPeriod === '1year' ? 'Last 1 Year' : trendPeriod === '2years' ? 'Last 2 Years' : trendPeriod === '3years' ? 'Last 3 Years' : 'All Years'}
+                    {' • '}Period: {trendPeriod === '1year' ? 'Last 1 Year' : trendPeriod === '2years' ? 'Last 2 Years' : trendPeriod === '3years' ? 'Last 3 Years' : trendPeriod === '4years' ? 'Last 4 Years' : trendPeriod === '5years' ? 'Last 5 Years' : 'All Years'}
                   </p>
                 </div>
               </div>
@@ -3623,71 +3623,128 @@ export default function AcademicPage() {
                 </div>
               </div>
 
+              {/* Exams in Selected Period */}
+              <div style={{
+                marginBottom: '12px',
+                pageBreakInside: 'avoid'
+              }}>
+                <h3 style={{
+                  fontSize: '11px',
+                  fontWeight: 600,
+                  marginBottom: '6px',
+                  color: '#6b7280'
+                }}>Exams in Selected Period</h3>
+                <div style={{
+                  display: 'flex',
+                  flexWrap: 'wrap',
+                  gap: '4px'
+                }}>
+                  {trendData.map((item, idx) => (
+                    <span key={idx} style={{
+                      padding: '3px 8px',
+                      borderRadius: '4px',
+                      backgroundColor: '#f3f4f6',
+                      fontSize: '9px',
+                      fontWeight: 500,
+                      color: '#6b7280'
+                    }}>
+                      {item.period}
+                    </span>
+                  ))}
+                </div>
+              </div>
+
               {/* Rising & Falling - Detailed breakdown */}
               <div style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(2, 1fr)',
-              gap: '12px',
-              marginBottom: '12px',
-              pageBreakInside: 'avoid'
-            }}>
-                <div style={{
-                padding: '10px',
-                borderRadius: '6px',
-                backgroundColor: '#f0fdf4',
-                border: '1px solid #86efac'
+                display: 'grid',
+                gridTemplateColumns: 'repeat(2, 1fr)',
+                gap: '12px',
+                marginBottom: '12px',
+                pageBreakInside: 'avoid'
               }}>
-                  <h4 style={{
-                  fontSize: '11px',
-                  fontWeight: 600,
-                  color: '#16a34a',
-                  marginBottom: '6px'
-                }}>Rising Subjects Details</h4>
-                  {risingStars.length > 0 ? risingStars.map((item, i) => <div key={i} style={{
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  padding: '4px 6px',
-                  fontSize: '9px',
-                  borderBottom: '1px solid #86efac40'
+                <div style={{
+                  padding: '10px',
+                  borderRadius: '6px',
+                  backgroundColor: '#f0fdf4',
+                  border: '1px solid #86efac'
                 }}>
-                      <span>{item.subject.name}</span>
-                      <span style={{
+                  <h4 style={{
+                    fontSize: '11px',
                     fontWeight: 600,
-                    color: '#22c55e'
-                  }}>+{item.improvement}% ({item.prev}% → {item.current}%)</span>
-                    </div>) : <p style={{
-                  fontSize: '9px',
-                  color: '#666'
-                }}>No improving subjects</p>}
+                    color: '#16a34a',
+                    marginBottom: '8px'
+                  }}>Rising Subjects</h4>
+                  {risingStars.length > 0 ? risingStars.map((item, i) => <div key={i} style={{
+                    padding: '6px 8px',
+                    marginBottom: '6px',
+                    borderRadius: '6px',
+                    backgroundColor: 'rgba(34, 197, 94, 0.1)',
+                    border: '1px solid rgba(34, 197, 94, 0.3)'
+                  }}>
+                    <div style={{
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'flex-start',
+                      marginBottom: '4px'
+                    }}>
+                      <span style={{ fontSize: '9px', fontWeight: 500, color: '#1f2937' }}>{item.subject.name}</span>
+                      <span style={{
+                        padding: '2px 6px',
+                        borderRadius: '4px',
+                        backgroundColor: '#22c55e',
+                        color: 'white',
+                        fontSize: '8px',
+                        fontWeight: 700
+                      }}>+{item.improvement}%</span>
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'baseline', gap: '4px' }}>
+                      <span style={{ fontSize: '12px', fontWeight: 700, color: '#6b7280' }}>{item.prev}%</span>
+                      <span style={{ fontSize: '9px', color: '#9ca3af' }}>→</span>
+                      <span style={{ fontSize: '12px', fontWeight: 700, color: '#22c55e' }}>{item.current}%</span>
+                    </div>
+                  </div>) : <p style={{ fontSize: '9px', color: '#666' }}>No improving subjects</p>}
                 </div>
                 <div style={{
-                padding: '10px',
-                borderRadius: '6px',
-                backgroundColor: '#fef2f2',
-                border: '1px solid #fca5a5'
-              }}>
-                  <h4 style={{
-                  fontSize: '11px',
-                  fontWeight: 600,
-                  color: '#dc2626',
-                  marginBottom: '6px'
-                }}>Needs Focus Details</h4>
-                  {fallingBehind.length > 0 ? fallingBehind.map((item, i) => <div key={i} style={{
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  padding: '4px 6px',
-                  fontSize: '9px',
-                  borderBottom: '1px solid #fca5a540'
+                  padding: '10px',
+                  borderRadius: '6px',
+                  backgroundColor: '#fef2f2',
+                  border: '1px solid #fca5a5'
                 }}>
-                      <span>{item.subject.name}</span>
-                      <span style={{
+                  <h4 style={{
+                    fontSize: '11px',
                     fontWeight: 600,
-                    color: '#ef4444'
-                  }}>-{item.decline}% ({item.prev}% → {item.current}%)</span>
-                    </div>) : <p style={{
-                  fontSize: '9px',
-                  color: '#666'
-                }}>All subjects stable</p>}
+                    color: '#dc2626',
+                    marginBottom: '8px'
+                  }}>Needs Focus</h4>
+                  {fallingBehind.length > 0 ? fallingBehind.map((item, i) => <div key={i} style={{
+                    padding: '6px 8px',
+                    marginBottom: '6px',
+                    borderRadius: '6px',
+                    backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                    border: '1px solid rgba(239, 68, 68, 0.3)'
+                  }}>
+                    <div style={{
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'flex-start',
+                      marginBottom: '4px'
+                    }}>
+                      <span style={{ fontSize: '9px', fontWeight: 500, color: '#1f2937' }}>{item.subject.name}</span>
+                      <span style={{
+                        padding: '2px 6px',
+                        borderRadius: '4px',
+                        backgroundColor: '#ef4444',
+                        color: 'white',
+                        fontSize: '8px',
+                        fontWeight: 700
+                      }}>-{item.decline}%</span>
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'baseline', gap: '4px' }}>
+                      <span style={{ fontSize: '12px', fontWeight: 700, color: '#6b7280' }}>{item.prev}%</span>
+                      <span style={{ fontSize: '9px', color: '#9ca3af' }}>→</span>
+                      <span style={{ fontSize: '12px', fontWeight: 700, color: '#ef4444' }}>{item.current}%</span>
+                    </div>
+                  </div>) : <p style={{ fontSize: '9px', color: '#666' }}>All subjects stable</p>}
                 </div>
               </div>
 
