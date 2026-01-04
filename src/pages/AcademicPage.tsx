@@ -1331,7 +1331,7 @@ export default function AcademicPage() {
                     </h4>
                     <p className="text-[10px] text-muted-foreground -mt-1">Biggest improvements from previous exam</p>
                     <div className="grid grid-cols-3 gap-2">
-                      {risingStars.map(item => <div key={item.subject.name} className="relative flex flex-col items-center p-2.5 rounded-lg border overflow-hidden animate-glow" style={{
+                      {risingStars.map(item => <div key={item.subject.name} className="relative flex flex-col items-center p-2.5 rounded-lg border overflow-hidden animate-glow min-h-[110px]" style={{
                     background: 'linear-gradient(135deg, #fef3c7 0%, #fcd34d 50%, #f59e0b 100%)',
                     borderColor: 'rgba(251, 191, 36, 0.5)'
                   }}>
@@ -1391,7 +1391,7 @@ export default function AcademicPage() {
                     </h4>
                     <p className="text-[10px] text-muted-foreground -mt-1">Subjects that need extra attention</p>
                     <div className="grid grid-cols-3 gap-2">
-                      {fallingBehind.slice(0, 3).map(item => <div key={item.subject.name} className="relative flex flex-col items-center p-2.5 rounded-lg border overflow-hidden" style={{
+                      {fallingBehind.slice(0, 3).map(item => <div key={item.subject.name} className="relative flex flex-col items-center p-2.5 rounded-lg border overflow-hidden min-h-[110px]" style={{
                     background: 'linear-gradient(135deg, #fee2e2 0%, #fecaca 50%, #f87171 100%)',
                     borderColor: 'rgba(248, 113, 113, 0.5)'
                   }}>
