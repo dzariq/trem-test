@@ -1,18 +1,13 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { announcements } from "@/data/mockData";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Megaphone, Calendar, X } from "lucide-react";
-import { AnnouncementDrawer, getReadAnnouncementIds } from "@/components/AnnouncementDrawer";
-import { Check } from "lucide-react";
-import {
-  Drawer,
-  DrawerContent,
-  DrawerHeader,
-  DrawerTitle,
-  DrawerClose,
-} from "@/components/ui/drawer";
+import { Megaphone, Calendar, X, Check, ChevronLeft, ChevronRight, Download, FileText, ArrowLeft } from "lucide-react";
+import { getReadAnnouncementIds, markAnnouncementAsRead } from "@/components/AnnouncementDrawer";
+import { Drawer as DrawerPrimitive } from "vaul";
+import { cn } from "@/lib/utils";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 type CategoryFilter = "all" | "Event" | "Academic" | "General";
 
@@ -23,26 +18,40 @@ interface AnnouncementsListDrawerProps {
 
 export function AnnouncementsListDrawer({ isOpen, onOpenChange }: AnnouncementsListDrawerProps) {
   const [categoryFilter, setCategoryFilter] = useState<CategoryFilter>("all");
-  const [detailDrawerOpen, setDetailDrawerOpen] = useState(false);
+  const [currentView, setCurrentView] = useState<"list" | "detail">("list");
   const [currentAnnouncementIndex, setCurrentAnnouncementIndex] = useState(0);
   const [readIds, setReadIds] = useState<number[]>([]);
+  const [slideDirection, setSlideDirection] = useState<"left" | "right" | null>(null);
+  const [snap, setSnap] = useState<number | string | null>(0.85);
+
+  const touchStartX = useRef<number>(0);
+  const touchEndX = useRef<number>(0);
 
   useEffect(() => {
     setReadIds(getReadAnnouncementIds());
   }, []);
 
+  // Reset to list view when drawer closes
   useEffect(() => {
-    if (!detailDrawerOpen) {
+    if (!isOpen) {
+      setTimeout(() => setCurrentView("list"), 300);
+    }
+  }, [isOpen]);
+
+  // Refresh read status when returning to list
+  useEffect(() => {
+    if (currentView === "list") {
       setReadIds(getReadAnnouncementIds());
     }
-  }, [detailDrawerOpen]);
+  }, [currentView]);
 
   const isRead = (id: number) => readIds.includes(id);
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
     return date.toLocaleDateString("en-US", { 
-      month: "long", 
+      weekday: "short",
+      month: "short", 
       day: "numeric",
       year: "numeric"
     });
@@ -54,6 +63,8 @@ export function AnnouncementsListDrawer({ isOpen, onOpenChange }: AnnouncementsL
     ? announcements
     : announcements.filter(a => a.category === categoryFilter);
 
+  const currentAnnouncement = filteredAnnouncements[currentAnnouncementIndex];
+
   const getCategoryColor = (category: string) => {
     switch (category) {
       case "Event": return "bg-blue-500 text-white";
@@ -63,127 +74,415 @@ export function AnnouncementsListDrawer({ isOpen, onOpenChange }: AnnouncementsL
     }
   };
 
-  const handleAnnouncementClick = (index: number) => {
-    setCurrentAnnouncementIndex(index);
-    setDetailDrawerOpen(true);
+  const getFileIcon = (fileName: string) => {
+    const ext = fileName.split('.').pop()?.toLowerCase();
+    if (ext === 'pdf') return { icon: FileText, color: "text-red-500", bg: "bg-red-500/10" };
+    if (ext === 'doc' || ext === 'docx') return { icon: FileText, color: "text-blue-500", bg: "bg-blue-500/10" };
+    return { icon: FileText, color: "text-primary", bg: "bg-primary/10" };
   };
 
+  const handleAnnouncementClick = (index: number) => {
+    setCurrentAnnouncementIndex(index);
+    markAnnouncementAsRead(filteredAnnouncements[index].id);
+    setReadIds(prev => [...new Set([...prev, filteredAnnouncements[index].id])]);
+    setCurrentView("detail");
+  };
+
+  const handleBackToList = () => {
+    setCurrentView("list");
+  };
+
+  // Swipe navigation for detail view
+  const handleTouchStart = useCallback((e: React.TouchEvent) => {
+    touchStartX.current = e.touches[0].clientX;
+    touchEndX.current = e.touches[0].clientX;
+  }, []);
+
+  const handleTouchMove = useCallback((e: React.TouchEvent) => {
+    touchEndX.current = e.touches[0].clientX;
+  }, []);
+
+  const handleTouchEnd = useCallback(() => {
+    const deltaX = touchStartX.current - touchEndX.current;
+    const threshold = 50;
+
+    if (Math.abs(deltaX) > threshold) {
+      if (deltaX > 0 && currentAnnouncementIndex < filteredAnnouncements.length - 1) {
+        setSlideDirection("left");
+        setTimeout(() => {
+          const newIndex = currentAnnouncementIndex + 1;
+          setCurrentAnnouncementIndex(newIndex);
+          markAnnouncementAsRead(filteredAnnouncements[newIndex].id);
+          setReadIds(prev => [...new Set([...prev, filteredAnnouncements[newIndex].id])]);
+          setSlideDirection(null);
+        }, 150);
+      } else if (deltaX < 0 && currentAnnouncementIndex > 0) {
+        setSlideDirection("right");
+        setTimeout(() => {
+          const newIndex = currentAnnouncementIndex - 1;
+          setCurrentAnnouncementIndex(newIndex);
+          markAnnouncementAsRead(filteredAnnouncements[newIndex].id);
+          setReadIds(prev => [...new Set([...prev, filteredAnnouncements[newIndex].id])]);
+          setSlideDirection(null);
+        }, 150);
+      }
+    }
+  }, [currentAnnouncementIndex, filteredAnnouncements]);
+
+  const goToNext = () => {
+    if (currentAnnouncementIndex < filteredAnnouncements.length - 1) {
+      setSlideDirection("left");
+      setTimeout(() => {
+        const newIndex = currentAnnouncementIndex + 1;
+        setCurrentAnnouncementIndex(newIndex);
+        markAnnouncementAsRead(filteredAnnouncements[newIndex].id);
+        setReadIds(prev => [...new Set([...prev, filteredAnnouncements[newIndex].id])]);
+        setSlideDirection(null);
+      }, 150);
+    }
+  };
+
+  const goToPrevious = () => {
+    if (currentAnnouncementIndex > 0) {
+      setSlideDirection("right");
+      setTimeout(() => {
+        const newIndex = currentAnnouncementIndex - 1;
+        setCurrentAnnouncementIndex(newIndex);
+        markAnnouncementAsRead(filteredAnnouncements[newIndex].id);
+        setReadIds(prev => [...new Set([...prev, filteredAnnouncements[newIndex].id])]);
+        setSlideDirection(null);
+      }, 150);
+    }
+  };
+
+  const attachmentCount = currentAnnouncement?.attachments?.length || 0;
+
   return (
-    <>
-      <Drawer open={isOpen} onOpenChange={onOpenChange}>
-        <DrawerContent className="max-h-[95vh]">
-          <DrawerHeader className="flex flex-row items-center justify-between border-b pb-4">
-            <DrawerTitle className="text-xl font-semibold">Announcements</DrawerTitle>
-            <DrawerClose asChild>
-              <Button variant="ghost" size="icon" className="h-8 w-8">
-                <X className="h-5 w-5" />
-              </Button>
-            </DrawerClose>
-          </DrawerHeader>
+    <DrawerPrimitive.Root
+      open={isOpen}
+      onOpenChange={onOpenChange}
+      snapPoints={currentView === "detail" ? [0.85, 1] : undefined}
+      activeSnapPoint={currentView === "detail" ? snap : undefined}
+      setActiveSnapPoint={currentView === "detail" ? setSnap : undefined}
+    >
+      <DrawerPrimitive.Portal>
+        <DrawerPrimitive.Overlay className="fixed inset-0 z-50 bg-black/50" />
+        <DrawerPrimitive.Content
+          className={cn(
+            "fixed inset-x-0 bottom-0 z-50 flex flex-col rounded-t-[24px] border-t bg-background shadow-2xl outline-none",
+            currentView === "detail" && snap === 1 ? "h-[100dvh] rounded-none" : "max-h-[95vh]"
+          )}
+          style={{ left: 0, right: 0 }}
+        >
+          {/* Drag Handle */}
+          <div className="mx-auto mt-3 h-1.5 w-14 rounded-full bg-muted-foreground/30 flex-shrink-0" />
 
-          <div className="overflow-y-auto flex-1 px-4 py-4">
-            {/* Category Filter */}
-            <div className="flex gap-2 overflow-x-auto pb-3 mb-4">
-              {categories.map((category) => (
-                <Badge
-                  key={category}
-                  variant={categoryFilter === category ? "default" : "outline"}
-                  className="cursor-pointer whitespace-nowrap capitalize"
-                  onClick={() => setCategoryFilter(category)}
+          {/* === LIST VIEW === */}
+          {currentView === "list" && (
+            <>
+              {/* Header */}
+              <div className="flex items-center justify-between px-5 py-3 border-b border-border/50">
+                <h2 className="text-xl font-semibold">Announcements</h2>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8 rounded-full"
+                  onClick={() => onOpenChange(false)}
                 >
-                  {category === "all" ? "All" : category}
-                </Badge>
-              ))}
-            </div>
+                  <X className="h-5 w-5" />
+                </Button>
+              </div>
 
-            {/* Announcements List */}
-            <div className="space-y-4 pb-8">
-              {filteredAnnouncements.map((announcement, index) => (
-                <Card 
-                  key={announcement.id} 
-                  className="bg-card border-border shadow-sm overflow-hidden cursor-pointer active:scale-[0.98] transition-transform"
-                  onClick={() => handleAnnouncementClick(index)}
-                >
-                  {/* Image header or default pattern */}
-                  <div className="relative h-32 overflow-hidden">
-                    {announcement.image ? (
-                      <img 
-                        src={announcement.image} 
-                        alt={announcement.title}
-                        className="w-full h-full object-cover"
-                      />
-                    ) : (
-                      <div className="w-full h-full bg-gradient-to-br from-primary/20 via-primary/10 to-secondary/20 flex items-center justify-center">
-                        <div className="absolute inset-0 opacity-10">
-                          <div className="absolute top-2 left-4 w-8 h-8 rounded-full bg-primary/30" />
-                          <div className="absolute top-6 right-8 w-12 h-12 rounded-full bg-secondary/30" />
-                          <div className="absolute bottom-4 left-1/3 w-6 h-6 rounded-full bg-primary/20" />
+              <div className="overflow-y-auto flex-1 px-4 py-4">
+                {/* Category Filter */}
+                <div className="flex gap-2 overflow-x-auto pb-3 mb-4">
+                  {categories.map((category) => (
+                    <Badge
+                      key={category}
+                      variant={categoryFilter === category ? "default" : "outline"}
+                      className="cursor-pointer whitespace-nowrap capitalize"
+                      onClick={() => setCategoryFilter(category)}
+                    >
+                      {category === "all" ? "All" : category}
+                    </Badge>
+                  ))}
+                </div>
+
+                {/* Announcements List */}
+                <div className="space-y-4 pb-8">
+                  {filteredAnnouncements.map((announcement, index) => (
+                    <Card 
+                      key={announcement.id} 
+                      className="bg-card border-border shadow-sm overflow-hidden cursor-pointer active:scale-[0.98] transition-transform"
+                      onClick={() => handleAnnouncementClick(index)}
+                    >
+                      {/* Image header or default pattern */}
+                      <div className="relative h-32 overflow-hidden">
+                        {announcement.image ? (
+                          <img 
+                            src={announcement.image} 
+                            alt={announcement.title}
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          <div className="w-full h-full bg-gradient-to-br from-primary/20 via-primary/10 to-secondary/20 flex items-center justify-center">
+                            <div className="absolute inset-0 opacity-10">
+                              <div className="absolute top-2 left-4 w-8 h-8 rounded-full bg-primary/30" />
+                              <div className="absolute top-6 right-8 w-12 h-12 rounded-full bg-secondary/30" />
+                              <div className="absolute bottom-4 left-1/3 w-6 h-6 rounded-full bg-primary/20" />
+                            </div>
+                            <Megaphone className="h-12 w-12 text-primary/40" />
+                          </div>
+                        )}
+                        {/* Overlay gradient */}
+                        <div className="absolute inset-0 bg-gradient-to-t from-card via-card/30 to-transparent" />
+                        {/* Category badge & Read status */}
+                        <div className="absolute top-3 left-3 right-3 flex items-center justify-between">
+                          <Badge className={getCategoryColor(announcement.category)}>
+                            {announcement.category}
+                          </Badge>
+                          {isRead(announcement.id) && (
+                            <Badge variant="outline" className="text-xs gap-1 text-green-600 border-green-600/30 bg-green-500/10 backdrop-blur-sm">
+                              <Check className="h-3 w-3" />
+                              Read
+                            </Badge>
+                          )}
                         </div>
-                        <Megaphone className="h-12 w-12 text-primary/40" />
                       </div>
+
+                      <CardContent className="p-4">
+                        <h3 className="font-semibold text-foreground text-lg mb-2">
+                          {announcement.title}
+                        </h3>
+                        <p className="text-sm text-muted-foreground mb-3">
+                          {announcement.snippet}
+                        </p>
+                        <div className="flex items-center justify-between">
+                          <span className="text-xs text-muted-foreground flex items-center gap-1">
+                            <Calendar className="h-3 w-3" />
+                            {formatDate(announcement.date)}
+                          </span>
+                          <Button 
+                            variant="outline" 
+                            size="sm"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleAnnouncementClick(index);
+                            }}
+                          >
+                            Read More
+                          </Button>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+
+                  {filteredAnnouncements.length === 0 && (
+                    <div className="text-center py-12">
+                      <Megaphone className="h-12 w-12 mx-auto text-muted-foreground/50 mb-3" />
+                      <p className="text-muted-foreground">No announcements in this category</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </>
+          )}
+
+          {/* === DETAIL VIEW === */}
+          {currentView === "detail" && currentAnnouncement && (
+            <>
+              {/* Header Bar */}
+              <div className="flex items-center justify-between px-5 py-3 border-b border-border/50">
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="gap-1.5 rounded-full px-3"
+                    onClick={handleBackToList}
+                  >
+                    <ArrowLeft className="h-4 w-4" />
+                    Back
+                  </Button>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Badge className={cn("text-xs font-semibold px-3 py-1", getCategoryColor(currentAnnouncement.category))}>
+                    {currentAnnouncement.category}
+                  </Badge>
+                  {attachmentCount > 0 && (
+                    <Badge variant="secondary" className="text-xs gap-1">
+                      <FileText className="h-3 w-3" />
+                      {attachmentCount}
+                    </Badge>
+                  )}
+                  {isRead(currentAnnouncement.id) && (
+                    <Badge 
+                      variant="outline" 
+                      className="text-xs gap-1 text-green-600 border-green-600/30 bg-green-500/10"
+                    >
+                      <Check className="h-3 w-3" />
+                      Read
+                    </Badge>
+                  )}
+                </div>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8 rounded-full hover:bg-muted"
+                  onClick={() => onOpenChange(false)}
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+              </div>
+
+              {/* Content with swipe detection */}
+              <div
+                className="flex-1 overflow-hidden"
+                onTouchStart={handleTouchStart}
+                onTouchMove={handleTouchMove}
+                onTouchEnd={handleTouchEnd}
+              >
+                <ScrollArea className="h-full">
+                  <div 
+                    className={cn(
+                      "pb-28 transition-all duration-150 ease-out",
+                      slideDirection === "left" && "opacity-0 -translate-x-4",
+                      slideDirection === "right" && "opacity-0 translate-x-4"
                     )}
-                    {/* Overlay gradient */}
-                    <div className="absolute inset-0 bg-gradient-to-t from-card via-card/30 to-transparent" />
-                    {/* Category badge & Read status */}
-                    <div className="absolute top-3 left-3 right-3 flex items-center justify-between">
-                      <Badge className={getCategoryColor(announcement.category)}>
-                        {announcement.category}
-                      </Badge>
-                      {isRead(announcement.id) && (
-                        <Badge variant="outline" className="text-xs gap-1 text-green-600 border-green-600/30 bg-green-500/10 backdrop-blur-sm">
-                          <Check className="h-3 w-3" />
-                          Read
-                        </Badge>
+                  >
+                    {/* Image Header */}
+                    <div className="relative h-52 overflow-hidden">
+                      {currentAnnouncement.image ? (
+                        <img
+                          src={currentAnnouncement.image}
+                          alt={currentAnnouncement.title}
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <div className="w-full h-full bg-gradient-to-br from-primary/20 via-primary/10 to-secondary/20 flex items-center justify-center">
+                          <div className="absolute inset-0 opacity-30">
+                            <div className="absolute top-6 left-10 w-20 h-20 rounded-full bg-primary/20 blur-xl" />
+                            <div className="absolute top-16 right-16 w-28 h-28 rounded-full bg-secondary/20 blur-xl" />
+                            <div className="absolute bottom-10 left-1/3 w-16 h-16 rounded-full bg-primary/15 blur-xl" />
+                          </div>
+                          <Megaphone className="h-20 w-20 text-primary/40" />
+                        </div>
                       )}
+                      <div className="absolute inset-0 bg-gradient-to-t from-background via-background/50 to-transparent" />
+                    </div>
+
+                    {/* Content */}
+                    <div className="px-5 -mt-6 relative">
+                      {/* Title */}
+                      <h2 className="text-2xl font-bold text-foreground mb-3 leading-tight">
+                        {currentAnnouncement.title}
+                      </h2>
+
+                      {/* Date Pill */}
+                      <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-muted/60 text-muted-foreground text-sm mb-5">
+                        <Calendar className="h-3.5 w-3.5" />
+                        {formatDate(currentAnnouncement.date)}
+                      </div>
+
+                      {/* Attachments */}
+                      {currentAnnouncement.attachments && currentAnnouncement.attachments.length > 0 && (
+                        <div className="mb-6">
+                          <div className="flex flex-wrap gap-2">
+                            {currentAnnouncement.attachments.map((attachment, idx) => {
+                              const { icon: Icon, color, bg } = getFileIcon(attachment.name);
+                              return (
+                                <a
+                                  key={idx}
+                                  href={attachment.url}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className={cn(
+                                    "flex items-center gap-3 px-4 py-3 rounded-xl border border-border/60",
+                                    "bg-card shadow-sm hover:shadow-md transition-all hover:border-primary/30",
+                                    "group"
+                                  )}
+                                >
+                                  <div className={cn("p-2 rounded-lg", bg)}>
+                                    <Icon className={cn("h-5 w-5", color)} />
+                                  </div>
+                                  <div className="flex-1 min-w-0">
+                                    <p className="text-sm font-medium text-foreground truncate max-w-[160px]">
+                                      {attachment.name}
+                                    </p>
+                                    <p className="text-xs text-muted-foreground">Tap to open</p>
+                                  </div>
+                                  <Download className="h-4 w-4 text-muted-foreground group-hover:text-primary transition-colors" />
+                                </a>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Full Content */}
+                      <div className="prose prose-sm max-w-none">
+                        {currentAnnouncement.content.split("\n").map((paragraph, idx) => (
+                          <p key={idx} className="mb-4 text-[15px] leading-relaxed text-foreground/85">
+                            {paragraph}
+                          </p>
+                        ))}
+                      </div>
                     </div>
                   </div>
+                </ScrollArea>
+              </div>
 
-                  <CardContent className="p-4">
-                    <h3 className="font-semibold text-foreground text-lg mb-2">
-                      {announcement.title}
-                    </h3>
-                    <p className="text-sm text-muted-foreground mb-3">
-                      {announcement.snippet}
-                    </p>
-                    <div className="flex items-center justify-between">
-                      <span className="text-xs text-muted-foreground flex items-center gap-1">
-                        <Calendar className="h-3 w-3" />
-                        {formatDate(announcement.date)}
-                      </span>
-                      <Button 
-                        variant="outline" 
-                        size="sm"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleAnnouncementClick(index);
+              {/* Navigation Footer */}
+              <div className="absolute bottom-0 left-0 right-0 bg-background/98 backdrop-blur-md border-t border-border/50 px-4 py-4 pb-6">
+                <div className="flex items-center justify-between">
+                  {/* Previous Button */}
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={goToPrevious}
+                    disabled={currentAnnouncementIndex === 0}
+                    className="gap-1.5 rounded-full px-4"
+                  >
+                    <ChevronLeft className="h-4 w-4" />
+                    Prev
+                  </Button>
+
+                  {/* Dots Indicator */}
+                  <div className="flex items-center gap-2">
+                    {filteredAnnouncements.map((_, idx) => (
+                      <button
+                        key={idx}
+                        onClick={() => {
+                          setCurrentAnnouncementIndex(idx);
+                          markAnnouncementAsRead(filteredAnnouncements[idx].id);
+                          setReadIds(prev => [...new Set([...prev, filteredAnnouncements[idx].id])]);
                         }}
-                      >
-                        Read More
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
+                        className={cn(
+                          "rounded-full transition-all duration-200",
+                          idx === currentAnnouncementIndex
+                            ? "w-7 h-2.5 bg-primary"
+                            : "w-2.5 h-2.5 bg-muted-foreground/25 hover:bg-muted-foreground/40"
+                        )}
+                      />
+                    ))}
+                  </div>
 
-              {filteredAnnouncements.length === 0 && (
-                <div className="text-center py-12">
-                  <Megaphone className="h-12 w-12 mx-auto text-muted-foreground/50 mb-3" />
-                  <p className="text-muted-foreground">No announcements in this category</p>
+                  {/* Next Button */}
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={goToNext}
+                    disabled={currentAnnouncementIndex === filteredAnnouncements.length - 1}
+                    className="gap-1.5 rounded-full px-4"
+                  >
+                    Next
+                    <ChevronRight className="h-4 w-4" />
+                  </Button>
                 </div>
-              )}
-            </div>
-          </div>
-        </DrawerContent>
-      </Drawer>
-
-      {/* Announcement Detail Drawer */}
-      <AnnouncementDrawer
-        announcements={filteredAnnouncements}
-        currentIndex={currentAnnouncementIndex}
-        isOpen={detailDrawerOpen}
-        onOpenChange={setDetailDrawerOpen}
-        onNavigate={setCurrentAnnouncementIndex}
-      />
-    </>
+              </div>
+            </>
+          )}
+        </DrawerPrimitive.Content>
+      </DrawerPrimitive.Portal>
+    </DrawerPrimitive.Root>
   );
 }
