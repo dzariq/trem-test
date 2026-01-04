@@ -533,15 +533,17 @@ export default function AcademicPage() {
       const result: Record<string, number | string | null> = {
         period: p.label
       };
-      academicData.subjects.forEach(s => {
+      // Only include selected subjects
+      const selectedSubjectsData = academicData.subjects.filter(s => trendsSelectedSubjects.includes(s.name));
+      selectedSubjectsData.forEach(s => {
         result[s.name] = getScore(s, p.year, p.type);
       });
-      // Overall average
-      const scores = academicData.subjects.map(s => getScore(s, p.year, p.type)).filter(s => s !== null) as number[];
+      // Overall average of selected subjects only
+      const scores = selectedSubjectsData.map(s => getScore(s, p.year, p.type)).filter(s => s !== null) as number[];
       result["Average"] = scores.length > 0 ? Math.round(scores.reduce((a, b) => a + b, 0) / scores.length) : null;
       return result;
     });
-  }, [trendPeriod]);
+  }, [trendPeriod, trendsSelectedSubjects]);
 
   // Calculate trend direction for selected subject(s)
   const trendDirection = useMemo(() => {
@@ -549,7 +551,7 @@ export default function AcademicPage() {
       direction: "stable" as const,
       change: 0
     };
-    const key = subjectFilter === "all" ? "Average" : subjectFilter;
+    const key = trendsSelectedSubjects.length === 1 ? trendsSelectedSubjects[0] : "Average";
     const firstValue = trendData[0]?.[key] as number | null;
     const lastValue = trendData[trendData.length - 1]?.[key] as number | null;
     if (firstValue === null || lastValue === null) return {
@@ -562,17 +564,17 @@ export default function AcademicPage() {
       change: Math.abs(change),
       currentValue: lastValue
     };
-  }, [trendData, subjectFilter]);
+  }, [trendData, trendsSelectedSubjects]);
 
   // Calculate goal reference line value for trends chart
   const trendGoalValue = useMemo(() => {
-    if (subjectFilter === "all") {
-      // Average of all goals
-      const goalValues = Object.values(goals);
-      return goalValues.length > 0 ? Math.round(goalValues.reduce((a, b) => a + b, 0) / goalValues.length) : 80;
+    if (trendsSelectedSubjects.length === 1) {
+      return goals[trendsSelectedSubjects[0]] ?? 80;
     }
-    return goals[subjectFilter] ?? 80;
-  }, [subjectFilter, goals]);
+    // Average of selected subjects' goals
+    const selectedGoals = trendsSelectedSubjects.map(s => goals[s] ?? 80);
+    return selectedGoals.length > 0 ? Math.round(selectedGoals.reduce((a, b) => a + b, 0) / selectedGoals.length) : 80;
+  }, [trendsSelectedSubjects, goals]);
 
   // Category trend data
   const categoryTrendData = useMemo(() => {
@@ -1801,23 +1803,27 @@ export default function AcademicPage() {
                           fill: "hsl(var(--foreground))",
                           position: "insideTopLeft"
                         }} />
-                          {subjectFilter === "all" ? <Area type="monotone" dataKey="Average" stroke={trendDirection.direction === "up" ? "#22c55e" : trendDirection.direction === "down" ? "#ef4444" : "#3b82f6"} strokeWidth={2.5} fill={trendDirection.direction === "up" ? "url(#gradientGreen)" : trendDirection.direction === "down" ? "url(#gradientRed)" : "url(#gradientBlue)"} dot={{
-                          fill: trendDirection.direction === "up" ? "#22c55e" : trendDirection.direction === "down" ? "#ef4444" : "#3b82f6",
-                          strokeWidth: 0,
-                          r: 5
-                        }} activeDot={{
-                          r: 7,
-                          strokeWidth: 2,
-                          stroke: "#fff"
-                        }} connectNulls /> : <Area type="monotone" dataKey={subjectFilter} stroke={trendDirection.direction === "up" ? "#22c55e" : trendDirection.direction === "down" ? "#ef4444" : "#3b82f6"} strokeWidth={2.5} fill={trendDirection.direction === "up" ? "url(#gradientGreen)" : trendDirection.direction === "down" ? "url(#gradientRed)" : "url(#gradientBlue)"} dot={{
-                          fill: trendDirection.direction === "up" ? "#22c55e" : trendDirection.direction === "down" ? "#ef4444" : "#3b82f6",
-                          strokeWidth: 0,
-                          r: 5
-                        }} activeDot={{
-                          r: 7,
-                          strokeWidth: 2,
-                          stroke: "#fff"
-                        }} connectNulls />}
+                          {trendsSelectedSubjects.length === 1 ? (
+                            <Area type="monotone" dataKey={trendsSelectedSubjects[0]} stroke={trendDirection.direction === "up" ? "#22c55e" : trendDirection.direction === "down" ? "#ef4444" : "#3b82f6"} strokeWidth={2.5} fill={trendDirection.direction === "up" ? "url(#gradientGreen)" : trendDirection.direction === "down" ? "url(#gradientRed)" : "url(#gradientBlue)"} dot={{
+                              fill: trendDirection.direction === "up" ? "#22c55e" : trendDirection.direction === "down" ? "#ef4444" : "#3b82f6",
+                              strokeWidth: 0,
+                              r: 5
+                            }} activeDot={{
+                              r: 7,
+                              strokeWidth: 2,
+                              stroke: "#fff"
+                            }} connectNulls />
+                          ) : (
+                            <Area type="monotone" dataKey="Average" stroke={trendDirection.direction === "up" ? "#22c55e" : trendDirection.direction === "down" ? "#ef4444" : "#3b82f6"} strokeWidth={2.5} fill={trendDirection.direction === "up" ? "url(#gradientGreen)" : trendDirection.direction === "down" ? "url(#gradientRed)" : "url(#gradientBlue)"} dot={{
+                              fill: trendDirection.direction === "up" ? "#22c55e" : trendDirection.direction === "down" ? "#ef4444" : "#3b82f6",
+                              strokeWidth: 0,
+                              r: 5
+                            }} activeDot={{
+                              r: 7,
+                              strokeWidth: 2,
+                              stroke: "#fff"
+                            }} connectNulls />
+                          )}
                         </AreaChart>
                       </ResponsiveContainer>
                     </div>
