@@ -4,7 +4,6 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Check, ChevronRight, Megaphone } from "lucide-react";
-import { useNavigate } from "react-router-dom";
 import {
   Carousel,
   CarouselContent,
@@ -13,10 +12,11 @@ import {
   CarouselPrevious,
 } from "@/components/ui/carousel";
 import { AnnouncementDrawer, getReadAnnouncementIds } from "@/components/AnnouncementDrawer";
+import { AnnouncementsListDrawer } from "@/components/AnnouncementsListDrawer";
 
 export function AnnouncementCarousel() {
-  const navigate = useNavigate();
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [listDrawerOpen, setListDrawerOpen] = useState(false);
   const [currentAnnouncementIndex, setCurrentAnnouncementIndex] = useState(0);
   const [readIds, setReadIds] = useState<number[]>([]);
 
@@ -27,10 +27,10 @@ export function AnnouncementCarousel() {
 
   // Refresh read status when drawer closes
   useEffect(() => {
-    if (!drawerOpen) {
+    if (!drawerOpen && !listDrawerOpen) {
       setReadIds(getReadAnnouncementIds());
     }
-  }, [drawerOpen]);
+  }, [drawerOpen, listDrawerOpen]);
 
   const isRead = (id: number) => readIds.includes(id);
 
@@ -55,7 +55,7 @@ export function AnnouncementCarousel() {
         <Button 
           variant="link" 
           className="text-primary p-0 h-auto text-sm"
-          onClick={() => navigate("/parent/announcements")}
+          onClick={() => setListDrawerOpen(true)}
         >
           See all <ChevronRight className="h-4 w-4 ml-1" />
         </Button>
@@ -196,6 +196,13 @@ export function AnnouncementCarousel() {
         isOpen={drawerOpen}
         onOpenChange={setDrawerOpen}
         onNavigate={setCurrentAnnouncementIndex}
+        onSeeAll={() => setListDrawerOpen(true)}
+      />
+
+      {/* Announcements List Drawer */}
+      <AnnouncementsListDrawer
+        isOpen={listDrawerOpen}
+        onOpenChange={setListDrawerOpen}
       />
     </section>
   );
