@@ -2269,27 +2269,35 @@ export default function AcademicPage() {
 
                 {/* Comparison Summary Cards */}
                 <div className="grid grid-cols-2 gap-3">
-                  <div className="p-3 rounded-lg bg-card border-l-4 border-l-blue-500 border border-border shadow-sm">
-                    <div className="flex items-center gap-2 mb-1">
-                      <span className="w-2 h-2 rounded-full bg-blue-500"></span>
-                      <span className="text-xs font-semibold text-blue-600">Exam A</span>
+                  <div className="p-4 rounded-xl bg-gradient-to-br from-orange-500/10 to-orange-600/5 border border-orange-500/20">
+                    <div className="flex items-center gap-2 mb-2">
+                      <div className="w-8 h-8 rounded-lg bg-orange-500/20 flex items-center justify-center">
+                        <BarChart3 className="h-4 w-4 text-orange-500" />
+                      </div>
+                      <div>
+                        <span className="text-xs font-semibold text-foreground">Exam A</span>
+                        <p className="text-[10px] text-muted-foreground">{getExamLabelForComparison(compareExamA)}</p>
+                      </div>
                     </div>
-                    <p className="text-xs text-muted-foreground mb-1">{getExamLabelForComparison(compareExamA)}</p>
                     <p className="text-2xl font-bold text-foreground">
                       {Math.round(comparisonData.reduce((sum, d) => sum + d.examA, 0) / comparisonData.length)}%
                     </p>
-                    <p className="text-xs text-muted-foreground">Average Score</p>
+                    <p className="text-[10px] text-muted-foreground">Average Score</p>
                   </div>
-                  <div className="p-3 rounded-lg bg-card border-l-4 border-l-red-500 border border-border shadow-sm">
-                    <div className="flex items-center gap-2 mb-1">
-                      <span className="w-2 h-2 rounded-full bg-red-500"></span>
-                      <span className="text-xs font-semibold text-red-600">Exam B</span>
+                  <div className="p-4 rounded-xl bg-gradient-to-br from-blue-500/10 to-blue-600/5 border border-blue-500/20">
+                    <div className="flex items-center gap-2 mb-2">
+                      <div className="w-8 h-8 rounded-lg bg-blue-500/20 flex items-center justify-center">
+                        <BarChart3 className="h-4 w-4 text-blue-500" />
+                      </div>
+                      <div>
+                        <span className="text-xs font-semibold text-foreground">Exam B</span>
+                        <p className="text-[10px] text-muted-foreground">{getExamLabelForComparison(compareExamB)}</p>
+                      </div>
                     </div>
-                    <p className="text-xs text-muted-foreground mb-1">{getExamLabelForComparison(compareExamB)}</p>
                     <p className="text-2xl font-bold text-foreground">
                       {Math.round(comparisonData.reduce((sum, d) => sum + d.examB, 0) / comparisonData.length)}%
                     </p>
-                    <p className="text-xs text-muted-foreground">Average Score</p>
+                    <p className="text-[10px] text-muted-foreground">Average Score</p>
                   </div>
                 </div>
 
