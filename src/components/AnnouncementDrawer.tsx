@@ -4,7 +4,7 @@ import { Drawer as DrawerPrimitive } from "vaul";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Calendar, ChevronLeft, ChevronRight, Megaphone, Paperclip, X } from "lucide-react";
+import { Calendar, ChevronLeft, ChevronRight, Download, FileText, Megaphone, X } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 
 interface Announcement {
@@ -33,7 +33,8 @@ export function AnnouncementDrawer({
   onOpenChange,
   onNavigate,
 }: AnnouncementDrawerProps) {
-  const [snap, setSnap] = useState<number | string | null>(0.6);
+  const [snap, setSnap] = useState<number | string | null>(0.85);
+  const [slideDirection, setSlideDirection] = useState<"left" | "right" | null>(null);
   const touchStartX = useRef<number>(0);
   const touchEndX = useRef<number>(0);
   const contentRef = useRef<HTMLDivElement>(null);
@@ -43,7 +44,8 @@ export function AnnouncementDrawer({
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
     return date.toLocaleDateString("en-US", {
-      month: "long",
+      weekday: "short",
+      month: "short",
       day: "numeric",
       year: "numeric",
     });
@@ -62,6 +64,13 @@ export function AnnouncementDrawer({
     }
   };
 
+  const getFileIcon = (fileName: string) => {
+    const ext = fileName.split('.').pop()?.toLowerCase();
+    if (ext === 'pdf') return { icon: FileText, color: "text-red-500", bg: "bg-red-500/10" };
+    if (ext === 'doc' || ext === 'docx') return { icon: FileText, color: "text-blue-500", bg: "bg-blue-500/10" };
+    return { icon: FileText, color: "text-primary", bg: "bg-primary/10" };
+  };
+
   const handleTouchStart = useCallback((e: React.TouchEvent) => {
     touchStartX.current = e.touches[0].clientX;
     touchEndX.current = e.touches[0].clientX;
@@ -77,34 +86,50 @@ export function AnnouncementDrawer({
 
     if (Math.abs(deltaX) > threshold) {
       if (deltaX > 0 && currentIndex < announcements.length - 1) {
-        // Swipe left - next
-        onNavigate(currentIndex + 1);
+        setSlideDirection("left");
+        setTimeout(() => {
+          onNavigate(currentIndex + 1);
+          setSlideDirection(null);
+        }, 150);
       } else if (deltaX < 0 && currentIndex > 0) {
-        // Swipe right - previous
-        onNavigate(currentIndex - 1);
+        setSlideDirection("right");
+        setTimeout(() => {
+          onNavigate(currentIndex - 1);
+          setSlideDirection(null);
+        }, 150);
       }
     }
   }, [currentIndex, announcements.length, onNavigate]);
 
   const goToNext = () => {
     if (currentIndex < announcements.length - 1) {
-      onNavigate(currentIndex + 1);
+      setSlideDirection("left");
+      setTimeout(() => {
+        onNavigate(currentIndex + 1);
+        setSlideDirection(null);
+      }, 150);
     }
   };
 
   const goToPrevious = () => {
     if (currentIndex > 0) {
-      onNavigate(currentIndex - 1);
+      setSlideDirection("right");
+      setTimeout(() => {
+        onNavigate(currentIndex - 1);
+        setSlideDirection(null);
+      }, 150);
     }
   };
 
   if (!currentAnnouncement) return null;
 
+  const attachmentCount = currentAnnouncement.attachments?.length || 0;
+
   return (
     <DrawerPrimitive.Root
       open={isOpen}
       onOpenChange={onOpenChange}
-      snapPoints={[0.6, 1]}
+      snapPoints={[0.85, 1]}
       activeSnapPoint={snap}
       setActiveSnapPoint={setSnap}
     >
@@ -112,22 +137,35 @@ export function AnnouncementDrawer({
         <DrawerPrimitive.Overlay className="fixed inset-0 z-50 bg-black/80" />
         <DrawerPrimitive.Content
           className={cn(
-            "fixed inset-x-0 bottom-0 z-50 flex flex-col rounded-t-[20px] border-t bg-background",
-            snap === 1 ? "h-[100dvh]" : "h-auto max-h-[85vh]"
+            "fixed inset-x-0 bottom-0 z-50 flex flex-col rounded-t-[24px] border-t bg-background shadow-2xl",
+            snap === 1 ? "h-[100dvh]" : "h-auto max-h-[90vh]"
           )}
         >
           {/* Drag Handle */}
-          <div className="mx-auto mt-3 h-1.5 w-12 rounded-full bg-muted flex-shrink-0" />
+          <div className="mx-auto mt-3 h-1.5 w-14 rounded-full bg-muted-foreground/30 flex-shrink-0" />
 
-          {/* Close Button */}
-          <Button
-            variant="ghost"
-            size="icon"
-            className="absolute right-3 top-3 z-10 h-8 w-8 rounded-full bg-muted/80"
-            onClick={() => onOpenChange(false)}
-          >
-            <X className="h-4 w-4" />
-          </Button>
+          {/* Header Bar */}
+          <div className="flex items-center justify-between px-5 py-3 border-b border-border/50">
+            <div className="flex items-center gap-2">
+              <Badge className={cn("text-xs font-semibold px-3 py-1", getCategoryColor(currentAnnouncement.category))}>
+                {currentAnnouncement.category}
+              </Badge>
+              {attachmentCount > 0 && (
+                <Badge variant="secondary" className="text-xs gap-1">
+                  <FileText className="h-3 w-3" />
+                  {attachmentCount}
+                </Badge>
+              )}
+            </div>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8 rounded-full hover:bg-muted"
+              onClick={() => onOpenChange(false)}
+            >
+              <X className="h-4 w-4" />
+            </Button>
+          </div>
 
           {/* Content with swipe detection */}
           <div
@@ -138,9 +176,15 @@ export function AnnouncementDrawer({
             onTouchEnd={handleTouchEnd}
           >
             <ScrollArea className="h-full">
-              <div className="pb-24">
+              <div 
+                className={cn(
+                  "pb-28 transition-all duration-150 ease-out",
+                  slideDirection === "left" && "opacity-0 -translate-x-4",
+                  slideDirection === "right" && "opacity-0 translate-x-4"
+                )}
+              >
                 {/* Image Header */}
-                <div className="relative h-48 overflow-hidden">
+                <div className="relative h-52 overflow-hidden">
                   {currentAnnouncement.image ? (
                     <img
                       src={currentAnnouncement.image}
@@ -148,101 +192,105 @@ export function AnnouncementDrawer({
                       className="w-full h-full object-cover"
                     />
                   ) : (
-                    <div className="w-full h-full bg-gradient-to-br from-primary/30 via-primary/20 to-secondary/30 flex items-center justify-center">
-                      <div className="absolute inset-0 opacity-20">
-                        <div className="absolute top-4 left-8 w-16 h-16 rounded-full bg-primary/30" />
-                        <div className="absolute top-12 right-12 w-24 h-24 rounded-full bg-secondary/30" />
-                        <div className="absolute bottom-8 left-1/4 w-12 h-12 rounded-full bg-primary/20" />
+                    <div className="w-full h-full bg-gradient-to-br from-primary/20 via-primary/10 to-secondary/20 flex items-center justify-center">
+                      <div className="absolute inset-0 opacity-30">
+                        <div className="absolute top-6 left-10 w-20 h-20 rounded-full bg-primary/20 blur-xl" />
+                        <div className="absolute top-16 right-16 w-28 h-28 rounded-full bg-secondary/20 blur-xl" />
+                        <div className="absolute bottom-10 left-1/3 w-16 h-16 rounded-full bg-primary/15 blur-xl" />
                       </div>
-                      <Megaphone className="h-16 w-16 text-primary/50" />
+                      <Megaphone className="h-20 w-20 text-primary/40" />
                     </div>
                   )}
-                  <div className="absolute inset-0 bg-gradient-to-t from-background via-background/40 to-transparent" />
-                  
-                  {/* Category Badge */}
-                  <div className="absolute top-4 left-4">
-                    <Badge className={getCategoryColor(currentAnnouncement.category)}>
-                      {currentAnnouncement.category}
-                    </Badge>
-                  </div>
+                  <div className="absolute inset-0 bg-gradient-to-t from-background via-background/50 to-transparent" />
                 </div>
 
                 {/* Content */}
-                <div className="px-5 pt-4">
+                <div className="px-5 -mt-6 relative">
                   {/* Title */}
-                  <h2 className="text-xl font-bold text-foreground mb-2">
+                  <h2 className="text-2xl font-bold text-foreground mb-3 leading-tight">
                     {currentAnnouncement.title}
                   </h2>
 
-                  {/* Date */}
-                  <div className="flex items-center gap-2 text-muted-foreground text-sm mb-4">
-                    <Calendar className="h-4 w-4" />
+                  {/* Date Pill */}
+                  <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-muted/60 text-muted-foreground text-sm mb-5">
+                    <Calendar className="h-3.5 w-3.5" />
                     {formatDate(currentAnnouncement.date)}
                   </div>
 
+                  {/* Attachments - Moved Up */}
+                  {currentAnnouncement.attachments && currentAnnouncement.attachments.length > 0 && (
+                    <div className="mb-6">
+                      <div className="flex flex-wrap gap-2">
+                        {currentAnnouncement.attachments.map((attachment, idx) => {
+                          const { icon: Icon, color, bg } = getFileIcon(attachment.name);
+                          return (
+                            <a
+                              key={idx}
+                              href={attachment.url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className={cn(
+                                "flex items-center gap-3 px-4 py-3 rounded-xl border border-border/60",
+                                "bg-card shadow-sm hover:shadow-md transition-all hover:border-primary/30",
+                                "group"
+                              )}
+                            >
+                              <div className={cn("p-2 rounded-lg", bg)}>
+                                <Icon className={cn("h-5 w-5", color)} />
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <p className="text-sm font-medium text-foreground truncate max-w-[160px]">
+                                  {attachment.name}
+                                </p>
+                                <p className="text-xs text-muted-foreground">Tap to open</p>
+                              </div>
+                              <Download className="h-4 w-4 text-muted-foreground group-hover:text-primary transition-colors" />
+                            </a>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
+
                   {/* Full Content */}
-                  <div className="prose prose-sm max-w-none text-foreground/90">
+                  <div className="prose prose-sm max-w-none">
                     {currentAnnouncement.content.split("\n").map((paragraph, idx) => (
-                      <p key={idx} className="mb-3 text-sm leading-relaxed">
+                      <p key={idx} className="mb-4 text-[15px] leading-relaxed text-foreground/85">
                         {paragraph}
                       </p>
                     ))}
                   </div>
-
-                  {/* Attachments */}
-                  {currentAnnouncement.attachments && currentAnnouncement.attachments.length > 0 && (
-                    <div className="mt-6 pt-4 border-t border-border">
-                      <h3 className="font-semibold text-foreground mb-3 flex items-center gap-2">
-                        <Paperclip className="h-4 w-4" />
-                        Attachments
-                      </h3>
-                      <div className="space-y-2">
-                        {currentAnnouncement.attachments.map((attachment, idx) => (
-                          <a
-                            key={idx}
-                            href={attachment.url}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="flex items-center gap-2 p-3 rounded-lg bg-muted/50 hover:bg-muted transition-colors"
-                          >
-                            <Paperclip className="h-4 w-4 text-primary" />
-                            <span className="text-sm text-foreground">{attachment.name}</span>
-                          </a>
-                        ))}
-                      </div>
-                    </div>
-                  )}
                 </div>
               </div>
             </ScrollArea>
           </div>
 
           {/* Navigation Footer */}
-          <div className="absolute bottom-0 left-0 right-0 bg-background/95 backdrop-blur-sm border-t border-border p-4">
+          <div className="absolute bottom-0 left-0 right-0 bg-background/98 backdrop-blur-md border-t border-border/50 px-4 py-4 pb-6">
             <div className="flex items-center justify-between">
               {/* Previous Button */}
               <Button
-                variant="ghost"
+                variant="outline"
                 size="sm"
                 onClick={goToPrevious}
                 disabled={currentIndex === 0}
-                className="gap-1"
+                className="gap-1.5 rounded-full px-4"
               >
                 <ChevronLeft className="h-4 w-4" />
                 Prev
               </Button>
 
               {/* Dots Indicator */}
-              <div className="flex items-center gap-1.5">
+              <div className="flex items-center gap-2">
                 {announcements.map((_, idx) => (
                   <button
                     key={idx}
                     onClick={() => onNavigate(idx)}
                     className={cn(
-                      "h-2 rounded-full transition-all",
+                      "rounded-full transition-all duration-200",
                       idx === currentIndex
-                        ? "w-6 bg-primary"
-                        : "w-2 bg-muted-foreground/30 hover:bg-muted-foreground/50"
+                        ? "w-7 h-2.5 bg-primary"
+                        : "w-2.5 h-2.5 bg-muted-foreground/25 hover:bg-muted-foreground/40"
                     )}
                   />
                 ))}
@@ -250,21 +298,16 @@ export function AnnouncementDrawer({
 
               {/* Next Button */}
               <Button
-                variant="ghost"
+                variant="outline"
                 size="sm"
                 onClick={goToNext}
                 disabled={currentIndex === announcements.length - 1}
-                className="gap-1"
+                className="gap-1.5 rounded-full px-4"
               >
                 Next
                 <ChevronRight className="h-4 w-4" />
               </Button>
             </div>
-
-            {/* Swipe hint */}
-            <p className="text-center text-xs text-muted-foreground mt-2">
-              Swipe left or right to navigate
-            </p>
           </div>
         </DrawerPrimitive.Content>
       </DrawerPrimitive.Portal>
