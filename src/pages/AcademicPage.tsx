@@ -228,34 +228,39 @@ export default function AcademicPage() {
     return `${examLabel} ${selectedYear}`;
   };
 
+  // Filtered subjects based on gradesSelectedSubjects
+  const filteredGradesSubjects = useMemo(() => {
+    return academicData.subjects.filter(s => gradesSelectedSubjects.includes(s.name));
+  }, [gradesSelectedSubjects]);
+
   // Calculate averages
   const currentAverage = useMemo(() => {
-    const scores = academicData.subjects.map(s => getScore(s, selectedYear, examType)).filter(s => s !== null) as number[];
+    const scores = filteredGradesSubjects.map(s => getScore(s, selectedYear, examType)).filter(s => s !== null) as number[];
     return scores.length > 0 ? Math.round(scores.reduce((a, b) => a + b, 0) / scores.length) : 0;
-  }, [selectedYear, examType]);
+  }, [selectedYear, examType, filteredGradesSubjects]);
 
   // Calculate category averages for selected year
   const categoryAverages = useMemo(() => {
     const categories = ["attitude", "homework", "quiz", "exam"] as const;
     return categories.map(cat => {
-      const scores = academicData.subjects.map(s => getCategoryScore(s, selectedYear, cat)).filter(s => s !== null) as number[];
+      const scores = filteredGradesSubjects.map(s => getCategoryScore(s, selectedYear, cat)).filter(s => s !== null) as number[];
       return {
         category: cat.charAt(0).toUpperCase() + cat.slice(1),
         score: scores.length > 0 ? Math.round(scores.reduce((a, b) => a + b, 0) / scores.length) : 0,
         classAverage: classAverages[selectedYear]?.[cat] ?? 0
       };
     });
-  }, [selectedYear]);
+  }, [selectedYear, filteredGradesSubjects]);
 
   // Subject performance data for bar chart (sorted best to worst)
   const subjectPerformance = useMemo(() => {
-    return academicData.subjects.map(s => ({
+    return filteredGradesSubjects.map(s => ({
       name: s.name,
       score: getScore(s, selectedYear, examType) ?? 0,
       classAvg: classAverages[selectedYear]?.[examType] ?? 0,
       goal: goals[s.name] ?? 80
     })).sort((a, b) => b.score - a.score);
-  }, [selectedYear, examType, goals]);
+  }, [selectedYear, examType, goals, filteredGradesSubjects]);
 
   // Grade distribution
   const gradeDistribution = useMemo(() => {
@@ -267,7 +272,7 @@ export default function AcademicPage() {
       "D": 0,
       "E": 0
     };
-    academicData.subjects.forEach(s => {
+    filteredGradesSubjects.forEach(s => {
       const score = getScore(s, selectedYear, examType);
       if (score !== null) {
         const grade = getGradeFromScore(score);
@@ -278,14 +283,14 @@ export default function AcademicPage() {
       grade,
       count
     }));
-  }, [selectedYear, examType]);
+  }, [selectedYear, examType, filteredGradesSubjects]);
 
   // Top 3 and Bottom 3 subjects (bottom only includes scores below 50%)
   const {
     top3,
     needsAttention
   } = useMemo(() => {
-    const sorted = [...academicData.subjects].sort((a, b) => {
+    const sorted = [...filteredGradesSubjects].sort((a, b) => {
       const scoreA = getScore(a, selectedYear, examType) ?? 0;
       const scoreB = getScore(b, selectedYear, examType) ?? 0;
       return scoreB - scoreA;
@@ -296,7 +301,7 @@ export default function AcademicPage() {
       top3: sorted.slice(0, 3),
       needsAttention: below50
     };
-  }, [selectedYear, examType]);
+  }, [selectedYear, examType, filteredGradesSubjects]);
 
   // Calculate attendance rate from all months
   const attendanceStats = useMemo(() => {
@@ -320,20 +325,21 @@ export default function AcademicPage() {
 
   // Calculate subjects passing (score >= 50)
   const passingStats = useMemo(() => {
-    const passingSubjects = academicData.subjects.filter(s => (getScore(s, selectedYear, examType) ?? 0) >= 50);
+    const passingSubjects = filteredGradesSubjects.filter(s => (getScore(s, selectedYear, examType) ?? 0) >= 50);
     const passingCount = passingSubjects.length;
-    const totalSubjects = academicData.subjects.length;
-    const passingPercentage = Math.round(passingCount / totalSubjects * 100);
+    const totalSubjects = filteredGradesSubjects.length;
+    const passingPercentage = totalSubjects > 0 ? Math.round(passingCount / totalSubjects * 100) : 0;
     return {
       passingCount,
       totalSubjects,
       passingPercentage
     };
-  }, [selectedYear, examType]);
+  }, [selectedYear, examType, filteredGradesSubjects]);
 
   // Find weakest subject
   const weakestSubjectInfo = useMemo(() => {
-    const weakest = academicData.subjects.reduce((worst, s) => {
+    if (filteredGradesSubjects.length === 0) return { name: "N/A", score: 0 };
+    const weakest = filteredGradesSubjects.reduce((worst, s) => {
       const currentScore = getScore(s, selectedYear, examType) ?? 100;
       const worstScore = getScore(worst, selectedYear, examType) ?? 100;
       return currentScore < worstScore ? s : worst;
@@ -343,11 +349,12 @@ export default function AcademicPage() {
       name: weakest.name,
       score: weakestScore
     };
-  }, [selectedYear, examType]);
+  }, [selectedYear, examType, filteredGradesSubjects]);
 
   // Best subject info
   const bestSubjectInfo = useMemo(() => {
-    const best = academicData.subjects.reduce((bestSub, s) => {
+    if (filteredGradesSubjects.length === 0) return { name: "N/A", score: 0 };
+    const best = filteredGradesSubjects.reduce((bestSub, s) => {
       const currentScore = getScore(s, selectedYear, examType) ?? 0;
       const bestScore = getScore(bestSub, selectedYear, examType) ?? 0;
       return currentScore > bestScore ? s : bestSub;
@@ -357,7 +364,7 @@ export default function AcademicPage() {
       name: best.name,
       score: bestScore
     };
-  }, [selectedYear, examType]);
+  }, [selectedYear, examType, filteredGradesSubjects]);
 
   // Improvement from previous exam
   const improvementStats = useMemo(() => {
@@ -382,8 +389,8 @@ export default function AcademicPage() {
     } else {
       prevType = "midYear";
     }
-    const currentScores = academicData.subjects.map(s => getScore(s, selectedYear, examType)).filter(s => s !== null) as number[];
-    const prevScores = academicData.subjects.map(s => getScore(s, prevYear, prevType)).filter(s => s !== null) as number[];
+    const currentScores = filteredGradesSubjects.map(s => getScore(s, selectedYear, examType)).filter(s => s !== null) as number[];
+    const prevScores = filteredGradesSubjects.map(s => getScore(s, prevYear, prevType)).filter(s => s !== null) as number[];
     if (currentScores.length === 0 || prevScores.length === 0) return {
       points: 0,
       text: "N/A"
@@ -395,7 +402,7 @@ export default function AcademicPage() {
       points,
       text: points >= 0 ? `+${points}%` : `${points}%`
     };
-  }, [selectedYear, examType]);
+  }, [selectedYear, examType, filteredGradesSubjects]);
   const risingStars = useMemo(() => {
     // Determine previous exam period
     let prevYear: YearKey = selectedYear;
@@ -415,7 +422,7 @@ export default function AcademicPage() {
       // Previous is same year's mid-year
       prevType = "midYear";
     }
-    const improvements = academicData.subjects.map(s => {
+    const improvements = filteredGradesSubjects.map(s => {
       const current = getScore(s, selectedYear, examType) ?? 0;
       const prev = getScore(s, prevYear, prevType) ?? 0;
       return {
@@ -426,7 +433,7 @@ export default function AcademicPage() {
       };
     }).filter(item => item.improvement > 0 && item.current > 0 && item.prev > 0);
     return improvements.sort((a, b) => b.improvement - a.improvement).slice(0, 3);
-  }, [selectedYear, examType]);
+  }, [selectedYear, examType, filteredGradesSubjects]);
 
   // Falling behind - subjects with biggest decline from previous exam
   const fallingBehind = useMemo(() => {
@@ -445,7 +452,7 @@ export default function AcademicPage() {
     } else {
       prevType = "midYear";
     }
-    const declines = academicData.subjects.map(s => {
+    const declines = filteredGradesSubjects.map(s => {
       const current = getScore(s, selectedYear, examType) ?? 0;
       const prev = getScore(s, prevYear, prevType) ?? 0;
       return {
@@ -456,7 +463,7 @@ export default function AcademicPage() {
       };
     }).filter(item => item.decline > 0 && item.current > 0 && item.prev > 0);
     return declines.sort((a, b) => b.decline - a.decline).slice(0, 3);
-  }, [selectedYear, examType]);
+  }, [selectedYear, examType, filteredGradesSubjects]);
 
   // Year-over-year trend data with period filtering (3 years of data)
   const trendData = useMemo(() => {
@@ -1386,7 +1393,7 @@ export default function AcademicPage() {
                   <h4 className="text-sm font-medium text-foreground">Grade Distribution</h4>
                   <div className="grid grid-cols-6 gap-2">
                     {(() => {
-                    const totalSubjects = academicData.subjects.length;
+                    const totalSubjects = filteredGradesSubjects.length;
                     const gradeCardColors: Record<string, {
                       bg: string;
                       text: string;
