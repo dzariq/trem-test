@@ -245,7 +245,7 @@ export function AnnouncementDrawer({
                 onClick={() => setViewMode(viewMode === "single" ? "all" : "single")}
               >
                 <Grid2X2 className="h-3.5 w-3.5" />
-                {viewMode === "single" ? "View All" : "Back"}
+                {viewMode === "single" ? "See All" : "Back"}
                 {viewMode === "single" && unreadCount > 0 && (
                   <Badge 
                     variant="destructive" 
