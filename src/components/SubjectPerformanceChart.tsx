@@ -1,6 +1,7 @@
 import { useState, useRef, useMemo, TouchEvent, useCallback, useEffect } from "react";
 import { Badge } from "@/components/ui/badge";
 import { getTinySubjectCode } from "@/data/subjectsConfig";
+import { Maximize2, Target } from "lucide-react";
 import {
   BarChart,
   Bar,
@@ -276,15 +277,31 @@ export function SubjectPerformanceChart({
           )}
         </h4>
         
-        {/* Reset zoom indicator - only show when zoomed */}
-        {zoomLevel !== totalSubjects && (
+        {/* Zoom preset buttons */}
+        <div className="flex items-center gap-1.5">
           <button
             onClick={handleShowAll}
-            className="text-[10px] text-primary underline transition-opacity hover:opacity-70"
+            className={`flex items-center gap-1 px-2 py-1 rounded-full text-[10px] font-medium transition-all duration-200 ${
+              zoomLevel === totalSubjects
+                ? 'bg-primary text-primary-foreground shadow-sm'
+                : 'bg-muted text-muted-foreground hover:bg-muted/80'
+            }`}
           >
-            Reset zoom
+            <Maximize2 className="w-3 h-3" />
+            All
           </button>
-        )}
+          <button
+            onClick={handleFocusView}
+            className={`flex items-center gap-1 px-2 py-1 rounded-full text-[10px] font-medium transition-all duration-200 ${
+              zoomLevel === FOCUS_COUNT
+                ? 'bg-primary text-primary-foreground shadow-sm'
+                : 'bg-muted text-muted-foreground hover:bg-muted/80'
+            }`}
+          >
+            <Target className="w-3 h-3" />
+            Focus
+          </button>
+        </div>
       </div>
       
       {/* Scroll indicator dots when zoomed in */}
