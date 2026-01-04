@@ -1562,16 +1562,16 @@ export default function AcademicPage() {
                   // Determine text size based on value length
                   const valueLength = String(stat.value).length;
                   const textSizeClass = valueLength > 12 ? "text-xs" : valueLength > 8 ? "text-sm" : "text-lg";
-                  return <div key={index} className="flex flex-col items-center justify-center p-3 rounded-xl border min-h-[100px]" style={{
+                  return <div key={index} className="flex flex-col items-center justify-center p-3 rounded-xl border min-h-[100px] text-center" style={{
                     backgroundColor: stat.bgColor,
                     borderColor: 'transparent'
                   }}>
                         <stat.icon className="h-5 w-5 mb-1" style={{
                       color: stat.iconColor
                     }} />
-                        <span className={`${textSizeClass} font-bold text-foreground text-center leading-tight line-clamp-2`}>{stat.value}</span>
-                        <span className="text-[10px] text-muted-foreground mt-0.5">{stat.label}</span>
-                        <span className="text-[9px] text-muted-foreground/70">{stat.subtext}</span>
+                        <span className={`${textSizeClass} font-bold text-foreground text-center leading-tight line-clamp-2 w-full`}>{stat.value}</span>
+                        <span className="text-[10px] text-muted-foreground mt-0.5 text-center w-full">{stat.label}</span>
+                        <span className="text-[9px] text-muted-foreground/70 text-center w-full">{stat.subtext}</span>
                       </div>;
                 })}
                 </div>
