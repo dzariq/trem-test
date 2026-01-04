@@ -762,6 +762,29 @@ export default function AcademicPage() {
               <FileText className="h-5 w-5 text-primary" />
               Report Card
             </CardTitle>
+            {/* Year and Exam Period Selectors */}
+            <div className="flex gap-2 mt-3">
+              <Select value={selectedYear} onValueChange={(v) => setSelectedYear(v as YearKey)}>
+                <SelectTrigger className="flex-1 h-9 text-sm">
+                  <SelectValue placeholder="Year" />
+                </SelectTrigger>
+                <SelectContent className="bg-card">
+                  <SelectItem value="2025">2025</SelectItem>
+                  <SelectItem value="2024">2024</SelectItem>
+                  <SelectItem value="2023">2023</SelectItem>
+                  <SelectItem value="2022">2022</SelectItem>
+                </SelectContent>
+              </Select>
+              <Select value={examType} onValueChange={(v) => setExamType(v as ExamType)}>
+                <SelectTrigger className="flex-1 h-9 text-sm">
+                  <SelectValue placeholder="Exam" />
+                </SelectTrigger>
+                <SelectContent className="bg-card">
+                  <SelectItem value="midYear">Mid-Year</SelectItem>
+                  <SelectItem value="yearEnd">Year-End</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
           </CardHeader>
           <CardContent className="space-y-4">
             {/* Tabs for Grades/Behavior/Activities */}
