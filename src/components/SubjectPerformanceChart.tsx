@@ -253,8 +253,8 @@ export function SubjectPerformanceChart({
     setPinchScale(1);
   }, [zoomLevel, totalSubjects, scrollOffset, triggerHaptic]);
 
-  // Dynamic chart height - compact: ~20px per subject instead of 40px
-  const chartHeight = Math.max(160, Math.round(animatedZoom) * 20);
+  // Fixed chart height - bars get taller when fewer subjects are shown
+  const CHART_HEIGHT = 240;
 
   // Generate help text
   const getHelpText = () => {
@@ -313,7 +313,7 @@ export function SubjectPerformanceChart({
         ref={chartContainerRef}
         className="select-none relative overflow-hidden rounded-lg"
         style={{ 
-          height: chartHeight,
+          height: CHART_HEIGHT,
           WebkitTapHighlightColor: 'transparent',
           touchAction: zoomLevel < totalSubjects ? 'pan-y' : 'manipulation',
           transition: isPinching ? 'none' : 'height 0.25s cubic-bezier(0.34, 1.56, 0.64, 1)',
@@ -370,7 +370,7 @@ export function SubjectPerformanceChart({
           }}
         >
           <ResponsiveContainer width="100%" height="100%" style={{ overflow: 'visible' }}>
-            <BarChart data={visibleData} layout="vertical" margin={{ left: 0, right: 8, top: 4, bottom: 4 }}>
+            <BarChart data={visibleData} layout="vertical" margin={{ left: 0, right: 16, top: 4, bottom: 4 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" strokeOpacity={0.3} />
               <XAxis 
                 type="number" 
