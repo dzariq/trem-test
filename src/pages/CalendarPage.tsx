@@ -208,22 +208,24 @@ export default function CalendarPage() {
 
             {/* Calendar Component */}
             <Card className="bg-card border-border shadow-sm">
-              <CardContent className="p-3">
-                <Calendar
-                  mode="single"
-                  selected={selectedDate}
-                  onSelect={setSelectedDate}
-                  className="rounded-md w-full pointer-events-auto"
-                  modifiers={{
-                    hasEvent: datesWithEvents
-                  }}
-                  modifiersStyles={{
-                    hasEvent: { 
-                      backgroundColor: "hsl(var(--primary) / 0.1)",
-                      fontWeight: "bold"
-                    }
-                  }}
-                />
+              <CardContent className="p-3 sm:p-4 md:p-6">
+                <div className="flex justify-center">
+                  <Calendar
+                    mode="single"
+                    selected={selectedDate}
+                    onSelect={setSelectedDate}
+                    className="rounded-md w-full max-w-md mx-auto"
+                    modifiers={{
+                      hasEvent: datesWithEvents
+                    }}
+                    modifiersStyles={{
+                      hasEvent: { 
+                        backgroundColor: "hsl(var(--primary) / 0.1)",
+                        fontWeight: "bold"
+                      }
+                    }}
+                  />
+                </div>
               </CardContent>
             </Card>
 
