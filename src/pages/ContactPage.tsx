@@ -1,8 +1,9 @@
 import { AppLayout } from "@/components/layout/AppLayout";
 import { AppHeader } from "@/components/layout/AppHeader";
 import { Card, CardContent } from "@/components/ui/card";
-import { MapPin, Phone, Mail, Clock, ExternalLink } from "lucide-react";
+import { MapPin, Phone, Mail, Clock, ExternalLink, ChevronLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useNavigate } from "react-router-dom";
 import schoolLogo from "@/assets/school-badge.png";
 
 const campuses = [
@@ -33,6 +34,8 @@ const officeHours = [
 ];
 
 export default function ContactPage() {
+  const navigate = useNavigate();
+  
   const handleCall = (phone: string) => {
     window.location.href = `tel:${phone.replace(/[^0-9+]/g, '')}`;
   };
@@ -42,6 +45,14 @@ export default function ContactPage() {
       <AppHeader 
         leftContent={
           <div className="flex items-center gap-2">
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              className="h-8 w-8 -ml-2"
+              onClick={() => navigate(-1)}
+            >
+              <ChevronLeft className="h-5 w-5" />
+            </Button>
             <img src={schoolLogo} alt="School Logo" className="h-12 w-auto -my-2 drop-shadow-md" />
             <h1 className="text-xl font-semibold text-foreground">Contact Us</h1>
           </div>
