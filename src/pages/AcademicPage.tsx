@@ -2353,40 +2353,50 @@ export default function AcademicPage() {
                                 </div>
                               ) : (
                                 <div className="space-y-3">
-                                  {/* Mini Area Chart */}
-                                  <div className="h-32 -mx-2">
+                                  {/* Bar Chart - Before/After Comparison */}
+                                  <div className="h-36 -mx-2">
                                     <ResponsiveContainer width="100%" height="100%">
-                                      <AreaChart data={top5Growth.map(item => ({
+                                      <BarChart data={top5Growth.map(item => ({
                                         name: shortenSubjectName(item.name),
-                                        growth: item.delta,
-                                        percentChange: item.examB > 0 ? item.delta / item.examB * 100 : 0,
-                                        from: item.examB,
-                                        to: item.examA
-                                      }))} margin={{ top: 10, right: 10, left: 10, bottom: 0 }}>
-                                        <defs>
-                                          <linearGradient id="growthGradient" x1="0" y1="0" x2="0" y2="1">
-                                            <stop offset="5%" stopColor="hsl(142, 76%, 46%)" stopOpacity={0.4} />
-                                            <stop offset="95%" stopColor="hsl(142, 76%, 46%)" stopOpacity={0.05} />
-                                          </linearGradient>
-                                        </defs>
+                                        examB: item.examB,
+                                        examA: item.examA,
+                                        delta: item.delta
+                                      }))} margin={{ top: 10, right: 10, left: 10, bottom: 0 }} barGap={2} barCategoryGap="20%">
                                         <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 9, fill: 'hsl(var(--muted-foreground))' }} interval={0} height={30} />
-                                        <YAxis hide />
-                                        <Area type="monotone" dataKey="growth" stroke="hsl(142, 76%, 46%)" strokeWidth={2} fill="url(#growthGradient)" dot={{ r: 4, fill: "hsl(142, 76%, 46%)", strokeWidth: 2, stroke: "hsl(var(--background))" }} activeDot={{ r: 6, fill: "hsl(142, 76%, 46%)", strokeWidth: 2, stroke: "hsl(var(--background))" }} />
+                                        <YAxis hide domain={[0, 100]} />
                                         <Tooltip content={({ active, payload }) => {
                                           if (active && payload && payload.length) {
                                             const data = payload[0].payload;
                                             return (
                                               <div className="bg-popover border border-border rounded-lg shadow-lg p-2">
                                                 <p className="text-xs font-medium text-foreground">{data.name}</p>
-                                                <p className="text-xs text-emerald-500 font-bold">+{data.growth} pts</p>
-                                                <p className="text-[10px] text-muted-foreground">{data.from} → {data.to}</p>
+                                                <div className="flex items-center gap-2 mt-1">
+                                                  <span className="text-[10px] text-red-500">B: {data.examB}</span>
+                                                  <span className="text-[10px] text-muted-foreground">→</span>
+                                                  <span className="text-[10px] text-blue-500">A: {data.examA}</span>
+                                                </div>
+                                                <p className="text-xs text-emerald-500 font-bold mt-1">+{data.delta} pts</p>
                                               </div>
                                             );
                                           }
                                           return null;
                                         }} />
-                                      </AreaChart>
+                                        <Bar dataKey="examB" fill="hsl(0, 72%, 51%)" radius={[4, 4, 0, 0]} name="Exam B" />
+                                        <Bar dataKey="examA" fill="hsl(217, 91%, 60%)" radius={[4, 4, 0, 0]} name="Exam A" />
+                                      </BarChart>
                                     </ResponsiveContainer>
+                                  </div>
+                                  
+                                  {/* Legend */}
+                                  <div className="flex items-center justify-center gap-4 text-[10px]">
+                                    <div className="flex items-center gap-1">
+                                      <div className="w-3 h-3 rounded-sm bg-red-500" />
+                                      <span className="text-muted-foreground">Exam B (Before)</span>
+                                    </div>
+                                    <div className="flex items-center gap-1">
+                                      <div className="w-3 h-3 rounded-sm bg-blue-500" />
+                                      <span className="text-muted-foreground">Exam A (After)</span>
+                                    </div>
                                   </div>
                                   
                                   {/* Top 5 Rankings */}
@@ -2451,40 +2461,50 @@ export default function AcademicPage() {
                                 </div>
                               ) : (
                                 <div className="space-y-3">
-                                  {/* Mini Area Chart */}
-                                  <div className="h-32 -mx-2">
+                                  {/* Bar Chart - Before/After Comparison */}
+                                  <div className="h-36 -mx-2">
                                     <ResponsiveContainer width="100%" height="100%">
-                                      <AreaChart data={top5Decline.map(item => ({
+                                      <BarChart data={top5Decline.map(item => ({
                                         name: shortenSubjectName(item.name),
-                                        decline: Math.abs(item.delta),
-                                        percentChange: item.examB > 0 ? Math.abs(item.delta) / item.examB * 100 : 0,
-                                        from: item.examB,
-                                        to: item.examA
-                                      }))} margin={{ top: 10, right: 10, left: 10, bottom: 0 }}>
-                                        <defs>
-                                          <linearGradient id="declineGradient" x1="0" y1="0" x2="0" y2="1">
-                                            <stop offset="5%" stopColor="hsl(0, 72%, 51%)" stopOpacity={0.4} />
-                                            <stop offset="95%" stopColor="hsl(0, 72%, 51%)" stopOpacity={0.05} />
-                                          </linearGradient>
-                                        </defs>
+                                        examB: item.examB,
+                                        examA: item.examA,
+                                        delta: item.delta
+                                      }))} margin={{ top: 10, right: 10, left: 10, bottom: 0 }} barGap={2} barCategoryGap="20%">
                                         <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 9, fill: 'hsl(var(--muted-foreground))' }} interval={0} height={30} />
-                                        <YAxis hide />
-                                        <Area type="monotone" dataKey="decline" stroke="hsl(0, 72%, 51%)" strokeWidth={2} fill="url(#declineGradient)" dot={{ r: 4, fill: "hsl(0, 72%, 51%)", strokeWidth: 2, stroke: "hsl(var(--background))" }} activeDot={{ r: 6, fill: "hsl(0, 72%, 51%)", strokeWidth: 2, stroke: "hsl(var(--background))" }} />
+                                        <YAxis hide domain={[0, 100]} />
                                         <Tooltip content={({ active, payload }) => {
                                           if (active && payload && payload.length) {
                                             const data = payload[0].payload;
                                             return (
                                               <div className="bg-popover border border-border rounded-lg shadow-lg p-2">
                                                 <p className="text-xs font-medium text-foreground">{data.name}</p>
-                                                <p className="text-xs text-red-500 font-bold">-{data.decline} pts</p>
-                                                <p className="text-[10px] text-muted-foreground">{data.from} → {data.to}</p>
+                                                <div className="flex items-center gap-2 mt-1">
+                                                  <span className="text-[10px] text-red-500">B: {data.examB}</span>
+                                                  <span className="text-[10px] text-muted-foreground">→</span>
+                                                  <span className="text-[10px] text-blue-500">A: {data.examA}</span>
+                                                </div>
+                                                <p className="text-xs text-red-500 font-bold mt-1">{data.delta} pts</p>
                                               </div>
                                             );
                                           }
                                           return null;
                                         }} />
-                                      </AreaChart>
+                                        <Bar dataKey="examB" fill="hsl(0, 72%, 51%)" radius={[4, 4, 0, 0]} name="Exam B" />
+                                        <Bar dataKey="examA" fill="hsl(217, 91%, 60%)" radius={[4, 4, 0, 0]} name="Exam A" />
+                                      </BarChart>
                                     </ResponsiveContainer>
+                                  </div>
+                                  
+                                  {/* Legend */}
+                                  <div className="flex items-center justify-center gap-4 text-[10px]">
+                                    <div className="flex items-center gap-1">
+                                      <div className="w-3 h-3 rounded-sm bg-red-500" />
+                                      <span className="text-muted-foreground">Exam B (Before)</span>
+                                    </div>
+                                    <div className="flex items-center gap-1">
+                                      <div className="w-3 h-3 rounded-sm bg-blue-500" />
+                                      <span className="text-muted-foreground">Exam A (After)</span>
+                                    </div>
                                   </div>
                                   
                                   {/* Top 5 Rankings */}
