@@ -1,4 +1,5 @@
 import { useState, useMemo, useRef, useCallback, useEffect } from "react";
+import { Carousel, CarouselContent, CarouselItem } from "@/components/ui/carousel";
 import { useSearchParams } from "react-router-dom";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { AppHeader } from "@/components/layout/AppHeader";
@@ -2333,132 +2334,250 @@ export default function AcademicPage() {
                   );
                 })()}
 
-                {/* Top 5 Growth Leaders - Moomoo Style */}
-                <div className="p-4 rounded-xl bg-gradient-to-br from-emerald-500/10 to-emerald-600/5 border border-emerald-500/20">
-                  <div className="flex items-center justify-between mb-3">
-                    <div className="flex items-center gap-2">
-                      <div className="w-8 h-8 rounded-lg bg-emerald-500/20 flex items-center justify-center">
-                        <TrendingUp className="h-4 w-4 text-emerald-500" />
-                      </div>
-                      <div>
-                        <h4 className="text-sm font-semibold text-foreground">Top Growth Subjects</h4>
-                        <p className="text-[10px] text-muted-foreground">Best performing subjects</p>
+                {/* Top 5 Growth/Decline Leaders - Swipeable Carousel */}
+                {(() => {
+                  const top5Growth = [...comparisonData].sort((a, b) => b.delta - a.delta).slice(0, 5).filter(item => item.delta > 0);
+                  const top5Decline = [...comparisonData].sort((a, b) => a.delta - b.delta).slice(0, 5).filter(item => item.delta < 0);
+                  const [activeSlide, setActiveSlide] = useState(0);
+                  const [showSwipeHint, setShowSwipeHint] = useState(true);
+                  
+                  // Hide swipe hint after 3 seconds or on swipe
+                  useEffect(() => {
+                    const timer = setTimeout(() => setShowSwipeHint(false), 3000);
+                    return () => clearTimeout(timer);
+                  }, []);
+
+                  return (
+                    <div className="relative">
+                      <Carousel
+                        className="w-full"
+                        opts={{ align: "start", loop: false }}
+                        setApi={(api) => {
+                          if (api) {
+                            api.on("select", () => {
+                              setActiveSlide(api.selectedScrollSnap());
+                              setShowSwipeHint(false);
+                            });
+                          }
+                        }}
+                      >
+                        <CarouselContent className="-ml-2">
+                          {/* Slide 1: Top Growth Subjects */}
+                          <CarouselItem className="pl-2">
+                            <div className="p-4 rounded-xl bg-gradient-to-br from-emerald-500/10 to-emerald-600/5 border border-emerald-500/20">
+                              <div className="flex items-center justify-between mb-3">
+                                <div className="flex items-center gap-2">
+                                  <div className="w-8 h-8 rounded-lg bg-emerald-500/20 flex items-center justify-center">
+                                    <TrendingUp className="h-4 w-4 text-emerald-500" />
+                                  </div>
+                                  <div>
+                                    <h4 className="text-sm font-semibold text-foreground">Top Growth Subjects</h4>
+                                    <p className="text-[10px] text-muted-foreground">Best performing subjects</p>
+                                  </div>
+                                </div>
+                                <Badge className="bg-emerald-500/20 text-emerald-600 border-emerald-500/30 text-xs">
+                                  Top 5
+                                </Badge>
+                              </div>
+                              
+                              {top5Growth.length === 0 ? (
+                                <div className="text-center py-4 text-muted-foreground text-sm">
+                                  No subjects showed improvement in this period
+                                </div>
+                              ) : (
+                                <div className="space-y-3">
+                                  {/* Mini Area Chart */}
+                                  <div className="h-32 -mx-2">
+                                    <ResponsiveContainer width="100%" height="100%">
+                                      <AreaChart data={top5Growth.map(item => ({
+                                        name: shortenSubjectName(item.name),
+                                        growth: item.delta,
+                                        percentChange: item.examB > 0 ? item.delta / item.examB * 100 : 0,
+                                        from: item.examB,
+                                        to: item.examA
+                                      }))} margin={{ top: 10, right: 10, left: 10, bottom: 0 }}>
+                                        <defs>
+                                          <linearGradient id="growthGradient" x1="0" y1="0" x2="0" y2="1">
+                                            <stop offset="5%" stopColor="hsl(142, 76%, 46%)" stopOpacity={0.4} />
+                                            <stop offset="95%" stopColor="hsl(142, 76%, 46%)" stopOpacity={0.05} />
+                                          </linearGradient>
+                                        </defs>
+                                        <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 9, fill: 'hsl(var(--muted-foreground))' }} interval={0} height={30} />
+                                        <YAxis hide />
+                                        <Area type="monotone" dataKey="growth" stroke="hsl(142, 76%, 46%)" strokeWidth={2} fill="url(#growthGradient)" dot={{ r: 4, fill: "hsl(142, 76%, 46%)", strokeWidth: 2, stroke: "hsl(var(--background))" }} activeDot={{ r: 6, fill: "hsl(142, 76%, 46%)", strokeWidth: 2, stroke: "hsl(var(--background))" }} />
+                                        <Tooltip content={({ active, payload }) => {
+                                          if (active && payload && payload.length) {
+                                            const data = payload[0].payload;
+                                            return (
+                                              <div className="bg-popover border border-border rounded-lg shadow-lg p-2">
+                                                <p className="text-xs font-medium text-foreground">{data.name}</p>
+                                                <p className="text-xs text-emerald-500 font-bold">+{data.growth} pts</p>
+                                                <p className="text-[10px] text-muted-foreground">{data.from} → {data.to}</p>
+                                              </div>
+                                            );
+                                          }
+                                          return null;
+                                        }} />
+                                      </AreaChart>
+                                    </ResponsiveContainer>
+                                  </div>
+                                  
+                                  {/* Top 5 Rankings */}
+                                  <div className="space-y-2">
+                                    {top5Growth.map((item, index) => {
+                                      const percentChange = item.examB > 0 ? (item.delta / item.examB * 100).toFixed(1) : '0.0';
+                                      const maxDelta = Math.max(...top5Growth.map(t => t.delta));
+                                      const barWidth = item.delta / maxDelta * 100;
+                                      return (
+                                        <div key={item.name} className="flex items-center gap-2">
+                                          <div className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold ${index === 0 ? 'bg-yellow-500/20 text-yellow-600' : index === 1 ? 'bg-gray-400/20 text-gray-500' : index === 2 ? 'bg-amber-600/20 text-amber-600' : 'bg-muted text-muted-foreground'}`}>
+                                            {index + 1}
+                                          </div>
+                                          <span className="text-xs font-medium text-foreground w-16 truncate">{shortenSubjectName(item.name)}</span>
+                                          <div className="flex-1 h-4 bg-muted/30 rounded-full overflow-hidden relative">
+                                            <div className="h-full bg-gradient-to-r from-emerald-500 to-emerald-400 rounded-full transition-all duration-700" style={{ width: `${barWidth}%` }} />
+                                          </div>
+                                          <div className="flex items-center gap-1 min-w-[60px] justify-end">
+                                            <span className="text-xs font-bold text-emerald-500">+{item.delta}</span>
+                                            <span className="text-[9px] text-muted-foreground">({percentChange}%)</span>
+                                          </div>
+                                        </div>
+                                      );
+                                    })}
+                                  </div>
+                                  
+                                  {/* Summary Footer */}
+                                  <div className="pt-2 border-t border-emerald-500/20 flex items-center justify-between">
+                                    <span className="text-[10px] text-muted-foreground">
+                                      Average growth: +{(top5Growth.reduce((sum, t) => sum + t.delta, 0) / top5Growth.length).toFixed(1)} pts
+                                    </span>
+                                    <span className="text-[10px] text-emerald-500 font-medium">
+                                      🏆 {shortenSubjectName(top5Growth[0].name)} leads with +{top5Growth[0].delta} pts
+                                    </span>
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+                          </CarouselItem>
+                          
+                          {/* Slide 2: Top Declined Subjects */}
+                          <CarouselItem className="pl-2">
+                            <div className="p-4 rounded-xl bg-gradient-to-br from-red-500/10 to-red-600/5 border border-red-500/20">
+                              <div className="flex items-center justify-between mb-3">
+                                <div className="flex items-center gap-2">
+                                  <div className="w-8 h-8 rounded-lg bg-red-500/20 flex items-center justify-center">
+                                    <TrendingDown className="h-4 w-4 text-red-500" />
+                                  </div>
+                                  <div>
+                                    <h4 className="text-sm font-semibold text-foreground">Top Declined Subjects</h4>
+                                    <p className="text-[10px] text-muted-foreground">Needs attention</p>
+                                  </div>
+                                </div>
+                                <Badge className="bg-red-500/20 text-red-600 border-red-500/30 text-xs">
+                                  Top 5
+                                </Badge>
+                              </div>
+                              
+                              {top5Decline.length === 0 ? (
+                                <div className="text-center py-4 text-muted-foreground text-sm">
+                                  No subjects showed decline in this period 🎉
+                                </div>
+                              ) : (
+                                <div className="space-y-3">
+                                  {/* Mini Area Chart */}
+                                  <div className="h-32 -mx-2">
+                                    <ResponsiveContainer width="100%" height="100%">
+                                      <AreaChart data={top5Decline.map(item => ({
+                                        name: shortenSubjectName(item.name),
+                                        decline: Math.abs(item.delta),
+                                        percentChange: item.examB > 0 ? Math.abs(item.delta) / item.examB * 100 : 0,
+                                        from: item.examB,
+                                        to: item.examA
+                                      }))} margin={{ top: 10, right: 10, left: 10, bottom: 0 }}>
+                                        <defs>
+                                          <linearGradient id="declineGradient" x1="0" y1="0" x2="0" y2="1">
+                                            <stop offset="5%" stopColor="hsl(0, 72%, 51%)" stopOpacity={0.4} />
+                                            <stop offset="95%" stopColor="hsl(0, 72%, 51%)" stopOpacity={0.05} />
+                                          </linearGradient>
+                                        </defs>
+                                        <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 9, fill: 'hsl(var(--muted-foreground))' }} interval={0} height={30} />
+                                        <YAxis hide />
+                                        <Area type="monotone" dataKey="decline" stroke="hsl(0, 72%, 51%)" strokeWidth={2} fill="url(#declineGradient)" dot={{ r: 4, fill: "hsl(0, 72%, 51%)", strokeWidth: 2, stroke: "hsl(var(--background))" }} activeDot={{ r: 6, fill: "hsl(0, 72%, 51%)", strokeWidth: 2, stroke: "hsl(var(--background))" }} />
+                                        <Tooltip content={({ active, payload }) => {
+                                          if (active && payload && payload.length) {
+                                            const data = payload[0].payload;
+                                            return (
+                                              <div className="bg-popover border border-border rounded-lg shadow-lg p-2">
+                                                <p className="text-xs font-medium text-foreground">{data.name}</p>
+                                                <p className="text-xs text-red-500 font-bold">-{data.decline} pts</p>
+                                                <p className="text-[10px] text-muted-foreground">{data.from} → {data.to}</p>
+                                              </div>
+                                            );
+                                          }
+                                          return null;
+                                        }} />
+                                      </AreaChart>
+                                    </ResponsiveContainer>
+                                  </div>
+                                  
+                                  {/* Top 5 Rankings */}
+                                  <div className="space-y-2">
+                                    {top5Decline.map((item, index) => {
+                                      const percentChange = item.examB > 0 ? (Math.abs(item.delta) / item.examB * 100).toFixed(1) : '0.0';
+                                      const maxDelta = Math.max(...top5Decline.map(t => Math.abs(t.delta)));
+                                      const barWidth = Math.abs(item.delta) / maxDelta * 100;
+                                      return (
+                                        <div key={item.name} className="flex items-center gap-2">
+                                          <div className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold ${index === 0 ? 'bg-red-500/20 text-red-600' : index === 1 ? 'bg-red-400/20 text-red-500' : index === 2 ? 'bg-red-300/20 text-red-400' : 'bg-muted text-muted-foreground'}`}>
+                                            {index + 1}
+                                          </div>
+                                          <span className="text-xs font-medium text-foreground w-16 truncate">{shortenSubjectName(item.name)}</span>
+                                          <div className="flex-1 h-4 bg-muted/30 rounded-full overflow-hidden relative">
+                                            <div className="h-full bg-gradient-to-r from-red-500 to-red-400 rounded-full transition-all duration-700" style={{ width: `${barWidth}%` }} />
+                                          </div>
+                                          <div className="flex items-center gap-1 min-w-[60px] justify-end">
+                                            <span className="text-xs font-bold text-red-500">{item.delta}</span>
+                                            <span className="text-[9px] text-muted-foreground">({percentChange}%)</span>
+                                          </div>
+                                        </div>
+                                      );
+                                    })}
+                                  </div>
+                                  
+                                  {/* Summary Footer */}
+                                  <div className="pt-2 border-t border-red-500/20 flex items-center justify-between">
+                                    <span className="text-[10px] text-muted-foreground">
+                                      Average decline: {(top5Decline.reduce((sum, t) => sum + t.delta, 0) / top5Decline.length).toFixed(1)} pts
+                                    </span>
+                                    <span className="text-[10px] text-red-500 font-medium">
+                                      ⚠️ {shortenSubjectName(top5Decline[0].name)} needs focus
+                                    </span>
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+                          </CarouselItem>
+                        </CarouselContent>
+                      </Carousel>
+                      
+                      {/* Dot Indicators & Swipe Hint */}
+                      <div className="flex items-center justify-center gap-3 mt-3">
+                        <div className="flex items-center gap-2">
+                          <div className={`w-2.5 h-2.5 rounded-full transition-all duration-300 ${activeSlide === 0 ? 'bg-emerald-500 scale-125' : 'bg-emerald-500/30'}`} />
+                          <div className={`w-2.5 h-2.5 rounded-full transition-all duration-300 ${activeSlide === 1 ? 'bg-red-500 scale-125' : 'bg-red-500/30'}`} />
+                        </div>
+                        
+                        {/* Swipe Hint */}
+                        {showSwipeHint && top5Decline.length > 0 && (
+                          <div className="flex items-center gap-1 text-[10px] text-muted-foreground animate-pulse">
+                            <span>Swipe for declined</span>
+                            <ArrowRightLeft className="h-3 w-3" />
+                          </div>
+                        )}
                       </div>
                     </div>
-                    <Badge className="bg-emerald-500/20 text-emerald-600 border-emerald-500/30 text-xs">
-                      Top 5
-                    </Badge>
-                  </div>
-                  
-                  {/* Top 5 Growth Chart */}
-                  {(() => {
-                  const top5Growth = [...comparisonData].sort((a, b) => b.delta - a.delta).slice(0, 5).filter(item => item.delta > 0);
-                  if (top5Growth.length === 0) {
-                    return <div className="text-center py-4 text-muted-foreground text-sm">
-                          No subjects showed improvement in this period
-                        </div>;
-                  }
-                  const maxDelta = Math.max(...top5Growth.map(t => t.delta));
-                  return <div className="space-y-3">
-                        {/* Mini Area Chart */}
-                        <div className="h-32 -mx-2">
-                          <ResponsiveContainer width="100%" height="100%">
-                            <AreaChart data={top5Growth.map(item => ({
-                          name: shortenSubjectName(item.name),
-                          growth: item.delta,
-                          percentChange: item.examB > 0 ? item.delta / item.examB * 100 : 0,
-                          from: item.examB,
-                          to: item.examA
-                        }))} margin={{
-                          top: 10,
-                          right: 10,
-                          left: 10,
-                          bottom: 0
-                        }}>
-                              <defs>
-                                <linearGradient id="growthGradient" x1="0" y1="0" x2="0" y2="1">
-                                  <stop offset="5%" stopColor="hsl(142, 76%, 46%)" stopOpacity={0.4} />
-                                  <stop offset="95%" stopColor="hsl(142, 76%, 46%)" stopOpacity={0.05} />
-                                </linearGradient>
-                              </defs>
-                              <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{
-                            fontSize: 9,
-                            fill: 'hsl(var(--muted-foreground))'
-                          }} interval={0} height={30} />
-                              <YAxis hide />
-                              <Area type="monotone" dataKey="growth" stroke="hsl(142, 76%, 46%)" strokeWidth={2} fill="url(#growthGradient)" dot={{
-                            r: 4,
-                            fill: "hsl(142, 76%, 46%)",
-                            strokeWidth: 2,
-                            stroke: "hsl(var(--background))"
-                          }} activeDot={{
-                            r: 6,
-                            fill: "hsl(142, 76%, 46%)",
-                            strokeWidth: 2,
-                            stroke: "hsl(var(--background))"
-                          }} />
-                              <Tooltip content={({
-                            active,
-                            payload
-                          }) => {
-                            if (active && payload && payload.length) {
-                              const data = payload[0].payload;
-                              return <div className="bg-popover border border-border rounded-lg shadow-lg p-2">
-                                        <p className="text-xs font-medium text-foreground">{data.name}</p>
-                                        <p className="text-xs text-emerald-500 font-bold">+{data.growth} pts</p>
-                                        <p className="text-[10px] text-muted-foreground">{data.from} → {data.to}</p>
-                                      </div>;
-                            }
-                            return null;
-                          }} />
-                            </AreaChart>
-                          </ResponsiveContainer>
-                        </div>
-                        
-                        {/* Top 5 Rankings */}
-                        <div className="space-y-2">
-                          {top5Growth.map((item, index) => {
-                        const percentChange = item.examB > 0 ? (item.delta / item.examB * 100).toFixed(1) : '0.0';
-                        const barWidth = item.delta / maxDelta * 100;
-                        return <div key={item.name} className="flex items-center gap-2">
-                                {/* Rank Badge */}
-                                <div className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold ${index === 0 ? 'bg-yellow-500/20 text-yellow-600' : index === 1 ? 'bg-gray-400/20 text-gray-500' : index === 2 ? 'bg-amber-600/20 text-amber-600' : 'bg-muted text-muted-foreground'}`}>
-                                  {index + 1}
-                                </div>
-                                
-                                {/* Subject Name */}
-                                <span className="text-xs font-medium text-foreground w-16 truncate">
-                                  {shortenSubjectName(item.name)}
-                                </span>
-                                
-                                {/* Growth Bar */}
-                                <div className="flex-1 h-4 bg-muted/30 rounded-full overflow-hidden relative">
-                                  <div className="h-full bg-gradient-to-r from-emerald-500 to-emerald-400 rounded-full transition-all duration-700" style={{
-                              width: `${barWidth}%`
-                            }} />
-                                </div>
-                                
-                                {/* Growth Stats */}
-                                <div className="flex items-center gap-1 min-w-[60px] justify-end">
-                                  <span className="text-xs font-bold text-emerald-500">+{item.delta}</span>
-                                  <span className="text-[9px] text-muted-foreground">({percentChange}%)</span>
-                                </div>
-                              </div>;
-                      })}
-                        </div>
-                        
-                        {/* Summary Footer */}
-                        <div className="pt-2 border-t border-emerald-500/20 flex items-center justify-between">
-                          <span className="text-[10px] text-muted-foreground">
-                            Average growth: +{(top5Growth.reduce((sum, t) => sum + t.delta, 0) / top5Growth.length).toFixed(1)} pts
-                          </span>
-                          <span className="text-[10px] text-emerald-500 font-medium">
-                            🏆 {shortenSubjectName(top5Growth[0].name)} leads with +{top5Growth[0].delta} pts
-                          </span>
-                        </div>
-                      </div>;
+                  );
                 })()}
-                </div>
 
                 {/* Subject Comparison - Moomoo Style */}
                 <div className="space-y-3">
