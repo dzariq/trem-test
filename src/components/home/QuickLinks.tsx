@@ -28,18 +28,18 @@ export function QuickLinks() {
               key={link.label}
               onClick={() => link.path !== "#" && navigate(link.path)}
               className={cn(
-                "flex flex-col items-center justify-center py-1.5 px-1 rounded-xl",
+                "flex flex-col items-center justify-start py-1.5 px-1 rounded-xl",
                 "transition-all duration-200 hover:bg-muted/50",
                 "active:scale-95"
               )}
             >
               <div className={cn(
-                "w-11 h-11 rounded-xl flex items-center justify-center mb-1.5",
+                "w-11 h-11 rounded-xl flex items-center justify-center shrink-0",
                 link.bgColor
               )}>
                 <link.icon className={cn("h-6 w-6", link.iconColor)} strokeWidth={2} />
               </div>
-              <span className="text-[9px] font-medium text-foreground text-center leading-tight">{link.label}</span>
+              <span className="text-[9px] font-medium text-foreground text-center leading-tight mt-1.5 h-6 flex items-start justify-center">{link.label}</span>
             </button>
           ))}
         </div>
