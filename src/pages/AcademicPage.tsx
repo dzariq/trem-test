@@ -2346,8 +2346,8 @@ export default function AcademicPage() {
 
                 {/* Top 5 Growth/Decline Leaders - Swipeable Carousel */}
                 {(() => {
-                  const top5Growth = [...comparisonData].sort((a, b) => b.delta - a.delta).slice(0, 5).filter(item => item.delta > 0);
-                  const top5Decline = [...comparisonData].sort((a, b) => a.delta - b.delta).slice(0, 5).filter(item => item.delta < 0);
+                  const top5Growth = [...comparisonData].filter(item => item.delta > 0).sort((a, b) => b.delta - a.delta).slice(0, 5);
+                  const top5Decline = [...comparisonData].filter(item => item.delta < 0).sort((a, b) => a.delta - b.delta).slice(0, 5);
 
                   return (
                     <div className="relative">
