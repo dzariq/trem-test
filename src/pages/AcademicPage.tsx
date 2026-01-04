@@ -1978,12 +1978,12 @@ export default function AcademicPage() {
                       <span>Rising Subjects</span>
                     </h4>
                     <div className="space-y-2">
-                      {risingStars.length > 0 ? risingStars.map((item, idx) => <div key={idx} className="p-2.5 rounded-lg border border-green-500/30 bg-green-500/10 min-h-[72px] flex flex-col justify-between">
+                      {risingStars.length > 0 ? risingStars.map((item, idx) => <div key={idx} className="p-2.5 rounded-lg border border-green-500/30 bg-green-500/10 min-h-[72px] flex flex-col">
                           <div className="flex items-start justify-between gap-2">
                             <span className="text-xs font-medium text-foreground line-clamp-2 flex-1">{item.subject.name}</span>
-                            <span className="text-xs font-bold text-green-600 flex-shrink-0">+{item.improvement}%</span>
+                            <span className="px-1.5 py-0.5 rounded bg-green-500 text-[10px] font-bold text-white flex-shrink-0">+{item.improvement}%</span>
                           </div>
-                          <div className="flex items-center gap-1.5 mt-1">
+                          <div className="flex items-baseline gap-1.5 mt-auto">
                             <span className="text-base font-bold text-muted-foreground">{item.prev}%</span>
                             <span className="text-xs text-muted-foreground">→</span>
                             <span className="text-base font-bold text-green-600">{item.current}%</span>
@@ -1999,12 +1999,12 @@ export default function AcademicPage() {
                       <span>Needs Focus</span>
                     </h4>
                     <div className="space-y-2">
-                      {fallingBehind.length > 0 ? fallingBehind.map((item, idx) => <div key={idx} className="p-2.5 rounded-lg border border-red-500/30 bg-red-500/10 min-h-[72px] flex flex-col justify-between">
+                      {fallingBehind.length > 0 ? fallingBehind.map((item, idx) => <div key={idx} className="p-2.5 rounded-lg border border-red-500/30 bg-red-500/10 min-h-[72px] flex flex-col">
                           <div className="flex items-start justify-between gap-2">
                             <span className="text-xs font-medium text-foreground line-clamp-2 flex-1">{item.subject.name}</span>
-                            <span className="text-xs font-bold text-red-600 flex-shrink-0">-{item.decline}%</span>
+                            <span className="px-1.5 py-0.5 rounded bg-red-500 text-[10px] font-bold text-white flex-shrink-0">-{item.decline}%</span>
                           </div>
-                          <div className="flex items-center gap-1.5 mt-1">
+                          <div className="flex items-baseline gap-1.5 mt-auto">
                             <span className="text-base font-bold text-muted-foreground">{item.prev}%</span>
                             <span className="text-xs text-muted-foreground">→</span>
                             <span className="text-base font-bold text-red-600">{item.current}%</span>
