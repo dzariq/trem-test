@@ -7,12 +7,15 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Megaphone, Calendar, ChevronLeft } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { AnnouncementDrawer } from "@/components/AnnouncementDrawer";
 
 type CategoryFilter = "all" | "Event" | "Academic" | "General";
 
 export default function AnnouncementsPage() {
   const navigate = useNavigate();
   const [categoryFilter, setCategoryFilter] = useState<CategoryFilter>("all");
+  const [drawerOpen, setDrawerOpen] = useState(false);
+  const [currentAnnouncementIndex, setCurrentAnnouncementIndex] = useState(0);
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
@@ -36,6 +39,11 @@ export default function AnnouncementsPage() {
       case "General": return "bg-primary text-primary-foreground";
       default: return "bg-muted text-muted-foreground";
     }
+  };
+
+  const handleAnnouncementClick = (index: number) => {
+    setCurrentAnnouncementIndex(index);
+    setDrawerOpen(true);
   };
 
   return (
@@ -68,8 +76,12 @@ export default function AnnouncementsPage() {
 
         {/* Announcements List */}
         <div className="space-y-4">
-          {filteredAnnouncements.map((announcement) => (
-            <Card key={announcement.id} className="bg-card border-border shadow-sm overflow-hidden">
+          {filteredAnnouncements.map((announcement, index) => (
+            <Card 
+              key={announcement.id} 
+              className="bg-card border-border shadow-sm overflow-hidden cursor-pointer active:scale-[0.98] transition-transform"
+              onClick={() => handleAnnouncementClick(index)}
+            >
               {/* Image header or default pattern */}
               <div className="relative h-32 overflow-hidden">
                 {announcement.image ? (
@@ -113,7 +125,10 @@ export default function AnnouncementsPage() {
                   <Button 
                     variant="outline" 
                     size="sm"
-                    onClick={() => navigate(`/parent/announcements/${announcement.id}`)}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleAnnouncementClick(index);
+                    }}
                   >
                     Read More
                   </Button>
@@ -130,6 +145,15 @@ export default function AnnouncementsPage() {
           )}
         </div>
       </section>
+
+      {/* Announcement Drawer */}
+      <AnnouncementDrawer
+        announcements={filteredAnnouncements}
+        currentIndex={currentAnnouncementIndex}
+        isOpen={drawerOpen}
+        onOpenChange={setDrawerOpen}
+        onNavigate={setCurrentAnnouncementIndex}
+      />
     </AppLayout>
   );
 }
