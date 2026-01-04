@@ -79,6 +79,7 @@ export default function AcademicPage() {
   // Carousel state for Top Growth/Decline section
   const [growthCarouselSlide, setGrowthCarouselSlide] = useState(0);
   const [showGrowthSwipeHint, setShowGrowthSwipeHint] = useState(true);
+  const [growthCarouselApi, setGrowthCarouselApi] = useState<any>(null);
   
   // Hide swipe hint after 3 seconds
   useEffect(() => {
@@ -2306,6 +2307,7 @@ export default function AcademicPage() {
                         opts={{ align: "start", loop: false }}
                         setApi={(api) => {
                           if (api) {
+                            setGrowthCarouselApi(api);
                             api.on("select", () => {
                               setGrowthCarouselSlide(api.selectedScrollSnap());
                               setShowGrowthSwipeHint(false);
@@ -2512,20 +2514,32 @@ export default function AcademicPage() {
                         </CarouselContent>
                       </Carousel>
                       
-                      {/* Dot Indicators & Swipe Hint */}
-                      <div className="flex items-center justify-center gap-3 mt-3">
-                        <div className="flex items-center gap-2">
-                          <div className={`w-2.5 h-2.5 rounded-full transition-all duration-300 ${growthCarouselSlide === 0 ? 'bg-emerald-500 scale-125' : 'bg-emerald-500/30'}`} />
-                          <div className={`w-2.5 h-2.5 rounded-full transition-all duration-300 ${growthCarouselSlide === 1 ? 'bg-red-500 scale-125' : 'bg-red-500/30'}`} />
+                      {/* Switcher Buttons */}
+                      <div className="flex items-center justify-center mt-3">
+                        <div className="flex items-center bg-muted/50 rounded-lg p-1 gap-1">
+                          <button
+                            onClick={() => growthCarouselApi?.scrollTo(0)}
+                            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-all duration-300 ${
+                              growthCarouselSlide === 0 
+                                ? 'bg-emerald-500 text-white shadow-sm' 
+                                : 'text-muted-foreground hover:text-foreground hover:bg-muted'
+                            }`}
+                          >
+                            <TrendingUp className="h-3.5 w-3.5" />
+                            <span>Growth</span>
+                          </button>
+                          <button
+                            onClick={() => growthCarouselApi?.scrollTo(1)}
+                            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-all duration-300 ${
+                              growthCarouselSlide === 1 
+                                ? 'bg-red-500 text-white shadow-sm' 
+                                : 'text-muted-foreground hover:text-foreground hover:bg-muted'
+                            }`}
+                          >
+                            <TrendingDown className="h-3.5 w-3.5" />
+                            <span>Decline</span>
+                          </button>
                         </div>
-                        
-                        {/* Swipe Hint */}
-                        {showGrowthSwipeHint && top5Decline.length > 0 && (
-                          <div className="flex items-center gap-1 text-[10px] text-muted-foreground animate-pulse">
-                            <span>Swipe for declined</span>
-                            <ArrowRightLeft className="h-3 w-3" />
-                          </div>
-                        )}
                       </div>
                     </div>
                   );
