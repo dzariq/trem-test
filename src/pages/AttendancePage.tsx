@@ -36,10 +36,15 @@ export default function AttendancePage() {
   const [selectedYear, setSelectedYear] = useState("2025");
   const [zoomLevel, setZoomLevel] = useState<ZoomLevel>(3);
   const chartContainerRef = useRef<HTMLDivElement>(null);
-  const [scrollPosition, setScrollPosition] = useState(100);
   const [isPinching, setIsPinching] = useState(false);
   const lastPinchDistance = useRef<number | null>(null);
   const [activeTooltip, setActiveTooltip] = useState<string | null>(null);
+  
+  // Swipe navigation state
+  const [monthOffset, setMonthOffset] = useState(0); // 0 = most recent months
+  const touchStartRef = useRef<{ x: number; y: number } | null>(null);
+  const swipeDirectionRef = useRef<'horizontal' | 'vertical' | null>(null);
+  const swipeDistanceRef = useRef(0);
 
   const yearOptions = ["2025", "2024", "2023"];
   const zoomOptions: { value: ZoomLevel; label: string }[] = [
@@ -67,19 +72,32 @@ export default function AttendancePage() {
     }
   };
 
-  // Pinch-to-zoom handlers
+  // Calculate max offset based on zoom level
+  const maxMonthOffset = Math.max(0, 12 - zoomLevel);
+
+  // Touch handlers with smart gesture detection
   const handleTouchStart = (e: React.TouchEvent) => {
     if (e.touches.length === 2) {
+      // Pinch gesture
       e.preventDefault();
       setIsPinching(true);
       const dx = e.touches[0].clientX - e.touches[1].clientX;
       const dy = e.touches[0].clientY - e.touches[1].clientY;
       lastPinchDistance.current = Math.sqrt(dx * dx + dy * dy);
+    } else if (e.touches.length === 1) {
+      // Single touch - prepare for swipe detection
+      touchStartRef.current = {
+        x: e.touches[0].clientX,
+        y: e.touches[0].clientY
+      };
+      swipeDirectionRef.current = null;
+      swipeDistanceRef.current = 0;
     }
   };
 
   const handleTouchMove = (e: React.TouchEvent) => {
     if (e.touches.length === 2 && lastPinchDistance.current !== null) {
+      // Pinch zoom handling
       e.preventDefault();
       const dx = e.touches[0].clientX - e.touches[1].clientX;
       const dy = e.touches[0].clientY - e.touches[1].clientY;
@@ -101,15 +119,66 @@ export default function AttendancePage() {
         if (newZoom && newZoom !== zoomLevel) {
           triggerHaptic();
           setZoomLevel(newZoom);
+          // Adjust offset when zooming out to ensure valid range
+          setMonthOffset(prev => Math.min(prev, Math.max(0, 12 - newZoom!)));
         }
         lastPinchDistance.current = newDistance;
+      }
+    } else if (e.touches.length === 1 && touchStartRef.current) {
+      // Single touch swipe detection
+      const deltaX = e.touches[0].clientX - touchStartRef.current.x;
+      const deltaY = e.touches[0].clientY - touchStartRef.current.y;
+      
+      // Determine swipe direction on first significant movement
+      if (swipeDirectionRef.current === null && (Math.abs(deltaX) > 10 || Math.abs(deltaY) > 10)) {
+        if (Math.abs(deltaY) > Math.abs(deltaX)) {
+          // Vertical swipe - allow page scrolling
+          swipeDirectionRef.current = 'vertical';
+        } else {
+          // Horizontal swipe - handle chart navigation
+          swipeDirectionRef.current = 'horizontal';
+        }
+      }
+      
+      // Handle horizontal swipe
+      if (swipeDirectionRef.current === 'horizontal') {
+        e.preventDefault();
+        swipeDistanceRef.current = deltaX;
       }
     }
   };
 
   const handleTouchEnd = () => {
-    setIsPinching(false);
-    lastPinchDistance.current = null;
+    // Handle pinch end
+    if (isPinching) {
+      setIsPinching(false);
+      lastPinchDistance.current = null;
+    }
+    
+    // Handle horizontal swipe end
+    if (swipeDirectionRef.current === 'horizontal' && Math.abs(swipeDistanceRef.current) > 50) {
+      const swipeThreshold = 50;
+      if (swipeDistanceRef.current > swipeThreshold) {
+        // Swipe right - go to earlier months
+        setMonthOffset(prev => {
+          const newOffset = Math.min(prev + 1, maxMonthOffset);
+          if (newOffset !== prev) triggerHaptic();
+          return newOffset;
+        });
+      } else if (swipeDistanceRef.current < -swipeThreshold) {
+        // Swipe left - go to later months
+        setMonthOffset(prev => {
+          const newOffset = Math.max(prev - 1, 0);
+          if (newOffset !== prev) triggerHaptic();
+          return newOffset;
+        });
+      }
+    }
+    
+    // Reset touch state
+    touchStartRef.current = null;
+    swipeDirectionRef.current = null;
+    swipeDistanceRef.current = 0;
   };
 
   const getStatusColor = (status: string) => {
@@ -141,15 +210,18 @@ export default function AttendancePage() {
     total: item.present + item.absent + item.late + item.excused
   }));
 
-  // Get visible chart data based on zoom level
-  const chartData = zoomLevel === 12 
-    ? allChartData 
-    : allChartData.slice(-zoomLevel);
+  // Get visible chart data based on zoom level and offset
+  const chartData = (() => {
+    if (zoomLevel === 12) return allChartData;
+    const endIndex = allChartData.length - monthOffset;
+    const startIndex = Math.max(0, endIndex - zoomLevel);
+    return allChartData.slice(startIndex, endIndex);
+  })();
 
-  // Scroll to end when zoom changes
+  // Reset offset when zoom level shows all months
   useEffect(() => {
-    if (chartContainerRef.current && zoomLevel < 12) {
-      chartContainerRef.current.scrollLeft = chartContainerRef.current.scrollWidth;
+    if (zoomLevel === 12) {
+      setMonthOffset(0);
     }
   }, [zoomLevel]);
 
@@ -269,13 +341,23 @@ export default function AttendancePage() {
             </div>
           </CardHeader>
           <CardContent>
+            {/* Swipe indicators */}
+            {zoomLevel < 12 && (
+              <div className="flex items-center justify-between text-xs text-muted-foreground mb-2">
+                <span className={monthOffset < maxMonthOffset ? "opacity-100" : "opacity-30"}>
+                  ← Earlier
+                </span>
+                <span className={monthOffset > 0 ? "opacity-100" : "opacity-30"}>
+                  Later →
+                </span>
+              </div>
+            )}
             <div 
               ref={chartContainerRef}
-              className="h-64 overflow-x-auto select-none transition-all duration-300 ease-out"
+              className="h-64 select-none transition-all duration-300 ease-out"
               style={{ 
-                WebkitOverflowScrolling: 'touch',
                 WebkitTapHighlightColor: 'transparent',
-                touchAction: isPinching ? 'none' : 'pan-x'
+                touchAction: isPinching ? 'none' : swipeDirectionRef.current === 'horizontal' ? 'none' : 'pan-y'
               }}
               onTouchStart={handleTouchStart}
               onTouchMove={handleTouchMove}
@@ -291,8 +373,7 @@ export default function AttendancePage() {
               <div 
                 className="transition-all duration-300 ease-out"
                 style={{ 
-                  width: zoomLevel === 12 ? '100%' : `${Math.max(100, zoomLevel * 20)}%`, 
-                  minWidth: '100%', 
+                  width: '100%', 
                   height: '100%' 
                 }}
               >
