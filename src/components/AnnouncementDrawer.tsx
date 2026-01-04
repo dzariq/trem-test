@@ -63,7 +63,8 @@ export function AnnouncementDrawer({
   const currentAnnouncement = announcements[currentIndex];
 
   // Calculate unread count
-  const unreadCount = announcements.filter(a => !isAnnouncementRead(a.id)).length;
+  const readIds = getReadAnnouncementIds();
+  const unreadCount = announcements.filter(a => !readIds.includes(a.id)).length;
 
   // Reset view mode when drawer closes
   useEffect(() => {
