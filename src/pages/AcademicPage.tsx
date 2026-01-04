@@ -2338,12 +2338,12 @@ export default function AcademicPage() {
                           {/* Slide 1: Top Growth Subjects */}
                           <CarouselItem className="pl-2">
                             <div className="p-4 rounded-xl bg-gradient-to-br from-emerald-500/10 to-emerald-600/5 border border-emerald-500/20">
-                              <div className="flex items-center justify-between mb-3">
+                              <div className="flex flex-col items-center justify-center mb-3">
                                 <div className="flex items-center gap-2">
                                   <div className="w-8 h-8 rounded-lg bg-emerald-500/20 flex items-center justify-center">
                                     <TrendingUp className="h-4 w-4 text-emerald-500" />
                                   </div>
-                                  <div>
+                                  <div className="text-center">
                                     <h4 className="text-sm font-semibold text-foreground">Top Growth Subjects</h4>
                                     <p className="text-[10px] text-muted-foreground">Best performing subjects</p>
                                   </div>
