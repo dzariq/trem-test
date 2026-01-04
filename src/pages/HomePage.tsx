@@ -4,7 +4,6 @@ import { AnnouncementCarousel } from "@/components/home/AnnouncementCarousel";
 import { UpcomingEvents } from "@/components/home/UpcomingEvents";
 import { QuickLinks } from "@/components/home/QuickLinks";
 import { AttendanceSummary } from "@/components/home/AttendanceSummary";
-import { ResultsSummary } from "@/components/home/ResultsSummary";
 import { StudentPillSelector } from "@/components/home/StudentPillSelector";
 import { WelcomeTypingAnimation } from "@/components/home/WelcomeTypingAnimation";
 import schoolBadge from "@/assets/school-badge.png";
@@ -38,7 +37,16 @@ export default function HomePage() {
       <AnnouncementCarousel />
       <UpcomingEvents />
       <AttendanceSummary />
-      <ResultsSummary />
+      
+      {/* Footer with faded school badge */}
+      <div className="flex flex-col items-center justify-center py-8 mt-4">
+        <img 
+          src={schoolBadge} 
+          alt="School Badge" 
+          className="h-20 w-auto opacity-20 grayscale"
+        />
+        <p className="text-muted-foreground/50 text-xs mt-2">Collinz International School</p>
+      </div>
     </AppLayout>
   );
 }
