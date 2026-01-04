@@ -1,6 +1,7 @@
 import { useState, useRef, useMemo, TouchEvent, useCallback, useEffect } from "react";
 import { Badge } from "@/components/ui/badge";
 import { getTinySubjectCode } from "@/data/subjectsConfig";
+import { Maximize2, Target } from "lucide-react";
 import {
   BarChart,
   Bar,
@@ -43,38 +44,49 @@ export function SubjectPerformanceChart({
   lineColors = defaultLineColors,
   showGoalBadge = true,
 }: SubjectPerformanceChartProps) {
-  // Zoom state - controls how many subjects are visible
-  const [zoomLevel, setZoomLevel] = useState<number>(() => Math.min(6, data.length));
-  // Animated zoom level for smooth transitions
-  const [animatedZoom, setAnimatedZoom] = useState<number>(() => Math.min(6, data.length));
-  // Scroll offset - which subject index to start from
+  const totalSubjects = data.length;
+  const MIN_VISIBLE = 3;
+  const FOCUS_COUNT = Math.min(5, totalSubjects);
+  
+  // Default to showing ALL subjects - user can zoom IN to see fewer
+  const [zoomLevel, setZoomLevel] = useState<number>(totalSubjects);
+  const [animatedZoom, setAnimatedZoom] = useState<number>(totalSubjects);
   const [scrollOffset, setScrollOffset] = useState<number>(0);
-  // Pinch feedback state
+  
+  // UI feedback states
   const [isPinching, setIsPinching] = useState(false);
   const [pinchScale, setPinchScale] = useState(1);
+  const [zoomFeedback, setZoomFeedback] = useState<string | null>(null);
+  const [isAtLimit, setIsAtLimit] = useState<'min' | 'max' | null>(null);
   
   // Touch gesture refs
   const initialTouchDistance = useRef<number | null>(null);
-  const initialZoomLevel = useRef<number>(6);
-  const lastTouchY = useRef<number | null>(null);
-  const isScrolling = useRef<boolean>(false);
+  const initialZoomLevel = useRef<number>(totalSubjects);
   const chartContainerRef = useRef<HTMLDivElement>(null);
   const animationRef = useRef<number | null>(null);
+  const feedbackTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const swipeStartX = useRef<number | null>(null);
 
-  // Smooth zoom animation
+  // Spring animation for smooth zoom transitions
   useEffect(() => {
     if (animatedZoom !== zoomLevel) {
       const startZoom = animatedZoom;
       const targetZoom = zoomLevel;
       const startTime = performance.now();
-      const duration = 200; // ms
+      const duration = 250;
       
       const animate = (currentTime: number) => {
         const elapsed = currentTime - startTime;
         const progress = Math.min(elapsed / duration, 1);
         
-        // Ease out cubic for smooth deceleration
-        const eased = 1 - Math.pow(1 - progress, 3);
+        // Spring-like easing with slight overshoot
+        const easeOutBack = (t: number) => {
+          const c1 = 1.70158;
+          const c3 = c1 + 1;
+          return 1 + c3 * Math.pow(t - 1, 3) + c1 * Math.pow(t - 1, 2);
+        };
+        
+        const eased = easeOutBack(progress);
         const currentZoom = startZoom + (targetZoom - startZoom) * eased;
         
         setAnimatedZoom(currentZoom);
@@ -97,15 +109,48 @@ export function SubjectPerformanceChart({
     }
   }, [zoomLevel, animatedZoom]);
 
-  // Haptic feedback helper with intensity based on zoom change
+  // Haptic feedback helper
   const triggerHaptic = useCallback((style: 'light' | 'medium' | 'heavy' = 'light') => {
     if (navigator.vibrate) {
-      const patterns = { light: 8, medium: 15, heavy: 25 };
+      const patterns = { light: 8, medium: 15, heavy: 30 };
       navigator.vibrate(patterns[style]);
     }
   }, []);
 
-  // Get visible subjects based on zoom and scroll, with short names for display
+  // Show zoom feedback with auto-dismiss
+  const showFeedback = useCallback((message: string, limit?: 'min' | 'max') => {
+    if (feedbackTimeoutRef.current) {
+      clearTimeout(feedbackTimeoutRef.current);
+    }
+    setZoomFeedback(message);
+    setIsAtLimit(limit || null);
+    
+    feedbackTimeoutRef.current = setTimeout(() => {
+      setZoomFeedback(null);
+      setIsAtLimit(null);
+    }, 1200);
+  }, []);
+
+  // Zoom preset handlers
+  const handleShowAll = useCallback(() => {
+    if (zoomLevel !== totalSubjects) {
+      setZoomLevel(totalSubjects);
+      setScrollOffset(0);
+      triggerHaptic('medium');
+      showFeedback('All subjects');
+    }
+  }, [zoomLevel, totalSubjects, triggerHaptic, showFeedback]);
+
+  const handleFocusView = useCallback(() => {
+    if (zoomLevel !== FOCUS_COUNT) {
+      setZoomLevel(FOCUS_COUNT);
+      setScrollOffset(0);
+      triggerHaptic('medium');
+      showFeedback(`Top ${FOCUS_COUNT} subjects`);
+    }
+  }, [zoomLevel, FOCUS_COUNT, triggerHaptic, showFeedback]);
+
+  // Get visible subjects based on zoom and scroll
   const visibleData = useMemo(() => {
     const effectiveZoom = Math.round(animatedZoom);
     const maxOffset = Math.max(0, data.length - effectiveZoom);
@@ -116,10 +161,10 @@ export function SubjectPerformanceChart({
     }));
   }, [data, animatedZoom, scrollOffset]);
 
-  // Touch handlers - only capture pinch gestures, let single finger scroll pass through
+  // Touch handlers
   const handleTouchStart = useCallback((e: TouchEvent<HTMLDivElement>) => {
     if (e.touches.length === 2) {
-      // Pinch gesture start - prevent default to capture gesture
+      // Pinch gesture
       e.preventDefault();
       const touch1 = e.touches[0];
       const touch2 = e.touches[1];
@@ -128,20 +173,18 @@ export function SubjectPerformanceChart({
         touch2.clientY - touch1.clientY
       );
       initialZoomLevel.current = zoomLevel;
-      isScrolling.current = false;
-      lastTouchY.current = null;
       setIsPinching(true);
       setPinchScale(1);
       triggerHaptic('light');
+    } else if (e.touches.length === 1 && zoomLevel < totalSubjects) {
+      // Single touch for swipe (only when zoomed in)
+      swipeStartX.current = e.touches[0].clientX;
     }
-    // Single touch - don't capture, let page scroll normally
-  }, [zoomLevel, triggerHaptic]);
+  }, [zoomLevel, totalSubjects, triggerHaptic]);
 
   const handleTouchMove = useCallback((e: TouchEvent<HTMLDivElement>) => {
     if (e.touches.length === 2 && initialTouchDistance.current !== null) {
-      // Pinch gesture only
       e.preventDefault();
-      isScrolling.current = false;
 
       const touch1 = e.touches[0];
       const touch2 = e.touches[1];
@@ -152,50 +195,74 @@ export function SubjectPerformanceChart({
 
       const ratio = currentDistance / initialTouchDistance.current;
       
-      // Update visual scale for immediate feedback
-      setPinchScale(Math.max(0.8, Math.min(1.2, ratio)));
+      // Visual scale feedback
+      setPinchScale(Math.max(0.85, Math.min(1.15, ratio)));
       
       const deadzone = 0.08;
-
       if (Math.abs(1 - ratio) < deadzone) return;
 
-      const maxSubjects = data.length;
-      // Inverted: pinch out (ratio > 1) = show fewer subjects (zoom in)
-      // pinch in (ratio < 1) = show more subjects (zoom out)
-      const proposed = Math.round(initialZoomLevel.current / ratio);
-      const newZoom = Math.max(3, Math.min(maxSubjects, proposed));
+      // REVERSED: Pinch IN (ratio < 1) = show FEWER subjects (zoom in for detail)
+      // Pinch OUT (ratio > 1) = show MORE subjects (zoom out to see all)
+      const proposed = Math.round(initialZoomLevel.current * ratio);
+      const newZoom = Math.max(MIN_VISIBLE, Math.min(totalSubjects, proposed));
 
       if (newZoom !== zoomLevel) {
-        // Haptic intensity based on zoom change magnitude
-        const zoomDiff = Math.abs(newZoom - zoomLevel);
-        triggerHaptic(zoomDiff > 2 ? 'heavy' : zoomDiff > 1 ? 'medium' : 'light');
+        // Check limits
+        if (newZoom === MIN_VISIBLE && proposed < MIN_VISIBLE) {
+          triggerHaptic('heavy');
+          showFeedback('Maximum focus', 'min');
+        } else if (newZoom === totalSubjects && proposed > totalSubjects) {
+          triggerHaptic('heavy');
+          showFeedback('All subjects visible', 'max');
+        } else {
+          const zoomDiff = Math.abs(newZoom - zoomLevel);
+          triggerHaptic(zoomDiff > 2 ? 'heavy' : zoomDiff > 1 ? 'medium' : 'light');
+        }
         
         setZoomLevel(newZoom);
-        // Adjust scroll offset to keep centered
+        // Adjust scroll offset
         const maxOffset = Math.max(0, data.length - newZoom);
         setScrollOffset(prev => Math.min(prev, maxOffset));
-        // Update baseline for continuous pinching
+        
         initialTouchDistance.current = currentDistance;
         initialZoomLevel.current = newZoom;
       }
     }
-    // Single touch - let page scroll normally (no internal scroll capture)
-  }, [data.length, zoomLevel, triggerHaptic]);
+  }, [data.length, zoomLevel, totalSubjects, triggerHaptic, showFeedback]);
 
-  const handleTouchEnd = useCallback(() => {
+  const handleTouchEnd = useCallback((e: TouchEvent<HTMLDivElement>) => {
+    // Handle swipe end for scrolling when zoomed in
+    if (swipeStartX.current !== null && zoomLevel < totalSubjects && e.changedTouches.length === 1) {
+      const deltaX = e.changedTouches[0].clientX - swipeStartX.current;
+      const threshold = 50;
+      
+      if (Math.abs(deltaX) > threshold) {
+        if (deltaX < 0 && scrollOffset + zoomLevel < totalSubjects) {
+          setScrollOffset(prev => Math.min(prev + 1, totalSubjects - zoomLevel));
+          triggerHaptic('light');
+        } else if (deltaX > 0 && scrollOffset > 0) {
+          setScrollOffset(prev => Math.max(prev - 1, 0));
+          triggerHaptic('light');
+        }
+      }
+      swipeStartX.current = null;
+    }
+    
     initialTouchDistance.current = null;
-    lastTouchY.current = null;
-    isScrolling.current = false;
     setIsPinching(false);
     setPinchScale(1);
-  }, []);
+  }, [zoomLevel, totalSubjects, scrollOffset, triggerHaptic]);
 
-  // Calculate if we can scroll
-  const canScrollUp = scrollOffset > 0;
-  const canScrollDown = scrollOffset < data.length - zoomLevel;
-
-  // Calculate dynamic height with smooth transition
+  // Dynamic chart height
   const chartHeight = Math.max(220, Math.round(animatedZoom) * 40);
+
+  // Generate help text
+  const getHelpText = () => {
+    if (zoomLevel === totalSubjects) {
+      return `All ${totalSubjects} subjects • Pinch in to focus`;
+    }
+    return `${zoomLevel} of ${totalSubjects} • Swipe to browse • Pinch out for all`;
+  };
 
   return (
     <div className="space-y-2">
@@ -209,37 +276,49 @@ export function SubjectPerformanceChart({
             </Badge>
           )}
         </h4>
-        <div className="flex items-center gap-1">
-          <span className="text-[10px] text-muted-foreground">
-            {scrollOffset + 1}-{Math.min(scrollOffset + zoomLevel, data.length)}/{data.length}
-          </span>
-          {zoomLevel !== 6 && (
-            <button
-              onClick={() => {
-                triggerHaptic('light');
-                setZoomLevel(6);
-                setScrollOffset(0);
-              }}
-              className="text-[10px] text-primary underline ml-1 transition-opacity hover:opacity-70"
-            >
-              Reset
-            </button>
-          )}
-          {zoomLevel < data.length && (
-            <button
-              onClick={() => {
-                triggerHaptic('light');
-                setZoomLevel(data.length);
-                setScrollOffset(0);
-              }}
-              className="text-[10px] text-primary underline ml-1 transition-opacity hover:opacity-70"
-            >
-              Show all
-            </button>
-          )}
+        
+        {/* Zoom preset buttons */}
+        <div className="flex items-center gap-1.5">
+          <button
+            onClick={handleShowAll}
+            className={`flex items-center gap-1 px-2 py-1 rounded-full text-[10px] font-medium transition-all duration-200 ${
+              zoomLevel === totalSubjects
+                ? 'bg-primary text-primary-foreground shadow-sm'
+                : 'bg-muted text-muted-foreground hover:bg-muted/80'
+            }`}
+          >
+            <Maximize2 className="w-3 h-3" />
+            All
+          </button>
+          <button
+            onClick={handleFocusView}
+            className={`flex items-center gap-1 px-2 py-1 rounded-full text-[10px] font-medium transition-all duration-200 ${
+              zoomLevel === FOCUS_COUNT
+                ? 'bg-primary text-primary-foreground shadow-sm'
+                : 'bg-muted text-muted-foreground hover:bg-muted/80'
+            }`}
+          >
+            <Target className="w-3 h-3" />
+            Focus
+          </button>
         </div>
       </div>
       
+      {/* Scroll indicator dots when zoomed in */}
+      {zoomLevel < totalSubjects && (
+        <div className="flex justify-center gap-1 py-1">
+          {Array.from({ length: Math.ceil(totalSubjects / zoomLevel) }).map((_, i) => (
+            <div
+              key={i}
+              className={`h-1.5 rounded-full transition-all duration-200 ${
+                Math.floor(scrollOffset / zoomLevel) === i
+                  ? 'bg-primary w-4'
+                  : 'bg-muted-foreground/30 w-1.5'
+              }`}
+            />
+          ))}
+        </div>
+      )}
       
       <div 
         ref={chartContainerRef}
@@ -247,14 +326,31 @@ export function SubjectPerformanceChart({
         style={{ 
           height: chartHeight,
           WebkitTapHighlightColor: 'transparent',
-          touchAction: 'pan-y',
-          transition: isPinching ? 'none' : 'height 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
+          touchAction: zoomLevel < totalSubjects ? 'pan-y' : 'manipulation',
+          transition: isPinching ? 'none' : 'height 0.25s cubic-bezier(0.34, 1.56, 0.64, 1)',
         }}
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
       >
-        {/* Pinch feedback overlay */}
+        {/* Zoom feedback overlay */}
+        {zoomFeedback && (
+          <div 
+            className={`absolute inset-0 pointer-events-none z-10 flex items-center justify-center transition-opacity duration-200`}
+          >
+            <div className={`px-4 py-2 rounded-full text-xs font-medium shadow-lg backdrop-blur-sm ${
+              isAtLimit === 'min' 
+                ? 'bg-amber-500/90 text-white animate-pulse' 
+                : isAtLimit === 'max'
+                ? 'bg-primary/90 text-primary-foreground animate-pulse'
+                : 'bg-background/95 text-foreground border border-border'
+            }`}>
+              {zoomFeedback}
+            </div>
+          </div>
+        )}
+        
+        {/* Pinch gesture feedback */}
         {isPinching && (
           <div 
             className="absolute inset-0 pointer-events-none z-10 flex items-center justify-center"
@@ -270,7 +366,7 @@ export function SubjectPerformanceChart({
               }}
             >
               <span className="text-xs font-medium text-primary">
-                {zoomLevel < 6 ? '🔍 Zoomed In' : zoomLevel > 6 ? '🔭 Zoomed Out' : '📊 Default'}
+                {pinchScale < 1 ? '🔍 Zooming In' : pinchScale > 1 ? '🔭 Zooming Out' : '📊 Adjusting'}
               </span>
             </div>
           </div>
@@ -278,8 +374,8 @@ export function SubjectPerformanceChart({
         
         <div
           style={{
-            transform: isPinching ? `scale(${0.95 + (pinchScale - 1) * 0.1})` : 'scale(1)',
-            transition: isPinching ? 'transform 0.05s ease-out' : 'transform 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
+            transform: isPinching ? `scale(${0.97 + (pinchScale - 1) * 0.08})` : 'scale(1)',
+            transition: isPinching ? 'transform 0.05s ease-out' : 'transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1)',
             transformOrigin: 'center center',
             height: '100%',
           }}
@@ -342,14 +438,8 @@ export function SubjectPerformanceChart({
         </div>
       </div>
       
-      <p className="text-[10px] text-muted-foreground text-center flex items-center justify-center gap-1.5">
-        <span className="inline-flex items-center gap-0.5">
-          <span>👌</span>
-          <span>Pinch to zoom</span>
-        </span>
-        {isPinching && (
-          <span className="text-primary animate-pulse">• Zooming...</span>
-        )}
+      <p className="text-[10px] text-muted-foreground text-center">
+        {getHelpText()}
       </p>
     </div>
   );
