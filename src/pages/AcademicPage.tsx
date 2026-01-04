@@ -57,7 +57,7 @@ export default function AcademicPage() {
   const [selectedYear, setSelectedYear] = useState<YearKey>("2025");
   const [selectedYears, setSelectedYears] = useState<string[]>(["2025", "2024", "2023"]);
   const [subjectFilter, setSubjectFilter] = useState("all");
-  const [trendPeriod, setTrendPeriod] = useState<"1year" | "2years" | "3years" | "4years" | "5years" | "6years">("6years");
+  const [trendPeriod, setTrendPeriod] = useState<"1year" | "2years" | "3years" | "4years" | "5years">("5years");
 
   // Trends tab filters - multi-select subjects (like Overview)
   const [trendsSelectedSubjects, setTrendsSelectedSubjects] = useState<string[]>(academicData.subjects.map(s => s.name));
@@ -526,9 +526,7 @@ export default function AcademicPage() {
     } else if (trendPeriod === "4years") {
       filteredPeriods = periods.slice(-8); // Last 8 periods
     } else if (trendPeriod === "5years") {
-      filteredPeriods = periods.slice(-10); // Last 10 periods
-    } else if (trendPeriod === "6years") {
-      filteredPeriods = periods; // All periods (6 years max)
+      filteredPeriods = periods.slice(-10); // Last 10 periods (5 years max)
     }
     return filteredPeriods.map(p => {
       const result: Record<string, number | string | null> = {
@@ -1668,9 +1666,6 @@ export default function AcademicPage() {
                   }, {
                     key: "5years",
                     label: "5Y"
-                  }, {
-                    key: "6years",
-                    label: "6Y"
                   }] as const).map(({
                     key,
                     label
