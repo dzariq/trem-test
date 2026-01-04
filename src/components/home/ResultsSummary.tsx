@@ -89,17 +89,22 @@ export function ResultsSummary() {
       );
 
       const ratio = currentDistance / initialTouchDistance.current;
-      const deadzone = 0.08; // ignore tiny jitters
+      const deadzone = 0.05; // reduced for better responsiveness
 
       if (Math.abs(1 - ratio) < deadzone) return;
 
       const maxSubjects = allSubjectPerformance.length;
-      const proposed = Math.round(initialZoomLevel.current * ratio);
+      // Inverted: pinch out (ratio > 1) = show fewer subjects (zoom in)
+      // pinch in (ratio < 1) = show more subjects (zoom out)
+      const proposed = Math.round(initialZoomLevel.current / ratio);
       const newZoom = Math.max(3, Math.min(maxSubjects, proposed));
 
       if (newZoom !== subjectZoomLevel) {
         triggerHaptic('medium');
         setSubjectZoomLevel(newZoom);
+        // Update baseline for continuous pinching
+        initialTouchDistance.current = currentDistance;
+        initialZoomLevel.current = newZoom;
       }
     }
   };
@@ -436,13 +441,14 @@ export function ResultsSummary() {
               onTouchMove={handleTouchMove}
               onTouchEnd={handleTouchEnd}
             >
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={subjectPerformance} layout="vertical" margin={{ left: 0, right: 24, top: 4, bottom: 4 }}>
+              <ResponsiveContainer width="100%" height="100%" style={{ overflow: 'visible' }}>
+                <BarChart data={subjectPerformance} layout="vertical" margin={{ left: 0, right: 48, top: 4, bottom: 4 }}>
                   <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" strokeOpacity={0.3} />
                   <XAxis 
                     type="number" 
-                    domain={[0, 100]}
-                    padding={{ right: 16 }}
+                    domain={[0, 105]}
+                    ticks={[0, 25, 50, 75, 100]}
+                    padding={{ right: 24 }}
                     tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }}
                     axisLine={false}
                     tickLine={false}
