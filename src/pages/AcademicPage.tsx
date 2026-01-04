@@ -1314,12 +1314,6 @@ export default function AcademicPage() {
                       </span>
                     </div>
                   </div>
-
-                  {/* Report Button for Overview */}
-                  <Button size="sm" className="w-full gap-2 bg-emerald-600 hover:bg-emerald-700 text-white" onClick={() => setOverviewReportDialogOpen(true)}>
-                    <FileText className="h-4 w-4" />
-                    Generate Report
-                  </Button>
                 </div>
 
                 {/* Rising Stars */}
@@ -1630,6 +1624,12 @@ export default function AcademicPage() {
                     </div>
                   </div>
                 </div>
+
+                {/* Report Button for Overview - at the bottom */}
+                <Button size="sm" className="w-full gap-2 bg-emerald-600 hover:bg-emerald-700 text-white" onClick={() => setOverviewReportDialogOpen(true)}>
+                  <FileText className="h-4 w-4" />
+                  Generate Report
+                </Button>
 
               </TabsContent>
 
