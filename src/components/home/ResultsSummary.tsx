@@ -3,7 +3,7 @@ import { academicData, attendanceData } from "@/data/mockData";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ChevronRight, TrendingUp, Award, BookOpen, Calendar, Target, AlertTriangle, ArrowUp } from "lucide-react";
+import { ChevronRight, TrendingUp, Award, BookOpen, Calendar, Target, AlertTriangle, ArrowUp, Trophy } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import {
   BarChart,
@@ -36,26 +36,19 @@ const shortenSubjectName = (name: string): string => {
   return abbreviations[name] || name;
 };
 
+// Get grade from score
+const getGradeFromScore = (score: number) => {
+  if (score >= 90) return "A*";
+  if (score >= 80) return "A";
+  if (score >= 70) return "B";
+  if (score >= 60) return "C";
+  if (score >= 50) return "D";
+  return "E";
+};
+
 export function ResultsSummary() {
   const navigate = useNavigate();
   const [subjectFilter, setSubjectFilter] = useState<string>("all");
-
-  // Subject colors matching AcademicPage chart colors (per subject)
-  const subjectColors: Record<string, string> = {
-    "English": "#3b82f6",       // blue
-    "Mathematics": "#f59e0b",   // amber/orange
-    "Science": "#10b981",       // emerald/green
-    "History": "#8b5cf6",       // violet/purple
-    "Geography": "#ef4444",     // red
-    "Art": "#06b6d4",           // cyan
-    "Music": "#ec4899",         // pink
-    "Physical Education": "#84cc16", // lime
-    "Mandarin": "#f59e0b",      // amber
-    "Computer Studies": "#3b82f6", // blue
-    "French": "#8b5cf6",        // violet
-    "Chemistry": "#ef4444",     // red
-    "Physics": "#10b981",       // green
-  };
 
   // Line colors array for indexed access
   const lineColors = [
@@ -89,6 +82,7 @@ export function ResultsSummary() {
     const bestScore = getScore(best, "2025", "midYear") ?? 0;
     return currentScore > bestScore ? s : best;
   });
+  const bestScore = getScore(bestSubject, "2025", "midYear") ?? 0;
 
   // Find weakest subject based on current mid-year scores
   const weakestSubject = academicData.subjects.reduce((worst, s) => {
@@ -117,14 +111,6 @@ export function ResultsSummary() {
   const totalSubjects = academicData.subjects.length;
   const passingPercentage = Math.round((passingCount / totalSubjects) * 100);
 
-  // Performance level based on average
-  const getPerformanceLevel = (avg: number) => {
-    if (avg >= 80) return "Above Average";
-    if (avg >= 65) return "Average";
-    return "Needs Improvement";
-  };
-  const performanceLevel = getPerformanceLevel(currentAverage);
-
   // Subject performance data for bar chart (sorted best to worst), filtered by selection
   const subjectPerformance = useMemo(() => {
     const subjects = subjectFilter === "all" 
@@ -141,12 +127,41 @@ export function ResultsSummary() {
       .sort((a, b) => b.score - a.score);
   }, [subjectFilter]);
 
+  // Grade distribution
+  const gradeDistribution = useMemo(() => {
+    const grades = { "A*": 0, "A": 0, "B": 0, "C": 0, "D": 0, "E": 0 };
+    academicData.subjects.forEach(s => {
+      const score = getScore(s, "2025", "midYear");
+      if (score !== null) {
+        const grade = getGradeFromScore(score);
+        grades[grade as keyof typeof grades]++;
+      }
+    });
+    return Object.entries(grades).map(([grade, count]) => ({ grade, count }));
+  }, []);
+
+  // Top 3 performers
+  const top3 = useMemo(() => {
+    return [...academicData.subjects]
+      .sort((a, b) => (getScore(b, "2025", "midYear") ?? 0) - (getScore(a, "2025", "midYear") ?? 0))
+      .slice(0, 3);
+  }, []);
+
+  // Needs attention - only subjects below 50%
+  const needsAttention = useMemo(() => {
+    return [...academicData.subjects]
+      .filter(s => (getScore(s, "2025", "midYear") ?? 0) < 50)
+      .sort((a, b) => (getScore(a, "2025", "midYear") ?? 0) - (getScore(b, "2025", "midYear") ?? 0))
+      .slice(0, 3);
+  }, []);
+
   // Rising stars - subjects with biggest improvement from previous exam (2024 year-end to 2025 mid-year)
   const risingStars = useMemo(() => {
     const improvements = academicData.subjects.map(s => {
       const current = getScore(s, "2025", "midYear") ?? 0;
       const prev = getScore(s, "2024", "yearEnd") ?? 0;
       return {
+        subject: s,
         name: s.name,
         current,
         prev,
@@ -157,29 +172,39 @@ export function ResultsSummary() {
     return improvements.sort((a, b) => b.improvement - a.improvement).slice(0, 3);
   }, []);
 
+  // Grade card colors matching Academic Page
+  const gradeCardColors: Record<string, { bg: string; text: string }> = {
+    "A*": { bg: 'rgba(5, 150, 105, 0.15)', text: '#059669' },
+    "A": { bg: 'rgba(34, 197, 94, 0.12)', text: '#22c55e' },
+    "B": { bg: 'rgba(59, 130, 246, 0.12)', text: '#3b82f6' },
+    "C": { bg: 'rgba(234, 179, 8, 0.12)', text: '#ca8a04' },
+    "D": { bg: 'rgba(249, 115, 22, 0.12)', text: '#ea580c' },
+    "E": { bg: 'rgba(239, 68, 68, 0.12)', text: '#dc2626' }
+  };
+
   const stats = [
     {
       icon: BookOpen, 
-      label: "Current Avg", 
+      label: "Average", 
       value: `${currentAverage}%`,
-      subtext: performanceLevel,
-      iconColor: "#3b82f6", // blue
+      subtext: currentAverage >= 70 ? "Above Average" : currentAverage >= 50 ? "Average" : "Below Average",
+      iconColor: "#3b82f6",
       bgColor: "rgba(59, 130, 246, 0.08)"
     },
     { 
       icon: Award, 
-      label: "Top Subject", 
-      value: bestSubject.name,
-      subtext: `${getScore(bestSubject, "2025", "midYear")}%`,
-      iconColor: "#f59e0b", // amber
+      label: "Best Subject", 
+      value: shortenSubjectName(bestSubject.name),
+      subtext: `${bestScore}%`,
+      iconColor: "#f59e0b",
       bgColor: "rgba(245, 158, 11, 0.08)"
     },
     { 
       icon: TrendingUp, 
-      label: "vs Last Exam", 
+      label: "Improvement", 
       value: improvementText,
       subtext: improvementPoints >= 0 ? "Improved" : "Declined",
-      iconColor: improvementPoints >= 0 ? "#10b981" : "#ef4444", // emerald or red
+      iconColor: improvementPoints >= 0 ? "#10b981" : "#ef4444",
       bgColor: improvementPoints >= 0 ? "rgba(16, 185, 129, 0.08)" : "rgba(239, 68, 68, 0.08)"
     },
     { 
@@ -187,7 +212,7 @@ export function ResultsSummary() {
       label: "Attendance", 
       value: `${attendanceRate}%`,
       subtext: "This Term",
-      iconColor: "#8b5cf6", // violet
+      iconColor: "#8b5cf6",
       bgColor: "rgba(139, 92, 246, 0.08)"
     },
     { 
@@ -195,7 +220,7 @@ export function ResultsSummary() {
       label: "Passing", 
       value: `${passingCount}/${totalSubjects}`,
       subtext: `${passingPercentage}%`,
-      iconColor: "#06b6d4", // cyan
+      iconColor: "#06b6d4",
       bgColor: "rgba(6, 182, 212, 0.08)"
     },
     { 
@@ -203,7 +228,7 @@ export function ResultsSummary() {
       label: "Needs Focus", 
       value: shortenSubjectName(weakestSubject.name),
       subtext: `${weakestScore}%`,
-      iconColor: "#ef4444", // red
+      iconColor: "#ef4444",
       bgColor: "rgba(239, 68, 68, 0.08)"
     },
   ];
@@ -214,103 +239,39 @@ export function ResultsSummary() {
         <CardHeader className="pb-2">
           <CardTitle className="text-lg font-semibold">Academic Performance</CardTitle>
         </CardHeader>
-        <CardContent className="pb-4">
-          {/* Rising Stars - First */}
-          {risingStars.length > 0 && (
-            <div className="mb-4">
-              <h4 className="text-sm font-medium text-foreground flex items-center gap-1.5 mb-1">
-                <TrendingUp className="h-4 w-4" style={{ color: '#d97706' }} /> Rising Stars
-              </h4>
-              <p className="text-[10px] text-muted-foreground mb-2">Biggest improvements from previous exam</p>
-              <div className="grid grid-cols-3 gap-2">
-                {risingStars.map((item) => (
+        <CardContent className="pb-4 space-y-4">
+          {/* Grade Distribution - Matching Academic Page */}
+          <div className="space-y-2">
+            <h4 className="text-sm font-medium text-foreground">Grade Distribution</h4>
+            <div className="grid grid-cols-6 gap-2">
+              {gradeDistribution.map(g => {
+                const percentage = totalSubjects > 0 ? Math.round((g.count / totalSubjects) * 100) : 0;
+                const colors = gradeCardColors[g.grade] || { bg: 'rgba(156, 163, 175, 0.12)', text: '#6b7280' };
+                return (
                   <div 
-                    key={item.name} 
-                    className="relative flex flex-col items-center p-2.5 rounded-lg border overflow-hidden animate-glow"
-                    style={{ 
-                      background: 'linear-gradient(135deg, #fef3c7 0%, #fcd34d 50%, #f59e0b 100%)', 
-                      borderColor: 'rgba(251, 191, 36, 0.5)'
-                    }}
+                    key={g.grade} 
+                    className="flex flex-col items-center text-center p-2 rounded-lg"
+                    style={{ backgroundColor: colors.bg }}
                   >
-                    {/* Inner shine effect - lighter */}
-                    <div 
-                      className="absolute inset-0 pointer-events-none"
-                      style={{
-                        background: 'radial-gradient(ellipse at 30% 20%, rgba(255, 255, 255, 0.25) 0%, transparent 40%)',
-                      }}
-                    />
-                    {/* Star pattern background */}
-                    <div className="absolute inset-0 pointer-events-none">
-                      <svg className="absolute -top-1 -left-1 w-8 h-8 opacity-40" fill="#fbbf24" stroke="#f59e0b" strokeWidth="0.5" viewBox="0 0 24 24">
-                        <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
-                      </svg>
-                      <svg className="absolute top-0 right-0 w-6 h-6 opacity-35" fill="#fde68a" stroke="#fbbf24" strokeWidth="0.5" viewBox="0 0 24 24">
-                        <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
-                      </svg>
-                      <svg className="absolute -bottom-2 -right-1 w-7 h-7 opacity-45" fill="#fbbf24" stroke="#f59e0b" strokeWidth="0.5" viewBox="0 0 24 24">
-                        <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
-                      </svg>
-                    </div>
-                    <span className="text-xs font-medium text-foreground text-center relative z-10">{shortenSubjectName(item.name)}</span>
-                    <div className="flex items-center gap-1 mt-1 relative z-10">
-                      <ArrowUp className="h-3 w-3" style={{ color: '#d97706' }} />
-                      <span className="text-sm font-bold" style={{ color: '#d97706' }}>+{item.improvement}%</span>
-                    </div>
-                    <div className="flex items-center gap-1 mt-1 relative z-10">
-                      <span 
-                        className="text-[10px] font-medium px-2 py-0.5 rounded-full"
-                        style={{ backgroundColor: '#fef3c7', color: '#92400e' }}
-                      >
-                        {item.prev}%
-                      </span>
-                      <span className="text-[10px] text-muted-foreground">→</span>
-                      <span 
-                        className="text-[10px] font-semibold px-2 py-0.5 rounded-full"
-                        style={{ backgroundColor: '#f59e0b', color: '#ffffff' }}
-                      >
-                        {item.current}%
-                      </span>
-                    </div>
+                    <span className="text-xs font-semibold" style={{ color: colors.text }}>{g.grade}</span>
+                    <span className="text-xl font-bold text-foreground">{g.count}</span>
+                    <span className="text-[10px] text-muted-foreground">{percentage}%</span>
                   </div>
-                ))}
-              </div>
+                );
+              })}
             </div>
-          )}
-
-          {/* Subject Filter Chips */}
-          <div className="flex gap-1.5 mb-3 overflow-x-auto pb-1 scrollbar-hide">
-            <Badge 
-              variant={subjectFilter === "all" ? "default" : "outline"}
-              className="cursor-pointer whitespace-nowrap text-xs px-2 py-0.5"
-              onClick={() => setSubjectFilter("all")}
-            >
-              All
-            </Badge>
-            {academicData.subjects.map((subject) => (
-              <Badge
-                key={subject.name}
-                variant={subjectFilter === subject.name ? "default" : "outline"}
-                className="cursor-pointer whitespace-nowrap text-xs px-2 py-0.5"
-                onClick={() => setSubjectFilter(subject.name)}
-              >
-                {shortenSubjectName(subject.name)}
-              </Badge>
-            ))}
           </div>
 
-          {/* Subject Performance Bar Chart */}
-          <div className="mb-3">
-            <h4 className="text-sm font-medium text-foreground flex items-center gap-2 mb-2">
+          {/* Subject Performance Bar Chart - Matching Academic Page */}
+          <div className="space-y-2">
+            <h4 className="text-sm font-medium text-foreground flex items-center gap-2">
               Subject Performance
               <Badge variant="outline" className="text-[10px] px-1.5 py-0">
-                <span
-                  className="w-2 h-2 rounded-full mr-1"
-                  style={{ backgroundColor: "hsl(var(--foreground))" }}
-                />
+                <span className="w-2 h-2 rounded-full mr-1" style={{ backgroundColor: "hsl(var(--foreground))" }} />
                 Goal
               </Badge>
             </h4>
-            <div className="h-44">
+            <div className="h-52">
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={subjectPerformance} layout="vertical">
                   <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" strokeOpacity={0.3} />
@@ -342,12 +303,10 @@ export function ResultsSummary() {
                     ]}
                   />
                   <Bar dataKey="score" radius={[0, 4, 4, 0]}>
-                    {subjectPerformance.map((entry, index) => {
-                      const color = subjectColors[entry.fullName] || lineColors[index % lineColors.length];
-                      return <Cell key={index} fill={color} />;
-                    })}
+                    {subjectPerformance.map((entry, index) => (
+                      <Cell key={index} fill={lineColors[index % lineColors.length]} />
+                    ))}
                   </Bar>
-
                   {subjectPerformance.map((entry) => (
                     <ReferenceDot
                       key={`goal-${entry.name}`}
@@ -364,27 +323,111 @@ export function ResultsSummary() {
             </div>
           </div>
 
-          {/* Stats Grid */}
-          <div className="grid grid-cols-3 gap-3 mb-4">
-            {stats.map((stat) => (
-              <div 
-                key={stat.label} 
-                className="flex flex-col items-center text-center p-3 rounded-lg border"
-                style={{ backgroundColor: stat.bgColor, borderColor: 'transparent' }}
-              >
-                <stat.icon className="h-5 w-5 mb-1" style={{ color: stat.iconColor }} />
-                <span className="text-base font-bold text-foreground">{stat.value}</span>
-                <span className="text-[10px] text-muted-foreground leading-tight">{stat.label}</span>
-                <span className="text-[10px] text-muted-foreground/70">{stat.subtext}</span>
-              </div>
-            ))}
+          {/* Stats Cards Grid - Matching Academic Page */}
+          <div className="grid grid-cols-3 gap-2">
+            {stats.map((stat, index) => {
+              const valueLength = String(stat.value).length;
+              const textSizeClass = valueLength > 12 ? "text-xs" : valueLength > 8 ? "text-sm" : "text-lg";
+              return (
+                <div 
+                  key={index} 
+                  className="flex flex-col items-center justify-center p-3 rounded-xl border min-h-[100px]"
+                  style={{ backgroundColor: stat.bgColor, borderColor: 'transparent' }}
+                >
+                  <stat.icon className="h-5 w-5 mb-1" style={{ color: stat.iconColor }} />
+                  <span className={`${textSizeClass} font-bold text-foreground text-center leading-tight line-clamp-2`}>{stat.value}</span>
+                  <span className="text-[10px] text-muted-foreground mt-0.5">{stat.label}</span>
+                  <span className="text-[9px] text-muted-foreground/70">{stat.subtext}</span>
+                </div>
+              );
+            })}
           </div>
 
+          {/* Top 3 Performers & Needs Attention - Matching Academic Page */}
+          <div className="grid grid-cols-2 gap-3">
+            {/* Top 3 */}
+            <div className="space-y-2">
+              <h4 className="text-sm font-medium text-foreground flex items-center gap-1.5">
+                <Trophy className="h-4 w-4" style={{ color: '#22c55e' }} /> Top Performers
+              </h4>
+              <div className="space-y-2">
+                {top3.map((s, index) => {
+                  const score = getScore(s, "2025", "midYear");
+                  return (
+                    <div 
+                      key={s.name} 
+                      className="flex items-center gap-2 p-2.5 rounded-lg border min-h-[60px]"
+                      style={{
+                        backgroundColor: 'rgba(34, 197, 94, 0.1)',
+                        borderColor: 'rgba(34, 197, 94, 0.2)'
+                      }}
+                    >
+                      <span 
+                        className="w-6 h-6 shrink-0 rounded-full flex items-center justify-center text-xs font-bold"
+                        style={{ backgroundColor: 'rgba(34, 197, 94, 0.2)', color: '#16a34a' }}
+                      >
+                        {index + 1}
+                      </span>
+                      <div className="flex flex-col min-w-0 flex-1">
+                        <span className="text-sm font-medium text-foreground leading-tight">{shortenSubjectName(s.name)}</span>
+                        <Badge 
+                          className="text-xs font-semibold w-fit mt-1 text-white"
+                          style={{ backgroundColor: '#22c55e' }}
+                        >
+                          {score}%
+                        </Badge>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Needs Attention - only subjects below 50% */}
+            {needsAttention.length > 0 && (
+              <div className="space-y-2">
+                <h4 className="text-sm font-medium text-foreground flex items-center gap-1.5">
+                  <AlertTriangle className="h-4 w-4" style={{ color: '#ef4444' }} /> Needs Attention
+                </h4>
+                <div className="space-y-2">
+                  {needsAttention.map((s, index) => {
+                    const score = getScore(s, "2025", "midYear");
+                    return (
+                      <div 
+                        key={s.name} 
+                        className="flex items-center gap-2 p-2.5 rounded-lg border min-h-[60px]"
+                        style={{
+                          backgroundColor: 'rgba(254, 202, 202, 0.3)',
+                          borderColor: 'rgba(248, 113, 113, 0.3)'
+                        }}
+                      >
+                        <span 
+                          className="w-6 h-6 shrink-0 rounded-full flex items-center justify-center text-xs font-bold"
+                          style={{ backgroundColor: 'rgba(254, 202, 202, 0.5)', color: '#dc2626' }}
+                        >
+                          {index + 1}
+                        </span>
+                        <div className="flex flex-col min-w-0 flex-1">
+                          <span className="text-sm font-medium text-foreground leading-tight">{shortenSubjectName(s.name)}</span>
+                          <Badge 
+                            className="text-xs font-semibold w-fit mt-1 text-white"
+                            style={{ backgroundColor: '#f87171' }}
+                          >
+                            {score}%
+                          </Badge>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+          </div>
           
           <Button 
             variant="outline" 
             className="w-full"
-            onClick={() => navigate("/parent/academic")}
+            onClick={() => navigate("/parent/academic?section=analysis")}
           >
             View Analysis <ChevronRight className="h-4 w-4 ml-1" />
           </Button>
