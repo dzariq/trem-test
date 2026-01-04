@@ -1487,50 +1487,75 @@ export default function AcademicPage() {
                   </div>
                   <div 
                     ref={chartContainerRef}
-                    className="overflow-auto select-none transition-all duration-200 ease-out rounded-lg"
+                    className="overflow-x-auto overflow-y-hidden select-none transition-all duration-200 ease-out rounded-lg"
                     style={{ 
-                      height: Math.max(208, 208 * chartZoom),
+                      height: 220,
                       WebkitTapHighlightColor: 'transparent',
-                      touchAction: isPinching ? 'none' : 'pan-x pan-y'
+                      WebkitOverflowScrolling: 'touch',
+                      touchAction: isPinching ? 'none' : 'pan-x'
                     }}
                     onTouchStart={handleTouchStart}
                     onTouchMove={handleTouchMove}
                     onTouchEnd={handleTouchEnd}
                   >
                     <div 
-                      className="transition-transform duration-200 ease-out origin-top-left"
+                      className="transition-all duration-200 ease-out"
                       style={{ 
-                        width: `${100 * chartZoom}%`,
-                        height: `${100 * chartZoom}%`,
-                        minHeight: 208
+                        width: `${Math.max(100, 100 * chartZoom)}%`,
+                        minWidth: `${subjectPerformance.length * 60}px`,
+                        height: '100%'
                       }}
                     >
                       <ResponsiveContainer width="100%" height="100%">
-                        <BarChart data={subjectPerformance} layout="vertical">
-                          <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" strokeOpacity={0.3} />
-                          <XAxis type="number" domain={[0, 100]} tick={{
-                          fontSize: 10,
-                          fill: "hsl(var(--muted-foreground))"
-                        }} />
-                          <YAxis type="category" dataKey="name" tick={{
-                          fontSize: 10,
-                          fill: "hsl(var(--muted-foreground))"
-                        }} width={70} />
+                        <BarChart data={subjectPerformance} margin={{ top: 10, right: 10, left: 10, bottom: 40 }}>
+                          <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" strokeOpacity={0.3} vertical={false} />
+                          <XAxis 
+                            type="category" 
+                            dataKey="name" 
+                            tick={{
+                              fontSize: 9,
+                              fill: "hsl(var(--muted-foreground))"
+                            }}
+                            angle={-45}
+                            textAnchor="end"
+                            height={50}
+                            interval={0}
+                          />
+                          <YAxis 
+                            type="number" 
+                            domain={[0, 100]} 
+                            tick={{
+                              fontSize: 10,
+                              fill: "hsl(var(--muted-foreground))"
+                            }}
+                            width={30}
+                            tickFormatter={(value) => `${value}`}
+                          />
                           <Tooltip 
                             contentStyle={{
                               backgroundColor: "hsl(var(--card))",
                               border: "1px solid hsl(var(--border))",
-                              borderRadius: "8px"
+                              borderRadius: "8px",
+                              boxShadow: "0 4px 12px rgba(0,0,0,0.15)"
                             }} 
                             formatter={(value: number, name: string) => [`${value}%`, name === "score" ? "Score" : name === "goal" ? "Goal" : name]}
-                            trigger="click"
-                            cursor={false}
+                            cursor={{ fill: 'hsl(var(--muted)/0.3)' }}
                           />
-                          <Bar dataKey="score" radius={[0, 4, 4, 0]}>
+                          <Bar dataKey="score" radius={[4, 4, 0, 0]} maxBarSize={40}>
                             {subjectPerformance.map((entry, index) => <Cell key={index} fill={lineColors[index % lineColors.length]} />)}
                           </Bar>
-
-                          {subjectPerformance.map(entry => <ReferenceDot key={`goal-${entry.name}`} x={entry.goal} y={entry.name} r={4} fill="hsl(var(--foreground))" stroke="hsl(var(--background))" strokeWidth={1} />)}
+                          <ReferenceLine y={0} stroke="hsl(var(--border))" />
+                          {subjectPerformance.map((entry, index) => (
+                            <ReferenceDot 
+                              key={`goal-${entry.name}`} 
+                              x={index} 
+                              y={entry.goal} 
+                              r={4} 
+                              fill="hsl(var(--foreground))" 
+                              stroke="hsl(var(--background))" 
+                              strokeWidth={1}
+                            />
+                          ))}
                         </BarChart>
                       </ResponsiveContainer>
                     </div>
