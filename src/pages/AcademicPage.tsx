@@ -1953,15 +1953,15 @@ export default function AcademicPage() {
                 </div>
 
                 {/* Exam List for Selected Period */}
-                <div className="space-y-2">
+                <div className="space-y-1.5">
                   <h4 className="text-xs font-medium text-muted-foreground">
-                    Exams in selected period ({trendData.length} exams)
+                    Exams in selected period
                   </h4>
-                  <div className="flex flex-wrap gap-1.5">
+                  <div className="flex flex-wrap gap-1">
                     {trendData.map((item, idx) => (
                       <div
                         key={idx}
-                        className="px-2.5 py-1.5 rounded-md bg-muted/50 border border-border/50 text-xs font-medium text-foreground"
+                        className="px-2 py-0.5 rounded bg-muted/50 text-[11px] font-medium text-muted-foreground"
                       >
                         {item.period}
                       </div>
