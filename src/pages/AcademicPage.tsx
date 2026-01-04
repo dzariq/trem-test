@@ -69,10 +69,12 @@ export default function AcademicPage() {
   const [expandedSection, setExpandedSection] = useState<"comment" | "tips">("comment");
 
   // Pinch-to-zoom state for chart
-  const [chartZoom, setChartZoom] = useState(1);
+  type ChartZoomLevel = 1 | 1.5 | 2;
+  const [chartZoom, setChartZoom] = useState<ChartZoomLevel>(1);
   const chartContainerRef = useRef<HTMLDivElement>(null);
   const lastTouchDistance = useRef<number | null>(null);
   const [isPinching, setIsPinching] = useState(false);
+  const [selectedSubjectPopup, setSelectedSubjectPopup] = useState<string | null>(null);
 
   // Haptic feedback helper
   const triggerHaptic = useCallback(() => {
@@ -97,17 +99,26 @@ export default function AcademicPage() {
       const touch1 = e.touches[0];
       const touch2 = e.touches[1];
       const currentDistance = Math.hypot(touch2.clientX - touch1.clientX, touch2.clientY - touch1.clientY);
-      const scale = currentDistance / lastTouchDistance.current;
-      const newZoom = Math.min(3, Math.max(0.5, chartZoom * scale));
+      const delta = currentDistance - lastTouchDistance.current;
       
-      // Trigger haptic at zoom thresholds
-      if ((chartZoom < 1.5 && newZoom >= 1.5) || (chartZoom >= 1.5 && newZoom < 1.5) ||
-          (chartZoom < 2 && newZoom >= 2) || (chartZoom >= 2 && newZoom < 2)) {
-        triggerHaptic();
+      if (Math.abs(delta) > 40) {
+        let newZoom: ChartZoomLevel = chartZoom;
+        if (delta > 0) {
+          // Pinch out - zoom in
+          if (chartZoom === 1) newZoom = 1.5;
+          else if (chartZoom === 1.5) newZoom = 2;
+        } else {
+          // Pinch in - zoom out
+          if (chartZoom === 2) newZoom = 1.5;
+          else if (chartZoom === 1.5) newZoom = 1;
+        }
+        
+        if (newZoom !== chartZoom) {
+          triggerHaptic();
+          setChartZoom(newZoom);
+        }
+        lastTouchDistance.current = currentDistance;
       }
-      
-      setChartZoom(newZoom);
-      lastTouchDistance.current = currentDistance;
     }
   }, [chartZoom, triggerHaptic]);
 
@@ -1479,11 +1490,22 @@ export default function AcademicPage() {
                         Goal
                       </Badge>
                     </h4>
-                    {chartZoom !== 1 && (
-                      <Button variant="ghost" size="sm" className="h-6 text-xs px-2" onClick={resetZoom}>
-                        Reset
-                      </Button>
-                    )}
+                    <div className="flex items-center gap-1">
+                      {[1, 1.5, 2].map((level) => (
+                        <Button
+                          key={level}
+                          variant={chartZoom === level ? "default" : "outline"}
+                          size="sm"
+                          className="h-6 text-[10px] px-2"
+                          onClick={() => {
+                            triggerHaptic();
+                            setChartZoom(level as 1 | 1.5 | 2);
+                          }}
+                        >
+                          {level}x
+                        </Button>
+                      ))}
+                    </div>
                   </div>
                   <div 
                     ref={chartContainerRef}
@@ -1501,24 +1523,36 @@ export default function AcademicPage() {
                     <div 
                       className="transition-all duration-200 ease-out"
                       style={{ 
-                        width: `${Math.max(100, 100 * chartZoom)}%`,
-                        minWidth: `${subjectPerformance.length * 60}px`,
+                        width: `${100 * chartZoom}%`,
+                        minWidth: `${subjectPerformance.length * 45}px`,
                         height: '100%'
                       }}
                     >
                       <ResponsiveContainer width="100%" height="100%">
-                        <BarChart data={subjectPerformance} margin={{ top: 10, right: 10, left: 10, bottom: 40 }}>
+                        <BarChart 
+                          data={subjectPerformance.map(s => ({
+                            ...s,
+                            shortName: getTinySubjectCode(s.name)
+                          }))} 
+                          margin={{ top: 10, right: 10, left: 10, bottom: 30 }}
+                          onClick={(data) => {
+                            if (data && data.activePayload && data.activePayload[0]) {
+                              const fullName = data.activePayload[0].payload.name;
+                              setSelectedSubjectPopup(fullName);
+                            }
+                          }}
+                        >
                           <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" strokeOpacity={0.3} vertical={false} />
                           <XAxis 
                             type="category" 
-                            dataKey="name" 
+                            dataKey="shortName" 
                             tick={{
-                              fontSize: 9,
+                              fontSize: 8,
                               fill: "hsl(var(--muted-foreground))"
                             }}
                             angle={-45}
                             textAnchor="end"
-                            height={50}
+                            height={40}
                             interval={0}
                           />
                           <YAxis 
@@ -1528,7 +1562,7 @@ export default function AcademicPage() {
                               fontSize: 10,
                               fill: "hsl(var(--muted-foreground))"
                             }}
-                            width={30}
+                            width={25}
                             tickFormatter={(value) => `${value}`}
                           />
                           <Tooltip 
@@ -1539,18 +1573,24 @@ export default function AcademicPage() {
                               boxShadow: "0 4px 12px rgba(0,0,0,0.15)"
                             }} 
                             formatter={(value: number, name: string) => [`${value}%`, name === "score" ? "Score" : name === "goal" ? "Goal" : name]}
+                            labelFormatter={(label, payload) => {
+                              if (payload && payload[0]) {
+                                return payload[0].payload.name;
+                              }
+                              return label;
+                            }}
                             cursor={{ fill: 'hsl(var(--muted)/0.3)' }}
                           />
-                          <Bar dataKey="score" radius={[4, 4, 0, 0]} maxBarSize={40}>
+                          <Bar dataKey="score" radius={[4, 4, 0, 0]} maxBarSize={35}>
                             {subjectPerformance.map((entry, index) => <Cell key={index} fill={lineColors[index % lineColors.length]} />)}
                           </Bar>
                           <ReferenceLine y={0} stroke="hsl(var(--border))" />
                           {subjectPerformance.map((entry, index) => (
                             <ReferenceDot 
                               key={`goal-${entry.name}`} 
-                              x={index} 
+                              x={getTinySubjectCode(entry.name)} 
                               y={entry.goal} 
-                              r={4} 
+                              r={3} 
                               fill="hsl(var(--foreground))" 
                               stroke="hsl(var(--background))" 
                               strokeWidth={1}
@@ -1560,7 +1600,36 @@ export default function AcademicPage() {
                       </ResponsiveContainer>
                     </div>
                   </div>
+                  <p className="text-[10px] text-muted-foreground text-center">
+                    Tap bar for full subject name • Pinch to zoom
+                  </p>
                 </div>
+
+                {/* Subject Name Popup Dialog */}
+                <Dialog open={!!selectedSubjectPopup} onOpenChange={() => setSelectedSubjectPopup(null)}>
+                  <DialogContent className="max-w-[280px] rounded-xl">
+                    <DialogHeader>
+                      <DialogTitle className="text-base">{selectedSubjectPopup}</DialogTitle>
+                    </DialogHeader>
+                    {selectedSubjectPopup && (() => {
+                      const subjectData = subjectPerformance.find(s => s.name === selectedSubjectPopup);
+                      if (!subjectData) return null;
+                      return (
+                        <div className="space-y-3 pt-2">
+                          <div className="flex justify-between items-center">
+                            <span className="text-sm text-muted-foreground">Score</span>
+                            <span className="text-lg font-semibold">{subjectData.score}%</span>
+                          </div>
+                          <div className="flex justify-between items-center">
+                            <span className="text-sm text-muted-foreground">Goal</span>
+                            <span className="text-lg font-semibold">{subjectData.goal}%</span>
+                          </div>
+                          <Progress value={subjectData.score} className="h-2" />
+                        </div>
+                      );
+                    })()}
+                  </DialogContent>
+                </Dialog>
 
                 {/* Stats Cards Grid - 6 cards */}
                 <div className="grid grid-cols-3 gap-2">
