@@ -2297,7 +2297,7 @@ export default function AcademicPage() {
                 {/* Top 5 Growth/Decline Leaders - Swipeable Carousel */}
                 {(() => {
                   const top5Growth = [...comparisonData].filter(item => item.delta > 0).sort((a, b) => b.delta - a.delta).slice(0, 5);
-                  const top5Decline = [...comparisonData].filter(item => item.delta < 0).sort((a, b) => a.delta - b.delta).slice(0, 5);
+                  const top5Decline = [...comparisonData].filter(item => item.delta < 0).sort((a, b) => a.delta - b.delta).slice(0, 3);
 
                   return (
                     <div className="relative">
@@ -2426,7 +2426,7 @@ export default function AcademicPage() {
                                   </div>
                                 </div>
                                 <Badge className="bg-red-500/20 text-red-600 border-red-500/30 text-xs">
-                                  Top 5
+                                  Top 3
                                 </Badge>
                               </div>
                               
