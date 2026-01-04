@@ -253,8 +253,8 @@ export function SubjectPerformanceChart({
     setPinchScale(1);
   }, [zoomLevel, totalSubjects, scrollOffset, triggerHaptic]);
 
-  // Dynamic chart height
-  const chartHeight = Math.max(220, Math.round(animatedZoom) * 40);
+  // Dynamic chart height - compact: ~20px per subject instead of 40px
+  const chartHeight = Math.max(160, Math.round(animatedZoom) * 20);
 
   // Generate help text
   const getHelpText = () => {
