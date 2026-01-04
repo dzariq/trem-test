@@ -79,7 +79,7 @@ export default function AcademicPage() {
   // Carousel state for Top Growth/Decline section
   const [growthCarouselSlide, setGrowthCarouselSlide] = useState(0);
   const [showGrowthSwipeHint, setShowGrowthSwipeHint] = useState(true);
-
+  
   // Hide swipe hint after 3 seconds
   useEffect(() => {
     const timer = setTimeout(() => setShowGrowthSwipeHint(false), 3000);
@@ -92,6 +92,7 @@ export default function AcademicPage() {
       navigator.vibrate(10);
     }
   }, []);
+
   const handleTouchStart = useCallback((e: React.TouchEvent) => {
     if (e.touches.length === 2) {
       e.preventDefault();
@@ -101,6 +102,7 @@ export default function AcademicPage() {
       lastTouchDistance.current = Math.hypot(touch2.clientX - touch1.clientX, touch2.clientY - touch1.clientY);
     }
   }, []);
+
   const handleTouchMove = useCallback((e: React.TouchEvent) => {
     if (e.touches.length === 2 && lastTouchDistance.current !== null) {
       e.preventDefault();
@@ -109,19 +111,23 @@ export default function AcademicPage() {
       const currentDistance = Math.hypot(touch2.clientX - touch1.clientX, touch2.clientY - touch1.clientY);
       const scale = currentDistance / lastTouchDistance.current;
       const newZoom = Math.min(3, Math.max(0.5, chartZoom * scale));
-
+      
       // Trigger haptic at zoom thresholds
-      if (chartZoom < 1.5 && newZoom >= 1.5 || chartZoom >= 1.5 && newZoom < 1.5 || chartZoom < 2 && newZoom >= 2 || chartZoom >= 2 && newZoom < 2) {
+      if ((chartZoom < 1.5 && newZoom >= 1.5) || (chartZoom >= 1.5 && newZoom < 1.5) ||
+          (chartZoom < 2 && newZoom >= 2) || (chartZoom >= 2 && newZoom < 2)) {
         triggerHaptic();
       }
+      
       setChartZoom(newZoom);
       lastTouchDistance.current = currentDistance;
     }
   }, [chartZoom, triggerHaptic]);
+
   const handleTouchEnd = useCallback(() => {
     setIsPinching(false);
     lastTouchDistance.current = null;
   }, []);
+
   const resetZoom = useCallback(() => {
     triggerHaptic();
     setChartZoom(1);
@@ -376,10 +382,7 @@ export default function AcademicPage() {
 
   // Find weakest subject
   const weakestSubjectInfo = useMemo(() => {
-    if (filteredGradesSubjects.length === 0) return {
-      name: "N/A",
-      score: 0
-    };
+    if (filteredGradesSubjects.length === 0) return { name: "N/A", score: 0 };
     const weakest = filteredGradesSubjects.reduce((worst, s) => {
       const currentScore = getScore(s, selectedYear, examType) ?? 100;
       const worstScore = getScore(worst, selectedYear, examType) ?? 100;
@@ -394,10 +397,7 @@ export default function AcademicPage() {
 
   // Best subject info
   const bestSubjectInfo = useMemo(() => {
-    if (filteredGradesSubjects.length === 0) return {
-      name: "N/A",
-      score: 0
-    };
+    if (filteredGradesSubjects.length === 0) return { name: "N/A", score: 0 };
     const best = filteredGradesSubjects.reduce((bestSub, s) => {
       const currentScore = getScore(s, selectedYear, examType) ?? 0;
       const bestScore = getScore(bestSub, selectedYear, examType) ?? 0;
@@ -783,7 +783,7 @@ export default function AcademicPage() {
             </CardTitle>
             {/* Year and Exam Period Selectors */}
             <div className="flex gap-2 mt-3">
-              <Select value={selectedYear} onValueChange={v => setSelectedYear(v as YearKey)}>
+              <Select value={selectedYear} onValueChange={(v) => setSelectedYear(v as YearKey)}>
                 <SelectTrigger className="flex-1 h-9 text-sm">
                   <SelectValue placeholder="Year" />
                 </SelectTrigger>
@@ -794,7 +794,7 @@ export default function AcademicPage() {
                   <SelectItem value="2022">2022</SelectItem>
                 </SelectContent>
               </Select>
-              <Select value={examType} onValueChange={v => setExamType(v as ExamType)}>
+              <Select value={examType} onValueChange={(v) => setExamType(v as ExamType)}>
                 <SelectTrigger className="flex-1 h-9 text-sm">
                   <SelectValue placeholder="Exam" />
                 </SelectTrigger>
@@ -878,12 +878,20 @@ export default function AcademicPage() {
                         
                         {/* Expanded Comment Box - Full Width */}
                         {expandedInRow && <div className="animate-fade-in">
-                            <div className={`rounded-xl p-4 relative mt-1 transition-colors ${expandedSection === "tips" ? "bg-amber-50 border border-amber-200" : "bg-primary/5 border border-primary/20"}`}>
+                            <div className={`rounded-xl p-4 relative mt-1 transition-colors ${
+                              expandedSection === "tips" 
+                                ? "bg-amber-50 border border-amber-200" 
+                                : "bg-primary/5 border border-primary/20"
+                            }`}>
                               {/* Arrow pointer - clean triangle without bottom line */}
                               <div className="absolute -top-[10px] w-5 h-[10px] overflow-hidden" style={{
                             left: expandedInRow === rowSubjects[0] ? 'calc(25% - 10px)' : 'calc(75% - 10px)'
                           }}>
-                                <div className={`w-[14px] h-[14px] rotate-45 border-l border-t ${expandedSection === "tips" ? "bg-amber-50 border-amber-200" : "bg-primary/5 border-primary/20"}`} style={{
+                                <div className={`w-[14px] h-[14px] rotate-45 border-l border-t ${
+                                  expandedSection === "tips"
+                                    ? "bg-amber-50 border-amber-200"
+                                    : "bg-primary/5 border-primary/20"
+                                }`} style={{
                               position: 'absolute',
                               top: '5px',
                               left: '3px'
@@ -892,24 +900,39 @@ export default function AcademicPage() {
                               
                               {/* Toggle Buttons */}
                               <div className="flex gap-2 mb-3">
-                                <button onClick={e => {
-                              e.stopPropagation();
-                              setExpandedSection("comment");
-                            }} className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium transition-all ${expandedSection === "comment" ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground hover:bg-muted/80"}`}>
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setExpandedSection("comment");
+                                  }}
+                                  className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
+                                    expandedSection === "comment" 
+                                      ? "bg-primary text-primary-foreground" 
+                                      : "bg-muted text-muted-foreground hover:bg-muted/80"
+                                  }`}
+                                >
                                   <MessageSquare className="h-3 w-3" />
                                   Teacher's Comment
                                 </button>
-                                <button onClick={e => {
-                              e.stopPropagation();
-                              setExpandedSection("tips");
-                            }} className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium transition-all ${expandedSection === "tips" ? "bg-amber-500 text-white" : "bg-muted text-muted-foreground hover:bg-muted/80"}`}>
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setExpandedSection("tips");
+                                  }}
+                                  className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
+                                    expandedSection === "tips" 
+                                      ? "bg-amber-500 text-white" 
+                                      : "bg-muted text-muted-foreground hover:bg-muted/80"
+                                  }`}
+                                >
                                   <BookOpen className="h-3 w-3" />
                                   Learning Tips
                                 </button>
                               </div>
                               
                               {/* Content Section */}
-                              {expandedSection === "comment" ? <div className="flex items-start gap-3">
+                              {expandedSection === "comment" ? (
+                                <div className="flex items-start gap-3">
                                   <div className="flex-shrink-0 w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
                                     <MessageSquare className="h-4 w-4 text-primary" />
                                   </div>
@@ -919,18 +942,23 @@ export default function AcademicPage() {
                                       {expandedInRow.teacherComment}
                                     </p>
                                   </div>
-                                </div> : <div className="flex items-start gap-3">
+                                </div>
+                              ) : (
+                                <div className="flex items-start gap-3">
                                   <div className="flex-shrink-0 w-8 h-8 rounded-full bg-amber-100 flex items-center justify-center">
                                     <BookOpen className="h-4 w-4 text-amber-600" />
                                   </div>
                                   <div className="flex-1 min-w-0 space-y-3">
-                                    {expandedInRow.classStudyRecommendation && <div>
+                                    {expandedInRow.classStudyRecommendation && (
+                                      <div>
                                         <p className="text-xs font-medium text-amber-600 mb-1">Class Learning Tips</p>
                                         <p className="text-sm text-muted-foreground leading-relaxed">
                                           {expandedInRow.classStudyRecommendation}
                                         </p>
-                                      </div>}
-                                    {expandedInRow.studyRecommendation && <div className="pt-2 border-t border-amber-200">
+                                      </div>
+                                    )}
+                                    {expandedInRow.studyRecommendation && (
+                                      <div className="pt-2 border-t border-amber-200">
                                         <div className="flex items-center gap-2 mb-1">
                                           <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-amber-500 text-white">
                                             Individual Tips
@@ -939,12 +967,16 @@ export default function AcademicPage() {
                                         <p className="text-sm text-muted-foreground leading-relaxed">
                                           {expandedInRow.studyRecommendation}
                                         </p>
-                                      </div>}
-                                    {!expandedInRow.classStudyRecommendation && !expandedInRow.studyRecommendation && <p className="text-sm text-muted-foreground italic">
+                                      </div>
+                                    )}
+                                    {!expandedInRow.classStudyRecommendation && !expandedInRow.studyRecommendation && (
+                                      <p className="text-sm text-muted-foreground italic">
                                         No learning tips available for this subject.
-                                      </p>}
+                                      </p>
+                                    )}
                                   </div>
-                                </div>}
+                                </div>
+                              )}
                             </div>
                           </div>}
                       </div>;
@@ -1111,10 +1143,20 @@ export default function AcademicPage() {
                 {/* Year Selection */}
                 <div className="space-y-2 pb-3 mb-3 border-b border-border">
                   <div className="flex gap-2">
-                    {(["2025", "2024", "2023"] as const).map(year => <button key={year} onClick={() => toggleYear(year)} className={`flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-md border text-sm font-medium transition-colors ${selectedYears.includes(year) ? "bg-primary text-primary-foreground border-primary" : "bg-card border-border text-foreground hover:bg-accent"}`}>
+                    {(["2025", "2024", "2023"] as const).map(year => (
+                      <button 
+                        key={year} 
+                        onClick={() => toggleYear(year)} 
+                        className={`flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-md border text-sm font-medium transition-colors ${
+                          selectedYears.includes(year) 
+                            ? "bg-primary text-primary-foreground border-primary" 
+                            : "bg-card border-border text-foreground hover:bg-accent"
+                        }`}
+                      >
                         {selectedYears.includes(year) && <Check className="h-3.5 w-3.5" />}
                         {year}
-                      </button>)}
+                      </button>
+                    ))}
                   </div>
                   <Badge variant="secondary" className="text-xs">
                     Viewing: {selectedYears.sort().reverse().join(", ")}
@@ -1463,12 +1505,15 @@ export default function AcademicPage() {
                   </div>
                 </div>
 
-                <SubjectPerformanceChart data={subjectPerformance.map(s => ({
-                name: shortenSubjectName(s.name),
-                fullName: s.name,
-                score: s.score,
-                goal: s.goal
-              }))} lineColors={lineColors} />
+                <SubjectPerformanceChart 
+                  data={subjectPerformance.map(s => ({
+                    name: shortenSubjectName(s.name),
+                    fullName: s.name,
+                    score: s.score,
+                    goal: s.goal
+                  }))}
+                  lineColors={lineColors}
+                />
 
                 {/* Stats Cards Grid - 6 cards */}
                 <div className="grid grid-cols-3 gap-2">
@@ -1537,70 +1582,66 @@ export default function AcademicPage() {
                   {/* Top 3 */}
                   <div className="space-y-2">
                     <h4 className="text-sm font-medium text-foreground flex items-center gap-1.5">
-                      <Trophy className="h-4 w-4" style={{
-                      color: '#22c55e'
-                    }} /> Top Performers
+                      <Trophy className="h-4 w-4" style={{ color: '#22c55e' }} /> Top Performers
                     </h4>
                     <div className="space-y-2">
-                      {[0, 1, 2].map(index => {
-                      const s = top3[index];
-                      if (!s) {
-                        return <div key={index} className="min-h-[60px]" />;
-                      }
-                      const score = getScore(s, selectedYear, examType);
-                      return <div key={s.name} className="flex items-center gap-2 p-2.5 rounded-lg border min-h-[60px]" style={{
-                        backgroundColor: 'rgba(34, 197, 94, 0.1)',
-                        borderColor: 'rgba(34, 197, 94, 0.2)'
-                      }}>
+                      {[0, 1, 2].map((index) => {
+                        const s = top3[index];
+                        if (!s) {
+                          return <div key={index} className="min-h-[60px]" />;
+                        }
+                        const score = getScore(s, selectedYear, examType);
+                        return (
+                          <div key={s.name} className="flex items-center gap-2 p-2.5 rounded-lg border min-h-[60px]" style={{
+                            backgroundColor: 'rgba(34, 197, 94, 0.1)',
+                            borderColor: 'rgba(34, 197, 94, 0.2)'
+                          }}>
                             <span className="w-6 h-6 shrink-0 rounded-full flex items-center justify-center text-xs font-bold" style={{
-                          backgroundColor: 'rgba(34, 197, 94, 0.2)',
-                          color: '#16a34a'
-                        }}>
+                              backgroundColor: 'rgba(34, 197, 94, 0.2)',
+                              color: '#16a34a'
+                            }}>
                               {index + 1}
                             </span>
                             <div className="flex flex-col min-w-0 flex-1">
                               <span className="text-sm font-medium text-foreground leading-tight">{shortenSubjectName(s.name)}</span>
-                              <Badge className="text-xs font-semibold w-fit mt-1 text-white" style={{
-                            backgroundColor: '#22c55e'
-                          }}>{score}%</Badge>
+                              <Badge className="text-xs font-semibold w-fit mt-1 text-white" style={{ backgroundColor: '#22c55e' }}>{score}%</Badge>
                             </div>
-                          </div>;
-                    })}
+                          </div>
+                        );
+                      })}
                     </div>
                   </div>
 
                   {/* Needs Attention - only subjects below 50% */}
                   <div className="space-y-2">
                     <h4 className="text-sm font-medium text-foreground flex items-center gap-1.5">
-                      <AlertTriangle className="h-4 w-4" style={{
-                      color: '#ef4444'
-                    }} /> Needs Attention
+                      <AlertTriangle className="h-4 w-4" style={{ color: '#ef4444' }} /> Needs Attention
                     </h4>
                     <div className="space-y-2">
-                      {[0, 1, 2].map(index => {
-                      const s = needsAttention[index];
-                      if (!s) {
-                        return <div key={index} className="min-h-[60px]" />;
-                      }
-                      const score = getScore(s, selectedYear, examType);
-                      return <div key={s.name} className="flex items-center gap-2 p-2.5 rounded-lg border min-h-[60px]" style={{
-                        backgroundColor: 'rgba(254, 202, 202, 0.3)',
-                        borderColor: 'rgba(248, 113, 113, 0.3)'
-                      }}>
+                      {[0, 1, 2].map((index) => {
+                        const s = needsAttention[index];
+                        if (!s) {
+                          return <div key={index} className="min-h-[60px]" />;
+                        }
+                        const score = getScore(s, selectedYear, examType);
+                        return (
+                          <div key={s.name} className="flex items-center gap-2 p-2.5 rounded-lg border min-h-[60px]" style={{
+                            backgroundColor: 'rgba(254, 202, 202, 0.3)',
+                            borderColor: 'rgba(248, 113, 113, 0.3)'
+                          }}>
                             <span className="w-6 h-6 shrink-0 rounded-full flex items-center justify-center text-xs font-bold" style={{
-                          backgroundColor: 'rgba(254, 202, 202, 0.5)',
-                          color: '#dc2626'
-                        }}>
+                              backgroundColor: 'rgba(254, 202, 202, 0.5)',
+                              color: '#dc2626'
+                            }}>
                               {index + 1}
                             </span>
                             <div className="flex flex-col min-w-0 flex-1">
                               <span className="text-sm font-medium text-foreground leading-tight">{shortenSubjectName(s.name)}</span>
-                              <Badge className="text-xs font-semibold w-fit mt-1 text-white" style={{
-                            backgroundColor: '#f87171'
-                          }}>{score}%</Badge>
+                              <Badge className="text-xs font-semibold w-fit mt-1 text-white" style={{ backgroundColor: '#f87171' }}>{score}%</Badge>
                             </div>
-                          </div>;
-                    })}
+                          </div>
+                        );
+                      })}
                     </div>
                   </div>
                 </div>
@@ -1698,10 +1739,24 @@ export default function AcademicPage() {
                       <div className="flex items-center gap-2">
                         {/* Chart View Switcher */}
                         <div className="flex items-center gap-0.5 bg-muted/50 rounded-lg p-0.5">
-                          <button onClick={() => setChartViewMode("single")} className={`px-2 py-1 text-[10px] font-medium rounded-md transition-colors ${chartViewMode === "single" ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}>
+                          <button
+                            onClick={() => setChartViewMode("single")}
+                            className={`px-2 py-1 text-[10px] font-medium rounded-md transition-colors ${
+                              chartViewMode === "single"
+                                ? "bg-background text-foreground shadow-sm"
+                                : "text-muted-foreground hover:text-foreground"
+                            }`}
+                          >
                             Average
                           </button>
-                          <button onClick={() => setChartViewMode("multiple")} className={`px-2 py-1 text-[10px] font-medium rounded-md transition-colors ${chartViewMode === "multiple" ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}>
+                          <button
+                            onClick={() => setChartViewMode("multiple")}
+                            className={`px-2 py-1 text-[10px] font-medium rounded-md transition-colors ${
+                              chartViewMode === "multiple"
+                                ? "bg-background text-foreground shadow-sm"
+                                : "text-muted-foreground hover:text-foreground"
+                            }`}
+                          >
                             Individual
                           </button>
                         </div>
@@ -1710,12 +1765,14 @@ export default function AcademicPage() {
 
                     <div className="flex items-center justify-between">
                       <p className="text-[10px] text-muted-foreground">← Swipe • Pinch to zoom →</p>
-                      {chartZoom !== 1 && <div className="flex items-center gap-2">
+                      {chartZoom !== 1 && (
+                        <div className="flex items-center gap-2">
                           <button onClick={resetZoom} className="text-[10px] text-primary underline">
                             Reset zoom
                           </button>
                           <p className="text-[10px] text-muted-foreground">{`${Math.round(chartZoom * 100)}%`}</p>
-                        </div>}
+                        </div>
+                      )}
                     </div>
                   </div>
                   <div ref={chartContainerRef} className="h-64 overflow-x-auto overflow-y-hidden scrollbar-thin scrollbar-thumb-muted scrollbar-track-transparent" style={{
@@ -1729,15 +1786,14 @@ export default function AcademicPage() {
                     height: '100%',
                     transition: 'width 0.1s ease-out'
                   }}>
-                      {trendsSelectedSubjects.length === 0 ? <div className="h-full w-full flex items-center justify-center">
+                      {trendsSelectedSubjects.length === 0 ? (
+                        <div className="h-full w-full flex items-center justify-center">
                           <p className="text-xs text-muted-foreground">Select at least one subject to view the chart.</p>
-                        </div> : <ResponsiveContainer width="100%" height="100%">
-                          {chartViewMode === "single" ? <AreaChart data={trendData} margin={{
-                        top: 10,
-                        right: 20,
-                        left: 0,
-                        bottom: 20
-                      }}>
+                        </div>
+                      ) : (
+                        <ResponsiveContainer width="100%" height="100%">
+                          {chartViewMode === "single" ? (
+                            <AreaChart data={trendData} margin={{ top: 10, right: 20, left: 0, bottom: 20 }}>
                               <defs>
                                 <linearGradient id="gradientGreen" x1="0" y1="0" x2="0" y2="1">
                                   <stop offset="0%" stopColor="#22c55e" stopOpacity={0.4} />
@@ -1753,151 +1809,158 @@ export default function AcademicPage() {
                                 </linearGradient>
                               </defs>
                               <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" strokeOpacity={0.2} vertical={false} />
-                              <XAxis dataKey="period" axisLine={false} tickLine={false} interval={0} height={40} tick={({
-                          x,
-                          y,
-                          payload
-                        }) => {
-                          const parts = payload.value.split(" ");
-                          return <g transform={`translate(${x},${y})`}>
+                              <XAxis
+                                dataKey="period"
+                                axisLine={false}
+                                tickLine={false}
+                                interval={0}
+                                height={40}
+                                tick={({ x, y, payload }) => {
+                                  const parts = payload.value.split(" ");
+                                  return (
+                                    <g transform={`translate(${x},${y})`}>
                                       <text x={0} y={0} dy={12} textAnchor="middle" fontSize={10} fill="hsl(var(--muted-foreground))">
                                         {parts[0]}
                                       </text>
                                       <text x={0} y={0} dy={24} textAnchor="middle" fontSize={9} fill="hsl(var(--muted-foreground))" opacity={0.7}>
                                         {parts[1]}
                                       </text>
-                                    </g>;
-                        }} />
-                              <YAxis domain={[30, 100]} tick={{
-                          fontSize: 11,
-                          fill: "hsl(var(--muted-foreground))"
-                        }} axisLine={false} tickLine={false} width={35} />
-                              <Tooltip contentStyle={{
-                          backgroundColor: "hsl(var(--card))",
-                          border: "1px solid hsl(var(--border))",
-                          borderRadius: "12px",
-                          boxShadow: "0 4px 12px rgba(0,0,0,0.1)"
-                        }} labelStyle={{
-                          fontWeight: 600,
-                          marginBottom: 4
-                        }} />
-                              <ReferenceLine y={50} stroke="#f59e0b" strokeDasharray="5 5" strokeOpacity={0.6} label={{
-                          value: "Pass",
-                          fontSize: 9,
-                          fill: "#f59e0b",
-                          position: "insideTopLeft"
-                        }} />
-                              <ReferenceLine y={80} stroke="#22c55e" strokeDasharray="5 5" strokeOpacity={0.6} label={{
-                          value: "A",
-                          fontSize: 9,
-                          fill: "#22c55e",
-                          position: "insideTopLeft"
-                        }} />
-                              <ReferenceLine y={trendGoalValue} stroke="hsl(var(--foreground))" strokeDasharray="4 4" strokeWidth={2} label={{
-                          value: "Goal",
-                          fontSize: 9,
-                          fill: "hsl(var(--foreground))",
-                          position: "insideTopLeft"
-                        }} />
+                                    </g>
+                                  );
+                                }}
+                              />
+                              <YAxis
+                                domain={[30, 100]}
+                                tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }}
+                                axisLine={false}
+                                tickLine={false}
+                                width={35}
+                              />
+                              <Tooltip
+                                contentStyle={{
+                                  backgroundColor: "hsl(var(--card))",
+                                  border: "1px solid hsl(var(--border))",
+                                  borderRadius: "12px",
+                                  boxShadow: "0 4px 12px rgba(0,0,0,0.1)"
+                                }}
+                                labelStyle={{ fontWeight: 600, marginBottom: 4 }}
+                              />
+                              <ReferenceLine y={50} stroke="#f59e0b" strokeDasharray="5 5" strokeOpacity={0.6} label={{ value: "Pass", fontSize: 9, fill: "#f59e0b", position: "insideTopLeft" }} />
+                              <ReferenceLine y={80} stroke="#22c55e" strokeDasharray="5 5" strokeOpacity={0.6} label={{ value: "A", fontSize: 9, fill: "#22c55e", position: "insideTopLeft" }} />
+                              <ReferenceLine y={trendGoalValue} stroke="hsl(var(--foreground))" strokeDasharray="4 4" strokeWidth={2} label={{ value: "Goal", fontSize: 9, fill: "hsl(var(--foreground))", position: "insideTopLeft" }} />
 
-                              {trendsSelectedSubjects.length === 1 ? <Area type="monotone" dataKey={trendsSelectedSubjects[0]} stroke={trendDirection.direction === "up" ? "#22c55e" : trendDirection.direction === "down" ? "#ef4444" : "#3b82f6"} strokeWidth={2.5} fill={trendDirection.direction === "up" ? "url(#gradientGreen)" : trendDirection.direction === "down" ? "url(#gradientRed)" : "url(#gradientBlue)"} dot={{
-                          fill: trendDirection.direction === "up" ? "#22c55e" : trendDirection.direction === "down" ? "#ef4444" : "#3b82f6",
-                          strokeWidth: 0,
-                          r: 5
-                        }} activeDot={{
-                          r: 7,
-                          strokeWidth: 2,
-                          stroke: "#fff"
-                        }} connectNulls /> : <Area type="monotone" dataKey="Average" stroke={trendDirection.direction === "up" ? "#22c55e" : trendDirection.direction === "down" ? "#ef4444" : "#3b82f6"} strokeWidth={2.5} fill={trendDirection.direction === "up" ? "url(#gradientGreen)" : trendDirection.direction === "down" ? "url(#gradientRed)" : "url(#gradientBlue)"} dot={{
-                          fill: trendDirection.direction === "up" ? "#22c55e" : trendDirection.direction === "down" ? "#ef4444" : "#3b82f6",
-                          strokeWidth: 0,
-                          r: 5
-                        }} activeDot={{
-                          r: 7,
-                          strokeWidth: 2,
-                          stroke: "#fff"
-                        }} connectNulls />}
-                            </AreaChart> : <LineChart data={trendData} margin={{
-                        top: 10,
-                        right: 20,
-                        left: 0,
-                        bottom: 20
-                      }}>
+                              {trendsSelectedSubjects.length === 1 ? (
+                                <Area
+                                  type="monotone"
+                                  dataKey={trendsSelectedSubjects[0]}
+                                  stroke={trendDirection.direction === "up" ? "#22c55e" : trendDirection.direction === "down" ? "#ef4444" : "#3b82f6"}
+                                  strokeWidth={2.5}
+                                  fill={trendDirection.direction === "up" ? "url(#gradientGreen)" : trendDirection.direction === "down" ? "url(#gradientRed)" : "url(#gradientBlue)"}
+                                  dot={{
+                                    fill: trendDirection.direction === "up" ? "#22c55e" : trendDirection.direction === "down" ? "#ef4444" : "#3b82f6",
+                                    strokeWidth: 0,
+                                    r: 5
+                                  }}
+                                  activeDot={{ r: 7, strokeWidth: 2, stroke: "#fff" }}
+                                  connectNulls
+                                />
+                              ) : (
+                                <Area
+                                  type="monotone"
+                                  dataKey="Average"
+                                  stroke={trendDirection.direction === "up" ? "#22c55e" : trendDirection.direction === "down" ? "#ef4444" : "#3b82f6"}
+                                  strokeWidth={2.5}
+                                  fill={trendDirection.direction === "up" ? "url(#gradientGreen)" : trendDirection.direction === "down" ? "url(#gradientRed)" : "url(#gradientBlue)"}
+                                  dot={{
+                                    fill: trendDirection.direction === "up" ? "#22c55e" : trendDirection.direction === "down" ? "#ef4444" : "#3b82f6",
+                                    strokeWidth: 0,
+                                    r: 5
+                                  }}
+                                  activeDot={{ r: 7, strokeWidth: 2, stroke: "#fff" }}
+                                  connectNulls
+                                />
+                              )}
+                            </AreaChart>
+                          ) : (
+                            <LineChart data={trendData} margin={{ top: 10, right: 20, left: 0, bottom: 20 }}>
                               <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" strokeOpacity={0.2} vertical={false} />
-                              <XAxis dataKey="period" axisLine={false} tickLine={false} interval={0} height={40} tick={({
-                          x,
-                          y,
-                          payload
-                        }) => {
-                          const parts = payload.value.split(" ");
-                          return <g transform={`translate(${x},${y})`}>
+                              <XAxis
+                                dataKey="period"
+                                axisLine={false}
+                                tickLine={false}
+                                interval={0}
+                                height={40}
+                                tick={({ x, y, payload }) => {
+                                  const parts = payload.value.split(" ");
+                                  return (
+                                    <g transform={`translate(${x},${y})`}>
                                       <text x={0} y={0} dy={12} textAnchor="middle" fontSize={10} fill="hsl(var(--muted-foreground))">
                                         {parts[0]}
                                       </text>
                                       <text x={0} y={0} dy={24} textAnchor="middle" fontSize={9} fill="hsl(var(--muted-foreground))" opacity={0.7}>
                                         {parts[1]}
                                       </text>
-                                    </g>;
-                        }} />
-                              <YAxis domain={[30, 100]} tick={{
-                          fontSize: 11,
-                          fill: "hsl(var(--muted-foreground))"
-                        }} axisLine={false} tickLine={false} width={35} />
-                              <Tooltip contentStyle={{
-                          backgroundColor: "hsl(var(--card))",
-                          border: "1px solid hsl(var(--border))",
-                          borderRadius: "12px",
-                          boxShadow: "0 4px 12px rgba(0,0,0,0.1)"
-                        }} labelStyle={{
-                          fontWeight: 600,
-                          marginBottom: 4
-                        }} />
-                              <ReferenceLine y={50} stroke="#f59e0b" strokeDasharray="5 5" strokeOpacity={0.6} label={{
-                          value: "Pass",
-                          fontSize: 9,
-                          fill: "#f59e0b",
-                          position: "insideTopLeft"
-                        }} />
-                              <ReferenceLine y={80} stroke="#22c55e" strokeDasharray="5 5" strokeOpacity={0.6} label={{
-                          value: "A",
-                          fontSize: 9,
-                          fill: "#22c55e",
-                          position: "insideTopLeft"
-                        }} />
-                              <ReferenceLine y={trendGoalValue} stroke="hsl(var(--foreground))" strokeDasharray="4 4" strokeWidth={2} label={{
-                          value: "Goal",
-                          fontSize: 9,
-                          fill: "hsl(var(--foreground))",
-                          position: "insideTopLeft"
-                        }} />
+                                    </g>
+                                  );
+                                }}
+                              />
+                              <YAxis
+                                domain={[30, 100]}
+                                tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }}
+                                axisLine={false}
+                                tickLine={false}
+                                width={35}
+                              />
+                              <Tooltip
+                                contentStyle={{
+                                  backgroundColor: "hsl(var(--card))",
+                                  border: "1px solid hsl(var(--border))",
+                                  borderRadius: "12px",
+                                  boxShadow: "0 4px 12px rgba(0,0,0,0.1)"
+                                }}
+                                labelStyle={{ fontWeight: 600, marginBottom: 4 }}
+                              />
+                              <ReferenceLine y={50} stroke="#f59e0b" strokeDasharray="5 5" strokeOpacity={0.6} label={{ value: "Pass", fontSize: 9, fill: "#f59e0b", position: "insideTopLeft" }} />
+                              <ReferenceLine y={80} stroke="#22c55e" strokeDasharray="5 5" strokeOpacity={0.6} label={{ value: "A", fontSize: 9, fill: "#22c55e", position: "insideTopLeft" }} />
+                              <ReferenceLine y={trendGoalValue} stroke="hsl(var(--foreground))" strokeDasharray="4 4" strokeWidth={2} label={{ value: "Goal", fontSize: 9, fill: "hsl(var(--foreground))", position: "insideTopLeft" }} />
 
-                              {trendsSelectedSubjects.map(subject => {
-                          const stroke = getSubjectStroke(subject);
-                          return <Line key={subject} type="monotone" dataKey={subject} stroke={stroke} strokeWidth={2} dot={{
-                            fill: stroke,
-                            strokeWidth: 0,
-                            r: 3
-                          }} activeDot={{
-                            r: 5,
-                            strokeWidth: 2,
-                            stroke: "#fff"
-                          }} connectNulls />;
-                        })}
-                            </LineChart>}
-                        </ResponsiveContainer>}
+                              {trendsSelectedSubjects.map((subject) => {
+                                const stroke = getSubjectStroke(subject);
+                                return (
+                                  <Line
+                                    key={subject}
+                                    type="monotone"
+                                    dataKey={subject}
+                                    stroke={stroke}
+                                    strokeWidth={2}
+                                    dot={{ fill: stroke, strokeWidth: 0, r: 3 }}
+                                    activeDot={{ r: 5, strokeWidth: 2, stroke: "#fff" }}
+                                    connectNulls
+                                  />
+                                );
+                              })}
+                            </LineChart>
+                          )}
+                        </ResponsiveContainer>
+                      )}
                     </div>
                   </div>
                   {/* Color Legend for Multiple Lines Mode */}
-                  {chartViewMode === "multiple" && trendsSelectedSubjects.length > 1 && <div className="flex flex-wrap gap-x-3 gap-y-1.5 mt-2 px-1">
-                      {trendsSelectedSubjects.map(subject => <div key={subject} className="flex items-center gap-1">
-                          <div className="w-2.5 h-2.5 rounded-full shrink-0" style={{
-                      backgroundColor: getSubjectStroke(subject)
-                    }} />
+                  {chartViewMode === "multiple" && trendsSelectedSubjects.length > 1 && (
+                    <div className="flex flex-wrap gap-x-3 gap-y-1.5 mt-2 px-1">
+                      {trendsSelectedSubjects.map((subject) => (
+                        <div key={subject} className="flex items-center gap-1">
+                          <div
+                            className="w-2.5 h-2.5 rounded-full shrink-0"
+                            style={{ backgroundColor: getSubjectStroke(subject) }}
+                          />
                           <span className="text-[10px] text-muted-foreground">
                             {getTinySubjectCode(subject)}
                           </span>
-                        </div>)}
-                    </div>}
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
 
                 {/* Exam List for Selected Period */}
@@ -1906,9 +1969,14 @@ export default function AcademicPage() {
                     Exams in selected period
                   </h4>
                   <div className="flex flex-wrap gap-1">
-                    {trendData.map((item, idx) => <div key={idx} className="px-2 py-0.5 rounded bg-muted/50 text-[11px] font-medium text-muted-foreground">
+                    {trendData.map((item, idx) => (
+                      <div
+                        key={idx}
+                        className="px-2 py-0.5 rounded bg-muted/50 text-[11px] font-medium text-muted-foreground"
+                      >
                         {item.period}
-                      </div>)}
+                      </div>
+                    ))}
                   </div>
                 </div>
 
@@ -1980,21 +2048,35 @@ export default function AcademicPage() {
                     <ResponsiveContainer width="100%" height="100%">
                       <RadarChart data={radarData} cx="50%" cy="50%" outerRadius="65%">
                         <PolarGrid stroke="hsl(var(--border))" strokeOpacity={0.5} />
-                        <PolarAngleAxis dataKey="subject" tick={{
-                        fontSize: 9,
-                        fill: "hsl(var(--muted-foreground))"
-                      }} tickLine={false} />
-                        <PolarRadiusAxis angle={30} domain={[0, 100]} tick={{
-                        fontSize: 8,
-                        fill: "hsl(var(--muted-foreground))"
-                      }} tickCount={5} axisLine={false} />
-                        <Radar name="Score" dataKey="score" stroke={radarAverage >= 70 ? "#22c55e" : radarAverage >= 50 ? "#f59e0b" : "#ef4444"} fill={radarAverage >= 70 ? "#22c55e" : radarAverage >= 50 ? "#f59e0b" : "#ef4444"} fillOpacity={0.3} strokeWidth={2} />
-                        <Tooltip contentStyle={{
-                        backgroundColor: "hsl(var(--card))",
-                        border: "1px solid hsl(var(--border))",
-                        borderRadius: "8px",
-                        fontSize: 12
-                      }} formatter={(value: number) => [`${value}%`, "Score"]} />
+                        <PolarAngleAxis 
+                          dataKey="subject" 
+                          tick={{ fontSize: 9, fill: "hsl(var(--muted-foreground))" }} 
+                          tickLine={false} 
+                        />
+                        <PolarRadiusAxis 
+                          angle={30} 
+                          domain={[0, 100]} 
+                          tick={{ fontSize: 8, fill: "hsl(var(--muted-foreground))" }} 
+                          tickCount={5} 
+                          axisLine={false} 
+                        />
+                        <Radar 
+                          name="Score" 
+                          dataKey="score" 
+                          stroke={radarAverage >= 70 ? "#22c55e" : radarAverage >= 50 ? "#f59e0b" : "#ef4444"} 
+                          fill={radarAverage >= 70 ? "#22c55e" : radarAverage >= 50 ? "#f59e0b" : "#ef4444"} 
+                          fillOpacity={0.3} 
+                          strokeWidth={2} 
+                        />
+                        <Tooltip 
+                          contentStyle={{
+                            backgroundColor: "hsl(var(--card))",
+                            border: "1px solid hsl(var(--border))",
+                            borderRadius: "8px",
+                            fontSize: 12
+                          }} 
+                          formatter={(value: number) => [`${value}%`, "Score"]} 
+                        />
                       </RadarChart>
                     </ResponsiveContainer>
                   </div>
@@ -2033,10 +2115,17 @@ export default function AcademicPage() {
                     </div>
                   </div>
                   {/* View More Button */}
-                  {heatmapData.length > 6 && <Button variant="ghost" size="sm" className="w-full text-xs text-muted-foreground hover:text-foreground" onClick={() => setHeatmapExpanded(!heatmapExpanded)}>
+                  {heatmapData.length > 6 && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="w-full text-xs text-muted-foreground hover:text-foreground"
+                      onClick={() => setHeatmapExpanded(!heatmapExpanded)}
+                    >
                       {heatmapExpanded ? "View Less" : `View More (${heatmapData.length - 6} more subjects)`}
                       <ChevronDown className={`h-4 w-4 ml-1 transition-transform ${heatmapExpanded ? "rotate-180" : ""}`} />
-                    </Button>}
+                    </Button>
+                  )}
                   {/* Legend */}
                   <div className="flex items-center justify-center gap-1 mt-2">
                     <span className="text-[9px] text-muted-foreground mr-1">Low</span>
@@ -2205,31 +2294,75 @@ export default function AcademicPage() {
 
                 {/* Comparison Stats Cards */}
                 {(() => {
-                const avgA = Math.round(comparisonData.reduce((sum, d) => sum + d.examA, 0) / comparisonData.length);
-                const avgB = Math.round(comparisonData.reduce((sum, d) => sum + d.examB, 0) / comparisonData.length);
-                const overallChange = avgA - avgB;
-                const improvedSubjects = comparisonData.filter(d => d.delta > 0);
-                const declinedSubjects = comparisonData.filter(d => d.delta < 0);
-                const bestPerforming = [...comparisonData].sort((a, b) => b.delta - a.delta)[0];
-                return;
-              })()}
+                  const avgA = Math.round(comparisonData.reduce((sum, d) => sum + d.examA, 0) / comparisonData.length);
+                  const avgB = Math.round(comparisonData.reduce((sum, d) => sum + d.examB, 0) / comparisonData.length);
+                  const overallChange = avgA - avgB;
+                  const improvedSubjects = comparisonData.filter(d => d.delta > 0);
+                  const declinedSubjects = comparisonData.filter(d => d.delta < 0);
+                  const bestPerforming = [...comparisonData].sort((a, b) => b.delta - a.delta)[0];
+                  
+                  return (
+                    <div className="grid grid-cols-3 gap-1.5">
+                      {/* Improved */}
+                      <div className="p-2 rounded-xl bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800 shadow-sm">
+                        <div className="flex items-center gap-1.5 mb-0.5">
+                          <span className="text-xs">🚀</span>
+                          <p className="text-sm font-bold text-emerald-600">{improvedSubjects.length}</p>
+                          <p className="text-[9px] text-muted-foreground">Improved</p>
+                        </div>
+                        <p className="text-[8px] text-emerald-600 truncate">
+                          {improvedSubjects.slice(0, 2).map(s => shortenSubjectName(s.name)).join(', ')}
+                          {improvedSubjects.length > 2 && ` +${improvedSubjects.length - 2}`}
+                        </p>
+                      </div>
+
+                      {/* Declined */}
+                      <div className="p-2 rounded-xl bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-800 shadow-sm">
+                        <div className="flex items-center gap-1.5 mb-0.5">
+                          <span className="text-xs">📉</span>
+                          <p className="text-sm font-bold text-red-500">{declinedSubjects.length}</p>
+                          <p className="text-[9px] text-muted-foreground">Declined</p>
+                        </div>
+                        <p className="text-[8px] text-red-500 truncate">
+                          {declinedSubjects.slice(0, 2).map(s => shortenSubjectName(s.name)).join(', ')}
+                          {declinedSubjects.length > 2 && ` +${declinedSubjects.length - 2}`}
+                        </p>
+                      </div>
+
+                      {/* Best Performing */}
+                      <div className="p-2 rounded-xl bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 shadow-sm">
+                        <div className="flex items-center gap-1 mb-0.5">
+                          <span className="text-xs">🏆</span>
+                          <p className="text-xs font-bold text-amber-600 truncate">{bestPerforming ? shortenSubjectName(bestPerforming.name) : '-'}</p>
+                        </div>
+                        <p className="text-[9px] text-muted-foreground">Best Performing</p>
+                        <p className="text-[8px] text-amber-600">
+                          {bestPerforming && bestPerforming.delta > 0 ? `+${bestPerforming.delta} marks` : '-'}
+                        </p>
+                      </div>
+                    </div>
+                  );
+                })()}
 
                 {/* Top 5 Growth/Decline Leaders - Swipeable Carousel */}
                 {(() => {
-                const top5Growth = [...comparisonData].sort((a, b) => b.delta - a.delta).slice(0, 5).filter(item => item.delta > 0);
-                const top5Decline = [...comparisonData].sort((a, b) => a.delta - b.delta).slice(0, 5).filter(item => item.delta < 0);
-                return <div className="relative">
-                      <Carousel className="w-full" opts={{
-                    align: "start",
-                    loop: false
-                  }} setApi={api => {
-                    if (api) {
-                      api.on("select", () => {
-                        setGrowthCarouselSlide(api.selectedScrollSnap());
-                        setShowGrowthSwipeHint(false);
-                      });
-                    }
-                  }}>
+                  const top5Growth = [...comparisonData].sort((a, b) => b.delta - a.delta).slice(0, 5).filter(item => item.delta > 0);
+                  const top5Decline = [...comparisonData].sort((a, b) => a.delta - b.delta).slice(0, 5).filter(item => item.delta < 0);
+
+                  return (
+                    <div className="relative">
+                      <Carousel
+                        className="w-full"
+                        opts={{ align: "start", loop: false }}
+                        setApi={(api) => {
+                          if (api) {
+                            api.on("select", () => {
+                              setGrowthCarouselSlide(api.selectedScrollSnap());
+                              setShowGrowthSwipeHint(false);
+                            });
+                          }
+                        }}
+                      >
                         <CarouselContent className="-ml-2">
                           {/* Slide 1: Top Growth Subjects */}
                           <CarouselItem className="pl-2">
@@ -2249,60 +2382,44 @@ export default function AcademicPage() {
                                 </Badge>
                               </div>
                               
-                              {top5Growth.length === 0 ? <div className="text-center py-4 text-muted-foreground text-sm">
+                              {top5Growth.length === 0 ? (
+                                <div className="text-center py-4 text-muted-foreground text-sm">
                                   No subjects showed improvement in this period
-                                </div> : <div className="space-y-3">
+                                </div>
+                              ) : (
+                                <div className="space-y-3">
                                   {/* Mini Area Chart */}
                                   <div className="h-32 -mx-2">
                                     <ResponsiveContainer width="100%" height="100%">
                                       <AreaChart data={top5Growth.map(item => ({
-                                  name: shortenSubjectName(item.name),
-                                  growth: item.delta,
-                                  percentChange: item.examB > 0 ? item.delta / item.examB * 100 : 0,
-                                  from: item.examB,
-                                  to: item.examA
-                                }))} margin={{
-                                  top: 10,
-                                  right: 10,
-                                  left: 10,
-                                  bottom: 0
-                                }}>
+                                        name: shortenSubjectName(item.name),
+                                        growth: item.delta,
+                                        percentChange: item.examB > 0 ? item.delta / item.examB * 100 : 0,
+                                        from: item.examB,
+                                        to: item.examA
+                                      }))} margin={{ top: 10, right: 10, left: 10, bottom: 0 }}>
                                         <defs>
                                           <linearGradient id="growthGradient" x1="0" y1="0" x2="0" y2="1">
                                             <stop offset="5%" stopColor="hsl(142, 76%, 46%)" stopOpacity={0.4} />
                                             <stop offset="95%" stopColor="hsl(142, 76%, 46%)" stopOpacity={0.05} />
                                           </linearGradient>
                                         </defs>
-                                        <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{
-                                    fontSize: 9,
-                                    fill: 'hsl(var(--muted-foreground))'
-                                  }} interval={0} height={30} />
+                                        <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 9, fill: 'hsl(var(--muted-foreground))' }} interval={0} height={30} />
                                         <YAxis hide />
-                                        <Area type="monotone" dataKey="growth" stroke="hsl(142, 76%, 46%)" strokeWidth={2} fill="url(#growthGradient)" dot={{
-                                    r: 4,
-                                    fill: "hsl(142, 76%, 46%)",
-                                    strokeWidth: 2,
-                                    stroke: "hsl(var(--background))"
-                                  }} activeDot={{
-                                    r: 6,
-                                    fill: "hsl(142, 76%, 46%)",
-                                    strokeWidth: 2,
-                                    stroke: "hsl(var(--background))"
-                                  }} />
-                                        <Tooltip content={({
-                                    active,
-                                    payload
-                                  }) => {
-                                    if (active && payload && payload.length) {
-                                      const data = payload[0].payload;
-                                      return <div className="bg-popover border border-border rounded-lg shadow-lg p-2">
+                                        <Area type="monotone" dataKey="growth" stroke="hsl(142, 76%, 46%)" strokeWidth={2} fill="url(#growthGradient)" dot={{ r: 4, fill: "hsl(142, 76%, 46%)", strokeWidth: 2, stroke: "hsl(var(--background))" }} activeDot={{ r: 6, fill: "hsl(142, 76%, 46%)", strokeWidth: 2, stroke: "hsl(var(--background))" }} />
+                                        <Tooltip content={({ active, payload }) => {
+                                          if (active && payload && payload.length) {
+                                            const data = payload[0].payload;
+                                            return (
+                                              <div className="bg-popover border border-border rounded-lg shadow-lg p-2">
                                                 <p className="text-xs font-medium text-foreground">{data.name}</p>
                                                 <p className="text-xs text-emerald-500 font-bold">+{data.growth} pts</p>
                                                 <p className="text-[10px] text-muted-foreground">{data.from} → {data.to}</p>
-                                              </div>;
-                                    }
-                                    return null;
-                                  }} />
+                                              </div>
+                                            );
+                                          }
+                                          return null;
+                                        }} />
                                       </AreaChart>
                                     </ResponsiveContainer>
                                   </div>
@@ -2310,25 +2427,25 @@ export default function AcademicPage() {
                                   {/* Top 5 Rankings */}
                                   <div className="space-y-2">
                                     {top5Growth.map((item, index) => {
-                                const percentChange = item.examB > 0 ? (item.delta / item.examB * 100).toFixed(1) : '0.0';
-                                const maxDelta = Math.max(...top5Growth.map(t => t.delta));
-                                const barWidth = item.delta / maxDelta * 100;
-                                return <div key={item.name} className="flex items-center gap-2">
+                                      const percentChange = item.examB > 0 ? (item.delta / item.examB * 100).toFixed(1) : '0.0';
+                                      const maxDelta = Math.max(...top5Growth.map(t => t.delta));
+                                      const barWidth = item.delta / maxDelta * 100;
+                                      return (
+                                        <div key={item.name} className="flex items-center gap-2">
                                           <div className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold ${index === 0 ? 'bg-yellow-500/20 text-yellow-600' : index === 1 ? 'bg-gray-400/20 text-gray-500' : index === 2 ? 'bg-amber-600/20 text-amber-600' : 'bg-muted text-muted-foreground'}`}>
                                             {index + 1}
                                           </div>
                                           <span className="text-xs font-medium text-foreground w-16 truncate">{shortenSubjectName(item.name)}</span>
                                           <div className="flex-1 h-4 bg-muted/30 rounded-full overflow-hidden relative">
-                                            <div className="h-full bg-gradient-to-r from-emerald-500 to-emerald-400 rounded-full transition-all duration-700" style={{
-                                      width: `${barWidth}%`
-                                    }} />
+                                            <div className="h-full bg-gradient-to-r from-emerald-500 to-emerald-400 rounded-full transition-all duration-700" style={{ width: `${barWidth}%` }} />
                                           </div>
                                           <div className="flex items-center gap-1 min-w-[60px] justify-end">
                                             <span className="text-xs font-bold text-emerald-500">+{item.delta}</span>
                                             <span className="text-[9px] text-muted-foreground">({percentChange}%)</span>
                                           </div>
-                                        </div>;
-                              })}
+                                        </div>
+                                      );
+                                    })}
                                   </div>
                                   
                                   {/* Summary Footer */}
@@ -2340,7 +2457,8 @@ export default function AcademicPage() {
                                       🏆 {shortenSubjectName(top5Growth[0].name)} leads with +{top5Growth[0].delta} pts
                                     </span>
                                   </div>
-                                </div>}
+                                </div>
+                              )}
                             </div>
                           </CarouselItem>
                           
@@ -2362,60 +2480,44 @@ export default function AcademicPage() {
                                 </Badge>
                               </div>
                               
-                              {top5Decline.length === 0 ? <div className="text-center py-4 text-muted-foreground text-sm">
+                              {top5Decline.length === 0 ? (
+                                <div className="text-center py-4 text-muted-foreground text-sm">
                                   No subjects showed decline in this period 🎉
-                                </div> : <div className="space-y-3">
+                                </div>
+                              ) : (
+                                <div className="space-y-3">
                                   {/* Mini Area Chart */}
                                   <div className="h-32 -mx-2">
                                     <ResponsiveContainer width="100%" height="100%">
                                       <AreaChart data={top5Decline.map(item => ({
-                                  name: shortenSubjectName(item.name),
-                                  decline: Math.abs(item.delta),
-                                  percentChange: item.examB > 0 ? Math.abs(item.delta) / item.examB * 100 : 0,
-                                  from: item.examB,
-                                  to: item.examA
-                                }))} margin={{
-                                  top: 10,
-                                  right: 10,
-                                  left: 10,
-                                  bottom: 0
-                                }}>
+                                        name: shortenSubjectName(item.name),
+                                        decline: Math.abs(item.delta),
+                                        percentChange: item.examB > 0 ? Math.abs(item.delta) / item.examB * 100 : 0,
+                                        from: item.examB,
+                                        to: item.examA
+                                      }))} margin={{ top: 10, right: 10, left: 10, bottom: 0 }}>
                                         <defs>
                                           <linearGradient id="declineGradient" x1="0" y1="0" x2="0" y2="1">
                                             <stop offset="5%" stopColor="hsl(0, 72%, 51%)" stopOpacity={0.4} />
                                             <stop offset="95%" stopColor="hsl(0, 72%, 51%)" stopOpacity={0.05} />
                                           </linearGradient>
                                         </defs>
-                                        <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{
-                                    fontSize: 9,
-                                    fill: 'hsl(var(--muted-foreground))'
-                                  }} interval={0} height={30} />
+                                        <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 9, fill: 'hsl(var(--muted-foreground))' }} interval={0} height={30} />
                                         <YAxis hide />
-                                        <Area type="monotone" dataKey="decline" stroke="hsl(0, 72%, 51%)" strokeWidth={2} fill="url(#declineGradient)" dot={{
-                                    r: 4,
-                                    fill: "hsl(0, 72%, 51%)",
-                                    strokeWidth: 2,
-                                    stroke: "hsl(var(--background))"
-                                  }} activeDot={{
-                                    r: 6,
-                                    fill: "hsl(0, 72%, 51%)",
-                                    strokeWidth: 2,
-                                    stroke: "hsl(var(--background))"
-                                  }} />
-                                        <Tooltip content={({
-                                    active,
-                                    payload
-                                  }) => {
-                                    if (active && payload && payload.length) {
-                                      const data = payload[0].payload;
-                                      return <div className="bg-popover border border-border rounded-lg shadow-lg p-2">
+                                        <Area type="monotone" dataKey="decline" stroke="hsl(0, 72%, 51%)" strokeWidth={2} fill="url(#declineGradient)" dot={{ r: 4, fill: "hsl(0, 72%, 51%)", strokeWidth: 2, stroke: "hsl(var(--background))" }} activeDot={{ r: 6, fill: "hsl(0, 72%, 51%)", strokeWidth: 2, stroke: "hsl(var(--background))" }} />
+                                        <Tooltip content={({ active, payload }) => {
+                                          if (active && payload && payload.length) {
+                                            const data = payload[0].payload;
+                                            return (
+                                              <div className="bg-popover border border-border rounded-lg shadow-lg p-2">
                                                 <p className="text-xs font-medium text-foreground">{data.name}</p>
                                                 <p className="text-xs text-red-500 font-bold">-{data.decline} pts</p>
                                                 <p className="text-[10px] text-muted-foreground">{data.from} → {data.to}</p>
-                                              </div>;
-                                    }
-                                    return null;
-                                  }} />
+                                              </div>
+                                            );
+                                          }
+                                          return null;
+                                        }} />
                                       </AreaChart>
                                     </ResponsiveContainer>
                                   </div>
@@ -2423,25 +2525,25 @@ export default function AcademicPage() {
                                   {/* Top 5 Rankings */}
                                   <div className="space-y-2">
                                     {top5Decline.map((item, index) => {
-                                const percentChange = item.examB > 0 ? (Math.abs(item.delta) / item.examB * 100).toFixed(1) : '0.0';
-                                const maxDelta = Math.max(...top5Decline.map(t => Math.abs(t.delta)));
-                                const barWidth = Math.abs(item.delta) / maxDelta * 100;
-                                return <div key={item.name} className="flex items-center gap-2">
+                                      const percentChange = item.examB > 0 ? (Math.abs(item.delta) / item.examB * 100).toFixed(1) : '0.0';
+                                      const maxDelta = Math.max(...top5Decline.map(t => Math.abs(t.delta)));
+                                      const barWidth = Math.abs(item.delta) / maxDelta * 100;
+                                      return (
+                                        <div key={item.name} className="flex items-center gap-2">
                                           <div className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold ${index === 0 ? 'bg-red-500/20 text-red-600' : index === 1 ? 'bg-red-400/20 text-red-500' : index === 2 ? 'bg-red-300/20 text-red-400' : 'bg-muted text-muted-foreground'}`}>
                                             {index + 1}
                                           </div>
                                           <span className="text-xs font-medium text-foreground w-16 truncate">{shortenSubjectName(item.name)}</span>
                                           <div className="flex-1 h-4 bg-muted/30 rounded-full overflow-hidden relative">
-                                            <div className="h-full bg-gradient-to-r from-red-500 to-red-400 rounded-full transition-all duration-700" style={{
-                                      width: `${barWidth}%`
-                                    }} />
+                                            <div className="h-full bg-gradient-to-r from-red-500 to-red-400 rounded-full transition-all duration-700" style={{ width: `${barWidth}%` }} />
                                           </div>
                                           <div className="flex items-center gap-1 min-w-[60px] justify-end">
                                             <span className="text-xs font-bold text-red-500">{item.delta}</span>
                                             <span className="text-[9px] text-muted-foreground">({percentChange}%)</span>
                                           </div>
-                                        </div>;
-                              })}
+                                        </div>
+                                      );
+                                    })}
                                   </div>
                                   
                                   {/* Summary Footer */}
@@ -2453,7 +2555,8 @@ export default function AcademicPage() {
                                       ⚠️ {shortenSubjectName(top5Decline[0].name)} needs focus
                                     </span>
                                   </div>
-                                </div>}
+                                </div>
+                              )}
                             </div>
                           </CarouselItem>
                         </CarouselContent>
@@ -2467,13 +2570,16 @@ export default function AcademicPage() {
                         </div>
                         
                         {/* Swipe Hint */}
-                        {showGrowthSwipeHint && top5Decline.length > 0 && <div className="flex items-center gap-1 text-[10px] text-muted-foreground animate-pulse">
+                        {showGrowthSwipeHint && top5Decline.length > 0 && (
+                          <div className="flex items-center gap-1 text-[10px] text-muted-foreground animate-pulse">
                             <span>Swipe for declined</span>
                             <ArrowRightLeft className="h-3 w-3" />
-                          </div>}
+                          </div>
+                        )}
                       </div>
-                    </div>;
-              })()}
+                    </div>
+                  );
+                })()}
 
                 {/* Subject Comparison - Moomoo Style */}
                 <div className="space-y-3">
@@ -2665,13 +2771,13 @@ export default function AcademicPage() {
                       {/* Individual Subject Goals */}
                       <div className="space-y-3">
                         {goalsData.map(item => <div key={item.name} className="p-4 rounded-xl bg-accent/30 border border-border/50 transition-all cursor-pointer active:opacity-70" onClick={() => {
-                      if (editingGoal === item.name) {
-                        setEditingGoal(null);
-                      } else {
-                        setEditingGoal(item.name);
-                        setTempGoalValue(item.target.toString());
-                      }
-                    }}>
+                        if (editingGoal === item.name) {
+                          setEditingGoal(null);
+                        } else {
+                          setEditingGoal(item.name);
+                          setTempGoalValue(item.target.toString());
+                        }
+                      }}>
                             {/* Card Header */}
                             <div className="flex items-center justify-between min-h-[44px]">
                               <div className="flex items-center gap-3">
@@ -2689,7 +2795,7 @@ export default function AcademicPage() {
                             </div>
 
                             {/* Expanded Slider Section */}
-                            {editingGoal === item.name && <div className="mt-4 pt-4 border-t border-border/50 space-y-4 animate-in slide-in-from-top-2 duration-200" onClick={e => e.stopPropagation()}>
+                            {editingGoal === item.name && <div className="mt-4 pt-4 border-t border-border/50 space-y-4 animate-in slide-in-from-top-2 duration-200" onClick={(e) => e.stopPropagation()}>
                                 <div className="flex items-center justify-between">
                                   <span className="text-sm text-muted-foreground">Set Target Goal</span>
                                   <span className="text-lg font-bold text-primary">{tempGoalValue}%</span>
@@ -3212,124 +3318,67 @@ export default function AcademicPage() {
 
               {/* Subject Performance Bar Chart */}
               <div style={{
-              marginBottom: '12px',
-              pageBreakInside: 'avoid'
-            }}>
-                <h3 style={{
-                fontSize: '12px',
-                fontWeight: 600,
-                marginBottom: '8px',
-                paddingBottom: '4px',
-                borderBottom: '1px solid #ddd',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '6px'
+                marginBottom: '12px',
+                pageBreakInside: 'avoid'
               }}>
+                <h3 style={{
+                  fontSize: '12px',
+                  fontWeight: 600,
+                  marginBottom: '8px',
+                  paddingBottom: '4px',
+                  borderBottom: '1px solid #ddd',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px'
+                }}>
                   📊 Performance Chart
                 </h3>
-                <div style={{
-                display: 'flex',
-                flexDirection: 'column',
-                gap: '4px'
-              }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                   {subjectPerformance.map((sub, index) => {
-                  const barColors = ['#3b82f6', '#f59e0b', '#10b981', '#8b5cf6', '#ef4444', '#06b6d4', '#ec4899', '#84cc16'];
-                  const barColor = barColors[index % barColors.length];
-                  return <div key={sub.name} style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '8px'
-                  }}>
-                        <div style={{
-                      width: '80px',
-                      fontSize: '8px',
-                      fontWeight: 500,
-                      color: '#374151',
-                      textAlign: 'right',
-                      flexShrink: 0
-                    }}>
+                    const barColors = ['#3b82f6', '#f59e0b', '#10b981', '#8b5cf6', '#ef4444', '#06b6d4', '#ec4899', '#84cc16'];
+                    const barColor = barColors[index % barColors.length];
+                    return (
+                      <div key={sub.name} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <div style={{ width: '80px', fontSize: '8px', fontWeight: 500, color: '#374151', textAlign: 'right', flexShrink: 0 }}>
                           {shortenSubjectName(sub.name)}
                         </div>
-                        <div style={{
-                      flex: 1,
-                      height: '14px',
-                      background: '#f3f4f6',
-                      borderRadius: '4px',
-                      position: 'relative',
-                      overflow: 'hidden'
-                    }}>
+                        <div style={{ flex: 1, height: '14px', background: '#f3f4f6', borderRadius: '4px', position: 'relative', overflow: 'hidden' }}>
                           {/* Score bar */}
-                          <div style={{
-                        width: `${sub.score}%`,
-                        height: '100%',
-                        background: barColor,
-                        borderRadius: '4px'
-                      }} />
+                          <div style={{ 
+                            width: `${sub.score}%`, 
+                            height: '100%', 
+                            background: barColor,
+                            borderRadius: '4px'
+                          }} />
                           {/* Goal marker */}
                           <div style={{
-                        position: 'absolute',
-                        left: `${sub.goal}%`,
-                        top: '50%',
-                        transform: 'translate(-50%, -50%)',
-                        width: '8px',
-                        height: '8px',
-                        background: '#1a1a1a',
-                        borderRadius: '50%',
-                        border: '1.5px solid white'
-                      }} />
+                            position: 'absolute',
+                            left: `${sub.goal}%`,
+                            top: '50%',
+                            transform: 'translate(-50%, -50%)',
+                            width: '8px',
+                            height: '8px',
+                            background: '#1a1a1a',
+                            borderRadius: '50%',
+                            border: '1.5px solid white'
+                          }} />
                         </div>
-                        <div style={{
-                      width: '35px',
-                      fontSize: '9px',
-                      fontWeight: 600,
-                      color: '#1a1a1a',
-                      textAlign: 'right',
-                      flexShrink: 0
-                    }}>
+                        <div style={{ width: '35px', fontSize: '9px', fontWeight: 600, color: '#1a1a1a', textAlign: 'right', flexShrink: 0 }}>
                           {sub.score}%
                         </div>
-                      </div>;
-                })}
+                      </div>
+                    );
+                  })}
                 </div>
                 {/* Legend */}
-                <div style={{
-                display: 'flex',
-                justifyContent: 'flex-end',
-                gap: '12px',
-                marginTop: '6px'
-              }}>
-                  <div style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '4px'
-                }}>
-                    <div style={{
-                    width: '20px',
-                    height: '8px',
-                    background: '#3b82f6',
-                    borderRadius: '2px'
-                  }} />
-                    <span style={{
-                    fontSize: '7px',
-                    color: '#6b7280'
-                  }}>Score</span>
+                <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px', marginTop: '6px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                    <div style={{ width: '20px', height: '8px', background: '#3b82f6', borderRadius: '2px' }} />
+                    <span style={{ fontSize: '7px', color: '#6b7280' }}>Score</span>
                   </div>
-                  <div style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '4px'
-                }}>
-                    <div style={{
-                    width: '8px',
-                    height: '8px',
-                    background: '#1a1a1a',
-                    borderRadius: '50%',
-                    border: '1px solid #d1d5db'
-                  }} />
-                    <span style={{
-                    fontSize: '7px',
-                    color: '#6b7280'
-                  }}>Goal</span>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                    <div style={{ width: '8px', height: '8px', background: '#1a1a1a', borderRadius: '50%', border: '1px solid #d1d5db' }} />
+                    <span style={{ fontSize: '7px', color: '#6b7280' }}>Goal</span>
                   </div>
                 </div>
               </div>
@@ -3697,168 +3746,126 @@ export default function AcademicPage() {
 
               {/* Exams in Selected Period */}
               <div style={{
-              marginBottom: '12px',
-              pageBreakInside: 'avoid'
-            }}>
-                <h3 style={{
-                fontSize: '11px',
-                fontWeight: 600,
-                marginBottom: '6px',
-                color: '#6b7280'
-              }}>Exams in Selected Period</h3>
-                <div style={{
-                display: 'flex',
-                flexWrap: 'wrap',
-                gap: '4px'
+                marginBottom: '12px',
+                pageBreakInside: 'avoid'
               }}>
-                  {trendData.map((item, idx) => <span key={idx} style={{
-                  padding: '3px 8px',
-                  borderRadius: '4px',
-                  backgroundColor: '#f3f4f6',
-                  fontSize: '9px',
-                  fontWeight: 500,
+                <h3 style={{
+                  fontSize: '11px',
+                  fontWeight: 600,
+                  marginBottom: '6px',
                   color: '#6b7280'
+                }}>Exams in Selected Period</h3>
+                <div style={{
+                  display: 'flex',
+                  flexWrap: 'wrap',
+                  gap: '4px'
                 }}>
+                  {trendData.map((item, idx) => (
+                    <span key={idx} style={{
+                      padding: '3px 8px',
+                      borderRadius: '4px',
+                      backgroundColor: '#f3f4f6',
+                      fontSize: '9px',
+                      fontWeight: 500,
+                      color: '#6b7280'
+                    }}>
                       {item.period}
-                    </span>)}
+                    </span>
+                  ))}
                 </div>
               </div>
 
               {/* Rising & Falling - Detailed breakdown */}
               <div style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(2, 1fr)',
-              gap: '12px',
-              marginBottom: '12px',
-              pageBreakInside: 'avoid'
-            }}>
-                <div style={{
-                padding: '10px',
-                borderRadius: '6px',
-                backgroundColor: '#f0fdf4',
-                border: '1px solid #86efac'
+                display: 'grid',
+                gridTemplateColumns: 'repeat(2, 1fr)',
+                gap: '12px',
+                marginBottom: '12px',
+                pageBreakInside: 'avoid'
               }}>
-                  <h4 style={{
-                  fontSize: '11px',
-                  fontWeight: 600,
-                  color: '#16a34a',
-                  marginBottom: '8px'
-                }}>Rising Subjects</h4>
-                  {risingStars.length > 0 ? risingStars.map((item, i) => <div key={i} style={{
-                  padding: '6px 8px',
-                  marginBottom: '6px',
+                <div style={{
+                  padding: '10px',
                   borderRadius: '6px',
-                  backgroundColor: 'rgba(34, 197, 94, 0.1)',
-                  border: '1px solid rgba(34, 197, 94, 0.3)'
+                  backgroundColor: '#f0fdf4',
+                  border: '1px solid #86efac'
                 }}>
-                    <div style={{
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'flex-start',
-                    marginBottom: '4px'
+                  <h4 style={{
+                    fontSize: '11px',
+                    fontWeight: 600,
+                    color: '#16a34a',
+                    marginBottom: '8px'
+                  }}>Rising Subjects</h4>
+                  {risingStars.length > 0 ? risingStars.map((item, i) => <div key={i} style={{
+                    padding: '6px 8px',
+                    marginBottom: '6px',
+                    borderRadius: '6px',
+                    backgroundColor: 'rgba(34, 197, 94, 0.1)',
+                    border: '1px solid rgba(34, 197, 94, 0.3)'
                   }}>
-                      <span style={{
-                      fontSize: '9px',
-                      fontWeight: 500,
-                      color: '#1f2937'
-                    }}>{item.subject.name}</span>
-                      <span style={{
-                      padding: '2px 6px',
-                      borderRadius: '4px',
-                      backgroundColor: '#22c55e',
-                      color: 'white',
-                      fontSize: '8px',
-                      fontWeight: 700
-                    }}>+{item.improvement}%</span>
-                    </div>
                     <div style={{
-                    display: 'flex',
-                    alignItems: 'baseline',
-                    gap: '4px'
-                  }}>
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'flex-start',
+                      marginBottom: '4px'
+                    }}>
+                      <span style={{ fontSize: '9px', fontWeight: 500, color: '#1f2937' }}>{item.subject.name}</span>
                       <span style={{
-                      fontSize: '12px',
-                      fontWeight: 700,
-                      color: '#6b7280'
-                    }}>{item.prev}%</span>
-                      <span style={{
-                      fontSize: '9px',
-                      color: '#9ca3af'
-                    }}>→</span>
-                      <span style={{
-                      fontSize: '12px',
-                      fontWeight: 700,
-                      color: '#22c55e'
-                    }}>{item.current}%</span>
+                        padding: '2px 6px',
+                        borderRadius: '4px',
+                        backgroundColor: '#22c55e',
+                        color: 'white',
+                        fontSize: '8px',
+                        fontWeight: 700
+                      }}>+{item.improvement}%</span>
                     </div>
-                  </div>) : <p style={{
-                  fontSize: '9px',
-                  color: '#666'
-                }}>No improving subjects</p>}
+                    <div style={{ display: 'flex', alignItems: 'baseline', gap: '4px' }}>
+                      <span style={{ fontSize: '12px', fontWeight: 700, color: '#6b7280' }}>{item.prev}%</span>
+                      <span style={{ fontSize: '9px', color: '#9ca3af' }}>→</span>
+                      <span style={{ fontSize: '12px', fontWeight: 700, color: '#22c55e' }}>{item.current}%</span>
+                    </div>
+                  </div>) : <p style={{ fontSize: '9px', color: '#666' }}>No improving subjects</p>}
                 </div>
                 <div style={{
-                padding: '10px',
-                borderRadius: '6px',
-                backgroundColor: '#fef2f2',
-                border: '1px solid #fca5a5'
-              }}>
-                  <h4 style={{
-                  fontSize: '11px',
-                  fontWeight: 600,
-                  color: '#dc2626',
-                  marginBottom: '8px'
-                }}>Needs Focus</h4>
-                  {fallingBehind.length > 0 ? fallingBehind.map((item, i) => <div key={i} style={{
-                  padding: '6px 8px',
-                  marginBottom: '6px',
+                  padding: '10px',
                   borderRadius: '6px',
-                  backgroundColor: 'rgba(239, 68, 68, 0.1)',
-                  border: '1px solid rgba(239, 68, 68, 0.3)'
+                  backgroundColor: '#fef2f2',
+                  border: '1px solid #fca5a5'
                 }}>
-                    <div style={{
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'flex-start',
-                    marginBottom: '4px'
+                  <h4 style={{
+                    fontSize: '11px',
+                    fontWeight: 600,
+                    color: '#dc2626',
+                    marginBottom: '8px'
+                  }}>Needs Focus</h4>
+                  {fallingBehind.length > 0 ? fallingBehind.map((item, i) => <div key={i} style={{
+                    padding: '6px 8px',
+                    marginBottom: '6px',
+                    borderRadius: '6px',
+                    backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                    border: '1px solid rgba(239, 68, 68, 0.3)'
                   }}>
-                      <span style={{
-                      fontSize: '9px',
-                      fontWeight: 500,
-                      color: '#1f2937'
-                    }}>{item.subject.name}</span>
-                      <span style={{
-                      padding: '2px 6px',
-                      borderRadius: '4px',
-                      backgroundColor: '#ef4444',
-                      color: 'white',
-                      fontSize: '8px',
-                      fontWeight: 700
-                    }}>-{item.decline}%</span>
-                    </div>
                     <div style={{
-                    display: 'flex',
-                    alignItems: 'baseline',
-                    gap: '4px'
-                  }}>
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'flex-start',
+                      marginBottom: '4px'
+                    }}>
+                      <span style={{ fontSize: '9px', fontWeight: 500, color: '#1f2937' }}>{item.subject.name}</span>
                       <span style={{
-                      fontSize: '12px',
-                      fontWeight: 700,
-                      color: '#6b7280'
-                    }}>{item.prev}%</span>
-                      <span style={{
-                      fontSize: '9px',
-                      color: '#9ca3af'
-                    }}>→</span>
-                      <span style={{
-                      fontSize: '12px',
-                      fontWeight: 700,
-                      color: '#ef4444'
-                    }}>{item.current}%</span>
+                        padding: '2px 6px',
+                        borderRadius: '4px',
+                        backgroundColor: '#ef4444',
+                        color: 'white',
+                        fontSize: '8px',
+                        fontWeight: 700
+                      }}>-{item.decline}%</span>
                     </div>
-                  </div>) : <p style={{
-                  fontSize: '9px',
-                  color: '#666'
-                }}>All subjects stable</p>}
+                    <div style={{ display: 'flex', alignItems: 'baseline', gap: '4px' }}>
+                      <span style={{ fontSize: '12px', fontWeight: 700, color: '#6b7280' }}>{item.prev}%</span>
+                      <span style={{ fontSize: '9px', color: '#9ca3af' }}>→</span>
+                      <span style={{ fontSize: '12px', fontWeight: 700, color: '#ef4444' }}>{item.current}%</span>
+                    </div>
+                  </div>) : <p style={{ fontSize: '9px', color: '#666' }}>All subjects stable</p>}
                 </div>
               </div>
 
@@ -4020,7 +4027,7 @@ export default function AcademicPage() {
                   flexDirection: 'column',
                   gap: '6px'
                 }}>
-                    {subjectVsClassData.slice(0, 6).map(item => {
+                    {subjectVsClassData.slice(0, 6).map((item) => {
                     // Use centralized subject color - look up by full name
                     const barColor = getSubjectColor(item.fullName);
                     return <div key={item.name} style={{
