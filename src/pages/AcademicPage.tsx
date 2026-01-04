@@ -36,7 +36,6 @@ const getCategoryScore = (subject: typeof academicData.subjects[0], year: YearKe
 // Import centralized subjects config
 import { getShortSubjectName, getTinySubjectCode, subjectGroups, allSubjects } from "@/data/subjectsConfig";
 import { SubjectGroupPill } from "@/components/SubjectGroupPill";
-import { SubjectFilterDropdown } from "@/components/SubjectFilterDropdown";
 
 // Use centralized short name function
 const shortenSubjectName = getShortSubjectName;
@@ -1655,7 +1654,7 @@ export default function AcademicPage() {
                     </div>
                   </div>
                   {/* Period Toggle */}
-                  <div className="grid grid-cols-5 gap-1 bg-muted/50 p-1 rounded-lg">
+                  <div className="flex flex-wrap gap-1 bg-muted/50 p-1 rounded-lg">
                     {([{
                     key: "1year",
                     label: "1Y"
@@ -1674,26 +1673,40 @@ export default function AcademicPage() {
                   }] as const).map(({
                     key,
                     label
-                  }) => <button key={key} onClick={() => setTrendPeriod(key)} className={`py-1.5 text-xs font-medium rounded-md transition-all text-center ${trendPeriod === key ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}>
+                  }) => <button key={key} onClick={() => setTrendPeriod(key)} className={`px-3 py-1.5 text-xs font-medium rounded-md transition-all whitespace-nowrap flex-shrink-0 ${trendPeriod === key ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}>
                         {label}
                       </button>)}
                   </div>
                 </div>
 
-                {/* Subject Filter Dropdown */}
-                <SubjectFilterDropdown
-                  selectedSubjects={trendsSelectedSubjects}
-                  onToggle={subjectName => {
+                {/* Subject Filter Pills - Standardized with mobile-friendly dropdowns */}
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-medium text-foreground">Subjects:</span>
+                    <div className="flex gap-2">
+                      <button className="text-sm font-medium text-foreground hover:text-primary transition-colors" onClick={() => setTrendsSelectedSubjects(academicData.subjects.map(s => s.name))}>
+                        Select All
+                      </button>
+                      <button className="text-sm font-medium text-foreground hover:text-primary transition-colors" onClick={() => setTrendsSelectedSubjects([])}>
+                        Clear
+                      </button>
+                    </div>
+                  </div>
+                  <div className="flex flex-wrap gap-1.5 p-2.5 rounded-lg border border-border bg-background items-center">
+                    {/* Grouped subject pills with mobile-friendly drawers */}
+                    {subjectGroups.map(group => <SubjectGroupPill key={group.baseName} baseName={group.baseName} shortName={group.shortName} variants={group.variants || []} selectedSubjects={trendsSelectedSubjects} onToggle={subjectName => {
                     if (trendsSelectedSubjects.includes(subjectName)) {
                       setTrendsSelectedSubjects(prev => prev.filter(s => s !== subjectName));
                     } else {
                       setTrendsSelectedSubjects(prev => [...prev, subjectName]);
                     }
-                  }}
-                  onSelectAll={() => setTrendsSelectedSubjects(academicData.subjects.map(s => s.name))}
-                  onClear={() => setTrendsSelectedSubjects([])}
-                  totalSubjects={academicData.subjects.length}
-                />
+                  }} />)}
+                    {/* Subject count badge */}
+                    <span className="ml-auto px-2 py-0.5 text-xs font-medium bg-primary/10 text-primary rounded-full">
+                      {trendsSelectedSubjects.length}/{academicData.subjects.length}
+                    </span>
+                  </div>
+                </div>
 
                 {/* Moomoo-Style Gradient Area Chart - Scrollable with Pinch-to-Zoom */}
                 <div className="space-y-2">
