@@ -196,7 +196,7 @@ export function SubjectPerformanceChart({
         onTouchEnd={handleTouchEnd}
       >
         <ResponsiveContainer width="100%" height="100%" style={{ overflow: 'visible' }}>
-          <BarChart data={visibleData} layout="vertical" margin={{ left: 0, right: 20, top: 4, bottom: 4 }}>
+          <BarChart data={visibleData} layout="vertical" margin={{ left: 0, right: 8, top: 4, bottom: 4 }}>
             <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" strokeOpacity={0.3} />
             <XAxis 
               type="number" 
@@ -209,8 +209,8 @@ export function SubjectPerformanceChart({
             <YAxis 
               type="category" 
               dataKey="displayName" 
-              tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }} 
-              width={75}
+              tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }} 
+              width={55}
               axisLine={false}
               tickLine={false}
             />
