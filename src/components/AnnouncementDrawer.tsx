@@ -8,7 +8,7 @@ import { Calendar, Check, ChevronLeft, ChevronRight, Download, FileText, Megapho
 
 const READ_ANNOUNCEMENTS_KEY = "readAnnouncementIds";
 
-const getReadAnnouncementIds = (): number[] => {
+export const getReadAnnouncementIds = (): number[] => {
   try {
     const stored = localStorage.getItem(READ_ANNOUNCEMENTS_KEY);
     return stored ? JSON.parse(stored) : [];
@@ -17,7 +17,7 @@ const getReadAnnouncementIds = (): number[] => {
   }
 };
 
-const markAnnouncementAsRead = (id: number): void => {
+export const markAnnouncementAsRead = (id: number): void => {
   const readIds = getReadAnnouncementIds();
   if (!readIds.includes(id)) {
     readIds.push(id);
