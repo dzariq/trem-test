@@ -165,6 +165,35 @@ export default function AcademicPage() {
   const [comparisonReportDialogOpen, setComparisonReportDialogOpen] = useState(false);
   const comparisonReportRef = useRef<HTMLDivElement>(null);
   const [heatmapExpanded, setHeatmapExpanded] = useState(false);
+  const [chartViewMode, setChartViewMode] = useState<"single" | "multiple">("single");
+
+  // Subject color palette for multiple lines mode
+  const subjectColors: Record<string, string> = {
+    "English (First Language)": "#3b82f6",
+    "English (Second Language)": "#60a5fa",
+    "Malay (First Language)": "#8b5cf6",
+    "Malay (Foreign Language)": "#a78bfa",
+    "Chinese (Foreign Language)": "#ec4899",
+    "Mathematics": "#f59e0b",
+    "Additional Mathematics": "#fbbf24",
+    "Science": "#22c55e",
+    "Biology": "#10b981",
+    "Chemistry": "#14b8a6",
+    "Physics": "#06b6d4",
+    "History": "#f97316",
+    "Geography": "#84cc16",
+    "Literature": "#d946ef",
+    "Art": "#f472b6",
+    "Music": "#a855f7",
+    "Physical Education": "#0ea5e9",
+    "ICT": "#6366f1",
+    "Economics": "#eab308",
+    "Business Studies": "#fb923c",
+    "Accounting": "#4ade80",
+    "Religious Studies": "#c084fc",
+    "Social Studies": "#2dd4bf",
+    "Environmental Science": "#34d399"
+  };
   const isActivitiesTab = activeTab === "cocurriculum";
   const toggleYear = (year: string) => {
     setSelectedYears(prev => prev.includes(year) ? prev.filter(y => y !== year) : [...prev, year]);
@@ -1715,7 +1744,30 @@ export default function AcademicPage() {
                 <div className="space-y-2">
                   <div className="flex items-center justify-between">
                     <p className="text-[10px] text-muted-foreground">← Swipe • Pinch to zoom →</p>
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-3">
+                      {/* Chart View Switcher */}
+                      <div className="flex items-center gap-0.5 bg-muted/50 rounded-lg p-0.5">
+                        <button
+                          onClick={() => setChartViewMode("single")}
+                          className={`px-2 py-1 text-[10px] font-medium rounded-md transition-colors ${
+                            chartViewMode === "single" 
+                              ? "bg-background text-foreground shadow-sm" 
+                              : "text-muted-foreground hover:text-foreground"
+                          }`}
+                        >
+                          Average
+                        </button>
+                        <button
+                          onClick={() => setChartViewMode("multiple")}
+                          className={`px-2 py-1 text-[10px] font-medium rounded-md transition-colors ${
+                            chartViewMode === "multiple" 
+                              ? "bg-background text-foreground shadow-sm" 
+                              : "text-muted-foreground hover:text-foreground"
+                          }`}
+                        >
+                          Individual
+                        </button>
+                      </div>
                       {chartZoom !== 1 && <button onClick={resetZoom} className="text-[10px] text-primary underline">
                           Reset zoom
                         </button>}
@@ -1803,31 +1855,72 @@ export default function AcademicPage() {
                           fill: "hsl(var(--foreground))",
                           position: "insideTopLeft"
                         }} />
-                          {trendsSelectedSubjects.length === 1 ? (
-                            <Area type="monotone" dataKey={trendsSelectedSubjects[0]} stroke={trendDirection.direction === "up" ? "#22c55e" : trendDirection.direction === "down" ? "#ef4444" : "#3b82f6"} strokeWidth={2.5} fill={trendDirection.direction === "up" ? "url(#gradientGreen)" : trendDirection.direction === "down" ? "url(#gradientRed)" : "url(#gradientBlue)"} dot={{
-                              fill: trendDirection.direction === "up" ? "#22c55e" : trendDirection.direction === "down" ? "#ef4444" : "#3b82f6",
-                              strokeWidth: 0,
-                              r: 5
-                            }} activeDot={{
-                              r: 7,
-                              strokeWidth: 2,
-                              stroke: "#fff"
-                            }} connectNulls />
+                          {chartViewMode === "single" ? (
+                            // Single line mode - show average or single subject
+                            trendsSelectedSubjects.length === 1 ? (
+                              <Area type="monotone" dataKey={trendsSelectedSubjects[0]} stroke={trendDirection.direction === "up" ? "#22c55e" : trendDirection.direction === "down" ? "#ef4444" : "#3b82f6"} strokeWidth={2.5} fill={trendDirection.direction === "up" ? "url(#gradientGreen)" : trendDirection.direction === "down" ? "url(#gradientRed)" : "url(#gradientBlue)"} dot={{
+                                fill: trendDirection.direction === "up" ? "#22c55e" : trendDirection.direction === "down" ? "#ef4444" : "#3b82f6",
+                                strokeWidth: 0,
+                                r: 5
+                              }} activeDot={{
+                                r: 7,
+                                strokeWidth: 2,
+                                stroke: "#fff"
+                              }} connectNulls />
+                            ) : (
+                              <Area type="monotone" dataKey="Average" stroke={trendDirection.direction === "up" ? "#22c55e" : trendDirection.direction === "down" ? "#ef4444" : "#3b82f6"} strokeWidth={2.5} fill={trendDirection.direction === "up" ? "url(#gradientGreen)" : trendDirection.direction === "down" ? "url(#gradientRed)" : "url(#gradientBlue)"} dot={{
+                                fill: trendDirection.direction === "up" ? "#22c55e" : trendDirection.direction === "down" ? "#ef4444" : "#3b82f6",
+                                strokeWidth: 0,
+                                r: 5
+                              }} activeDot={{
+                                r: 7,
+                                strokeWidth: 2,
+                                stroke: "#fff"
+                              }} connectNulls />
+                            )
                           ) : (
-                            <Area type="monotone" dataKey="Average" stroke={trendDirection.direction === "up" ? "#22c55e" : trendDirection.direction === "down" ? "#ef4444" : "#3b82f6"} strokeWidth={2.5} fill={trendDirection.direction === "up" ? "url(#gradientGreen)" : trendDirection.direction === "down" ? "url(#gradientRed)" : "url(#gradientBlue)"} dot={{
-                              fill: trendDirection.direction === "up" ? "#22c55e" : trendDirection.direction === "down" ? "#ef4444" : "#3b82f6",
-                              strokeWidth: 0,
-                              r: 5
-                            }} activeDot={{
-                              r: 7,
-                              strokeWidth: 2,
-                              stroke: "#fff"
-                            }} connectNulls />
+                            // Multiple lines mode - show individual colored lines
+                            trendsSelectedSubjects.map((subject) => (
+                              <Line
+                                key={subject}
+                                type="monotone"
+                                dataKey={subject}
+                                stroke={subjectColors[subject] || "#8884d8"}
+                                strokeWidth={2}
+                                dot={{
+                                  fill: subjectColors[subject] || "#8884d8",
+                                  strokeWidth: 0,
+                                  r: 3
+                                }}
+                                activeDot={{
+                                  r: 5,
+                                  strokeWidth: 2,
+                                  stroke: "#fff"
+                                }}
+                                connectNulls
+                              />
+                            ))
                           )}
                         </AreaChart>
                       </ResponsiveContainer>
                     </div>
                   </div>
+                  {/* Color Legend for Multiple Lines Mode */}
+                  {chartViewMode === "multiple" && trendsSelectedSubjects.length > 1 && (
+                    <div className="flex flex-wrap gap-x-3 gap-y-1.5 mt-2 px-1">
+                      {trendsSelectedSubjects.map((subject) => (
+                        <div key={subject} className="flex items-center gap-1">
+                          <div 
+                            className="w-2.5 h-2.5 rounded-full shrink-0" 
+                            style={{ backgroundColor: subjectColors[subject] || "#8884d8" }} 
+                          />
+                          <span className="text-[10px] text-muted-foreground">
+                            {getTinySubjectCode(subject)}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
 
                 {/* Rising & Falling Subjects */}
