@@ -80,32 +80,26 @@ export function ResultsSummary() {
   const handleTouchMove = (e: TouchEvent<HTMLDivElement>) => {
     if (e.touches.length === 2 && initialTouchDistance.current !== null) {
       e.preventDefault();
+
       const touch1 = e.touches[0];
       const touch2 = e.touches[1];
       const currentDistance = Math.hypot(
         touch2.clientX - touch1.clientX,
         touch2.clientY - touch1.clientY
       );
-      
-      const delta = currentDistance - initialTouchDistance.current;
-      const threshold = 40;
-      
-      if (Math.abs(delta) > threshold) {
-        const maxSubjects = academicData.subjects.length;
-        let newZoom = initialZoomLevel.current;
-        
-        if (delta > 0) {
-          // Pinch out - zoom out (show more subjects)
-          newZoom = Math.min(maxSubjects, initialZoomLevel.current + Math.floor(delta / threshold));
-        } else {
-          // Pinch in - zoom in (show fewer subjects)
-          newZoom = Math.max(3, initialZoomLevel.current - Math.floor(Math.abs(delta) / threshold));
-        }
-        
-        if (newZoom !== subjectZoomLevel) {
-          triggerHaptic('medium');
-          setSubjectZoomLevel(newZoom);
-        }
+
+      const ratio = currentDistance / initialTouchDistance.current;
+      const deadzone = 0.08; // ignore tiny jitters
+
+      if (Math.abs(1 - ratio) < deadzone) return;
+
+      const maxSubjects = allSubjectPerformance.length;
+      const proposed = Math.round(initialZoomLevel.current * ratio);
+      const newZoom = Math.max(3, Math.min(maxSubjects, proposed));
+
+      if (newZoom !== subjectZoomLevel) {
+        triggerHaptic('medium');
+        setSubjectZoomLevel(newZoom);
       }
     }
   };
@@ -407,6 +401,17 @@ export function ResultsSummary() {
                 <span className="text-[10px] text-muted-foreground">
                   {subjectZoomLevel}/{allSubjectPerformance.length}
                 </span>
+                {subjectZoomLevel !== 6 && (
+                  <button
+                    onClick={() => {
+                      triggerHaptic('light');
+                      setSubjectZoomLevel(6);
+                    }}
+                    className="text-[10px] text-primary underline ml-1"
+                  >
+                    Reset
+                  </button>
+                )}
                 {subjectZoomLevel < allSubjectPerformance.length && (
                   <button
                     onClick={() => {
@@ -432,11 +437,12 @@ export function ResultsSummary() {
               onTouchEnd={handleTouchEnd}
             >
               <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={subjectPerformance} layout="vertical" margin={{ left: 0, right: 10 }}>
+                <BarChart data={subjectPerformance} layout="vertical" margin={{ left: 0, right: 24, top: 4, bottom: 4 }}>
                   <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" strokeOpacity={0.3} />
                   <XAxis 
                     type="number" 
-                    domain={[0, 100]} 
+                    domain={[0, 100]}
+                    padding={{ right: 16 }}
                     tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }}
                     axisLine={false}
                     tickLine={false}
