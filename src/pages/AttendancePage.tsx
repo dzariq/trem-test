@@ -1,11 +1,11 @@
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { AppHeader } from "@/components/layout/AppHeader";
 import { attendanceData, students } from "@/data/mockData";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { ChevronLeft, ChevronRight, Check, X, Clock, CalendarOff } from "lucide-react";
+import { ChevronLeft, ChevronRight, Check, X, Clock, CalendarOff, ZoomIn, ZoomOut } from "lucide-react";
 import schoolLogo from "@/assets/school-badge.png";
 import {
   BarChart,
@@ -27,14 +27,23 @@ import {
 const months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
 
 type StatusFilter = "all" | "present" | "absent" | "late" | "excused";
+type ZoomLevel = 3 | 6 | 12;
 
 export default function AttendancePage() {
   const [selectedMonth, setSelectedMonth] = useState("December");
   const [currentMonthIndex, setCurrentMonthIndex] = useState(11);
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
   const [selectedYear, setSelectedYear] = useState("2025");
+  const [zoomLevel, setZoomLevel] = useState<ZoomLevel>(3);
+  const chartContainerRef = useRef<HTMLDivElement>(null);
+  const [scrollPosition, setScrollPosition] = useState(100); // Start at end (most recent)
 
   const yearOptions = ["2025", "2024", "2023"];
+  const zoomOptions: { value: ZoomLevel; label: string }[] = [
+    { value: 3, label: "3 Months" },
+    { value: 6, label: "6 Months" },
+    { value: 12, label: "12 Months" },
+  ];
 
   const goToPrevMonth = () => {
     const newIndex = currentMonthIndex > 0 ? currentMonthIndex - 1 : 11;
@@ -46,6 +55,16 @@ export default function AttendancePage() {
     const newIndex = currentMonthIndex < 11 ? currentMonthIndex + 1 : 0;
     setCurrentMonthIndex(newIndex);
     setSelectedMonth(months[newIndex]);
+  };
+
+  const handleZoomIn = () => {
+    if (zoomLevel === 12) setZoomLevel(6);
+    else if (zoomLevel === 6) setZoomLevel(3);
+  };
+
+  const handleZoomOut = () => {
+    if (zoomLevel === 3) setZoomLevel(6);
+    else if (zoomLevel === 6) setZoomLevel(12);
   };
 
   const getStatusColor = (status: string) => {
@@ -72,10 +91,22 @@ export default function AttendancePage() {
     return status.charAt(0).toUpperCase() + status.slice(1);
   };
 
-  const chartData = attendanceData.monthly.map(item => ({
+  const allChartData = attendanceData.monthly.map(item => ({
     ...item,
     total: item.present + item.absent + item.late + item.excused
   }));
+
+  // Get visible chart data based on zoom level
+  const chartData = zoomLevel === 12 
+    ? allChartData 
+    : allChartData.slice(-zoomLevel);
+
+  // Scroll to end when zoom changes
+  useEffect(() => {
+    if (chartContainerRef.current && zoomLevel < 12) {
+      chartContainerRef.current.scrollLeft = chartContainerRef.current.scrollWidth;
+    }
+  }, [zoomLevel]);
 
   // Calculate monthly summary
   const monthlySummary = {
@@ -163,52 +194,100 @@ export default function AttendancePage() {
       {/* Attendance Chart */}
       <section className="px-4 pt-4">
         <Card className="bg-card border-border shadow-sm">
-          <CardHeader className="pb-2 flex flex-row items-center justify-between">
-            <CardTitle className="text-lg font-semibold">Yearly Overview</CardTitle>
-            <Select value={selectedYear} onValueChange={setSelectedYear}>
-              <SelectTrigger className="w-24 h-8 text-sm">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent className="bg-card">
-                {yearOptions.map((year) => (
-                  <SelectItem key={year} value={year}>{year}</SelectItem>
+          <CardHeader className="pb-2">
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-lg font-semibold">Yearly Overview</CardTitle>
+              <Select value={selectedYear} onValueChange={setSelectedYear}>
+                <SelectTrigger className="w-24 h-8 text-sm">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent className="bg-card">
+                  {yearOptions.map((year) => (
+                    <SelectItem key={year} value={year}>{year}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            {/* Zoom Controls */}
+            <div className="flex items-center justify-between mt-3">
+              <div className="flex items-center gap-1">
+                <Button 
+                  variant="outline" 
+                  size="icon" 
+                  className="h-8 w-8"
+                  onClick={handleZoomIn}
+                  disabled={zoomLevel === 3}
+                >
+                  <ZoomIn className="h-4 w-4" />
+                </Button>
+                <Button 
+                  variant="outline" 
+                  size="icon" 
+                  className="h-8 w-8"
+                  onClick={handleZoomOut}
+                  disabled={zoomLevel === 12}
+                >
+                  <ZoomOut className="h-4 w-4" />
+                </Button>
+              </div>
+              <div className="flex gap-1">
+                {zoomOptions.map((option) => (
+                  <Button
+                    key={option.value}
+                    variant={zoomLevel === option.value ? "default" : "outline"}
+                    size="sm"
+                    className="h-7 text-xs px-2"
+                    onClick={() => setZoomLevel(option.value)}
+                  >
+                    {option.label}
+                  </Button>
                 ))}
-              </SelectContent>
-            </Select>
+              </div>
+            </div>
+            <p className="text-xs text-muted-foreground mt-2">
+              {zoomLevel < 12 && "← Swipe to see more months →"}
+            </p>
           </CardHeader>
           <CardContent>
-            <div className="h-64">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={chartData} barCategoryGap="15%">
-                  <XAxis 
-                    dataKey="month" 
-                    tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }}
-                    axisLine={false}
-                    tickLine={false}
-                  />
-                  <YAxis 
-                    tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }}
-                    axisLine={false}
-                    tickLine={false}
-                  />
-                  <Tooltip 
-                    contentStyle={{ 
-                      backgroundColor: "hsl(var(--card))",
-                      border: "1px solid hsl(var(--border))",
-                      borderRadius: "8px"
-                    }}
-                  />
-                  <Legend 
-                    wrapperStyle={{ fontSize: 11 }}
-                    iconType="circle"
-                    iconSize={8}
-                  />
-                  <Bar dataKey="present" stackId="a" fill="hsl(160, 84%, 39%)" name="Present" radius={[0, 0, 0, 0]} />
-                  <Bar dataKey="absent" stackId="a" fill="hsl(var(--destructive))" name="Absent" radius={[0, 0, 0, 0]} />
-                  <Bar dataKey="late" stackId="a" fill="hsl(38, 92%, 50%)" name="Late" radius={[0, 0, 0, 0]} />
-                  <Bar dataKey="excused" stackId="a" fill="hsl(271, 91%, 65%)" name="Excused" radius={[4, 4, 0, 0]} />
-                </BarChart>
-              </ResponsiveContainer>
+            <div 
+              ref={chartContainerRef}
+              className="h-64 overflow-x-auto touch-pan-x"
+              style={{ WebkitOverflowScrolling: 'touch' }}
+            >
+              <div style={{ width: zoomLevel === 12 ? '100%' : `${Math.max(100, zoomLevel * 20)}%`, minWidth: '100%', height: '100%' }}>
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={chartData} barCategoryGap={zoomLevel === 3 ? "20%" : zoomLevel === 6 ? "15%" : "10%"}>
+                    <XAxis 
+                      dataKey="month" 
+                      tick={{ fontSize: zoomLevel === 12 ? 9 : 11, fill: "hsl(var(--muted-foreground))" }}
+                      axisLine={false}
+                      tickLine={false}
+                    />
+                    <YAxis 
+                      tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }}
+                      axisLine={false}
+                      tickLine={false}
+                      width={30}
+                    />
+                    <Tooltip 
+                      contentStyle={{ 
+                        backgroundColor: "hsl(var(--card))",
+                        border: "1px solid hsl(var(--border))",
+                        borderRadius: "8px"
+                      }}
+                    />
+                    <Legend 
+                      wrapperStyle={{ fontSize: 10, paddingTop: 8 }}
+                      iconType="circle"
+                      iconSize={6}
+                    />
+                    <Bar dataKey="present" stackId="a" fill="hsl(160, 84%, 39%)" name="Present" radius={[0, 0, 0, 0]} />
+                    <Bar dataKey="absent" stackId="a" fill="hsl(var(--destructive))" name="Absent" radius={[0, 0, 0, 0]} />
+                    <Bar dataKey="late" stackId="a" fill="hsl(38, 92%, 50%)" name="Late" radius={[0, 0, 0, 0]} />
+                    <Bar dataKey="excused" stackId="a" fill="hsl(271, 91%, 65%)" name="Excused" radius={[4, 4, 0, 0]} />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
             </div>
           </CardContent>
         </Card>
