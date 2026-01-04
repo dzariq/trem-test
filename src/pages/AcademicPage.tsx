@@ -2361,10 +2361,10 @@ export default function AcademicPage() {
                                     {top5Growth.map(item => {
                                       const percentChange = item.examB > 0 ? (item.delta / item.examB * 100).toFixed(0) : '0';
                                       return (
-                                        <div key={item.name} className="inline-flex items-center gap-1 px-2 py-1 rounded-md" style={{ backgroundColor: 'hsl(217, 91%, 95%)', border: '1.5px solid hsl(217, 91%, 50%)' }}>
-                                          <ArrowUp className="h-3 w-3" style={{ color: 'hsl(217, 91%, 50%)' }} />
+                                        <div key={item.name} className="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-emerald-500/10 border border-emerald-500/20">
+                                          <ArrowUp className="h-3 w-3 text-emerald-500" />
                                           <span className="text-[10px] font-medium text-foreground">{shortenSubjectName(item.name)}</span>
-                                          <span className="text-[10px] font-bold" style={{ color: 'hsl(217, 91%, 45%)' }}>+{percentChange}%</span>
+                                          <span className="text-[10px] font-bold text-emerald-600">+{percentChange}%</span>
                                         </div>
                                       );
                                     })}
@@ -2480,10 +2480,10 @@ export default function AcademicPage() {
                                     {top5Decline.map(item => {
                                       const percentChange = item.examB > 0 ? (Math.abs(item.delta) / item.examB * 100).toFixed(0) : '0';
                                       return (
-                                        <div key={item.name} className="inline-flex items-center gap-1 px-2 py-1 rounded-md" style={{ backgroundColor: 'hsl(0, 72%, 95%)', border: '1.5px solid hsl(0, 72%, 55%)' }}>
-                                          <ArrowDown className="h-3 w-3" style={{ color: 'hsl(0, 72%, 55%)' }} />
+                                        <div key={item.name} className="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-red-500/10 border border-red-500/20">
+                                          <ArrowDown className="h-3 w-3 text-red-500" />
                                           <span className="text-[10px] font-medium text-foreground">{shortenSubjectName(item.name)}</span>
-                                          <span className="text-[10px] font-bold" style={{ color: 'hsl(0, 72%, 45%)' }}>-{percentChange}%</span>
+                                          <span className="text-[10px] font-bold text-red-600">-{percentChange}%</span>
                                         </div>
                                       );
                                     })}
