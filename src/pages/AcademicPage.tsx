@@ -166,7 +166,6 @@ export default function AcademicPage() {
   const comparisonReportRef = useRef<HTMLDivElement>(null);
   const [heatmapExpanded, setHeatmapExpanded] = useState(false);
   const [chartViewMode, setChartViewMode] = useState<"single" | "multiple">("single");
-  const [trendSubjectsView, setTrendSubjectsView] = useState<"growth" | "decline">("growth");
 
   // Use centralized subject colors for chart strokes
   const getSubjectStroke = (subject: string) => {
@@ -466,7 +465,7 @@ export default function AcademicPage() {
         improvement: current - prev
       };
     }).filter(item => item.improvement > 0 && item.current > 0 && item.prev > 0);
-    return improvements.sort((a, b) => b.improvement - a.improvement).slice(0, 5);
+    return improvements.sort((a, b) => b.improvement - a.improvement).slice(0, 3);
   }, [selectedYear, examType, filteredGradesSubjects]);
 
   // Falling behind - subjects with biggest decline from previous exam
@@ -496,7 +495,7 @@ export default function AcademicPage() {
         decline: prev - current
       };
     }).filter(item => item.decline > 0 && item.current > 0 && item.prev > 0);
-    return declines.sort((a, b) => b.decline - a.decline).slice(0, 5);
+    return declines.sort((a, b) => b.decline - a.decline).slice(0, 3);
   }, [selectedYear, examType, filteredGradesSubjects]);
 
   // Year-over-year trend data with period filtering (3 years of data)
@@ -1958,7 +1957,7 @@ export default function AcademicPage() {
                   <h4 className="text-xs font-medium text-muted-foreground">
                     Exams in selected period ({trendData.length} exams)
                   </h4>
-                  <div className="flex gap-1.5 overflow-x-auto pb-1 scrollbar-thin">
+                  <div className="flex flex-wrap gap-1.5">
                     {trendData.map((item, idx) => (
                       <div
                         key={idx}
@@ -1970,112 +1969,45 @@ export default function AcademicPage() {
                   </div>
                 </div>
 
-                {/* Top Growth / Decline Subjects - Swipeable */}
-                <div className="space-y-3">
-                  {/* Header with toggle */}
-                  <div className="flex items-center justify-between">
-                    <h4 className="text-sm font-medium text-foreground flex items-center gap-1.5">
-                      {trendSubjectsView === "growth" ? (
-                        <>
-                          <TrendingUp className="h-4 w-4 text-green-500" />
-                          <span>Top Growth</span>
-                        </>
-                      ) : (
-                        <>
-                          <TrendingDown className="h-4 w-4 text-red-500" />
-                          <span>Top Decline</span>
-                        </>
-                      )}
+                {/* Rising & Falling Subjects */}
+                <div className="grid grid-cols-2 gap-3 items-start">
+                  {/* Rising Subjects */}
+                  <div className="space-y-2">
+                    <h4 className="text-sm font-medium text-foreground flex items-center gap-1.5 min-h-[20px]">
+                      <TrendingUp className="h-4 w-4 text-green-500 flex-shrink-0" />
+                      <span>Rising Subjects</span>
                     </h4>
-                    {/* Indicator dots */}
-                    <div className="flex items-center gap-1.5">
-                      <button
-                        onClick={() => setTrendSubjectsView("growth")}
-                        className={`w-2 h-2 rounded-full transition-all ${
-                          trendSubjectsView === "growth" ? "bg-green-500 w-4" : "bg-muted-foreground/30"
-                        }`}
-                      />
-                      <button
-                        onClick={() => setTrendSubjectsView("decline")}
-                        className={`w-2 h-2 rounded-full transition-all ${
-                          trendSubjectsView === "decline" ? "bg-red-500 w-4" : "bg-muted-foreground/30"
-                        }`}
-                      />
+                    <div className="space-y-2">
+                      {risingStars.length > 0 ? risingStars.map((item, idx) => <div key={idx} className="p-2.5 rounded-lg border border-green-500/30 bg-green-500/10 min-h-[72px] flex flex-col justify-between">
+                          <div className="flex items-start justify-between gap-2">
+                            <span className="text-xs font-medium text-foreground line-clamp-2 flex-1">{item.subject.name}</span>
+                            <span className="text-xs font-bold text-green-600 flex-shrink-0">+{item.improvement}%</span>
+                          </div>
+                          <p className="text-[10px] text-muted-foreground">
+                            {item.prev}% → {item.current}%
+                          </p>
+                        </div>) : <p className="text-xs text-muted-foreground p-2">No improving subjects</p>}
                     </div>
                   </div>
-                  
-                  {/* Swipeable container */}
-                  <div 
-                    className="overflow-hidden relative"
-                    onTouchStart={(e) => {
-                      const touch = e.touches[0];
-                      (e.currentTarget as HTMLElement).dataset.startX = touch.clientX.toString();
-                    }}
-                    onTouchEnd={(e) => {
-                      const startX = parseFloat((e.currentTarget as HTMLElement).dataset.startX || "0");
-                      const endX = e.changedTouches[0].clientX;
-                      const diff = startX - endX;
-                      if (Math.abs(diff) > 50) {
-                        if (diff > 0 && trendSubjectsView === "growth") {
-                          setTrendSubjectsView("decline");
-                        } else if (diff < 0 && trendSubjectsView === "decline") {
-                          setTrendSubjectsView("growth");
-                        }
-                      }
-                    }}
-                  >
-                    <div 
-                      className="flex transition-transform duration-300 ease-out"
-                      style={{ transform: `translateX(${trendSubjectsView === "growth" ? "0" : "-100"}%)` }}
-                    >
-                      {/* Growth Panel */}
-                      <div className="w-full flex-shrink-0 space-y-2">
-                        {risingStars.length > 0 ? risingStars.map((item, idx) => (
-                          <div 
-                            key={idx} 
-                            className="p-2.5 rounded-lg border border-green-500/30 bg-green-500/10 flex items-center justify-between gap-3"
-                          >
-                            <div className="flex items-center gap-2 min-w-0 flex-1">
-                              <span className="text-xs font-bold text-green-600 flex-shrink-0">#{idx + 1}</span>
-                              <span className="text-xs font-medium text-foreground truncate">{item.subject.name}</span>
-                            </div>
-                            <div className="flex items-center gap-2 flex-shrink-0">
-                              <span className="text-[10px] text-muted-foreground">{item.prev}% → {item.current}%</span>
-                              <span className="text-xs font-bold text-green-600">+{item.improvement}%</span>
-                            </div>
+
+                  {/* Falling Behind */}
+                  <div className="space-y-2">
+                    <h4 className="text-sm font-medium text-foreground flex items-center gap-1.5 min-h-[20px]">
+                      <TrendingDown className="h-4 w-4 text-red-500 flex-shrink-0" />
+                      <span>Needs Focus</span>
+                    </h4>
+                    <div className="space-y-2">
+                      {fallingBehind.length > 0 ? fallingBehind.map((item, idx) => <div key={idx} className="p-2.5 rounded-lg border border-red-500/30 bg-red-500/10 min-h-[72px] flex flex-col justify-between">
+                          <div className="flex items-start justify-between gap-2">
+                            <span className="text-xs font-medium text-foreground line-clamp-2 flex-1">{item.subject.name}</span>
+                            <span className="text-xs font-bold text-red-600 flex-shrink-0">-{item.decline}%</span>
                           </div>
-                        )) : (
-                          <p className="text-xs text-muted-foreground p-2 text-center">No improving subjects</p>
-                        )}
-                      </div>
-                      
-                      {/* Decline Panel */}
-                      <div className="w-full flex-shrink-0 space-y-2">
-                        {fallingBehind.length > 0 ? fallingBehind.map((item, idx) => (
-                          <div 
-                            key={idx} 
-                            className="p-2.5 rounded-lg border border-red-500/30 bg-red-500/10 flex items-center justify-between gap-3"
-                          >
-                            <div className="flex items-center gap-2 min-w-0 flex-1">
-                              <span className="text-xs font-bold text-red-600 flex-shrink-0">#{idx + 1}</span>
-                              <span className="text-xs font-medium text-foreground truncate">{item.subject.name}</span>
-                            </div>
-                            <div className="flex items-center gap-2 flex-shrink-0">
-                              <span className="text-[10px] text-muted-foreground">{item.prev}% → {item.current}%</span>
-                              <span className="text-xs font-bold text-red-600">-{item.decline}%</span>
-                            </div>
-                          </div>
-                        )) : (
-                          <p className="text-xs text-muted-foreground p-2 text-center">All subjects stable!</p>
-                        )}
-                      </div>
+                          <p className="text-[10px] text-muted-foreground">
+                            {item.prev}% → {item.current}%
+                          </p>
+                        </div>) : <p className="text-xs text-muted-foreground p-2">All subjects stable!</p>}
                     </div>
                   </div>
-                  
-                  {/* Swipe hint */}
-                  <p className="text-[10px] text-muted-foreground text-center">
-                    ← Swipe to see {trendSubjectsView === "growth" ? "declining" : "growing"} subjects →
-                  </p>
                 </div>
 
                 {/* Dynamic Trend Insights */}
@@ -2321,29 +2253,81 @@ export default function AcademicPage() {
 
                 {/* Comparison Summary Cards */}
                 <div className="grid grid-cols-2 gap-3">
-                  <div className="p-4 rounded-xl bg-card border-l-4 border-l-blue-500 border border-border shadow-sm">
-                    <div className="flex items-center gap-2 mb-2">
-                      <span className="w-2.5 h-2.5 rounded-full bg-blue-500"></span>
-                      <span className="text-sm font-semibold text-blue-600">Exam A</span>
+                  <div className="p-3 rounded-lg bg-card border-l-4 border-l-blue-500 border border-border shadow-sm">
+                    <div className="flex items-center gap-2 mb-1">
+                      <span className="w-2 h-2 rounded-full bg-blue-500"></span>
+                      <span className="text-xs font-semibold text-blue-600">Exam A</span>
                     </div>
-                    <p className="text-sm text-muted-foreground mb-1">{getExamLabelForComparison(compareExamA)}</p>
-                    <p className="text-3xl font-bold text-foreground mb-0.5">
+                    <p className="text-xs text-muted-foreground mb-1">{getExamLabelForComparison(compareExamA)}</p>
+                    <p className="text-2xl font-bold text-foreground">
                       {Math.round(comparisonData.reduce((sum, d) => sum + d.examA, 0) / comparisonData.length)}%
                     </p>
                     <p className="text-xs text-muted-foreground">Average Score</p>
                   </div>
-                  <div className="p-4 rounded-xl bg-card border-l-4 border-l-red-400 border border-border shadow-sm">
-                    <div className="flex items-center gap-2 mb-2">
-                      <span className="w-2.5 h-2.5 rounded-full bg-red-400"></span>
-                      <span className="text-sm font-semibold text-red-500">Exam B</span>
+                  <div className="p-3 rounded-lg bg-card border-l-4 border-l-red-500 border border-border shadow-sm">
+                    <div className="flex items-center gap-2 mb-1">
+                      <span className="w-2 h-2 rounded-full bg-red-500"></span>
+                      <span className="text-xs font-semibold text-red-600">Exam B</span>
                     </div>
-                    <p className="text-sm text-muted-foreground mb-1">{getExamLabelForComparison(compareExamB)}</p>
-                    <p className="text-3xl font-bold text-foreground mb-0.5">
+                    <p className="text-xs text-muted-foreground mb-1">{getExamLabelForComparison(compareExamB)}</p>
+                    <p className="text-2xl font-bold text-foreground">
                       {Math.round(comparisonData.reduce((sum, d) => sum + d.examB, 0) / comparisonData.length)}%
                     </p>
                     <p className="text-xs text-muted-foreground">Average Score</p>
                   </div>
                 </div>
+
+                {/* Comparison Stats Cards */}
+                {(() => {
+                  const avgA = Math.round(comparisonData.reduce((sum, d) => sum + d.examA, 0) / comparisonData.length);
+                  const avgB = Math.round(comparisonData.reduce((sum, d) => sum + d.examB, 0) / comparisonData.length);
+                  const overallChange = avgA - avgB;
+                  const improvedSubjects = comparisonData.filter(d => d.delta > 0);
+                  const declinedSubjects = comparisonData.filter(d => d.delta < 0);
+                  const bestPerforming = [...comparisonData].sort((a, b) => b.delta - a.delta)[0];
+                  
+                  return (
+                    <div className="grid grid-cols-3 gap-1.5">
+                      {/* Improved */}
+                      <div className="p-2 rounded-xl bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800 shadow-sm">
+                        <div className="flex items-center gap-1.5 mb-0.5">
+                          <span className="text-xs">🚀</span>
+                          <p className="text-sm font-bold text-emerald-600">{improvedSubjects.length}</p>
+                          <p className="text-[9px] text-muted-foreground">Improved</p>
+                        </div>
+                        <p className="text-[8px] text-emerald-600 truncate">
+                          {improvedSubjects.slice(0, 2).map(s => shortenSubjectName(s.name)).join(', ')}
+                          {improvedSubjects.length > 2 && ` +${improvedSubjects.length - 2}`}
+                        </p>
+                      </div>
+
+                      {/* Declined */}
+                      <div className="p-2 rounded-xl bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-800 shadow-sm">
+                        <div className="flex items-center gap-1.5 mb-0.5">
+                          <span className="text-xs">📉</span>
+                          <p className="text-sm font-bold text-red-500">{declinedSubjects.length}</p>
+                          <p className="text-[9px] text-muted-foreground">Declined</p>
+                        </div>
+                        <p className="text-[8px] text-red-500 truncate">
+                          {declinedSubjects.slice(0, 2).map(s => shortenSubjectName(s.name)).join(', ')}
+                          {declinedSubjects.length > 2 && ` +${declinedSubjects.length - 2}`}
+                        </p>
+                      </div>
+
+                      {/* Best Performing */}
+                      <div className="p-2 rounded-xl bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 shadow-sm">
+                        <div className="flex items-center gap-1 mb-0.5">
+                          <span className="text-xs">🏆</span>
+                          <p className="text-xs font-bold text-amber-600 truncate">{bestPerforming ? shortenSubjectName(bestPerforming.name) : '-'}</p>
+                        </div>
+                        <p className="text-[9px] text-muted-foreground">Best Performing</p>
+                        <p className="text-[8px] text-amber-600">
+                          {bestPerforming && bestPerforming.delta > 0 ? `+${bestPerforming.delta} marks` : '-'}
+                        </p>
+                      </div>
+                    </div>
+                  );
+                })()}
 
                 {/* Top 5 Growth Leaders - Moomoo Style */}
                 <div className="p-4 rounded-xl bg-gradient-to-br from-emerald-500/10 to-emerald-600/5 border border-emerald-500/20">
