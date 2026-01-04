@@ -1913,68 +1913,6 @@ export default function AcademicPage() {
                   </p>
                 </div>
 
-                {/* Subject vs Class Average Horizontal Bar Chart */}
-                <div className="space-y-2">
-                  <h4 className="text-sm font-medium text-foreground flex items-center gap-1.5">
-                    <GitCompare className="h-4 w-4 text-primary" />
-                    vs Class Average
-                  </h4>
-                  <div className="h-64">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <BarChart data={subjectVsClassData} layout="vertical">
-                        <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" strokeOpacity={0.3} horizontal={false} />
-                        <XAxis type="number" domain={[0, 100]} tick={{
-                        fontSize: 10,
-                        fill: "hsl(var(--muted-foreground))"
-                      }} axisLine={false} tickLine={false} />
-                        <YAxis type="category" dataKey="name" tick={{
-                        fontSize: 10,
-                        fill: "hsl(var(--muted-foreground))"
-                      }} width={70} axisLine={false} tickLine={false} />
-                        <Tooltip contentStyle={{
-                        backgroundColor: "hsl(var(--card))",
-                        border: "1px solid hsl(var(--border))",
-                        borderRadius: "8px"
-                      }} formatter={(value: number, name: string) => [`${value}%`, name === "student" ? "Your Score" : "Class Average"]} />
-                        <Legend wrapperStyle={{
-                        fontSize: 10
-                      }} formatter={value => value === "student" ? "Your Score" : "Class Avg"} />
-                        <Bar dataKey="student" radius={[0, 4, 4, 0]} barSize={12}>
-                          {subjectVsClassData.map((entry, index) => {
-                          const subjectColors: Record<string, string> = {
-                            "English": "#22c55e",
-                            "English 1L": "#22c55e",
-                            "English 2L": "#16a34a",
-                            "Math": "#f59e0b",
-                            "Mathematics": "#f59e0b",
-                            "Science": "#3b82f6",
-                            "Physics": "#06b6d4",
-                            "Chemistry": "#8b5cf6",
-                            "Biology": "#10b981",
-                            "History": "#ef4444",
-                            "Geography": "#f97316",
-                            "Art": "#ec4899",
-                            "ICT": "#6366f1",
-                            "Islamic St.": "#14b8a6",
-                            "Add Math": "#a855f7"
-                          };
-                          const fallbackColors = ["#3b82f6", "#f59e0b", "#22c55e", "#ef4444", "#8b5cf6", "#f97316", "#06b6d4", "#ec4899", "#10b981", "#6366f1"];
-                          const color = subjectColors[entry.name] || subjectColors[entry.fullName] || fallbackColors[index % fallbackColors.length];
-                          return <Cell key={`cell-${index}`} fill={color} />;
-                        })}
-                        </Bar>
-                        {/* Class Average as dots on top of bars */}
-                        {subjectVsClassData.map(entry => <ReferenceDot key={`classAvg-${entry.name}`} x={entry.classAvg} y={entry.name} r={4} fill="hsl(var(--foreground))" stroke="hsl(var(--background))" strokeWidth={1} />)}
-                      </BarChart>
-                    </ResponsiveContainer>
-                  </div>
-                  {/* Delta badges */}
-                  <div className="flex flex-wrap gap-1.5 justify-center">
-                    {subjectVsClassData.slice(0, 4).map(item => <Badge key={item.name} variant={item.delta >= 0 ? "default" : "destructive"} className={`text-[10px] px-2 py-0.5 ${item.delta >= 0 ? "bg-[#3b82f6] hover:bg-[#3b82f6]/90" : ""}`}>
-                        {item.name}: {item.delta >= 0 ? "+" : ""}{item.delta}%
-                      </Badge>)}
-                  </div>
-                </div>
 
                 {/* Performance Heatmap */}
                 <div className="space-y-2">
