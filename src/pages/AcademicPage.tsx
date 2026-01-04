@@ -167,32 +167,19 @@ export default function AcademicPage() {
   const [heatmapExpanded, setHeatmapExpanded] = useState(false);
   const [chartViewMode, setChartViewMode] = useState<"single" | "multiple">("single");
 
-  // Subject color palette for multiple lines mode
-  const subjectColors: Record<string, string> = {
-    "English (First Language)": "#3b82f6",
-    "English (Second Language)": "#60a5fa",
-    "Malay (First Language)": "#8b5cf6",
-    "Malay (Foreign Language)": "#a78bfa",
-    "Chinese (Foreign Language)": "#ec4899",
-    "Mathematics": "#f59e0b",
-    "Additional Mathematics": "#fbbf24",
-    "Science": "#22c55e",
-    "Biology": "#10b981",
-    "Chemistry": "#14b8a6",
-    "Physics": "#06b6d4",
-    "History": "#f97316",
-    "Geography": "#84cc16",
-    "Literature": "#d946ef",
-    "Art": "#f472b6",
-    "Music": "#a855f7",
-    "Physical Education": "#0ea5e9",
-    "ICT": "#6366f1",
-    "Economics": "#eab308",
-    "Business Studies": "#fb923c",
-    "Accounting": "#4ade80",
-    "Religious Studies": "#c084fc",
-    "Social Studies": "#2dd4bf",
-    "Environmental Science": "#34d399"
+  // Subject color palette for multiple lines mode (design tokens)
+  const subjectStrokePalette = [
+    "hsl(var(--chart-1))",
+    "hsl(var(--chart-2))",
+    "hsl(var(--chart-3))",
+    "hsl(var(--chart-4))",
+    "hsl(var(--chart-5))"
+  ];
+
+  const getSubjectStroke = (subject: string, indexHint = 0) => {
+    const idx = academicData.subjects.findIndex((s) => s.name === subject);
+    const resolvedIndex = idx >= 0 ? idx : indexHint;
+    return subjectStrokePalette[resolvedIndex % subjectStrokePalette.length];
   };
   const isActivitiesTab = activeTab === "cocurriculum";
   const toggleYear = (year: string) => {
@@ -548,7 +535,7 @@ export default function AcademicPage() {
     // Filter based on trendPeriod
     let filteredPeriods = periods;
     if (trendPeriod === "1year") {
-      filteredPeriods = periods.slice(-2); // Last 2 periods (current year)
+      filteredPeriods = periods.slice(-2); // Last 2 periods
     } else if (trendPeriod === "2years") {
       filteredPeriods = periods.slice(-4); // Last 4 periods
     } else if (trendPeriod === "3years") {
@@ -556,7 +543,8 @@ export default function AcademicPage() {
     } else if (trendPeriod === "4years") {
       filteredPeriods = periods.slice(-8); // Last 8 periods
     } else if (trendPeriod === "5years") {
-      filteredPeriods = periods.slice(-10); // Last 10 periods (5 years max)
+      // Keep the default view compact (requested: 7 periods)
+      filteredPeriods = periods.slice(-7);
     }
     return filteredPeriods.map(p => {
       const result: Record<string, number | string | null> = {
@@ -1742,38 +1730,48 @@ export default function AcademicPage() {
 
                 {/* Moomoo-Style Gradient Area Chart - Scrollable with Pinch-to-Zoom */}
                 <div className="space-y-2">
-                  <div className="flex items-center justify-between">
-                    <p className="text-[10px] text-muted-foreground">← Swipe • Pinch to zoom →</p>
-                    <div className="flex items-center gap-3">
-                      {/* Chart View Switcher */}
-                      <div className="flex items-center gap-0.5 bg-muted/50 rounded-lg p-0.5">
-                        <button
-                          onClick={() => setChartViewMode("single")}
-                          className={`px-2 py-1 text-[10px] font-medium rounded-md transition-colors ${
-                            chartViewMode === "single" 
-                              ? "bg-background text-foreground shadow-sm" 
-                              : "text-muted-foreground hover:text-foreground"
-                          }`}
-                        >
-                          Average
-                        </button>
-                        <button
-                          onClick={() => setChartViewMode("multiple")}
-                          className={`px-2 py-1 text-[10px] font-medium rounded-md transition-colors ${
-                            chartViewMode === "multiple" 
-                              ? "bg-background text-foreground shadow-sm" 
-                              : "text-muted-foreground hover:text-foreground"
-                          }`}
-                        >
-                          Individual
-                        </button>
-                      </div>
-                      {chartZoom !== 1 && <button onClick={resetZoom} className="text-[10px] text-primary underline">
-                          Reset zoom
-                        </button>}
+                  <div className="space-y-1">
+                    <div className="flex items-center justify-between">
                       <p className="text-[10px] text-muted-foreground">
-                        {chartZoom !== 1 ? `${Math.round(chartZoom * 100)}%` : `${trendData.length} periods`}
+                        Range: <span className="font-medium text-foreground">{trendData.length} periods</span>
                       </p>
+                      <div className="flex items-center gap-2">
+                        {/* Chart View Switcher */}
+                        <div className="flex items-center gap-0.5 bg-muted/50 rounded-lg p-0.5">
+                          <button
+                            onClick={() => setChartViewMode("single")}
+                            className={`px-2 py-1 text-[10px] font-medium rounded-md transition-colors ${
+                              chartViewMode === "single"
+                                ? "bg-background text-foreground shadow-sm"
+                                : "text-muted-foreground hover:text-foreground"
+                            }`}
+                          >
+                            Average
+                          </button>
+                          <button
+                            onClick={() => setChartViewMode("multiple")}
+                            className={`px-2 py-1 text-[10px] font-medium rounded-md transition-colors ${
+                              chartViewMode === "multiple"
+                                ? "bg-background text-foreground shadow-sm"
+                                : "text-muted-foreground hover:text-foreground"
+                            }`}
+                          >
+                            Individual
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center justify-between">
+                      <p className="text-[10px] text-muted-foreground">← Swipe • Pinch to zoom →</p>
+                      {chartZoom !== 1 && (
+                        <div className="flex items-center gap-2">
+                          <button onClick={resetZoom} className="text-[10px] text-primary underline">
+                            Reset zoom
+                          </button>
+                          <p className="text-[10px] text-muted-foreground">{`${Math.round(chartZoom * 100)}%`}</p>
+                        </div>
+                      )}
                     </div>
                   </div>
                   <div ref={chartContainerRef} className="h-64 overflow-x-auto overflow-y-hidden scrollbar-thin scrollbar-thumb-muted scrollbar-track-transparent" style={{
@@ -1787,132 +1785,173 @@ export default function AcademicPage() {
                     height: '100%',
                     transition: 'width 0.1s ease-out'
                   }}>
-                      <ResponsiveContainer width="100%" height="100%">
-                        <AreaChart data={trendData} margin={{
-                        top: 10,
-                        right: 20,
-                        left: 0,
-                        bottom: 20
-                      }}>
-                          <defs>
-                            <linearGradient id="gradientGreen" x1="0" y1="0" x2="0" y2="1">
-                              <stop offset="0%" stopColor="#22c55e" stopOpacity={0.4} />
-                              <stop offset="100%" stopColor="#22c55e" stopOpacity={0.05} />
-                            </linearGradient>
-                            <linearGradient id="gradientRed" x1="0" y1="0" x2="0" y2="1">
-                              <stop offset="0%" stopColor="#ef4444" stopOpacity={0.4} />
-                              <stop offset="100%" stopColor="#ef4444" stopOpacity={0.05} />
-                            </linearGradient>
-                            <linearGradient id="gradientBlue" x1="0" y1="0" x2="0" y2="1">
-                              <stop offset="0%" stopColor="#3b82f6" stopOpacity={0.4} />
-                              <stop offset="100%" stopColor="#3b82f6" stopOpacity={0.05} />
-                            </linearGradient>
-                          </defs>
-                          <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" strokeOpacity={0.2} vertical={false} />
-                          <XAxis dataKey="period" axisLine={false} tickLine={false} interval={0} height={40} tick={({
-                          x,
-                          y,
-                          payload
-                        }) => {
-                          const parts = payload.value.split(' ');
-                          return <g transform={`translate(${x},${y})`}>
-                                  <text x={0} y={0} dy={12} textAnchor="middle" fontSize={10} fill="hsl(var(--muted-foreground))">
-                                    {parts[0]}
-                                  </text>
-                                  <text x={0} y={0} dy={24} textAnchor="middle" fontSize={9} fill="hsl(var(--muted-foreground))" opacity={0.7}>
-                                    {parts[1]}
-                                  </text>
-                                </g>;
-                        }} />
-                          <YAxis domain={[30, 100]} tick={{
-                          fontSize: 11,
-                          fill: "hsl(var(--muted-foreground))"
-                        }} axisLine={false} tickLine={false} width={35} />
-                          <Tooltip contentStyle={{
-                          backgroundColor: "hsl(var(--card))",
-                          border: "1px solid hsl(var(--border))",
-                          borderRadius: "12px",
-                          boxShadow: "0 4px 12px rgba(0,0,0,0.1)"
-                        }} labelStyle={{
-                          fontWeight: 600,
-                          marginBottom: 4
-                        }} />
-                          <ReferenceLine y={50} stroke="#f59e0b" strokeDasharray="5 5" strokeOpacity={0.6} label={{
-                          value: "Pass",
-                          fontSize: 9,
-                          fill: "#f59e0b",
-                          position: "insideTopLeft"
-                        }} />
-                          <ReferenceLine y={80} stroke="#22c55e" strokeDasharray="5 5" strokeOpacity={0.6} label={{
-                          value: "A",
-                          fontSize: 9,
-                          fill: "#22c55e",
-                          position: "insideTopLeft"
-                        }} />
-                          <ReferenceLine y={trendGoalValue} stroke="hsl(var(--foreground))" strokeDasharray="4 4" strokeWidth={2} label={{
-                          value: "Goal",
-                          fontSize: 9,
-                          fill: "hsl(var(--foreground))",
-                          position: "insideTopLeft"
-                        }} />
+                      {trendsSelectedSubjects.length === 0 ? (
+                        <div className="h-full w-full flex items-center justify-center">
+                          <p className="text-xs text-muted-foreground">Select at least one subject to view the chart.</p>
+                        </div>
+                      ) : (
+                        <ResponsiveContainer width="100%" height="100%">
                           {chartViewMode === "single" ? (
-                            // Single line mode - show average or single subject
-                            trendsSelectedSubjects.length === 1 ? (
-                              <Area type="monotone" dataKey={trendsSelectedSubjects[0]} stroke={trendDirection.direction === "up" ? "#22c55e" : trendDirection.direction === "down" ? "#ef4444" : "#3b82f6"} strokeWidth={2.5} fill={trendDirection.direction === "up" ? "url(#gradientGreen)" : trendDirection.direction === "down" ? "url(#gradientRed)" : "url(#gradientBlue)"} dot={{
-                                fill: trendDirection.direction === "up" ? "#22c55e" : trendDirection.direction === "down" ? "#ef4444" : "#3b82f6",
-                                strokeWidth: 0,
-                                r: 5
-                              }} activeDot={{
-                                r: 7,
-                                strokeWidth: 2,
-                                stroke: "#fff"
-                              }} connectNulls />
-                            ) : (
-                              <Area type="monotone" dataKey="Average" stroke={trendDirection.direction === "up" ? "#22c55e" : trendDirection.direction === "down" ? "#ef4444" : "#3b82f6"} strokeWidth={2.5} fill={trendDirection.direction === "up" ? "url(#gradientGreen)" : trendDirection.direction === "down" ? "url(#gradientRed)" : "url(#gradientBlue)"} dot={{
-                                fill: trendDirection.direction === "up" ? "#22c55e" : trendDirection.direction === "down" ? "#ef4444" : "#3b82f6",
-                                strokeWidth: 0,
-                                r: 5
-                              }} activeDot={{
-                                r: 7,
-                                strokeWidth: 2,
-                                stroke: "#fff"
-                              }} connectNulls />
-                            )
-                          ) : (
-                            // Multiple lines mode - show individual colored lines
-                            trendsSelectedSubjects.map((subject) => (
-                              <Line
-                                key={subject}
-                                type="monotone"
-                                dataKey={subject}
-                                stroke={subjectColors[subject] || "#8884d8"}
-                                strokeWidth={2}
-                                dot={{
-                                  fill: subjectColors[subject] || "#8884d8",
-                                  strokeWidth: 0,
-                                  r: 3
+                            <AreaChart data={trendData} margin={{ top: 10, right: 20, left: 0, bottom: 20 }}>
+                              <defs>
+                                <linearGradient id="gradientGreen" x1="0" y1="0" x2="0" y2="1">
+                                  <stop offset="0%" stopColor="#22c55e" stopOpacity={0.4} />
+                                  <stop offset="100%" stopColor="#22c55e" stopOpacity={0.05} />
+                                </linearGradient>
+                                <linearGradient id="gradientRed" x1="0" y1="0" x2="0" y2="1">
+                                  <stop offset="0%" stopColor="#ef4444" stopOpacity={0.4} />
+                                  <stop offset="100%" stopColor="#ef4444" stopOpacity={0.05} />
+                                </linearGradient>
+                                <linearGradient id="gradientBlue" x1="0" y1="0" x2="0" y2="1">
+                                  <stop offset="0%" stopColor="#3b82f6" stopOpacity={0.4} />
+                                  <stop offset="100%" stopColor="#3b82f6" stopOpacity={0.05} />
+                                </linearGradient>
+                              </defs>
+                              <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" strokeOpacity={0.2} vertical={false} />
+                              <XAxis
+                                dataKey="period"
+                                axisLine={false}
+                                tickLine={false}
+                                interval={0}
+                                height={40}
+                                tick={({ x, y, payload }) => {
+                                  const parts = payload.value.split(" ");
+                                  return (
+                                    <g transform={`translate(${x},${y})`}>
+                                      <text x={0} y={0} dy={12} textAnchor="middle" fontSize={10} fill="hsl(var(--muted-foreground))">
+                                        {parts[0]}
+                                      </text>
+                                      <text x={0} y={0} dy={24} textAnchor="middle" fontSize={9} fill="hsl(var(--muted-foreground))" opacity={0.7}>
+                                        {parts[1]}
+                                      </text>
+                                    </g>
+                                  );
                                 }}
-                                activeDot={{
-                                  r: 5,
-                                  strokeWidth: 2,
-                                  stroke: "#fff"
-                                }}
-                                connectNulls
                               />
-                            ))
+                              <YAxis
+                                domain={[30, 100]}
+                                tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }}
+                                axisLine={false}
+                                tickLine={false}
+                                width={35}
+                              />
+                              <Tooltip
+                                contentStyle={{
+                                  backgroundColor: "hsl(var(--card))",
+                                  border: "1px solid hsl(var(--border))",
+                                  borderRadius: "12px",
+                                  boxShadow: "0 4px 12px rgba(0,0,0,0.1)"
+                                }}
+                                labelStyle={{ fontWeight: 600, marginBottom: 4 }}
+                              />
+                              <ReferenceLine y={50} stroke="#f59e0b" strokeDasharray="5 5" strokeOpacity={0.6} label={{ value: "Pass", fontSize: 9, fill: "#f59e0b", position: "insideTopLeft" }} />
+                              <ReferenceLine y={80} stroke="#22c55e" strokeDasharray="5 5" strokeOpacity={0.6} label={{ value: "A", fontSize: 9, fill: "#22c55e", position: "insideTopLeft" }} />
+                              <ReferenceLine y={trendGoalValue} stroke="hsl(var(--foreground))" strokeDasharray="4 4" strokeWidth={2} label={{ value: "Goal", fontSize: 9, fill: "hsl(var(--foreground))", position: "insideTopLeft" }} />
+
+                              {trendsSelectedSubjects.length === 1 ? (
+                                <Area
+                                  type="monotone"
+                                  dataKey={trendsSelectedSubjects[0]}
+                                  stroke={trendDirection.direction === "up" ? "#22c55e" : trendDirection.direction === "down" ? "#ef4444" : "#3b82f6"}
+                                  strokeWidth={2.5}
+                                  fill={trendDirection.direction === "up" ? "url(#gradientGreen)" : trendDirection.direction === "down" ? "url(#gradientRed)" : "url(#gradientBlue)"}
+                                  dot={{
+                                    fill: trendDirection.direction === "up" ? "#22c55e" : trendDirection.direction === "down" ? "#ef4444" : "#3b82f6",
+                                    strokeWidth: 0,
+                                    r: 5
+                                  }}
+                                  activeDot={{ r: 7, strokeWidth: 2, stroke: "#fff" }}
+                                  connectNulls
+                                />
+                              ) : (
+                                <Area
+                                  type="monotone"
+                                  dataKey="Average"
+                                  stroke={trendDirection.direction === "up" ? "#22c55e" : trendDirection.direction === "down" ? "#ef4444" : "#3b82f6"}
+                                  strokeWidth={2.5}
+                                  fill={trendDirection.direction === "up" ? "url(#gradientGreen)" : trendDirection.direction === "down" ? "url(#gradientRed)" : "url(#gradientBlue)"}
+                                  dot={{
+                                    fill: trendDirection.direction === "up" ? "#22c55e" : trendDirection.direction === "down" ? "#ef4444" : "#3b82f6",
+                                    strokeWidth: 0,
+                                    r: 5
+                                  }}
+                                  activeDot={{ r: 7, strokeWidth: 2, stroke: "#fff" }}
+                                  connectNulls
+                                />
+                              )}
+                            </AreaChart>
+                          ) : (
+                            <LineChart data={trendData} margin={{ top: 10, right: 20, left: 0, bottom: 20 }}>
+                              <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" strokeOpacity={0.2} vertical={false} />
+                              <XAxis
+                                dataKey="period"
+                                axisLine={false}
+                                tickLine={false}
+                                interval={0}
+                                height={40}
+                                tick={({ x, y, payload }) => {
+                                  const parts = payload.value.split(" ");
+                                  return (
+                                    <g transform={`translate(${x},${y})`}>
+                                      <text x={0} y={0} dy={12} textAnchor="middle" fontSize={10} fill="hsl(var(--muted-foreground))">
+                                        {parts[0]}
+                                      </text>
+                                      <text x={0} y={0} dy={24} textAnchor="middle" fontSize={9} fill="hsl(var(--muted-foreground))" opacity={0.7}>
+                                        {parts[1]}
+                                      </text>
+                                    </g>
+                                  );
+                                }}
+                              />
+                              <YAxis
+                                domain={[30, 100]}
+                                tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }}
+                                axisLine={false}
+                                tickLine={false}
+                                width={35}
+                              />
+                              <Tooltip
+                                contentStyle={{
+                                  backgroundColor: "hsl(var(--card))",
+                                  border: "1px solid hsl(var(--border))",
+                                  borderRadius: "12px",
+                                  boxShadow: "0 4px 12px rgba(0,0,0,0.1)"
+                                }}
+                                labelStyle={{ fontWeight: 600, marginBottom: 4 }}
+                              />
+                              <ReferenceLine y={50} stroke="#f59e0b" strokeDasharray="5 5" strokeOpacity={0.6} label={{ value: "Pass", fontSize: 9, fill: "#f59e0b", position: "insideTopLeft" }} />
+                              <ReferenceLine y={80} stroke="#22c55e" strokeDasharray="5 5" strokeOpacity={0.6} label={{ value: "A", fontSize: 9, fill: "#22c55e", position: "insideTopLeft" }} />
+                              <ReferenceLine y={trendGoalValue} stroke="hsl(var(--foreground))" strokeDasharray="4 4" strokeWidth={2} label={{ value: "Goal", fontSize: 9, fill: "hsl(var(--foreground))", position: "insideTopLeft" }} />
+
+                              {trendsSelectedSubjects.map((subject, i) => {
+                                const stroke = getSubjectStroke(subject, i);
+                                return (
+                                  <Line
+                                    key={subject}
+                                    type="monotone"
+                                    dataKey={subject}
+                                    stroke={stroke}
+                                    strokeWidth={2}
+                                    dot={{ fill: stroke, strokeWidth: 0, r: 3 }}
+                                    activeDot={{ r: 5, strokeWidth: 2, stroke: "#fff" }}
+                                    connectNulls
+                                  />
+                                );
+                              })}
+                            </LineChart>
                           )}
-                        </AreaChart>
-                      </ResponsiveContainer>
+                        </ResponsiveContainer>
+                      )}
                     </div>
                   </div>
                   {/* Color Legend for Multiple Lines Mode */}
                   {chartViewMode === "multiple" && trendsSelectedSubjects.length > 1 && (
                     <div className="flex flex-wrap gap-x-3 gap-y-1.5 mt-2 px-1">
-                      {trendsSelectedSubjects.map((subject) => (
+                      {trendsSelectedSubjects.map((subject, i) => (
                         <div key={subject} className="flex items-center gap-1">
-                          <div 
-                            className="w-2.5 h-2.5 rounded-full shrink-0" 
-                            style={{ backgroundColor: subjectColors[subject] || "#8884d8" }} 
+                          <div
+                            className="w-2.5 h-2.5 rounded-full shrink-0"
+                            style={{ backgroundColor: getSubjectStroke(subject, i) }}
                           />
                           <span className="text-[10px] text-muted-foreground">
                             {getTinySubjectCode(subject)}
@@ -3753,22 +3792,28 @@ export default function AcademicPage() {
                   gap: '6px'
                 }}>
                     {subjectVsClassData.slice(0, 6).map((item, i) => {
-                    const subjectColors: Record<string, string> = {
-                      "Eng": "#22c55e",
-                      "Math": "#f59e0b",
-                      "Sci": "#3b82f6",
-                      "Phy": "#06b6d4",
-                      "Chem": "#8b5cf6",
-                      "Bio": "#10b981",
-                      "Hist": "#ef4444",
-                      "Geo": "#f97316",
-                      "Art": "#ec4899",
-                      "ICT": "#6366f1",
-                      "Islam": "#14b8a6",
-                      "Add M": "#a855f7"
+                    const subjectTinyColors: Record<string, string> = {
+                      "Eng": "hsl(var(--chart-3))",
+                      "Math": "hsl(var(--chart-2))",
+                      "Sci": "hsl(var(--chart-1))",
+                      "Phy": "hsl(var(--chart-4))",
+                      "Chem": "hsl(var(--chart-5))",
+                      "Bio": "hsl(var(--chart-3))",
+                      "Hist": "hsl(var(--chart-4))",
+                      "Geo": "hsl(var(--chart-2))",
+                      "Art": "hsl(var(--chart-5))",
+                      "ICT": "hsl(var(--chart-1))",
+                      "Islam": "hsl(var(--chart-3))",
+                      "Add M": "hsl(var(--chart-2))"
                     };
-                    const fallbackColors = ["#3b82f6", "#f59e0b", "#22c55e", "#ef4444", "#8b5cf6", "#f97316"];
-                    const barColor = subjectColors[item.name] || fallbackColors[i % fallbackColors.length];
+                    const fallbackColors = [
+                      "hsl(var(--chart-1))",
+                      "hsl(var(--chart-2))",
+                      "hsl(var(--chart-3))",
+                      "hsl(var(--chart-4))",
+                      "hsl(var(--chart-5))"
+                    ];
+                    const barColor = subjectTinyColors[item.name] || fallbackColors[i % fallbackColors.length];
                     return <div key={item.name} style={{
                       display: 'flex',
                       alignItems: 'center',
