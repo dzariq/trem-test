@@ -6,7 +6,6 @@ import {
   DrawerHeader,
   DrawerTitle,
 } from "@/components/ui/drawer";
-import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -15,10 +14,7 @@ import {
   Calendar, 
   FileText, 
   AlertCircle, 
-  CheckCircle2,
   Clock,
-  Trash2,
-  Check,
   Users,
   BookOpen,
   Trophy,
@@ -302,7 +298,9 @@ export function NotificationsDrawer({ open, onOpenChange, isTeacher = false }: N
 
   const handleNotificationClick = (notification: Notification) => {
     // Mark as read
-    markAsRead(notification.id);
+    setNotifications(prev => 
+      prev.map(n => n.id === notification.id ? { ...n, isRead: true } : n)
+    );
     
     // Navigate if there's a link
     if (notification.linkTo) {
@@ -311,24 +309,8 @@ export function NotificationsDrawer({ open, onOpenChange, isTeacher = false }: N
     }
   };
 
-  const markAsRead = (id: string) => {
-    setNotifications(prev => 
-      prev.map(n => n.id === id ? { ...n, isRead: true } : n)
-    );
-  };
-
   const markAllAsRead = () => {
     setNotifications(prev => prev.map(n => ({ ...n, isRead: true })));
-  };
-
-  const deleteNotification = (id: string, e: React.MouseEvent) => {
-    e.stopPropagation(); // Prevent card click
-    setNotifications(prev => prev.filter(n => n.id !== id));
-  };
-
-  const handleMarkAsRead = (id: string, e: React.MouseEvent) => {
-    e.stopPropagation(); // Prevent card click
-    markAsRead(id);
   };
 
   const filteredNotifications = filter === "all" 
@@ -368,7 +350,6 @@ export function NotificationsDrawer({ open, onOpenChange, isTeacher = false }: N
             </div>
             {unreadCount > 0 && (
               <Button variant="ghost" size="sm" onClick={markAllAsRead} className="text-xs">
-                <Check className="h-3 w-3 mr-1" />
                 Mark all read
               </Button>
             )}
@@ -377,72 +358,50 @@ export function NotificationsDrawer({ open, onOpenChange, isTeacher = false }: N
 
         <ScrollArea className="flex-1 px-4 pb-6" style={{ maxHeight: "calc(85vh - 140px)" }}>
           {/* Notifications List */}
-          <div className="space-y-3">
+          <div className="space-y-2">
             {filteredNotifications.map((notification) => {
               const Icon = getTypeIcon(notification.type);
               const hasLink = !!notification.linkTo;
               
               return (
-                <Card 
+                <div 
                   key={notification.id} 
-                  className={`bg-card border-border shadow-sm transition-all ${
-                    !notification.isRead ? "border-l-4 border-l-primary" : ""
-                  } ${hasLink ? "cursor-pointer hover:bg-accent/50 active:scale-[0.99]" : ""}`}
+                  className={`flex items-center gap-3 p-3 rounded-xl transition-all active:scale-[0.98] ${
+                    !notification.isRead 
+                      ? "bg-primary/5 border border-primary/20" 
+                      : "bg-muted/30"
+                  } ${hasLink ? "cursor-pointer" : ""}`}
                   onClick={() => hasLink && handleNotificationClick(notification)}
                 >
-                  <CardContent className="p-4">
-                    <div className="flex gap-3">
-                      <div className={`w-10 h-10 rounded-lg ${getTypeColor(notification.type)} flex items-center justify-center flex-shrink-0`}>
-                        <Icon className="h-5 w-5" />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-start justify-between gap-2">
-                          <h3 className={`font-medium text-foreground ${!notification.isRead ? "font-semibold" : ""}`}>
-                            {notification.title}
-                          </h3>
-                          <div className="flex items-center gap-1 flex-shrink-0">
-                            {!notification.isRead && (
-                              <div className="w-2 h-2 rounded-full bg-primary" />
-                            )}
-                            {hasLink && (
-                              <ChevronRight className="h-4 w-4 text-muted-foreground" />
-                            )}
-                          </div>
-                        </div>
-                        <p className="text-sm text-muted-foreground mt-1 line-clamp-2">
-                          {notification.message}
-                        </p>
-                        <div className="flex items-center justify-between mt-2">
-                          <span className="text-xs text-muted-foreground flex items-center gap-1">
-                            <Clock className="h-3 w-3" />
-                            {notification.time}
-                          </span>
-                          <div className="flex gap-1">
-                            {!notification.isRead && (
-                              <Button 
-                                variant="ghost" 
-                                size="sm" 
-                                className="h-7 px-2 text-xs"
-                                onClick={(e) => handleMarkAsRead(notification.id, e)}
-                              >
-                                <CheckCircle2 className="h-3 w-3 mr-1" />
-                                Read
-                              </Button>
-                            )}
-                            <Button 
-                              variant="ghost" 
-                              size="sm" 
-                              className="h-7 px-2 text-xs text-destructive hover:text-destructive"
-                              onClick={(e) => deleteNotification(notification.id, e)}
-                            >
-                              <Trash2 className="h-3 w-3" />
-                            </Button>
-                          </div>
-                        </div>
-                      </div>
+                  {/* Icon */}
+                  <div className={`w-10 h-10 rounded-full ${getTypeColor(notification.type)} flex items-center justify-center flex-shrink-0`}>
+                    <Icon className="h-5 w-5" />
+                  </div>
+                  
+                  {/* Content */}
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2">
+                      <h3 className={`text-sm text-foreground truncate ${!notification.isRead ? "font-semibold" : "font-medium"}`}>
+                        {notification.title}
+                      </h3>
+                      {!notification.isRead && (
+                        <div className="w-2 h-2 rounded-full bg-primary flex-shrink-0" />
+                      )}
                     </div>
-                  </CardContent>
-                </Card>
+                    <p className="text-xs text-muted-foreground mt-0.5 line-clamp-1">
+                      {notification.message}
+                    </p>
+                    <span className="text-[10px] text-muted-foreground/70 mt-1 flex items-center gap-1">
+                      <Clock className="h-2.5 w-2.5" />
+                      {notification.time}
+                    </span>
+                  </div>
+                  
+                  {/* Arrow */}
+                  {hasLink && (
+                    <ChevronRight className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                  )}
+                </div>
               );
             })}
 
