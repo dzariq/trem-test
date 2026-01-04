@@ -63,7 +63,7 @@ export function AnnouncementDrawer({
 
   const handleSeeAll = () => {
     onOpenChange(false);
-    navigate("/announcements");
+    navigate("/parent/announcements");
   };
 
   const currentAnnouncement = announcements[currentIndex];
