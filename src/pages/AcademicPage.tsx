@@ -1655,7 +1655,7 @@ export default function AcademicPage() {
                     </div>
                   </div>
                   {/* Period Toggle */}
-                  <div className="flex flex-wrap gap-1 bg-muted/50 p-1 rounded-lg">
+                  <div className="grid grid-cols-5 gap-1 bg-muted/50 p-1 rounded-lg">
                     {([{
                     key: "1year",
                     label: "1Y"
@@ -1674,7 +1674,7 @@ export default function AcademicPage() {
                   }] as const).map(({
                     key,
                     label
-                  }) => <button key={key} onClick={() => setTrendPeriod(key)} className={`px-3 py-1.5 text-xs font-medium rounded-md transition-all whitespace-nowrap flex-shrink-0 ${trendPeriod === key ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}>
+                  }) => <button key={key} onClick={() => setTrendPeriod(key)} className={`py-1.5 text-xs font-medium rounded-md transition-all text-center ${trendPeriod === key ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}>
                         {label}
                       </button>)}
                   </div>
