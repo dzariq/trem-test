@@ -17,6 +17,14 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
+import {
+  Drawer,
+  DrawerContent,
+  DrawerHeader,
+  DrawerTitle,
+  DrawerFooter,
+  DrawerClose,
+} from "@/components/ui/drawer";
 import { 
   Mail, 
   Phone, 
@@ -415,15 +423,18 @@ export default function ProfilePage() {
         downloadFileName="Student_Handbook_2026.pdf"
       />
 
-      {/* Student Details Dialog */}
-      <Dialog open={!!selectedStudent && !isPhotoEditOpen} onOpenChange={(open) => !open && setSelectedStudent(null)}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>Student Details</DialogTitle>
-          </DialogHeader>
+      {/* Student Details Drawer - Mobile friendly with drag to close */}
+      <Drawer open={!!selectedStudent && !isPhotoEditOpen} onOpenChange={(open) => !open && setSelectedStudent(null)}>
+        <DrawerContent className="max-h-[90vh]">
+          <DrawerHeader className="text-center relative">
+            <DrawerTitle>Student Details</DrawerTitle>
+            <DrawerClose className="absolute right-4 top-4 rounded-full bg-muted p-2 opacity-70 hover:opacity-100">
+              <X className="h-4 w-4" />
+            </DrawerClose>
+          </DrawerHeader>
           
           {selectedStudent && (
-            <div className="space-y-6 py-4">
+            <div className="space-y-6 px-4 pb-4 overflow-y-auto">
               {/* Student Avatar & Info */}
               <div className="flex flex-col items-center gap-4">
                 <Avatar className="h-24 w-24 border-4 border-primary/20">
@@ -514,11 +525,11 @@ export default function ProfilePage() {
             </div>
           )}
 
-          <DialogFooter>
-            <Button onClick={() => setSelectedStudent(null)}>Close</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+          <DrawerFooter>
+            <Button onClick={() => setSelectedStudent(null)} className="w-full">Close</Button>
+          </DrawerFooter>
+        </DrawerContent>
+      </Drawer>
 
       {/* Photo Edit Dialog */}
       <Dialog open={isPhotoEditOpen} onOpenChange={setIsPhotoEditOpen}>
