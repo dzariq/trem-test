@@ -1,8 +1,7 @@
 import { AppLayout } from "@/components/layout/AppLayout";
 import { AppHeader } from "@/components/layout/AppHeader";
 import { Badge } from "@/components/ui/badge";
-import { Award, Calendar } from "lucide-react";
-import schoolLogo from "@/assets/school-badge.png";
+import { Award, Calendar, ChevronLeft } from "lucide-react";
 import dnaBanner from "@/assets/dna-banner.png";
 import { students } from "@/data/mockData";
 import { awardTypes, awardColors, getStudentAwards } from "@/data/awardsData";
@@ -10,12 +9,19 @@ import { useState } from "react";
 import { cn } from "@/lib/utils";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import { useNavigate } from "react-router-dom";
+import { Button } from "@/components/ui/button";
+
 export default function AwardsPage() {
+  const navigate = useNavigate();
   const [selectedStudentId, setSelectedStudentId] = useState(students[0]?.id || "1");
   const earnedAwards = getStudentAwards(selectedStudentId);
+  
   return <AppLayout>
       <AppHeader leftContent={<div className="flex items-center gap-2">
-            <img src={schoolLogo} alt="School Logo" className="h-16 w-auto -my-3 drop-shadow-md" />
+            <Button variant="ghost" size="icon" className="h-9 w-9" onClick={() => navigate(-1)}>
+              <ChevronLeft className="h-5 w-5" />
+            </Button>
             <h1 className="text-lg font-semibold text-foreground">Students Award</h1>
           </div>} rightContent={<Select value={selectedStudentId} onValueChange={setSelectedStudentId}>
             <SelectTrigger className="w-32 h-8 text-sm">
