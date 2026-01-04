@@ -74,22 +74,29 @@ export function SwipeableNotification({
     }
   };
 
+  // Only show delete background when swiping
+  const showDeleteBackground = translateX < -5;
+
   return (
     <div className="relative overflow-hidden rounded-xl">
-      {/* Delete background */}
-      <div className="absolute inset-y-0 right-0 w-24 bg-destructive flex items-center justify-center rounded-r-xl">
+      {/* Delete background - only visible when swiping */}
+      <div 
+        className={`absolute inset-y-0 right-0 w-24 bg-destructive flex items-center justify-center rounded-r-xl transition-opacity duration-150 ${
+          showDeleteBackground ? "opacity-100" : "opacity-0"
+        }`}
+      >
         <Trash2 className="h-5 w-5 text-destructive-foreground" />
       </div>
       
       {/* Notification content */}
       <div
-        className={`relative flex items-center gap-3 p-3 rounded-xl transition-all ${
+        className={`relative flex items-center gap-3 p-3 rounded-xl bg-card ${
           isDeleting ? "opacity-0 scale-95" : ""
         } ${
           !isRead 
-            ? "bg-primary/5 border border-primary/20" 
-            : "bg-muted/30"
-        } ${hasLink ? "cursor-pointer" : ""}`}
+            ? "border border-primary/20 bg-primary/5" 
+            : "border border-border"
+        } ${hasLink ? "cursor-pointer active:scale-[0.98]" : ""}`}
         style={{ 
           transform: `translateX(${translateX}px)`,
           transition: isDraggingRef.current && Math.abs(translateX) > 0 ? 'none' : 'transform 0.2s ease-out, opacity 0.15s ease-out'
