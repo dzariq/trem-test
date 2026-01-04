@@ -1832,12 +1832,12 @@ export default function AcademicPage() {
                       Rising Subjects
                     </h4>
                     <div className="space-y-2">
-                      {risingStars.length > 0 ? risingStars.map((item, idx) => <div key={idx} className="p-2.5 rounded-lg border border-green-500/30 bg-green-500/10">
-                          <div className="flex items-center justify-between">
-                            <span className="text-xs font-medium text-foreground">{item.subject.name}</span>
-                            <span className="text-xs font-bold text-green-600">+{item.improvement}%</span>
+                      {risingStars.length > 0 ? risingStars.map((item, idx) => <div key={idx} className="p-2.5 rounded-lg border border-green-500/30 bg-green-500/10 h-[72px] flex flex-col justify-between">
+                          <div className="flex items-start justify-between gap-2">
+                            <span className="text-xs font-medium text-foreground line-clamp-2 flex-1">{item.subject.name}</span>
+                            <span className="text-xs font-bold text-green-600 flex-shrink-0">+{item.improvement}%</span>
                           </div>
-                          <p className="text-[10px] text-muted-foreground mt-0.5">
+                          <p className="text-[10px] text-muted-foreground">
                             {item.prev}% → {item.current}%
                           </p>
                         </div>) : <p className="text-xs text-muted-foreground p-2">No improving subjects</p>}
@@ -1851,12 +1851,12 @@ export default function AcademicPage() {
                       Needs Focus
                     </h4>
                     <div className="space-y-2">
-                      {fallingBehind.length > 0 ? fallingBehind.map((item, idx) => <div key={idx} className="p-2.5 rounded-lg border border-red-500/30 bg-red-500/10">
-                          <div className="flex items-center justify-between">
-                            <span className="text-xs font-medium text-foreground">{item.subject.name}</span>
-                            <span className="text-xs font-bold text-red-600">-{item.decline}%</span>
+                      {fallingBehind.length > 0 ? fallingBehind.map((item, idx) => <div key={idx} className="p-2.5 rounded-lg border border-red-500/30 bg-red-500/10 h-[72px] flex flex-col justify-between">
+                          <div className="flex items-start justify-between gap-2">
+                            <span className="text-xs font-medium text-foreground line-clamp-2 flex-1">{item.subject.name}</span>
+                            <span className="text-xs font-bold text-red-600 flex-shrink-0">-{item.decline}%</span>
                           </div>
-                          <p className="text-[10px] text-muted-foreground mt-0.5">
+                          <p className="text-[10px] text-muted-foreground">
                             {item.prev}% → {item.current}%
                           </p>
                         </div>) : <p className="text-xs text-muted-foreground p-2">All subjects stable!</p>}
