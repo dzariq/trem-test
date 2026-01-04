@@ -5,7 +5,7 @@ import { attendanceData, students } from "@/data/mockData";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { ChevronLeft, ChevronRight, Check, X, Clock, CalendarOff, ZoomIn, ZoomOut } from "lucide-react";
+import { ChevronLeft, ChevronRight, Check, X, Clock, CalendarOff } from "lucide-react";
 import schoolLogo from "@/assets/school-badge.png";
 import {
   BarChart,
@@ -36,7 +36,9 @@ export default function AttendancePage() {
   const [selectedYear, setSelectedYear] = useState("2025");
   const [zoomLevel, setZoomLevel] = useState<ZoomLevel>(3);
   const chartContainerRef = useRef<HTMLDivElement>(null);
-  const [scrollPosition, setScrollPosition] = useState(100); // Start at end (most recent)
+  const [scrollPosition, setScrollPosition] = useState(100);
+  const [isPinching, setIsPinching] = useState(false);
+  const lastPinchDistance = useRef<number | null>(null);
 
   const yearOptions = ["2025", "2024", "2023"];
   const zoomOptions: { value: ZoomLevel; label: string }[] = [
@@ -57,14 +59,39 @@ export default function AttendancePage() {
     setSelectedMonth(months[newIndex]);
   };
 
-  const handleZoomIn = () => {
-    if (zoomLevel === 12) setZoomLevel(6);
-    else if (zoomLevel === 6) setZoomLevel(3);
+  // Pinch-to-zoom handlers
+  const handleTouchStart = (e: React.TouchEvent) => {
+    if (e.touches.length === 2) {
+      setIsPinching(true);
+      const dx = e.touches[0].clientX - e.touches[1].clientX;
+      const dy = e.touches[0].clientY - e.touches[1].clientY;
+      lastPinchDistance.current = Math.sqrt(dx * dx + dy * dy);
+    }
   };
 
-  const handleZoomOut = () => {
-    if (zoomLevel === 3) setZoomLevel(6);
-    else if (zoomLevel === 6) setZoomLevel(12);
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (e.touches.length === 2 && lastPinchDistance.current !== null) {
+      const dx = e.touches[0].clientX - e.touches[1].clientX;
+      const dy = e.touches[0].clientY - e.touches[1].clientY;
+      const newDistance = Math.sqrt(dx * dx + dy * dy);
+      const delta = newDistance - lastPinchDistance.current;
+      
+      if (Math.abs(delta) > 30) {
+        if (delta > 0) {
+          // Pinch out - zoom in (show fewer months)
+          setZoomLevel(prev => prev === 12 ? 6 : prev === 6 ? 3 : 3);
+        } else {
+          // Pinch in - zoom out (show more months)
+          setZoomLevel(prev => prev === 3 ? 6 : prev === 6 ? 12 : 12);
+        }
+        lastPinchDistance.current = newDistance;
+      }
+    }
+  };
+
+  const handleTouchEnd = () => {
+    setIsPinching(false);
+    lastPinchDistance.current = null;
   };
 
   const getStatusColor = (status: string) => {
@@ -208,51 +235,29 @@ export default function AttendancePage() {
                 </SelectContent>
               </Select>
             </div>
-            {/* Zoom Controls */}
-            <div className="flex items-center justify-between mt-3">
-              <div className="flex items-center gap-1">
-                <Button 
-                  variant="outline" 
-                  size="icon" 
-                  className="h-8 w-8"
-                  onClick={handleZoomIn}
-                  disabled={zoomLevel === 3}
+            {/* Zoom Level Pills */}
+            <div className="flex justify-center gap-1 mt-2">
+              {zoomOptions.map((option) => (
+                <Button
+                  key={option.value}
+                  variant={zoomLevel === option.value ? "default" : "outline"}
+                  size="sm"
+                  className="h-7 text-xs px-3"
+                  onClick={() => setZoomLevel(option.value)}
                 >
-                  <ZoomIn className="h-4 w-4" />
+                  {option.label}
                 </Button>
-                <Button 
-                  variant="outline" 
-                  size="icon" 
-                  className="h-8 w-8"
-                  onClick={handleZoomOut}
-                  disabled={zoomLevel === 12}
-                >
-                  <ZoomOut className="h-4 w-4" />
-                </Button>
-              </div>
-              <div className="flex gap-1">
-                {zoomOptions.map((option) => (
-                  <Button
-                    key={option.value}
-                    variant={zoomLevel === option.value ? "default" : "outline"}
-                    size="sm"
-                    className="h-7 text-xs px-2"
-                    onClick={() => setZoomLevel(option.value)}
-                  >
-                    {option.label}
-                  </Button>
-                ))}
-              </div>
+              ))}
             </div>
-            <p className="text-xs text-muted-foreground mt-2">
-              {zoomLevel < 12 && "← Swipe to see more months →"}
-            </p>
           </CardHeader>
           <CardContent>
             <div 
               ref={chartContainerRef}
-              className="h-64 overflow-x-auto touch-pan-x"
+              className="h-64 overflow-x-auto touch-pan-x select-none"
               style={{ WebkitOverflowScrolling: 'touch' }}
+              onTouchStart={handleTouchStart}
+              onTouchMove={handleTouchMove}
+              onTouchEnd={handleTouchEnd}
             >
               <div style={{ width: zoomLevel === 12 ? '100%' : `${Math.max(100, zoomLevel * 20)}%`, minWidth: '100%', height: '100%' }}>
                 <ResponsiveContainer width="100%" height="100%">
