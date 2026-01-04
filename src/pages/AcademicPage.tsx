@@ -1978,8 +1978,8 @@ export default function AcademicPage() {
                       <span>Rising Subjects</span>
                     </h4>
                     <div className="space-y-2">
-                      {risingStars.length > 0 ? risingStars.map((item, idx) => <div key={idx} className="p-2.5 rounded-lg border border-green-500/30 bg-green-500/10 min-h-[72px] flex flex-col">
-                          <div className="flex items-start justify-between gap-2">
+                      {risingStars.length > 0 ? risingStars.map((item, idx) => <div key={idx} className="p-2.5 rounded-lg border border-green-500/30 bg-green-500/10 h-[84px] flex flex-col">
+                          <div className="flex items-start justify-between gap-2 min-h-[32px]">
                             <span className="text-xs font-medium text-foreground line-clamp-2 flex-1">{item.subject.name}</span>
                             <span className="px-1.5 py-0.5 rounded bg-green-500 text-[10px] font-bold text-white flex-shrink-0">+{item.improvement}%</span>
                           </div>
@@ -1999,8 +1999,8 @@ export default function AcademicPage() {
                       <span>Needs Focus</span>
                     </h4>
                     <div className="space-y-2">
-                      {fallingBehind.length > 0 ? fallingBehind.map((item, idx) => <div key={idx} className="p-2.5 rounded-lg border border-red-500/30 bg-red-500/10 min-h-[72px] flex flex-col">
-                          <div className="flex items-start justify-between gap-2">
+                      {fallingBehind.length > 0 ? fallingBehind.map((item, idx) => <div key={idx} className="p-2.5 rounded-lg border border-red-500/30 bg-red-500/10 h-[84px] flex flex-col">
+                          <div className="flex items-start justify-between gap-2 min-h-[32px]">
                             <span className="text-xs font-medium text-foreground line-clamp-2 flex-1">{item.subject.name}</span>
                             <span className="px-1.5 py-0.5 rounded bg-red-500 text-[10px] font-bold text-white flex-shrink-0">-{item.decline}%</span>
                           </div>
