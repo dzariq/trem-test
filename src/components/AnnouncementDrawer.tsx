@@ -1,10 +1,29 @@
 import * as React from "react";
-import { useState, useRef, useCallback } from "react";
+import { useState, useRef, useCallback, useEffect } from "react";
 import { Drawer as DrawerPrimitive } from "vaul";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Calendar, ChevronLeft, ChevronRight, Download, FileText, Megaphone, X } from "lucide-react";
+import { Calendar, Check, ChevronLeft, ChevronRight, Download, FileText, Megaphone, X } from "lucide-react";
+
+const READ_ANNOUNCEMENTS_KEY = "readAnnouncementIds";
+
+const getReadAnnouncementIds = (): number[] => {
+  try {
+    const stored = localStorage.getItem(READ_ANNOUNCEMENTS_KEY);
+    return stored ? JSON.parse(stored) : [];
+  } catch {
+    return [];
+  }
+};
+
+const markAnnouncementAsRead = (id: number): void => {
+  const readIds = getReadAnnouncementIds();
+  if (!readIds.includes(id)) {
+    readIds.push(id);
+    localStorage.setItem(READ_ANNOUNCEMENTS_KEY, JSON.stringify(readIds));
+  }
+};
 import { ScrollArea } from "@/components/ui/scroll-area";
 
 interface Announcement {
@@ -35,11 +54,28 @@ export function AnnouncementDrawer({
 }: AnnouncementDrawerProps) {
   const [snap, setSnap] = useState<number | string | null>(0.85);
   const [slideDirection, setSlideDirection] = useState<"left" | "right" | null>(null);
+  const [isRead, setIsRead] = useState(false);
   const touchStartX = useRef<number>(0);
   const touchEndX = useRef<number>(0);
   const contentRef = useRef<HTMLDivElement>(null);
 
   const currentAnnouncement = announcements[currentIndex];
+
+  // Mark as read when drawer opens or announcement changes
+  useEffect(() => {
+    if (isOpen && currentAnnouncement) {
+      markAnnouncementAsRead(currentAnnouncement.id);
+      setIsRead(true);
+    }
+  }, [isOpen, currentAnnouncement]);
+
+  // Check read status when announcement changes
+  useEffect(() => {
+    if (currentAnnouncement) {
+      const readIds = getReadAnnouncementIds();
+      setIsRead(readIds.includes(currentAnnouncement.id));
+    }
+  }, [currentAnnouncement]);
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
@@ -154,6 +190,12 @@ export function AnnouncementDrawer({
                 <Badge variant="secondary" className="text-xs gap-1">
                   <FileText className="h-3 w-3" />
                   {attachmentCount}
+                </Badge>
+              )}
+              {isRead && (
+                <Badge variant="outline" className="text-xs gap-1 text-green-600 border-green-600/30 bg-green-500/10">
+                  <Check className="h-3 w-3" />
+                  Read
                 </Badge>
               )}
             </div>
