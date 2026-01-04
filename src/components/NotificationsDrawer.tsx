@@ -9,12 +9,12 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { SwipeableNotification } from "@/components/SwipeableNotification";
 import { 
   Bell, 
   Calendar, 
   FileText, 
   AlertCircle, 
-  Clock,
   Users,
   BookOpen,
   Trophy,
@@ -25,7 +25,6 @@ import {
   Camera,
   ClipboardCheck,
   MessageSquare,
-  ChevronRight,
   GraduationCap
 } from "lucide-react";
 
@@ -297,16 +296,18 @@ export function NotificationsDrawer({ open, onOpenChange, isTeacher = false }: N
   };
 
   const handleNotificationClick = (notification: Notification) => {
-    // Mark as read
-    setNotifications(prev => 
-      prev.map(n => n.id === notification.id ? { ...n, isRead: true } : n)
-    );
+    // Remove notification and navigate
+    setNotifications(prev => prev.filter(n => n.id !== notification.id));
     
     // Navigate if there's a link
     if (notification.linkTo) {
       onOpenChange(false); // Close drawer
       navigate(notification.linkTo);
     }
+  };
+
+  const deleteNotification = (id: string) => {
+    setNotifications(prev => prev.filter(n => n.id !== id));
   };
 
   const markAllAsRead = () => {
@@ -354,9 +355,12 @@ export function NotificationsDrawer({ open, onOpenChange, isTeacher = false }: N
               </Button>
             )}
           </div>
+          <p className="text-xs text-muted-foreground text-center">
+            Swipe left to delete • Tap to open
+          </p>
         </div>
 
-        <ScrollArea className="flex-1 px-4 pb-6" style={{ maxHeight: "calc(85vh - 140px)" }}>
+        <ScrollArea className="flex-1 px-4 pb-6" style={{ maxHeight: "calc(85vh - 160px)" }}>
           {/* Notifications List */}
           <div className="space-y-2">
             {filteredNotifications.map((notification) => {
@@ -364,44 +368,19 @@ export function NotificationsDrawer({ open, onOpenChange, isTeacher = false }: N
               const hasLink = !!notification.linkTo;
               
               return (
-                <div 
-                  key={notification.id} 
-                  className={`flex items-center gap-3 p-3 rounded-xl transition-all active:scale-[0.98] ${
-                    !notification.isRead 
-                      ? "bg-primary/5 border border-primary/20" 
-                      : "bg-muted/30"
-                  } ${hasLink ? "cursor-pointer" : ""}`}
-                  onClick={() => hasLink && handleNotificationClick(notification)}
-                >
-                  {/* Icon */}
-                  <div className={`w-10 h-10 rounded-full ${getTypeColor(notification.type)} flex items-center justify-center flex-shrink-0`}>
-                    <Icon className="h-5 w-5" />
-                  </div>
-                  
-                  {/* Content */}
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2">
-                      <h3 className={`text-sm text-foreground truncate ${!notification.isRead ? "font-semibold" : "font-medium"}`}>
-                        {notification.title}
-                      </h3>
-                      {!notification.isRead && (
-                        <div className="w-2 h-2 rounded-full bg-primary flex-shrink-0" />
-                      )}
-                    </div>
-                    <p className="text-xs text-muted-foreground mt-0.5 line-clamp-1">
-                      {notification.message}
-                    </p>
-                    <span className="text-[10px] text-muted-foreground/70 mt-1 flex items-center gap-1">
-                      <Clock className="h-2.5 w-2.5" />
-                      {notification.time}
-                    </span>
-                  </div>
-                  
-                  {/* Arrow */}
-                  {hasLink && (
-                    <ChevronRight className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-                  )}
-                </div>
+                <SwipeableNotification
+                  key={notification.id}
+                  id={notification.id}
+                  icon={<Icon className="h-5 w-5" />}
+                  iconBgClass={getTypeColor(notification.type)}
+                  title={notification.title}
+                  message={notification.message}
+                  time={notification.time}
+                  isRead={notification.isRead}
+                  hasLink={hasLink}
+                  onClick={() => handleNotificationClick(notification)}
+                  onDelete={() => deleteNotification(notification.id)}
+                />
               );
             })}
 
