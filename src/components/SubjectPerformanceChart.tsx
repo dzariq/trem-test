@@ -1,5 +1,6 @@
 import { useState, useRef, useMemo, TouchEvent, useCallback } from "react";
 import { Badge } from "@/components/ui/badge";
+import { getTinySubjectCode } from "@/data/subjectsConfig";
 import {
   BarChart,
   Bar,
@@ -62,17 +63,21 @@ export function SubjectPerformanceChart({
     }
   }, []);
 
-  // Get visible subjects based on zoom and scroll
+  // Get visible subjects based on zoom and scroll, with short names for display
   const visibleData = useMemo(() => {
     const maxOffset = Math.max(0, data.length - zoomLevel);
     const clampedOffset = Math.min(scrollOffset, maxOffset);
-    return data.slice(clampedOffset, clampedOffset + zoomLevel);
+    return data.slice(clampedOffset, clampedOffset + zoomLevel).map(item => ({
+      ...item,
+      displayName: getTinySubjectCode(item.name)
+    }));
   }, [data, zoomLevel, scrollOffset]);
 
-  // Touch handlers
+  // Touch handlers - only capture pinch gestures, let single finger scroll pass through
   const handleTouchStart = useCallback((e: TouchEvent<HTMLDivElement>) => {
     if (e.touches.length === 2) {
-      // Pinch gesture start
+      // Pinch gesture start - prevent default to capture gesture
+      e.preventDefault();
       const touch1 = e.touches[0];
       const touch2 = e.touches[1];
       initialTouchDistance.current = Math.hypot(
@@ -82,17 +87,13 @@ export function SubjectPerformanceChart({
       initialZoomLevel.current = zoomLevel;
       isScrolling.current = false;
       lastTouchY.current = null;
-    } else if (e.touches.length === 1) {
-      // Single touch - scroll gesture start
-      lastTouchY.current = e.touches[0].clientY;
-      isScrolling.current = true;
-      initialTouchDistance.current = null;
     }
+    // Single touch - don't capture, let page scroll normally
   }, [zoomLevel]);
 
   const handleTouchMove = useCallback((e: TouchEvent<HTMLDivElement>) => {
     if (e.touches.length === 2 && initialTouchDistance.current !== null) {
-      // Pinch gesture
+      // Pinch gesture only
       e.preventDefault();
       isScrolling.current = false;
 
@@ -124,25 +125,9 @@ export function SubjectPerformanceChart({
         initialTouchDistance.current = currentDistance;
         initialZoomLevel.current = newZoom;
       }
-    } else if (e.touches.length === 1 && isScrolling.current && lastTouchY.current !== null) {
-      // Scroll gesture
-      const currentY = e.touches[0].clientY;
-      const deltaY = lastTouchY.current - currentY;
-      const threshold = 30; // pixels to move before scrolling
-
-      if (Math.abs(deltaY) > threshold) {
-        const direction = deltaY > 0 ? 1 : -1;
-        const maxOffset = Math.max(0, data.length - zoomLevel);
-        const newOffset = Math.max(0, Math.min(maxOffset, scrollOffset + direction));
-        
-        if (newOffset !== scrollOffset) {
-          triggerHaptic('light');
-          setScrollOffset(newOffset);
-        }
-        lastTouchY.current = currentY;
-      }
     }
-  }, [data.length, zoomLevel, scrollOffset, triggerHaptic]);
+    // Single touch - let page scroll normally (no internal scroll capture)
+  }, [data.length, zoomLevel, triggerHaptic]);
 
   const handleTouchEnd = useCallback(() => {
     initialTouchDistance.current = null;
@@ -197,19 +182,14 @@ export function SubjectPerformanceChart({
         </div>
       </div>
       
-      {/* Scroll indicator - top */}
-      {canScrollUp && (
-        <div className="flex justify-center">
-          <div className="w-8 h-1 rounded-full bg-muted-foreground/30 animate-pulse" />
-        </div>
-      )}
       
       <div 
         ref={chartContainerRef}
-        className="touch-none select-none relative"
+        className="select-none relative"
         style={{ 
-          height: Math.max(180, visibleData.length * 32),
-          WebkitTapHighlightColor: 'transparent'
+          height: Math.max(220, visibleData.length * 40),
+          WebkitTapHighlightColor: 'transparent',
+          touchAction: 'pan-y'
         }}
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
@@ -229,9 +209,9 @@ export function SubjectPerformanceChart({
             />
             <YAxis 
               type="category" 
-              dataKey="name" 
-              tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }} 
-              width={75}
+              dataKey="displayName" 
+              tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }} 
+              width={65}
               axisLine={false}
               tickLine={false}
             />
@@ -246,6 +226,10 @@ export function SubjectPerformanceChart({
                 `${value}%`, 
                 name === "score" ? "Score" : name === "goal" ? "Goal" : name
               ]}
+              labelFormatter={(label) => {
+                const item = visibleData.find(d => d.displayName === label);
+                return item?.name || label;
+              }}
               trigger="click"
               cursor={false}
             />
@@ -256,9 +240,9 @@ export function SubjectPerformanceChart({
             </Bar>
             {visibleData.map((entry) => (
               <ReferenceDot
-                key={`goal-${entry.name}`}
+                key={`goal-${entry.displayName}`}
                 x={entry.goal}
-                y={entry.name}
+                y={entry.displayName}
                 r={4}
                 fill="hsl(var(--foreground))"
                 stroke="hsl(var(--background))"
@@ -269,15 +253,8 @@ export function SubjectPerformanceChart({
         </ResponsiveContainer>
       </div>
       
-      {/* Scroll indicator - bottom */}
-      {canScrollDown && (
-        <div className="flex justify-center">
-          <div className="w-8 h-1 rounded-full bg-muted-foreground/30 animate-pulse" />
-        </div>
-      )}
-      
       <p className="text-[10px] text-muted-foreground text-center">
-        Pinch to zoom • Swipe to scroll
+        Pinch to zoom
       </p>
     </div>
   );
