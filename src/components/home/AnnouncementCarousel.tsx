@@ -1,9 +1,9 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { announcements } from "@/data/mockData";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ChevronRight, Megaphone } from "lucide-react";
+import { Check, ChevronRight, Megaphone } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import {
   Carousel,
@@ -12,12 +12,27 @@ import {
   CarouselNext,
   CarouselPrevious,
 } from "@/components/ui/carousel";
-import { AnnouncementDrawer } from "@/components/AnnouncementDrawer";
+import { AnnouncementDrawer, getReadAnnouncementIds } from "@/components/AnnouncementDrawer";
 
 export function AnnouncementCarousel() {
   const navigate = useNavigate();
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [currentAnnouncementIndex, setCurrentAnnouncementIndex] = useState(0);
+  const [readIds, setReadIds] = useState<number[]>([]);
+
+  // Load read status on mount and when drawer closes
+  useEffect(() => {
+    setReadIds(getReadAnnouncementIds());
+  }, []);
+
+  // Refresh read status when drawer closes
+  useEffect(() => {
+    if (!drawerOpen) {
+      setReadIds(getReadAnnouncementIds());
+    }
+  }, [drawerOpen]);
+
+  const isRead = (id: number) => readIds.includes(id);
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
@@ -72,11 +87,17 @@ export function AnnouncementCarousel() {
             )}
             {/* Overlay gradient */}
             <div className="absolute inset-0 bg-gradient-to-t from-card via-card/60 to-transparent" />
-            {/* Featured Badge */}
-            <div className="absolute top-3 left-3">
+            {/* Featured Badge & Read Status */}
+            <div className="absolute top-3 left-3 right-3 flex items-center justify-between">
               <Badge className="bg-primary text-primary-foreground text-xs">
                 Featured
               </Badge>
+              {isRead(mainAnnouncement.id) && (
+                <Badge variant="outline" className="text-xs gap-1 text-green-600 border-green-600/30 bg-green-500/10 backdrop-blur-sm">
+                  <Check className="h-3 w-3" />
+                  Read
+                </Badge>
+              )}
             </div>
             {/* Category and Date */}
             <div className="absolute bottom-3 left-4 flex items-center gap-2">
@@ -138,10 +159,16 @@ export function AnnouncementCarousel() {
                         </div>
                       )}
                       <div className="absolute inset-0 bg-gradient-to-t from-card via-card/50 to-transparent" />
-                      <div className="absolute bottom-2 left-3">
+                      <div className="absolute bottom-2 left-3 right-3 flex items-center justify-between">
                         <Badge variant="secondary" className="text-[10px]">
                           {announcement.category}
                         </Badge>
+                        {isRead(announcement.id) && (
+                          <Badge variant="outline" className="text-[10px] gap-0.5 text-green-600 border-green-600/30 bg-green-500/10 backdrop-blur-sm px-1.5">
+                            <Check className="h-2.5 w-2.5" />
+                            Read
+                          </Badge>
+                        )}
                       </div>
                     </div>
                     <CardContent className="p-3 pt-2">
