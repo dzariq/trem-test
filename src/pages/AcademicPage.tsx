@@ -164,6 +164,7 @@ export default function AcademicPage() {
   const trendsReportRef = useRef<HTMLDivElement>(null);
   const [comparisonReportDialogOpen, setComparisonReportDialogOpen] = useState(false);
   const comparisonReportRef = useRef<HTMLDivElement>(null);
+  const [heatmapExpanded, setHeatmapExpanded] = useState(false);
   const isActivitiesTab = activeTab === "cocurriculum";
   const toggleYear = (year: string) => {
     setSelectedYears(prev => prev.includes(year) ? prev.filter(y => y !== year) : [...prev, year]);
@@ -1893,7 +1894,7 @@ export default function AcademicPage() {
                           </div>)}
                       </div>
                       {/* Subject rows */}
-                      {heatmapData.map(row => <div key={row.subject} className="flex gap-1 mb-1">
+                      {(heatmapExpanded ? heatmapData : heatmapData.slice(0, 6)).map(row => <div key={row.subject} className="flex gap-1 mb-1">
                           <div className="w-16 shrink-0 text-[10px] font-medium text-foreground truncate pr-1 flex items-center">
                             {row.subject}
                           </div>
@@ -1906,6 +1907,18 @@ export default function AcademicPage() {
                         </div>)}
                     </div>
                   </div>
+                  {/* View More Button */}
+                  {heatmapData.length > 6 && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="w-full text-xs text-muted-foreground hover:text-foreground"
+                      onClick={() => setHeatmapExpanded(!heatmapExpanded)}
+                    >
+                      {heatmapExpanded ? "View Less" : `View More (${heatmapData.length - 6} more subjects)`}
+                      <ChevronDown className={`h-4 w-4 ml-1 transition-transform ${heatmapExpanded ? "rotate-180" : ""}`} />
+                    </Button>
+                  )}
                   {/* Legend */}
                   <div className="flex items-center justify-center gap-1 mt-2">
                     <span className="text-[9px] text-muted-foreground mr-1">Low</span>
