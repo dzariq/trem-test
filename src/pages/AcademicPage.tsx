@@ -2010,7 +2010,7 @@ export default function AcademicPage() {
                     Strengths Profile
                   </h4>
                   <p className="text-[10px] text-muted-foreground -mt-1">
-                    This chart shows your child's performance across all subjects at a glance. The further the colored area extends towards the edge, the stronger the performance in that subject. Use this to quickly identify areas of strength and subjects that may need more attention.
+                    Larger areas indicate stronger subjects. Smaller areas need more focus.
                   </p>
                   <div className="h-56">
                     <ResponsiveContainer width="100%" height="100%">
