@@ -1708,12 +1708,6 @@ export default function AcademicPage() {
                   </div>
                 </div>
 
-                {/* Report Button for Trends */}
-                <Button size="sm" className="w-full gap-2 bg-emerald-600 hover:bg-emerald-700 text-white" onClick={() => setTrendsReportDialogOpen(true)}>
-                  <FileText className="h-4 w-4" />
-                  Generate Report
-                </Button>
-
                 {/* Moomoo-Style Gradient Area Chart - Scrollable with Pinch-to-Zoom */}
                 <div className="space-y-2">
                   <div className="flex items-center justify-between">
@@ -1955,6 +1949,12 @@ export default function AcademicPage() {
                     <span className="text-[9px] text-muted-foreground ml-1">High</span>
                   </div>
                 </div>
+
+                {/* Report Button for Trends - at the bottom */}
+                <Button size="sm" className="w-full gap-2 bg-emerald-600 hover:bg-emerald-700 text-white" onClick={() => setTrendsReportDialogOpen(true)}>
+                  <FileText className="h-4 w-4" />
+                  Generate Report
+                </Button>
               </TabsContent>
 
               {/* COMPARISON TAB */}
