@@ -76,6 +76,16 @@ export default function AcademicPage() {
   const lastTouchDistance = useRef<number | null>(null);
   const [isPinching, setIsPinching] = useState(false);
 
+  // Carousel state for Top Growth/Decline section
+  const [growthCarouselSlide, setGrowthCarouselSlide] = useState(0);
+  const [showGrowthSwipeHint, setShowGrowthSwipeHint] = useState(true);
+  
+  // Hide swipe hint after 3 seconds
+  useEffect(() => {
+    const timer = setTimeout(() => setShowGrowthSwipeHint(false), 3000);
+    return () => clearTimeout(timer);
+  }, []);
+
   // Haptic feedback helper
   const triggerHaptic = useCallback(() => {
     if ('vibrate' in navigator) {
@@ -2338,14 +2348,6 @@ export default function AcademicPage() {
                 {(() => {
                   const top5Growth = [...comparisonData].sort((a, b) => b.delta - a.delta).slice(0, 5).filter(item => item.delta > 0);
                   const top5Decline = [...comparisonData].sort((a, b) => a.delta - b.delta).slice(0, 5).filter(item => item.delta < 0);
-                  const [activeSlide, setActiveSlide] = useState(0);
-                  const [showSwipeHint, setShowSwipeHint] = useState(true);
-                  
-                  // Hide swipe hint after 3 seconds or on swipe
-                  useEffect(() => {
-                    const timer = setTimeout(() => setShowSwipeHint(false), 3000);
-                    return () => clearTimeout(timer);
-                  }, []);
 
                   return (
                     <div className="relative">
@@ -2355,8 +2357,8 @@ export default function AcademicPage() {
                         setApi={(api) => {
                           if (api) {
                             api.on("select", () => {
-                              setActiveSlide(api.selectedScrollSnap());
-                              setShowSwipeHint(false);
+                              setGrowthCarouselSlide(api.selectedScrollSnap());
+                              setShowGrowthSwipeHint(false);
                             });
                           }
                         }}
@@ -2563,12 +2565,12 @@ export default function AcademicPage() {
                       {/* Dot Indicators & Swipe Hint */}
                       <div className="flex items-center justify-center gap-3 mt-3">
                         <div className="flex items-center gap-2">
-                          <div className={`w-2.5 h-2.5 rounded-full transition-all duration-300 ${activeSlide === 0 ? 'bg-emerald-500 scale-125' : 'bg-emerald-500/30'}`} />
-                          <div className={`w-2.5 h-2.5 rounded-full transition-all duration-300 ${activeSlide === 1 ? 'bg-red-500 scale-125' : 'bg-red-500/30'}`} />
+                          <div className={`w-2.5 h-2.5 rounded-full transition-all duration-300 ${growthCarouselSlide === 0 ? 'bg-emerald-500 scale-125' : 'bg-emerald-500/30'}`} />
+                          <div className={`w-2.5 h-2.5 rounded-full transition-all duration-300 ${growthCarouselSlide === 1 ? 'bg-red-500 scale-125' : 'bg-red-500/30'}`} />
                         </div>
                         
                         {/* Swipe Hint */}
-                        {showSwipeHint && top5Decline.length > 0 && (
+                        {showGrowthSwipeHint && top5Decline.length > 0 && (
                           <div className="flex items-center gap-1 text-[10px] text-muted-foreground animate-pulse">
                             <span>Swipe for declined</span>
                             <ArrowRightLeft className="h-3 w-3" />
