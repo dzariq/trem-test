@@ -277,30 +277,19 @@ export function SubjectPerformanceChart({
           )}
         </h4>
         
-        {/* Zoom preset buttons */}
-        <div className="flex items-center gap-1.5">
-          <button
-            onClick={handleShowAll}
-            className={`flex items-center gap-1 px-2 py-1 rounded-full text-[10px] font-medium transition-all duration-200 ${
-              zoomLevel === totalSubjects
-                ? 'bg-primary text-primary-foreground shadow-sm'
-                : 'bg-muted text-muted-foreground hover:bg-muted/80'
-            }`}
-          >
-            <Maximize2 className="w-3 h-3" />
-            All
-          </button>
-          <button
-            onClick={handleFocusView}
-            className={`flex items-center gap-1 px-2 py-1 rounded-full text-[10px] font-medium transition-all duration-200 ${
-              zoomLevel === FOCUS_COUNT
-                ? 'bg-primary text-primary-foreground shadow-sm'
-                : 'bg-muted text-muted-foreground hover:bg-muted/80'
-            }`}
-          >
-            <Target className="w-3 h-3" />
-            Focus
-          </button>
+        {/* Zoom indicator */}
+        <div className="flex items-center gap-2 text-xs">
+          {zoomLevel < totalSubjects && (
+            <button
+              onClick={handleShowAll}
+              className="text-primary hover:underline font-medium"
+            >
+              Reset zoom
+            </button>
+          )}
+          <span className="text-muted-foreground">
+            {Math.round((totalSubjects / zoomLevel) * 100)}%
+          </span>
         </div>
       </div>
       
