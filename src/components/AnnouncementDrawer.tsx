@@ -62,6 +62,9 @@ export function AnnouncementDrawer({
 
   const currentAnnouncement = announcements[currentIndex];
 
+  // Calculate unread count
+  const unreadCount = announcements.filter(a => !isAnnouncementRead(a.id)).length;
+
   // Reset view mode when drawer closes
   useEffect(() => {
     if (!isOpen) {
@@ -243,6 +246,14 @@ export function AnnouncementDrawer({
               >
                 <Grid2X2 className="h-3.5 w-3.5" />
                 {viewMode === "single" ? "View All" : "Back"}
+                {viewMode === "single" && unreadCount > 0 && (
+                  <Badge 
+                    variant="destructive" 
+                    className="ml-1 h-5 min-w-5 px-1.5 text-[10px] font-semibold"
+                  >
+                    {unreadCount}
+                  </Badge>
+                )}
               </Button>
               <Button
                 variant="ghost"
