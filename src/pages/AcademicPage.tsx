@@ -15,6 +15,7 @@ import schoolLogo from "@/assets/school-badge.png";
 import { CertificateDialog } from "@/components/CertificateDialog";
 import { ReportCardDialog } from "@/components/ReportCardDialog";
 import { EnvelopeAwardCard } from "@/components/EnvelopeAwardCard";
+import { SubjectPerformanceChart } from "@/components/SubjectPerformanceChart";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { LineChart, Line, XAxis, YAxis, ResponsiveContainer, Tooltip, Legend, CartesianGrid, BarChart, Bar, Cell, PieChart, Pie, AreaChart, Area, ReferenceLine, ReferenceDot, RadarChart, Radar, PolarGrid, PolarAngleAxis, PolarRadiusAxis } from "recharts";
 type YearKey = "2022" | "2023" | "2024" | "2025";
@@ -1468,74 +1469,15 @@ export default function AcademicPage() {
                   </div>
                 </div>
 
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between">
-                    <h4 className="text-sm font-medium text-foreground flex items-center gap-2">
-                      Subject Performance
-                      <Badge variant="outline" className="text-[10px] px-1.5 py-0">
-                        <span className="w-2 h-2 rounded-full mr-1" style={{
-                        backgroundColor: "hsl(var(--foreground))"
-                      }} />
-                        Goal
-                      </Badge>
-                    </h4>
-                    {chartZoom !== 1 && (
-                      <Button variant="ghost" size="sm" className="h-6 text-xs px-2" onClick={resetZoom}>
-                        Reset
-                      </Button>
-                    )}
-                  </div>
-                  <div 
-                    ref={chartContainerRef}
-                    className="overflow-auto select-none transition-all duration-200 ease-out rounded-lg"
-                    style={{ 
-                      height: Math.max(208, 208 * chartZoom),
-                      WebkitTapHighlightColor: 'transparent',
-                      touchAction: isPinching ? 'none' : 'pan-x pan-y'
-                    }}
-                    onTouchStart={handleTouchStart}
-                    onTouchMove={handleTouchMove}
-                    onTouchEnd={handleTouchEnd}
-                  >
-                    <div 
-                      className="transition-transform duration-200 ease-out origin-top-left"
-                      style={{ 
-                        width: `${100 * chartZoom}%`,
-                        height: `${100 * chartZoom}%`,
-                        minHeight: 208
-                      }}
-                    >
-                      <ResponsiveContainer width="100%" height="100%">
-                        <BarChart data={subjectPerformance} layout="vertical">
-                          <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" strokeOpacity={0.3} />
-                          <XAxis type="number" domain={[0, 100]} tick={{
-                          fontSize: 10,
-                          fill: "hsl(var(--muted-foreground))"
-                        }} />
-                          <YAxis type="category" dataKey="name" tick={{
-                          fontSize: 10,
-                          fill: "hsl(var(--muted-foreground))"
-                        }} width={70} />
-                          <Tooltip 
-                            contentStyle={{
-                              backgroundColor: "hsl(var(--card))",
-                              border: "1px solid hsl(var(--border))",
-                              borderRadius: "8px"
-                            }} 
-                            formatter={(value: number, name: string) => [`${value}%`, name === "score" ? "Score" : name === "goal" ? "Goal" : name]}
-                            trigger="click"
-                            cursor={false}
-                          />
-                          <Bar dataKey="score" radius={[0, 4, 4, 0]}>
-                            {subjectPerformance.map((entry, index) => <Cell key={index} fill={lineColors[index % lineColors.length]} />)}
-                          </Bar>
-
-                          {subjectPerformance.map(entry => <ReferenceDot key={`goal-${entry.name}`} x={entry.goal} y={entry.name} r={4} fill="hsl(var(--foreground))" stroke="hsl(var(--background))" strokeWidth={1} />)}
-                        </BarChart>
-                      </ResponsiveContainer>
-                    </div>
-                  </div>
-                </div>
+                <SubjectPerformanceChart 
+                  data={subjectPerformance.map(s => ({
+                    name: shortenSubjectName(s.name),
+                    fullName: s.name,
+                    score: s.score,
+                    goal: s.goal
+                  }))}
+                  lineColors={lineColors}
+                />
 
                 {/* Stats Cards Grid - 6 cards */}
                 <div className="grid grid-cols-3 gap-2">

@@ -1,21 +1,11 @@
-import { useState, useMemo, useRef, TouchEvent } from "react";
+import { useState, useMemo } from "react";
 import { academicData, attendanceData } from "@/data/mockData";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ChevronRight, TrendingUp, Award, BookOpen, Calendar, Target, AlertTriangle, ArrowUp, Trophy } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import {
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  ResponsiveContainer,
-  Tooltip,
-  CartesianGrid,
-  Cell,
-  ReferenceDot,
-} from "recharts";
+import { SubjectPerformanceChart } from "@/components/SubjectPerformanceChart";
 
 // Helper to get score from new data structure
 const getScore = (subject: typeof academicData.subjects[0], year: string, examType: "midYear" | "yearEnd") => {
@@ -49,69 +39,6 @@ const getGradeFromScore = (score: number) => {
 export function ResultsSummary() {
   const navigate = useNavigate();
   const [subjectFilter, setSubjectFilter] = useState<string>("all");
-  
-  // Pinch-to-zoom state for subject performance chart
-  const [subjectZoomLevel, setSubjectZoomLevel] = useState<number>(6); // Default show 6 subjects
-  const initialTouchDistance = useRef<number | null>(null);
-  const initialZoomLevel = useRef<number>(6);
-  const chartContainerRef = useRef<HTMLDivElement>(null);
-
-  // Haptic feedback helper
-  const triggerHaptic = (style: 'light' | 'medium' | 'heavy' = 'light') => {
-    if (navigator.vibrate) {
-      const patterns = { light: 10, medium: 20, heavy: 30 };
-      navigator.vibrate(patterns[style]);
-    }
-  };
-
-  // Touch handlers for pinch-to-zoom
-  const handleTouchStart = (e: TouchEvent<HTMLDivElement>) => {
-    if (e.touches.length === 2) {
-      const touch1 = e.touches[0];
-      const touch2 = e.touches[1];
-      initialTouchDistance.current = Math.hypot(
-        touch2.clientX - touch1.clientX,
-        touch2.clientY - touch1.clientY
-      );
-      initialZoomLevel.current = subjectZoomLevel;
-    }
-  };
-
-  const handleTouchMove = (e: TouchEvent<HTMLDivElement>) => {
-    if (e.touches.length === 2 && initialTouchDistance.current !== null) {
-      e.preventDefault();
-
-      const touch1 = e.touches[0];
-      const touch2 = e.touches[1];
-      const currentDistance = Math.hypot(
-        touch2.clientX - touch1.clientX,
-        touch2.clientY - touch1.clientY
-      );
-
-      const ratio = currentDistance / initialTouchDistance.current;
-      const deadzone = 0.05; // reduced for better responsiveness
-
-      if (Math.abs(1 - ratio) < deadzone) return;
-
-      const maxSubjects = allSubjectPerformance.length;
-      // Inverted: pinch out (ratio > 1) = show fewer subjects (zoom in)
-      // pinch in (ratio < 1) = show more subjects (zoom out)
-      const proposed = Math.round(initialZoomLevel.current / ratio);
-      const newZoom = Math.max(3, Math.min(maxSubjects, proposed));
-
-      if (newZoom !== subjectZoomLevel) {
-        triggerHaptic('medium');
-        setSubjectZoomLevel(newZoom);
-        // Update baseline for continuous pinching
-        initialTouchDistance.current = currentDistance;
-        initialZoomLevel.current = newZoom;
-      }
-    }
-  };
-
-  const handleTouchEnd = () => {
-    initialTouchDistance.current = null;
-  };
 
   // Line colors array for indexed access
   const lineColors = [
@@ -189,11 +116,6 @@ export function ResultsSummary() {
       }))
       .sort((a, b) => b.score - a.score);
   }, [subjectFilter]);
-
-  // Visible subject performance based on zoom level
-  const subjectPerformance = useMemo(() => {
-    return allSubjectPerformance.slice(0, subjectZoomLevel);
-  }, [allSubjectPerformance, subjectZoomLevel]);
 
   // Grade distribution
   const gradeDistribution = useMemo(() => {
@@ -392,108 +314,11 @@ export function ResultsSummary() {
             </div>
           )}
 
-          {/* Subject Performance Bar Chart - Matching Academic Page */}
-          <div className="space-y-2">
-            <div className="flex items-center justify-between">
-              <h4 className="text-sm font-medium text-foreground flex items-center gap-2">
-                Subject Performance
-                <Badge variant="outline" className="text-[10px] px-1.5 py-0">
-                  <span className="w-2 h-2 rounded-full mr-1" style={{ backgroundColor: "hsl(var(--foreground))" }} />
-                  Goal
-                </Badge>
-              </h4>
-              <div className="flex items-center gap-1">
-                <span className="text-[10px] text-muted-foreground">
-                  {subjectZoomLevel}/{allSubjectPerformance.length}
-                </span>
-                {subjectZoomLevel !== 6 && (
-                  <button
-                    onClick={() => {
-                      triggerHaptic('light');
-                      setSubjectZoomLevel(6);
-                    }}
-                    className="text-[10px] text-primary underline ml-1"
-                  >
-                    Reset
-                  </button>
-                )}
-                {subjectZoomLevel < allSubjectPerformance.length && (
-                  <button
-                    onClick={() => {
-                      triggerHaptic('light');
-                      setSubjectZoomLevel(allSubjectPerformance.length);
-                    }}
-                    className="text-[10px] text-primary underline ml-1"
-                  >
-                    Show all
-                  </button>
-                )}
-              </div>
-            </div>
-            <div 
-              ref={chartContainerRef}
-              className="touch-none select-none"
-              style={{ 
-                height: Math.max(180, subjectPerformance.length * 32),
-                WebkitTapHighlightColor: 'transparent'
-              }}
-              onTouchStart={handleTouchStart}
-              onTouchMove={handleTouchMove}
-              onTouchEnd={handleTouchEnd}
-            >
-              <ResponsiveContainer width="100%" height="100%" style={{ overflow: 'visible' }}>
-                <BarChart data={subjectPerformance} layout="vertical" margin={{ left: 0, right: 48, top: 4, bottom: 4 }}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" strokeOpacity={0.3} />
-                  <XAxis 
-                    type="number" 
-                    domain={[0, 105]}
-                    ticks={[0, 25, 50, 75, 100]}
-                    padding={{ right: 24 }}
-                    tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }}
-                    axisLine={false}
-                    tickLine={false}
-                  />
-                  <YAxis 
-                    type="category" 
-                    dataKey="name" 
-                    tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }} 
-                    width={75}
-                    axisLine={false}
-                    tickLine={false}
-                  />
-                  <Tooltip 
-                    contentStyle={{ 
-                      backgroundColor: "hsl(var(--card))", 
-                      border: "1px solid hsl(var(--border))", 
-                      borderRadius: "8px",
-                      fontSize: "11px"
-                    }}
-                    formatter={(value: number, name: string) => [
-                      `${value}%`, 
-                      name === "score" ? "Score" : name === "goal" ? "Goal" : name
-                    ]}
-                  />
-                  <Bar dataKey="score" radius={[0, 4, 4, 0]}>
-                    {subjectPerformance.map((entry, index) => (
-                      <Cell key={index} fill={lineColors[index % lineColors.length]} />
-                    ))}
-                  </Bar>
-                  {subjectPerformance.map((entry) => (
-                    <ReferenceDot
-                      key={`goal-${entry.name}`}
-                      x={entry.goal}
-                      y={entry.name}
-                      r={4}
-                      fill="hsl(var(--foreground))"
-                      stroke="hsl(var(--background))"
-                      strokeWidth={1}
-                    />
-                  ))}
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
-            <p className="text-[10px] text-muted-foreground text-center">Pinch to zoom • Show more or fewer subjects</p>
-          </div>
+          {/* Subject Performance Bar Chart */}
+          <SubjectPerformanceChart 
+            data={allSubjectPerformance} 
+            lineColors={lineColors}
+          />
 
           {/* Stats Cards Grid - Matching Academic Page */}
           <div className="grid grid-cols-3 gap-2">
