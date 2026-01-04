@@ -590,21 +590,42 @@ export function ReportCardDialog({
             )}
 
             {/* Signatures */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '8px', marginTop: '16px', paddingTop: '12px', borderTop: '1px solid #d1d5db' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '8px', marginTop: '16px', paddingTop: '12px' }}>
               <div style={{ textAlign: 'center' }}>
-                <div style={{ borderBottom: '1px solid #374151', height: '30px', marginBottom: '6px' }}></div>
-                <div style={{ fontSize: '10px', fontWeight: '600', color: '#1a1a1a' }}>{headOfSchoolName}</div>
-                <div style={{ fontSize: '9px', color: '#6b7280' }}>Head of School</div>
+                <div style={{ height: '35px', marginBottom: '4px', display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }}>
+                  <svg width="80" height="30" viewBox="0 0 80 30" style={{ opacity: 0.85 }}>
+                    <path d="M5 20 Q15 5, 25 15 T45 12 Q55 8, 65 18 Q70 22, 75 15" fill="none" stroke="#1e3a5f" strokeWidth="1.5" strokeLinecap="round"/>
+                    <path d="M20 22 Q30 25, 40 20" fill="none" stroke="#1e3a5f" strokeWidth="1" strokeLinecap="round"/>
+                  </svg>
+                </div>
+                <div style={{ borderTop: '1px solid #374151', paddingTop: '4px' }}>
+                  <div style={{ fontSize: '10px', fontWeight: '600', color: '#1a1a1a' }}>{headOfSchoolName}</div>
+                  <div style={{ fontSize: '9px', color: '#6b7280' }}>Head of School</div>
+                </div>
               </div>
               <div style={{ textAlign: 'center' }}>
-                <div style={{ borderBottom: '1px solid #374151', height: '30px', marginBottom: '6px' }}></div>
-                <div style={{ fontSize: '10px', fontWeight: '600', color: '#1a1a1a' }}>{principalName}</div>
-                <div style={{ fontSize: '9px', color: '#6b7280' }}>Senior Principal</div>
+                <div style={{ height: '35px', marginBottom: '4px', display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }}>
+                  <svg width="80" height="30" viewBox="0 0 80 30" style={{ opacity: 0.85 }}>
+                    <path d="M10 18 Q20 8, 30 20 Q40 28, 50 15 Q60 5, 70 18" fill="none" stroke="#1e3a5f" strokeWidth="1.5" strokeLinecap="round"/>
+                    <path d="M25 10 L35 8 M55 20 Q60 22, 65 18" fill="none" stroke="#1e3a5f" strokeWidth="1" strokeLinecap="round"/>
+                  </svg>
+                </div>
+                <div style={{ borderTop: '1px solid #374151', paddingTop: '4px' }}>
+                  <div style={{ fontSize: '10px', fontWeight: '600', color: '#1a1a1a' }}>{principalName}</div>
+                  <div style={{ fontSize: '9px', color: '#6b7280' }}>Senior Principal</div>
+                </div>
               </div>
               <div style={{ textAlign: 'center' }}>
-                <div style={{ borderBottom: '1px solid #374151', height: '30px', marginBottom: '6px' }}></div>
-                <div style={{ fontSize: '10px', fontWeight: '600', color: '#1a1a1a' }}>{deputyPrincipalName}</div>
-                <div style={{ fontSize: '9px', color: '#6b7280' }}>Deputy Principal</div>
+                <div style={{ height: '35px', marginBottom: '4px', display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }}>
+                  <svg width="80" height="30" viewBox="0 0 80 30" style={{ opacity: 0.85 }}>
+                    <path d="M8 15 Q18 5, 28 18 T48 10 Q58 8, 68 20" fill="none" stroke="#1e3a5f" strokeWidth="1.5" strokeLinecap="round"/>
+                    <path d="M15 20 Q25 24, 35 18 M60 15 L70 12" fill="none" stroke="#1e3a5f" strokeWidth="1" strokeLinecap="round"/>
+                  </svg>
+                </div>
+                <div style={{ borderTop: '1px solid #374151', paddingTop: '4px' }}>
+                  <div style={{ fontSize: '10px', fontWeight: '600', color: '#1a1a1a' }}>{deputyPrincipalName}</div>
+                  <div style={{ fontSize: '9px', color: '#6b7280' }}>Deputy Principal</div>
+                </div>
               </div>
             </div>
 
