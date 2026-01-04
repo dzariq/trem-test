@@ -1874,40 +1874,6 @@ export default function AcademicPage() {
                   </p>
                 </div>
 
-                {/* Radar Chart - Subject Strengths Profile */}
-                <div className="space-y-2">
-                  <h4 className="text-sm font-medium text-foreground flex items-center gap-1.5">
-                    <Target className="h-4 w-4 text-primary" />
-                    Strengths Profile
-                  </h4>
-                  <div className="h-56">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <RadarChart data={radarData} cx="50%" cy="50%" outerRadius="70%">
-                        <PolarGrid stroke="hsl(var(--border))" strokeOpacity={0.5} />
-                        <PolarAngleAxis dataKey="subject" tick={{
-                        fontSize: 9,
-                        fill: "hsl(var(--muted-foreground))"
-                      }} tickLine={false} />
-                        <PolarRadiusAxis angle={30} domain={[0, 100]} tick={{
-                        fontSize: 8,
-                        fill: "hsl(var(--muted-foreground))"
-                      }} tickCount={5} axisLine={false} />
-                        <Radar name="Score" dataKey="score" stroke={radarAverage >= 70 ? "#22c55e" : radarAverage >= 50 ? "#f59e0b" : "#ef4444"} fill={radarAverage >= 70 ? "#22c55e" : radarAverage >= 50 ? "#f59e0b" : "#ef4444"} fillOpacity={0.3} strokeWidth={2} />
-                        <Tooltip contentStyle={{
-                        backgroundColor: "hsl(var(--card))",
-                        border: "1px solid hsl(var(--border))",
-                        borderRadius: "8px",
-                        fontSize: 12
-                      }} formatter={(value: number) => [`${value}%`, "Score"]} />
-                      </RadarChart>
-                    </ResponsiveContainer>
-                  </div>
-                  <p className="text-[10px] text-muted-foreground text-center">
-                    Visual snapshot of performance across all subjects
-                  </p>
-                </div>
-
-
                 {/* Performance Heatmap */}
                 <div className="space-y-2">
                   <h4 className="text-sm font-medium text-foreground flex items-center gap-1.5">
