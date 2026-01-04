@@ -2348,9 +2348,6 @@ export default function AcademicPage() {
                                     <p className="text-[10px] text-muted-foreground">Best performing subjects</p>
                                   </div>
                                 </div>
-                                <Badge className="bg-emerald-500/20 text-emerald-600 border-emerald-500/30 text-xs">
-                                  Top 5
-                                </Badge>
                               </div>
                               
                               {top5Growth.length === 0 ? (
@@ -2470,9 +2467,6 @@ export default function AcademicPage() {
                                     <p className="text-[10px] text-muted-foreground">Needs attention</p>
                                   </div>
                                 </div>
-                                <Badge className="bg-red-500/20 text-red-600 border-red-500/30 text-xs">
-                                  Top 3
-                                </Badge>
                               </div>
                               
                               {top5Decline.length === 0 ? (
