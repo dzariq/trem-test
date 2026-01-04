@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { announcements } from "@/data/mockData";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -11,9 +12,12 @@ import {
   CarouselNext,
   CarouselPrevious,
 } from "@/components/ui/carousel";
+import { AnnouncementDrawer } from "@/components/AnnouncementDrawer";
 
 export function AnnouncementCarousel() {
   const navigate = useNavigate();
+  const [drawerOpen, setDrawerOpen] = useState(false);
+  const [currentAnnouncementIndex, setCurrentAnnouncementIndex] = useState(0);
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
@@ -22,6 +26,11 @@ export function AnnouncementCarousel() {
 
   const mainAnnouncement = announcements[0];
   const otherAnnouncements = announcements.slice(1, 4);
+
+  const handleAnnouncementClick = (index: number) => {
+    setCurrentAnnouncementIndex(index);
+    setDrawerOpen(true);
+  };
 
   return (
     <section className="py-4">
@@ -39,7 +48,10 @@ export function AnnouncementCarousel() {
 
       {/* Featured Main Announcement */}
       <div className="px-4 mb-4">
-        <Card className="bg-card border-border shadow-md overflow-hidden">
+        <Card 
+          className="bg-card border-border shadow-md overflow-hidden cursor-pointer active:scale-[0.98] transition-transform"
+          onClick={() => handleAnnouncementClick(0)}
+        >
           {/* Large Image Header */}
           <div className="relative h-48 overflow-hidden">
             {mainAnnouncement.image ? (
@@ -85,7 +97,10 @@ export function AnnouncementCarousel() {
             </p>
             <Button 
               className="w-full"
-              onClick={() => navigate(`/parent/announcements/${mainAnnouncement.id}`)}
+              onClick={(e) => {
+                e.stopPropagation();
+                handleAnnouncementClick(0);
+              }}
             >
               Read More
             </Button>
@@ -104,9 +119,12 @@ export function AnnouncementCarousel() {
             className="w-full"
           >
             <CarouselContent className="-ml-2">
-              {otherAnnouncements.map((announcement) => (
+              {otherAnnouncements.map((announcement, idx) => (
                 <CarouselItem key={announcement.id} className="pl-2 basis-[75%]">
-                  <Card className="bg-card border-border shadow-sm overflow-hidden">
+                  <Card 
+                    className="bg-card border-border shadow-sm overflow-hidden cursor-pointer active:scale-[0.98] transition-transform"
+                    onClick={() => handleAnnouncementClick(idx + 1)}
+                  >
                     <div className="relative h-20 overflow-hidden">
                       {announcement.image ? (
                         <img 
@@ -143,6 +161,15 @@ export function AnnouncementCarousel() {
           </Carousel>
         </div>
       )}
+
+      {/* Announcement Drawer */}
+      <AnnouncementDrawer
+        announcements={announcements}
+        currentIndex={currentAnnouncementIndex}
+        isOpen={drawerOpen}
+        onOpenChange={setDrawerOpen}
+        onNavigate={setCurrentAnnouncementIndex}
+      />
     </section>
   );
 }
