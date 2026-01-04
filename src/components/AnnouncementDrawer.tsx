@@ -5,7 +5,6 @@ import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Calendar, Check, ChevronLeft, ChevronRight, Download, FileText, Megaphone, X, List } from "lucide-react";
-import { useNavigate } from "react-router-dom";
 
 const READ_ANNOUNCEMENTS_KEY = "readAnnouncementIds";
 
@@ -44,6 +43,7 @@ interface AnnouncementDrawerProps {
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
   onNavigate: (index: number) => void;
+  onSeeAll?: () => void;
 }
 
 export function AnnouncementDrawer({
@@ -52,8 +52,8 @@ export function AnnouncementDrawer({
   isOpen,
   onOpenChange,
   onNavigate,
+  onSeeAll,
 }: AnnouncementDrawerProps) {
-  const navigate = useNavigate();
   const [snap, setSnap] = useState<number | string | null>(0.85);
   const [slideDirection, setSlideDirection] = useState<"left" | "right" | null>(null);
   const [isRead, setIsRead] = useState(false);
@@ -63,7 +63,9 @@ export function AnnouncementDrawer({
 
   const handleSeeAll = () => {
     onOpenChange(false);
-    navigate("/parent/announcements");
+    if (onSeeAll) {
+      onSeeAll();
+    }
   };
 
   const currentAnnouncement = announcements[currentIndex];
@@ -211,15 +213,17 @@ export function AnnouncementDrawer({
               )}
             </div>
             <div className="flex items-center gap-2">
-              <Button
-                variant="ghost"
-                size="sm"
-                className="text-xs text-primary hover:bg-primary/10 rounded-full px-3 gap-1"
-                onClick={handleSeeAll}
-              >
-                <List className="h-3.5 w-3.5" />
-                See All
-              </Button>
+              {onSeeAll && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="text-xs text-primary hover:bg-primary/10 rounded-full px-3 gap-1"
+                  onClick={handleSeeAll}
+                >
+                  <List className="h-3.5 w-3.5" />
+                  See All
+                </Button>
+              )}
               <Button
                 variant="ghost"
                 size="icon"
