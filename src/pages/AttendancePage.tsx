@@ -59,9 +59,17 @@ export default function AttendancePage() {
     setSelectedMonth(months[newIndex]);
   };
 
+  // Haptic feedback helper
+  const triggerHaptic = () => {
+    if ('vibrate' in navigator) {
+      navigator.vibrate(10);
+    }
+  };
+
   // Pinch-to-zoom handlers
   const handleTouchStart = (e: React.TouchEvent) => {
     if (e.touches.length === 2) {
+      e.preventDefault();
       setIsPinching(true);
       const dx = e.touches[0].clientX - e.touches[1].clientX;
       const dy = e.touches[0].clientY - e.touches[1].clientY;
@@ -71,18 +79,27 @@ export default function AttendancePage() {
 
   const handleTouchMove = (e: React.TouchEvent) => {
     if (e.touches.length === 2 && lastPinchDistance.current !== null) {
+      e.preventDefault();
       const dx = e.touches[0].clientX - e.touches[1].clientX;
       const dy = e.touches[0].clientY - e.touches[1].clientY;
       const newDistance = Math.sqrt(dx * dx + dy * dy);
       const delta = newDistance - lastPinchDistance.current;
       
-      if (Math.abs(delta) > 30) {
+      if (Math.abs(delta) > 40) {
+        let newZoom: ZoomLevel | null = null;
         if (delta > 0) {
           // Pinch out - zoom in (show fewer months)
-          setZoomLevel(prev => prev === 12 ? 6 : prev === 6 ? 3 : 3);
+          if (zoomLevel === 12) newZoom = 6;
+          else if (zoomLevel === 6) newZoom = 3;
         } else {
           // Pinch in - zoom out (show more months)
-          setZoomLevel(prev => prev === 3 ? 6 : prev === 6 ? 12 : 12);
+          if (zoomLevel === 3) newZoom = 6;
+          else if (zoomLevel === 6) newZoom = 12;
+        }
+        
+        if (newZoom && newZoom !== zoomLevel) {
+          triggerHaptic();
+          setZoomLevel(newZoom);
         }
         lastPinchDistance.current = newDistance;
       }
@@ -253,13 +270,24 @@ export default function AttendancePage() {
           <CardContent>
             <div 
               ref={chartContainerRef}
-              className="h-64 overflow-x-auto touch-pan-x select-none"
-              style={{ WebkitOverflowScrolling: 'touch' }}
+              className="h-64 overflow-x-auto select-none transition-all duration-300 ease-out"
+              style={{ 
+                WebkitOverflowScrolling: 'touch',
+                WebkitTapHighlightColor: 'transparent',
+                touchAction: isPinching ? 'none' : 'pan-x'
+              }}
               onTouchStart={handleTouchStart}
               onTouchMove={handleTouchMove}
               onTouchEnd={handleTouchEnd}
             >
-              <div style={{ width: zoomLevel === 12 ? '100%' : `${Math.max(100, zoomLevel * 20)}%`, minWidth: '100%', height: '100%' }}>
+              <div 
+                className="transition-all duration-300 ease-out"
+                style={{ 
+                  width: zoomLevel === 12 ? '100%' : `${Math.max(100, zoomLevel * 20)}%`, 
+                  minWidth: '100%', 
+                  height: '100%' 
+                }}
+              >
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart data={chartData} barCategoryGap={zoomLevel === 3 ? "20%" : zoomLevel === 6 ? "15%" : "10%"}>
                     <XAxis 
@@ -280,6 +308,8 @@ export default function AttendancePage() {
                         border: "1px solid hsl(var(--border))",
                         borderRadius: "8px"
                       }}
+                      trigger="click"
+                      cursor={false}
                     />
                     <Legend 
                       wrapperStyle={{ fontSize: 10, paddingTop: 8 }}
