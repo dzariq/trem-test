@@ -2321,81 +2321,29 @@ export default function AcademicPage() {
 
                 {/* Comparison Summary Cards */}
                 <div className="grid grid-cols-2 gap-3">
-                  <div className="p-3 rounded-lg bg-card border-l-4 border-l-blue-500 border border-border shadow-sm">
-                    <div className="flex items-center gap-2 mb-1">
-                      <span className="w-2 h-2 rounded-full bg-blue-500"></span>
-                      <span className="text-xs font-semibold text-blue-600">Exam A</span>
+                  <div className="p-4 rounded-xl bg-card border-l-4 border-l-blue-500 border border-border shadow-sm">
+                    <div className="flex items-center gap-2 mb-2">
+                      <span className="w-2.5 h-2.5 rounded-full bg-blue-500"></span>
+                      <span className="text-sm font-semibold text-blue-600">Exam A</span>
                     </div>
-                    <p className="text-xs text-muted-foreground mb-1">{getExamLabelForComparison(compareExamA)}</p>
-                    <p className="text-2xl font-bold text-foreground">
+                    <p className="text-sm text-muted-foreground mb-1">{getExamLabelForComparison(compareExamA)}</p>
+                    <p className="text-3xl font-bold text-foreground mb-0.5">
                       {Math.round(comparisonData.reduce((sum, d) => sum + d.examA, 0) / comparisonData.length)}%
                     </p>
                     <p className="text-xs text-muted-foreground">Average Score</p>
                   </div>
-                  <div className="p-3 rounded-lg bg-card border-l-4 border-l-red-500 border border-border shadow-sm">
-                    <div className="flex items-center gap-2 mb-1">
-                      <span className="w-2 h-2 rounded-full bg-red-500"></span>
-                      <span className="text-xs font-semibold text-red-600">Exam B</span>
+                  <div className="p-4 rounded-xl bg-card border-l-4 border-l-red-400 border border-border shadow-sm">
+                    <div className="flex items-center gap-2 mb-2">
+                      <span className="w-2.5 h-2.5 rounded-full bg-red-400"></span>
+                      <span className="text-sm font-semibold text-red-500">Exam B</span>
                     </div>
-                    <p className="text-xs text-muted-foreground mb-1">{getExamLabelForComparison(compareExamB)}</p>
-                    <p className="text-2xl font-bold text-foreground">
+                    <p className="text-sm text-muted-foreground mb-1">{getExamLabelForComparison(compareExamB)}</p>
+                    <p className="text-3xl font-bold text-foreground mb-0.5">
                       {Math.round(comparisonData.reduce((sum, d) => sum + d.examB, 0) / comparisonData.length)}%
                     </p>
                     <p className="text-xs text-muted-foreground">Average Score</p>
                   </div>
                 </div>
-
-                {/* Comparison Stats Cards */}
-                {(() => {
-                  const avgA = Math.round(comparisonData.reduce((sum, d) => sum + d.examA, 0) / comparisonData.length);
-                  const avgB = Math.round(comparisonData.reduce((sum, d) => sum + d.examB, 0) / comparisonData.length);
-                  const overallChange = avgA - avgB;
-                  const improvedSubjects = comparisonData.filter(d => d.delta > 0);
-                  const declinedSubjects = comparisonData.filter(d => d.delta < 0);
-                  const bestPerforming = [...comparisonData].sort((a, b) => b.delta - a.delta)[0];
-                  
-                  return (
-                    <div className="grid grid-cols-3 gap-1.5">
-                      {/* Improved */}
-                      <div className="p-2 rounded-xl bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800 shadow-sm">
-                        <div className="flex items-center gap-1.5 mb-0.5">
-                          <span className="text-xs">🚀</span>
-                          <p className="text-sm font-bold text-emerald-600">{improvedSubjects.length}</p>
-                          <p className="text-[9px] text-muted-foreground">Improved</p>
-                        </div>
-                        <p className="text-[8px] text-emerald-600 truncate">
-                          {improvedSubjects.slice(0, 2).map(s => shortenSubjectName(s.name)).join(', ')}
-                          {improvedSubjects.length > 2 && ` +${improvedSubjects.length - 2}`}
-                        </p>
-                      </div>
-
-                      {/* Declined */}
-                      <div className="p-2 rounded-xl bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-800 shadow-sm">
-                        <div className="flex items-center gap-1.5 mb-0.5">
-                          <span className="text-xs">📉</span>
-                          <p className="text-sm font-bold text-red-500">{declinedSubjects.length}</p>
-                          <p className="text-[9px] text-muted-foreground">Declined</p>
-                        </div>
-                        <p className="text-[8px] text-red-500 truncate">
-                          {declinedSubjects.slice(0, 2).map(s => shortenSubjectName(s.name)).join(', ')}
-                          {declinedSubjects.length > 2 && ` +${declinedSubjects.length - 2}`}
-                        </p>
-                      </div>
-
-                      {/* Best Performing */}
-                      <div className="p-2 rounded-xl bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 shadow-sm">
-                        <div className="flex items-center gap-1 mb-0.5">
-                          <span className="text-xs">🏆</span>
-                          <p className="text-xs font-bold text-amber-600 truncate">{bestPerforming ? shortenSubjectName(bestPerforming.name) : '-'}</p>
-                        </div>
-                        <p className="text-[9px] text-muted-foreground">Best Performing</p>
-                        <p className="text-[8px] text-amber-600">
-                          {bestPerforming && bestPerforming.delta > 0 ? `+${bestPerforming.delta} marks` : '-'}
-                        </p>
-                      </div>
-                    </div>
-                  );
-                })()}
 
                 {/* Top 5 Growth Leaders - Moomoo Style */}
                 <div className="p-4 rounded-xl bg-gradient-to-br from-emerald-500/10 to-emerald-600/5 border border-emerald-500/20">
