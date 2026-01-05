@@ -11,18 +11,27 @@ interface ReflectionSectionProps {
   onChange: (reflection: LessonPlanReflection) => void;
 }
 
+const reflectionQuestions = [
+  { key: "objectivesRealistic", label: "Were the lesson objectives realistic?" },
+  { key: "learnersLearned", label: "What did the learners learn today?" },
+  { key: "learningAtmosphere", label: "What was the learning atmosphere like?" },
+  { key: "differentiationWorked", label: "Did my planned differentiation work well?" },
+  { key: "timingsAndChanges", label: "Did I stick to timings? What changes did I make from my plan and why?" },
+] as const;
+
 export function ReflectionSection({ reflection, onChange }: ReflectionSectionProps) {
-  const hasNoComments = !reflection.comments.trim();
+  const isIncomplete = !reflection.comments.trim() || 
+    reflectionQuestions.some(q => !reflection[q.key]?.trim());
   
   return (
-    <Card className={cn(hasNoComments && "border-amber-300")}>
+    <Card className={cn(isIncomplete && "border-amber-300")}>
       <CardHeader className="py-3 px-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <MessageSquare className="h-4 w-4 text-primary" />
             <CardTitle className="text-sm font-semibold">Reflection</CardTitle>
           </div>
-          {hasNoComments && (
+          {isIncomplete && (
             <div className="flex items-center gap-1 text-amber-600">
               <AlertCircle className="h-4 w-4" />
               <span className="text-xs font-medium">Incomplete</span>
@@ -78,23 +87,48 @@ export function ReflectionSection({ reflection, onChange }: ReflectionSectionPro
           </div>
         </div>
 
-        {/* Comments */}
+        {/* Reflection Questions */}
+        <div className="space-y-4">
+          {reflectionQuestions.map((q) => (
+            <div key={q.key} className="space-y-2">
+              <Label className="text-sm font-medium">
+                {q.label}
+                {!reflection[q.key]?.trim() && (
+                  <span className="text-amber-600 ml-2 text-xs font-normal">
+                    (Required)
+                  </span>
+                )}
+              </Label>
+              <Textarea
+                value={reflection[q.key] || ""}
+                onChange={(e) => onChange({ ...reflection, [q.key]: e.target.value })}
+                placeholder="Enter your reflection..."
+                className={cn(
+                  "min-h-[60px]",
+                  !reflection[q.key]?.trim() && "border-amber-300 focus-visible:ring-amber-500"
+                )}
+              />
+            </div>
+          ))}
+        </div>
+
+        {/* Additional Comments */}
         <div className="space-y-2">
           <Label className="text-sm font-medium">
-            Comments / Notes
-            {hasNoComments && (
+            Additional Comments / Notes
+            {!reflection.comments.trim() && (
               <span className="text-amber-600 ml-2 text-xs font-normal">
-                (Required for completion)
+                (Required)
               </span>
             )}
           </Label>
           <Textarea
             value={reflection.comments}
             onChange={(e) => onChange({ ...reflection, comments: e.target.value })}
-            placeholder="Reflect on the lesson: What went well? What could be improved? Any observations about student understanding?"
+            placeholder="Any other observations or notes about the lesson..."
             className={cn(
-              "min-h-[100px]",
-              hasNoComments && "border-amber-300 focus-visible:ring-amber-500"
+              "min-h-[80px]",
+              !reflection.comments.trim() && "border-amber-300 focus-visible:ring-amber-500"
             )}
           />
         </div>
@@ -102,14 +136,14 @@ export function ReflectionSection({ reflection, onChange }: ReflectionSectionPro
         {/* Completion Status */}
         <div className={cn(
           "rounded-md p-3 text-xs",
-          hasNoComments 
+          isIncomplete 
             ? "bg-amber-50 border border-amber-200 text-amber-700" 
             : "bg-emerald-50 border border-emerald-200 text-emerald-700"
         )}>
-          {hasNoComments ? (
+          {isIncomplete ? (
             <div className="flex items-center gap-2">
               <AlertCircle className="h-4 w-4" />
-              <span>Please add your reflection comments to mark this lesson plan as complete.</span>
+              <span>Please complete all reflection questions to mark this lesson plan as complete.</span>
             </div>
           ) : (
             <div className="flex items-center gap-2">
