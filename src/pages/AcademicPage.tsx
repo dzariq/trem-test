@@ -184,6 +184,22 @@ export default function AcademicPage() {
   const comparisonReportRef = useRef<HTMLDivElement>(null);
   const [heatmapExpanded, setHeatmapExpanded] = useState(false);
   const [chartViewMode, setChartViewMode] = useState<"single" | "multiple">("single");
+  const [isAtBottom, setIsAtBottom] = useState(false);
+
+  // Scroll detection for floating FAB
+  useEffect(() => {
+    const handleScroll = () => {
+      const scrollTop = window.scrollY;
+      const windowHeight = window.innerHeight;
+      const documentHeight = document.documentElement.scrollHeight;
+      const isNearBottom = scrollTop + windowHeight >= documentHeight - 150;
+      setIsAtBottom(isNearBottom);
+    };
+    
+    window.addEventListener('scroll', handleScroll);
+    handleScroll(); // Check initial position
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
   // Use centralized subject colors for chart strokes
   const getSubjectStroke = (subject: string) => {
@@ -2892,6 +2908,24 @@ export default function AcademicPage() {
                     </>;
               })()}
               </TabsContent>
+
+              {/* Floating Generate Report FAB - for Overview, Trends, Compare tabs */}
+              {mainSection === "analysis" && (analysisTab === "overview" || analysisTab === "trends" || analysisTab === "comparison") && !isAtBottom && (
+                <Button
+                  className="fixed z-50 shadow-xl bottom-24 right-4 h-14 w-14 rounded-full p-0 bg-emerald-600 hover:bg-emerald-700 transition-all duration-300"
+                  onClick={() => {
+                    if (analysisTab === 'overview') {
+                      setOverviewReportDialogOpen(true);
+                    } else if (analysisTab === 'trends') {
+                      setTrendsReportDialogOpen(true);
+                    } else if (analysisTab === 'comparison') {
+                      setComparisonReportDialogOpen(true);
+                    }
+                  }}
+                >
+                  <FileText className="h-6 w-6 text-white" />
+                </Button>
+              )}
             </Tabs>
           </CardContent>
         </Card>
