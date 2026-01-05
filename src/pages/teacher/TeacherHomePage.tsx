@@ -114,7 +114,7 @@ export default function TeacherHomePage() {
       </div>
 
       {/* Content with Background Pattern */}
-      <div className="relative">
+      <div className="relative -mt-8">
         <GeometricBackgroundPattern />
         
         <div className="relative z-10">
