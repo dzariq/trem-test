@@ -2861,23 +2861,39 @@ export default function AcademicPage() {
                                 </div>
                               </div>}
                             
-                            {/* Progress Bar - Only show when not editing */}
+                            {/* Measurement/Ruler Design - Only show when not editing */}
                             {editingGoal !== item.name && <>
-                                <div className="relative mt-3 mb-2">
-                                  <div className="h-3 bg-transparent border border-border rounded-full overflow-hidden">
-                                    <div className="h-full rounded-full transition-all" style={{
-                              width: `${item.current}%`,
-                              backgroundColor: item.achieved ? '#22c55e' : item.gap <= 30 ? '#3b82f6' : '#f87171'
-                            }} />
-                                  </div>
-                                  {/* Target marker */}
-                                  <div className="absolute top-0 h-3 w-0.5 bg-foreground/70 rounded" style={{
-                            left: `${Math.min(item.target, 100)}%`
-                          }} />
+                                <div className="relative mt-4 mb-3 pt-4">
+                                  {/* Ruler track */}
+                                  <div className="absolute top-1/2 -translate-y-1/2 w-full h-[2px] bg-muted-foreground/30" />
+                                  
+                                  {/* Tick marks */}
+                                  {[0, 25, 50, 75, 100].map((tick) => (
+                                    <div key={tick} className="absolute top-1/2 -translate-y-1/2" style={{ left: `${tick}%` }}>
+                                      <div className={`w-[1px] ${tick === 0 || tick === 100 ? 'h-4' : 'h-2.5'} bg-muted-foreground/40 -translate-x-1/2`} />
+                                      {(tick === 0 || tick === 50 || tick === 100) && (
+                                        <span className="absolute top-3 text-[8px] text-muted-foreground -translate-x-1/2">{tick}</span>
+                                      )}
+                                    </div>
+                                  ))}
+                                  
+                                  {/* Goal marker (diamond) */}
+                                  <div 
+                                    className="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 w-3.5 h-3.5 bg-foreground rotate-45 shadow-sm transition-all duration-500"
+                                    style={{ left: `${Math.min(item.target, 100)}%` }}
+                                  />
+                                  
+                                  {/* Goal value label */}
+                                  <span 
+                                    className="absolute -top-2 text-[10px] font-bold text-foreground -translate-x-1/2 transition-all duration-500"
+                                    style={{ left: `${Math.min(item.target, 100)}%` }}
+                                  >
+                                    {item.target}%
+                                  </span>
                                 </div>
 
                                 {/* Score Details */}
-                                <div className="flex items-center justify-between text-sm">
+                                <div className="flex items-center justify-between text-sm mt-4">
                                   <span className="text-muted-foreground">
                                     Current: <span className="font-medium text-foreground">{item.current}%</span>
                                   </span>
