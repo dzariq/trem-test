@@ -1,8 +1,8 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
-import { Switch } from "@/components/ui/switch";
+import { Slider } from "@/components/ui/slider";
 import { Label } from "@/components/ui/label";
-import { AlertCircle, CheckCircle2, XCircle, MessageSquare } from "lucide-react";
+import { AlertCircle, CheckCircle2, MessageSquare, Target } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { LessonPlanReflection } from "@/data/lessonPlanData";
 
@@ -65,51 +65,47 @@ export function ReflectionSection({ reflection, onChange }: ReflectionSectionPro
         </div>
       </CardHeader>
       <CardContent className="px-4 pb-4 space-y-4">
-        {/* Objectives Achievement Toggles */}
+        {/* Objectives Achievement Percentage Slider */}
         <div className="space-y-3">
-          <div className="flex items-center justify-between p-3 rounded-lg bg-emerald-50">
-            <div className="flex items-center gap-2">
-              <CheckCircle2 className={cn(
-                "h-4 w-4",
-                reflection.objectivesAchieved ? "text-emerald-500" : "text-muted-foreground"
-              )} />
-              <Label className="text-sm font-medium cursor-pointer">
-                Learning objectives achieved
+          <div className="p-4 rounded-lg bg-muted/50 border">
+            <div className="flex items-center gap-2 mb-3">
+              <Target className="h-4 w-4 text-primary" />
+              <Label className="text-sm font-medium">
+                Learning Objectives Achievement
               </Label>
             </div>
-            <Switch
-              checked={reflection.objectivesAchieved}
-              onCheckedChange={(checked) => 
-                onChange({ 
-                  ...reflection, 
-                  objectivesAchieved: checked,
-                  objectivesNotAchieved: checked ? false : reflection.objectivesNotAchieved
-                })
-              }
-            />
-          </div>
-          
-          <div className="flex items-center justify-between p-3 rounded-lg bg-red-50">
-            <div className="flex items-center gap-2">
-              <XCircle className={cn(
-                "h-4 w-4",
-                reflection.objectivesNotAchieved ? "text-destructive" : "text-muted-foreground"
-              )} />
-              <Label className="text-sm font-medium cursor-pointer">
-                Learning objectives not achieved
-              </Label>
+            <div className="space-y-3">
+              <Slider
+                value={[reflection.objectivesAchievementPercent]}
+                onValueChange={(value) => 
+                  onChange({ 
+                    ...reflection, 
+                    objectivesAchievementPercent: value[0]
+                  })
+                }
+                max={100}
+                min={0}
+                step={5}
+                className={cn(
+                  "[&_[role=slider]]:h-5 [&_[role=slider]]:w-5",
+                  reflection.objectivesAchievementPercent >= 70 && "[&_.relative]:bg-emerald-200 [&_[role=slider]]:border-emerald-500 [&_[role=slider]]:bg-emerald-500",
+                  reflection.objectivesAchievementPercent >= 40 && reflection.objectivesAchievementPercent < 70 && "[&_.relative]:bg-amber-200 [&_[role=slider]]:border-amber-500 [&_[role=slider]]:bg-amber-500",
+                  reflection.objectivesAchievementPercent < 40 && "[&_.relative]:bg-red-200 [&_[role=slider]]:border-destructive [&_[role=slider]]:bg-destructive"
+                )}
+              />
+              <div className="flex justify-between items-center">
+                <span className="text-xs text-muted-foreground">0% - Not achieved</span>
+                <span className={cn(
+                  "text-lg font-bold",
+                  reflection.objectivesAchievementPercent >= 70 && "text-emerald-600",
+                  reflection.objectivesAchievementPercent >= 40 && reflection.objectivesAchievementPercent < 70 && "text-amber-600",
+                  reflection.objectivesAchievementPercent < 40 && "text-destructive"
+                )}>
+                  {reflection.objectivesAchievementPercent}%
+                </span>
+                <span className="text-xs text-muted-foreground">100% - Fully achieved</span>
+              </div>
             </div>
-            <Switch
-              checked={reflection.objectivesNotAchieved}
-              onCheckedChange={(checked) => 
-                onChange({ 
-                  ...reflection, 
-                  objectivesNotAchieved: checked,
-                  objectivesAchieved: checked ? false : reflection.objectivesAchieved
-                })
-              }
-              className="data-[state=checked]:bg-destructive"
-            />
           </div>
         </div>
 
