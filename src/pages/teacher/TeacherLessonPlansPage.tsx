@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { TeacherAppLayout } from "@/components/layout/TeacherAppLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -34,33 +34,40 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
-import { 
-  Plus, 
-  ChevronRight, 
-  BookOpen, 
-  CheckCircle2, 
-  Clock, 
+import {
+  Plus,
+  ChevronRight,
+  BookOpen,
+  CheckCircle2,
+  Clock,
   AlertCircle,
   FileText,
-  CalendarIcon
+  CalendarIcon,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { toast } from "@/hooks/use-toast";
-import { startOfWeek, endOfWeek, addWeeks, format, isWithinInterval, addDays, isSameWeek, eachDayOfInterval } from "date-fns";
-import { DateRange } from "react-day-picker";
-import { 
-  mockLessonPlans, 
-  getAvailableSubjects, 
+import {
+  startOfWeek,
+  addWeeks,
+  format,
+  isWithinInterval,
+  addDays,
+  isSameWeek,
+  eachDayOfInterval,
+} from "date-fns";
+import {
+  mockLessonPlans,
+  getAvailableSubjects,
   getLessonPlanStatus,
   type LessonPlan,
-  type SubjectCurriculum 
+  type SubjectCurriculum,
 } from "@/data/lessonPlanData";
 
 // Holiday periods (blocked weeks)
 const holidayPeriods = [
   { start: new Date(2026, 2, 14), end: new Date(2026, 2, 22) }, // March school holiday
   { start: new Date(2026, 5, 27), end: new Date(2026, 6, 26) }, // June-July holiday
-  { start: new Date(2026, 8, 5), end: new Date(2026, 8, 13) },  // September holiday
+  { start: new Date(2026, 8, 5), end: new Date(2026, 8, 13) }, // September holiday
   { start: new Date(2026, 10, 14), end: new Date(2026, 11, 31) }, // Nov-Dec holiday
 ];
 
@@ -73,7 +80,7 @@ const getWeekNumber = (date: Date, termStart: Date): number => {
 
 // Check if a date is in a holiday period
 const isHoliday = (date: Date): boolean => {
-  return holidayPeriods.some(period => 
+  return holidayPeriods.some((period) =>
     isWithinInterval(date, { start: period.start, end: period.end })
   );
 };
@@ -89,50 +96,23 @@ const getSchoolWeek = (date: Date): { start: Date; end: Date } => {
 const isWeekHoliday = (date: Date): boolean => {
   const { start, end } = getSchoolWeek(date);
   const weekDays = eachDayOfInterval({ start, end });
-  return weekDays.some(day => isHoliday(day));
+  return weekDays.some((day) => isHoliday(day));
 };
 
 const TeacherLessonPlansPage = () => {
   const navigate = useNavigate();
-  const [selectedSubject, setSelectedSubject] = useState<string>(mockLessonPlans[0]?.subject || "");
+  const [selectedSubject, setSelectedSubject] = useState<string>(
+    mockLessonPlans[0]?.subject || ""
+  );
   const [isAddTopicOpen, setIsAddTopicOpen] = useState(false);
   const [newTopicTitle, setNewTopicTitle] = useState("");
   const [isAddSubtopicOpen, setIsAddSubtopicOpen] = useState(false);
   const [currentTopicId, setCurrentTopicId] = useState<string>("");
   const [newSubtopicTitle, setNewSubtopicTitle] = useState("");
   const [weekCalendarOpen, setWeekCalendarOpen] = useState<string | null>(null);
-  const [debugOverflow, setDebugOverflow] = useState(false);
-  
+
   // Term start date (for week calculation)
   const termStart = new Date(2026, 0, 5); // January 5, 2026
-
-  // Debug overflow detector
-  useEffect(() => {
-    if (!debugOverflow) return;
-    
-    const checkOverflow = () => {
-      const docWidth = document.documentElement.clientWidth;
-      document.querySelectorAll('*').forEach((el) => {
-        const rect = el.getBoundingClientRect();
-        if (rect.right > docWidth + 1) { // +1 for rounding tolerance
-          (el as HTMLElement).style.outline = '3px solid red';
-          (el as HTMLElement).style.backgroundColor = 'rgba(255,0,0,0.15)';
-          console.log('🔴 OVERFLOW:', el.tagName, el.className, '| Right:', rect.right.toFixed(0), '| DocWidth:', docWidth);
-        }
-      });
-    };
-    
-    // Run after a short delay to ensure render is complete
-    const timer = setTimeout(checkOverflow, 100);
-    
-    return () => {
-      clearTimeout(timer);
-      document.querySelectorAll('*').forEach((el) => {
-        (el as HTMLElement).style.outline = '';
-        (el as HTMLElement).style.backgroundColor = '';
-      });
-    };
-  }, [debugOverflow]);
   
   const subjects = getAvailableSubjects();
   const curriculum = mockLessonPlans.find(s => s.subject === selectedSubject);
@@ -281,17 +261,9 @@ const TeacherLessonPlansPage = () => {
   };
 
   return (
-      <TeacherAppLayout>
-        {/* Temporary Debug Toggle */}
-        <button
-          onClick={() => setDebugOverflow(!debugOverflow)}
-          className="fixed top-2 right-2 z-50 bg-destructive text-destructive-foreground text-xs px-2 py-1 rounded shadow-lg"
-        >
-          {debugOverflow ? "Hide Debug" : "Debug Overflow"}
-        </button>
-        
-        <div className="flex flex-col h-full min-h-0">
-          {/* Header with Subject Selector */}
+    <TeacherAppLayout>
+      <div className="flex flex-col h-full min-h-0 overflow-x-hidden">
+        {/* Header with Subject Selector */}
           <div className="px-4 py-3 border-b border-border bg-card/50">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
               <Select value={selectedSubject} onValueChange={setSelectedSubject}>
@@ -319,7 +291,7 @@ const TeacherLessonPlansPage = () => {
           </div>
 
           {/* Topics and Weeks List */}
-          <ScrollArea className="flex-1 min-h-0 overflow-visible">
+          <ScrollArea className="flex-1 min-h-0 overflow-hidden">
             <div className="p-4 space-y-4 w-full max-w-full min-w-0">
               {curriculum?.topics.map((topic, topicIndex) => (
               <Card key={topic.id} className="overflow-hidden w-full">
@@ -346,15 +318,15 @@ const TeacherLessonPlansPage = () => {
                         <Plus className="h-3.5 w-3.5" />
                       </Button>
                     </div>
-                    <div className="flex flex-wrap gap-1.5">
+                    <div className="flex flex-wrap gap-1.5 min-w-0">
                       {topic.subtopics && topic.subtopics.length > 0 ? (
                         topic.subtopics.map((subtopic, idx) => (
                           <Badge
                             key={idx}
                             variant="secondary"
-                            className="text-xs font-normal max-w-full"
+                            className="text-xs font-normal max-w-full min-w-0 overflow-hidden"
                           >
-                            <span className="truncate">{subtopic}</span>
+                            <span className="block truncate">{subtopic}</span>
                           </Badge>
                         ))
                       ) : (
