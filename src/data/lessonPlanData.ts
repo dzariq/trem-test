@@ -668,19 +668,19 @@ export const mockLessonPlans: SubjectCurriculum[] = [
                 attachments: [],
                 homework: "Find and classify 5 triangles at home",
                 reflection: {
-                  objectivesAchieved: false,
+                  objectivesAchieved: true,
                   objectivesNotAchieved: false,
-                  objectivesRealistic: "",
-                  learnersLearned: "",
-                  learningAtmosphere: "",
-                  differentiationWorked: "",
-                  timingsAndChanges: "",
-                  comments: ""
+                  objectivesRealistic: "Yes, students grasped triangle classification well.",
+                  learnersLearned: "Students can classify triangles by both sides and angles.",
+                  learningAtmosphere: "Very engaging with the sorting activity.",
+                  differentiationWorked: "Triangle cutouts helped tactile learners.",
+                  timingsAndChanges: "Perfect timing throughout.",
+                  comments: "Excellent lesson. The hands-on sorting activity was very effective. Students are ready for quadrilaterals."
                 },
-                attendance: null,
-                approval: { preparedBy: "Ms. Sarah Chen", preparedDate: "2026-02-04", checkedBy: null, checkedDate: null, status: "pending_review" },
+                attendance: { present: 20, absent: 0, late: 0, excused: 0, total: 20 },
+                approval: { preparedBy: "Ms. Sarah Chen", preparedDate: "2026-02-04", checkedBy: "Mr. David Wong", checkedDate: "2026-02-05", status: "approved" },
                 createdAt: "2026-02-03T10:00:00Z",
-                updatedAt: "2026-02-04T10:00:00Z"
+                updatedAt: "2026-02-05T15:00:00Z"
               }
             ]
           },
