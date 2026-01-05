@@ -302,7 +302,7 @@ export default function TeacherHomePage() {
               src={teacherHomePattern} 
               alt="" 
               aria-hidden="true"
-              className="w-full h-auto pointer-events-none -mb-16 relative z-0"
+              className="w-full h-auto pointer-events-none -mb-24 relative z-0"
             />
           </div>
 

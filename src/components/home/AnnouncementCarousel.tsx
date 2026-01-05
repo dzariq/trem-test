@@ -51,7 +51,7 @@ export function AnnouncementCarousel() {
     <section className="py-4">
       {/* Header */}
       <div className="flex items-center justify-between mb-3 px-4">
-        <h2 className="text-lg font-semibold text-foreground">Announcements</h2>
+        <h2 className="text-lg font-semibold text-white">Announcements</h2>
         <Button 
           variant="link" 
           className="text-primary p-0 h-auto text-sm"
