@@ -35,8 +35,14 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
+import {
   Plus,
   ChevronRight,
+  ChevronDown,
   BookOpen,
   CheckCircle2,
   Clock,
@@ -305,10 +311,13 @@ const TeacherLessonPlansPage = () => {
                     </div>
                   </div>
                   
-                  {/* Subtopics Section */}
-                  <div className="mt-3 pt-3 border-t border-border/50">
-                    <div className="flex items-center justify-between mb-2">
-                      <span className="text-xs font-medium text-muted-foreground">Subtopics:</span>
+                  {/* Subtopics Section - Collapsible */}
+                  <Collapsible defaultOpen={false} className="mt-3 pt-3 border-t border-border/50">
+                    <div className="flex items-center justify-between">
+                      <CollapsibleTrigger className="flex items-center gap-1 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors [&[data-state=open]>svg]:rotate-180">
+                        <ChevronDown className="h-3.5 w-3.5 transition-transform" />
+                        Subtopics ({topic.subtopics?.length || 0})
+                      </CollapsibleTrigger>
                       <Button
                         variant="ghost"
                         size="sm"
@@ -318,22 +327,24 @@ const TeacherLessonPlansPage = () => {
                         <Plus className="h-3.5 w-3.5" />
                       </Button>
                     </div>
-                    <div className="flex flex-wrap gap-1.5 min-w-0">
-                      {topic.subtopics && topic.subtopics.length > 0 ? (
-                        topic.subtopics.map((subtopic, idx) => (
-                          <Badge
-                            key={idx}
-                            variant="secondary"
-                            className="text-xs font-normal max-w-full min-w-0 overflow-hidden"
-                          >
-                            <span className="block truncate">{subtopic}</span>
-                          </Badge>
-                        ))
-                      ) : (
-                        <span className="text-xs text-muted-foreground italic">No subtopics added</span>
-                      )}
-                    </div>
-                  </div>
+                    <CollapsibleContent className="mt-2">
+                      <div className="flex flex-wrap gap-1.5 min-w-0">
+                        {topic.subtopics && topic.subtopics.length > 0 ? (
+                          topic.subtopics.map((subtopic, idx) => (
+                            <Badge
+                              key={idx}
+                              variant="secondary"
+                              className="text-xs font-normal max-w-full min-w-0 overflow-hidden"
+                            >
+                              <span className="block truncate">{subtopic}</span>
+                            </Badge>
+                          ))
+                        ) : (
+                          <span className="text-xs text-muted-foreground italic">No subtopics added</span>
+                        )}
+                      </div>
+                    </CollapsibleContent>
+                  </Collapsible>
                 </CardHeader>
                 <CardContent className="p-0 overflow-hidden">
                   <Accordion type="multiple" className="w-full overflow-hidden">
@@ -398,7 +409,20 @@ const TeacherLessonPlansPage = () => {
                                     />
                                   </PopoverContent>
                                 </Popover>
-                                <span className="text-sm font-medium truncate min-w-0">{week.title}</span>
+                                {(() => {
+                                  const weekSubtopics = [...new Set(
+                                    week.lessonPlans.map(lp => lp.subtopic).filter(Boolean)
+                                  )];
+                                  return weekSubtopics.length > 0 ? (
+                                    <span className="text-sm font-medium truncate min-w-0">
+                                      {weekSubtopics.join(", ")}
+                                    </span>
+                                  ) : (
+                                    <span className="text-sm text-muted-foreground italic truncate min-w-0">
+                                      No subtopics assigned
+                                    </span>
+                                  );
+                                })()}
                               </div>
                               <Badge 
                                 variant="secondary" 
