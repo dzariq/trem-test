@@ -35,7 +35,8 @@ import {
   FileText,
   ClipboardList,
   Check,
-  ChevronsUpDown
+  ChevronsUpDown,
+  Settings
 } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
@@ -44,7 +45,6 @@ import { LessonFlowEditor } from "@/components/lessonplan/LessonFlowEditor";
 import { ObjectivesEditor } from "@/components/lessonplan/ObjectivesEditor";
 import { ApprovalSection } from "@/components/lessonplan/ApprovalSection";
 import { ReflectionSection } from "@/components/lessonplan/ReflectionSection";
-import { WeekConfigDialog } from "@/components/lessonplan/WeekConfigDialog";
 import { 
   getLessonPlanById, 
   createEmptyLessonPlan,
@@ -54,7 +54,7 @@ import {
 } from "@/data/lessonPlanData";
 import { allSubjects } from "@/data/subjectsConfig";
 import { teacherProfile } from "@/data/teacherMockData";
-import { weekConfigs, formatWeekDateRange, getLessonDate } from "@/data/weekConfigData";
+import { getWeekConfigs, formatWeekDateRange, getLessonDate } from "@/data/weekConfigData";
 import html2canvas from "html2canvas";
 import jsPDF from "jspdf";
 
@@ -317,13 +317,14 @@ const LessonPlanDetailPage = () => {
                 <div className="space-y-1.5">
                   <div className="flex items-center justify-between">
                     <Label className="text-xs text-muted-foreground">Week Number</Label>
-                    <WeekConfigDialog onConfigUpdate={() => {
-                      // Force re-render to update dates
-                      if (lessonPlan) {
-                        const newDate = getLessonDate(lessonPlan.weekNumber, lessonPlan.lessonNumber);
-                        if (newDate) updateField("date", newDate);
-                      }
-                    }} />
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-6 w-6 p-0"
+                      onClick={() => navigate("/teacher/week-config")}
+                    >
+                      <Settings className="h-3.5 w-3.5 text-muted-foreground" />
+                    </Button>
                   </div>
                   <Select 
                     value={lessonPlan.weekNumber.toString()} 
@@ -339,7 +340,7 @@ const LessonPlanDetailPage = () => {
                     </SelectTrigger>
                     <SelectContent>
                       <ScrollArea className="h-60">
-                        {weekConfigs.map((week) => (
+                        {getWeekConfigs().map((week) => (
                           <SelectItem key={week.weekNumber} value={week.weekNumber.toString()}>
                             Week {week.weekNumber} ({formatWeekDateRange(week.weekNumber)})
                           </SelectItem>
