@@ -42,7 +42,7 @@ export function ReflectionSection({ reflection, onChange }: ReflectionSectionPro
       <CardContent className="px-4 pb-4 space-y-4">
         {/* Objectives Achievement Toggles */}
         <div className="space-y-3">
-          <div className="flex items-center justify-between p-3 rounded-lg bg-muted/50">
+          <div className="flex items-center justify-between p-3 rounded-lg bg-emerald-50">
             <div className="flex items-center gap-2">
               <CheckCircle2 className={cn(
                 "h-4 w-4",
@@ -64,7 +64,7 @@ export function ReflectionSection({ reflection, onChange }: ReflectionSectionPro
             />
           </div>
           
-          <div className="flex items-center justify-between p-3 rounded-lg bg-muted/50">
+          <div className="flex items-center justify-between p-3 rounded-lg bg-red-50">
             <div className="flex items-center gap-2">
               <XCircle className={cn(
                 "h-4 w-4",
