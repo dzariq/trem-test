@@ -302,32 +302,32 @@ const TeacherLessonPlansPage = () => {
               {curriculum?.topics.map((topic, topicIndex) => (
               <Card key={topic.id} className="overflow-hidden w-full">
                 <CardHeader className="py-0 px-0 overflow-hidden">
-                  {/* Topic Title Section - Darker Green */}
-                  <div className="py-3 px-4 bg-emerald-500 dark:bg-emerald-600">
+                  {/* Topic Title Section - Primary Green */}
+                  <div className="py-3 px-4 bg-primary">
                     <div className="flex items-center justify-between gap-2 min-w-0">
                       <div className="flex items-center gap-2 min-w-0">
                         <div className="h-6 w-6 rounded-full bg-white/20 flex items-center justify-center flex-shrink-0">
-                          <BookOpen className="h-3.5 w-3.5 text-white" />
+                          <BookOpen className="h-3.5 w-3.5 text-primary-foreground" />
                         </div>
-                        <CardTitle className="text-sm font-semibold text-white truncate">
+                        <CardTitle className="text-sm font-semibold text-primary-foreground truncate">
                           Topic {topicIndex + 1}: {topic.title}
                         </CardTitle>
                       </div>
                     </div>
                   </div>
                   
-                  {/* Subtopics Section - Lighter Green */}
-                  <div className="py-2 px-4 bg-emerald-50 dark:bg-emerald-950/30 border-b border-emerald-200 dark:border-emerald-900/50">
+                  {/* Subtopics Section - Lighter tone */}
+                  <div className="py-2 px-4 bg-primary/10 dark:bg-primary/20 border-b border-primary/20 dark:border-primary/30">
                     <Collapsible defaultOpen={false}>
                       <div className="flex items-center justify-between">
-                        <CollapsibleTrigger className="flex items-center gap-1 text-xs font-medium text-emerald-700 dark:text-emerald-300 hover:text-emerald-900 dark:hover:text-emerald-100 transition-colors [&[data-state=open]>svg]:rotate-180">
+                        <CollapsibleTrigger className="flex items-center gap-1 text-xs font-medium text-primary dark:text-primary hover:text-primary/80 transition-colors [&[data-state=open]>svg]:rotate-180">
                           <ChevronDown className="h-3.5 w-3.5 transition-transform" />
                           Subtopics ({topic.subtopics?.length || 0})
                         </CollapsibleTrigger>
                         <Button
                           variant="ghost"
                           size="sm"
-                          className="h-6 w-6 p-0 text-emerald-700 dark:text-emerald-300 hover:text-emerald-900 hover:bg-emerald-100 dark:hover:bg-emerald-900/50"
+                          className="h-6 w-6 p-0 text-primary hover:text-primary/80 hover:bg-primary/10"
                           onClick={() => handleOpenAddSubtopic(topic.id)}
                         >
                           <Plus className="h-3.5 w-3.5" />
@@ -340,13 +340,13 @@ const TeacherLessonPlansPage = () => {
                               <Badge
                                 key={idx}
                                 variant="secondary"
-                                className="text-xs font-normal max-w-full min-w-0 overflow-hidden bg-emerald-100 text-emerald-800 dark:bg-emerald-900/50 dark:text-emerald-200"
+                                className="text-xs font-normal max-w-full min-w-0 overflow-hidden bg-primary/15 text-primary dark:bg-primary/25 dark:text-primary"
                               >
                                 <span className="block truncate">{subtopic}</span>
                               </Badge>
                             ))
                           ) : (
-                            <span className="text-xs text-emerald-600 dark:text-emerald-400 italic">No subtopics added</span>
+                            <span className="text-xs text-primary/70 italic">No subtopics added</span>
                           )}
                         </div>
                       </CollapsibleContent>
