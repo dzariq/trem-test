@@ -48,25 +48,24 @@ export function AnnouncementCarousel() {
   };
 
   return (
-    <section className="py-4 px-4">
-      <div className="bg-background/20 backdrop-blur-md rounded-2xl p-4 shadow-lg border border-white/20">
-        {/* Header */}
-        <div className="flex items-center justify-between mb-3">
-          <h2 className="text-lg font-semibold text-foreground">Announcements</h2>
-          <Button 
-            variant="link" 
-            className="text-primary p-0 h-auto text-sm"
-            onClick={() => setListDrawerOpen(true)}
-          >
-            See all <ChevronRight className="h-4 w-4 ml-1" />
-          </Button>
-        </div>
+    <section className="py-4">
+      {/* Header */}
+      <div className="flex items-center justify-between mb-3 px-4">
+        <h2 className="text-lg font-semibold text-foreground">Announcements</h2>
+        <Button 
+          variant="link" 
+          className="text-primary p-0 h-auto text-sm"
+          onClick={() => setListDrawerOpen(true)}
+        >
+          See all <ChevronRight className="h-4 w-4 ml-1" />
+        </Button>
+      </div>
 
-        {/* Featured Main Announcement */}
-        <div className="mb-4">
-          <Card 
-            className="bg-white/30 backdrop-blur-sm border-white/30 shadow-md overflow-hidden cursor-pointer active:scale-[0.98] transition-transform"
-            onClick={() => handleAnnouncementClick(0)}
+      {/* Featured Main Announcement */}
+      <div className="px-4 mb-4">
+        <Card 
+          className="bg-card border-border shadow-md overflow-hidden cursor-pointer active:scale-[0.98] transition-transform"
+          onClick={() => handleAnnouncementClick(0)}
         >
           {/* Large Image Header */}
           <div className="relative h-48 overflow-hidden">
@@ -130,21 +129,21 @@ export function AnnouncementCarousel() {
         </Card>
       </div>
       
-        {/* Other Announcements Carousel */}
-        {otherAnnouncements.length > 0 && (
-          <div>
-            <Carousel
-              opts={{
-                align: "start",
-                loop: true,
-              }}
-              className="w-full"
-            >
-              <CarouselContent className="-ml-2">
-                {otherAnnouncements.map((announcement, idx) => (
-                  <CarouselItem key={announcement.id} className="pl-2 basis-[75%]">
-                    <Card 
-                      className="bg-white/30 backdrop-blur-sm border-white/30 shadow-sm overflow-hidden cursor-pointer active:scale-[0.98] transition-transform"
+      {/* Other Announcements Carousel */}
+      {otherAnnouncements.length > 0 && (
+        <div className="px-4">
+          <Carousel
+            opts={{
+              align: "start",
+              loop: true,
+            }}
+            className="w-full"
+          >
+            <CarouselContent className="-ml-2">
+              {otherAnnouncements.map((announcement, idx) => (
+                <CarouselItem key={announcement.id} className="pl-2 basis-[75%]">
+                  <Card 
+                    className="bg-card border-border shadow-sm overflow-hidden cursor-pointer active:scale-[0.98] transition-transform"
                     onClick={() => handleAnnouncementClick(idx + 1)}
                   >
                     <div className="relative h-20 overflow-hidden">
@@ -186,10 +185,9 @@ export function AnnouncementCarousel() {
             </CarouselContent>
             <CarouselPrevious className="hidden sm:flex -left-2" />
             <CarouselNext className="hidden sm:flex -right-2" />
-            </Carousel>
-          </div>
-        )}
-      </div>
+          </Carousel>
+        </div>
+      )}
 
       {/* Announcement Drawer */}
       <AnnouncementDrawer
