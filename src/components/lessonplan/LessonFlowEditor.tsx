@@ -137,18 +137,18 @@ export function LessonFlowEditor({ lessonFlow, onChange }: LessonFlowEditorProps
       </CardHeader>
       <CardContent className="px-4 pb-4">
         <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as typeof activeTab)}>
-          <TabsList className="grid w-full grid-cols-3 mb-4">
-            <TabsTrigger value="beginning" className="text-xs gap-1">
-              Beginning
-              <span className="text-muted-foreground">({lessonFlow.beginning.duration}m)</span>
+          <TabsList className="grid w-full grid-cols-3 mb-4 h-auto">
+            <TabsTrigger value="beginning" className="text-xs flex-col py-2 px-1 gap-0.5">
+              <span>Beginning</span>
+              <span className="text-muted-foreground text-[10px]">({lessonFlow.beginning.duration}m)</span>
             </TabsTrigger>
-            <TabsTrigger value="middle" className="text-xs gap-1">
-              Middle
-              <span className="text-muted-foreground">({lessonFlow.middle.duration}m)</span>
+            <TabsTrigger value="middle" className="text-xs flex-col py-2 px-1 gap-0.5">
+              <span>Middle</span>
+              <span className="text-muted-foreground text-[10px]">({lessonFlow.middle.duration}m)</span>
             </TabsTrigger>
-            <TabsTrigger value="end" className="text-xs gap-1">
-              End
-              <span className="text-muted-foreground">({lessonFlow.end.duration}m)</span>
+            <TabsTrigger value="end" className="text-xs flex-col py-2 px-1 gap-0.5">
+              <span>End</span>
+              <span className="text-muted-foreground text-[10px]">({lessonFlow.end.duration}m)</span>
             </TabsTrigger>
           </TabsList>
           
