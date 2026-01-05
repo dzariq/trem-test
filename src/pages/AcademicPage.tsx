@@ -2812,13 +2812,9 @@ export default function AcademicPage() {
                             {/* Card Header */}
                             <div className="flex items-center justify-between min-h-[44px]">
                               <div className="flex items-center gap-3">
-                                {item.achieved ? <CheckCircle2 className="h-7 w-7" style={{
-                            color: '#22c55e'
-                          }} /> : item.gap <= 30 ? <CheckCircle2 className="h-7 w-7" style={{
-                            color: '#3b82f6'
-                          }} /> : <CheckCircle2 className="h-7 w-7" style={{
-                            color: '#f97316'
-                          }} />}
+                                <CheckCircle2 className="h-7 w-7" strokeWidth={1.5} style={{
+                            color: item.achieved ? '#22c55e' : item.gap <= 30 ? '#3b82f6' : '#f97316'
+                          }} />
                                 <span className="font-medium text-foreground">{item.name}</span>
                               </div>
                               <div className="flex items-center gap-2">
