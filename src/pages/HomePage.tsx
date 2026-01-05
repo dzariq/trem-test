@@ -8,6 +8,7 @@ import { StudentPillSelector } from "@/components/home/StudentPillSelector";
 import { WelcomeTypingAnimation } from "@/components/home/WelcomeTypingAnimation";
 import schoolBadge from "@/assets/school-badge.png";
 import heroBanner from "@/assets/hero-banner.png";
+import teacherHomePattern from "@/assets/teacher-home-pattern.png";
 
 export default function HomePage() {
   return (
@@ -35,6 +36,17 @@ export default function HomePage() {
       
       <QuickLinks />
       <AnnouncementCarousel />
+      
+      {/* Background pattern for Upcoming Events */}
+      <div className="w-full -mb-24">
+        <img 
+          src={teacherHomePattern} 
+          alt="" 
+          className="w-full h-auto object-cover"
+          aria-hidden="true"
+        />
+      </div>
+      
       <UpcomingEvents />
       <AttendanceSummary />
       
