@@ -282,8 +282,8 @@ const TeacherLessonPlansPage = () => {
           </div>
 
           {/* Topics and Weeks List */}
-          <ScrollArea className="flex-1 min-h-0">
-            <div className="p-4 space-y-4">
+          <ScrollArea className="flex-1 min-h-0 overflow-visible">
+            <div className="p-4 space-y-4 w-full max-w-full min-w-0">
               {curriculum?.topics.map((topic, topicIndex) => (
               <Card key={topic.id} className="overflow-hidden w-full">
                 <CardHeader className="py-3 px-4 bg-muted/30">
