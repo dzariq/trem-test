@@ -4,11 +4,11 @@ import { NavLink } from "react-router-dom";
 import { cn } from "@/lib/utils";
 
 const navItems = [
-  { to: "/teacher", icon: Home, label: "Home" },
-  { to: "/teacher/attendance", icon: UserCheck, label: "Attendance" },
-  { to: "/teacher/lesson-plans", icon: ClipboardList, label: "Lesson\nPlans" },
-  { to: "/teacher/academic", icon: GraduationCap, label: "Academic" },
-  { to: "/teacher/calendar", icon: Calendar, label: "Calendar" },
+  { to: "/teacher", icon: Home, label: "Home", labelLine2: "" },
+  { to: "/teacher/attendance", icon: UserCheck, label: "Attendance", labelLine2: "" },
+  { to: "/teacher/lesson-plans", icon: ClipboardList, label: "Lesson", labelLine2: "Plans" },
+  { to: "/teacher/academic", icon: GraduationCap, label: "Academic", labelLine2: "" },
+  { to: "/teacher/calendar", icon: Calendar, label: "Calendar", labelLine2: "" },
 ];
 
 export function TeacherBottomNavigation() {
@@ -39,7 +39,7 @@ export function TeacherBottomNavigation() {
         isVisible ? "translate-y-0" : "translate-y-full"
       )}
     >
-      <div className="flex justify-around items-center py-2 px-4">
+      <div className="flex justify-around items-stretch py-2 px-2">
         {navItems.map((item) => (
           <NavLink
             key={item.to}
@@ -47,7 +47,7 @@ export function TeacherBottomNavigation() {
             end={item.to === "/teacher"}
             className={({ isActive }) =>
               cn(
-                "flex flex-col items-center justify-center py-2 px-3 rounded-lg transition-all duration-200 min-w-[60px]",
+                "flex flex-col items-center justify-start py-2 px-2 rounded-lg transition-all duration-200 flex-1 min-h-[60px]",
                 isActive
                   ? "text-primary bg-accent"
                   : "text-muted-foreground hover:text-foreground hover:bg-accent/50"
@@ -57,10 +57,15 @@ export function TeacherBottomNavigation() {
             {({ isActive }) => (
               <>
                 <item.icon className={cn(
-                  "h-5 w-5 mb-1", 
+                  "h-5 w-5 mb-1 shrink-0", 
                   isActive && "stroke-[2.5px]"
                 )} />
-                <span className="text-xs font-medium text-center whitespace-pre-line">{item.label}</span>
+                <div className="flex flex-col items-center justify-center min-h-[24px]">
+                  <span className="text-[10px] font-medium text-center leading-tight">{item.label}</span>
+                  {item.labelLine2 && (
+                    <span className="text-[10px] font-medium text-center leading-tight">{item.labelLine2}</span>
+                  )}
+                </div>
               </>
             )}
           </NavLink>
