@@ -8,6 +8,7 @@ import { Calendar } from "@/components/ui/calendar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { MapPin, Clock, User, ChevronDown, CalendarDays, ClipboardList, FileText } from "lucide-react";
+import schoolLogo from "@/assets/school-badge.png";
 
 import { calendarEvents, ccaActivities } from "@/data/mockData";
 import { format, isSameDay, parseISO } from "date-fns";
@@ -98,7 +99,10 @@ export default function TeacherCalendarPage() {
     <TeacherAppLayout>
       <AppHeader 
         leftContent={
-          <h1 className="text-xl font-semibold text-foreground">Calendar</h1>
+          <div className="flex items-center gap-2">
+            <img src={schoolLogo} alt="School Logo" className="h-16 w-auto -my-3 drop-shadow-md" />
+            <h1 className="text-xl font-semibold text-foreground">Calendar</h1>
+          </div>
         }
       />
 
