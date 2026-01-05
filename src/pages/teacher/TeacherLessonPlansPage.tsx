@@ -139,12 +139,14 @@ const TeacherLessonPlansPage = () => {
         {/* Topics and Weeks List */}
         <ScrollArea className="flex-1">
           <div className="p-4 space-y-4">
-            {curriculum?.topics.map((topic) => (
+            {curriculum?.topics.map((topic, topicIndex) => (
               <Card key={topic.id} className="overflow-hidden">
                 <CardHeader className="py-3 px-4 bg-muted/30">
                   <div className="flex items-center gap-2">
                     <BookOpen className="h-4 w-4 text-primary" />
-                    <CardTitle className="text-sm font-semibold">{topic.title}</CardTitle>
+                    <CardTitle className="text-sm font-semibold">
+                      Topic {topicIndex + 1}: {topic.title}
+                    </CardTitle>
                   </div>
                 </CardHeader>
                 <CardContent className="p-0">
