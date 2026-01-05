@@ -1529,13 +1529,17 @@ export default function AcademicPage() {
                 </div>
 
                 <SubjectPerformanceChart 
-                  data={subjectPerformance.map(s => ({
-                    name: shortenSubjectName(s.name),
-                    fullName: s.name,
-                    score: s.score,
-                    goal: s.goal
+                  data={subjectVsClassData.map(s => ({
+                    name: s.name,
+                    fullName: s.fullName,
+                    score: s.student,
+                    goal: 80,
+                    cohortAvg: s.classAvg
                   }))}
                   lineColors={lineColors}
+                  title="Subject Performance vs Class Cohort"
+                  showGoalBadge={false}
+                  showCohortDot={true}
                 />
 
                 {/* Stats Cards Grid - 6 cards */}
