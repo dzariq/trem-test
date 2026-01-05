@@ -47,7 +47,7 @@ export interface LessonPlan {
   title: string;
   weekNumber: number;
   lessonNumber: number; // 1-5
-  teacherName: string;
+  teacherNames: string[];
   className: string;
   subject: string;
   topic: string;
@@ -134,7 +134,7 @@ export const mockLessonPlans: SubjectCurriculum[] = [
                 title: "Understanding Variables and Constants",
                 weekNumber: 1,
                 lessonNumber: 1,
-                teacherName: "Ms. Sarah Chen",
+                teacherNames: ["Ms. Sarah Chen"],
                 className: "5A",
                 subject: "Mathematics",
                 topic: "Algebra Basics",
@@ -204,7 +204,7 @@ export const mockLessonPlans: SubjectCurriculum[] = [
                 title: "Writing Algebraic Expressions",
                 weekNumber: 1,
                 lessonNumber: 2,
-                teacherName: "Ms. Sarah Chen",
+                teacherNames: ["Ms. Sarah Chen"],
                 className: "5A",
                 subject: "Mathematics",
                 topic: "Algebra Basics",
@@ -273,7 +273,7 @@ export const mockLessonPlans: SubjectCurriculum[] = [
                 title: "Evaluating Expressions",
                 weekNumber: 1,
                 lessonNumber: 3,
-                teacherName: "Ms. Sarah Chen",
+                teacherNames: ["Ms. Sarah Chen"],
                 className: "5A",
                 subject: "Mathematics",
                 topic: "Algebra Basics",
@@ -348,7 +348,7 @@ export const mockLessonPlans: SubjectCurriculum[] = [
                 title: "One-Step Equations",
                 weekNumber: 2,
                 lessonNumber: 1,
-                teacherName: "Ms. Sarah Chen",
+                teacherNames: ["Ms. Sarah Chen"],
                 className: "5A",
                 subject: "Mathematics",
                 topic: "Algebra Basics",
@@ -426,7 +426,7 @@ export const mockLessonPlans: SubjectCurriculum[] = [
                 title: "Understanding Linear Equations",
                 weekNumber: 3,
                 lessonNumber: 1,
-                teacherName: "Ms. Sarah Chen",
+                teacherNames: ["Ms. Sarah Chen"],
                 className: "5A",
                 subject: "Mathematics",
                 topic: "Linear Equations",
@@ -466,7 +466,7 @@ export const mockLessonPlans: SubjectCurriculum[] = [
                 title: "Graphing Linear Equations",
                 weekNumber: 3,
                 lessonNumber: 2,
-                teacherName: "Ms. Sarah Chen",
+                teacherNames: ["Ms. Sarah Chen"],
                 className: "5A",
                 subject: "Mathematics",
                 topic: "Linear Equations",
@@ -513,7 +513,7 @@ export const mockLessonPlans: SubjectCurriculum[] = [
                 title: "Understanding Slope",
                 weekNumber: 4,
                 lessonNumber: 1,
-                teacherName: "Ms. Sarah Chen",
+                teacherNames: ["Ms. Sarah Chen"],
                 className: "5A",
                 subject: "Mathematics",
                 topic: "Linear Equations",
@@ -567,7 +567,7 @@ export const mockLessonPlans: SubjectCurriculum[] = [
                 title: "Points, Lines, and Planes",
                 weekNumber: 5,
                 lessonNumber: 1,
-                teacherName: "Ms. Sarah Chen",
+                teacherNames: ["Ms. Sarah Chen"],
                 className: "5A",
                 subject: "Mathematics",
                 topic: "Geometry Fundamentals",
@@ -607,7 +607,7 @@ export const mockLessonPlans: SubjectCurriculum[] = [
                 title: "Types of Angles",
                 weekNumber: 5,
                 lessonNumber: 2,
-                teacherName: "Ms. Sarah Chen",
+                teacherNames: ["Ms. Sarah Chen"],
                 className: "5A",
                 subject: "Mathematics",
                 topic: "Geometry Fundamentals",
@@ -647,7 +647,7 @@ export const mockLessonPlans: SubjectCurriculum[] = [
                 title: "Introduction to Triangles",
                 weekNumber: 5,
                 lessonNumber: 3,
-                teacherName: "Ms. Sarah Chen",
+                teacherNames: ["Ms. Sarah Chen"],
                 className: "5A",
                 subject: "Mathematics",
                 topic: "Geometry Fundamentals",
@@ -725,7 +725,7 @@ export const mockLessonPlans: SubjectCurriculum[] = [
                 title: "What is a Force?",
                 weekNumber: 1,
                 lessonNumber: 1,
-                teacherName: "Ms. Sarah Chen",
+                teacherNames: ["Ms. Sarah Chen"],
                 className: "5A",
                 subject: "Science",
                 topic: "Forces and Motion",
@@ -799,7 +799,7 @@ export const mockLessonPlans: SubjectCurriculum[] = [
 
 // Helper to create empty lesson plan
 export const createEmptyLessonPlan = (
-  teacherName: string,
+  teacherNames: string[],
   className: string,
   subject: string,
   topic: string,
@@ -810,7 +810,7 @@ export const createEmptyLessonPlan = (
   title: "",
   weekNumber,
   lessonNumber,
-  teacherName,
+  teacherNames,
   className,
   subject,
   topic,
@@ -857,7 +857,7 @@ export const createEmptyLessonPlan = (
   },
   attendance: null,
   approval: {
-    preparedBy: teacherName,
+    preparedBy: teacherNames[0] || "",
     preparedDate: new Date().toISOString().split("T")[0],
     checkedBy: null,
     checkedDate: null,

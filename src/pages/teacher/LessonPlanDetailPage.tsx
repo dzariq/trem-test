@@ -73,7 +73,7 @@ const LessonPlanDetailPage = () => {
   useEffect(() => {
     if (isNew) {
       const newLP = createEmptyLessonPlan(
-        teacherProfile.name,
+        [teacherProfile.name],
         teacherProfile.classes[0] || "",
         "Mathematics",
         "",
@@ -346,12 +346,11 @@ const LessonPlanDetailPage = () => {
               {/* Teacher & Class */}
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1.5">
-                  <Label className="text-xs text-muted-foreground">Teacher Name</Label>
-                  <Input
-                    value={lessonPlan.teacherName}
-                    onChange={(e) => updateField("teacherName", e.target.value)}
-                    className="h-9"
-                    readOnly
+                  <Label className="text-xs text-muted-foreground">Teacher(s)</Label>
+                  <TagInput
+                    tags={lessonPlan.teacherNames}
+                    onChange={(tags) => updateField("teacherNames", tags)}
+                    placeholder="Add teacher name..."
                   />
                 </div>
                 <div className="space-y-1.5">
