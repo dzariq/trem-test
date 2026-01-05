@@ -42,7 +42,7 @@ const gradeCategories = [{
 }];
 
 // Import centralized subjects config
-import { allSubjects, getShortSubjectName, getTinySubjectCode, subjectGroups } from "@/data/subjectsConfig";
+import { allSubjects, getShortSubjectName, getTinySubjectCode, getSubjectColor, subjectGroups } from "@/data/subjectsConfig";
 import { SubjectGroupPill } from "@/components/SubjectGroupPill";
 import { SubjectPerformanceChart } from "@/components/SubjectPerformanceChart";
 
@@ -192,6 +192,7 @@ export default function TeacherAcademicPage() {
   // Trends tab state - like student page
   const [trendPeriod, setTrendPeriod] = useState<"1year" | "2years" | "3years" | "4years" | "5years" | "6years">("6years");
   const [trendsSelectedSubjects, setTrendsSelectedSubjects] = useState<string[]>([...subjects]);
+  const [chartViewMode, setChartViewMode] = useState<"single" | "multiple">("single");
 
   // Pinch-to-zoom state for chart
   const [chartZoom, setChartZoom] = useState(1);
@@ -3466,110 +3467,241 @@ export default function TeacherAcademicPage() {
 
                 {/* Moomoo-Style Gradient Area Chart - Scrollable with Pinch-to-Zoom */}
                 <div className="space-y-2">
-                  <div className="flex items-center justify-between">
-                    <p className="text-[10px] text-muted-foreground">← Swipe • Pinch to zoom →</p>
-                    <div className="flex items-center gap-2">
-                      {chartZoom !== 1 && <button onClick={resetZoom} className="text-[10px] text-primary underline">
-                          Reset zoom
-                        </button>}
+                  <div className="space-y-1">
+                    <div className="flex items-center justify-between">
                       <p className="text-[10px] text-muted-foreground">
-                        {chartZoom !== 1 ? `${Math.round(chartZoom * 100)}%` : `${trendData.length} periods`}
+                        Range: <span className="font-medium text-foreground">{trendData.length} periods</span>
                       </p>
+                      <div className="flex items-center gap-2">
+                        {/* Chart View Switcher */}
+                        <div className="flex items-center gap-0.5 bg-muted/50 rounded-lg p-0.5">
+                          <button
+                            onClick={() => setChartViewMode("single")}
+                            className={`px-2 py-1 text-[10px] font-medium rounded-md transition-colors ${
+                              chartViewMode === "single"
+                                ? "bg-background text-foreground shadow-sm"
+                                : "text-muted-foreground hover:text-foreground"
+                            }`}
+                          >
+                            Average
+                          </button>
+                          <button
+                            onClick={() => setChartViewMode("multiple")}
+                            className={`px-2 py-1 text-[10px] font-medium rounded-md transition-colors ${
+                              chartViewMode === "multiple"
+                                ? "bg-background text-foreground shadow-sm"
+                                : "text-muted-foreground hover:text-foreground"
+                            }`}
+                          >
+                            Individual
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center justify-between">
+                      <p className="text-[10px] text-muted-foreground">← Swipe • Pinch to zoom →</p>
+                      {chartZoom !== 1 && (
+                        <div className="flex items-center gap-2">
+                          <button onClick={resetZoom} className="text-[10px] text-primary underline">
+                            Reset zoom
+                          </button>
+                          <p className="text-[10px] text-muted-foreground">{`${Math.round(chartZoom * 100)}%`}</p>
+                        </div>
+                      )}
                     </div>
                   </div>
                   <div ref={chartContainerRef} className={cn("h-64 overflow-x-auto overflow-y-hidden scrollbar-thin scrollbar-thumb-muted scrollbar-track-transparent", isMobile && "h-52")} style={{
-                  WebkitOverflowScrolling: 'touch',
-                  scrollBehavior: 'smooth',
-                  touchAction: 'pan-x pan-y pinch-zoom'
-                }} onTouchStart={handleTouchStart} onTouchMove={handleTouchMove} onTouchEnd={handleTouchEnd}>
+                    WebkitOverflowScrolling: 'touch',
+                    scrollBehavior: 'smooth',
+                    touchAction: 'pan-x pan-y pinch-zoom'
+                  }} onTouchStart={handleTouchStart} onTouchMove={handleTouchMove} onTouchEnd={handleTouchEnd}>
                     <div style={{
-                    width: Math.max(100, trendData.length / 4 * 100 * chartZoom) + '%',
-                    minWidth: isMobile ? '120%' : '100%',
-                    height: '100%',
-                    transition: 'width 0.1s ease-out'
-                  }}>
+                      width: Math.max(100, trendData.length / 4 * 100 * chartZoom) + '%',
+                      minWidth: isMobile ? '120%' : '100%',
+                      height: '100%',
+                      transition: 'width 0.1s ease-out'
+                    }}>
                       <ResponsiveContainer width="100%" height="100%">
-                        <AreaChart data={trendData} margin={{
-                        top: 10,
-                        right: isMobile ? 10 : 20,
-                        left: isMobile ? -15 : 0,
-                        bottom: 20
-                      }}>
-                          <defs>
-                            <linearGradient id="gradientGreen" x1="0" y1="0" x2="0" y2="1">
-                              <stop offset="0%" stopColor="#22c55e" stopOpacity={0.4} />
-                              <stop offset="100%" stopColor="#22c55e" stopOpacity={0.05} />
-                            </linearGradient>
-                            <linearGradient id="gradientRed" x1="0" y1="0" x2="0" y2="1">
-                              <stop offset="0%" stopColor="#ef4444" stopOpacity={0.4} />
-                              <stop offset="100%" stopColor="#ef4444" stopOpacity={0.05} />
-                            </linearGradient>
-                            <linearGradient id="gradientBlue" x1="0" y1="0" x2="0" y2="1">
-                              <stop offset="0%" stopColor="#3b82f6" stopOpacity={0.4} />
-                              <stop offset="100%" stopColor="#3b82f6" stopOpacity={0.05} />
-                            </linearGradient>
-                          </defs>
-                          <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" strokeOpacity={0.2} vertical={false} />
-                          <XAxis dataKey="period" axisLine={false} tickLine={false} interval={0} height={40} tick={({
-                          x,
-                          y,
-                          payload
-                        }) => {
-                          const parts = payload.value.split(' ');
-                          return <g transform={`translate(${x},${y})`}>
-                                  <text x={0} y={0} dy={12} textAnchor="middle" fontSize={isMobile ? 8 : 10} fill="hsl(var(--muted-foreground))">
-                                    {parts[0]}
-                                  </text>
-                                  <text x={0} y={0} dy={24} textAnchor="middle" fontSize={isMobile ? 7 : 9} fill="hsl(var(--muted-foreground))" opacity={0.7}>
-                                    {parts[1]}
-                                  </text>
-                                </g>;
-                        }} />
-                          <YAxis domain={[30, 100]} tick={{
-                          fontSize: isMobile ? 9 : 11,
-                          fill: "hsl(var(--muted-foreground))"
-                        }} axisLine={false} tickLine={false} width={isMobile ? 28 : 35} />
-                          <Tooltip contentStyle={{
-                          backgroundColor: "hsl(var(--card))",
-                          border: "1px solid hsl(var(--border))",
-                          borderRadius: "12px",
-                          boxShadow: "0 4px 12px rgba(0,0,0,0.1)"
-                        }} labelStyle={{
-                          fontWeight: 600,
-                          marginBottom: 4
-                        }} />
-                          <ReferenceLine y={50} stroke="#f59e0b" strokeDasharray="5 5" strokeOpacity={0.6} label={{
-                          value: "Pass",
-                          fontSize: 9,
-                          fill: "#f59e0b"
-                        }} />
-                          <ReferenceLine y={80} stroke="#22c55e" strokeDasharray="5 5" strokeOpacity={0.6} label={{
-                          value: "A",
-                          fontSize: 9,
-                          fill: "#22c55e"
-                        }} />
-                          {/* Render Area for the average of selected subjects */}
-                          <Area 
-                            type="monotone" 
-                            dataKey="Average" 
-                            stroke={trendDirection.direction === "up" ? "#22c55e" : trendDirection.direction === "down" ? "#ef4444" : "#3b82f6"} 
-                            strokeWidth={2.5} 
-                            fill={trendDirection.direction === "up" ? "url(#gradientGreen)" : trendDirection.direction === "down" ? "url(#gradientRed)" : "url(#gradientBlue)"} 
-                            dot={{
-                              fill: trendDirection.direction === "up" ? "#22c55e" : trendDirection.direction === "down" ? "#ef4444" : "#3b82f6",
-                              strokeWidth: 0,
-                              r: 5
-                            }} 
-                            activeDot={{
-                              r: 7,
-                              strokeWidth: 2,
-                              stroke: "#fff"
-                            }} 
-                            connectNulls 
-                          />
-                        </AreaChart>
+                        {chartViewMode === "single" ? (
+                          <AreaChart data={trendData} margin={{
+                            top: 10,
+                            right: isMobile ? 10 : 20,
+                            left: isMobile ? -15 : 0,
+                            bottom: 20
+                          }}>
+                            <defs>
+                              <linearGradient id="gradientGreenTrend" x1="0" y1="0" x2="0" y2="1">
+                                <stop offset="0%" stopColor="#22c55e" stopOpacity={0.4} />
+                                <stop offset="100%" stopColor="#22c55e" stopOpacity={0.05} />
+                              </linearGradient>
+                              <linearGradient id="gradientRedTrend" x1="0" y1="0" x2="0" y2="1">
+                                <stop offset="0%" stopColor="#ef4444" stopOpacity={0.4} />
+                                <stop offset="100%" stopColor="#ef4444" stopOpacity={0.05} />
+                              </linearGradient>
+                              <linearGradient id="gradientBlueTrend" x1="0" y1="0" x2="0" y2="1">
+                                <stop offset="0%" stopColor="#3b82f6" stopOpacity={0.4} />
+                                <stop offset="100%" stopColor="#3b82f6" stopOpacity={0.05} />
+                              </linearGradient>
+                            </defs>
+                            <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" strokeOpacity={0.2} vertical={false} />
+                            <XAxis dataKey="period" axisLine={false} tickLine={false} interval={0} height={40} tick={({
+                              x,
+                              y,
+                              payload
+                            }) => {
+                              const parts = payload.value.split(' ');
+                              return <g transform={`translate(${x},${y})`}>
+                                <text x={0} y={0} dy={12} textAnchor="middle" fontSize={isMobile ? 8 : 10} fill="hsl(var(--muted-foreground))">
+                                  {parts[0]}
+                                </text>
+                                <text x={0} y={0} dy={24} textAnchor="middle" fontSize={isMobile ? 7 : 9} fill="hsl(var(--muted-foreground))" opacity={0.7}>
+                                  {parts[1]}
+                                </text>
+                              </g>;
+                            }} />
+                            <YAxis domain={[30, 100]} tick={{
+                              fontSize: isMobile ? 9 : 11,
+                              fill: "hsl(var(--muted-foreground))"
+                            }} axisLine={false} tickLine={false} width={isMobile ? 28 : 35} />
+                            <Tooltip contentStyle={{
+                              backgroundColor: "hsl(var(--card))",
+                              border: "1px solid hsl(var(--border))",
+                              borderRadius: "12px",
+                              boxShadow: "0 4px 12px rgba(0,0,0,0.1)"
+                            }} labelStyle={{
+                              fontWeight: 600,
+                              marginBottom: 4
+                            }} />
+                            <ReferenceLine y={50} stroke="#f59e0b" strokeDasharray="5 5" strokeOpacity={0.6} label={{ value: "Pass", fontSize: 9, fill: "#f59e0b", position: "insideTopLeft" }} />
+                            <ReferenceLine y={80} stroke="#22c55e" strokeDasharray="5 5" strokeOpacity={0.6} label={{ value: "A", fontSize: 9, fill: "#22c55e", position: "insideTopLeft" }} />
+                            <ReferenceLine y={70} stroke="hsl(var(--foreground))" strokeDasharray="4 4" strokeWidth={2} label={{ value: "Goal", fontSize: 9, fill: "hsl(var(--foreground))", position: "insideTopLeft" }} />
+                            
+                            {trendsSelectedSubjects.length === 1 ? (
+                              <Area
+                                type="monotone"
+                                dataKey={trendsSelectedSubjects[0]}
+                                stroke={trendDirection.direction === "up" ? "#22c55e" : trendDirection.direction === "down" ? "#ef4444" : "#3b82f6"}
+                                strokeWidth={2.5}
+                                fill={trendDirection.direction === "up" ? "url(#gradientGreenTrend)" : trendDirection.direction === "down" ? "url(#gradientRedTrend)" : "url(#gradientBlueTrend)"}
+                                dot={{
+                                  fill: trendDirection.direction === "up" ? "#22c55e" : trendDirection.direction === "down" ? "#ef4444" : "#3b82f6",
+                                  strokeWidth: 0,
+                                  r: 5
+                                }}
+                                activeDot={{ r: 7, strokeWidth: 2, stroke: "#fff" }}
+                                connectNulls
+                              />
+                            ) : (
+                              <Area
+                                type="monotone"
+                                dataKey="Average"
+                                stroke={trendDirection.direction === "up" ? "#22c55e" : trendDirection.direction === "down" ? "#ef4444" : "#3b82f6"}
+                                strokeWidth={2.5}
+                                fill={trendDirection.direction === "up" ? "url(#gradientGreenTrend)" : trendDirection.direction === "down" ? "url(#gradientRedTrend)" : "url(#gradientBlueTrend)"}
+                                dot={{
+                                  fill: trendDirection.direction === "up" ? "#22c55e" : trendDirection.direction === "down" ? "#ef4444" : "#3b82f6",
+                                  strokeWidth: 0,
+                                  r: 5
+                                }}
+                                activeDot={{ r: 7, strokeWidth: 2, stroke: "#fff" }}
+                                connectNulls
+                              />
+                            )}
+                          </AreaChart>
+                        ) : (
+                          <LineChart data={trendData} margin={{
+                            top: 10,
+                            right: isMobile ? 10 : 20,
+                            left: isMobile ? -15 : 0,
+                            bottom: 20
+                          }}>
+                            <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" strokeOpacity={0.2} vertical={false} />
+                            <XAxis dataKey="period" axisLine={false} tickLine={false} interval={0} height={40} tick={({
+                              x,
+                              y,
+                              payload
+                            }) => {
+                              const parts = payload.value.split(' ');
+                              return <g transform={`translate(${x},${y})`}>
+                                <text x={0} y={0} dy={12} textAnchor="middle" fontSize={isMobile ? 8 : 10} fill="hsl(var(--muted-foreground))">
+                                  {parts[0]}
+                                </text>
+                                <text x={0} y={0} dy={24} textAnchor="middle" fontSize={isMobile ? 7 : 9} fill="hsl(var(--muted-foreground))" opacity={0.7}>
+                                  {parts[1]}
+                                </text>
+                              </g>;
+                            }} />
+                            <YAxis domain={[30, 100]} tick={{
+                              fontSize: isMobile ? 9 : 11,
+                              fill: "hsl(var(--muted-foreground))"
+                            }} axisLine={false} tickLine={false} width={isMobile ? 28 : 35} />
+                            <Tooltip contentStyle={{
+                              backgroundColor: "hsl(var(--card))",
+                              border: "1px solid hsl(var(--border))",
+                              borderRadius: "12px",
+                              boxShadow: "0 4px 12px rgba(0,0,0,0.1)"
+                            }} labelStyle={{
+                              fontWeight: 600,
+                              marginBottom: 4
+                            }} />
+                            <ReferenceLine y={50} stroke="#f59e0b" strokeDasharray="5 5" strokeOpacity={0.6} label={{ value: "Pass", fontSize: 9, fill: "#f59e0b", position: "insideTopLeft" }} />
+                            <ReferenceLine y={80} stroke="#22c55e" strokeDasharray="5 5" strokeOpacity={0.6} label={{ value: "A", fontSize: 9, fill: "#22c55e", position: "insideTopLeft" }} />
+                            <ReferenceLine y={70} stroke="hsl(var(--foreground))" strokeDasharray="4 4" strokeWidth={2} label={{ value: "Goal", fontSize: 9, fill: "hsl(var(--foreground))", position: "insideTopLeft" }} />
+
+                            {trendsSelectedSubjects.map((subject) => {
+                              const color = getSubjectColor(subject);
+                              return (
+                                <Line
+                                  key={subject}
+                                  type="monotone"
+                                  dataKey={subject}
+                                  stroke={color}
+                                  strokeWidth={2}
+                                  dot={{ fill: color, strokeWidth: 0, r: 3 }}
+                                  activeDot={{ r: 5, strokeWidth: 2, stroke: "#fff" }}
+                                  connectNulls
+                                />
+                              );
+                            })}
+                          </LineChart>
+                        )}
                       </ResponsiveContainer>
                     </div>
+                  </div>
+                  
+                  {/* Individual subject legend when in multiple mode */}
+                  {chartViewMode === "multiple" && trendsSelectedSubjects.length > 1 && (
+                    <div className="flex flex-wrap gap-1.5 justify-center">
+                      {trendsSelectedSubjects.map((subject) => (
+                        <div key={subject} className="flex items-center gap-1 px-1.5 py-0.5 rounded bg-muted/50">
+                          <div
+                            className="w-2 h-2 rounded-full"
+                            style={{ backgroundColor: getSubjectColor(subject) }}
+                          />
+                          <span className="text-[10px] text-muted-foreground">
+                            {getTinySubjectCode(subject)}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                {/* Exam List for Selected Period */}
+                <div className="space-y-1.5">
+                  <h4 className="text-xs font-medium text-muted-foreground">
+                    Exams in selected period
+                  </h4>
+                  <div className="flex flex-wrap gap-1">
+                    {trendData.map((item, idx) => (
+                      <div
+                        key={idx}
+                        className="px-2 py-0.5 rounded bg-muted/50 text-[11px] font-medium text-muted-foreground"
+                      >
+                        {item.period}
+                      </div>
+                    ))}
                   </div>
                 </div>
 
