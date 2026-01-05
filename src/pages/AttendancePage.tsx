@@ -334,13 +334,13 @@ export default function AttendancePage() {
               </Select>
             </div>
             {/* Zoom Level Pills */}
-            <div className="flex justify-center gap-1 mt-2">
+            <div className="flex gap-1 mt-2">
               {zoomOptions.map((option) => (
                 <Button
                   key={option.value}
                   variant={zoomLevel === option.value ? "default" : "outline"}
                   size="sm"
-                  className="h-7 text-xs px-3"
+                  className="h-7 text-xs px-3 flex-1"
                   onClick={() => setZoomLevel(option.value)}
                 >
                   {option.label}
