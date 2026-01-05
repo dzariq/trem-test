@@ -259,7 +259,7 @@ const TeacherLessonPlansPage = () => {
         </div>
         <div className="flex-1 min-w-0 overflow-hidden">
           <p className="text-sm font-medium truncate">{lp.title}</p>
-          <p className="text-xs text-muted-foreground truncate">{lp.topic}</p>
+          <p className="text-xs text-muted-foreground truncate">{lp.subtopic || "No subtopic"}</p>
         </div>
         <ChevronRight className="h-4 w-4 text-muted-foreground flex-shrink-0" />
       </button>
