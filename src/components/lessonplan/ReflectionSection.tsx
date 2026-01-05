@@ -24,7 +24,7 @@ export function ReflectionSection({ reflection, onChange }: ReflectionSectionPro
     reflectionQuestions.some(q => !reflection[q.key]?.trim());
   
   return (
-    <Card className={cn(isIncomplete && "border-amber-300")}>
+    <Card className={cn("bg-amber-50/50", isIncomplete && "border-amber-300")}>
       <CardHeader className="py-3 px-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
