@@ -28,7 +28,7 @@ function Calendar({ className, classNames, showOutsideDays = true, ...props }: C
         head_row: "flex w-full justify-between mb-1",
         head_cell: "text-muted-foreground flex-1 font-medium text-sm text-center py-2",
         row: "flex w-full mt-1 justify-between",
-        cell: "flex-1 aspect-square text-center p-0.5 relative [&:has([aria-selected].day-range-end)]:rounded-lg [&:has([aria-selected].day-outside)]:bg-accent/50 [&:has([aria-selected])]:bg-accent first:[&:has([aria-selected])]:rounded-lg last:[&:has([aria-selected])]:rounded-lg focus-within:relative focus-within:z-20",
+        cell: "flex-1 aspect-square text-center p-0.5 relative [&:has([aria-selected].day-range-end)]:rounded-lg [&:has([aria-selected].day-outside)]:bg-transparent first:[&:has([aria-selected])]:rounded-lg last:[&:has([aria-selected])]:rounded-lg focus-within:relative focus-within:z-20",
         day: cn(buttonVariants({ variant: "ghost" }), "h-full w-full p-0 font-normal text-base aria-selected:opacity-100 aspect-square rounded-lg hover:bg-muted active:bg-muted/80"),
         day_range_end: "day-range-end",
         day_selected:
