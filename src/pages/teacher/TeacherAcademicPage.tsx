@@ -4309,12 +4309,20 @@ export default function TeacherAcademicPage() {
               })()}
               </TabsContent>
 
-              {/* Floating Generate Report FAB - appears when not at bottom for Overview, Bands, Trends */}
-              {analysisSubTab !== 'comparison' && !isAtBottom && (
+              {/* Floating Generate Report FAB - for all tabs */}
+              {!isAtBottom && (
                 <Button
                   className="fixed z-50 shadow-xl bottom-24 right-4 h-14 w-14 rounded-full p-0 bg-emerald-600 hover:bg-emerald-700 transition-all duration-300"
                   onClick={() => {
-                    window.scrollTo({ top: document.documentElement.scrollHeight, behavior: 'smooth' });
+                    if (analysisSubTab === 'overview') {
+                      setOverviewReportDialogOpen(true);
+                    } else if (analysisSubTab === 'distribution') {
+                      setBandsReportDialogOpen(true);
+                    } else if (analysisSubTab === 'trends') {
+                      setTrendsReportDialogOpen(true);
+                    } else if (analysisSubTab === 'comparison') {
+                      setComparisonReportDialogOpen(true);
+                    }
                   }}
                 >
                   <FileText className="h-6 w-6 text-white" />
