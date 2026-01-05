@@ -3390,7 +3390,7 @@ export default function TeacherAcademicPage() {
                     </Select>
                   </div>
                   {/* Period Toggle */}
-                  <div className="flex gap-1 bg-muted/50 p-1 rounded-lg w-fit">
+                  <div className="flex gap-1 bg-muted/50 p-1 rounded-lg flex-1">
                     {([{
                     key: "1year",
                     label: "1Y"
@@ -3412,7 +3412,7 @@ export default function TeacherAcademicPage() {
                   }] as const).map(({
                     key,
                     label
-                  }) => <button key={key} onClick={() => setTrendPeriod(key)} className={`px-3 py-1.5 text-xs font-medium rounded-md transition-all whitespace-nowrap ${trendPeriod === key ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}>
+                  }) => <button key={key} onClick={() => setTrendPeriod(key)} className={`flex-1 px-3 py-1.5 text-xs font-medium rounded-md transition-all whitespace-nowrap ${trendPeriod === key ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}>
                         {label}
                       </button>)}
                   </div>
