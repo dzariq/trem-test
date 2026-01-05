@@ -17,6 +17,11 @@ export interface LessonFlow {
 export interface LessonPlanReflection {
   objectivesAchieved: boolean;
   objectivesNotAchieved: boolean;
+  objectivesRealistic: string;
+  learnersLearned: string;
+  learningAtmosphere: string;
+  differentiationWorked: string;
+  timingsAndChanges: string;
   comments: string;
 }
 
@@ -174,6 +179,11 @@ export const mockLessonPlans: SubjectCurriculum[] = [
                 reflection: {
                   objectivesAchieved: true,
                   objectivesNotAchieved: false,
+                  objectivesRealistic: "Yes, objectives were achievable within the time frame.",
+                  learnersLearned: "Students learned to identify variables and constants in expressions.",
+                  learningAtmosphere: "Positive and engaging. Students were curious and asked questions.",
+                  differentiationWorked: "Yes, the visual cards helped struggling learners.",
+                  timingsAndChanges: "Stuck to timings. Extended practice time by 5 minutes.",
                   comments: "Students grasped the concept well. Some needed extra support with distinguishing coefficients from constants."
                 },
                 attendance: { present: 18, absent: 1, late: 1, excused: 0, total: 20 },
@@ -238,6 +248,11 @@ export const mockLessonPlans: SubjectCurriculum[] = [
                 reflection: {
                   objectivesAchieved: true,
                   objectivesNotAchieved: false,
+                  objectivesRealistic: "Yes, well-paced for the class level.",
+                  learnersLearned: "Students can now translate verbal phrases to algebraic expressions.",
+                  learningAtmosphere: "Energetic and collaborative during the game activity.",
+                  differentiationWorked: "The game format helped all learners participate.",
+                  timingsAndChanges: "Reduced intro by 5 mins to allow more game time.",
                   comments: "Good participation. The translation game was very effective."
                 },
                 attendance: { present: 19, absent: 0, late: 1, excused: 0, total: 20 },
@@ -301,6 +316,11 @@ export const mockLessonPlans: SubjectCurriculum[] = [
                 reflection: {
                   objectivesAchieved: false,
                   objectivesNotAchieved: true,
+                  objectivesRealistic: "",
+                  learnersLearned: "",
+                  learningAtmosphere: "",
+                  differentiationWorked: "",
+                  timingsAndChanges: "",
                   comments: ""
                 },
                 attendance: null,
@@ -367,6 +387,11 @@ export const mockLessonPlans: SubjectCurriculum[] = [
                 reflection: {
                   objectivesAchieved: false,
                   objectivesNotAchieved: false,
+                  objectivesRealistic: "",
+                  learnersLearned: "",
+                  learningAtmosphere: "",
+                  differentiationWorked: "",
+                  timingsAndChanges: "",
                   comments: ""
                 },
                 attendance: null,
@@ -461,6 +486,11 @@ export const mockLessonPlans: SubjectCurriculum[] = [
                 reflection: {
                   objectivesAchieved: true,
                   objectivesNotAchieved: false,
+                  objectivesRealistic: "Yes, but measurement accuracy needs more time.",
+                  learnersLearned: "Students can identify different types of forces.",
+                  learningAtmosphere: "Very enthusiastic during the hands-on experiments.",
+                  differentiationWorked: "Paired stronger students with those needing support.",
+                  timingsAndChanges: "Extended experiment time, shortened summary.",
                   comments: "Students enjoyed the hands-on activity. Will need more time for measurement practice."
                 },
                 attendance: { present: 20, absent: 0, late: 0, excused: 0, total: 20 },
@@ -533,6 +563,11 @@ export const createEmptyLessonPlan = (
   reflection: {
     objectivesAchieved: false,
     objectivesNotAchieved: false,
+    objectivesRealistic: "",
+    learnersLearned: "",
+    learningAtmosphere: "",
+    differentiationWorked: "",
+    timingsAndChanges: "",
     comments: ""
   },
   attendance: null,
