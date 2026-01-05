@@ -1533,13 +1533,12 @@ export default function AcademicPage() {
                     name: s.name,
                     fullName: s.fullName,
                     score: s.student,
-                    goal: 80,
-                    cohortAvg: s.classAvg
+                    goal: goals[s.fullName] ?? 80
                   }))}
                   lineColors={lineColors}
-                  title="Subject Performance vs Class Cohort"
-                  showGoalBadge={false}
-                  showCohortDot={true}
+                  title="Subject Performance"
+                  showGoalBadge={true}
+                  showCohortDot={false}
                 />
 
                 {/* Stats Cards Grid - 6 cards */}
