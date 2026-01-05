@@ -216,18 +216,22 @@ export default function TeacherAttendancePage() {
 
           {/* Summary */}
           <div className="grid grid-cols-4 gap-2">
-            <Badge variant="outline" className="bg-emerald-50 text-emerald-700 border-emerald-200 justify-center py-1">
-              Present: {presentCount}
-            </Badge>
-            <Badge variant="outline" className="bg-red-50 text-red-700 border-red-200 justify-center py-1">
-              Absent: {absentCount}
-            </Badge>
-            <Badge variant="outline" className="bg-amber-50 text-amber-700 border-amber-200 justify-center py-1">
-              Late: {lateCount}
-            </Badge>
-            <Badge variant="outline" className="bg-purple-50 text-purple-700 border-purple-200 justify-center py-1">
-              Excused: {excusedCount}
-            </Badge>
+            <div className="flex flex-col items-center rounded-md border bg-emerald-50 border-emerald-200 py-2 px-1">
+              <span className="text-xs font-medium text-emerald-700">Present</span>
+              <span className="text-lg font-bold text-emerald-700">{presentCount}</span>
+            </div>
+            <div className="flex flex-col items-center rounded-md border bg-red-50 border-red-200 py-2 px-1">
+              <span className="text-xs font-medium text-red-700">Absent</span>
+              <span className="text-lg font-bold text-red-700">{absentCount}</span>
+            </div>
+            <div className="flex flex-col items-center rounded-md border bg-amber-50 border-amber-200 py-2 px-1">
+              <span className="text-xs font-medium text-amber-700">Late</span>
+              <span className="text-lg font-bold text-amber-700">{lateCount}</span>
+            </div>
+            <div className="flex flex-col items-center rounded-md border bg-purple-50 border-purple-200 py-2 px-1">
+              <span className="text-xs font-medium text-purple-700">Excused</span>
+              <span className="text-lg font-bold text-purple-700">{excusedCount}</span>
+            </div>
           </div>
 
           {/* Student List */}
