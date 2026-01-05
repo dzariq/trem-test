@@ -320,8 +320,8 @@ const LessonPlanDetailPage = () => {
                 </Popover>
               </div>
 
-              {/* Week, Lesson, Date, Class - All in one row */}
-              <div className="grid grid-cols-4 gap-3">
+              {/* Week, Lesson, Date, Class - Responsive grid */}
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                 <div className="space-y-1.5">
                   <Label className="text-xs text-muted-foreground">Week</Label>
                   <Select 
