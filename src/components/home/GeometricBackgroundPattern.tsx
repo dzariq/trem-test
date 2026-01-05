@@ -18,8 +18,8 @@ export function GeometricBackgroundPattern({ className }: GeometricBackgroundPat
         preserveAspectRatio="xMidYMid slice"
         xmlns="http://www.w3.org/2000/svg"
       >
-        {/* Plain white background */}
-        <rect width="100%" height="100%" fill="hsl(0, 0%, 100%)" />
+        {/* Transparent background */}
+        <rect width="100%" height="100%" fill="transparent" />
       </svg>
     </div>
   );
