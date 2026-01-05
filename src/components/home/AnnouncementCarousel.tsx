@@ -13,6 +13,8 @@ import {
 } from "@/components/ui/carousel";
 import { AnnouncementDrawer, getReadAnnouncementIds } from "@/components/AnnouncementDrawer";
 import { AnnouncementsListDrawer } from "@/components/AnnouncementsListDrawer";
+import { getCategoryColor } from "@/data/categoryColors";
+import { cn } from "@/lib/utils";
 
 export function AnnouncementCarousel() {
   const [drawerOpen, setDrawerOpen] = useState(false);
@@ -101,9 +103,14 @@ export function AnnouncementCarousel() {
             </div>
             {/* Category and Date */}
             <div className="absolute bottom-3 left-4 flex items-center gap-2">
-              <Badge variant="secondary" className="text-xs">
-                {mainAnnouncement.category}
-              </Badge>
+              {(() => {
+                const colors = getCategoryColor(mainAnnouncement.category);
+                return (
+                  <Badge className={cn("text-xs", colors.bg, colors.text)}>
+                    {mainAnnouncement.category}
+                  </Badge>
+                );
+              })()}
               <Badge variant="outline" className="text-xs bg-card/80 backdrop-blur-sm">
                 {formatDate(mainAnnouncement.date)}
               </Badge>
@@ -160,9 +167,14 @@ export function AnnouncementCarousel() {
                       )}
                       <div className="absolute inset-0 bg-gradient-to-t from-card via-card/50 to-transparent" />
                       <div className="absolute bottom-2 left-3 right-3 flex items-center justify-between">
-                        <Badge variant="secondary" className="text-[10px]">
-                          {announcement.category}
-                        </Badge>
+                        {(() => {
+                          const colors = getCategoryColor(announcement.category);
+                          return (
+                            <Badge className={cn("text-[10px]", colors.bg, colors.text)}>
+                              {announcement.category}
+                            </Badge>
+                          );
+                        })()}
                         {isRead(announcement.id) && (
                           <Badge variant="outline" className="text-[10px] gap-0.5 text-green-600 border-green-600/30 bg-green-500/10 backdrop-blur-sm px-1.5">
                             <Check className="h-2.5 w-2.5" />

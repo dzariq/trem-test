@@ -5,6 +5,8 @@ import { Button } from "@/components/ui/button";
 import { ChevronRight, MapPin, Clock } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { useNavigate } from "react-router-dom";
+import { getCategoryColor } from "@/data/categoryColors";
+import { cn } from "@/lib/utils";
 
 type EventCategory = "all" | "academic" | "sports" | "arts" | "meeting";
 
@@ -50,16 +52,25 @@ export function UpcomingEvents() {
 
       {/* Filter Tabs */}
       <div className="flex gap-2 mb-3 overflow-x-auto pb-1">
-        {filters.map((filter) => (
-          <Badge
-            key={filter.value}
-            variant={activeFilter === filter.value ? "default" : "outline"}
-            className="cursor-pointer whitespace-nowrap px-3 py-1"
-            onClick={() => setActiveFilter(filter.value)}
-          >
-            {filter.label}
-          </Badge>
-        ))}
+        {filters.map((filter) => {
+          const colors = getCategoryColor(filter.value);
+          const isActive = activeFilter === filter.value;
+          return (
+            <Badge
+              key={filter.value}
+              variant="secondary"
+              className={cn(
+                "cursor-pointer whitespace-nowrap px-3 py-1 transition-all",
+                isActive 
+                  ? `${colors.bg} ${colors.text}` 
+                  : "bg-white/80 text-foreground hover:bg-white"
+              )}
+              onClick={() => setActiveFilter(filter.value)}
+            >
+              {filter.label}
+            </Badge>
+          );
+        })}
       </div>
       
       <div className="space-y-3">
