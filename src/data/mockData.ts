@@ -218,24 +218,24 @@ export const attendanceData = {
     excused: 1
   },
   dailyBreakdown: [
-    { date: "2026-01-01", status: "present", reason: null },
-    { date: "2025-12-31", status: "excused", reason: "Holiday" },
-    { date: "2025-12-30", status: "present", reason: null },
-    { date: "2025-12-29", status: "present", reason: null },
-    { date: "2025-12-28", status: "absent", reason: "MC" },
-    { date: "2025-12-27", status: "present", reason: null },
-    { date: "2025-12-26", status: "late", reason: "Traffic" },
-    { date: "2025-12-25", status: "excused", reason: "Holiday" },
-    { date: "2025-12-24", status: "present", reason: null },
-    { date: "2025-12-23", status: "present", reason: null },
-    { date: "2025-12-22", status: "present", reason: null },
-    { date: "2025-12-21", status: "present", reason: null },
-    { date: "2025-12-20", status: "present", reason: null },
-    { date: "2025-12-19", status: "present", reason: null },
-    { date: "2025-12-18", status: "late", reason: "Doctor appointment" },
-    { date: "2025-12-17", status: "present", reason: null },
-    { date: "2025-12-16", status: "present", reason: null },
-    { date: "2025-12-15", status: "present", reason: null }
+    { date: "2026-01-01", status: "present", reason: null, remarks: null },
+    { date: "2025-12-31", status: "excused", reason: "Holiday", remarks: "New Year's Eve - school closed for public holiday" },
+    { date: "2025-12-30", status: "present", reason: null, remarks: null },
+    { date: "2025-12-29", status: "present", reason: null, remarks: null },
+    { date: "2025-12-28", status: "absent", reason: "MC", remarks: "Student was unwell with fever. Medical certificate submitted by parent via email. Doctor advised 1 day rest." },
+    { date: "2025-12-27", status: "present", reason: null, remarks: null },
+    { date: "2025-12-26", status: "late", reason: "Traffic", remarks: "Student arrived at 8:15 AM due to heavy traffic jam on main road. Parent notified school via phone call." },
+    { date: "2025-12-25", status: "excused", reason: "Holiday", remarks: "Christmas Day - school closed for public holiday" },
+    { date: "2025-12-24", status: "present", reason: null, remarks: null },
+    { date: "2025-12-23", status: "present", reason: null, remarks: null },
+    { date: "2025-12-22", status: "present", reason: null, remarks: null },
+    { date: "2025-12-21", status: "present", reason: null, remarks: null },
+    { date: "2025-12-20", status: "present", reason: null, remarks: null },
+    { date: "2025-12-19", status: "present", reason: null, remarks: null },
+    { date: "2025-12-18", status: "late", reason: "Doctor appointment", remarks: "Student had scheduled doctor's appointment in the morning. Arrived at 9:30 AM. Appointment letter was provided." },
+    { date: "2025-12-17", status: "present", reason: null, remarks: null },
+    { date: "2025-12-16", status: "present", reason: null, remarks: null },
+    { date: "2025-12-15", status: "present", reason: null, remarks: null }
   ]
 };
 
