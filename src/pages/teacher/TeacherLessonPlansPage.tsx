@@ -175,7 +175,7 @@ const TeacherLessonPlansPage = () => {
 
   return (
     <TeacherAppLayout>
-      <div className="flex flex-col h-full">
+      <div className="flex flex-col h-full overflow-hidden">
         {/* Header with Subject Selector */}
         <div className="px-4 py-3 border-b border-border bg-card/50">
           <div className="flex items-center justify-between gap-3">
@@ -200,10 +200,10 @@ const TeacherLessonPlansPage = () => {
         </div>
 
         {/* Topics and Weeks List */}
-        <ScrollArea className="flex-1">
-          <div className="p-4 space-y-4">
+        <ScrollArea className="flex-1 overflow-x-hidden">
+          <div className="p-4 space-y-4 overflow-hidden">
             {curriculum?.topics.map((topic, topicIndex) => (
-              <Card key={topic.id} className="overflow-hidden">
+              <Card key={topic.id} className="overflow-hidden w-full">
                 <CardHeader className="py-3 px-4 bg-muted/30">
                   <div className="flex items-center justify-between gap-2">
                     <div className="flex items-center gap-2">
