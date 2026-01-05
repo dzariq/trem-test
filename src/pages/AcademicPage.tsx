@@ -3169,8 +3169,9 @@ export default function AcademicPage() {
                     <div style={{
                     fontSize: '10px',
                     color: '#991b1b',
-                    fontWeight: 600
-                  }}>Needs Focus</div>
+                    fontWeight: 600,
+                    lineHeight: '1.2'
+                  }}>Needs<br />Focus</div>
                     <div style={{
                     fontSize: '8px',
                     color: '#991b1b',
