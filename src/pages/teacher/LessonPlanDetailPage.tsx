@@ -200,9 +200,19 @@ const LessonPlanDetailPage = () => {
           {/* Section 1: Basic Information */}
           <Card>
             <CardHeader className="py-3 px-4">
-              <div className="flex items-center gap-2">
-                <FileText className="h-4 w-4 text-primary" />
-                <CardTitle className="text-sm font-semibold">Basic Information</CardTitle>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <FileText className="h-4 w-4 text-primary" />
+                  <CardTitle className="text-sm font-semibold">Basic Information</CardTitle>
+                </div>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-7 w-7 p-0"
+                  onClick={() => navigate("/teacher/week-config")}
+                >
+                  <Settings className="h-4 w-4 text-muted-foreground" />
+                </Button>
               </div>
             </CardHeader>
             <CardContent className="px-4 pb-4 space-y-4">
@@ -310,20 +320,10 @@ const LessonPlanDetailPage = () => {
                 </Popover>
               </div>
 
-              {/* Week, Lesson, Date - All in one row */}
-              <div className="grid grid-cols-3 gap-3">
+              {/* Week, Lesson, Date, Class - All in one row */}
+              <div className="grid grid-cols-4 gap-3">
                 <div className="space-y-1.5">
-                  <div className="flex items-center justify-between">
-                    <Label className="text-xs text-muted-foreground">Week</Label>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="h-5 w-5 p-0"
-                      onClick={() => navigate("/teacher/week-config")}
-                    >
-                      <Settings className="h-3 w-3 text-muted-foreground" />
-                    </Button>
-                  </div>
+                  <Label className="text-xs text-muted-foreground">Week</Label>
                   <Select 
                     value={lessonPlan.weekNumber.toString()} 
                     onValueChange={(v) => {
@@ -379,20 +379,6 @@ const LessonPlanDetailPage = () => {
                     className="h-9"
                   />
                 </div>
-              </div>
-
-              {/* Teacher & Class */}
-              <div className="grid grid-cols-2 gap-3">
-                <div className="space-y-1.5">
-                  <Label className="text-xs text-muted-foreground">Teacher(s)</Label>
-                  <div className="flex flex-wrap gap-1 min-h-9 items-center px-3 rounded-md border border-input bg-muted/50">
-                    {lessonPlan.teacherNames.map((name, idx) => (
-                      <Badge key={idx} variant="secondary" className="text-xs">
-                        {name}
-                      </Badge>
-                    ))}
-                  </div>
-                </div>
                 <div className="space-y-1.5">
                   <Label className="text-xs text-muted-foreground">Class</Label>
                   <Select 
@@ -408,6 +394,18 @@ const LessonPlanDetailPage = () => {
                       ))}
                     </SelectContent>
                   </Select>
+                </div>
+              </div>
+
+              {/* Teacher(s) */}
+              <div className="space-y-1.5">
+                <Label className="text-xs text-muted-foreground">Teacher(s)</Label>
+                <div className="flex flex-wrap gap-1.5 min-h-9 items-center px-3 py-2 rounded-md border border-input bg-muted/50">
+                  {lessonPlan.teacherNames.map((name, idx) => (
+                    <Badge key={idx} variant="secondary" className="text-xs">
+                      {name}
+                    </Badge>
+                  ))}
                 </div>
               </div>
             </CardContent>
