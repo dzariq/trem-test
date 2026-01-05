@@ -83,6 +83,7 @@ export function ReflectionSection({ reflection, onChange }: ReflectionSectionPro
                   objectivesAchieved: checked ? false : reflection.objectivesAchieved
                 })
               }
+              className="data-[state=checked]:bg-destructive"
             />
           </div>
         </div>
