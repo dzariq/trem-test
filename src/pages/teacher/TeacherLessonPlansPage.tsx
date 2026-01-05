@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { TeacherAppLayout } from "@/components/layout/TeacherAppLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -116,6 +116,7 @@ const TeacherLessonPlansPage = () => {
   const [currentTopicId, setCurrentTopicId] = useState<string>("");
   const [newSubtopicTitle, setNewSubtopicTitle] = useState("");
   const [weekCalendarOpen, setWeekCalendarOpen] = useState<string | null>(null);
+  const [dateRange, setDateRange] = useState<{ from: Date | undefined; to: Date | undefined }>({ from: undefined, to: undefined });
 
   // Term start date (for week calculation)
   const termStart = new Date(2026, 0, 5); // January 5, 2026
@@ -372,7 +373,16 @@ const TeacherLessonPlansPage = () => {
                               <div className="flex items-center gap-2 min-w-0 flex-1">
                                 <Popover 
                                   open={weekCalendarOpen === week.id} 
-                                  onOpenChange={(open) => setWeekCalendarOpen(open ? week.id : null)}
+                                  onOpenChange={(open) => {
+                                    setWeekCalendarOpen(open ? week.id : null);
+                                    if (open) {
+                                      // Initialize with current week range when opening
+                                      const weekStart = addWeeks(termStart, week.weekNumber - 1);
+                                      setDateRange({ from: weekStart, to: addDays(weekStart, 4) });
+                                    } else {
+                                      setDateRange({ from: undefined, to: undefined });
+                                    }
+                                  }}
                                 >
                                   <PopoverTrigger asChild onClick={(e) => e.stopPropagation()}>
                                     <button className="flex items-center gap-1 px-2 py-1 rounded-md border border-border bg-background hover:bg-muted text-xs font-normal flex-shrink-0 transition-colors">
@@ -387,11 +397,9 @@ const TeacherLessonPlansPage = () => {
                                     </div>
                                     <Calendar
                                       mode="range"
-                                      selected={{
-                                        from: addWeeks(termStart, week.weekNumber - 1),
-                                        to: addDays(addWeeks(termStart, week.weekNumber - 1), 4)
-                                      }}
+                                      selected={dateRange}
                                       onSelect={(range) => {
+                                        setDateRange({ from: range?.from, to: range?.to });
                                         if (range?.from && range?.to) {
                                           handleWeekChange(week.id, range.from);
                                         }
