@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { TeacherAppLayout } from "@/components/layout/TeacherAppLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -101,9 +101,38 @@ const TeacherLessonPlansPage = () => {
   const [currentTopicId, setCurrentTopicId] = useState<string>("");
   const [newSubtopicTitle, setNewSubtopicTitle] = useState("");
   const [weekCalendarOpen, setWeekCalendarOpen] = useState<string | null>(null);
+  const [debugOverflow, setDebugOverflow] = useState(false);
   
   // Term start date (for week calculation)
   const termStart = new Date(2026, 0, 5); // January 5, 2026
+
+  // Debug overflow detector
+  useEffect(() => {
+    if (!debugOverflow) return;
+    
+    const checkOverflow = () => {
+      const docWidth = document.documentElement.clientWidth;
+      document.querySelectorAll('*').forEach((el) => {
+        const rect = el.getBoundingClientRect();
+        if (rect.right > docWidth + 1) { // +1 for rounding tolerance
+          (el as HTMLElement).style.outline = '3px solid red';
+          (el as HTMLElement).style.backgroundColor = 'rgba(255,0,0,0.15)';
+          console.log('🔴 OVERFLOW:', el.tagName, el.className, '| Right:', rect.right.toFixed(0), '| DocWidth:', docWidth);
+        }
+      });
+    };
+    
+    // Run after a short delay to ensure render is complete
+    const timer = setTimeout(checkOverflow, 100);
+    
+    return () => {
+      clearTimeout(timer);
+      document.querySelectorAll('*').forEach((el) => {
+        (el as HTMLElement).style.outline = '';
+        (el as HTMLElement).style.backgroundColor = '';
+      });
+    };
+  }, [debugOverflow]);
   
   const subjects = getAvailableSubjects();
   const curriculum = mockLessonPlans.find(s => s.subject === selectedSubject);
@@ -253,6 +282,14 @@ const TeacherLessonPlansPage = () => {
 
   return (
       <TeacherAppLayout>
+        {/* Temporary Debug Toggle */}
+        <button
+          onClick={() => setDebugOverflow(!debugOverflow)}
+          className="fixed top-2 right-2 z-50 bg-destructive text-destructive-foreground text-xs px-2 py-1 rounded shadow-lg"
+        >
+          {debugOverflow ? "Hide Debug" : "Debug Overflow"}
+        </button>
+        
         <div className="flex flex-col h-full min-h-0">
           {/* Header with Subject Selector */}
           <div className="px-4 py-3 border-b border-border bg-card/50">
