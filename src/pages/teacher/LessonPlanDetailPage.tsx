@@ -9,6 +9,12 @@ import { Label } from "@/components/ui/label";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
+import { Checkbox } from "@/components/ui/checkbox";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import {
   Select,
   SelectContent,
@@ -27,7 +33,9 @@ import {
   GraduationCap,
   Users,
   FileText,
-  ClipboardList
+  ClipboardList,
+  Check,
+  ChevronsUpDown
 } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
@@ -195,6 +203,101 @@ const LessonPlanDetailPage = () => {
               </div>
             </CardHeader>
             <CardContent className="px-4 pb-4 space-y-4">
+              {/* Subject (Read-only) */}
+              <div className="space-y-1.5">
+                <Label className="text-xs text-muted-foreground">Subject</Label>
+                <div className="h-9 px-3 flex items-center rounded-md border border-input bg-muted/50 text-sm text-muted-foreground">
+                  {lessonPlan.subject || <span className="italic">No subject assigned</span>}
+                </div>
+              </div>
+
+              {/* Topic (Read-only) */}
+              <div className="space-y-1.5">
+                <Label className="text-xs text-muted-foreground">Topic</Label>
+                <div className="h-9 px-3 flex items-center rounded-md border border-input bg-muted/50 text-sm text-muted-foreground">
+                  {lessonPlan.topic || <span className="italic">No topic assigned</span>}
+                </div>
+              </div>
+
+              {/* Subtopics (Multi-select) */}
+              <div className="space-y-1.5">
+                <Label className="text-xs text-muted-foreground">Subtopics</Label>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      role="combobox"
+                      className="w-full h-auto min-h-9 justify-between text-left font-normal"
+                    >
+                      <div className="flex flex-wrap gap-1">
+                        {lessonPlan.subtopics && lessonPlan.subtopics.length > 0 ? (
+                          lessonPlan.subtopics.map((subtopic) => (
+                            <Badge key={subtopic} variant="secondary" className="text-xs">
+                              {subtopic}
+                            </Badge>
+                          ))
+                        ) : (
+                          <span className="text-muted-foreground">Select subtopics...</span>
+                        )}
+                      </div>
+                      <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-full p-0" align="start">
+                    <div className="p-2 space-y-2">
+                      {/* Select All / Deselect All */}
+                      <div className="flex gap-2 pb-2 border-b border-border">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-7 text-xs"
+                          onClick={() => {
+                            const allSubtopics = getSubtopicsForTopic(lessonPlan.subject, lessonPlan.topic);
+                            updateField("subtopics", allSubtopics);
+                          }}
+                        >
+                          Select All
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-7 text-xs"
+                          onClick={() => updateField("subtopics", [])}
+                        >
+                          Clear All
+                        </Button>
+                      </div>
+                      {/* Subtopic options */}
+                      <div className="space-y-1 max-h-48 overflow-y-auto">
+                        {getSubtopicsForTopic(lessonPlan.subject, lessonPlan.topic).map((subtopic) => {
+                          const isSelected = lessonPlan.subtopics?.includes(subtopic) || false;
+                          return (
+                            <div
+                              key={subtopic}
+                              className="flex items-center gap-2 p-2 rounded-md hover:bg-muted cursor-pointer"
+                              onClick={() => {
+                                const currentSubtopics = lessonPlan.subtopics || [];
+                                if (isSelected) {
+                                  updateField("subtopics", currentSubtopics.filter(s => s !== subtopic));
+                                } else {
+                                  updateField("subtopics", [...currentSubtopics, subtopic]);
+                                }
+                              }}
+                            >
+                              <Checkbox checked={isSelected} />
+                              <span className="text-sm">{subtopic}</span>
+                            </div>
+                          );
+                        })}
+                        {getSubtopicsForTopic(lessonPlan.subject, lessonPlan.topic).length === 0 && (
+                          <p className="text-xs text-muted-foreground p-2">No subtopics available for this topic.</p>
+                        )}
+                      </div>
+                    </div>
+                  </PopoverContent>
+                </Popover>
+              </div>
+
               {/* Lesson Title */}
               <div className="space-y-1.5">
                 <Label className="text-xs text-muted-foreground">Lesson Title</Label>
@@ -263,53 +366,6 @@ const LessonPlanDetailPage = () => {
                       {teacherProfile.classes.map((cls) => (
                         <SelectItem key={cls} value={cls}>{cls}</SelectItem>
                       ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-
-              {/* Subject */}
-              <div className="space-y-1.5">
-                <Label className="text-xs text-muted-foreground">Subject</Label>
-                <Select 
-                  value={lessonPlan.subject} 
-                  onValueChange={(v) => updateField("subject", v)}
-                >
-                  <SelectTrigger className="h-9">
-                    <SelectValue placeholder="Select subject" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {allSubjects.map((subject) => (
-                      <SelectItem key={subject} value={subject}>{subject}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              {/* Topic & Subtopic */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <div className="space-y-1.5">
-                  <Label className="text-xs text-muted-foreground">Topic</Label>
-                  <div className="h-9 px-3 flex items-center rounded-md border border-input bg-muted/50 text-sm">
-                    {lessonPlan.topic || <span className="text-muted-foreground italic">No topic assigned</span>}
-                  </div>
-                </div>
-                <div className="space-y-1.5">
-                  <Label className="text-xs text-muted-foreground">Subtopic</Label>
-                  <Select
-                    value={lessonPlan.subtopic}
-                    onValueChange={(value) => updateField("subtopic", value)}
-                  >
-                    <SelectTrigger className="h-9">
-                      <SelectValue placeholder="Select subtopic..." />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {getSubtopicsForTopic(lessonPlan.subject, lessonPlan.topic).map((subtopic) => (
-                        <SelectItem key={subtopic} value={subtopic}>{subtopic}</SelectItem>
-                      ))}
-                      {lessonPlan.subtopic && !getSubtopicsForTopic(lessonPlan.subject, lessonPlan.topic).includes(lessonPlan.subtopic) && (
-                        <SelectItem value={lessonPlan.subtopic}>{lessonPlan.subtopic}</SelectItem>
-                      )}
                     </SelectContent>
                   </Select>
                 </div>

@@ -51,7 +51,7 @@ export interface LessonPlan {
   className: string;
   subject: string;
   topic: string;
-  subtopic: string;
+  subtopics: string[];
   date: string;
   
   // Learning Objectives
@@ -138,7 +138,7 @@ export const mockLessonPlans: SubjectCurriculum[] = [
                 className: "5A",
                 subject: "Mathematics",
                 topic: "Algebra Basics",
-                subtopic: "Variables and Constants",
+                subtopics: ["Variables and Constants"],
                 date: "2026-01-06",
                 learningObjectives: [
                   "Define what a variable is in algebra",
@@ -208,7 +208,7 @@ export const mockLessonPlans: SubjectCurriculum[] = [
                 className: "5A",
                 subject: "Mathematics",
                 topic: "Algebra Basics",
-                subtopic: "Algebraic Expressions",
+                subtopics: ["Algebraic Expressions"],
                 date: "2026-01-07",
                 learningObjectives: [
                   "Translate verbal phrases into algebraic expressions",
@@ -277,7 +277,7 @@ export const mockLessonPlans: SubjectCurriculum[] = [
                 className: "5A",
                 subject: "Mathematics",
                 topic: "Algebra Basics",
-                subtopic: "Evaluating Expressions",
+                subtopics: ["Evaluating Expressions"],
                 date: "2026-01-08",
                 learningObjectives: [
                   "Substitute values for variables",
@@ -352,7 +352,7 @@ export const mockLessonPlans: SubjectCurriculum[] = [
                 className: "5A",
                 subject: "Mathematics",
                 topic: "Algebra Basics",
-                subtopic: "One-Step Equations",
+                subtopics: ["One-Step Equations"],
                 date: "2026-01-13",
                 learningObjectives: [
                   "Solve one-step equations using addition and subtraction",
@@ -430,7 +430,7 @@ export const mockLessonPlans: SubjectCurriculum[] = [
                 className: "5A",
                 subject: "Mathematics",
                 topic: "Linear Equations",
-                subtopic: "Introduction to Linear Equations",
+                subtopics: ["Introduction to Linear Equations"],
                 date: "2026-01-20",
                 learningObjectives: [
                   "Identify linear equations in one variable",
@@ -470,7 +470,7 @@ export const mockLessonPlans: SubjectCurriculum[] = [
                 className: "5A",
                 subject: "Mathematics",
                 topic: "Linear Equations",
-                subtopic: "Graphing Linear Equations",
+                subtopics: ["Graphing Linear Equations"],
                 date: "2026-01-21",
                 learningObjectives: [
                   "Plot points on a coordinate plane",
@@ -517,7 +517,7 @@ export const mockLessonPlans: SubjectCurriculum[] = [
                 className: "5A",
                 subject: "Mathematics",
                 topic: "Linear Equations",
-                subtopic: "Slope and Intercept",
+                subtopics: ["Slope and Intercept"],
                 date: "2026-01-27",
                 learningObjectives: [
                   "Calculate slope from two points",
@@ -571,7 +571,7 @@ export const mockLessonPlans: SubjectCurriculum[] = [
                 className: "5A",
                 subject: "Mathematics",
                 topic: "Geometry Fundamentals",
-                subtopic: "Points, Lines, and Planes",
+                subtopics: ["Points, Lines, and Planes"],
                 date: "2026-02-03",
                 learningObjectives: [
                   "Define point, line, and plane",
@@ -611,7 +611,7 @@ export const mockLessonPlans: SubjectCurriculum[] = [
                 className: "5A",
                 subject: "Mathematics",
                 topic: "Geometry Fundamentals",
-                subtopic: "Angles",
+                subtopics: ["Angles"],
                 date: "2026-02-04",
                 learningObjectives: [
                   "Identify acute, right, obtuse, and straight angles",
@@ -651,7 +651,7 @@ export const mockLessonPlans: SubjectCurriculum[] = [
                 className: "5A",
                 subject: "Mathematics",
                 topic: "Geometry Fundamentals",
-                subtopic: "Triangles",
+                subtopics: ["Triangles"],
                 date: "2026-02-05",
                 learningObjectives: [
                   "Classify triangles by sides and angles",
@@ -729,7 +729,7 @@ export const mockLessonPlans: SubjectCurriculum[] = [
                 className: "5A",
                 subject: "Science",
                 topic: "Forces and Motion",
-                subtopic: "Introduction to Forces",
+                subtopics: ["Introduction to Forces"],
                 date: "2026-01-06",
                 learningObjectives: [
                   "Define what a force is",
@@ -814,7 +814,7 @@ export const createEmptyLessonPlan = (
   className,
   subject,
   topic,
-  subtopic: "",
+  subtopics: [],
   date: new Date().toISOString().split("T")[0],
   learningObjectives: [],
   vocabulary: [],
