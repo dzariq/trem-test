@@ -301,11 +301,13 @@ const TeacherLessonPlansPage = () => {
             <div className="p-4 space-y-4 w-full max-w-full min-w-0">
               {curriculum?.topics.map((topic, topicIndex) => (
               <Card key={topic.id} className="overflow-hidden w-full">
-                <CardHeader className="py-3 px-4 bg-muted/30">
+                <CardHeader className="py-3 px-4 bg-emerald-50 dark:bg-emerald-950/30 border-b border-emerald-200 dark:border-emerald-900/50">
                   <div className="flex items-center justify-between gap-2 min-w-0">
                     <div className="flex items-center gap-2 min-w-0">
-                      <BookOpen className="h-4 w-4 text-primary flex-shrink-0" />
-                      <CardTitle className="text-sm font-semibold truncate">
+                      <div className="h-6 w-6 rounded-full bg-emerald-500 flex items-center justify-center flex-shrink-0">
+                        <BookOpen className="h-3.5 w-3.5 text-white" />
+                      </div>
+                      <CardTitle className="text-sm font-semibold text-emerald-900 dark:text-emerald-100 truncate">
                         Topic {topicIndex + 1}: {topic.title}
                       </CardTitle>
                     </div>
