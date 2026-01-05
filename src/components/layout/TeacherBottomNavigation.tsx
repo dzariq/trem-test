@@ -16,7 +16,7 @@ const navItems = [{
   to: "/teacher/lesson-plans",
   icon: ClipboardList,
   label: "Lesson",
-  labelLine2: "Plans"
+  labelLine2: ""
 }, {
   to: "/teacher/academic",
   icon: GraduationCap,
