@@ -347,11 +347,13 @@ const LessonPlanDetailPage = () => {
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1.5">
                   <Label className="text-xs text-muted-foreground">Teacher(s)</Label>
-                  <TagInput
-                    tags={lessonPlan.teacherNames}
-                    onChange={(tags) => updateField("teacherNames", tags)}
-                    placeholder="Add teacher name..."
-                  />
+                  <div className="flex flex-wrap gap-1.5 min-h-9 items-center">
+                    {lessonPlan.teacherNames.map((name, idx) => (
+                      <Badge key={idx} variant="secondary" className="text-xs">
+                        {name}
+                      </Badge>
+                    ))}
+                  </div>
                 </div>
                 <div className="space-y-1.5">
                   <Label className="text-xs text-muted-foreground">Class</Label>
