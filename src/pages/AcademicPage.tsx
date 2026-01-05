@@ -1854,6 +1854,7 @@ export default function AcademicPage() {
                               />
                               <ReferenceLine y={50} stroke="#f59e0b" strokeDasharray="5 5" strokeOpacity={0.6} label={{ value: "Pass", fontSize: 9, fill: "#f59e0b", position: "insideTopLeft" }} />
                               <ReferenceLine y={80} stroke="#22c55e" strokeDasharray="5 5" strokeOpacity={0.6} label={{ value: "A", fontSize: 9, fill: "#22c55e", position: "insideTopLeft" }} />
+                              <ReferenceLine y={trendGoalValue} stroke="hsl(var(--foreground))" strokeDasharray="4 4" strokeWidth={2} label={{ value: "Goal", fontSize: 9, fill: "hsl(var(--foreground))", position: "insideTopLeft" }} />
 
                               {trendsSelectedSubjects.length === 1 ? (
                                 <Area
@@ -1928,6 +1929,7 @@ export default function AcademicPage() {
                               />
                               <ReferenceLine y={50} stroke="#f59e0b" strokeDasharray="5 5" strokeOpacity={0.6} label={{ value: "Pass", fontSize: 9, fill: "#f59e0b", position: "insideTopLeft" }} />
                               <ReferenceLine y={80} stroke="#22c55e" strokeDasharray="5 5" strokeOpacity={0.6} label={{ value: "A", fontSize: 9, fill: "#22c55e", position: "insideTopLeft" }} />
+                              <ReferenceLine y={trendGoalValue} stroke="hsl(var(--foreground))" strokeDasharray="4 4" strokeWidth={2} label={{ value: "Goal", fontSize: 9, fill: "hsl(var(--foreground))", position: "insideTopLeft" }} />
 
                               {trendsSelectedSubjects.map((subject) => {
                                 const stroke = getSubjectStroke(subject);
@@ -1948,10 +1950,6 @@ export default function AcademicPage() {
                           )}
                         </ResponsiveContainer>
                       )}
-                    </div>
-                    {/* Goal Label */}
-                    <div className="flex items-center justify-center mt-2">
-                      <span className="text-xs font-medium text-muted-foreground">Goal: {trendGoalValue}</span>
                     </div>
                   </div>
                   {/* Color Legend for Multiple Lines Mode */}
