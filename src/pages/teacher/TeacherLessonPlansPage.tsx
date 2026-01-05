@@ -280,7 +280,7 @@ const TeacherLessonPlansPage = () => {
         </div>
         <div className="flex-1 min-w-0 overflow-hidden">
           <p className="text-sm font-medium truncate">{lp.title}</p>
-          <p className="text-xs text-muted-foreground truncate">{lp.subtopic || "No subtopic"}</p>
+          <p className="text-xs text-muted-foreground truncate">{lp.subtopics?.join(", ") || "No subtopic"}</p>
         </div>
         <ChevronRight className="h-4 w-4 text-muted-foreground flex-shrink-0" />
       </button>
@@ -443,7 +443,7 @@ const TeacherLessonPlansPage = () => {
                                 </Popover>
                                 {(() => {
                                   const weekSubtopics = [...new Set(
-                                    week.lessonPlans.map(lp => lp.subtopic).filter(Boolean)
+                                    week.lessonPlans.flatMap(lp => lp.subtopics || []).filter(Boolean)
                                   )];
                                   return weekSubtopics.length > 0 ? (
                                     <div className="flex gap-1.5 min-w-0 overflow-x-auto scrollbar-thin">
