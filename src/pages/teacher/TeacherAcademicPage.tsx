@@ -3995,14 +3995,9 @@ export default function TeacherAcademicPage() {
                       {/* Comparison Summary Cards */}
                       <div className="flex items-center gap-2">
                         <div className="flex-1 p-4 rounded-xl bg-gradient-to-br from-blue-500/10 to-blue-600/5 border border-blue-500/20">
-                          <div className="flex items-center gap-2 mb-2">
-                            <div className="w-8 h-8 rounded-lg bg-blue-500/20 flex items-center justify-center">
-                              <BarChart3 className="h-4 w-4 text-blue-500" />
-                            </div>
-                            <div>
-                              <span className="text-xs font-semibold text-foreground">Exam A</span>
-                              <p className="text-[10px] text-muted-foreground">{examALabel}</p>
-                            </div>
+                          <div className="mb-2">
+                            <span className="text-xs font-semibold text-foreground">Exam A</span>
+                            <p className="text-[10px] text-muted-foreground">{examALabel}</p>
                           </div>
                           <p className="text-2xl font-bold text-foreground">{avgA}%</p>
                           <p className="text-[10px] text-muted-foreground">Average Score</p>
@@ -4014,14 +4009,9 @@ export default function TeacherAcademicPage() {
                         </div>
                         
                         <div className="flex-1 p-4 rounded-xl bg-gradient-to-br from-amber-500/10 to-amber-600/5 border border-amber-500/20">
-                          <div className="flex items-center gap-2 mb-2">
-                            <div className="w-8 h-8 rounded-lg bg-amber-500/20 flex items-center justify-center">
-                              <BarChart3 className="h-4 w-4 text-amber-500" />
-                            </div>
-                            <div>
-                              <span className="text-xs font-semibold text-foreground">Exam B</span>
-                              <p className="text-[10px] text-muted-foreground">{examBLabel}</p>
-                            </div>
+                          <div className="mb-2">
+                            <span className="text-xs font-semibold text-foreground">Exam B</span>
+                            <p className="text-[10px] text-muted-foreground">{examBLabel}</p>
                           </div>
                           <p className="text-2xl font-bold text-foreground">{avgB}%</p>
                           <p className="text-[10px] text-muted-foreground">Average Score</p>
