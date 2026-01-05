@@ -453,7 +453,7 @@ const LessonPlanDetailPage = () => {
                 const prevLesson = getPreviousLessonPlan(lessonPlan);
                 if (prevLesson && prevLesson.learningObjectives.length > 0) {
                   return (
-                    <div className="bg-muted/50 rounded-lg p-3 border">
+                    <div className="bg-emerald-50 rounded-lg p-3 border border-emerald-200">
                       <p className="text-xs font-medium text-muted-foreground mb-2">
                         From Week {prevLesson.weekNumber}, Lesson {prevLesson.lessonNumber}:
                       </p>
