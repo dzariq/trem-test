@@ -64,8 +64,8 @@ export function ApprovalSection({ approval, onChange, readOnly = false }: Approv
         </div>
       </CardHeader>
       <CardContent className="px-4 pb-4 space-y-4">
-        {/* Prepared By */}
-        <div className="grid grid-cols-2 gap-3">
+        {/* All approval fields in a compact grid */}
+        <div className="grid grid-cols-4 gap-3">
           <div className="space-y-1.5">
             <Label className="text-xs text-muted-foreground">Prepared by</Label>
             <Input
@@ -85,17 +85,13 @@ export function ApprovalSection({ approval, onChange, readOnly = false }: Approv
               className="h-9"
             />
           </div>
-        </div>
-
-        {/* Checked By */}
-        <div className="grid grid-cols-2 gap-3">
           <div className="space-y-1.5">
-            <Label className="text-xs text-muted-foreground">Checked by (HOD/Admin)</Label>
+            <Label className="text-xs text-muted-foreground">Checked by</Label>
             <Input
               value={approval.checkedBy || ""}
               onChange={(e) => onChange({ ...approval, checkedBy: e.target.value || null })}
               disabled={readOnly}
-              placeholder="Not yet checked"
+              placeholder="HOD/Admin"
               className="h-9"
             />
           </div>
