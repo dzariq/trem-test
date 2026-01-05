@@ -12,11 +12,36 @@ interface ReflectionSectionProps {
 }
 
 const reflectionQuestions = [
-  { key: "objectivesRealistic", label: "Were the lesson objectives realistic?" },
-  { key: "learnersLearned", label: "What did the learners learn today?" },
-  { key: "learningAtmosphere", label: "What was the learning atmosphere like?" },
-  { key: "differentiationWorked", label: "Did my planned differentiation work well?" },
-  { key: "timingsAndChanges", label: "Did I stick to timings? What changes did I make from my plan and why?" },
+  { 
+    key: "objectivesRealistic", 
+    label: "Were the lesson objectives achievable within the time?",
+    placeholder: "What made them achievable / not achievable?"
+  },
+  { 
+    key: "learnersLearned", 
+    label: "What did learners achieve today?",
+    placeholder: "State what most students can do now + any key misconceptions."
+  },
+  { 
+    key: "learningAtmosphere", 
+    label: "How was the learning atmosphere?",
+    placeholder: "Engagement level, participation, behaviour, energy."
+  },
+  { 
+    key: "differentiationWorked", 
+    label: "Did differentiation/support strategies work?",
+    placeholder: "Who needed extra support? What helped? What didn't?"
+  },
+  { 
+    key: "timingsAndChanges", 
+    label: "Did I follow the planned timing? If not, what changed and why?",
+    placeholder: "What activity took longer/shorter?"
+  },
+  { 
+    key: "nextLessonImprovements", 
+    label: "Next lesson improvements (must be specific)",
+    placeholder: 'Example: "Reduce worksheet Qs from 10 to 6", "Add 2 examples before independent work", "Prepare extension task".'
+  },
 ] as const;
 
 export function ReflectionSection({ reflection, onChange }: ReflectionSectionProps) {
@@ -103,7 +128,7 @@ export function ReflectionSection({ reflection, onChange }: ReflectionSectionPro
               <Textarea
                 value={reflection[q.key] || ""}
                 onChange={(e) => onChange({ ...reflection, [q.key]: e.target.value })}
-                placeholder="Enter your reflection..."
+                placeholder={q.placeholder}
                 className={cn(
                   "min-h-[60px]",
                   !reflection[q.key]?.trim() && "border-amber-300 focus-visible:ring-amber-500"
@@ -116,7 +141,7 @@ export function ReflectionSection({ reflection, onChange }: ReflectionSectionPro
         {/* Additional Comments */}
         <div className="space-y-2">
           <Label className="text-sm font-medium">
-            Additional Comments / Notes
+            Additional notes / follow-up needed
             {!reflection.comments.trim() && (
               <span className="text-amber-600 ml-2 text-xs font-normal">
                 (Required)
@@ -126,7 +151,7 @@ export function ReflectionSection({ reflection, onChange }: ReflectionSectionPro
           <Textarea
             value={reflection.comments}
             onChange={(e) => onChange({ ...reflection, comments: e.target.value })}
-            placeholder="Any other observations or notes about the lesson..."
+            placeholder="Resources to improve, students to follow up, support needed."
             className={cn(
               "min-h-[80px]",
               !reflection.comments.trim() && "border-amber-300 focus-visible:ring-amber-500"

@@ -22,6 +22,7 @@ export interface LessonPlanReflection {
   learningAtmosphere: string;
   differentiationWorked: string;
   timingsAndChanges: string;
+  nextLessonImprovements: string;
   comments: string;
 }
 
@@ -186,6 +187,7 @@ export const mockLessonPlans: SubjectCurriculum[] = [
                   learningAtmosphere: "Positive and engaging. Students were curious and asked questions.",
                   differentiationWorked: "Yes, the visual cards helped struggling learners.",
                   timingsAndChanges: "Stuck to timings. Extended practice time by 5 minutes.",
+                  nextLessonImprovements: "Add more visual examples before independent work.",
                   comments: "Students grasped the concept well. Some needed extra support with distinguishing coefficients from constants."
                 },
                 attendance: { present: 18, absent: 1, late: 1, excused: 0, total: 20 },
@@ -255,6 +257,7 @@ export const mockLessonPlans: SubjectCurriculum[] = [
                   learningAtmosphere: "Energetic and collaborative during the game activity.",
                   differentiationWorked: "The game format helped all learners participate.",
                   timingsAndChanges: "Reduced intro by 5 mins to allow more game time.",
+                  nextLessonImprovements: "Prepare more challenging expressions for advanced students.",
                   comments: "Good participation. The translation game was very effective."
                 },
                 attendance: { present: 19, absent: 0, late: 1, excused: 0, total: 20 },
@@ -323,6 +326,7 @@ export const mockLessonPlans: SubjectCurriculum[] = [
                   learningAtmosphere: "",
                   differentiationWorked: "",
                   timingsAndChanges: "",
+                  nextLessonImprovements: "",
                   comments: ""
                 },
                 attendance: null,
@@ -394,6 +398,7 @@ export const mockLessonPlans: SubjectCurriculum[] = [
                   learningAtmosphere: "",
                   differentiationWorked: "",
                   timingsAndChanges: "",
+                  nextLessonImprovements: "",
                   comments: ""
                 },
                 attendance: null,
@@ -454,6 +459,7 @@ export const mockLessonPlans: SubjectCurriculum[] = [
                   learningAtmosphere: "Focused and engaged throughout.",
                   differentiationWorked: "Visual examples helped visual learners.",
                   timingsAndChanges: "On track with timing.",
+                  nextLessonImprovements: "Add more graphing practice problems.",
                   comments: "Good lesson. Students ready for graphing next."
                 },
                 attendance: { present: 19, absent: 1, late: 0, excused: 0, total: 20 },
@@ -494,6 +500,7 @@ export const mockLessonPlans: SubjectCurriculum[] = [
                   learningAtmosphere: "",
                   differentiationWorked: "",
                   timingsAndChanges: "",
+                  nextLessonImprovements: "",
                   comments: ""
                 },
                 attendance: null,
@@ -541,6 +548,7 @@ export const mockLessonPlans: SubjectCurriculum[] = [
                   learningAtmosphere: "",
                   differentiationWorked: "",
                   timingsAndChanges: "",
+                  nextLessonImprovements: "",
                   comments: ""
                 },
                 attendance: null,
@@ -595,6 +603,7 @@ export const mockLessonPlans: SubjectCurriculum[] = [
                   learningAtmosphere: "Interactive and curious.",
                   differentiationWorked: "Concrete examples helped struggling students.",
                   timingsAndChanges: "Slightly extended hands-on time.",
+                  nextLessonImprovements: "Prepare more hands-on activities for next lesson.",
                   comments: "Great start to geometry unit. Students excited about the topic."
                 },
                 attendance: { present: 20, absent: 0, late: 0, excused: 0, total: 20 },
@@ -635,6 +644,7 @@ export const mockLessonPlans: SubjectCurriculum[] = [
                   learningAtmosphere: "Hands-on and engaged.",
                   differentiationWorked: "Peer tutoring worked well.",
                   timingsAndChanges: "Added extra protractor practice.",
+                  nextLessonImprovements: "Add 3 more protractor alignment exercises.",
                   comments: "Some students need more practice with protractor alignment."
                 },
                 attendance: { present: 18, absent: 2, late: 0, excused: 0, total: 20 },
@@ -675,6 +685,7 @@ export const mockLessonPlans: SubjectCurriculum[] = [
                   learningAtmosphere: "Very engaging with the sorting activity.",
                   differentiationWorked: "Triangle cutouts helped tactile learners.",
                   timingsAndChanges: "Perfect timing throughout.",
+                  nextLessonImprovements: "Prepare quadrilateral cutouts for next lesson.",
                   comments: "Excellent lesson. The hands-on sorting activity was very effective. Students are ready for quadrilaterals."
                 },
                 attendance: { present: 20, absent: 0, late: 0, excused: 0, total: 20 },
@@ -776,6 +787,7 @@ export const mockLessonPlans: SubjectCurriculum[] = [
                   learningAtmosphere: "Very enthusiastic during the hands-on experiments.",
                   differentiationWorked: "Paired stronger students with those needing support.",
                   timingsAndChanges: "Extended experiment time, shortened summary.",
+                  nextLessonImprovements: "Add 5 more minutes for measurement practice.",
                   comments: "Students enjoyed the hands-on activity. Will need more time for measurement practice."
                 },
                 attendance: { present: 20, absent: 0, late: 0, excused: 0, total: 20 },
@@ -853,6 +865,7 @@ export const createEmptyLessonPlan = (
     learningAtmosphere: "",
     differentiationWorked: "",
     timingsAndChanges: "",
+    nextLessonImprovements: "",
     comments: ""
   },
   attendance: null,
