@@ -415,14 +415,14 @@ const LessonPlanDetailPage = () => {
                 <CardTitle className="text-sm font-semibold">Previous Learning</CardTitle>
               </div>
             </CardHeader>
-            <CardContent className="px-4 pb-4 space-y-3">
+            <CardContent className="px-4 pb-4">
               {(() => {
                 const prevLesson = getPreviousLessonPlan(lessonPlan);
                 if (prevLesson && prevLesson.learningObjectives.length > 0) {
                   return (
                     <div className="bg-muted/50 rounded-lg p-3 border">
                       <p className="text-xs font-medium text-muted-foreground mb-2">
-                        Auto-filled from previous lesson (Week {prevLesson.weekNumber}, Lesson {prevLesson.lessonNumber}):
+                        From Week {prevLesson.weekNumber}, Lesson {prevLesson.lessonNumber}:
                       </p>
                       <ul className="text-sm space-y-1">
                         {prevLesson.learningObjectives.map((obj, idx) => (
@@ -435,14 +435,12 @@ const LessonPlanDetailPage = () => {
                     </div>
                   );
                 }
-                return null;
+                return (
+                  <p className="text-sm text-muted-foreground italic">
+                    No previous lesson found for this subject.
+                  </p>
+                );
               })()}
-              <Textarea
-                value={lessonPlan.previousLearning}
-                onChange={(e) => updateField("previousLearning", e.target.value)}
-                placeholder="Add any additional context about what students have previously learned..."
-                className="min-h-[60px]"
-              />
             </CardContent>
           </Card>
 
