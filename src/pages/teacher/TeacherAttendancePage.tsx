@@ -214,17 +214,17 @@ export default function TeacherAttendancePage() {
           </div>
 
           {/* Summary */}
-          <div className="flex gap-2 flex-wrap">
-            <Badge variant="outline" className="bg-emerald-50 text-emerald-700 border-emerald-200">
+          <div className="grid grid-cols-4 gap-2">
+            <Badge variant="outline" className="bg-emerald-50 text-emerald-700 border-emerald-200 justify-center py-1">
               Present: {presentCount}
             </Badge>
-            <Badge variant="outline" className="bg-red-50 text-red-700 border-red-200">
+            <Badge variant="outline" className="bg-red-50 text-red-700 border-red-200 justify-center py-1">
               Absent: {absentCount}
             </Badge>
-            <Badge variant="outline" className="bg-amber-50 text-amber-700 border-amber-200">
+            <Badge variant="outline" className="bg-amber-50 text-amber-700 border-amber-200 justify-center py-1">
               Late: {lateCount}
             </Badge>
-            <Badge variant="outline" className="bg-purple-50 text-purple-700 border-purple-200">
+            <Badge variant="outline" className="bg-purple-50 text-purple-700 border-purple-200 justify-center py-1">
               Excused: {excusedCount}
             </Badge>
           </div>
@@ -240,13 +240,13 @@ export default function TeacherAttendancePage() {
               {students.map((student, index) => (
                 <div 
                   key={student.id} 
-                  className="flex items-center justify-between p-3 rounded-xl border border-border/50 bg-card hover:bg-muted/30 transition-colors"
+                  className="flex items-center justify-between p-3 rounded-xl border border-border/50 bg-card hover:bg-muted/30 transition-colors gap-2"
                 >
-                  <div className="flex items-center gap-3">
-                    <span className="flex items-center justify-center h-6 w-6 rounded-full bg-primary/10 text-xs font-medium text-primary">{index + 1}</span>
-                    <span className="font-medium text-foreground">{student.name}</span>
+                  <div className="flex items-center gap-2 min-w-0 flex-1">
+                    <span className="flex items-center justify-center h-6 w-6 rounded-full bg-primary/10 text-xs font-medium text-primary flex-shrink-0">{index + 1}</span>
+                    <span className="font-medium text-foreground text-sm truncate">{student.name}</span>
                   </div>
-                  <div className="flex gap-1.5">
+                  <div className="flex gap-1 flex-shrink-0">
                     {getStatusButton(
                       student.id,
                       "present",
