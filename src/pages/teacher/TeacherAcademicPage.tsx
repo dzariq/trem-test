@@ -3674,12 +3674,12 @@ export default function TeacherAcademicPage() {
                   {chartViewMode === "multiple" && trendsSelectedSubjects.length > 1 && (
                     <div className="flex flex-wrap gap-1.5 justify-center">
                       {trendsSelectedSubjects.map((subject) => (
-                        <div key={subject} className="flex items-center gap-1 px-1.5 py-0.5 rounded bg-muted/50">
+                        <div key={subject} className="flex items-center gap-1.5 px-1">
                           <div
-                            className="w-2 h-2 rounded-full"
+                            className="w-2.5 h-2.5 rounded-full"
                             style={{ backgroundColor: getSubjectColor(subject) }}
                           />
-                          <span className="text-[10px] text-muted-foreground">
+                          <span className="text-[11px] font-medium text-foreground">
                             {getTinySubjectCode(subject)}
                           </span>
                         </div>
