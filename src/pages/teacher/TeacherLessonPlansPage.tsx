@@ -5,6 +5,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import {
   Select,
   SelectContent,
@@ -12,6 +14,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import {
   Accordion,
   AccordionContent,
@@ -28,6 +38,7 @@ import {
   FileText 
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { toast } from "@/hooks/use-toast";
 import { 
   mockLessonPlans, 
   getAvailableSubjects, 
@@ -39,6 +50,8 @@ import {
 const TeacherLessonPlansPage = () => {
   const navigate = useNavigate();
   const [selectedSubject, setSelectedSubject] = useState<string>(mockLessonPlans[0]?.subject || "");
+  const [isAddTopicOpen, setIsAddTopicOpen] = useState(false);
+  const [newTopicTitle, setNewTopicTitle] = useState("");
   
   const subjects = getAvailableSubjects();
   const curriculum = mockLessonPlans.find(s => s.subject === selectedSubject);
@@ -71,6 +84,19 @@ const TeacherLessonPlansPage = () => {
 
   const handleLessonPlanClick = (lp: LessonPlan) => {
     navigate(`/teacher/lesson-plans/${lp.id}`);
+  };
+
+  const handleAddTopic = () => {
+    if (!newTopicTitle.trim()) return;
+    
+    // In a real app, this would save to the database
+    toast({
+      title: "Topic Created",
+      description: `Topic "${newTopicTitle}" has been added to ${selectedSubject}.`,
+    });
+    
+    setNewTopicTitle("");
+    setIsAddTopicOpen(false);
   };
 
   const handleCreateNew = () => {
@@ -129,9 +155,9 @@ const TeacherLessonPlansPage = () => {
               </SelectContent>
             </Select>
             
-            <Button size="sm" onClick={handleCreateNew} className="gap-1.5">
+            <Button size="sm" onClick={() => setIsAddTopicOpen(true)} className="gap-1.5">
               <Plus className="h-4 w-4" />
-              <span className="hidden sm:inline">New LP</span>
+              <span className="hidden sm:inline">New Topic</span>
             </Button>
           </div>
         </div>
@@ -237,6 +263,40 @@ const TeacherLessonPlansPage = () => {
           </div>
         </ScrollArea>
       </div>
+
+      {/* Add Topic Dialog */}
+      <Dialog open={isAddTopicOpen} onOpenChange={setIsAddTopicOpen}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Add New Topic</DialogTitle>
+            <DialogDescription>
+              Create a new topic for {selectedSubject}. Topics are automatically numbered.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="topic-title">Topic Title</Label>
+              <Input
+                id="topic-title"
+                placeholder="e.g., Linear Equations"
+                value={newTopicTitle}
+                onChange={(e) => setNewTopicTitle(e.target.value)}
+              />
+            </div>
+            <p className="text-xs text-muted-foreground">
+              This will be added as Topic {(curriculum?.topics.length || 0) + 1}
+            </p>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsAddTopicOpen(false)}>
+              Cancel
+            </Button>
+            <Button onClick={handleAddTopic} disabled={!newTopicTitle.trim()}>
+              Add Topic
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </TeacherAppLayout>
   );
 };
