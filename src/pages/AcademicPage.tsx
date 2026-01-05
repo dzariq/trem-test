@@ -2632,16 +2632,12 @@ export default function AcademicPage() {
                           
                           {/* Visual Bars */}
                           <div className="space-y-1.5">
-                            {/* Exam B (Previous) - Amber */}
+                            {/* Exam B (Previous) - Amber with outline */}
                             <div className="flex items-center gap-2">
                               <span className="text-[10px] text-muted-foreground w-16 truncate">{getExamLabelForComparison(compareExamB).split(' ')[0]}</span>
                               <div className="flex-1 h-5 bg-muted/30 rounded-full overflow-hidden relative">
-                                <div className="h-full bg-amber-500 rounded-full transition-all duration-500" style={{
+                                <div className="h-full bg-[hsl(38,92%,70%)] border-2 border-[hsl(38,92%,50%)] rounded-full transition-all duration-500" style={{
                               width: `${item.examB / 100 * 100}%`
-                            }} />
-                                {/* Goal marker line */}
-                                <div className="absolute top-0 h-full w-0.5 bg-black" style={{
-                              left: `${item.goal}%`
                             }} />
                                 <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] font-bold text-foreground">
                                   {item.examB}
@@ -2649,16 +2645,12 @@ export default function AcademicPage() {
                               </div>
                             </div>
                             
-                            {/* Exam A (Current) - Blue */}
+                            {/* Exam A (Current) - Blue with outline */}
                             <div className="flex items-center gap-2">
                               <span className="text-[10px] text-muted-foreground w-16 truncate">{getExamLabelForComparison(compareExamA).split(' ')[0]}</span>
                               <div className="flex-1 h-5 bg-muted/30 rounded-full overflow-hidden relative">
-                                <div className="h-full bg-blue-500 rounded-full transition-all duration-500" style={{
+                                <div className="h-full bg-[hsl(217,91%,75%)] border-2 border-[hsl(217,91%,50%)] rounded-full transition-all duration-500" style={{
                               width: `${item.examA / 100 * 100}%`
-                            }} />
-                                {/* Goal marker line */}
-                                <div className="absolute top-0 h-full w-0.5 bg-black" style={{
-                              left: `${item.goal}%`
                             }} />
                                 <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] font-bold text-foreground">
                                   {item.examA}
@@ -2666,14 +2658,31 @@ export default function AcademicPage() {
                               </div>
                             </div>
 
-                            {/* Goal Row - Black */}
+                            {/* Goal Row - Measurement/Ruler Design */}
                             <div className="flex items-center gap-2">
                               <span className="text-[10px] text-muted-foreground w-16 truncate font-medium">Goal</span>
-                              <div className="flex-1 h-3 bg-muted/30 rounded-full overflow-hidden relative">
-                                <div className="h-full bg-black rounded-full transition-all duration-500" style={{
-                              width: `${item.goal / 100 * 100}%`
-                            }} />
-                                <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[9px] font-bold text-foreground">
+                              <div className="flex-1 h-4 relative">
+                                {/* Ruler track */}
+                                <div className="absolute top-1/2 -translate-y-1/2 w-full h-[2px] bg-muted-foreground/30" />
+                                
+                                {/* Tick marks */}
+                                {[0, 25, 50, 75, 100].map((tick) => (
+                                  <div key={tick} className="absolute top-1/2 -translate-y-1/2" style={{ left: `${tick}%` }}>
+                                    <div className={`w-[1px] ${tick === 0 || tick === 100 ? 'h-3' : 'h-2'} bg-muted-foreground/40 -translate-x-1/2`} />
+                                  </div>
+                                ))}
+                                
+                                {/* Goal marker (diamond) */}
+                                <div 
+                                  className="absolute top-1/2 -translate-y-1/2 -translate-x-1/2 w-3 h-3 bg-foreground rotate-45 shadow-sm"
+                                  style={{ left: `${item.goal}%` }}
+                                />
+                                
+                                {/* Goal value label */}
+                                <span 
+                                  className="absolute -top-3 text-[9px] font-bold text-foreground -translate-x-1/2"
+                                  style={{ left: `${item.goal}%` }}
+                                >
                                   {item.goal}
                                 </span>
                               </div>
