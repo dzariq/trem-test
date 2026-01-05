@@ -9,7 +9,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Save, TrendingUp, TrendingDown, Minus, ChevronDown, ChevronUp, Users, Target, Award, AlertTriangle, BookOpen, BarChart3, FileText, CheckCircle, XCircle, Lightbulb, Copy, Printer, ArrowRight, ArrowUpRight, ArrowDownRight, Scale, Download, FileSpreadsheet, Check, Calendar, UserCheck, Plus, X } from "lucide-react";
+import { Save, TrendingUp, TrendingDown, Minus, ChevronDown, ChevronUp, Users, Target, Award, AlertTriangle, BookOpen, BarChart3, FileText, CheckCircle, XCircle, Lightbulb, Copy, Printer, ArrowRight, ArrowUpRight, ArrowDownRight, Scale, Download, FileSpreadsheet, Check, Calendar, UserCheck, Plus, X, ArrowUp, ArrowDown } from "lucide-react";
+import { Carousel, CarouselContent, CarouselItem } from "@/components/ui/carousel";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { toast } from "@/hooks/use-toast";
 import schoolLogo from "@/assets/school-badge.png";
@@ -213,6 +214,8 @@ export default function TeacherAcademicPage() {
   const trendsReportRef = useRef<HTMLDivElement>(null);
   const [comparisonReportDialogOpen, setComparisonReportDialogOpen] = useState(false);
   const comparisonReportRef = useRef<HTMLDivElement>(null);
+  const [growthCarouselApi, setGrowthCarouselApi] = useState<any>(null);
+  const [growthCarouselSlide, setGrowthCarouselSlide] = useState(0);
   const handleTouchStart = useCallback((e: React.TouchEvent) => {
     // Only handle pinch-to-zoom with 2 fingers, allow single-finger scrolling to pass through
     if (e.touches.length === 2) {
@@ -1733,7 +1736,7 @@ export default function TeacherAcademicPage() {
                 <TabsTrigger value="overview" className="text-xs">Overview</TabsTrigger>
                 <TabsTrigger value="distribution" className="text-xs">Bands</TabsTrigger>
                 <TabsTrigger value="trends" className="text-xs">Trends</TabsTrigger>
-                <TabsTrigger value="comparison" className="text-xs">Comparison</TabsTrigger>
+                <TabsTrigger value="comparison" className="text-xs">Compare</TabsTrigger>
               </TabsList>
 
               {/* ==================== OVERVIEW SUB-TAB ==================== */}
@@ -3815,22 +3818,22 @@ export default function TeacherAcademicPage() {
               {/* ==================== COMPARISON SUB-TAB ==================== */}
               <TabsContent value="comparison" className="space-y-4">
                 {/* Exam Selectors */}
-                <div className="grid grid-cols-2 gap-4">
+                <div className="flex items-center gap-2">
                   {/* Exam A - Light Blue Box */}
-                  <div className="space-y-3 p-3 rounded-xl border" style={{
-                  backgroundColor: 'rgba(59, 130, 246, 0.08)',
-                  borderColor: 'rgba(59, 130, 246, 0.25)'
-                }}>
-                    <label className="text-xs font-semibold flex items-center gap-1.5" style={{
-                    color: '#3b82f6'
+                  <div className="flex-1 space-y-2 p-3 rounded-xl border" style={{
+                    backgroundColor: 'rgba(59, 130, 246, 0.08)',
+                    borderColor: 'rgba(59, 130, 246, 0.25)'
                   }}>
+                    <label className="text-xs font-semibold flex items-center gap-1.5" style={{
+                      color: '#3b82f6'
+                    }}>
                       <div className="w-2 h-2 rounded-full" style={{
-                      backgroundColor: '#3b82f6'
-                    }} />
+                        backgroundColor: '#3b82f6'
+                      }} />
                       Exam A
                     </label>
                     <Select value={examAClass} onValueChange={setExamAClass}>
-                      <SelectTrigger className="w-full h-9 text-sm bg-background/80">
+                      <SelectTrigger className="w-full h-8 text-xs bg-background/80">
                         <SelectValue placeholder="Class" />
                       </SelectTrigger>
                       <SelectContent className="bg-card">
@@ -3838,7 +3841,7 @@ export default function TeacherAcademicPage() {
                       </SelectContent>
                     </Select>
                     <Select value={examAYear} onValueChange={setExamAYear}>
-                      <SelectTrigger className="w-full h-9 text-sm bg-background/80">
+                      <SelectTrigger className="w-full h-8 text-xs bg-background/80">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent className="bg-card">
@@ -3846,7 +3849,7 @@ export default function TeacherAcademicPage() {
                       </SelectContent>
                     </Select>
                     <Select value={examAPeriod} onValueChange={v => setExamAPeriod(v as "midYear" | "yearEnd")}>
-                      <SelectTrigger className="w-full h-9 text-sm bg-background/80">
+                      <SelectTrigger className="w-full h-8 text-xs bg-background/80">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent className="bg-card">
@@ -3855,21 +3858,26 @@ export default function TeacherAcademicPage() {
                     </Select>
                   </div>
                   
-                  {/* Exam B - Light Red Box */}
-                  <div className="space-y-3 p-3 rounded-xl border" style={{
-                  backgroundColor: 'rgba(239, 68, 68, 0.08)',
-                  borderColor: 'rgba(239, 68, 68, 0.25)'
-                }}>
-                    <label className="text-xs font-semibold flex items-center gap-1.5" style={{
-                    color: '#ef4444'
+                  {/* VS Divider */}
+                  <div className="flex flex-col items-center justify-center">
+                    <span className="text-xs font-bold text-muted-foreground">vs</span>
+                  </div>
+                  
+                  {/* Exam B - Light Amber Box */}
+                  <div className="flex-1 space-y-2 p-3 rounded-xl border" style={{
+                    backgroundColor: 'rgba(245, 158, 11, 0.08)',
+                    borderColor: 'rgba(245, 158, 11, 0.25)'
                   }}>
+                    <label className="text-xs font-semibold flex items-center gap-1.5" style={{
+                      color: '#d97706'
+                    }}>
                       <div className="w-2 h-2 rounded-full" style={{
-                      backgroundColor: '#ef4444'
-                    }} />
+                        backgroundColor: '#f59e0b'
+                      }} />
                       Exam B
                     </label>
                     <Select value={examBClass} onValueChange={setExamBClass}>
-                      <SelectTrigger className="w-full h-9 text-sm bg-background/80">
+                      <SelectTrigger className="w-full h-8 text-xs bg-background/80">
                         <SelectValue placeholder="Class" />
                       </SelectTrigger>
                       <SelectContent className="bg-card">
@@ -3877,7 +3885,7 @@ export default function TeacherAcademicPage() {
                       </SelectContent>
                     </Select>
                     <Select value={examBYear} onValueChange={setExamBYear}>
-                      <SelectTrigger className="w-full h-9 text-sm bg-background/80">
+                      <SelectTrigger className="w-full h-8 text-xs bg-background/80">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent className="bg-card">
@@ -3885,7 +3893,7 @@ export default function TeacherAcademicPage() {
                       </SelectContent>
                     </Select>
                     <Select value={examBPeriod} onValueChange={v => setExamBPeriod(v as "midYear" | "yearEnd")}>
-                      <SelectTrigger className="w-full h-9 text-sm bg-background/80">
+                      <SelectTrigger className="w-full h-8 text-xs bg-background/80">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent className="bg-card">
@@ -3973,145 +3981,331 @@ export default function TeacherAcademicPage() {
                 const avgB = comparisonData.length > 0 ? Math.round(comparisonData.reduce((sum, d) => sum + d.examB, 0) / comparisonData.length) : 0;
                 return <>
                       {/* Comparison Summary Cards */}
-                      <div className="grid grid-cols-2 gap-3">
-                        <div className="p-3 rounded-lg bg-chart-1/10 border border-chart-1/30">
-                          <p className="text-xs text-muted-foreground mb-1">{examALabel}</p>
-                          <p className="text-xl font-bold text-foreground">{avgA}%</p>
-                          <p className="text-xs text-muted-foreground">Average</p>
+                      <div className="flex items-center gap-2">
+                        <div className="flex-1 p-4 rounded-xl bg-gradient-to-br from-blue-500/10 to-blue-600/5 border border-blue-500/20">
+                          <div className="flex items-center gap-2 mb-2">
+                            <div className="w-8 h-8 rounded-lg bg-blue-500/20 flex items-center justify-center">
+                              <BarChart3 className="h-4 w-4 text-blue-500" />
+                            </div>
+                            <div>
+                              <span className="text-xs font-semibold text-foreground">Exam A</span>
+                              <p className="text-[10px] text-muted-foreground">{examALabel}</p>
+                            </div>
+                          </div>
+                          <p className="text-2xl font-bold text-foreground">{avgA}%</p>
+                          <p className="text-[10px] text-muted-foreground">Average Score</p>
                         </div>
-                        <div className="p-3 rounded-lg bg-chart-2/10 border border-chart-2/30">
-                          <p className="text-xs text-muted-foreground mb-1">{examBLabel}</p>
-                          <p className="text-xl font-bold text-foreground">{avgB}%</p>
-                          <p className="text-xs text-muted-foreground">Average</p>
+                        
+                        {/* VS Divider */}
+                        <div className="flex flex-col items-center justify-center">
+                          <span className="text-xs font-bold text-muted-foreground">vs</span>
+                        </div>
+                        
+                        <div className="flex-1 p-4 rounded-xl bg-gradient-to-br from-amber-500/10 to-amber-600/5 border border-amber-500/20">
+                          <div className="flex items-center gap-2 mb-2">
+                            <div className="w-8 h-8 rounded-lg bg-amber-500/20 flex items-center justify-center">
+                              <BarChart3 className="h-4 w-4 text-amber-500" />
+                            </div>
+                            <div>
+                              <span className="text-xs font-semibold text-foreground">Exam B</span>
+                              <p className="text-[10px] text-muted-foreground">{examBLabel}</p>
+                            </div>
+                          </div>
+                          <p className="text-2xl font-bold text-foreground">{avgB}%</p>
+                          <p className="text-[10px] text-muted-foreground">Average Score</p>
                         </div>
                       </div>
 
-                      {/* Top 5 Growth Leaders - Moomoo Style */}
-                      <div className="p-4 rounded-xl bg-gradient-to-br from-emerald-500/10 to-emerald-600/5 border border-emerald-500/20">
-                        <div className="flex items-center justify-between mb-3">
-                          <div className="flex items-center gap-2">
-                            <div className="w-8 h-8 rounded-lg bg-emerald-500/20 flex items-center justify-center">
-                              <TrendingUp className="h-4 w-4 text-emerald-500" />
-                            </div>
-                            <div>
-                              <h4 className="text-sm font-semibold text-foreground">Top Growth Leaders</h4>
-                              <p className="text-[10px] text-muted-foreground">Best performing subjects</p>
+                      {/* Top 5 Growth/Decline Leaders - Swipeable Carousel */}
+                      {(() => {
+                        const top5Growth = [...comparisonData].filter(item => item.delta > 0).sort((a, b) => b.delta - a.delta).slice(0, 5);
+                        const top5Decline = [...comparisonData].filter(item => item.delta < 0).sort((a, b) => a.delta - b.delta).slice(0, 3);
+
+                        return (
+                          <div className="relative">
+                            <Carousel
+                              className="w-full"
+                              opts={{ align: "start", loop: false }}
+                              setApi={(api) => {
+                                if (api) {
+                                  setGrowthCarouselApi(api);
+                                  api.on("select", () => {
+                                    setGrowthCarouselSlide(api.selectedScrollSnap());
+                                  });
+                                }
+                              }}
+                            >
+                              <CarouselContent className="-ml-2">
+                                {/* Slide 1: Top Growth Subjects */}
+                                <CarouselItem className="pl-2">
+                                  <div className="p-4 rounded-xl bg-gradient-to-br from-emerald-500/10 to-emerald-600/5 border border-emerald-500/20">
+                                    <div className="flex flex-col items-center justify-center mb-3">
+                                      <div className="flex items-center gap-2">
+                                        <div className="w-8 h-8 rounded-lg bg-emerald-500/20 flex items-center justify-center">
+                                          <TrendingUp className="h-4 w-4 text-emerald-500" />
+                                        </div>
+                                        <div className="text-center">
+                                          <h4 className="text-sm font-semibold text-foreground">Top Growth Subjects</h4>
+                                          <p className="text-[10px] text-muted-foreground">Best performing subjects</p>
+                                        </div>
+                                      </div>
+                                    </div>
+                                    
+                                    {top5Growth.length === 0 ? (
+                                      <div className="text-center py-4 text-muted-foreground text-sm">
+                                        No subjects showed improvement in this period
+                                      </div>
+                                    ) : (
+                                      <div className="space-y-3">
+                                        {/* Individual Subject Badges */}
+                                        <div className="flex flex-wrap justify-center gap-1.5">
+                                          {top5Growth.map(item => {
+                                            const percentChange = item.examB > 0 ? (item.delta / item.examB * 100).toFixed(0) : '0';
+                                            return (
+                                              <div key={item.name} className="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-emerald-500/10 border border-emerald-500/20">
+                                                <ArrowUp className="h-3 w-3 text-emerald-500" />
+                                                <span className="text-[10px] font-medium text-foreground">{shortenSubjectName(item.name)}</span>
+                                                <span className="text-[10px] font-bold text-emerald-600">+{percentChange}%</span>
+                                              </div>
+                                            );
+                                          })}
+                                        </div>
+                                        
+                                        {/* Bar Chart - Before/After Comparison */}
+                                        <div className="h-36 -mx-2">
+                                          <ResponsiveContainer width="100%" height="100%">
+                                            <BarChart data={top5Growth.map(item => ({
+                                              name: shortenSubjectName(item.name),
+                                              examA: item.examA,
+                                              examB: item.examB,
+                                              delta: item.delta
+                                            }))} margin={{ top: 10, right: 10, left: 10, bottom: 0 }} barGap={2} barCategoryGap="20%">
+                                              <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 9, fill: 'hsl(var(--muted-foreground))' }} interval={0} height={30} />
+                                              <YAxis hide domain={[0, 100]} />
+                                              <Tooltip content={({ active, payload }) => {
+                                                if (active && payload && payload.length) {
+                                                  const data = payload[0].payload;
+                                                  return (
+                                                    <div className="bg-popover border border-border rounded-lg shadow-lg p-2">
+                                                      <p className="text-xs font-medium text-foreground">{data.name}</p>
+                                                      <div className="flex items-center gap-2 mt-1">
+                                                        <span className="text-[10px] text-blue-500">A: {data.examA}</span>
+                                                        <span className="text-[10px] text-muted-foreground">vs</span>
+                                                        <span className="text-[10px] text-amber-500">B: {data.examB}</span>
+                                                      </div>
+                                                      <p className="text-xs text-emerald-500 font-bold mt-1">+{data.delta} pts</p>
+                                                    </div>
+                                                  );
+                                                }
+                                                return null;
+                                              }} />
+                                              <Bar dataKey="examB" fill="hsl(38, 92%, 70%)" stroke="hsl(38, 92%, 50%)" strokeWidth={1.5} radius={[4, 4, 0, 0]} name="Exam B" />
+                                              <Bar dataKey="examA" fill="hsl(217, 91%, 75%)" stroke="hsl(217, 91%, 50%)" strokeWidth={1.5} radius={[4, 4, 0, 0]} name="Exam A" />
+                                            </BarChart>
+                                          </ResponsiveContainer>
+                                        </div>
+                                        
+                                        {/* Legend */}
+                                        <div className="flex items-center justify-center gap-4 text-[10px]">
+                                          <div className="flex items-center gap-1">
+                                            <div className="w-3 h-3 rounded-sm bg-amber-300 border border-amber-500" />
+                                            <span className="text-muted-foreground">Exam B</span>
+                                          </div>
+                                          <div className="flex items-center gap-1">
+                                            <div className="w-3 h-3 rounded-sm bg-blue-300 border border-blue-500" />
+                                            <span className="text-muted-foreground">Exam A</span>
+                                          </div>
+                                        </div>
+                                        
+                                        {/* Top 5 Rankings */}
+                                        <div className="space-y-2">
+                                          {top5Growth.map((item, index) => {
+                                            const percentChange = item.examB > 0 ? (item.delta / item.examB * 100).toFixed(1) : '0.0';
+                                            const maxDelta = Math.max(...top5Growth.map(t => t.delta));
+                                            const barWidth = item.delta / maxDelta * 100;
+                                            return (
+                                              <div key={item.name} className="flex items-center gap-2">
+                                                <div className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold ${index === 0 ? 'bg-yellow-500/20 text-yellow-600' : index === 1 ? 'bg-gray-400/20 text-gray-500' : index === 2 ? 'bg-amber-600/20 text-amber-600' : 'bg-muted text-muted-foreground'}`}>
+                                                  {index + 1}
+                                                </div>
+                                                <span className="text-xs font-medium text-foreground w-16 truncate">{shortenSubjectName(item.name)}</span>
+                                                <div className="flex-1 h-4 bg-muted/30 rounded-full overflow-hidden relative">
+                                                  <div className="h-full bg-gradient-to-r from-emerald-500 to-emerald-400 rounded-full transition-all duration-700" style={{ width: `${barWidth}%` }} />
+                                                </div>
+                                                <div className="flex items-center gap-1 min-w-[60px] justify-end">
+                                                  <span className="text-xs font-bold text-emerald-500">+{item.delta}</span>
+                                                  <span className="text-[9px] text-muted-foreground">({percentChange}%)</span>
+                                                </div>
+                                              </div>
+                                            );
+                                          })}
+                                        </div>
+                                        
+                                        {/* Summary Footer */}
+                                        <div className="pt-2 border-t border-emerald-500/20 flex items-center justify-between">
+                                          <span className="text-[10px] text-muted-foreground">
+                                            Average growth: +{(top5Growth.reduce((sum, t) => sum + t.delta, 0) / top5Growth.length).toFixed(1)} pts
+                                          </span>
+                                          <span className="text-[10px] text-emerald-500 font-medium">
+                                            🏆 {shortenSubjectName(top5Growth[0].name)} leads with +{top5Growth[0].delta} pts
+                                          </span>
+                                        </div>
+                                      </div>
+                                    )}
+                                  </div>
+                                </CarouselItem>
+                                
+                                {/* Slide 2: Top Declined Subjects */}
+                                <CarouselItem className="pl-2">
+                                  <div className="p-4 rounded-xl bg-gradient-to-br from-red-500/10 to-red-600/5 border border-red-500/20">
+                                    <div className="flex flex-col items-center justify-center mb-3">
+                                      <div className="flex items-center gap-2">
+                                        <div className="w-8 h-8 rounded-lg bg-red-500/20 flex items-center justify-center">
+                                          <TrendingDown className="h-4 w-4 text-red-500" />
+                                        </div>
+                                        <div className="text-center">
+                                          <h4 className="text-sm font-semibold text-foreground">Top Declined Subjects</h4>
+                                          <p className="text-[10px] text-muted-foreground">Needs attention</p>
+                                        </div>
+                                      </div>
+                                    </div>
+                                    
+                                    {top5Decline.length === 0 ? (
+                                      <div className="text-center py-4 text-muted-foreground text-sm">
+                                        No subjects showed decline in this period 🎉
+                                      </div>
+                                    ) : (
+                                      <div className="space-y-3">
+                                        {/* Individual Subject Badges */}
+                                        <div className="flex flex-wrap justify-center gap-1.5">
+                                          {top5Decline.map(item => {
+                                            const percentChange = item.examB > 0 ? (Math.abs(item.delta) / item.examB * 100).toFixed(0) : '0';
+                                            return (
+                                              <div key={item.name} className="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-red-500/10 border border-red-500/20">
+                                                <ArrowDown className="h-3 w-3 text-red-500" />
+                                                <span className="text-[10px] font-medium text-foreground">{shortenSubjectName(item.name)}</span>
+                                                <span className="text-[10px] font-bold text-red-600">-{percentChange}%</span>
+                                              </div>
+                                            );
+                                          })}
+                                        </div>
+                                        
+                                        {/* Bar Chart - Before/After Comparison */}
+                                        <div className="h-36 -mx-2">
+                                          <ResponsiveContainer width="100%" height="100%">
+                                            <BarChart data={top5Decline.map(item => ({
+                                              name: shortenSubjectName(item.name),
+                                              examA: item.examA,
+                                              examB: item.examB,
+                                              delta: item.delta
+                                            }))} margin={{ top: 10, right: 10, left: 10, bottom: 0 }} barGap={2} barCategoryGap="20%">
+                                              <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 9, fill: 'hsl(var(--muted-foreground))' }} interval={0} height={30} />
+                                              <YAxis hide domain={[0, 100]} />
+                                              <Tooltip content={({ active, payload }) => {
+                                                if (active && payload && payload.length) {
+                                                  const data = payload[0].payload;
+                                                  return (
+                                                    <div className="bg-popover border border-border rounded-lg shadow-lg p-2">
+                                                      <p className="text-xs font-medium text-foreground">{data.name}</p>
+                                                      <div className="flex items-center gap-2 mt-1">
+                                                        <span className="text-[10px] text-blue-500">A: {data.examA}</span>
+                                                        <span className="text-[10px] text-muted-foreground">vs</span>
+                                                        <span className="text-[10px] text-amber-500">B: {data.examB}</span>
+                                                      </div>
+                                                      <p className="text-xs text-red-500 font-bold mt-1">{data.delta} pts</p>
+                                                    </div>
+                                                  );
+                                                }
+                                                return null;
+                                              }} />
+                                              <Bar dataKey="examB" fill="hsl(38, 92%, 70%)" stroke="hsl(38, 92%, 50%)" strokeWidth={1.5} radius={[4, 4, 0, 0]} name="Exam B" />
+                                              <Bar dataKey="examA" fill="hsl(217, 91%, 75%)" stroke="hsl(217, 91%, 50%)" strokeWidth={1.5} radius={[4, 4, 0, 0]} name="Exam A" />
+                                            </BarChart>
+                                          </ResponsiveContainer>
+                                        </div>
+                                        
+                                        {/* Legend */}
+                                        <div className="flex items-center justify-center gap-4 text-[10px]">
+                                          <div className="flex items-center gap-1">
+                                            <div className="w-3 h-3 rounded-sm bg-amber-300 border border-amber-500" />
+                                            <span className="text-muted-foreground">Exam B</span>
+                                          </div>
+                                          <div className="flex items-center gap-1">
+                                            <div className="w-3 h-3 rounded-sm bg-blue-300 border border-blue-500" />
+                                            <span className="text-muted-foreground">Exam A</span>
+                                          </div>
+                                        </div>
+                                        
+                                        {/* Top 5 Rankings */}
+                                        <div className="space-y-2">
+                                          {top5Decline.map((item, index) => {
+                                            const percentChange = item.examB > 0 ? (Math.abs(item.delta) / item.examB * 100).toFixed(1) : '0.0';
+                                            const maxDelta = Math.max(...top5Decline.map(t => Math.abs(t.delta)));
+                                            const barWidth = Math.abs(item.delta) / maxDelta * 100;
+                                            return (
+                                              <div key={item.name} className="flex items-center gap-2">
+                                                <div className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold ${index === 0 ? 'bg-red-500/20 text-red-600' : index === 1 ? 'bg-red-400/20 text-red-500' : index === 2 ? 'bg-red-300/20 text-red-400' : 'bg-muted text-muted-foreground'}`}>
+                                                  {index + 1}
+                                                </div>
+                                                <span className="text-xs font-medium text-foreground w-16 truncate">{shortenSubjectName(item.name)}</span>
+                                                <div className="flex-1 h-4 bg-muted/30 rounded-full overflow-hidden relative">
+                                                  <div className="h-full bg-gradient-to-r from-red-500 to-red-400 rounded-full transition-all duration-700" style={{ width: `${barWidth}%` }} />
+                                                </div>
+                                                <div className="flex items-center gap-1 min-w-[60px] justify-end">
+                                                  <span className="text-xs font-bold text-red-500">{item.delta}</span>
+                                                  <span className="text-[9px] text-muted-foreground">({percentChange}%)</span>
+                                                </div>
+                                              </div>
+                                            );
+                                          })}
+                                        </div>
+                                        
+                                        {/* Summary Footer */}
+                                        <div className="pt-2 border-t border-red-500/20 flex items-center justify-between">
+                                          <span className="text-[10px] text-muted-foreground">
+                                            Average decline: {(top5Decline.reduce((sum, t) => sum + t.delta, 0) / top5Decline.length).toFixed(1)} pts
+                                          </span>
+                                          <span className="text-[10px] text-red-500 font-medium">
+                                            ⚠️ {shortenSubjectName(top5Decline[0].name)} needs focus
+                                          </span>
+                                        </div>
+                                      </div>
+                                    )}
+                                  </div>
+                                </CarouselItem>
+                              </CarouselContent>
+                            </Carousel>
+                            
+                            {/* Switcher Buttons */}
+                            <div className="flex items-center justify-center mt-3">
+                              <div className="flex items-center bg-muted/50 rounded-lg p-1 gap-1">
+                                <button
+                                  onClick={() => growthCarouselApi?.scrollTo(0)}
+                                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-all duration-300 ${
+                                    growthCarouselSlide === 0 
+                                      ? 'bg-emerald-500 text-white shadow-sm' 
+                                      : 'text-muted-foreground hover:text-foreground hover:bg-muted'
+                                  }`}
+                                >
+                                  <TrendingUp className="h-3.5 w-3.5" />
+                                  <span>Growth</span>
+                                </button>
+                                <button
+                                  onClick={() => growthCarouselApi?.scrollTo(1)}
+                                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-all duration-300 ${
+                                    growthCarouselSlide === 1 
+                                      ? 'bg-red-500 text-white shadow-sm' 
+                                      : 'text-muted-foreground hover:text-foreground hover:bg-muted'
+                                  }`}
+                                >
+                                  <TrendingDown className="h-3.5 w-3.5" />
+                                  <span>Decline</span>
+                                </button>
+                              </div>
                             </div>
                           </div>
-                          <Badge className="bg-emerald-500/20 text-emerald-600 border-emerald-500/30 text-xs">
-                            Top 5
-                          </Badge>
-                        </div>
-                        
-                        {/* Top 5 Growth Chart */}
-                        {(() => {
-                      const top5Growth = [...comparisonData].sort((a, b) => b.delta - a.delta).slice(0, 5).filter(item => item.delta > 0);
-                      if (top5Growth.length === 0) {
-                        return <div className="text-center py-4 text-muted-foreground text-sm">
-                                No subjects showed improvement in this period
-                              </div>;
-                      }
-                      const maxDelta = Math.max(...top5Growth.map(t => t.delta));
-                      return <div className="space-y-3">
-                              {/* Mini Area Chart */}
-                              <div className={cn("h-32 -mx-2", isMobile && "h-28 -mx-1")}>
-                                <ResponsiveContainer width="100%" height="100%">
-                                  <AreaChart data={top5Growth.map(item => ({
-                              name: shortenSubjectName(item.name),
-                              growth: item.delta,
-                              percentChange: item.examB > 0 ? item.delta / item.examB * 100 : 0,
-                              from: item.examB,
-                              to: item.examA
-                            }))} margin={{
-                              top: 10,
-                              right: isMobile ? 5 : 10,
-                              left: isMobile ? 5 : 10,
-                              bottom: 0
-                            }}>
-                                    <defs>
-                                      <linearGradient id="growthGradientTeacher" x1="0" y1="0" x2="0" y2="1">
-                                        <stop offset="5%" stopColor="hsl(142, 76%, 46%)" stopOpacity={0.4} />
-                                        <stop offset="95%" stopColor="hsl(142, 76%, 46%)" stopOpacity={0.05} />
-                                      </linearGradient>
-                                    </defs>
-                                    <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{
-                                fontSize: isMobile ? 7 : 9,
-                                fill: 'hsl(var(--muted-foreground))'
-                              }} interval={0} height={30} />
-                                    <YAxis hide />
-                                    <Area type="monotone" dataKey="growth" stroke="hsl(142, 76%, 46%)" strokeWidth={2} fill="url(#growthGradientTeacher)" dot={{
-                                r: 4,
-                                fill: "hsl(142, 76%, 46%)",
-                                strokeWidth: 2,
-                                stroke: "hsl(var(--background))"
-                              }} activeDot={{
-                                r: 6,
-                                fill: "hsl(142, 76%, 46%)",
-                                strokeWidth: 2,
-                                stroke: "hsl(var(--background))"
-                              }} />
-                                    <Tooltip content={({
-                                active,
-                                payload
-                              }) => {
-                                if (active && payload && payload.length) {
-                                  const data = payload[0].payload;
-                                  return <div className="bg-popover border border-border rounded-lg shadow-lg p-2">
-                                              <p className="text-xs font-medium text-foreground">{data.name}</p>
-                                              <p className="text-xs text-emerald-500 font-bold">+{data.growth} pts</p>
-                                              <p className="text-[10px] text-muted-foreground">{data.from} → {data.to}</p>
-                                            </div>;
-                                }
-                                return null;
-                              }} />
-                                  </AreaChart>
-                                </ResponsiveContainer>
-                              </div>
-                              
-                              {/* Top 5 Rankings */}
-                              <div className="space-y-2">
-                                {top5Growth.map((item, index) => {
-                            const percentChange = item.examB > 0 ? (item.delta / item.examB * 100).toFixed(1) : '0.0';
-                            const barWidth = item.delta / maxDelta * 100;
-                            return <div key={item.name} className="flex items-center gap-2">
-                                      {/* Rank Badge */}
-                                      <div className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold ${index === 0 ? 'bg-yellow-500/20 text-yellow-600' : index === 1 ? 'bg-gray-400/20 text-gray-500' : index === 2 ? 'bg-amber-600/20 text-amber-600' : 'bg-muted text-muted-foreground'}`}>
-                                        {index + 1}
-                                      </div>
-                                      
-                                      {/* Subject Name */}
-                                      <span className="text-xs font-medium text-foreground w-16 truncate">
-                                        {shortenSubjectName(item.name)}
-                                      </span>
-                                      
-                                      {/* Growth Bar */}
-                                      <div className="flex-1 h-4 bg-muted/30 rounded-full overflow-hidden relative">
-                                        <div className="h-full bg-gradient-to-r from-emerald-500 to-emerald-400 rounded-full transition-all duration-700" style={{
-                                  width: `${barWidth}%`
-                                }} />
-                                      </div>
-                                      
-                                      {/* Growth Stats */}
-                                      <div className="flex items-center gap-1 min-w-[60px] justify-end">
-                                        <span className="text-xs font-bold text-emerald-500">+{item.delta}</span>
-                                        <span className="text-[9px] text-muted-foreground">({percentChange}%)</span>
-                                      </div>
-                                    </div>;
-                          })}
-                              </div>
-                              
-                              {/* Summary Footer */}
-                              <div className="pt-2 border-t border-emerald-500/20 flex items-center justify-between">
-                                <span className="text-[10px] text-muted-foreground">
-                                  Average growth: +{(top5Growth.reduce((sum, t) => sum + t.delta, 0) / top5Growth.length).toFixed(1)} pts
-                                </span>
-                                <span className="text-[10px] text-emerald-500 font-medium">
-                                  🏆 {shortenSubjectName(top5Growth[0].name)} leads with +{top5Growth[0].delta} pts
-                                </span>
-                              </div>
-                            </div>;
-                    })()}
-                      </div>
+                        );
+                      })()}
 
                       {/* Subject Comparison - Moomoo Style */}
                       <div className="space-y-3">
@@ -4132,26 +4326,26 @@ export default function TeacherAcademicPage() {
                                 
                                 {/* Visual Bars */}
                                 <div className="space-y-1.5">
-                                  {/* Exam B (Previous) - Blue */}
+                                  {/* Exam B (Previous) - Amber with outline */}
                                   <div className="flex items-center gap-2">
                                     <span className="text-[10px] text-muted-foreground w-16 truncate">{examBLabel.split(' ')[0]}</span>
                                     <div className="flex-1 h-5 bg-muted/30 rounded-full overflow-hidden relative">
-                                      <div className="h-full bg-blue-500 rounded-full transition-all duration-500" style={{
-                                  width: `${item.examB / 100 * 100}%`
-                                }} />
+                                      <div className="h-full bg-[hsl(38,92%,70%)] border-2 border-[hsl(38,92%,50%)] rounded-full transition-all duration-500" style={{
+                                        width: `${item.examB / 100 * 100}%`
+                                      }} />
                                       <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] font-bold text-foreground">
                                         {item.examB}
                                       </span>
                                     </div>
                                   </div>
                                   
-                                  {/* Exam A (Current) - Orange */}
+                                  {/* Exam A (Current) - Blue with outline */}
                                   <div className="flex items-center gap-2">
                                     <span className="text-[10px] text-muted-foreground w-16 truncate">{examALabel.split(' ')[0]}</span>
                                     <div className="flex-1 h-5 bg-muted/30 rounded-full overflow-hidden relative">
-                                      <div className="h-full bg-orange-500 rounded-full transition-all duration-500" style={{
-                                  width: `${item.examA / 100 * 100}%`
-                                }} />
+                                      <div className="h-full bg-[hsl(217,91%,75%)] border-2 border-[hsl(217,91%,50%)] rounded-full transition-all duration-500" style={{
+                                        width: `${item.examA / 100 * 100}%`
+                                      }} />
                                       <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] font-bold text-foreground">
                                         {item.examA}
                                       </span>
