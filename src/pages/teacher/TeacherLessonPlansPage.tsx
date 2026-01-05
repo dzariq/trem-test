@@ -49,6 +49,9 @@ import {
   AlertCircle,
   FileText,
   CalendarIcon,
+  Settings,
+  Trash2,
+  Pencil,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { toast } from "@/hooks/use-toast";
@@ -121,6 +124,13 @@ const TeacherLessonPlansPage = () => {
     from: undefined,
     to: undefined,
   });
+  
+  // Edit topic dialog state
+  const [isEditTopicOpen, setIsEditTopicOpen] = useState(false);
+  const [editingTopicId, setEditingTopicId] = useState<string>("");
+  const [editTopicTitle, setEditTopicTitle] = useState("");
+  const [editSubtopics, setEditSubtopics] = useState<string[]>([]);
+  const [newSubtopicInput, setNewSubtopicInput] = useState("");
 
   // Term start date (for week calculation)
   const termStart = new Date(2026, 0, 5); // January 5, 2026
@@ -236,6 +246,58 @@ const TeacherLessonPlansPage = () => {
     setCurrentTopicId("");
   };
 
+  const handleOpenEditTopic = (topic: { id: string; title: string; subtopics?: string[] }) => {
+    setEditingTopicId(topic.id);
+    setEditTopicTitle(topic.title);
+    setEditSubtopics(topic.subtopics || []);
+    setNewSubtopicInput("");
+    setIsEditTopicOpen(true);
+  };
+
+  const handleSaveTopicEdit = () => {
+    if (!editTopicTitle.trim()) return;
+    
+    setLessonPlansBySubject((prev) =>
+      prev.map((subject) => {
+        if (subject.subject !== selectedSubject) return subject;
+        return {
+          ...subject,
+          topics: subject.topics.map((topic) =>
+            topic.id === editingTopicId
+              ? { ...topic, title: editTopicTitle, subtopics: editSubtopics }
+              : topic
+          ),
+        };
+      })
+    );
+    
+    toast({
+      title: "Topic Updated",
+      description: `Topic "${editTopicTitle}" has been updated.`,
+    });
+    
+    setIsEditTopicOpen(false);
+    setEditingTopicId("");
+    setEditTopicTitle("");
+    setEditSubtopics([]);
+  };
+
+  const handleAddEditSubtopic = () => {
+    if (!newSubtopicInput.trim()) return;
+    setEditSubtopics([...editSubtopics, newSubtopicInput.trim()]);
+    setNewSubtopicInput("");
+  };
+
+  const handleRemoveEditSubtopic = (index: number) => {
+    setEditSubtopics(editSubtopics.filter((_, i) => i !== index));
+  };
+
+  const handleRenameEditSubtopic = (index: number, newName: string) => {
+    const updated = [...editSubtopics];
+    updated[index] = newName;
+    setEditSubtopics(updated);
+  };
+
   const handleCreateNew = () => {
     navigate("/teacher/lesson-plans/new");
   };
@@ -334,6 +396,14 @@ const TeacherLessonPlansPage = () => {
                           Topic {topicIndex + 1}: {topic.title}
                         </CardTitle>
                       </div>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-7 w-7 p-0 text-primary-foreground hover:text-primary-foreground/80 hover:bg-primary-foreground/10"
+                        onClick={() => handleOpenEditTopic(topic)}
+                      >
+                        <Settings className="h-4 w-4" />
+                      </Button>
                     </div>
                   </div>
                   
@@ -611,6 +681,84 @@ const TeacherLessonPlansPage = () => {
             </Button>
             <Button onClick={handleAddSubtopic} disabled={!newSubtopicTitle.trim()}>
               Add Subtopic
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Topic Dialog */}
+      <Dialog open={isEditTopicOpen} onOpenChange={setIsEditTopicOpen}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle>Edit Topic</DialogTitle>
+            <DialogDescription>
+              Edit the topic name and manage subtopics.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="edit-topic-title">Topic Name</Label>
+              <Input
+                id="edit-topic-title"
+                value={editTopicTitle}
+                onChange={(e) => setEditTopicTitle(e.target.value)}
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <Label>Subtopics</Label>
+              <div className="space-y-2 max-h-48 overflow-y-auto">
+                {editSubtopics.map((subtopic, idx) => (
+                  <div key={idx} className="flex items-center gap-2">
+                    <Input
+                      value={subtopic}
+                      onChange={(e) => handleRenameEditSubtopic(idx, e.target.value)}
+                      className="flex-1"
+                    />
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-9 w-9 p-0 text-muted-foreground hover:text-destructive"
+                      onClick={() => handleRemoveEditSubtopic(idx)}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                ))}
+                {editSubtopics.length === 0 && (
+                  <p className="text-sm text-muted-foreground italic py-2">No subtopics added yet.</p>
+                )}
+              </div>
+              
+              <div className="flex items-center gap-2 pt-2">
+                <Input
+                  placeholder="New subtopic name..."
+                  value={newSubtopicInput}
+                  onChange={(e) => setNewSubtopicInput(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      e.preventDefault();
+                      handleAddEditSubtopic();
+                    }
+                  }}
+                />
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleAddEditSubtopic}
+                  disabled={!newSubtopicInput.trim()}
+                >
+                  <Plus className="h-4 w-4" />
+                </Button>
+              </div>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsEditTopicOpen(false)}>
+              Cancel
+            </Button>
+            <Button onClick={handleSaveTopicEdit} disabled={!editTopicTitle.trim()}>
+              Save Changes
             </Button>
           </DialogFooter>
         </DialogContent>
