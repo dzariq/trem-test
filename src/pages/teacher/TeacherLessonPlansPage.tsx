@@ -301,7 +301,7 @@ const TeacherLessonPlansPage = () => {
             <div className="p-4 space-y-4 w-full max-w-full min-w-0">
               {curriculum?.topics.map((topic, topicIndex) => (
               <Card key={topic.id} className="overflow-hidden w-full">
-                <CardHeader className="py-0 px-0 overflow-hidden">
+                <CardHeader className="py-0 px-0 overflow-hidden space-y-0">
                   {/* Topic Title Section - Primary Green */}
                   <div className="py-3 px-4 bg-primary">
                     <div className="flex items-center justify-between gap-2 min-w-0">
