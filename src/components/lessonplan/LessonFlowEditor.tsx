@@ -78,24 +78,6 @@ export function LessonFlowEditor({ lessonFlow, onChange }: LessonFlowEditorProps
             className="min-h-[80px]"
           />
         </div>
-
-        {/* Teacher/Student Led Toggle */}
-        <div className="flex items-center justify-between">
-          <Label className="text-sm font-medium">Activity Type</Label>
-          <div className="flex items-center gap-2">
-            <span className={cn("text-xs", activity.isTeacherLed ? "text-muted-foreground" : "text-foreground font-medium")}>
-              Student-led
-            </span>
-            <Switch
-              checked={activity.isTeacherLed}
-              onCheckedChange={(checked) => updateSection(section, { isTeacherLed: checked })}
-            />
-            <span className={cn("text-xs", activity.isTeacherLed ? "text-foreground font-medium" : "text-muted-foreground")}>
-              Teacher-led
-            </span>
-          </div>
-        </div>
-
         {/* Steps */}
         <div className="space-y-2">
           <div className="flex items-center justify-between">
