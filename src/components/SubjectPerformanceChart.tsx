@@ -3,7 +3,7 @@ import { Badge } from "@/components/ui/badge";
 import { getTinySubjectCode } from "@/data/subjectsConfig";
 import { Maximize2, Target } from "lucide-react";
 import {
-  BarChart,
+  ComposedChart,
   Bar,
   XAxis,
   YAxis,
@@ -12,6 +12,7 @@ import {
   CartesianGrid,
   Cell,
   ReferenceDot,
+  Customized,
 } from "recharts";
 
 interface SubjectData {
@@ -382,7 +383,7 @@ export function SubjectPerformanceChart({
           }}
         >
           <ResponsiveContainer width="100%" height="100%" style={{ overflow: 'visible' }}>
-            <BarChart data={visibleData} layout="vertical" margin={{ left: 0, right: 16, top: 4, bottom: 4 }}>
+            <ComposedChart data={visibleData} layout="vertical" margin={{ left: 0, right: 16, top: 4, bottom: 4 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" strokeOpacity={0.3} />
               <XAxis 
                 type="number" 
@@ -434,19 +435,48 @@ export function SubjectPerformanceChart({
                   strokeWidth={1}
                 />
               ))}
-              {showCohortDot && visibleData.map((entry) => entry.cohortAvg !== undefined && (
-                <ReferenceDot
-                  key={`cohort-${entry.displayName}`}
-                  x={entry.cohortAvg}
-                  y={entry.displayName}
-                  r={4}
-                  fill="#000000"
-                  stroke="hsl(var(--background))"
-                  strokeWidth={1}
-                  className="dark:fill-white"
+              {showCohortDot && (
+                <Customized
+                  component={(props: any) => {
+                    const { xAxisMap, yAxisMap } = props;
+                    if (!xAxisMap || !yAxisMap) return null;
+                    
+                    const xAxis = Object.values(xAxisMap)[0] as any;
+                    const yAxis = Object.values(yAxisMap)[0] as any;
+                    
+                    if (!xAxis?.scale || !yAxis?.scale) return null;
+                    
+                    return (
+                      <g className="cohort-dots">
+                        {visibleData.map((entry, index) => {
+                          if (entry.cohortAvg === undefined) return null;
+                          
+                          const cx = xAxis.scale(entry.cohortAvg);
+                          const cy = yAxis.scale(entry.displayName);
+                          
+                          if (cx === undefined || cy === undefined) return null;
+                          
+                          // Adjust cy to center of the bar
+                          const bandwidth = yAxis.scale.bandwidth ? yAxis.scale.bandwidth() / 2 : 0;
+                          
+                          return (
+                            <circle
+                              key={`cohort-dot-${index}`}
+                              cx={cx}
+                              cy={cy + bandwidth}
+                              r={5}
+                              fill="hsl(var(--foreground))"
+                              stroke="hsl(var(--background))"
+                              strokeWidth={2}
+                            />
+                          );
+                        })}
+                      </g>
+                    );
+                  }}
                 />
-              ))}
-            </BarChart>
+              )}
+            </ComposedChart>
           </ResponsiveContainer>
         </div>
       </div>
