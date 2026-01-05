@@ -48,6 +48,7 @@ import {
   getLessonPlanById, 
   createEmptyLessonPlan,
   getSubtopicsForTopic,
+  getPreviousLessonPlan,
   type LessonPlan 
 } from "@/data/lessonPlanData";
 import { allSubjects } from "@/data/subjectsConfig";
@@ -415,16 +416,34 @@ const LessonPlanDetailPage = () => {
                 <CardTitle className="text-sm font-semibold">Previous Learning</CardTitle>
               </div>
             </CardHeader>
-            <CardContent className="px-4 pb-4">
+            <CardContent className="px-4 pb-4 space-y-3">
+              {(() => {
+                const prevLesson = getPreviousLessonPlan(lessonPlan);
+                if (prevLesson && prevLesson.learningObjectives.length > 0) {
+                  return (
+                    <div className="bg-muted/50 rounded-lg p-3 border">
+                      <p className="text-xs font-medium text-muted-foreground mb-2">
+                        Auto-filled from previous lesson (Week {prevLesson.weekNumber}, Lesson {prevLesson.lessonNumber}):
+                      </p>
+                      <ul className="text-sm space-y-1">
+                        {prevLesson.learningObjectives.map((obj, idx) => (
+                          <li key={idx} className="flex items-start gap-2">
+                            <span className="text-primary">•</span>
+                            <span>{obj}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  );
+                }
+                return null;
+              })()}
               <Textarea
                 value={lessonPlan.previousLearning}
                 onChange={(e) => updateField("previousLearning", e.target.value)}
-                placeholder="Describe what students have previously learned that relates to this lesson..."
-                className="min-h-[80px]"
+                placeholder="Add any additional context about what students have previously learned..."
+                className="min-h-[60px]"
               />
-              <p className="text-xs text-muted-foreground mt-2">
-                Tip: You can reference objectives from the previous lesson plan.
-              </p>
             </CardContent>
           </Card>
 
