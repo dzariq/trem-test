@@ -64,8 +64,8 @@ export function ApprovalSection({ approval, onChange, readOnly = false }: Approv
         </div>
       </CardHeader>
       <CardContent className="px-4 pb-4 space-y-4">
-        {/* All approval fields in a compact grid */}
-        <div className="grid grid-cols-4 gap-3">
+        {/* All approval fields in a responsive grid */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
           <div className="space-y-1.5">
             <Label className="text-xs text-muted-foreground">Prepared by</Label>
             <Input
