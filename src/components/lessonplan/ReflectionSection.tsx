@@ -67,7 +67,7 @@ export function ReflectionSection({ reflection, onChange }: ReflectionSectionPro
       <CardContent className="px-4 pb-4 space-y-4">
         {/* Objectives Achievement Percentage Slider */}
         <div className="space-y-3">
-          <div className="p-4 rounded-lg bg-muted/50 border">
+          <div className="p-4 rounded-lg bg-amber-50 border border-amber-200">
             <div className="flex items-center gap-2 mb-3">
               <Target className="h-4 w-4 text-primary" />
               <Label className="text-sm font-medium">
