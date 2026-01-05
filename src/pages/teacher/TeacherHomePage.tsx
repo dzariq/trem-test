@@ -104,7 +104,7 @@ export default function TeacherHomePage() {
       />
 
       {/* Hero Banner */}
-      <div className="relative">
+      <div className="w-full relative -mx-3 sm:-mx-4">
         <img 
           src={heroBanner} 
           alt="School Banner" 
