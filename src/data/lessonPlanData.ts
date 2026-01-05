@@ -420,6 +420,287 @@ export const mockLessonPlans: SubjectCurriculum[] = [
             id: "week-3",
             weekNumber: 3,
             title: "Introduction to Linear Equations",
+            lessonPlans: [
+              {
+                id: "lp-2-3-1",
+                title: "Understanding Linear Equations",
+                weekNumber: 3,
+                lessonNumber: 1,
+                teacherName: "Ms. Sarah Chen",
+                className: "5A",
+                subject: "Mathematics",
+                topic: "Linear Equations",
+                subtopic: "Introduction to Linear Equations",
+                date: "2026-01-20",
+                learningObjectives: [
+                  "Identify linear equations in one variable",
+                  "Differentiate between linear and non-linear equations"
+                ],
+                vocabulary: ["linear", "equation", "variable", "coefficient"],
+                previousLearning: "Students can solve one-step equations.",
+                lessonFlow: {
+                  beginning: { id: "b5", duration: 10, description: "Review one-step equations", steps: ["Quick quiz"], isTeacherLed: true },
+                  middle: { id: "m5", duration: 25, description: "Introduce linear equations", steps: ["Explanation", "Examples", "Practice"], isTeacherLed: false },
+                  end: { id: "e5", duration: 10, description: "Consolidation", steps: ["Summary", "Exit ticket"], isTeacherLed: true }
+                },
+                resources: "Textbook pages 60-65, Worksheet",
+                attachments: [],
+                homework: "Exercises 1-10 page 66",
+                reflection: {
+                  objectivesAchieved: true,
+                  objectivesNotAchieved: false,
+                  objectivesRealistic: "Yes, students understood the concept well.",
+                  learnersLearned: "Students can now identify linear equations.",
+                  learningAtmosphere: "Focused and engaged throughout.",
+                  differentiationWorked: "Visual examples helped visual learners.",
+                  timingsAndChanges: "On track with timing.",
+                  comments: "Good lesson. Students ready for graphing next."
+                },
+                attendance: { present: 19, absent: 1, late: 0, excused: 0, total: 20 },
+                approval: { preparedBy: "Ms. Sarah Chen", preparedDate: "2026-01-19", checkedBy: "Mr. David Wong", checkedDate: "2026-01-19", status: "approved" },
+                createdAt: "2026-01-18T10:00:00Z",
+                updatedAt: "2026-01-20T15:00:00Z"
+              },
+              {
+                id: "lp-2-3-2",
+                title: "Graphing Linear Equations",
+                weekNumber: 3,
+                lessonNumber: 2,
+                teacherName: "Ms. Sarah Chen",
+                className: "5A",
+                subject: "Mathematics",
+                topic: "Linear Equations",
+                subtopic: "Graphing Linear Equations",
+                date: "2026-01-21",
+                learningObjectives: [
+                  "Plot points on a coordinate plane",
+                  "Graph simple linear equations"
+                ],
+                vocabulary: ["coordinate", "x-axis", "y-axis", "origin", "plot"],
+                previousLearning: "Students can identify linear equations.",
+                lessonFlow: {
+                  beginning: { id: "b6", duration: 8, description: "Review coordinates", steps: ["Quick review"], isTeacherLed: true },
+                  middle: { id: "m6", duration: 30, description: "Graphing practice", steps: ["Demo", "Guided practice", "Independent work"], isTeacherLed: false },
+                  end: { id: "e6", duration: 7, description: "Wrap-up", steps: ["Review graphs", "Preview next lesson"], isTeacherLed: true }
+                },
+                resources: "Graph paper, Rulers, Projector",
+                attachments: [],
+                homework: "Graph 5 linear equations",
+                reflection: {
+                  objectivesAchieved: false,
+                  objectivesNotAchieved: false,
+                  objectivesRealistic: "",
+                  learnersLearned: "",
+                  learningAtmosphere: "",
+                  differentiationWorked: "",
+                  timingsAndChanges: "",
+                  comments: ""
+                },
+                attendance: null,
+                approval: { preparedBy: "Ms. Sarah Chen", preparedDate: "2026-01-20", checkedBy: null, checkedDate: null, status: "pending_review" },
+                createdAt: "2026-01-19T10:00:00Z",
+                updatedAt: "2026-01-20T10:00:00Z"
+              }
+            ]
+          },
+          {
+            id: "week-4",
+            weekNumber: 4,
+            title: "Slope and Y-Intercept",
+            lessonPlans: [
+              {
+                id: "lp-2-4-1",
+                title: "Understanding Slope",
+                weekNumber: 4,
+                lessonNumber: 1,
+                teacherName: "Ms. Sarah Chen",
+                className: "5A",
+                subject: "Mathematics",
+                topic: "Linear Equations",
+                subtopic: "Slope and Intercept",
+                date: "2026-01-27",
+                learningObjectives: [
+                  "Calculate slope from two points",
+                  "Interpret slope in real-world contexts"
+                ],
+                vocabulary: ["slope", "rise", "run", "steepness"],
+                previousLearning: "Students can graph linear equations.",
+                lessonFlow: {
+                  beginning: { id: "b7", duration: 10, description: "Review graphing", steps: ["Quick graphing exercise"], isTeacherLed: true },
+                  middle: { id: "m7", duration: 25, description: "Introduce slope", steps: ["Definition", "Calculation practice", "Real-world examples"], isTeacherLed: false },
+                  end: { id: "e7", duration: 10, description: "Assessment", steps: ["Exit ticket"], isTeacherLed: true }
+                },
+                resources: "Slope worksheets, Real-world graphs",
+                attachments: [],
+                homework: "Worksheet 5.1",
+                reflection: {
+                  objectivesAchieved: false,
+                  objectivesNotAchieved: false,
+                  objectivesRealistic: "",
+                  learnersLearned: "",
+                  learningAtmosphere: "",
+                  differentiationWorked: "",
+                  timingsAndChanges: "",
+                  comments: ""
+                },
+                attendance: null,
+                approval: { preparedBy: "Ms. Sarah Chen", preparedDate: "2026-01-26", checkedBy: null, checkedDate: null, status: "draft" },
+                createdAt: "2026-01-25T10:00:00Z",
+                updatedAt: "2026-01-26T10:00:00Z"
+              }
+            ]
+          }
+        ]
+      },
+      {
+        id: "topic-3",
+        title: "Geometry Fundamentals",
+        subtopics: ["Points, Lines, and Planes", "Angles", "Triangles", "Quadrilaterals"],
+        weeks: [
+          {
+            id: "week-5",
+            weekNumber: 5,
+            title: "Introduction to Geometry",
+            lessonPlans: [
+              {
+                id: "lp-3-5-1",
+                title: "Points, Lines, and Planes",
+                weekNumber: 5,
+                lessonNumber: 1,
+                teacherName: "Ms. Sarah Chen",
+                className: "5A",
+                subject: "Mathematics",
+                topic: "Geometry Fundamentals",
+                subtopic: "Points, Lines, and Planes",
+                date: "2026-02-03",
+                learningObjectives: [
+                  "Define point, line, and plane",
+                  "Identify these elements in real-world objects"
+                ],
+                vocabulary: ["point", "line", "plane", "segment", "ray"],
+                previousLearning: "Basic shapes knowledge from primary school.",
+                lessonFlow: {
+                  beginning: { id: "b8", duration: 10, description: "Warm-up", steps: ["Shape recognition game"], isTeacherLed: true },
+                  middle: { id: "m8", duration: 25, description: "New concepts", steps: ["Definitions", "Visual examples", "Hands-on activity"], isTeacherLed: false },
+                  end: { id: "e8", duration: 10, description: "Practice", steps: ["Worksheet practice"], isTeacherLed: true }
+                },
+                resources: "Geometry set, Visual aids",
+                attachments: [],
+                homework: "Draw 3 examples of each concept",
+                reflection: {
+                  objectivesAchieved: true,
+                  objectivesNotAchieved: false,
+                  objectivesRealistic: "Very achievable for this age group.",
+                  learnersLearned: "Students can identify basic geometric elements.",
+                  learningAtmosphere: "Interactive and curious.",
+                  differentiationWorked: "Concrete examples helped struggling students.",
+                  timingsAndChanges: "Slightly extended hands-on time.",
+                  comments: "Great start to geometry unit. Students excited about the topic."
+                },
+                attendance: { present: 20, absent: 0, late: 0, excused: 0, total: 20 },
+                approval: { preparedBy: "Ms. Sarah Chen", preparedDate: "2026-02-02", checkedBy: "Mr. David Wong", checkedDate: "2026-02-02", status: "approved" },
+                createdAt: "2026-02-01T10:00:00Z",
+                updatedAt: "2026-02-03T15:00:00Z"
+              },
+              {
+                id: "lp-3-5-2",
+                title: "Types of Angles",
+                weekNumber: 5,
+                lessonNumber: 2,
+                teacherName: "Ms. Sarah Chen",
+                className: "5A",
+                subject: "Mathematics",
+                topic: "Geometry Fundamentals",
+                subtopic: "Angles",
+                date: "2026-02-04",
+                learningObjectives: [
+                  "Identify acute, right, obtuse, and straight angles",
+                  "Measure angles using a protractor"
+                ],
+                vocabulary: ["angle", "acute", "right", "obtuse", "straight", "protractor"],
+                previousLearning: "Students understand points, lines, and planes.",
+                lessonFlow: {
+                  beginning: { id: "b9", duration: 8, description: "Review", steps: ["Quick quiz on previous lesson"], isTeacherLed: true },
+                  middle: { id: "m9", duration: 30, description: "Angle exploration", steps: ["Intro to angles", "Protractor use", "Measurement practice"], isTeacherLed: false },
+                  end: { id: "e9", duration: 7, description: "Summary", steps: ["Review angle types"], isTeacherLed: true }
+                },
+                resources: "Protractors, Angle worksheets",
+                attachments: [],
+                homework: "Measure 10 angles at home",
+                reflection: {
+                  objectivesAchieved: true,
+                  objectivesNotAchieved: false,
+                  objectivesRealistic: "Yes, but protractor use needs more practice.",
+                  learnersLearned: "Students can identify angle types and use protractors.",
+                  learningAtmosphere: "Hands-on and engaged.",
+                  differentiationWorked: "Peer tutoring worked well.",
+                  timingsAndChanges: "Added extra protractor practice.",
+                  comments: "Some students need more practice with protractor alignment."
+                },
+                attendance: { present: 18, absent: 2, late: 0, excused: 0, total: 20 },
+                approval: { preparedBy: "Ms. Sarah Chen", preparedDate: "2026-02-03", checkedBy: "Mr. David Wong", checkedDate: "2026-02-03", status: "approved" },
+                createdAt: "2026-02-02T10:00:00Z",
+                updatedAt: "2026-02-04T15:00:00Z"
+              },
+              {
+                id: "lp-3-5-3",
+                title: "Introduction to Triangles",
+                weekNumber: 5,
+                lessonNumber: 3,
+                teacherName: "Ms. Sarah Chen",
+                className: "5A",
+                subject: "Mathematics",
+                topic: "Geometry Fundamentals",
+                subtopic: "Triangles",
+                date: "2026-02-05",
+                learningObjectives: [
+                  "Classify triangles by sides and angles",
+                  "Identify properties of different triangle types"
+                ],
+                vocabulary: ["equilateral", "isosceles", "scalene", "acute triangle", "right triangle", "obtuse triangle"],
+                previousLearning: "Students can measure angles.",
+                lessonFlow: {
+                  beginning: { id: "b10", duration: 10, description: "Angle review", steps: ["Quick angle identification"], isTeacherLed: true },
+                  middle: { id: "m10", duration: 25, description: "Triangle classification", steps: ["Types by sides", "Types by angles", "Sorting activity"], isTeacherLed: false },
+                  end: { id: "e10", duration: 10, description: "Practice", steps: ["Classification worksheet"], isTeacherLed: true }
+                },
+                resources: "Triangle cutouts, Classification chart",
+                attachments: [],
+                homework: "Find and classify 5 triangles at home",
+                reflection: {
+                  objectivesAchieved: false,
+                  objectivesNotAchieved: false,
+                  objectivesRealistic: "",
+                  learnersLearned: "",
+                  learningAtmosphere: "",
+                  differentiationWorked: "",
+                  timingsAndChanges: "",
+                  comments: ""
+                },
+                attendance: null,
+                approval: { preparedBy: "Ms. Sarah Chen", preparedDate: "2026-02-04", checkedBy: null, checkedDate: null, status: "pending_review" },
+                createdAt: "2026-02-03T10:00:00Z",
+                updatedAt: "2026-02-04T10:00:00Z"
+              }
+            ]
+          },
+          {
+            id: "week-6",
+            weekNumber: 6,
+            title: "Quadrilaterals",
+            lessonPlans: []
+          }
+        ]
+      },
+      {
+        id: "topic-4",
+        title: "Fractions and Decimals",
+        subtopics: ["Understanding Fractions", "Equivalent Fractions", "Decimal Conversion", "Operations with Fractions"],
+        weeks: [
+          {
+            id: "week-7",
+            weekNumber: 7,
+            title: "Fraction Basics",
             lessonPlans: []
           }
         ]
