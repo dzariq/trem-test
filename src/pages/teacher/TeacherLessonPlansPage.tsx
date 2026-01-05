@@ -252,41 +252,45 @@ const TeacherLessonPlansPage = () => {
   };
 
   return (
-    <TeacherAppLayout>
-      <div className="flex flex-col h-full overflow-hidden">
-        {/* Header with Subject Selector */}
-        <div className="px-4 py-3 border-b border-border bg-card/50">
-          <div className="flex items-center justify-between gap-3">
-            <Select value={selectedSubject} onValueChange={setSelectedSubject}>
-              <SelectTrigger className="w-[180px]">
-                <SelectValue placeholder="Select subject" />
-              </SelectTrigger>
-              <SelectContent>
-                {subjects.map((subject) => (
-                  <SelectItem key={subject} value={subject}>
-                    {subject}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            
-            <Button size="sm" onClick={() => setIsAddTopicOpen(true)} className="gap-1.5">
-              <Plus className="h-4 w-4" />
-              <span className="hidden sm:inline">New Topic</span>
-            </Button>
-          </div>
-        </div>
+      <TeacherAppLayout>
+        <div className="flex flex-col h-full min-h-0">
+          {/* Header with Subject Selector */}
+          <div className="px-4 py-3 border-b border-border bg-card/50">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+              <Select value={selectedSubject} onValueChange={setSelectedSubject}>
+                <SelectTrigger className="w-full sm:w-[220px]">
+                  <SelectValue placeholder="Select subject" />
+                </SelectTrigger>
+                <SelectContent>
+                  {subjects.map((subject) => (
+                    <SelectItem key={subject} value={subject}>
+                      {subject}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
 
-        {/* Topics and Weeks List */}
-        <ScrollArea className="flex-1 overflow-x-hidden">
-          <div className="p-4 space-y-4 overflow-hidden">
-            {curriculum?.topics.map((topic, topicIndex) => (
+              <Button
+                size="sm"
+                onClick={() => setIsAddTopicOpen(true)}
+                className="gap-1.5 self-start sm:self-auto"
+              >
+                <Plus className="h-4 w-4" />
+                <span className="hidden sm:inline">New Topic</span>
+              </Button>
+            </div>
+          </div>
+
+          {/* Topics and Weeks List */}
+          <ScrollArea className="flex-1 min-h-0">
+            <div className="p-4 space-y-4">
+              {curriculum?.topics.map((topic, topicIndex) => (
               <Card key={topic.id} className="overflow-hidden w-full">
                 <CardHeader className="py-3 px-4 bg-muted/30">
-                  <div className="flex items-center justify-between gap-2">
-                    <div className="flex items-center gap-2">
-                      <BookOpen className="h-4 w-4 text-primary" />
-                      <CardTitle className="text-sm font-semibold">
+                  <div className="flex items-center justify-between gap-2 min-w-0">
+                    <div className="flex items-center gap-2 min-w-0">
+                      <BookOpen className="h-4 w-4 text-primary flex-shrink-0" />
+                      <CardTitle className="text-sm font-semibold truncate">
                         Topic {topicIndex + 1}: {topic.title}
                       </CardTitle>
                     </div>
@@ -332,8 +336,8 @@ const TeacherLessonPlansPage = () => {
                           value={week.id}
                           className="border-b last:border-b-0 overflow-hidden"
                         >
-                          <AccordionTrigger className="px-4 py-3 hover:no-underline hover:bg-muted/20 [&>svg]:flex-shrink-0">
-                            <div className="flex items-center justify-between w-full pr-2 min-w-0">
+                          <AccordionTrigger className="px-4 py-3 hover:no-underline hover:bg-muted/20 overflow-hidden [&>svg]:flex-shrink-0">
+                            <div className="flex flex-col gap-2 w-full pr-2 min-w-0 sm:flex-row sm:items-center sm:justify-between">
                               <div className="flex items-center gap-2 min-w-0 flex-1">
                                 <Popover 
                                   open={weekCalendarOpen === week.id} 
@@ -385,7 +389,7 @@ const TeacherLessonPlansPage = () => {
                               </div>
                               <Badge 
                                 variant="secondary" 
-                                className="text-xs ml-2 flex-shrink-0"
+                                className="text-xs self-end sm:self-auto"
                               >
                                 {completedCount}/{lpCount > 0 ? lpCount : 5}
                               </Badge>

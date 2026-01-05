@@ -39,7 +39,7 @@ export function TeacherBottomNavigation() {
         isVisible ? "translate-y-0" : "translate-y-full"
       )}
     >
-      <div className="max-w-lg mx-auto flex justify-around items-center py-2 px-1">
+      <div className="mx-auto w-full max-w-lg px-3 sm:px-4 flex justify-around items-center py-2">
         {navItems.map((item) => (
           <NavLink
             key={item.to}
