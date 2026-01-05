@@ -1042,10 +1042,9 @@ export default function TeacherAcademicPage() {
     return "#ef4444";
   };
   return <TeacherAppLayout>
-      <AppHeader showBack leftContent={<div className="flex items-center gap-2">
-            <img src={schoolLogo} alt="School Logo" className="h-12 w-auto -my-2 drop-shadow-md" />
-            <h1 className="text-xl font-semibold text-foreground">Academic</h1>
-          </div>} />
+      <AppHeader leftContent={
+          <h1 className="text-xl font-semibold text-foreground">Academic</h1>
+        } />
 
       <div className="px-4 mt-4 pb-4">
         <Tabs defaultValue="entry" className="w-full">

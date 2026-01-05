@@ -1,6 +1,8 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { TeacherAppLayout } from "@/components/layout/TeacherAppLayout";
+import { AppHeader } from "@/components/layout/AppHeader";
+import schoolLogo from "@/assets/school-badge.png";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -363,6 +365,14 @@ const TeacherLessonPlansPage = () => {
 
   return (
     <TeacherAppLayout>
+      <AppHeader 
+        leftContent={
+          <div className="flex items-center gap-2">
+            <img src={schoolLogo} alt="School Logo" className="h-16 w-auto -my-3 drop-shadow-md" />
+            <h1 className="text-xl font-semibold text-foreground">Lesson Plans</h1>
+          </div>
+        }
+      />
       <div className="flex flex-col h-full min-h-0 overflow-x-hidden">
         {/* Header with Year and Subject Selector */}
           <div className="px-4 py-3 border-b border-border bg-card/50">
