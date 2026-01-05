@@ -13,7 +13,6 @@ import { GeometricBackgroundPattern } from "@/components/home/GeometricBackgroun
 import { BookOpen, Users, Clock, FileText, Calendar, AlertTriangle, ClipboardList, Check, ChevronDown, ChevronUp } from "lucide-react";
 import schoolBadge from "@/assets/school-badge.png";
 import heroBanner from "@/assets/teacher-hero-banner.png";
-import teacherHomePattern from "@/assets/teacher-home-pattern.png";
 import { teacherProfile, teacherQuickStats, teacherDeadlines, Deadline } from "@/data/teacherMockData";
 import {
   Select,
@@ -296,20 +295,8 @@ export default function TeacherHomePage() {
             </div>
           </div>
 
-          {/* Decorative Pattern Background */}
-          <div className="relative mt-6">
-            <img 
-              src={teacherHomePattern} 
-              alt="" 
-              aria-hidden="true"
-              className="w-full h-auto pointer-events-none -mb-24 relative z-0"
-            />
-          </div>
-
-          <div className="relative z-10">
-            <AnnouncementCarousel />
-            <UpcomingEvents />
-          </div>
+        <AnnouncementCarousel />
+        <UpcomingEvents />
         </div>
       </div>
 

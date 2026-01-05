@@ -5,8 +5,6 @@ import { Button } from "@/components/ui/button";
 import { ChevronRight, MapPin, Clock } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { useNavigate } from "react-router-dom";
-import { getCategoryColor } from "@/data/categoryColors";
-import { cn } from "@/lib/utils";
 
 type EventCategory = "all" | "academic" | "sports" | "arts" | "meeting";
 
@@ -37,13 +35,10 @@ export function UpcomingEvents() {
   return (
     <section className="px-4 py-4">
       <div className="flex items-center justify-between mb-3">
-        <div className="bg-primary/80 backdrop-blur-sm px-4 py-1.5 rounded-full shadow-md">
-          <h2 className="text-base font-semibold text-white">Upcoming Events</h2>
-        </div>
+        <h2 className="text-lg font-semibold text-foreground">Upcoming Events</h2>
         <Button 
-          variant="secondary"
-          size="sm"
-          className="bg-white/90 backdrop-blur-sm text-primary hover:bg-white shadow-md rounded-full px-4"
+          variant="link" 
+          className="text-primary p-0 h-auto text-sm"
           onClick={() => navigate("/parent/calendar")}
         >
           See all <ChevronRight className="h-4 w-4 ml-1" />
@@ -52,25 +47,16 @@ export function UpcomingEvents() {
 
       {/* Filter Tabs */}
       <div className="flex gap-2 mb-3 overflow-x-auto pb-1">
-        {filters.map((filter) => {
-          const colors = getCategoryColor(filter.value);
-          const isActive = activeFilter === filter.value;
-          return (
-            <Badge
-              key={filter.value}
-              variant="secondary"
-              className={cn(
-                "cursor-pointer whitespace-nowrap px-3 py-1 transition-all",
-                isActive 
-                  ? `${colors.bg} ${colors.text}` 
-                  : "bg-white/80 text-foreground hover:bg-white"
-              )}
-              onClick={() => setActiveFilter(filter.value)}
-            >
-              {filter.label}
-            </Badge>
-          );
-        })}
+        {filters.map((filter) => (
+          <Badge
+            key={filter.value}
+            variant={activeFilter === filter.value ? "default" : "outline"}
+            className="cursor-pointer whitespace-nowrap px-3 py-1"
+            onClick={() => setActiveFilter(filter.value)}
+          >
+            {filter.label}
+          </Badge>
+        ))}
       </div>
       
       <div className="space-y-3">
