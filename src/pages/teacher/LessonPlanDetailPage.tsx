@@ -290,12 +290,9 @@ const LessonPlanDetailPage = () => {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div className="space-y-1.5">
                   <Label className="text-xs text-muted-foreground">Topic</Label>
-                  <Input
-                    value={lessonPlan.topic}
-                    onChange={(e) => updateField("topic", e.target.value)}
-                    placeholder="Main topic..."
-                    className="h-9"
-                  />
+                  <div className="h-9 px-3 flex items-center rounded-md border border-input bg-muted/50 text-sm">
+                    {lessonPlan.topic || <span className="text-muted-foreground italic">No topic assigned</span>}
+                  </div>
                 </div>
                 <div className="space-y-1.5">
                   <Label className="text-xs text-muted-foreground">Subtopic</Label>
