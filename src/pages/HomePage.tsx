@@ -8,7 +8,6 @@ import { StudentPillSelector } from "@/components/home/StudentPillSelector";
 import { WelcomeTypingAnimation } from "@/components/home/WelcomeTypingAnimation";
 import schoolBadge from "@/assets/school-badge.png";
 import heroBanner from "@/assets/hero-banner.png";
-import teacherHomePattern from "@/assets/teacher-home-pattern.png";
 
 export default function HomePage() {
   return (
@@ -34,19 +33,7 @@ export default function HomePage() {
         <WelcomeTypingAnimation />
       </div>
       
-      <div className="-mt-4">
-        <QuickLinks />
-      </div>
-      
-      {/* Background pattern that overlaps with announcements */}
-      <div className="relative z-0 -mb-28 -mt-8">
-        <img 
-          src={teacherHomePattern} 
-          alt="" 
-          className="w-full h-auto"
-        />
-      </div>
-      
+      <QuickLinks />
       <AnnouncementCarousel />
       <UpcomingEvents />
       <AttendanceSummary />
