@@ -2288,12 +2288,6 @@ export default function AcademicPage() {
                   </div>
                 </div>
 
-                {/* Report Button for Comparison */}
-                <Button size="sm" className="w-full gap-2 bg-emerald-600 hover:bg-emerald-700 text-white" onClick={() => setComparisonReportDialogOpen(true)}>
-                  <FileText className="h-4 w-4" />
-                  Generate Report
-                </Button>
-
                 {/* Comparison Summary Cards */}
                 <div className="flex items-center gap-2">
                   <div className="flex-1 p-4 rounded-xl bg-gradient-to-br from-blue-500/10 to-blue-600/5 border border-blue-500/20">
@@ -2729,6 +2723,12 @@ export default function AcademicPage() {
                   })()}
                   </p>
                 </div>
+
+                {/* Generate Report Button - at bottom */}
+                <Button size="sm" className="w-full gap-2 bg-emerald-600 hover:bg-emerald-700 text-white" onClick={() => setComparisonReportDialogOpen(true)}>
+                  <FileText className="h-4 w-4" />
+                  Generate Report
+                </Button>
               </TabsContent>
 
               {/* GOALS TAB */}
