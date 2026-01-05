@@ -44,6 +44,7 @@ const gradeCategories = [{
 // Import centralized subjects config
 import { allSubjects, getShortSubjectName, getTinySubjectCode, subjectGroups } from "@/data/subjectsConfig";
 import { SubjectGroupPill } from "@/components/SubjectGroupPill";
+import { SubjectPerformanceChart } from "@/components/SubjectPerformanceChart";
 
 // Use centralized subjects list
 const subjects = allSubjects;
@@ -1959,33 +1960,17 @@ export default function TeacherAcademicPage() {
                     </div>
                   </div>}
 
-                {/* Subject Performance Bar Chart */}
-                <div className="space-y-2">
-                  <h4 className="text-sm font-medium text-foreground">Subject Performance</h4>
-                  <div style={{ height: `${Math.max(176, subjectAverages.length * (isMobile ? 32 : 40))}px` }}>
-                    <ResponsiveContainer width="100%" height="100%">
-                      <BarChart data={subjectAverages} layout="vertical" margin={{ left: isMobile ? -15 : 0, right: isMobile ? 5 : 10 }}>
-                        <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" strokeOpacity={0.3} />
-                        <XAxis type="number" domain={[0, 100]} tick={{
-                        fontSize: isMobile ? 8 : 10,
-                        fill: "hsl(var(--muted-foreground))"
-                      }} />
-                        <YAxis type="category" dataKey="name" tick={{
-                        fontSize: isMobile ? 8 : 10,
-                        fill: "hsl(var(--muted-foreground))"
-                      }} width={isMobile ? 55 : 80} />
-                        <Tooltip contentStyle={{
-                        backgroundColor: "hsl(var(--card))",
-                        border: "1px solid hsl(var(--border))",
-                        borderRadius: "8px"
-                      }} formatter={(value: number) => [`${value.toFixed(1)}%`, "Average"]} />
-                        <Bar dataKey="average" radius={[0, 4, 4, 0]}>
-                          {subjectAverages.map((_, index) => <Cell key={index} fill={SUBJECT_COLORS[index % SUBJECT_COLORS.length]} />)}
-                        </Bar>
-                      </BarChart>
-                    </ResponsiveContainer>
-                  </div>
-                </div>
+                {/* Subject Performance Bar Chart - Using responsive component from Parent Academic */}
+                <SubjectPerformanceChart 
+                  data={subjectAverages.map((s, index) => ({
+                    name: s.name,
+                    fullName: s.fullName,
+                    score: Math.round(s.average),
+                    goal: Math.round(s.average)
+                  }))}
+                  lineColors={SUBJECT_COLORS}
+                  showGoalBadge={false}
+                />
 
                 {/* Stats Cards Grid */}
                 <div className="grid grid-cols-3 gap-2">
@@ -3681,99 +3666,16 @@ export default function TeacherAcademicPage() {
                   </p>
                 </div>
 
-                {/* Class vs Cohort Average Horizontal Bar Chart */}
-                <div className="space-y-2">
-                  <h4 className="text-sm font-medium text-foreground flex items-center gap-1.5">
-                    <BarChart3 className="h-4 w-4 text-primary" />
-                    Class VS Cohort Average
-                  </h4>
-                  <div className={cn("h-64", isMobile && "h-56")}>
-                    <ResponsiveContainer width="100%" height="100%">
-                      <BarChart data={subjectVsCohortData} layout="vertical" barGap={2} margin={{ left: isMobile ? -10 : 0, right: isMobile ? 5 : 10 }}>
-                        <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" strokeOpacity={0.3} horizontal={false} />
-                        <XAxis type="number" domain={[0, 100]} tick={{
-                        fontSize: isMobile ? 8 : 10,
-                        fill: "hsl(var(--muted-foreground))"
-                      }} axisLine={false} tickLine={false} />
-                        <YAxis type="category" dataKey="name" tick={{
-                        fontSize: isMobile ? 8 : 10,
-                        fill: "hsl(var(--muted-foreground))"
-                      }} width={isMobile ? 45 : 60} axisLine={false} tickLine={false} />
-                        <Tooltip contentStyle={{
-                        backgroundColor: "hsl(var(--card))",
-                        border: "1px solid hsl(var(--border))",
-                        borderRadius: "8px"
-                      }} formatter={(value: number, name: string) => [`${value}%`, name === "classScore" ? "Class Score" : "Cohort Average"]} />
-                        <Bar 
-                          dataKey="classScore" 
-                          radius={[0, 4, 4, 0]} 
-                          barSize={12}
-                          label={({ x, y, width, height, index }) => {
-                            const entry = subjectVsCohortData[index];
-                            if (!entry) return null;
-                            // Calculate dot position based on cohort average
-                            const chartWidth = width / (entry.classScore / 100);
-                            const dotX = x + (entry.cohortAvg / 100) * chartWidth;
-                            const dotY = y + height / 2;
-                            return (
-                              <circle
-                                cx={dotX}
-                                cy={dotY}
-                                r={5}
-                                fill="#1f2937"
-                                stroke="#ffffff"
-                                strokeWidth={2}
-                              />
-                            );
-                          }}
-                        >
-                          {subjectVsCohortData.map((entry, index) => {
-                            // Subject colors for visual distinction
-                            const subjectColors: Record<string, string> = {
-                              "English": "#22c55e",
-                              "Math": "#f59e0b",
-                              "Malay": "#3b82f6",
-                              "Science": "#ef4444",
-                              "ICT": "#8b5cf6",
-                              "Add Math": "#f97316",
-                              "Chemistry": "#06b6d4",
-                              "Physics": "#ec4899",
-                              "Biology": "#10b981",
-                              "Account": "#6366f1",
-                              "Econs": "#14b8a6",
-                              "Biz Stud": "#a855f7",
-                              "Moral": "#84cc16",
-                              "Islamic": "#0ea5e9",
-                              "Art": "#f43f5e",
-                              "Living S": "#facc15",
-                              "Chinese": "#64748b",
-                            };
-                            const fallbackColors = ["#3b82f6", "#f59e0b", "#22c55e", "#ef4444", "#8b5cf6", "#f97316", "#06b6d4", "#ec4899", "#10b981", "#6366f1"];
-                            const color = subjectColors[entry.name] || fallbackColors[index % fallbackColors.length];
-                            return <Cell key={`cell-${index}`} fill={color} />;
-                          })}
-                        </Bar>
-                      </BarChart>
-                    </ResponsiveContainer>
-                  </div>
-                  {/* Legend for dots */}
-                  <div className="flex items-center justify-center gap-3 text-[10px] text-muted-foreground">
-                    <div className="flex items-center gap-1">
-                      <div className="w-3 h-3 rounded-sm bg-primary" />
-                      <span>Class Score</span>
-                    </div>
-                    <div className="flex items-center gap-1">
-                      <div className="w-2 h-2 rounded-full bg-foreground" />
-                      <span>Cohort Avg</span>
-                    </div>
-                  </div>
-                  {/* Delta badges */}
-                  <div className="flex flex-wrap gap-1.5 justify-center">
-                    {subjectVsCohortData.slice(0, 4).map(item => <Badge key={item.name} variant={item.delta >= 0 ? "default" : "destructive"} className="text-[10px] px-2 py-0.5">
-                        {item.name}: {item.delta >= 0 ? "+" : ""}{item.delta}%
-                      </Badge>)}
-                  </div>
-                </div>
+                {/* Class vs Cohort Average - Using responsive chart component */}
+                <SubjectPerformanceChart 
+                  data={subjectVsCohortData.map((s) => ({
+                    name: s.name,
+                    fullName: s.fullName || s.name,
+                    score: s.classScore,
+                    goal: s.cohortAvg
+                  }))}
+                  lineColors={SUBJECT_COLORS}
+                />
 
                 {/* Performance Heatmap */}
                 <div className="space-y-2">
