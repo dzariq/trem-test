@@ -2,9 +2,8 @@ import { useNavigate } from "react-router-dom";
 import { 
   CalendarClock, 
   BookOpen, 
-  Calendar,
   BookMarked,
-  ClipboardList
+  Heart
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -13,9 +12,9 @@ interface TeacherQuickLinksProps {
 }
 
 const quickLinks = [
-  { icon: ClipboardList, label: "Lesson Plans", path: "/teacher/lesson-plans", bgColor: "bg-rose-100", iconColor: "text-rose-600" },
+  { icon: Heart, label: "DNA", path: "/teacher/dna", bgColor: "bg-rose-100", iconColor: "text-rose-500", isHeart: true },
   { icon: BookOpen, label: "Grade Entry", path: "/teacher/academic", bgColor: "bg-blue-100", iconColor: "text-blue-600" },
-  { icon: Calendar, label: "Calendar", path: "/teacher/calendar", bgColor: "bg-amber-100", iconColor: "text-amber-600" },
+  { icon: BookMarked, label: "Handbook", path: "/teacher/handbook", bgColor: "bg-purple-100", iconColor: "text-purple-600" },
   { icon: CalendarClock, label: "Timetable", path: "/teacher/timetable", bgColor: "bg-emerald-100", iconColor: "text-emerald-600", action: "timetable" },
 ];
 
@@ -48,7 +47,11 @@ export function TeacherQuickLinks({ onTimetableClick }: TeacherQuickLinksProps) 
                 "w-9 h-9 rounded-lg flex items-center justify-center mb-1",
                 link.bgColor
               )}>
-                <link.icon className={cn("h-4 w-4", link.iconColor)} />
+                {link.isHeart ? (
+                  <link.icon className="h-4 w-4" fill="#ef4444" color="#ef4444" />
+                ) : (
+                  <link.icon className={cn("h-4 w-4", link.iconColor)} />
+                )}
               </div>
               <span className="text-[9px] font-medium text-foreground text-center leading-tight">{link.label}</span>
             </button>
