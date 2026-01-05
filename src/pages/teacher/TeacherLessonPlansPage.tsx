@@ -245,14 +245,14 @@ const TeacherLessonPlansPage = () => {
       return (
         <button
           onClick={() => navigate(`/teacher/lesson-plans/new?week=${weekId}&lesson=${lessonNumber}`)}
-          className="flex items-center gap-2 sm:gap-3 p-2 sm:p-3 rounded-lg border border-dashed border-border hover:bg-muted/50 transition-colors w-full"
+          className="flex items-center gap-3 p-3 rounded-lg border border-dashed border-border hover:bg-muted/50 transition-colors w-full"
         >
-          <div className="h-6 w-6 sm:h-8 sm:w-8 rounded-full bg-muted flex items-center justify-center flex-shrink-0">
-            <Plus className="h-3 w-3 sm:h-4 sm:w-4 text-muted-foreground" />
+          <div className="h-8 w-8 rounded-full bg-muted flex items-center justify-center flex-shrink-0">
+            <Plus className="h-4 w-4 text-muted-foreground" />
           </div>
           <div className="text-left">
-            <p className="text-xs sm:text-sm font-medium text-muted-foreground">Lesson {lessonNumber}</p>
-            <p className="text-[10px] sm:text-xs text-muted-foreground">Tap to create</p>
+            <p className="text-sm font-medium text-muted-foreground">Lesson {lessonNumber}</p>
+            <p className="text-xs text-muted-foreground">Tap to create</p>
           </div>
         </button>
       );
@@ -264,14 +264,14 @@ const TeacherLessonPlansPage = () => {
       <button
         onClick={() => handleLessonPlanClick(lp)}
         className={cn(
-          "flex items-center gap-2 p-2 sm:p-3 rounded-lg border transition-colors w-full text-left overflow-hidden",
+          "flex items-center gap-2 p-3 rounded-lg border transition-colors w-full text-left overflow-hidden",
           status === "complete" && "border-emerald-200 bg-emerald-50/50 hover:bg-emerald-50",
           status === "incomplete" && "border-amber-200 bg-amber-50/50 hover:bg-amber-50",
           status === "draft" && "border-border bg-muted/30 hover:bg-muted/50"
         )}
       >
         <div className={cn(
-          "h-6 w-6 sm:h-8 sm:w-8 min-w-[1.5rem] sm:min-w-[2rem] rounded-full flex items-center justify-center flex-shrink-0 text-[10px] sm:text-xs font-bold",
+          "h-8 w-8 min-w-[2rem] rounded-full flex items-center justify-center flex-shrink-0 text-xs font-bold",
           status === "complete" && "bg-emerald-500 text-white",
           status === "incomplete" && "bg-amber-500 text-white",
           status === "draft" && "bg-muted text-muted-foreground"
@@ -279,8 +279,8 @@ const TeacherLessonPlansPage = () => {
           {lessonNumber}
         </div>
         <div className="flex-1 min-w-0 overflow-hidden">
-          <p className="text-xs sm:text-sm font-medium truncate">{lp.title}</p>
-          <p className="text-[10px] sm:text-xs text-muted-foreground truncate">{lp.subtopics?.join(", ") || "No subtopic"}</p>
+          <p className="text-sm font-medium truncate">{lp.title}</p>
+          <p className="text-xs text-muted-foreground truncate">{lp.subtopics?.join(", ") || "No subtopic"}</p>
         </div>
         <ChevronRight className="h-4 w-4 text-muted-foreground flex-shrink-0" />
       </button>
@@ -289,12 +289,12 @@ const TeacherLessonPlansPage = () => {
 
   return (
     <TeacherAppLayout>
-      <div className="flex flex-col h-full min-h-0 overflow-hidden w-full max-w-full">
+      <div className="flex flex-col h-full min-h-0 overflow-x-hidden">
         {/* Header with Subject Selector */}
-          <div className="px-2 sm:px-4 py-2 sm:py-3 border-b border-border bg-card/50">
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-3">
+          <div className="px-4 py-3 border-b border-border bg-card/50">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
               <Select value={selectedSubject} onValueChange={setSelectedSubject}>
-                <SelectTrigger className="w-full sm:w-[220px] text-xs sm:text-sm h-9 sm:h-10">
+                <SelectTrigger className="w-full sm:w-[220px]">
                   <SelectValue placeholder="Select subject" />
                 </SelectTrigger>
                 <SelectContent>
@@ -309,9 +309,9 @@ const TeacherLessonPlansPage = () => {
               <Button
                 size="sm"
                 onClick={() => setIsAddTopicOpen(true)}
-                className="gap-1.5 self-start sm:self-auto h-8 sm:h-9 text-xs sm:text-sm"
+                className="gap-1.5 self-start sm:self-auto"
               >
-                <Plus className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+                <Plus className="h-4 w-4" />
                 <span className="hidden sm:inline">New Topic</span>
               </Button>
             </div>
@@ -319,18 +319,18 @@ const TeacherLessonPlansPage = () => {
 
           {/* Topics and Weeks List */}
           <ScrollArea className="flex-1 min-h-0 overflow-hidden">
-            <div className="p-2 sm:p-4 space-y-3 sm:space-y-4 w-full max-w-full min-w-0">
+            <div className="p-4 space-y-4 w-full max-w-full min-w-0">
               {curriculum?.topics.map((topic, topicIndex) => (
-              <Card key={topic.id} className="overflow-hidden w-full rounded-lg sm:rounded-xl">
+              <Card key={topic.id} className="overflow-hidden w-full">
                 <CardHeader className="py-0 px-0 overflow-hidden space-y-0">
                   {/* Topic Title Section - Primary Green */}
-                  <div className="py-2 px-2 sm:py-3 sm:px-4 bg-primary">
+                  <div className="py-3 px-4 bg-primary">
                     <div className="flex items-center justify-between gap-2 min-w-0">
-                      <div className="flex items-center gap-1.5 sm:gap-2 min-w-0">
-                        <div className="h-5 w-5 sm:h-6 sm:w-6 rounded-full bg-white/20 flex items-center justify-center flex-shrink-0">
-                          <BookOpen className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-primary-foreground" />
+                      <div className="flex items-center gap-2 min-w-0">
+                        <div className="h-6 w-6 rounded-full bg-white/20 flex items-center justify-center flex-shrink-0">
+                          <BookOpen className="h-3.5 w-3.5 text-primary-foreground" />
                         </div>
-                        <CardTitle className="text-xs sm:text-sm font-semibold text-primary-foreground truncate">
+                        <CardTitle className="text-sm font-semibold text-primary-foreground truncate">
                           Topic {topicIndex + 1}: {topic.title}
                         </CardTitle>
                       </div>
@@ -338,36 +338,36 @@ const TeacherLessonPlansPage = () => {
                   </div>
                   
                   {/* Subtopics Section - Same dark green as topic */}
-                  <div className="py-1.5 px-2 sm:py-2 sm:px-4 bg-primary border-b border-primary-foreground/20">
+                  <div className="py-2 px-4 bg-primary border-b border-primary-foreground/20">
                     <Collapsible defaultOpen={false}>
                       <div className="flex items-center justify-between">
-                        <CollapsibleTrigger className="flex items-center gap-1 text-[10px] sm:text-xs font-medium text-primary-foreground hover:text-primary-foreground/80 transition-colors [&[data-state=open]>svg]:rotate-180">
-                          <ChevronDown className="h-3 w-3 sm:h-3.5 sm:w-3.5 transition-transform" />
+                        <CollapsibleTrigger className="flex items-center gap-1 text-xs font-medium text-primary-foreground hover:text-primary-foreground/80 transition-colors [&[data-state=open]>svg]:rotate-180">
+                          <ChevronDown className="h-3.5 w-3.5 transition-transform" />
                           Subtopics ({topic.subtopics?.length || 0})
                         </CollapsibleTrigger>
                         <Button
                           variant="ghost"
                           size="sm"
-                          className="h-5 w-5 sm:h-6 sm:w-6 p-0 text-primary-foreground hover:text-primary-foreground/80 hover:bg-primary-foreground/10"
+                          className="h-6 w-6 p-0 text-primary-foreground hover:text-primary-foreground/80 hover:bg-primary-foreground/10"
                           onClick={() => handleOpenAddSubtopic(topic.id)}
                         >
-                          <Plus className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
+                          <Plus className="h-3.5 w-3.5" />
                         </Button>
                       </div>
-                      <CollapsibleContent className="mt-1.5 sm:mt-2">
-                        <div className="flex flex-wrap gap-1 sm:gap-1.5 min-w-0 max-w-full">
+                      <CollapsibleContent className="mt-2">
+                        <div className="flex flex-wrap gap-1.5 min-w-0">
                           {topic.subtopics && topic.subtopics.length > 0 ? (
                             topic.subtopics.map((subtopic, idx) => (
                               <Badge
                                 key={idx}
                                 variant="secondary"
-                                className="text-[10px] sm:text-xs font-normal max-w-full min-w-0 overflow-hidden bg-primary-foreground/20 text-primary-foreground"
+                                className="text-xs font-normal max-w-full min-w-0 overflow-hidden bg-primary-foreground/20 text-primary-foreground"
                               >
                                 <span className="block truncate">{subtopic}</span>
                               </Badge>
                             ))
                           ) : (
-                            <span className="text-[10px] sm:text-xs text-primary-foreground/70 italic">No subtopics added</span>
+                            <span className="text-xs text-primary-foreground/70 italic">No subtopics added</span>
                           )}
                         </div>
                       </CollapsibleContent>
@@ -388,119 +388,117 @@ const TeacherLessonPlansPage = () => {
                           value={week.id}
                           className="border-b last:border-b-0 overflow-hidden"
                         >
-                          <AccordionTrigger className="relative px-2 sm:px-4 py-2 sm:py-3 pr-8 sm:pr-10 hover:no-underline hover:bg-muted/20 [&>svg]:absolute [&>svg]:right-2 sm:[&>svg]:right-3 [&>svg]:top-3 sm:[&>svg]:top-1/2 [&>svg]:-translate-y-1/2 [&>svg]:shrink-0 [&>svg]:h-3 [&>svg]:w-3 sm:[&>svg]:h-4 sm:[&>svg]:w-4">
-                            <div className="flex flex-col gap-1.5 sm:gap-2 w-full min-w-0">
-                              <div className="flex items-center justify-between gap-2 w-full">
-                                <div className="flex items-center gap-1.5 sm:gap-2 min-w-0">
-                                  <Popover 
-                                    open={weekCalendarOpen === week.id} 
-                                    onOpenChange={(open) => {
-                                      setWeekCalendarOpen(open ? week.id : null);
-                                      // Reset range each time the picker opens so it waits for 2 clicks
-                                      setDateRange({ from: undefined, to: undefined });
-                                    }}
-                                  >
-                                    <PopoverTrigger asChild onClick={(e) => e.stopPropagation()}>
-                                      <button className="flex items-center gap-1 px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-md border border-border bg-background hover:bg-muted text-[10px] sm:text-xs font-normal flex-shrink-0 transition-colors">
-                                        <CalendarIcon className="h-2.5 w-2.5 sm:h-3 sm:w-3" />
-                                        Week {week.weekNumber}
-                                      </button>
-                                    </PopoverTrigger>
-                                    <PopoverContent className="w-auto p-0 z-50" align="start" onClick={(e) => e.stopPropagation()}>
-                                      <div className="p-2 border-b border-border">
-                                        <p className="text-xs font-medium">Select Date Range</p>
-                                        <p className="text-xs text-muted-foreground">Click first date, then last date</p>
-                                      </div>
-                                      <Calendar
-                                        mode="range"
-                                        defaultMonth={addWeeks(termStart, week.weekNumber - 1)}
-                                        selected={dateRange}
-                                        onSelect={(range) => {
-                                          setDateRange({ from: range?.from, to: range?.to });
-                                          if (range?.from && range?.to) {
-                                            handleWeekChange(week.id, range.from);
-                                            setWeekCalendarOpen(null);
-                                            setDateRange({ from: undefined, to: undefined });
-                                          }
-                                        }}
-                                        disabled={(date) => {
-                                          // Disable weekends and holidays
-                                          const day = date.getDay();
-                                          return day === 0 || day === 6 || isHoliday(date);
-                                        }}
-                                        className={cn("p-3 pointer-events-auto")}
-                                        modifiers={{
-                                          holiday: (date) => isHoliday(date),
-                                        }}
-                                        modifiersStyles={{
-                                          holiday: {
-                                            backgroundColor: "hsl(var(--destructive) / 0.1)",
-                                            color: "hsl(var(--muted-foreground))",
-                                            textDecoration: "line-through",
-                                          },
-                                        }}
-                                      />
-                                    </PopoverContent>
-                                  </Popover>
-                                </div>
+                          <AccordionTrigger className="relative px-4 py-3 pr-10 hover:no-underline hover:bg-muted/20 [&>svg]:absolute [&>svg]:right-3 [&>svg]:top-1/2 [&>svg]:-translate-y-1/2 [&>svg]:shrink-0">
+                            <div className="flex flex-col gap-2 w-full min-w-0 sm:flex-row sm:items-center sm:justify-between">
+                              <div className="flex items-center gap-2 min-w-0 flex-1">
+                                <Popover 
+                                  open={weekCalendarOpen === week.id} 
+                                  onOpenChange={(open) => {
+                                    setWeekCalendarOpen(open ? week.id : null);
+                                    // Reset range each time the picker opens so it waits for 2 clicks
+                                    setDateRange({ from: undefined, to: undefined });
+                                  }}
+                                >
+                                  <PopoverTrigger asChild onClick={(e) => e.stopPropagation()}>
+                                    <button className="flex items-center gap-1 px-2 py-1 rounded-md border border-border bg-background hover:bg-muted text-xs font-normal flex-shrink-0 transition-colors">
+                                      <CalendarIcon className="h-3 w-3" />
+                                      Week {week.weekNumber}
+                                    </button>
+                                  </PopoverTrigger>
+                                  <PopoverContent className="w-auto p-0 z-50" align="start" onClick={(e) => e.stopPropagation()}>
+                                    <div className="p-2 border-b border-border">
+                                      <p className="text-xs font-medium">Select Date Range</p>
+                                      <p className="text-xs text-muted-foreground">Click first date, then last date</p>
+                                    </div>
+                                    <Calendar
+                                      mode="range"
+                                      defaultMonth={addWeeks(termStart, week.weekNumber - 1)}
+                                      selected={dateRange}
+                                      onSelect={(range) => {
+                                        setDateRange({ from: range?.from, to: range?.to });
+                                        if (range?.from && range?.to) {
+                                          handleWeekChange(week.id, range.from);
+                                          setWeekCalendarOpen(null);
+                                          setDateRange({ from: undefined, to: undefined });
+                                        }
+                                      }}
+                                      disabled={(date) => {
+                                        // Disable weekends and holidays
+                                        const day = date.getDay();
+                                        return day === 0 || day === 6 || isHoliday(date);
+                                      }}
+                                      className={cn("p-3 pointer-events-auto")}
+                                      modifiers={{
+                                        holiday: (date) => isHoliday(date),
+                                      }}
+                                      modifiersStyles={{
+                                        holiday: {
+                                          backgroundColor: "hsl(var(--destructive) / 0.1)",
+                                          color: "hsl(var(--muted-foreground))",
+                                          textDecoration: "line-through",
+                                        },
+                                      }}
+                                    />
+                                  </PopoverContent>
+                                </Popover>
                                 {(() => {
-                                  const total = lpCount > 0 ? lpCount : 5;
-                                  const isAllComplete = completedCount === total && total > 0;
-                                  const isNoneComplete = completedCount === 0;
-                                  
-                                  return (
-                                    <Badge 
-                                      variant="secondary" 
-                                      className={cn(
-                                        "text-[10px] sm:text-xs shrink-0",
-                                        isAllComplete && "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/50 dark:text-emerald-300",
-                                        isNoneComplete && "bg-red-100 text-red-700 dark:bg-red-900/50 dark:text-red-300",
-                                        !isAllComplete && !isNoneComplete && "bg-amber-100 text-amber-700 dark:bg-amber-900/50 dark:text-amber-300"
-                                      )}
-                                    >
-                                      {completedCount}/{total}
-                                    </Badge>
+                                  const weekSubtopics = [...new Set(
+                                    week.lessonPlans.flatMap(lp => lp.subtopics || []).filter(Boolean)
+                                  )];
+                                  return weekSubtopics.length > 0 ? (
+                                    <div className="flex gap-1.5 min-w-0 overflow-x-auto scrollbar-thin">
+                                      {weekSubtopics.map((subtopic, idx) => (
+                                        <Badge 
+                                          key={idx} 
+                                          variant="outline" 
+                                          className="text-xs font-normal px-2 py-0.5 whitespace-nowrap shrink-0"
+                                        >
+                                          {subtopic}
+                                        </Badge>
+                                      ))}
+                                    </div>
+                                  ) : (
+                                    <span className="text-xs text-muted-foreground italic">
+                                      No subtopics
+                                    </span>
                                   );
                                 })()}
                               </div>
                               {(() => {
-                                const weekSubtopics = [...new Set(
-                                  week.lessonPlans.flatMap(lp => lp.subtopics || []).filter(Boolean)
-                                )];
-                                return weekSubtopics.length > 0 ? (
-                                  <div className="flex gap-1 sm:gap-1.5 min-w-0 overflow-x-auto scrollbar-none pb-0.5">
-                                    {weekSubtopics.map((subtopic, idx) => (
-                                      <Badge 
-                                        key={idx} 
-                                        variant="outline" 
-                                        className="text-[10px] sm:text-xs font-normal px-1.5 sm:px-2 py-0 sm:py-0.5 whitespace-nowrap shrink-0"
-                                      >
-                                        {subtopic}
-                                      </Badge>
-                                    ))}
-                                  </div>
-                                ) : (
-                                  <span className="text-[10px] sm:text-xs text-muted-foreground italic">
-                                    No subtopics
-                                  </span>
+                                const total = lpCount > 0 ? lpCount : 5;
+                                const isAllComplete = completedCount === total && total > 0;
+                                const isNoneComplete = completedCount === 0;
+                                
+                                return (
+                                  <Badge 
+                                    variant="secondary" 
+                                    className={cn(
+                                      "text-xs shrink-0",
+                                      isAllComplete && "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/50 dark:text-emerald-300",
+                                      isNoneComplete && "bg-red-100 text-red-700 dark:bg-red-900/50 dark:text-red-300",
+                                      !isAllComplete && !isNoneComplete && "bg-amber-100 text-amber-700 dark:bg-amber-900/50 dark:text-amber-300"
+                                    )}
+                                  >
+                                    {completedCount}/{total}
+                                  </Badge>
                                 );
                               })()}
                             </div>
                           </AccordionTrigger>
-                            <AccordionContent className="px-2 sm:px-4 pb-2 sm:pb-3">
+                            <AccordionContent className="px-4 pb-3">
                               {/* Week Date Range Header */}
                               {(() => {
                                 const weekRange = getWeekRange(week.weekNumber);
                                 return (
-                                  <div className="flex items-center gap-1.5 sm:gap-2 pt-1.5 sm:pt-2 pb-2 sm:pb-3 border-b border-border/50 mb-2 sm:mb-3">
-                                    <CalendarIcon className="h-3 w-3 sm:h-4 sm:w-4 text-muted-foreground" />
-                                    <span className="text-[10px] sm:text-sm font-medium text-muted-foreground">
+                                  <div className="flex items-center gap-2 pt-2 pb-3 border-b border-border/50 mb-3">
+                                    <CalendarIcon className="h-4 w-4 text-muted-foreground" />
+                                    <span className="text-sm font-medium text-muted-foreground">
                                       {format(weekRange.start, "EEE, MMM d")} – {format(weekRange.end, "EEE, MMM d, yyyy")}
                                     </span>
                                   </div>
                                 );
                               })()}
-                              <div className="space-y-1.5 sm:space-y-2">
+                              <div className="space-y-2">
                                 {[1, 2, 3, 4, 5].map((lessonNum) => {
                                 const lp = week.lessonPlans.find(p => p.lessonNumber === lessonNum);
                                 return (
@@ -513,18 +511,18 @@ const TeacherLessonPlansPage = () => {
                             
                             {/* Week Summary */}
                             {week.lessonPlans.length > 0 && (
-                              <div className="mt-2 sm:mt-3 pt-2 sm:pt-3 border-t border-border">
-                                <div className="flex flex-wrap items-center gap-2 sm:gap-4 text-[10px] sm:text-xs text-muted-foreground">
+                              <div className="mt-3 pt-3 border-t border-border">
+                                <div className="flex items-center gap-4 text-xs text-muted-foreground">
                                   <div className="flex items-center gap-1">
-                                    <CheckCircle2 className="h-2.5 w-2.5 sm:h-3 sm:w-3 text-emerald-500" />
+                                    <CheckCircle2 className="h-3 w-3 text-emerald-500" />
                                     <span>{week.lessonPlans.filter(lp => getLessonPlanStatus(lp) === "complete").length} Complete</span>
                                   </div>
                                   <div className="flex items-center gap-1">
-                                    <AlertCircle className="h-2.5 w-2.5 sm:h-3 sm:w-3 text-amber-500" />
+                                    <AlertCircle className="h-3 w-3 text-amber-500" />
                                     <span>{week.lessonPlans.filter(lp => getLessonPlanStatus(lp) === "incomplete").length} Incomplete</span>
                                   </div>
                                   <div className="flex items-center gap-1">
-                                    <Clock className="h-2.5 w-2.5 sm:h-3 sm:w-3 text-muted-foreground" />
+                                    <Clock className="h-3 w-3 text-muted-foreground" />
                                     <span>{week.lessonPlans.filter(lp => getLessonPlanStatus(lp) === "draft").length} Draft</span>
                                   </div>
                                 </div>
