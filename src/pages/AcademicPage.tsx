@@ -1991,9 +1991,9 @@ export default function AcademicPage() {
                 <div className="grid grid-cols-2 gap-3 items-start">
                   {/* Rising Subjects */}
                   <div className="space-y-2">
-                    <h4 className="text-sm font-medium text-foreground flex items-center gap-1.5 min-h-[20px]">
+                    <h4 className="text-sm font-medium text-foreground flex items-center gap-1.5 min-h-[40px]">
                       <TrendingUp className="h-4 w-4 text-green-500 flex-shrink-0" />
-                      <span>Rising Subjects</span>
+                      <span className="leading-tight">Rising<br />Subjects</span>
                     </h4>
                     <div className="space-y-2">
                       {risingStars.length > 0 ? risingStars.map((item, idx) => <div key={idx} className="p-2.5 rounded-lg border border-green-500/30 bg-green-500/10 h-[84px] flex flex-col">
@@ -2012,9 +2012,9 @@ export default function AcademicPage() {
 
                   {/* Falling Behind */}
                   <div className="space-y-2">
-                    <h4 className="text-sm font-medium text-foreground flex items-center gap-1.5 min-h-[20px]">
+                    <h4 className="text-sm font-medium text-foreground flex items-center gap-1.5 min-h-[40px]">
                       <TrendingDown className="h-4 w-4 text-red-500 flex-shrink-0" />
-                      <span>Needs Focus</span>
+                      <span className="leading-tight">Needs<br />Focus</span>
                     </h4>
                     <div className="space-y-2">
                       {fallingBehind.length > 0 ? fallingBehind.map((item, idx) => <div key={idx} className="p-2.5 rounded-lg border border-red-500/30 bg-red-500/10 h-[84px] flex flex-col">
