@@ -73,7 +73,7 @@ export default function TeacherAttendancePage() {
       <button
         onClick={() => handleStatusChange(studentId, status)}
         className={cn(
-          "flex-1 p-2 rounded-lg transition-all duration-200 flex items-center justify-center",
+          "w-12 h-10 rounded-lg transition-all duration-200 flex items-center justify-center",
           isActive ? activeColor : "bg-muted hover:bg-muted/80"
         )}
         title={label}
@@ -240,13 +240,13 @@ export default function TeacherAttendancePage() {
               {students.map((student, index) => (
                 <div 
                   key={student.id} 
-                  className="flex flex-col p-3 rounded-xl border border-border/50 bg-card hover:bg-muted/30 transition-colors gap-2"
+                  className="flex flex-col p-3 rounded-xl border border-border/50 bg-card hover:bg-muted/30 transition-colors gap-3"
                 >
-                  <div className="flex items-center justify-center gap-2">
+                  <div className="flex items-center gap-2">
                     <span className="flex items-center justify-center h-6 w-6 rounded-full bg-primary/10 text-xs font-medium text-primary flex-shrink-0">{index + 1}</span>
                     <span className="font-medium text-foreground text-sm">{student.name}</span>
                   </div>
-                  <div className="flex gap-2 w-full">
+                  <div className="flex gap-3 justify-center">
                     {getStatusButton(
                       student.id,
                       "present",
