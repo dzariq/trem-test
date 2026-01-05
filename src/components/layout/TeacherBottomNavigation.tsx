@@ -6,7 +6,7 @@ import { cn } from "@/lib/utils";
 const navItems = [
   { to: "/teacher", icon: Home, label: "Home" },
   { to: "/teacher/attendance", icon: UserCheck, label: "Attendance" },
-  { to: "/teacher/lesson-plans", icon: ClipboardList, label: "Lesson Plans" },
+  { to: "/teacher/lesson-plans", icon: ClipboardList, label: "Lesson\nPlans" },
   { to: "/teacher/academic", icon: GraduationCap, label: "Academic" },
   { to: "/teacher/calendar", icon: Calendar, label: "Calendar" },
 ];
@@ -47,7 +47,7 @@ export function TeacherBottomNavigation() {
             end={item.to === "/teacher"}
             className={({ isActive }) =>
               cn(
-                "flex flex-col items-center justify-center py-2 px-3 rounded-lg transition-all duration-200 min-w-[60px]",
+                "flex flex-col items-center justify-center py-2 px-1 rounded-lg transition-all duration-200 flex-1 max-w-[72px]",
                 isActive
                   ? "text-primary bg-accent"
                   : "text-muted-foreground hover:text-foreground hover:bg-accent/50"
@@ -60,7 +60,7 @@ export function TeacherBottomNavigation() {
                   "h-5 w-5 mb-1", 
                   isActive && "stroke-[2.5px]"
                 )} />
-                <span className="text-xs font-medium">{item.label}</span>
+                <span className="text-[10px] font-medium text-center leading-tight whitespace-pre-line">{item.label}</span>
               </>
             )}
           </NavLink>
