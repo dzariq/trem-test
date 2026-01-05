@@ -127,30 +127,25 @@ const TeacherLessonPlansPage = () => {
       <button
         onClick={() => handleLessonPlanClick(lp)}
         className={cn(
-          "flex items-center gap-3 p-3 rounded-lg border transition-colors w-full text-left",
+          "flex items-center gap-2 p-3 rounded-lg border transition-colors w-full text-left overflow-hidden",
           status === "complete" && "border-emerald-200 bg-emerald-50/50 hover:bg-emerald-50",
           status === "incomplete" && "border-amber-200 bg-amber-50/50 hover:bg-amber-50",
           status === "draft" && "border-border bg-muted/30 hover:bg-muted/50"
         )}
       >
         <div className={cn(
-          "h-8 w-8 rounded-full flex items-center justify-center flex-shrink-0 text-xs font-bold",
+          "h-8 w-8 min-w-[2rem] rounded-full flex items-center justify-center flex-shrink-0 text-xs font-bold",
           status === "complete" && "bg-emerald-500 text-white",
           status === "incomplete" && "bg-amber-500 text-white",
           status === "draft" && "bg-muted text-muted-foreground"
         )}>
           {lessonNumber}
         </div>
-        <div className="flex-1 min-w-0">
+        <div className="flex-1 min-w-0 overflow-hidden">
           <p className="text-sm font-medium truncate">{lp.title}</p>
           <p className="text-xs text-muted-foreground truncate">{lp.topic}</p>
         </div>
-        <div className="flex items-center gap-1 flex-shrink-0">
-          {status === "complete" && <CheckCircle2 className="h-4 w-4 text-emerald-500" />}
-          {status === "incomplete" && <AlertCircle className="h-4 w-4 text-amber-500" />}
-          {status === "draft" && <Clock className="h-4 w-4 text-muted-foreground" />}
-          <ChevronRight className="h-4 w-4 text-muted-foreground" />
-        </div>
+        <ChevronRight className="h-4 w-4 text-muted-foreground flex-shrink-0" />
       </button>
     );
   };
