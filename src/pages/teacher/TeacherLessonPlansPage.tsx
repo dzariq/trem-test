@@ -418,12 +418,11 @@ const TeacherLessonPlansPage = () => {
               </div>
 
               <Button
-                size="sm"
                 onClick={() => setIsAddTopicOpen(true)}
-                className="gap-1.5 self-start sm:self-auto"
+                className="gap-2 self-start sm:self-auto"
               >
-                <Plus className="h-4 w-4" />
-                <span className="hidden sm:inline">New Topic</span>
+                <Plus className="h-5 w-5" />
+                New Topic
               </Button>
             </div>
           </div>
