@@ -3917,31 +3917,41 @@ export default function TeacherAcademicPage() {
 
                 {/* Subject Multi-Select */}
                 <div className="space-y-2">
-                  <label className="text-xs font-medium text-muted-foreground">Subjects</label>
-                  <div className="flex flex-wrap gap-1.5 p-2 rounded-lg border border-input bg-background min-h-[38px]">
-                    {subjects.map(s => {
-                    const isSelected = compareSubjects.includes(s);
-                    return <Badge key={s} variant={isSelected ? "default" : "outline"} className={`cursor-pointer text-xs transition-colors ${isSelected ? "bg-primary text-primary-foreground hover:bg-primary/80" : "hover:bg-accent"}`} onClick={() => {
-                      if (isSelected) {
-                        if (compareSubjects.length > 1) {
-                          setCompareSubjects(prev => prev.filter(name => name !== s));
-                        }
-                      } else {
-                        setCompareSubjects(prev => [...prev, s]);
-                      }
-                    }}>
-                          {shortenSubjectName(s)}
-                          {isSelected && <Check className="h-3 w-3 ml-1" />}
-                        </Badge>;
-                  })}
+                  <div className="flex items-center justify-between">
+                    <label className="text-xs font-medium text-muted-foreground">Subjects</label>
+                    <div className="flex gap-2">
+                      <button className="text-xs font-medium text-foreground hover:text-primary transition-colors" onClick={() => setCompareSubjects([...subjects])}>
+                        Select All
+                      </button>
+                      <button className="text-xs font-medium text-foreground hover:text-primary transition-colors" onClick={() => setCompareSubjects([subjects[0]])}>
+                        Clear
+                      </button>
+                    </div>
                   </div>
-                  <div className="flex gap-2">
-                    <Button variant="ghost" size="sm" className="text-xs h-7 px-2" onClick={() => setCompareSubjects([...subjects])}>
-                      Select All
-                    </Button>
-                    <Button variant="ghost" size="sm" className="text-xs h-7 px-2" onClick={() => setCompareSubjects([subjects[0]])}>
-                      Clear
-                    </Button>
+                  <div className="flex flex-wrap gap-1.5 p-2.5 rounded-lg border border-border bg-background items-center">
+                    {/* Grouped subject pills with mobile-friendly drawers */}
+                    {subjectGroups.map(group => (
+                      <SubjectGroupPill
+                        key={group.baseName}
+                        baseName={group.baseName}
+                        shortName={group.shortName}
+                        variants={group.variants || []}
+                        selectedSubjects={compareSubjects}
+                        onToggle={subjectName => {
+                          if (compareSubjects.includes(subjectName)) {
+                            if (compareSubjects.length > 1) {
+                              setCompareSubjects(prev => prev.filter(s => s !== subjectName));
+                            }
+                          } else {
+                            setCompareSubjects(prev => [...prev, subjectName]);
+                          }
+                        }}
+                      />
+                    ))}
+                    {/* Subject count badge */}
+                    <span className="ml-auto px-2 py-0.5 text-xs font-medium bg-primary/10 text-primary rounded-full">
+                      {compareSubjects.length}/{subjects.length}
+                    </span>
                   </div>
                 </div>
 
