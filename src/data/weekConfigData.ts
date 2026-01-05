@@ -34,27 +34,40 @@ const generateWeekConfigs = (baseDate: Date): WeekConfig[] => {
   return weeks;
 };
 
+// Generate 50 empty weeks (no dates)
+const generateEmptyWeeks = (): WeekConfig[] => {
+  const weeks: WeekConfig[] = [];
+  for (let i = 1; i <= 50; i++) {
+    weeks.push({
+      weekNumber: i,
+      startDate: "",
+      endDate: "",
+    });
+  }
+  return weeks;
+};
+
 // Initialize with default academic years
 const initializeAcademicYears = (): AcademicYear[] => {
   return [
     {
-      id: "2025-2026",
-      name: "2025-2026",
+      id: "2025",
+      name: "2025",
       startYear: 2025,
-      weeks: generateWeekConfigs(new Date("2025-01-06")), // First Monday of 2025
+      weeks: generateWeekConfigs(new Date("2025-01-06")),
     },
     {
-      id: "2026-2027",
-      name: "2026-2027",
+      id: "2026",
+      name: "2026",
       startYear: 2026,
-      weeks: generateWeekConfigs(new Date("2026-01-05")), // First Monday of 2026
+      weeks: generateWeekConfigs(new Date("2026-01-05")),
     },
   ];
 };
 
 // Store for academic years
 export let academicYears: AcademicYear[] = initializeAcademicYears();
-export let activeYearId: string = "2026-2027";
+export let activeYearId: string = "2026";
 
 // Get all academic years
 export const getAcademicYears = (): AcademicYear[] => {
@@ -82,40 +95,16 @@ export const getWeekConfigs = (): WeekConfig[] => {
 // Legacy export for backward compatibility
 export const weekConfigs = getWeekConfigs();
 
-// Create a new academic year
-export const createAcademicYear = (name: string, startDate: Date, copyFromYearId?: string): AcademicYear => {
-  const id = name;
-  const startYear = startDate.getFullYear();
-  
-  let weeks: WeekConfig[];
-  
-  if (copyFromYearId) {
-    const sourceYear = academicYears.find(y => y.id === copyFromYearId);
-    if (sourceYear) {
-      // Copy and offset dates by 1 year
-      weeks = sourceYear.weeks.map(week => {
-        const newStart = new Date(week.startDate);
-        newStart.setFullYear(newStart.getFullYear() + 1);
-        const newEnd = new Date(week.endDate);
-        newEnd.setFullYear(newEnd.getFullYear() + 1);
-        return {
-          weekNumber: week.weekNumber,
-          startDate: newStart.toISOString().split("T")[0],
-          endDate: newEnd.toISOString().split("T")[0],
-        };
-      });
-    } else {
-      weeks = generateWeekConfigs(startDate);
-    }
-  } else {
-    weeks = generateWeekConfigs(startDate);
-  }
+// Create a new academic year with empty weeks
+export const createAcademicYear = (year: number): AcademicYear => {
+  const id = year.toString();
+  const name = year.toString();
   
   const newYear: AcademicYear = {
     id,
     name,
-    startYear,
-    weeks,
+    startYear: year,
+    weeks: generateEmptyWeeks(),
   };
   
   academicYears.push(newYear);
