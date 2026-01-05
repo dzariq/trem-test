@@ -206,23 +206,34 @@ const LessonPlanDetailPage = () => {
               </div>
             </CardHeader>
             <CardContent className="px-4 pb-4 space-y-4">
-              {/* Subject (Read-only) */}
+              {/* Lesson Title - Prominent at top */}
               <div className="space-y-1.5">
-                <Label className="text-xs text-muted-foreground">Subject</Label>
-                <div className="h-9 px-3 flex items-center rounded-md border border-input bg-muted/50 text-sm text-muted-foreground">
-                  {lessonPlan.subject || <span className="italic">No subject assigned</span>}
+                <Label className="text-xs text-muted-foreground">Lesson Title</Label>
+                <Input
+                  value={lessonPlan.title}
+                  onChange={(e) => updateField("title", e.target.value)}
+                  placeholder="Enter lesson title..."
+                  className="h-10"
+                />
+              </div>
+
+              {/* Subject & Topic - Side by side */}
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1.5">
+                  <Label className="text-xs text-muted-foreground">Subject</Label>
+                  <div className="h-9 px-3 flex items-center rounded-md border border-input bg-muted/50 text-sm text-muted-foreground">
+                    {lessonPlan.subject || <span className="italic">No subject</span>}
+                  </div>
+                </div>
+                <div className="space-y-1.5">
+                  <Label className="text-xs text-muted-foreground">Topic</Label>
+                  <div className="h-9 px-3 flex items-center rounded-md border border-input bg-muted/50 text-sm text-muted-foreground truncate">
+                    {lessonPlan.topic || <span className="italic">No topic</span>}
+                  </div>
                 </div>
               </div>
 
-              {/* Topic (Read-only) */}
-              <div className="space-y-1.5">
-                <Label className="text-xs text-muted-foreground">Topic</Label>
-                <div className="h-9 px-3 flex items-center rounded-md border border-input bg-muted/50 text-sm text-muted-foreground">
-                  {lessonPlan.topic || <span className="italic">No topic assigned</span>}
-                </div>
-              </div>
-
-              {/* Subtopics (Multi-select) */}
+              {/* Subtopics */}
               <div className="space-y-1.5">
                 <Label className="text-xs text-muted-foreground">Subtopics</Label>
                 <Popover>
@@ -248,7 +259,6 @@ const LessonPlanDetailPage = () => {
                   </PopoverTrigger>
                   <PopoverContent className="w-full p-0" align="start">
                     <div className="p-2 space-y-2">
-                      {/* Select All / Deselect All */}
                       <div className="flex gap-2 pb-2 border-b border-border">
                         <Button
                           variant="ghost"
@@ -270,7 +280,6 @@ const LessonPlanDetailPage = () => {
                           Clear All
                         </Button>
                       </div>
-                      {/* Subtopic options */}
                       <div className="space-y-1 max-h-48 overflow-y-auto">
                         {getSubtopicsForTopic(lessonPlan.subject, lessonPlan.topic).map((subtopic) => {
                           const isSelected = lessonPlan.subtopics?.includes(subtopic) || false;
@@ -293,7 +302,7 @@ const LessonPlanDetailPage = () => {
                           );
                         })}
                         {getSubtopicsForTopic(lessonPlan.subject, lessonPlan.topic).length === 0 && (
-                          <p className="text-xs text-muted-foreground p-2">No subtopics available for this topic.</p>
+                          <p className="text-xs text-muted-foreground p-2">No subtopics available.</p>
                         )}
                       </div>
                     </div>
@@ -301,29 +310,18 @@ const LessonPlanDetailPage = () => {
                 </Popover>
               </div>
 
-              {/* Lesson Title */}
-              <div className="space-y-1.5">
-                <Label className="text-xs text-muted-foreground">Lesson Title</Label>
-                <Input
-                  value={lessonPlan.title}
-                  onChange={(e) => updateField("title", e.target.value)}
-                  placeholder="Enter lesson title..."
-                  className="h-10"
-                />
-              </div>
-
-              {/* Week & Lesson Number */}
-              <div className="grid grid-cols-2 gap-3">
+              {/* Week, Lesson, Date - All in one row */}
+              <div className="grid grid-cols-3 gap-3">
                 <div className="space-y-1.5">
                   <div className="flex items-center justify-between">
-                    <Label className="text-xs text-muted-foreground">Week Number</Label>
+                    <Label className="text-xs text-muted-foreground">Week</Label>
                     <Button
                       variant="ghost"
                       size="sm"
-                      className="h-6 w-6 p-0"
+                      className="h-5 w-5 p-0"
                       onClick={() => navigate("/teacher/week-config")}
                     >
-                      <Settings className="h-3.5 w-3.5 text-muted-foreground" />
+                      <Settings className="h-3 w-3 text-muted-foreground" />
                     </Button>
                   </div>
                   <Select 
@@ -342,7 +340,7 @@ const LessonPlanDetailPage = () => {
                       <ScrollArea className="h-60">
                         {getWeekConfigs().map((week) => (
                           <SelectItem key={week.weekNumber} value={week.weekNumber.toString()}>
-                            Week {week.weekNumber} ({formatWeekDateRange(week.weekNumber)})
+                            W{week.weekNumber}
                           </SelectItem>
                         ))}
                       </ScrollArea>
@@ -350,7 +348,7 @@ const LessonPlanDetailPage = () => {
                   </Select>
                 </div>
                 <div className="space-y-1.5">
-                  <Label className="text-xs text-muted-foreground">Lesson Number</Label>
+                  <Label className="text-xs text-muted-foreground">Lesson</Label>
                   <Select 
                     value={lessonPlan.lessonNumber.toString()} 
                     onValueChange={(v) => {
@@ -366,11 +364,20 @@ const LessonPlanDetailPage = () => {
                     <SelectContent>
                       {[1, 2, 3, 4, 5].map((num) => (
                         <SelectItem key={num} value={num.toString()}>
-                          Lesson {num}
+                          L{num}
                         </SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
+                </div>
+                <div className="space-y-1.5">
+                  <Label className="text-xs text-muted-foreground">Date</Label>
+                  <Input
+                    type="date"
+                    value={lessonPlan.date}
+                    onChange={(e) => updateField("date", e.target.value)}
+                    className="h-9"
+                  />
                 </div>
               </div>
 
@@ -378,7 +385,7 @@ const LessonPlanDetailPage = () => {
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1.5">
                   <Label className="text-xs text-muted-foreground">Teacher(s)</Label>
-                  <div className="flex flex-wrap gap-1.5 min-h-9 items-center">
+                  <div className="flex flex-wrap gap-1 min-h-9 items-center px-3 rounded-md border border-input bg-muted/50">
                     {lessonPlan.teacherNames.map((name, idx) => (
                       <Badge key={idx} variant="secondary" className="text-xs">
                         {name}
@@ -402,17 +409,6 @@ const LessonPlanDetailPage = () => {
                     </SelectContent>
                   </Select>
                 </div>
-              </div>
-
-              {/* Date */}
-              <div className="space-y-1.5">
-                <Label className="text-xs text-muted-foreground">Date</Label>
-                <Input
-                  type="date"
-                  value={lessonPlan.date}
-                  onChange={(e) => updateField("date", e.target.value)}
-                  className="h-9"
-                />
               </div>
             </CardContent>
           </Card>
