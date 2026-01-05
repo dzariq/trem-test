@@ -103,36 +103,55 @@ const TeacherLessonPlansPage = () => {
     navigate("/teacher/lesson-plans/new");
   };
 
-  const renderLessonPlanBadge = (lp: LessonPlan | undefined, lessonNumber: number, weekId: string) => {
+  const renderLessonPlanItem = (lp: LessonPlan | undefined, lessonNumber: number, weekId: string) => {
     if (!lp) {
       return (
-        <Button
-          variant="outline"
-          size="sm"
-          className="h-8 w-8 p-0 border-dashed"
+        <button
           onClick={() => navigate(`/teacher/lesson-plans/new?week=${weekId}&lesson=${lessonNumber}`)}
+          className="flex items-center gap-3 p-3 rounded-lg border border-dashed border-border hover:bg-muted/50 transition-colors w-full"
         >
-          <Plus className="h-3 w-3 text-muted-foreground" />
-        </Button>
+          <div className="h-8 w-8 rounded-full bg-muted flex items-center justify-center flex-shrink-0">
+            <Plus className="h-4 w-4 text-muted-foreground" />
+          </div>
+          <div className="text-left">
+            <p className="text-sm font-medium text-muted-foreground">Lesson {lessonNumber}</p>
+            <p className="text-xs text-muted-foreground">Tap to create</p>
+          </div>
+        </button>
       );
     }
 
     const status = getLessonPlanStatus(lp);
     
     return (
-      <Button
-        variant={status === "complete" ? "default" : status === "incomplete" ? "secondary" : "outline"}
-        size="sm"
-        className={cn(
-          "h-8 min-w-[2rem] px-2 gap-1",
-          status === "complete" && "bg-emerald-500 hover:bg-emerald-600",
-          status === "incomplete" && "border-amber-300 bg-amber-50 text-amber-700 hover:bg-amber-100"
-        )}
+      <button
         onClick={() => handleLessonPlanClick(lp)}
+        className={cn(
+          "flex items-center gap-3 p-3 rounded-lg border transition-colors w-full text-left",
+          status === "complete" && "border-emerald-200 bg-emerald-50/50 hover:bg-emerald-50",
+          status === "incomplete" && "border-amber-200 bg-amber-50/50 hover:bg-amber-50",
+          status === "draft" && "border-border bg-muted/30 hover:bg-muted/50"
+        )}
       >
-        {getStatusIcon(status)}
-        <span className="text-xs font-medium">LP{lp.lessonNumber}</span>
-      </Button>
+        <div className={cn(
+          "h-8 w-8 rounded-full flex items-center justify-center flex-shrink-0 text-xs font-bold",
+          status === "complete" && "bg-emerald-500 text-white",
+          status === "incomplete" && "bg-amber-500 text-white",
+          status === "draft" && "bg-muted text-muted-foreground"
+        )}>
+          {lessonNumber}
+        </div>
+        <div className="flex-1 min-w-0">
+          <p className="text-sm font-medium truncate">{lp.title}</p>
+          <p className="text-xs text-muted-foreground truncate">{lp.topic}</p>
+        </div>
+        <div className="flex items-center gap-1 flex-shrink-0">
+          {status === "complete" && <CheckCircle2 className="h-4 w-4 text-emerald-500" />}
+          {status === "incomplete" && <AlertCircle className="h-4 w-4 text-amber-500" />}
+          {status === "draft" && <Clock className="h-4 w-4 text-muted-foreground" />}
+          <ChevronRight className="h-4 w-4 text-muted-foreground" />
+        </div>
+      </button>
     );
   };
 
@@ -206,17 +225,12 @@ const TeacherLessonPlansPage = () => {
                             </div>
                           </AccordionTrigger>
                           <AccordionContent className="px-4 pb-3">
-                            <div className="grid grid-cols-3 gap-2 pt-2">
+                            <div className="space-y-2 pt-2">
                               {[1, 2, 3, 4, 5].map((lessonNum) => {
                                 const lp = week.lessonPlans.find(p => p.lessonNumber === lessonNum);
                                 return (
-                                  <div key={lessonNum} className="flex flex-col items-center gap-1">
-                                    {renderLessonPlanBadge(lp, lessonNum, week.id)}
-                                    {lp && (
-                                      <span className="text-[10px] text-muted-foreground max-w-[60px] truncate text-center">
-                                        {lp.title.substring(0, 15)}...
-                                      </span>
-                                    )}
+                                  <div key={lessonNum}>
+                                    {renderLessonPlanItem(lp, lessonNum, week.id)}
                                   </div>
                                 );
                               })}
