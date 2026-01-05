@@ -301,52 +301,57 @@ const TeacherLessonPlansPage = () => {
             <div className="p-4 space-y-4 w-full max-w-full min-w-0">
               {curriculum?.topics.map((topic, topicIndex) => (
               <Card key={topic.id} className="overflow-hidden w-full">
-                <CardHeader className="py-3 px-4 bg-emerald-50 dark:bg-emerald-950/30 border-b border-emerald-200 dark:border-emerald-900/50">
-                  <div className="flex items-center justify-between gap-2 min-w-0">
-                    <div className="flex items-center gap-2 min-w-0">
-                      <div className="h-6 w-6 rounded-full bg-emerald-500 flex items-center justify-center flex-shrink-0">
-                        <BookOpen className="h-3.5 w-3.5 text-white" />
+                <CardHeader className="py-0 px-0 overflow-hidden">
+                  {/* Topic Title Section - Darker Green */}
+                  <div className="py-3 px-4 bg-emerald-500 dark:bg-emerald-600">
+                    <div className="flex items-center justify-between gap-2 min-w-0">
+                      <div className="flex items-center gap-2 min-w-0">
+                        <div className="h-6 w-6 rounded-full bg-white/20 flex items-center justify-center flex-shrink-0">
+                          <BookOpen className="h-3.5 w-3.5 text-white" />
+                        </div>
+                        <CardTitle className="text-sm font-semibold text-white truncate">
+                          Topic {topicIndex + 1}: {topic.title}
+                        </CardTitle>
                       </div>
-                      <CardTitle className="text-sm font-semibold text-emerald-900 dark:text-emerald-100 truncate">
-                        Topic {topicIndex + 1}: {topic.title}
-                      </CardTitle>
                     </div>
                   </div>
                   
-                  {/* Subtopics Section - Collapsible */}
-                  <Collapsible defaultOpen={false} className="mt-3 pt-3 border-t border-border/50">
-                    <div className="flex items-center justify-between">
-                      <CollapsibleTrigger className="flex items-center gap-1 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors [&[data-state=open]>svg]:rotate-180">
-                        <ChevronDown className="h-3.5 w-3.5 transition-transform" />
-                        Subtopics ({topic.subtopics?.length || 0})
-                      </CollapsibleTrigger>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="h-6 w-6 p-0"
-                        onClick={() => handleOpenAddSubtopic(topic.id)}
-                      >
-                        <Plus className="h-3.5 w-3.5" />
-                      </Button>
-                    </div>
-                    <CollapsibleContent className="mt-2">
-                      <div className="flex flex-wrap gap-1.5 min-w-0">
-                        {topic.subtopics && topic.subtopics.length > 0 ? (
-                          topic.subtopics.map((subtopic, idx) => (
-                            <Badge
-                              key={idx}
-                              variant="secondary"
-                              className="text-xs font-normal max-w-full min-w-0 overflow-hidden"
-                            >
-                              <span className="block truncate">{subtopic}</span>
-                            </Badge>
-                          ))
-                        ) : (
-                          <span className="text-xs text-muted-foreground italic">No subtopics added</span>
-                        )}
+                  {/* Subtopics Section - Lighter Green */}
+                  <div className="py-2 px-4 bg-emerald-50 dark:bg-emerald-950/30 border-b border-emerald-200 dark:border-emerald-900/50">
+                    <Collapsible defaultOpen={false}>
+                      <div className="flex items-center justify-between">
+                        <CollapsibleTrigger className="flex items-center gap-1 text-xs font-medium text-emerald-700 dark:text-emerald-300 hover:text-emerald-900 dark:hover:text-emerald-100 transition-colors [&[data-state=open]>svg]:rotate-180">
+                          <ChevronDown className="h-3.5 w-3.5 transition-transform" />
+                          Subtopics ({topic.subtopics?.length || 0})
+                        </CollapsibleTrigger>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-6 w-6 p-0 text-emerald-700 dark:text-emerald-300 hover:text-emerald-900 hover:bg-emerald-100 dark:hover:bg-emerald-900/50"
+                          onClick={() => handleOpenAddSubtopic(topic.id)}
+                        >
+                          <Plus className="h-3.5 w-3.5" />
+                        </Button>
                       </div>
-                    </CollapsibleContent>
-                  </Collapsible>
+                      <CollapsibleContent className="mt-2">
+                        <div className="flex flex-wrap gap-1.5 min-w-0">
+                          {topic.subtopics && topic.subtopics.length > 0 ? (
+                            topic.subtopics.map((subtopic, idx) => (
+                              <Badge
+                                key={idx}
+                                variant="secondary"
+                                className="text-xs font-normal max-w-full min-w-0 overflow-hidden bg-emerald-100 text-emerald-800 dark:bg-emerald-900/50 dark:text-emerald-200"
+                              >
+                                <span className="block truncate">{subtopic}</span>
+                              </Badge>
+                            ))
+                          ) : (
+                            <span className="text-xs text-emerald-600 dark:text-emerald-400 italic">No subtopics added</span>
+                          )}
+                        </div>
+                      </CollapsibleContent>
+                    </Collapsible>
+                  </div>
                 </CardHeader>
                 <CardContent className="p-0 overflow-hidden">
                   <Accordion type="multiple" className="w-full overflow-hidden">
