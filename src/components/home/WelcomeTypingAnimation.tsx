@@ -43,18 +43,18 @@ export function WelcomeTypingAnimation() {
   if (!isVisible) return null;
 
   return (
-    <div className="absolute bottom-8 right-4 z-10">
-      <div className="relative bg-background/95 backdrop-blur-sm rounded-xl border border-border shadow-lg p-3 max-w-[200px]">
-        {/* Speech bubble tail pointing to teacher */}
-        <div className="absolute -top-2 right-6 w-0 h-0 border-l-[8px] border-l-transparent border-r-[8px] border-r-transparent border-b-[8px] border-b-background/95" />
-        <div className="absolute -top-[9px] right-6 w-0 h-0 border-l-[8px] border-l-transparent border-r-[8px] border-r-transparent border-b-[8px] border-b-border" style={{ zIndex: -1 }} />
-        
-        <p className="text-sm font-medium text-foreground">
-          {displayText}
-          {!isComplete && (
-            <span className="inline-block w-0.5 h-4 ml-0.5 bg-primary animate-pulse" />
-          )}
+    <div className="absolute bottom-12 right-20 z-10 max-w-[200px]">
+      {/* Speech bubble */}
+      <div className="relative bg-white rounded-2xl p-2.5 shadow-lg">
+        <p className="text-xs text-gray-700 italic leading-relaxed">
+          "{displayText}"
+          {!isComplete && <span className="animate-pulse text-primary">|</span>}
         </p>
+        {/* Speech bubble tail pointing right */}
+        <div className="absolute top-1/2 -right-2 -translate-y-1/2 w-0 h-0 
+          border-t-[6px] border-t-transparent 
+          border-l-[8px] border-l-white 
+          border-b-[6px] border-b-transparent" />
       </div>
     </div>
   );
