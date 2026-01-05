@@ -3663,9 +3663,13 @@ export default function TeacherAcademicPage() {
                     name: s.name,
                     fullName: s.fullName || s.name,
                     score: s.classScore,
-                    goal: s.cohortAvg
+                    goal: s.cohortAvg,
+                    cohortAvg: s.cohortAvg
                   }))}
                   lineColors={SUBJECT_COLORS}
+                  title="Class versus Cohort Average"
+                  showGoalBadge={false}
+                  showCohortDot={true}
                 />
 
                 {/* Performance Heatmap */}
