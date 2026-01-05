@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { TeacherAppLayout } from "@/components/layout/TeacherAppLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -110,20 +110,23 @@ const TeacherLessonPlansPage = () => {
   const [selectedSubject, setSelectedSubject] = useState<string>(
     mockLessonPlans[0]?.subject || ""
   );
+  const [lessonPlansBySubject, setLessonPlansBySubject] = useState(mockLessonPlans);
   const [isAddTopicOpen, setIsAddTopicOpen] = useState(false);
   const [newTopicTitle, setNewTopicTitle] = useState("");
   const [isAddSubtopicOpen, setIsAddSubtopicOpen] = useState(false);
   const [currentTopicId, setCurrentTopicId] = useState<string>("");
   const [newSubtopicTitle, setNewSubtopicTitle] = useState("");
   const [weekCalendarOpen, setWeekCalendarOpen] = useState<string | null>(null);
-  const [dateRange, setDateRange] = useState<{ from: Date | undefined; to: Date | undefined }>({ from: undefined, to: undefined });
+  const [dateRange, setDateRange] = useState<{ from: Date | undefined; to: Date | undefined }>({
+    from: undefined,
+    to: undefined,
+  });
 
   // Term start date (for week calculation)
   const termStart = new Date(2026, 0, 5); // January 5, 2026
-  
-  const subjects = getAvailableSubjects();
-  const curriculum = mockLessonPlans.find(s => s.subject === selectedSubject);
 
+  const subjects = getAvailableSubjects();
+  const curriculum = lessonPlansBySubject.find((s) => s.subject === selectedSubject);
   const handleWeekChange = (weekId: string, selectedDate: Date | undefined) => {
     if (!selectedDate) return;
 
@@ -140,6 +143,24 @@ const TeacherLessonPlansPage = () => {
     }
 
     const newWeekNumber = getWeekNumber(selectedDate, termStart);
+
+    // Persist the selection in local state so the UI updates
+    setLessonPlansBySubject((prev) =>
+      prev.map((subject) => {
+        if (subject.subject !== selectedSubject) return subject;
+
+        return {
+          ...subject,
+          topics: subject.topics.map((topic) => ({
+            ...topic,
+            weeks: topic.weeks.map((week) =>
+              week.id === weekId ? { ...week, weekNumber: newWeekNumber } : week
+            ),
+          })),
+        };
+      })
+    );
+
     toast({
       title: "Week Changed",
       description: `Week updated to Week ${newWeekNumber} (${format(start, "MMM d")} - ${format(end, "MMM d, yyyy")})`,
