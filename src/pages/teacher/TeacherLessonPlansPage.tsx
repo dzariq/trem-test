@@ -126,25 +126,24 @@ const TeacherLessonPlansPage = () => {
 
   const handleWeekChange = (weekId: string, selectedDate: Date | undefined) => {
     if (!selectedDate) return;
-    
+
     const { start, end } = getSchoolWeek(selectedDate);
-    
+
     // Check if any day in the week is a holiday
     if (isWeekHoliday(selectedDate)) {
       toast({
         title: "Holiday Period",
         description: "This week includes a holiday period and cannot be selected.",
-        variant: "destructive"
+        variant: "destructive",
       });
       return;
     }
-    
+
     const newWeekNumber = getWeekNumber(selectedDate, termStart);
     toast({
       title: "Week Changed",
       description: `Week updated to Week ${newWeekNumber} (${format(start, "MMM d")} - ${format(end, "MMM d, yyyy")})`,
     });
-    setWeekCalendarOpen(null);
   };
 
   // Get week range for display
@@ -375,13 +374,8 @@ const TeacherLessonPlansPage = () => {
                                   open={weekCalendarOpen === week.id} 
                                   onOpenChange={(open) => {
                                     setWeekCalendarOpen(open ? week.id : null);
-                                    if (open) {
-                                      // Initialize with current week range when opening
-                                      const weekStart = addWeeks(termStart, week.weekNumber - 1);
-                                      setDateRange({ from: weekStart, to: addDays(weekStart, 4) });
-                                    } else {
-                                      setDateRange({ from: undefined, to: undefined });
-                                    }
+                                    // Reset range each time the picker opens so it waits for 2 clicks
+                                    setDateRange({ from: undefined, to: undefined });
                                   }}
                                 >
                                   <PopoverTrigger asChild onClick={(e) => e.stopPropagation()}>
@@ -397,11 +391,14 @@ const TeacherLessonPlansPage = () => {
                                     </div>
                                     <Calendar
                                       mode="range"
+                                      defaultMonth={addWeeks(termStart, week.weekNumber - 1)}
                                       selected={dateRange}
                                       onSelect={(range) => {
                                         setDateRange({ from: range?.from, to: range?.to });
                                         if (range?.from && range?.to) {
                                           handleWeekChange(week.id, range.from);
+                                          setWeekCalendarOpen(null);
+                                          setDateRange({ from: undefined, to: undefined });
                                         }
                                       }}
                                       disabled={(date) => {
@@ -414,10 +411,10 @@ const TeacherLessonPlansPage = () => {
                                         holiday: (date) => isHoliday(date),
                                       }}
                                       modifiersStyles={{
-                                        holiday: { 
-                                          backgroundColor: 'hsl(var(--destructive) / 0.1)',
-                                          color: 'hsl(var(--muted-foreground))',
-                                          textDecoration: 'line-through'
+                                        holiday: {
+                                          backgroundColor: "hsl(var(--destructive) / 0.1)",
+                                          color: "hsl(var(--muted-foreground))",
+                                          textDecoration: "line-through",
                                         },
                                       }}
                                     />
