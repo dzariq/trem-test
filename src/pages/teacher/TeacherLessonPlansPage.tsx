@@ -391,9 +391,21 @@ const TeacherLessonPlansPage = () => {
                               </Badge>
                             </div>
                           </AccordionTrigger>
-                          <AccordionContent className="px-4 pb-3">
-                            <div className="space-y-2 pt-2">
-                              {[1, 2, 3, 4, 5].map((lessonNum) => {
+                            <AccordionContent className="px-4 pb-3">
+                              {/* Week Date Range Header */}
+                              {(() => {
+                                const weekRange = getWeekRange(week.weekNumber);
+                                return (
+                                  <div className="flex items-center gap-2 pt-2 pb-3 border-b border-border/50 mb-3">
+                                    <CalendarIcon className="h-4 w-4 text-muted-foreground" />
+                                    <span className="text-sm font-medium text-muted-foreground">
+                                      {format(weekRange.start, "EEE, MMM d")} – {format(weekRange.end, "EEE, MMM d, yyyy")}
+                                    </span>
+                                  </div>
+                                );
+                              })()}
+                              <div className="space-y-2">
+                                {[1, 2, 3, 4, 5].map((lessonNum) => {
                                 const lp = week.lessonPlans.find(p => p.lessonNumber === lessonNum);
                                 return (
                                   <div key={lessonNum}>
