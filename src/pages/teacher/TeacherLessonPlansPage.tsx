@@ -443,19 +443,11 @@ const TeacherLessonPlansPage = () => {
                   {/* Subtopics Section - Same dark green as topic */}
                   <div className="py-2 px-4 bg-primary border-b border-primary-foreground/20">
                     <Collapsible defaultOpen={false}>
-                      <div className="flex items-center justify-between">
+                      <div className="flex items-center">
                         <CollapsibleTrigger className="flex items-center gap-1 text-xs font-medium text-primary-foreground hover:text-primary-foreground/80 transition-colors [&[data-state=open]>svg]:rotate-180">
                           <ChevronDown className="h-3.5 w-3.5 transition-transform" />
                           Subtopics ({topic.subtopics?.length || 0})
                         </CollapsibleTrigger>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="h-6 w-6 p-0 text-primary-foreground hover:text-primary-foreground/80 hover:bg-primary-foreground/10"
-                          onClick={() => handleOpenAddSubtopic(topic.id)}
-                        >
-                          <Plus className="h-3.5 w-3.5" />
-                        </Button>
                       </div>
                       <CollapsibleContent className="mt-2">
                         <div className="flex flex-wrap gap-1.5 min-w-0">
