@@ -201,9 +201,10 @@ export function SubjectPerformanceChart({
       const deadzone = 0.08;
       if (Math.abs(1 - ratio) < deadzone) return;
 
-      // REVERSED: Pinch IN (ratio < 1) = show FEWER subjects (zoom in for detail)
-      // Pinch OUT (ratio > 1) = show MORE subjects (zoom out to see all)
-      const proposed = Math.round(initialZoomLevel.current * ratio);
+      // Pinch OUT (ratio > 1) = show FEWER subjects (zoom in for detail)
+      // Pinch IN (ratio < 1) = show MORE subjects (zoom out to see all)
+      const invertedRatio = 1 / ratio;
+      const proposed = Math.round(initialZoomLevel.current * invertedRatio);
       const newZoom = Math.max(MIN_VISIBLE, Math.min(totalSubjects, proposed));
 
       if (newZoom !== zoomLevel) {
@@ -259,9 +260,9 @@ export function SubjectPerformanceChart({
   // Generate help text
   const getHelpText = () => {
     if (zoomLevel === totalSubjects) {
-      return `All ${totalSubjects} subjects • Pinch in to focus`;
+      return `All ${totalSubjects} subjects • Pinch out to focus`;
     }
-    return `${zoomLevel} of ${totalSubjects} • Swipe to browse • Pinch out for all`;
+    return `${zoomLevel} of ${totalSubjects} • Swipe to browse • Pinch in for all`;
   };
 
   return (
