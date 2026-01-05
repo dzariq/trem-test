@@ -382,13 +382,20 @@ const TeacherLessonPlansPage = () => {
                                   </PopoverTrigger>
                                   <PopoverContent className="w-auto p-0 z-50" align="start" onClick={(e) => e.stopPropagation()}>
                                     <div className="p-2 border-b border-border">
-                                      <p className="text-xs font-medium">Select Week (Mon-Fri)</p>
-                                      <p className="text-xs text-muted-foreground">Click any day to select the school week</p>
+                                      <p className="text-xs font-medium">Select Date Range</p>
+                                      <p className="text-xs text-muted-foreground">Click first date, then last date</p>
                                     </div>
                                     <Calendar
-                                      mode="single"
-                                      selected={addWeeks(termStart, week.weekNumber - 1)}
-                                      onSelect={(date) => handleWeekChange(week.id, date)}
+                                      mode="range"
+                                      selected={{
+                                        from: addWeeks(termStart, week.weekNumber - 1),
+                                        to: addDays(addWeeks(termStart, week.weekNumber - 1), 4)
+                                      }}
+                                      onSelect={(range) => {
+                                        if (range?.from && range?.to) {
+                                          handleWeekChange(week.id, range.from);
+                                        }
+                                      }}
                                       disabled={(date) => {
                                         // Disable weekends and holidays
                                         const day = date.getDay();
@@ -397,10 +404,6 @@ const TeacherLessonPlansPage = () => {
                                       className={cn("p-3 pointer-events-auto")}
                                       modifiers={{
                                         holiday: (date) => isHoliday(date),
-                                        selectedWeek: (date) => {
-                                          const currentWeekStart = addWeeks(termStart, week.weekNumber - 1);
-                                          return isSameWeek(date, currentWeekStart, { weekStartsOn: 1 });
-                                        }
                                       }}
                                       modifiersStyles={{
                                         holiday: { 
@@ -408,10 +411,6 @@ const TeacherLessonPlansPage = () => {
                                           color: 'hsl(var(--muted-foreground))',
                                           textDecoration: 'line-through'
                                         },
-                                        selectedWeek: {
-                                          backgroundColor: 'hsl(var(--primary) / 0.15)',
-                                          fontWeight: 600
-                                        }
                                       }}
                                     />
                                   </PopoverContent>
