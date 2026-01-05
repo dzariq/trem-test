@@ -39,6 +39,7 @@ import { ReflectionSection } from "@/components/lessonplan/ReflectionSection";
 import { 
   getLessonPlanById, 
   createEmptyLessonPlan,
+  getSubtopicsForTopic,
   type LessonPlan 
 } from "@/data/lessonPlanData";
 import { allSubjects } from "@/data/subjectsConfig";
@@ -298,12 +299,22 @@ const LessonPlanDetailPage = () => {
                 </div>
                 <div className="space-y-1.5">
                   <Label className="text-xs text-muted-foreground">Subtopic</Label>
-                  <Input
+                  <Select
                     value={lessonPlan.subtopic}
-                    onChange={(e) => updateField("subtopic", e.target.value)}
-                    placeholder="Subtopic..."
-                    className="h-9"
-                  />
+                    onValueChange={(value) => updateField("subtopic", value)}
+                  >
+                    <SelectTrigger className="h-9">
+                      <SelectValue placeholder="Select subtopic..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {getSubtopicsForTopic(lessonPlan.subject, lessonPlan.topic).map((subtopic) => (
+                        <SelectItem key={subtopic} value={subtopic}>{subtopic}</SelectItem>
+                      ))}
+                      {lessonPlan.subtopic && !getSubtopicsForTopic(lessonPlan.subject, lessonPlan.topic).includes(lessonPlan.subtopic) && (
+                        <SelectItem value={lessonPlan.subtopic}>{lessonPlan.subtopic}</SelectItem>
+                      )}
+                    </SelectContent>
+                  </Select>
                 </div>
               </div>
 
