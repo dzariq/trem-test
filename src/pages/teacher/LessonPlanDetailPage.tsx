@@ -44,6 +44,7 @@ import { LessonFlowEditor } from "@/components/lessonplan/LessonFlowEditor";
 import { ObjectivesEditor } from "@/components/lessonplan/ObjectivesEditor";
 import { ApprovalSection } from "@/components/lessonplan/ApprovalSection";
 import { ReflectionSection } from "@/components/lessonplan/ReflectionSection";
+import { WeekConfigDialog } from "@/components/lessonplan/WeekConfigDialog";
 import { 
   getLessonPlanById, 
   createEmptyLessonPlan,
@@ -53,6 +54,7 @@ import {
 } from "@/data/lessonPlanData";
 import { allSubjects } from "@/data/subjectsConfig";
 import { teacherProfile } from "@/data/teacherMockData";
+import { weekConfigs, formatWeekDateRange, getLessonDate } from "@/data/weekConfigData";
 import html2canvas from "html2canvas";
 import jsPDF from "jspdf";
 
@@ -313,21 +315,49 @@ const LessonPlanDetailPage = () => {
               {/* Week & Lesson Number */}
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1.5">
-                  <Label className="text-xs text-muted-foreground">Week Number</Label>
-                  <Input
-                    type="number"
-                    value={lessonPlan.weekNumber}
-                    onChange={(e) => updateField("weekNumber", parseInt(e.target.value) || 1)}
-                    min={1}
-                    max={52}
-                    className="h-9"
-                  />
+                  <div className="flex items-center justify-between">
+                    <Label className="text-xs text-muted-foreground">Week Number</Label>
+                    <WeekConfigDialog onConfigUpdate={() => {
+                      // Force re-render to update dates
+                      if (lessonPlan) {
+                        const newDate = getLessonDate(lessonPlan.weekNumber, lessonPlan.lessonNumber);
+                        if (newDate) updateField("date", newDate);
+                      }
+                    }} />
+                  </div>
+                  <Select 
+                    value={lessonPlan.weekNumber.toString()} 
+                    onValueChange={(v) => {
+                      const weekNum = parseInt(v);
+                      updateField("weekNumber", weekNum);
+                      const newDate = getLessonDate(weekNum, lessonPlan.lessonNumber);
+                      if (newDate) updateField("date", newDate);
+                    }}
+                  >
+                    <SelectTrigger className="h-9">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <ScrollArea className="h-60">
+                        {weekConfigs.map((week) => (
+                          <SelectItem key={week.weekNumber} value={week.weekNumber.toString()}>
+                            Week {week.weekNumber} ({formatWeekDateRange(week.weekNumber)})
+                          </SelectItem>
+                        ))}
+                      </ScrollArea>
+                    </SelectContent>
+                  </Select>
                 </div>
                 <div className="space-y-1.5">
                   <Label className="text-xs text-muted-foreground">Lesson Number</Label>
                   <Select 
                     value={lessonPlan.lessonNumber.toString()} 
-                    onValueChange={(v) => updateField("lessonNumber", parseInt(v))}
+                    onValueChange={(v) => {
+                      const lessonNum = parseInt(v);
+                      updateField("lessonNumber", lessonNum);
+                      const newDate = getLessonDate(lessonPlan.weekNumber, lessonNum);
+                      if (newDate) updateField("date", newDate);
+                    }}
                   >
                     <SelectTrigger className="h-9">
                       <SelectValue />
