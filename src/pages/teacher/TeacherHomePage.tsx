@@ -125,7 +125,7 @@ export default function TeacherHomePage() {
             <div className="bg-background/20 backdrop-blur-md rounded-2xl p-4 shadow-lg border border-white/20 space-y-4">
               {/* Class Selector */}
               <Select value={selectedClass} onValueChange={setSelectedClass}>
-                <SelectTrigger className="w-full bg-white/30 backdrop-blur-sm border-white/30">
+                <SelectTrigger className="w-full bg-white/30 backdrop-blur-sm border border-gray-400">
                   <SelectValue placeholder="Select Class" />
                 </SelectTrigger>
                 <SelectContent>
