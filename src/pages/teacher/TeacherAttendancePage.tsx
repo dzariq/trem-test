@@ -8,6 +8,7 @@ import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { CalendarIcon, Check, X, Clock, AlertCircle, Save, ChevronLeft, ChevronRight as ChevronRightIcon, Users } from "lucide-react";
+import schoolLogo from "@/assets/school-badge.png";
 import { format, startOfWeek, endOfWeek, isToday, parseISO } from "date-fns";
 import { cn } from "@/lib/utils";
 import { toast } from "@/hooks/use-toast";
@@ -143,7 +144,10 @@ export default function TeacherAttendancePage() {
     <TeacherAppLayout>
       <AppHeader 
         leftContent={
-          <h1 className="text-xl font-semibold text-foreground">Attendance</h1>
+          <div className="flex items-center gap-2">
+            <img src={schoolLogo} alt="School Logo" className="h-16 w-auto -my-3 drop-shadow-md" />
+            <h1 className="text-xl font-semibold text-foreground">Attendance</h1>
+          </div>
         }
       />
 

@@ -39,7 +39,7 @@ export function TeacherBottomNavigation() {
         isVisible ? "translate-y-0" : "translate-y-full"
       )}
     >
-      <div className="mx-auto w-full px-3 sm:px-4 flex justify-around items-center py-2">
+      <div className="max-w-lg mx-auto flex justify-around items-center py-2 px-1">
         {navItems.map((item) => (
           <NavLink
             key={item.to}
@@ -47,7 +47,7 @@ export function TeacherBottomNavigation() {
             end={item.to === "/teacher"}
             className={({ isActive }) =>
               cn(
-                "flex flex-col items-center justify-center py-2 px-1 rounded-lg transition-all duration-200 flex-1 max-w-[72px]",
+                "flex flex-col items-center justify-center py-2 px-3 rounded-lg transition-all duration-200 min-w-[60px]",
                 isActive
                   ? "text-primary bg-accent"
                   : "text-muted-foreground hover:text-foreground hover:bg-accent/50"
@@ -60,7 +60,7 @@ export function TeacherBottomNavigation() {
                   "h-5 w-5 mb-1", 
                   isActive && "stroke-[2.5px]"
                 )} />
-                <span className="text-[10px] font-medium text-center leading-tight whitespace-pre-line">{item.label}</span>
+                <span className="text-xs font-medium text-center whitespace-pre-line">{item.label}</span>
               </>
             )}
           </NavLink>
