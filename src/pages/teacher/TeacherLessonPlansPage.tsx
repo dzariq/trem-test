@@ -71,6 +71,11 @@ import {
   type LessonPlan,
   type SubjectCurriculum,
 } from "@/data/lessonPlanData";
+import {
+  getAcademicYears,
+  getActiveYear,
+  setActiveYear,
+} from "@/data/weekConfigData";
 
 // Holiday periods (blocked weeks)
 const holidayPeriods = [
@@ -110,6 +115,11 @@ const isWeekHoliday = (date: Date): boolean => {
 
 const TeacherLessonPlansPage = () => {
   const navigate = useNavigate();
+  
+  // Year selection
+  const academicYears = getAcademicYears();
+  const [selectedYear, setSelectedYear] = useState<string>(getActiveYear()?.id || academicYears[0]?.id || "");
+  
   const [selectedSubject, setSelectedSubject] = useState<string>(
     mockLessonPlans[0]?.subject || ""
   );
@@ -352,21 +362,44 @@ const TeacherLessonPlansPage = () => {
   return (
     <TeacherAppLayout>
       <div className="flex flex-col h-full min-h-0 overflow-x-hidden">
-        {/* Header with Subject Selector */}
+        {/* Header with Year and Subject Selector */}
           <div className="px-4 py-3 border-b border-border bg-card/50">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-              <Select value={selectedSubject} onValueChange={setSelectedSubject}>
-                <SelectTrigger className="w-full sm:w-[220px]">
-                  <SelectValue placeholder="Select subject" />
-                </SelectTrigger>
-                <SelectContent>
-                  {subjects.map((subject) => (
-                    <SelectItem key={subject} value={subject}>
-                      {subject}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <div className="flex items-center gap-2">
+                {/* Year Selector */}
+                <Select 
+                  value={selectedYear} 
+                  onValueChange={(year) => {
+                    setSelectedYear(year);
+                    setActiveYear(year);
+                  }}
+                >
+                  <SelectTrigger className="w-20">
+                    <SelectValue placeholder="Year" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {academicYears.map((year) => (
+                      <SelectItem key={year.id} value={year.id}>
+                        {year.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+
+                {/* Subject Selector */}
+                <Select value={selectedSubject} onValueChange={setSelectedSubject}>
+                  <SelectTrigger className="w-full sm:w-[180px]">
+                    <SelectValue placeholder="Select subject" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {subjects.map((subject) => (
+                      <SelectItem key={subject} value={subject}>
+                        {subject}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
 
               <Button
                 size="sm"
