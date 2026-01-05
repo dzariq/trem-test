@@ -206,7 +206,7 @@ const TeacherLessonPlansPage = () => {
                             </div>
                           </AccordionTrigger>
                           <AccordionContent className="px-4 pb-3">
-                            <div className="flex flex-wrap gap-2 pt-2">
+                            <div className="grid grid-cols-3 gap-2 pt-2">
                               {[1, 2, 3, 4, 5].map((lessonNum) => {
                                 const lp = week.lessonPlans.find(p => p.lessonNumber === lessonNum);
                                 return (
