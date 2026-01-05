@@ -218,6 +218,7 @@ export default function TeacherAcademicPage() {
   const [heatmapExpanded, setHeatmapExpanded] = useState(false);
   const [growthCarouselApi, setGrowthCarouselApi] = useState<any>(null);
   const [growthCarouselSlide, setGrowthCarouselSlide] = useState(0);
+  const [analysisSubTab, setAnalysisSubTab] = useState<"overview" | "distribution" | "trends" | "comparison">("overview");
   const handleTouchStart = useCallback((e: React.TouchEvent) => {
     // Only handle pinch-to-zoom with 2 fingers, allow single-finger scrolling to pass through
     if (e.touches.length === 2) {
@@ -1735,7 +1736,7 @@ export default function TeacherAcademicPage() {
 
           <TabsContent value="analysis" className="space-y-4">
             {/* Sub-tabs for Class Analysis */}
-            <Tabs defaultValue="overview" className="w-full">
+            <Tabs defaultValue="overview" className="w-full" onValueChange={(v) => setAnalysisSubTab(v as "overview" | "distribution" | "trends" | "comparison")}>
               <TabsList className="grid w-full grid-cols-4 mb-4 bg-muted/50">
                 <TabsTrigger value="overview" className="text-xs">Overview</TabsTrigger>
                 <TabsTrigger value="distribution" className="text-xs">Bands</TabsTrigger>
@@ -1811,16 +1812,6 @@ export default function TeacherAcademicPage() {
                       {examPeriods.find(p => p.value === period)?.label}
                     </Badge>)}
                 </div>
-
-                {/* Report Button for Overview */}
-                <Button
-                  size="sm"
-                  className="w-full gap-2 bg-emerald-600 hover:bg-emerald-700 text-white"
-                  onClick={() => setOverviewReportDialogOpen(true)}
-                >
-                  <FileText className="h-4 w-4" />
-                  Generate Report
-                </Button>
 
                 {/* Subject Selector - Toggle Chips */}
                 <div className="space-y-2">
@@ -2120,20 +2111,20 @@ export default function TeacherAcademicPage() {
                     </div>
                   </div>
                 </div>
-              </TabsContent>
 
-              {/* ==================== DISTRIBUTION SUB-TAB ==================== */}
-              <TabsContent value="distribution" className="space-y-4">
-                {/* Report Button - Standalone */}
+                {/* Generate Report Button - at bottom */}
                 <Button
                   size="sm"
                   className="w-full gap-2 bg-emerald-600 hover:bg-emerald-700 text-white"
-                  onClick={() => setBandsReportDialogOpen(true)}
+                  onClick={() => setOverviewReportDialogOpen(true)}
                 >
                   <FileText className="h-4 w-4" />
                   Generate Report
                 </Button>
+              </TabsContent>
 
+              {/* ==================== DISTRIBUTION SUB-TAB ==================== */}
+              <TabsContent value="distribution" className="space-y-4">
                 {/* Comparison Mode Toggle */}
                 <div className="flex items-center justify-between p-3 rounded-lg bg-accent/30 border border-border">
                   <div className="flex items-center gap-2">
@@ -3357,6 +3348,16 @@ export default function TeacherAcademicPage() {
                     </div>
                   </DialogContent>
                 </Dialog>
+
+                {/* Generate Report Button - at bottom */}
+                <Button
+                  size="sm"
+                  className="w-full gap-2 bg-emerald-600 hover:bg-emerald-700 text-white"
+                  onClick={() => setBandsReportDialogOpen(true)}
+                >
+                  <FileText className="h-4 w-4" />
+                  Generate Report
+                </Button>
               </TabsContent>
 
               {/* ==================== TRENDS SUB-TAB ==================== */}
@@ -3416,16 +3417,6 @@ export default function TeacherAcademicPage() {
                       </button>)}
                   </div>
                 </div>
-
-                {/* Report Button for Trends */}
-                <Button
-                  size="sm"
-                  className="w-full gap-2 bg-emerald-600 hover:bg-emerald-700 text-white"
-                  onClick={() => setTrendsReportDialogOpen(true)}
-                >
-                  <FileText className="h-4 w-4" />
-                  Generate Report
-                </Button>
 
                 {/* Subject Filter - Standardized Pills with Multi-Select */}
                 <div className="space-y-2">
@@ -3730,6 +3721,16 @@ export default function TeacherAcademicPage() {
                     <span className="text-[9px] text-muted-foreground ml-1">High</span>
                   </div>
                 </div>
+
+                {/* Generate Report Button - at bottom */}
+                <Button
+                  size="sm"
+                  className="w-full gap-2 bg-emerald-600 hover:bg-emerald-700 text-white"
+                  onClick={() => setTrendsReportDialogOpen(true)}
+                >
+                  <FileText className="h-4 w-4" />
+                  Generate Report
+                </Button>
               </TabsContent>
 
               {/* ==================== COMPARISON SUB-TAB ==================== */}
@@ -4307,6 +4308,18 @@ export default function TeacherAcademicPage() {
                     </>;
               })()}
               </TabsContent>
+
+              {/* Floating Generate Report FAB - appears when not at bottom for Overview, Bands, Trends */}
+              {analysisSubTab !== 'comparison' && !isAtBottom && (
+                <Button
+                  className="fixed z-50 shadow-xl bottom-24 right-4 h-14 w-14 rounded-full p-0 bg-emerald-600 hover:bg-emerald-700 transition-all duration-300"
+                  onClick={() => {
+                    window.scrollTo({ top: document.documentElement.scrollHeight, behavior: 'smooth' });
+                  }}
+                >
+                  <FileText className="h-6 w-6 text-white" />
+                </Button>
+              )}
             </Tabs>
           </TabsContent>
         </Tabs>
