@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Calendar } from "@/components/ui/calendar";
 import {
   Select,
   SelectContent,
@@ -23,6 +24,11 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import {
   Accordion,
   AccordionContent,
   AccordionItem,
@@ -35,10 +41,12 @@ import {
   CheckCircle2, 
   Clock, 
   AlertCircle,
-  FileText 
+  FileText,
+  CalendarIcon
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { toast } from "@/hooks/use-toast";
+import { startOfWeek, addWeeks, format, isWithinInterval, addDays } from "date-fns";
 import { 
   mockLessonPlans, 
   getAvailableSubjects, 
@@ -46,6 +54,28 @@ import {
   type LessonPlan,
   type SubjectCurriculum 
 } from "@/data/lessonPlanData";
+
+// Holiday periods (blocked weeks)
+const holidayPeriods = [
+  { start: new Date(2026, 2, 14), end: new Date(2026, 2, 22) }, // March school holiday
+  { start: new Date(2026, 5, 27), end: new Date(2026, 6, 26) }, // June-July holiday
+  { start: new Date(2026, 8, 5), end: new Date(2026, 8, 13) },  // September holiday
+  { start: new Date(2026, 10, 14), end: new Date(2026, 11, 31) }, // Nov-Dec holiday
+];
+
+// Get week number from date
+const getWeekNumber = (date: Date, termStart: Date): number => {
+  const diffTime = date.getTime() - termStart.getTime();
+  const diffWeeks = Math.floor(diffTime / (7 * 24 * 60 * 60 * 1000));
+  return diffWeeks + 1;
+};
+
+// Check if a date is in a holiday period
+const isHoliday = (date: Date): boolean => {
+  return holidayPeriods.some(period => 
+    isWithinInterval(date, { start: period.start, end: period.end })
+  );
+};
 
 const TeacherLessonPlansPage = () => {
   const navigate = useNavigate();
@@ -55,9 +85,34 @@ const TeacherLessonPlansPage = () => {
   const [isAddSubtopicOpen, setIsAddSubtopicOpen] = useState(false);
   const [currentTopicId, setCurrentTopicId] = useState<string>("");
   const [newSubtopicTitle, setNewSubtopicTitle] = useState("");
+  const [weekCalendarOpen, setWeekCalendarOpen] = useState<string | null>(null);
+  
+  // Term start date (for week calculation)
+  const termStart = new Date(2026, 0, 5); // January 5, 2026
   
   const subjects = getAvailableSubjects();
   const curriculum = mockLessonPlans.find(s => s.subject === selectedSubject);
+
+  const handleWeekChange = (weekId: string, selectedDate: Date | undefined) => {
+    if (!selectedDate) return;
+    
+    // Check if it's a holiday
+    if (isHoliday(selectedDate)) {
+      toast({
+        title: "Holiday Period",
+        description: "This week is a holiday period and cannot be selected.",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    const newWeekNumber = getWeekNumber(selectedDate, termStart);
+    toast({
+      title: "Week Changed",
+      description: `Week updated to Week ${newWeekNumber} (${format(selectedDate, "MMM d, yyyy")})`,
+    });
+    setWeekCalendarOpen(null);
+  };
 
   const getStatusIcon = (status: "complete" | "incomplete" | "draft" | "empty") => {
     switch (status) {
@@ -257,9 +312,40 @@ const TeacherLessonPlansPage = () => {
                           <AccordionTrigger className="px-4 py-3 hover:no-underline hover:bg-muted/20 [&>svg]:flex-shrink-0">
                             <div className="flex items-center justify-between w-full pr-2 min-w-0">
                               <div className="flex items-center gap-2 min-w-0 flex-1">
-                                <Badge variant="outline" className="text-xs font-normal flex-shrink-0">
-                                  Week {week.weekNumber}
-                                </Badge>
+                                <Popover 
+                                  open={weekCalendarOpen === week.id} 
+                                  onOpenChange={(open) => setWeekCalendarOpen(open ? week.id : null)}
+                                >
+                                  <PopoverTrigger asChild onClick={(e) => e.stopPropagation()}>
+                                    <button className="flex items-center gap-1 px-2 py-1 rounded-md border border-border bg-background hover:bg-muted text-xs font-normal flex-shrink-0 transition-colors">
+                                      <CalendarIcon className="h-3 w-3" />
+                                      Week {week.weekNumber}
+                                    </button>
+                                  </PopoverTrigger>
+                                  <PopoverContent className="w-auto p-0 z-50" align="start" onClick={(e) => e.stopPropagation()}>
+                                    <div className="p-2 border-b border-border">
+                                      <p className="text-xs font-medium">Select Week</p>
+                                      <p className="text-xs text-muted-foreground">Holiday periods are disabled</p>
+                                    </div>
+                                    <Calendar
+                                      mode="single"
+                                      selected={addWeeks(termStart, week.weekNumber - 1)}
+                                      onSelect={(date) => handleWeekChange(week.id, date)}
+                                      disabled={(date) => isHoliday(date)}
+                                      className={cn("p-3 pointer-events-auto")}
+                                      modifiers={{
+                                        holiday: (date) => isHoliday(date)
+                                      }}
+                                      modifiersStyles={{
+                                        holiday: { 
+                                          backgroundColor: 'hsl(var(--destructive) / 0.1)',
+                                          color: 'hsl(var(--muted-foreground))',
+                                          textDecoration: 'line-through'
+                                        }
+                                      }}
+                                    />
+                                  </PopoverContent>
+                                </Popover>
                                 <span className="text-sm font-medium truncate">{week.title}</span>
                               </div>
                               <Badge 
