@@ -14,6 +14,66 @@ import { Carousel, CarouselContent, CarouselItem } from "@/components/ui/carouse
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { toast } from "@/hooks/use-toast";
 import schoolLogo from "@/assets/school-badge.png";
+import collinzLogo from "@/assets/collinz-school-logo.png";
+import cambridgeLogo from "@/assets/cambridge-logo.jpg";
+
+// SVG icons for print compatibility (inline SVGs render properly in print)
+const IconBook = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
+    <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
+  </svg>
+);
+
+const IconTrophy = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6" />
+    <path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18" />
+    <path d="M4 22h16" />
+    <path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22" />
+    <path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22" />
+    <path d="M18 2H6v7a6 6 0 0 0 12 0V2Z" />
+  </svg>
+);
+
+const IconTarget = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <circle cx="12" cy="12" r="10" />
+    <circle cx="12" cy="12" r="6" />
+    <circle cx="12" cy="12" r="2" />
+  </svg>
+);
+
+const IconStar = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+  </svg>
+);
+
+const IconBarChart = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <line x1="12" y1="20" x2="12" y2="10" />
+    <line x1="18" y1="20" x2="18" y2="4" />
+    <line x1="6" y1="20" x2="6" y2="16" />
+  </svg>
+);
+
+const IconTrendingUp = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <polyline points="22 7 13.5 15.5 8.5 10.5 2 17" />
+    <polyline points="16 7 22 7 22 13" />
+  </svg>
+);
+
+const IconScale = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="m16 16 3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1Z" />
+    <path d="m2 16 3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1Z" />
+    <path d="M7 21h10" />
+    <path d="M12 3v18" />
+    <path d="M3 7h2c2 0 5-1 7-2 2 1 5 2 7 2h2" />
+  </svg>
+);
 import { teacherProfile, classRosters, classGrades, detailedClassGrades, yearOverYearData, categoryYearOverYear, examComparisonData, ExamData, subjectYearlyData, multiClassTrendData, subjectExamData } from "@/data/teacherMockData";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -4566,74 +4626,89 @@ export default function TeacherAcademicPage() {
           
           <div className="flex-1 overflow-y-auto" ref={overviewReportRef}>
             <div className="space-y-4 p-2">
-              {/* Report Header */}
-              <div className="report-header" style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '15px', paddingBottom: '10px', borderBottom: '2px solid #3b82f6' }}>
-                <img src={schoolLogo} alt="School Logo" className="school-logo" style={{ width: '40px', height: '40px', objectFit: 'contain' }} />
-                <div style={{ textAlign: 'left' }}>
-                  <h1 style={{ fontSize: '16px', fontWeight: 700, margin: '0 0 2px 0' }}>Class Overview Report</h1>
-                  <p style={{ fontSize: '10px', color: '#666', margin: 0 }}>Class {selectedClass} - Academic Performance Overview</p>
-                  <p style={{ fontSize: '9px', color: '#888', margin: '2px 0 0 0' }}>
+              {/* Report Header - Dual Logo Style */}
+              <div className="report-header" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid #d1d5db', paddingBottom: '10px', marginBottom: '10px', gap: '8px' }}>
+                <img src={collinzLogo} alt="Collinz School" style={{ height: '40px', objectFit: 'contain' }} />
+                <div style={{ textAlign: 'center' }}>
+                  <div style={{ fontSize: '10px', fontWeight: 600, color: '#374151', letterSpacing: '0.5px', textTransform: 'uppercase' }}>Class Performance Report</div>
+                  <div style={{ fontSize: '13px', fontWeight: 700, color: '#374151' }}>Class {selectedClass} - {selectedYear} {selectedPeriod === 'midYear' ? 'Mid-Year' : 'Year-End'}</div>
+                  <div style={{ fontSize: '9px', color: '#6b7280', marginTop: '2px' }}>
                     Generated on {new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}
-                    {' • '}{selectedYear} {selectedPeriod === 'midYear' ? 'Mid-Year' : 'Year-End'} Examination
-                  </p>
+                  </div>
                 </div>
+                <img src={cambridgeLogo} alt="Cambridge Assessment" style={{ height: '35px', objectFit: 'contain' }} />
               </div>
 
-              {/* Summary Statistics Cards */}
+              {/* Summary Statistics Cards with Watermarks */}
               <div style={{ marginBottom: '12px', pageBreakInside: 'avoid' }}>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '8px' }}>
                   {/* Average */}
-                  <div style={{ padding: '12px 8px', borderRadius: '10px', backgroundColor: '#dcfce7', textAlign: 'center' }}>
-                    <div style={{ fontSize: '14px', marginBottom: '4px' }}>📖</div>
-                    <div style={{ fontSize: '18px', fontWeight: 700, color: '#22c55e' }}>{classAverage}%</div>
-                    <div style={{ fontSize: '10px', color: '#166534', fontWeight: 600 }}>Class Average</div>
-                    <div style={{ fontSize: '8px', color: '#166534', marginTop: '2px' }}>
-                      {classAverage >= 80 ? 'Excellent' : classAverage >= 60 ? 'Above Average' : 'Needs Improvement'}
+                  <div style={{ position: 'relative', padding: '12px 8px', borderRadius: '10px', backgroundColor: '#dcfce7', textAlign: 'center', overflow: 'hidden', border: '1px solid #d1d5db' }}>
+                    <div style={{ position: 'absolute', right: '4px', bottom: '-15px', fontSize: '50px', fontWeight: 800, color: '#22c55e', opacity: 0.15 }}>{classAverage}</div>
+                    <div style={{ position: 'relative', zIndex: 1 }}>
+                      <div style={{ fontSize: '18px', fontWeight: 700, color: '#22c55e' }}>{classAverage}%</div>
+                      <div style={{ fontSize: '10px', color: '#166534', fontWeight: 600 }}>Class Average</div>
+                      <div style={{ fontSize: '8px', color: '#166534', marginTop: '2px' }}>
+                        {classAverage >= 80 ? 'Excellent' : classAverage >= 60 ? 'Above Average' : 'Needs Improvement'}
+                      </div>
                     </div>
                   </div>
                   {/* Highest */}
-                  <div style={{ padding: '12px 8px', borderRadius: '10px', backgroundColor: '#fef3c7', textAlign: 'center' }}>
-                    <div style={{ fontSize: '14px', marginBottom: '4px' }}>🏆</div>
-                    <div style={{ fontSize: '18px', fontWeight: 700, color: '#d97706' }}>{highestScore}%</div>
-                    <div style={{ fontSize: '10px', color: '#92400e', fontWeight: 600 }}>Highest Score</div>
-                    <div style={{ fontSize: '8px', color: '#92400e', marginTop: '2px' }}>Top Student</div>
+                  <div style={{ position: 'relative', padding: '12px 8px', borderRadius: '10px', backgroundColor: '#fef3c7', textAlign: 'center', overflow: 'hidden', border: '1px solid #d1d5db' }}>
+                    <div style={{ position: 'absolute', right: '4px', bottom: '-15px', fontSize: '50px', fontWeight: 800, color: '#d97706', opacity: 0.15 }}>{highestScore}</div>
+                    <div style={{ position: 'relative', zIndex: 1 }}>
+                      <div style={{ fontSize: '18px', fontWeight: 700, color: '#d97706' }}>{highestScore}%</div>
+                      <div style={{ fontSize: '10px', color: '#92400e', fontWeight: 600 }}>Highest Score</div>
+                      <div style={{ fontSize: '8px', color: '#92400e', marginTop: '2px' }}>Top Student</div>
+                    </div>
                   </div>
                   {/* Pass Rate */}
-                  <div style={{ padding: '12px 8px', borderRadius: '10px', backgroundColor: '#ccfbf1', textAlign: 'center' }}>
-                    <div style={{ fontSize: '14px', marginBottom: '4px' }}>📈</div>
-                    <div style={{ fontSize: '18px', fontWeight: 700, color: '#0d9488' }}>{passRate}%</div>
-                    <div style={{ fontSize: '10px', color: '#115e59', fontWeight: 600 }}>Pass Rate</div>
-                    <div style={{ fontSize: '8px', color: '#115e59', marginTop: '2px' }}>
-                      {passRate >= 90 ? 'Excellent' : passRate >= 70 ? 'Good' : 'Needs Focus'}
+                  <div style={{ position: 'relative', padding: '12px 8px', borderRadius: '10px', backgroundColor: '#ccfbf1', textAlign: 'center', overflow: 'hidden', border: '1px solid #d1d5db' }}>
+                    <div style={{ position: 'absolute', right: '4px', bottom: '-15px', fontSize: '50px', fontWeight: 800, color: '#0d9488', opacity: 0.15 }}>{passRate}</div>
+                    <div style={{ position: 'relative', zIndex: 1 }}>
+                      <div style={{ fontSize: '18px', fontWeight: 700, color: '#0d9488' }}>{passRate}%</div>
+                      <div style={{ fontSize: '10px', color: '#115e59', fontWeight: 600 }}>Pass Rate</div>
+                      <div style={{ fontSize: '8px', color: '#115e59', marginTop: '2px' }}>
+                        {passRate >= 90 ? 'Excellent' : passRate >= 70 ? 'Good' : 'Needs Focus'}
+                      </div>
                     </div>
                   </div>
                   {/* Students */}
-                  <div style={{ padding: '12px 8px', borderRadius: '10px', backgroundColor: '#eff6ff', textAlign: 'center' }}>
-                    <div style={{ fontSize: '14px', marginBottom: '4px' }}>👥</div>
-                    <div style={{ fontSize: '18px', fontWeight: 700, color: '#3b82f6' }}>{students.length}</div>
-                    <div style={{ fontSize: '10px', color: '#1d4ed8', fontWeight: 600 }}>Students</div>
-                    <div style={{ fontSize: '8px', color: '#1d4ed8', marginTop: '2px' }}>In Class</div>
+                  <div style={{ position: 'relative', padding: '12px 8px', borderRadius: '10px', backgroundColor: '#eff6ff', textAlign: 'center', overflow: 'hidden', border: '1px solid #d1d5db' }}>
+                    <div style={{ position: 'absolute', right: '4px', bottom: '-15px', fontSize: '50px', fontWeight: 800, color: '#3b82f6', opacity: 0.15 }}>{students.length}</div>
+                    <div style={{ position: 'relative', zIndex: 1 }}>
+                      <div style={{ fontSize: '18px', fontWeight: 700, color: '#3b82f6' }}>{students.length}</div>
+                      <div style={{ fontSize: '10px', color: '#1d4ed8', fontWeight: 600 }}>Students</div>
+                      <div style={{ fontSize: '8px', color: '#1d4ed8', marginTop: '2px' }}>In Class</div>
+                    </div>
                   </div>
                   {/* A Grade Rate */}
-                  <div style={{ padding: '12px 8px', borderRadius: '10px', backgroundColor: '#f3e8ff', textAlign: 'center' }}>
-                    <div style={{ fontSize: '14px', marginBottom: '4px' }}>🎯</div>
-                    <div style={{ fontSize: '18px', fontWeight: 700, color: '#9333ea' }}>{aGradeRate}%</div>
-                    <div style={{ fontSize: '10px', color: '#6b21a8', fontWeight: 600 }}>A Grade</div>
-                    <div style={{ fontSize: '8px', color: '#6b21a8', marginTop: '2px' }}>Excellence Rate</div>
+                  <div style={{ position: 'relative', padding: '12px 8px', borderRadius: '10px', backgroundColor: '#f3e8ff', textAlign: 'center', overflow: 'hidden', border: '1px solid #d1d5db' }}>
+                    <div style={{ position: 'absolute', right: '4px', bottom: '-15px', fontSize: '50px', fontWeight: 800, color: '#9333ea', opacity: 0.15 }}>{aGradeRate}</div>
+                    <div style={{ position: 'relative', zIndex: 1 }}>
+                      <div style={{ fontSize: '18px', fontWeight: 700, color: '#9333ea' }}>{aGradeRate}%</div>
+                      <div style={{ fontSize: '10px', color: '#6b21a8', fontWeight: 600 }}>A Grade</div>
+                      <div style={{ fontSize: '8px', color: '#6b21a8', marginTop: '2px' }}>Excellence Rate</div>
+                    </div>
                   </div>
                   {/* Lowest */}
-                  <div style={{ padding: '12px 8px', borderRadius: '10px', backgroundColor: '#fee2e2', textAlign: 'center' }}>
-                    <div style={{ fontSize: '14px', marginBottom: '4px' }}>⚠️</div>
-                    <div style={{ fontSize: '18px', fontWeight: 700, color: '#dc2626' }}>{lowestScore}%</div>
-                    <div style={{ fontSize: '10px', color: '#991b1b', fontWeight: 600 }}>Lowest Score</div>
-                    <div style={{ fontSize: '8px', color: '#991b1b', marginTop: '2px' }}>Needs Support</div>
+                  <div style={{ position: 'relative', padding: '12px 8px', borderRadius: '10px', backgroundColor: '#fee2e2', textAlign: 'center', overflow: 'hidden', border: '1px solid #d1d5db' }}>
+                    <div style={{ position: 'absolute', right: '4px', bottom: '-15px', fontSize: '50px', fontWeight: 800, color: '#dc2626', opacity: 0.15 }}>{lowestScore}</div>
+                    <div style={{ position: 'relative', zIndex: 1 }}>
+                      <div style={{ fontSize: '18px', fontWeight: 700, color: '#dc2626' }}>{lowestScore}%</div>
+                      <div style={{ fontSize: '10px', color: '#991b1b', fontWeight: 600 }}>Lowest Score</div>
+                      <div style={{ fontSize: '8px', color: '#991b1b', marginTop: '2px' }}>Needs Support</div>
+                    </div>
                   </div>
                 </div>
               </div>
 
-              {/* Subject Performance */}
+              {/* Subject Performance - with icon header */}
               <div className="section" style={{ marginBottom: '12px', pageBreakInside: 'avoid' }}>
-                <h3 style={{ fontSize: '12px', fontWeight: 600, marginBottom: '8px', paddingBottom: '4px', borderBottom: '1px solid #ddd' }}>Subject Performance</h3>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '8px', paddingBottom: '6px', borderBottom: '1px solid #065f46' }}>
+                  <span style={{ color: '#065f46' }}><IconBook /></span>
+                  <h3 style={{ fontSize: '11px', fontWeight: 700, color: '#065f46', margin: 0 }}>Subject Performance</h3>
+                </div>
                 <div className="subject-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '6px' }}>
                   {subjectAverages.map((sub, idx) => (
                     <div key={sub.fullName} className="subject-item" style={{ 
@@ -4651,18 +4726,24 @@ export default function TeacherAcademicPage() {
                 </div>
               </div>
 
-              {/* Grade Distribution */}
+              {/* Grade Distribution - with icon header */}
               <div className="section" style={{ marginBottom: '12px', pageBreakInside: 'avoid' }}>
-                <h3 style={{ fontSize: '12px', fontWeight: 600, marginBottom: '8px', paddingBottom: '4px', borderBottom: '1px solid #ddd' }}>Grade Distribution</h3>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '8px', paddingBottom: '6px', borderBottom: '1px solid #065f46' }}>
+                  <span style={{ color: '#065f46' }}><IconBarChart /></span>
+                  <h3 style={{ fontSize: '11px', fontWeight: 700, color: '#065f46', margin: 0 }}>Grade Distribution</h3>
+                </div>
                 <div className="grade-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: '6px' }}>
                   {gradeDistribution.map(g => {
                     const total = gradeDistribution.reduce((sum, d) => sum + d.count, 0);
                     const percentage = total > 0 ? Math.round(g.count / total * 100) : 0;
                     return (
-                      <div key={g.range} className="grade-card" style={{ textAlign: 'center', padding: '8px 4px', border: '1px solid #ddd', borderRadius: '6px', backgroundColor: '#fff' }}>
-                        <div style={{ fontSize: '12px', fontWeight: 700, color: GRADE_COLORS[g.range as keyof typeof GRADE_COLORS] }}>{g.range}</div>
-                        <div style={{ fontSize: '16px', fontWeight: 700, color: '#1a1a1a' }}>{g.count}</div>
-                        <div style={{ fontSize: '9px', color: '#666' }}>{percentage}%</div>
+                      <div key={g.range} className="grade-card" style={{ position: 'relative', textAlign: 'center', padding: '8px 4px', border: '1px solid #d1d5db', borderRadius: '6px', backgroundColor: '#fff', overflow: 'hidden' }}>
+                        <div style={{ position: 'absolute', right: '2px', bottom: '-8px', fontSize: '36px', fontWeight: 800, color: GRADE_COLORS[g.range as keyof typeof GRADE_COLORS], opacity: 0.1 }}>{g.range}</div>
+                        <div style={{ position: 'relative', zIndex: 1 }}>
+                          <div style={{ fontSize: '12px', fontWeight: 700, color: GRADE_COLORS[g.range as keyof typeof GRADE_COLORS] }}>{g.range}</div>
+                          <div style={{ fontSize: '16px', fontWeight: 700, color: '#1a1a1a' }}>{g.count}</div>
+                          <div style={{ fontSize: '9px', color: '#666' }}>{percentage}%</div>
+                        </div>
                       </div>
                     );
                   })}
@@ -4675,9 +4756,10 @@ export default function TeacherAcademicPage() {
                   {/* Rising Subjects */}
                   {risingSubjects.length > 0 && (
                     <div style={{ padding: '10px', borderRadius: '8px', background: 'linear-gradient(135deg, #fef9c3 0%, #fef3c7 100%)', border: '1px solid #fde047' }}>
-                      <h4 style={{ fontSize: '11px', fontWeight: 600, color: '#ca8a04', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                        ⭐ Rising Subjects
-                      </h4>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '8px', paddingBottom: '6px', borderBottom: '1px solid #fde047' }}>
+                        <span style={{ color: '#ca8a04' }}><IconStar /></span>
+                        <h4 style={{ fontSize: '11px', fontWeight: 700, color: '#ca8a04', margin: 0 }}>Rising Subjects</h4>
+                      </div>
                       <p style={{ fontSize: '8px', color: '#a16207', marginBottom: '8px' }}>Top performing subjects</p>
                       <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
                         {risingSubjects.slice(0, 3).map((item) => (
@@ -4707,9 +4789,10 @@ export default function TeacherAcademicPage() {
                   {/* At-Risk Subjects */}
                   {fallingSubjects.length > 0 && (
                     <div style={{ padding: '10px', borderRadius: '8px', background: 'linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%)', border: '1px solid #fca5a5' }}>
-                      <h4 style={{ fontSize: '11px', fontWeight: 600, color: '#dc2626', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                        ⚠️ At-Risk Subjects
-                      </h4>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '8px', paddingBottom: '6px', borderBottom: '1px solid #fca5a5' }}>
+                        <span style={{ color: '#dc2626' }}><IconTarget /></span>
+                        <h4 style={{ fontSize: '11px', fontWeight: 700, color: '#dc2626', margin: 0 }}>At-Risk Subjects</h4>
+                      </div>
                       <p style={{ fontSize: '8px', color: '#b91c1c', marginBottom: '8px' }}>Needs extra attention</p>
                       <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
                         {fallingSubjects.slice(0, 3).map((item) => (
@@ -4738,10 +4821,13 @@ export default function TeacherAcademicPage() {
                 </div>
               )}
 
-              {/* Top Performers & At-Risk */}
+              {/* Top Performers & At-Risk Students */}
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '12px', marginBottom: '12px', pageBreakInside: 'avoid' }}>
-                <div style={{ padding: '10px', borderRadius: '6px', backgroundColor: '#dcfce7', border: '1px solid #86efac' }}>
-                  <h4 style={{ fontSize: '11px', fontWeight: 600, color: '#16a34a', marginBottom: '6px' }}>Top Performers ({topPerformers.length})</h4>
+                <div style={{ padding: '10px', borderRadius: '8px', backgroundColor: '#dcfce7', border: '1px solid #86efac' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '8px', paddingBottom: '6px', borderBottom: '1px solid #86efac' }}>
+                    <span style={{ color: '#16a34a' }}><IconTrophy /></span>
+                    <h4 style={{ fontSize: '11px', fontWeight: 700, color: '#16a34a', margin: 0 }}>Top Performers ({topPerformers.length})</h4>
+                  </div>
                   {topPerformers.map((s, i) => (
                     <div key={s.id} style={{ display: 'flex', justifyContent: 'space-between', padding: '3px 6px', fontSize: '9px', borderBottom: '1px solid #86efac40' }}>
                       <span>{i + 1}. {s.name}</span>
@@ -4750,8 +4836,11 @@ export default function TeacherAcademicPage() {
                   ))}
                   {topPerformers.length === 0 && <p style={{ fontSize: '9px', color: '#666' }}>No students</p>}
                 </div>
-                <div style={{ padding: '10px', borderRadius: '6px', backgroundColor: '#fee2e2', border: '1px solid #fca5a5' }}>
-                  <h4 style={{ fontSize: '11px', fontWeight: 600, color: '#dc2626', marginBottom: '6px' }}>At-Risk Students ({atRiskStudents.length})</h4>
+                <div style={{ padding: '10px', borderRadius: '8px', backgroundColor: '#fee2e2', border: '1px solid #fca5a5' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '8px', paddingBottom: '6px', borderBottom: '1px solid #fca5a5' }}>
+                    <span style={{ color: '#dc2626' }}><IconTarget /></span>
+                    <h4 style={{ fontSize: '11px', fontWeight: 700, color: '#dc2626', margin: 0 }}>At-Risk Students ({atRiskStudents.length})</h4>
+                  </div>
                   {atRiskStudents.map((s, i) => (
                     <div key={s.id} style={{ display: 'flex', justifyContent: 'space-between', padding: '3px 6px', fontSize: '9px', borderBottom: '1px solid #fca5a540' }}>
                       <span>{i + 1}. {s.name}</span>
@@ -4762,10 +4851,9 @@ export default function TeacherAcademicPage() {
                 </div>
               </div>
 
-              {/* Footer */}
-              <div className="footer" style={{ textAlign: 'center', fontSize: '8px', color: '#666', marginTop: '15px', paddingTop: '8px', borderTop: '1px solid #ddd' }}>
-                <p>This report was generated automatically by the School Management System</p>
-                <p>© {new Date().getFullYear()} All Rights Reserved</p>
+              {/* Footer - Professional Style */}
+              <div className="footer" style={{ marginTop: '12px', textAlign: 'center', fontSize: '8px', color: '#9ca3af', paddingTop: '8px', borderTop: '1px solid #d1d5db' }}>
+                This is a computer-generated report. Generated on {new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}.
               </div>
             </div>
           </div>
@@ -4867,44 +4955,60 @@ export default function TeacherAcademicPage() {
           
           <div className="flex-1 overflow-y-auto" ref={trendsReportRef}>
             <div className="space-y-4 p-2">
-              {/* Report Header */}
-              <div className="report-header" style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '15px', paddingBottom: '10px', borderBottom: '2px solid #22c55e' }}>
-                <img src={schoolLogo} alt="School Logo" className="school-logo" style={{ width: '40px', height: '40px', objectFit: 'contain' }} />
-                <div style={{ textAlign: 'left' }}>
-                  <h1 style={{ fontSize: '16px', fontWeight: 700, margin: '0 0 2px 0' }}>Performance Trends Report</h1>
-                  <p style={{ fontSize: '10px', color: '#666', margin: 0 }}>Class {selectedClass} - Historical Performance Analysis</p>
-                  <p style={{ fontSize: '9px', color: '#888', margin: '2px 0 0 0' }}>
+              {/* Report Header - Dual Logo Style */}
+              <div className="report-header" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid #d1d5db', paddingBottom: '10px', marginBottom: '10px', gap: '8px' }}>
+                <img src={collinzLogo} alt="Collinz School" style={{ height: '40px', objectFit: 'contain' }} />
+                <div style={{ textAlign: 'center' }}>
+                  <div style={{ fontSize: '10px', fontWeight: 600, color: '#374151', letterSpacing: '0.5px', textTransform: 'uppercase' }}>Performance Trends Report</div>
+                  <div style={{ fontSize: '13px', fontWeight: 700, color: '#374151' }}>Class {selectedClass} - Historical Analysis</div>
+                  <div style={{ fontSize: '9px', color: '#6b7280', marginTop: '2px' }}>
                     Generated on {new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}
                     {' • '}Period: {trendPeriod === '1year' ? 'Last 1 Year' : trendPeriod === '2years' ? 'Last 2 Years' : trendPeriod === '3years' ? 'Last 3 Years' : trendPeriod === '4years' ? 'Last 4 Years' : trendPeriod === '5years' ? 'Last 5 Years' : 'Last 6 Years'}
-                  </p>
+                  </div>
                 </div>
+                <img src={cambridgeLogo} alt="Cambridge Assessment" style={{ height: '35px', objectFit: 'contain' }} />
               </div>
 
               {/* Current Performance Summary */}
               <div className="section" style={{ marginBottom: '12px', pageBreakInside: 'avoid' }}>
-                <h3 style={{ fontSize: '12px', fontWeight: 600, marginBottom: '8px', paddingBottom: '4px', borderBottom: '1px solid #ddd' }}>Current Performance</h3>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '8px', paddingBottom: '6px', borderBottom: '1px solid #065f46' }}>
+                  <span style={{ color: '#065f46' }}><IconBarChart /></span>
+                  <h3 style={{ fontSize: '11px', fontWeight: 700, color: '#065f46', margin: 0 }}>Current Performance</h3>
+                </div>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '10px' }}>
-                  <div style={{ padding: '10px', borderRadius: '6px', backgroundColor: trendDirection.direction === 'up' ? '#dcfce7' : trendDirection.direction === 'down' ? '#fee2e2' : '#f3f4f6', border: '1px solid #ddd', textAlign: 'center' }}>
-                    <div style={{ fontSize: '20px', fontWeight: 700, color: '#1a1a1a' }}>{trendDirection.currentValue}%</div>
-                    <div style={{ fontSize: '9px', color: '#666' }}>{trendsSelectedSubjects.length === subjects.length ? 'Class Average' : `${trendsSelectedSubjects.length} Subject${trendsSelectedSubjects.length > 1 ? 's' : ''}`}</div>
-                    <div style={{ fontSize: '10px', fontWeight: 600, color: trendDirection.direction === 'up' ? '#22c55e' : trendDirection.direction === 'down' ? '#ef4444' : '#6b7280', marginTop: '4px' }}>
-                      {trendDirection.direction === 'up' ? '↑' : trendDirection.direction === 'down' ? '↓' : '→'} {trendDirection.change}%
+                  <div style={{ position: 'relative', padding: '10px', borderRadius: '8px', backgroundColor: trendDirection.direction === 'up' ? '#dcfce7' : trendDirection.direction === 'down' ? '#fee2e2' : '#f3f4f6', border: '1px solid #d1d5db', textAlign: 'center', overflow: 'hidden' }}>
+                    <div style={{ position: 'absolute', right: '4px', bottom: '-15px', fontSize: '50px', fontWeight: 800, color: trendDirection.direction === 'up' ? '#22c55e' : trendDirection.direction === 'down' ? '#ef4444' : '#6b7280', opacity: 0.15 }}>{trendDirection.currentValue}</div>
+                    <div style={{ position: 'relative', zIndex: 1 }}>
+                      <div style={{ fontSize: '20px', fontWeight: 700, color: '#1a1a1a' }}>{trendDirection.currentValue}%</div>
+                      <div style={{ fontSize: '9px', color: '#666' }}>{trendsSelectedSubjects.length === subjects.length ? 'Class Average' : `${trendsSelectedSubjects.length} Subject${trendsSelectedSubjects.length > 1 ? 's' : ''}`}</div>
+                      <div style={{ fontSize: '10px', fontWeight: 600, color: trendDirection.direction === 'up' ? '#22c55e' : trendDirection.direction === 'down' ? '#ef4444' : '#6b7280', marginTop: '4px' }}>
+                        {trendDirection.direction === 'up' ? '↑' : trendDirection.direction === 'down' ? '↓' : '→'} {trendDirection.change}%
+                      </div>
                     </div>
                   </div>
-                  <div style={{ padding: '10px', borderRadius: '6px', backgroundColor: '#dcfce7', border: '1px solid #86efac', textAlign: 'center' }}>
-                    <div style={{ fontSize: '14px', fontWeight: 700, color: '#22c55e' }}>{risingSubjects.length}</div>
-                    <div style={{ fontSize: '9px', color: '#666' }}>Rising Subjects</div>
+                  <div style={{ position: 'relative', padding: '10px', borderRadius: '8px', backgroundColor: '#dcfce7', border: '1px solid #86efac', textAlign: 'center', overflow: 'hidden' }}>
+                    <div style={{ position: 'absolute', right: '4px', bottom: '-15px', fontSize: '50px', fontWeight: 800, color: '#22c55e', opacity: 0.15 }}>{risingSubjects.length}</div>
+                    <div style={{ position: 'relative', zIndex: 1 }}>
+                      <div style={{ fontSize: '14px', fontWeight: 700, color: '#22c55e' }}>{risingSubjects.length}</div>
+                      <div style={{ fontSize: '9px', color: '#666' }}>Rising Subjects</div>
+                    </div>
                   </div>
-                  <div style={{ padding: '10px', borderRadius: '6px', backgroundColor: '#fee2e2', border: '1px solid #fca5a5', textAlign: 'center' }}>
-                    <div style={{ fontSize: '14px', fontWeight: 700, color: '#ef4444' }}>{fallingSubjects.length}</div>
-                    <div style={{ fontSize: '9px', color: '#666' }}>Needs Focus</div>
+                  <div style={{ position: 'relative', padding: '10px', borderRadius: '8px', backgroundColor: '#fee2e2', border: '1px solid #fca5a5', textAlign: 'center', overflow: 'hidden' }}>
+                    <div style={{ position: 'absolute', right: '4px', bottom: '-15px', fontSize: '50px', fontWeight: 800, color: '#ef4444', opacity: 0.15 }}>{fallingSubjects.length}</div>
+                    <div style={{ position: 'relative', zIndex: 1 }}>
+                      <div style={{ fontSize: '14px', fontWeight: 700, color: '#ef4444' }}>{fallingSubjects.length}</div>
+                      <div style={{ fontSize: '9px', color: '#666' }}>Needs Focus</div>
+                    </div>
                   </div>
                 </div>
               </div>
 
               {/* Performance Trend Chart (SVG for print) */}
               <div className="section" style={{ marginBottom: '12px', pageBreakInside: 'avoid' }}>
-                <h3 style={{ fontSize: '12px', fontWeight: 600, marginBottom: '8px', paddingBottom: '4px', borderBottom: '1px solid #ddd' }}>Performance Trend</h3>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '8px', paddingBottom: '6px', borderBottom: '1px solid #065f46' }}>
+                  <span style={{ color: '#065f46' }}><IconTrendingUp /></span>
+                  <h3 style={{ fontSize: '11px', fontWeight: 700, color: '#065f46', margin: 0 }}>Performance Trend</h3>
+                </div>
                 <div style={{ padding: '10px', backgroundColor: '#f9fafb', borderRadius: '6px', border: '1px solid #e5e7eb' }}>
                   <svg width="100%" height="120" viewBox="0 0 500 120" preserveAspectRatio="xMidYMid meet">
                     {/* Background grid lines */}
@@ -4973,9 +5077,10 @@ export default function TeacherAcademicPage() {
                   {/* Rising Subjects */}
                   {risingSubjects.length > 0 && (
                     <div style={{ padding: '10px', borderRadius: '8px', background: 'linear-gradient(135deg, #fef9c3 0%, #fef3c7 100%)', border: '1px solid #fde047' }}>
-                      <h4 style={{ fontSize: '11px', fontWeight: 600, color: '#ca8a04', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                        ⭐ Rising Subjects
-                      </h4>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '8px', paddingBottom: '6px', borderBottom: '1px solid #fde047' }}>
+                        <span style={{ color: '#ca8a04' }}><IconStar /></span>
+                        <h4 style={{ fontSize: '11px', fontWeight: 700, color: '#ca8a04', margin: 0 }}>Rising Subjects</h4>
+                      </div>
                       <p style={{ fontSize: '8px', color: '#a16207', marginBottom: '8px' }}>Top performing subjects</p>
                       <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
                         {risingSubjects.slice(0, 3).map((item) => (
@@ -5005,9 +5110,10 @@ export default function TeacherAcademicPage() {
                   {/* At-Risk Subjects */}
                   {fallingSubjects.length > 0 && (
                     <div style={{ padding: '10px', borderRadius: '8px', background: 'linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%)', border: '1px solid #fca5a5' }}>
-                      <h4 style={{ fontSize: '11px', fontWeight: 600, color: '#dc2626', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                        ⚠️ At-Risk Subjects
-                      </h4>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '8px', paddingBottom: '6px', borderBottom: '1px solid #fca5a5' }}>
+                        <span style={{ color: '#dc2626' }}><IconTarget /></span>
+                        <h4 style={{ fontSize: '11px', fontWeight: 700, color: '#dc2626', margin: 0 }}>At-Risk Subjects</h4>
+                      </div>
                       <p style={{ fontSize: '8px', color: '#b91c1c', marginBottom: '8px' }}>Needs extra attention</p>
                       <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
                         {fallingSubjects.slice(0, 3).map((item) => (
@@ -5038,12 +5144,15 @@ export default function TeacherAcademicPage() {
 
               {/* Historical Data Table */}
               <div className="section" style={{ marginBottom: '12px', pageBreakInside: 'avoid' }}>
-                <h3 style={{ fontSize: '12px', fontWeight: 600, marginBottom: '8px', paddingBottom: '4px', borderBottom: '1px solid #ddd' }}>Historical Performance Data</h3>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '8px', paddingBottom: '6px', borderBottom: '1px solid #065f46' }}>
+                  <span style={{ color: '#065f46' }}><IconBook /></span>
+                  <h3 style={{ fontSize: '11px', fontWeight: 700, color: '#065f46', margin: 0 }}>Historical Performance Data</h3>
+                </div>
                 <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '9px' }}>
                   <thead>
-                    <tr style={{ backgroundColor: '#f5f5f5' }}>
-                      <th style={{ padding: '6px 8px', borderBottom: '1px solid #ddd', textAlign: 'left' }}>Period</th>
-                      <th style={{ padding: '6px 8px', borderBottom: '1px solid #ddd', textAlign: 'right' }}>Average</th>
+                    <tr style={{ backgroundColor: '#065f46' }}>
+                      <th style={{ padding: '6px 8px', borderBottom: '1px solid #d1d5db', textAlign: 'left', color: 'white', fontWeight: 600 }}>Period</th>
+                      <th style={{ padding: '6px 8px', borderBottom: '1px solid #d1d5db', textAlign: 'right', color: 'white', fontWeight: 600 }}>Average</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -5059,7 +5168,10 @@ export default function TeacherAcademicPage() {
 
               {/* Strengths Profile Radar Chart (SVG for print) */}
               <div className="section" style={{ marginBottom: '12px', pageBreakInside: 'avoid' }}>
-                <h3 style={{ fontSize: '12px', fontWeight: 600, marginBottom: '8px', paddingBottom: '4px', borderBottom: '1px solid #ddd' }}>Strengths Profile</h3>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '8px', paddingBottom: '6px', borderBottom: '1px solid #065f46' }}>
+                  <span style={{ color: '#065f46' }}><IconTarget /></span>
+                  <h3 style={{ fontSize: '11px', fontWeight: 700, color: '#065f46', margin: 0 }}>Strengths Profile</h3>
+                </div>
                 <div style={{ padding: '10px', backgroundColor: '#f9fafb', borderRadius: '6px', border: '1px solid #e5e7eb', textAlign: 'center' }}>
                   <svg width="240" height="200" viewBox="0 0 240 200" style={{ margin: '0 auto', display: 'block' }}>
                     {/* Radar background circles */}
@@ -5113,7 +5225,10 @@ export default function TeacherAcademicPage() {
 
               {/* Class vs Cohort Average Bar Chart (SVG for print) */}
               <div className="section" style={{ marginBottom: '12px', pageBreakInside: 'avoid' }}>
-                <h3 style={{ fontSize: '12px', fontWeight: 600, marginBottom: '8px', paddingBottom: '4px', borderBottom: '1px solid #ddd' }}>Class VS Cohort Average</h3>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '8px', paddingBottom: '6px', borderBottom: '1px solid #065f46' }}>
+                  <span style={{ color: '#065f46' }}><IconBarChart /></span>
+                  <h3 style={{ fontSize: '11px', fontWeight: 700, color: '#065f46', margin: 0 }}>Class VS Cohort Average</h3>
+                </div>
                 <div style={{ padding: '10px', backgroundColor: '#f9fafb', borderRadius: '6px', border: '1px solid #e5e7eb' }}>
                   <svg width="100%" height="160" viewBox="0 0 500 160" preserveAspectRatio="xMidYMid meet">
                     {/* Grid lines */}
@@ -5157,14 +5272,17 @@ export default function TeacherAcademicPage() {
 
               {/* Performance Heatmap */}
               <div className="section" style={{ marginBottom: '12px', pageBreakInside: 'avoid' }}>
-                <h3 style={{ fontSize: '12px', fontWeight: 600, marginBottom: '8px', paddingBottom: '4px', borderBottom: '1px solid #ddd' }}>Performance Heatmap</h3>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '8px', paddingBottom: '6px', borderBottom: '1px solid #065f46' }}>
+                  <span style={{ color: '#065f46' }}><IconBarChart /></span>
+                  <h3 style={{ fontSize: '11px', fontWeight: 700, color: '#065f46', margin: 0 }}>Performance Heatmap</h3>
+                </div>
                 <div style={{ overflowX: 'auto' }}>
                   <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '9px' }}>
                     <thead>
-                      <tr style={{ backgroundColor: '#f5f5f5' }}>
-                        <th style={{ padding: '4px 6px', borderBottom: '1px solid #ddd', textAlign: 'left', minWidth: '80px' }}>Subject</th>
+                      <tr style={{ backgroundColor: '#065f46' }}>
+                        <th style={{ padding: '4px 6px', borderBottom: '1px solid #d1d5db', textAlign: 'left', minWidth: '80px', color: 'white', fontWeight: 600 }}>Subject</th>
                         {heatmapData[0]?.scores.map(s => (
-                          <th key={s.period} style={{ padding: '4px 6px', borderBottom: '1px solid #ddd', textAlign: 'center', minWidth: '40px' }}>{s.period}</th>
+                          <th key={s.period} style={{ padding: '4px 6px', borderBottom: '1px solid #d1d5db', textAlign: 'center', minWidth: '40px', color: 'white', fontWeight: 600 }}>{s.period}</th>
                         ))}
                       </tr>
                     </thead>
@@ -5203,10 +5321,9 @@ export default function TeacherAcademicPage() {
                 </p>
               </div>
 
-              {/* Footer */}
-              <div className="footer" style={{ textAlign: 'center', fontSize: '8px', color: '#666', marginTop: '15px', paddingTop: '8px', borderTop: '1px solid #ddd' }}>
-                <p>This report was generated automatically by the School Management System</p>
-                <p>© {new Date().getFullYear()} All Rights Reserved</p>
+              {/* Footer - Professional Style */}
+              <div className="footer" style={{ marginTop: '12px', textAlign: 'center', fontSize: '8px', color: '#9ca3af', paddingTop: '8px', borderTop: '1px solid #d1d5db' }}>
+                This is a computer-generated report. Generated on {new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}.
               </div>
             </div>
           </div>
@@ -5368,80 +5485,105 @@ export default function TeacherAcademicPage() {
               
               return (
                 <div className="space-y-4 p-2">
-                  {/* Report Header */}
-                  <div className="report-header" style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '15px', paddingBottom: '10px', borderBottom: '2px solid #8b5cf6' }}>
-                    <img src={schoolLogo} alt="School Logo" className="school-logo" style={{ width: '40px', height: '40px', objectFit: 'contain' }} />
-                    <div style={{ textAlign: 'left' }}>
-                      <h1 style={{ fontSize: '16px', fontWeight: 700, margin: '0 0 2px 0' }}>Exam Comparison Report</h1>
-                      <p style={{ fontSize: '10px', color: '#666', margin: 0 }}>{examALabel} vs {examBLabel}</p>
-                      <p style={{ fontSize: '9px', color: '#888', margin: '2px 0 0 0' }}>
+                  {/* Report Header - Dual Logo Style */}
+                  <div className="report-header" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid #d1d5db', paddingBottom: '10px', marginBottom: '10px', gap: '8px' }}>
+                    <img src={collinzLogo} alt="Collinz School" style={{ height: '40px', objectFit: 'contain' }} />
+                    <div style={{ textAlign: 'center' }}>
+                      <div style={{ fontSize: '10px', fontWeight: 600, color: '#374151', letterSpacing: '0.5px', textTransform: 'uppercase' }}>Exam Comparison Report</div>
+                      <div style={{ fontSize: '13px', fontWeight: 700, color: '#374151' }}>{examALabel} vs {examBLabel}</div>
+                      <div style={{ fontSize: '9px', color: '#6b7280', marginTop: '2px' }}>
                         Generated on {new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}
-                      </p>
+                      </div>
                     </div>
+                    <img src={cambridgeLogo} alt="Cambridge Assessment" style={{ height: '35px', objectFit: 'contain' }} />
                   </div>
 
                   {/* Summary Comparison */}
                   <div className="section" style={{ marginBottom: '12px', pageBreakInside: 'avoid' }}>
-                    <h3 style={{ fontSize: '12px', fontWeight: 600, marginBottom: '8px', paddingBottom: '4px', borderBottom: '1px solid #ddd' }}>Summary Comparison</h3>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '8px', paddingBottom: '6px', borderBottom: '1px solid #065f46' }}>
+                      <span style={{ color: '#065f46' }}><IconScale /></span>
+                      <h3 style={{ fontSize: '11px', fontWeight: 700, color: '#065f46', margin: 0 }}>Summary Comparison</h3>
+                    </div>
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '12px' }}>
-                      <div style={{ padding: '12px', borderRadius: '6px', backgroundColor: '#eff6ff', border: '1px solid #3b82f6' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '8px' }}>
-                          <div style={{ width: '10px', height: '10px', borderRadius: '50%', backgroundColor: '#3b82f6' }} />
-                          <span style={{ fontSize: '10px', fontWeight: 600, color: '#1d4ed8' }}>Exam A</span>
+                      <div style={{ position: 'relative', padding: '12px', borderRadius: '8px', backgroundColor: '#eff6ff', border: '1px solid #d1d5db', overflow: 'hidden' }}>
+                        <div style={{ position: 'absolute', right: '4px', bottom: '-15px', fontSize: '50px', fontWeight: 800, color: '#3b82f6', opacity: 0.15 }}>{avgA}</div>
+                        <div style={{ position: 'relative', zIndex: 1 }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '8px' }}>
+                            <div style={{ width: '10px', height: '10px', borderRadius: '50%', backgroundColor: '#3b82f6' }} />
+                            <span style={{ fontSize: '10px', fontWeight: 600, color: '#1d4ed8' }}>Exam A</span>
+                          </div>
+                          <p style={{ fontSize: '9px', color: '#666', marginBottom: '4px' }}>{examALabel}</p>
+                          <div style={{ fontSize: '24px', fontWeight: 700, color: '#1a1a1a' }}>{avgA}%</div>
+                          <p style={{ fontSize: '9px', color: '#666' }}>Average Score</p>
                         </div>
-                        <p style={{ fontSize: '9px', color: '#666', marginBottom: '4px' }}>{examALabel}</p>
-                        <div style={{ fontSize: '24px', fontWeight: 700, color: '#1a1a1a' }}>{avgA}%</div>
-                        <p style={{ fontSize: '9px', color: '#666' }}>Average Score</p>
                       </div>
-                      <div style={{ padding: '12px', borderRadius: '6px', backgroundColor: '#fef2f2', border: '1px solid #ef4444' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '8px' }}>
-                          <div style={{ width: '10px', height: '10px', borderRadius: '50%', backgroundColor: '#ef4444' }} />
-                          <span style={{ fontSize: '10px', fontWeight: 600, color: '#dc2626' }}>Exam B</span>
+                      <div style={{ position: 'relative', padding: '12px', borderRadius: '8px', backgroundColor: '#fef2f2', border: '1px solid #d1d5db', overflow: 'hidden' }}>
+                        <div style={{ position: 'absolute', right: '4px', bottom: '-15px', fontSize: '50px', fontWeight: 800, color: '#ef4444', opacity: 0.15 }}>{avgB}</div>
+                        <div style={{ position: 'relative', zIndex: 1 }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '8px' }}>
+                            <div style={{ width: '10px', height: '10px', borderRadius: '50%', backgroundColor: '#ef4444' }} />
+                            <span style={{ fontSize: '10px', fontWeight: 600, color: '#dc2626' }}>Exam B</span>
+                          </div>
+                          <p style={{ fontSize: '9px', color: '#666', marginBottom: '4px' }}>{examBLabel}</p>
+                          <div style={{ fontSize: '24px', fontWeight: 700, color: '#1a1a1a' }}>{avgB}%</div>
+                          <p style={{ fontSize: '9px', color: '#666' }}>Average Score</p>
                         </div>
-                        <p style={{ fontSize: '9px', color: '#666', marginBottom: '4px' }}>{examBLabel}</p>
-                        <div style={{ fontSize: '24px', fontWeight: 700, color: '#1a1a1a' }}>{avgB}%</div>
-                        <p style={{ fontSize: '9px', color: '#666' }}>Average Score</p>
                       </div>
                     </div>
                   </div>
 
-                  {/* Change Summary */}
+                  {/* Change Summary with Watermarks */}
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '8px', marginBottom: '12px', pageBreakInside: 'avoid' }}>
-                    <div style={{ padding: '10px', borderRadius: '6px', backgroundColor: avgDelta > 0 ? '#dcfce7' : avgDelta < 0 ? '#fee2e2' : '#f3f4f6', border: '1px solid #ddd', textAlign: 'center' }}>
-                      <div style={{ fontSize: '16px', fontWeight: 700, color: avgDelta > 0 ? '#22c55e' : avgDelta < 0 ? '#ef4444' : '#6b7280' }}>
-                        {avgDelta > 0 ? '+' : ''}{avgDelta}%
+                    <div style={{ position: 'relative', padding: '10px', borderRadius: '8px', backgroundColor: avgDelta > 0 ? '#dcfce7' : avgDelta < 0 ? '#fee2e2' : '#f3f4f6', border: '1px solid #d1d5db', textAlign: 'center', overflow: 'hidden' }}>
+                      <div style={{ position: 'absolute', right: '2px', bottom: '-10px', fontSize: '36px', fontWeight: 800, color: avgDelta > 0 ? '#22c55e' : avgDelta < 0 ? '#ef4444' : '#6b7280', opacity: 0.15 }}>{Math.abs(avgDelta)}</div>
+                      <div style={{ position: 'relative', zIndex: 1 }}>
+                        <div style={{ fontSize: '16px', fontWeight: 700, color: avgDelta > 0 ? '#22c55e' : avgDelta < 0 ? '#ef4444' : '#6b7280' }}>
+                          {avgDelta > 0 ? '+' : ''}{avgDelta}%
+                        </div>
+                        <div style={{ fontSize: '8px', color: '#666' }}>Overall Change</div>
                       </div>
-                      <div style={{ fontSize: '8px', color: '#666' }}>Overall Change</div>
                     </div>
-                    <div style={{ padding: '10px', borderRadius: '6px', backgroundColor: '#dcfce7', border: '1px solid #86efac', textAlign: 'center' }}>
-                      <div style={{ fontSize: '16px', fontWeight: 700, color: '#22c55e' }}>{improved}</div>
-                      <div style={{ fontSize: '8px', color: '#666' }}>Improved</div>
+                    <div style={{ position: 'relative', padding: '10px', borderRadius: '8px', backgroundColor: '#dcfce7', border: '1px solid #86efac', textAlign: 'center', overflow: 'hidden' }}>
+                      <div style={{ position: 'absolute', right: '2px', bottom: '-10px', fontSize: '36px', fontWeight: 800, color: '#22c55e', opacity: 0.15 }}>{improved}</div>
+                      <div style={{ position: 'relative', zIndex: 1 }}>
+                        <div style={{ fontSize: '16px', fontWeight: 700, color: '#22c55e' }}>{improved}</div>
+                        <div style={{ fontSize: '8px', color: '#666' }}>Improved</div>
+                      </div>
                     </div>
-                    <div style={{ padding: '10px', borderRadius: '6px', backgroundColor: '#fee2e2', border: '1px solid #fca5a5', textAlign: 'center' }}>
-                      <div style={{ fontSize: '16px', fontWeight: 700, color: '#ef4444' }}>{declined}</div>
-                      <div style={{ fontSize: '8px', color: '#666' }}>Declined</div>
+                    <div style={{ position: 'relative', padding: '10px', borderRadius: '8px', backgroundColor: '#fee2e2', border: '1px solid #fca5a5', textAlign: 'center', overflow: 'hidden' }}>
+                      <div style={{ position: 'absolute', right: '2px', bottom: '-10px', fontSize: '36px', fontWeight: 800, color: '#ef4444', opacity: 0.15 }}>{declined}</div>
+                      <div style={{ position: 'relative', zIndex: 1 }}>
+                        <div style={{ fontSize: '16px', fontWeight: 700, color: '#ef4444' }}>{declined}</div>
+                        <div style={{ fontSize: '8px', color: '#666' }}>Declined</div>
+                      </div>
                     </div>
-                    <div style={{ padding: '10px', borderRadius: '6px', backgroundColor: '#f3f4f6', border: '1px solid #ddd', textAlign: 'center' }}>
-                      <div style={{ fontSize: '16px', fontWeight: 700, color: '#6b7280' }}>{unchanged}</div>
-                      <div style={{ fontSize: '8px', color: '#666' }}>Unchanged</div>
+                    <div style={{ position: 'relative', padding: '10px', borderRadius: '8px', backgroundColor: '#f3f4f6', border: '1px solid #d1d5db', textAlign: 'center', overflow: 'hidden' }}>
+                      <div style={{ position: 'absolute', right: '2px', bottom: '-10px', fontSize: '36px', fontWeight: 800, color: '#6b7280', opacity: 0.15 }}>{unchanged}</div>
+                      <div style={{ position: 'relative', zIndex: 1 }}>
+                        <div style={{ fontSize: '16px', fontWeight: 700, color: '#6b7280' }}>{unchanged}</div>
+                        <div style={{ fontSize: '8px', color: '#666' }}>Unchanged</div>
+                      </div>
                     </div>
                   </div>
 
                   {/* Subject-by-Subject Comparison */}
                   <div className="section" style={{ marginBottom: '12px', pageBreakInside: 'avoid' }}>
-                    <h3 style={{ fontSize: '12px', fontWeight: 600, marginBottom: '8px', paddingBottom: '4px', borderBottom: '1px solid #ddd' }}>Subject Comparison</h3>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '8px', paddingBottom: '6px', borderBottom: '1px solid #065f46' }}>
+                      <span style={{ color: '#065f46' }}><IconBook /></span>
+                      <h3 style={{ fontSize: '11px', fontWeight: 700, color: '#065f46', margin: 0 }}>Subject Comparison</h3>
+                    </div>
                     <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '9px' }}>
                       <thead>
-                        <tr style={{ backgroundColor: '#f5f5f5' }}>
-                          <th style={{ padding: '6px 8px', borderBottom: '1px solid #ddd', textAlign: 'left' }}>Subject</th>
-                          <th style={{ padding: '6px 8px', borderBottom: '1px solid #ddd', textAlign: 'center' }}>Exam A</th>
-                          <th style={{ padding: '6px 8px', borderBottom: '1px solid #ddd', textAlign: 'center' }}>Exam B</th>
-                          <th style={{ padding: '6px 8px', borderBottom: '1px solid #ddd', textAlign: 'center' }}>Change</th>
+                        <tr style={{ backgroundColor: '#065f46' }}>
+                          <th style={{ padding: '6px 8px', borderBottom: '1px solid #d1d5db', textAlign: 'left', color: 'white', fontWeight: 600 }}>Subject</th>
+                          <th style={{ padding: '6px 8px', borderBottom: '1px solid #d1d5db', textAlign: 'center', color: 'white', fontWeight: 600 }}>Exam A</th>
+                          <th style={{ padding: '6px 8px', borderBottom: '1px solid #d1d5db', textAlign: 'center', color: 'white', fontWeight: 600 }}>Exam B</th>
+                          <th style={{ padding: '6px 8px', borderBottom: '1px solid #d1d5db', textAlign: 'center', color: 'white', fontWeight: 600 }}>Change</th>
                         </tr>
                       </thead>
                       <tbody>
                         {comparisonData.map((item, idx) => (
-                          <tr key={item.name} style={{ backgroundColor: idx % 2 === 0 ? '#fff' : '#f9f9f9' }}>
+                          <tr key={item.name} style={{ backgroundColor: idx % 2 === 0 ? '#fff' : '#f9fafb' }}>
                             <td style={{ padding: '5px 8px', borderBottom: '1px solid #eee', fontWeight: 500 }}>{item.name}</td>
                             <td style={{ padding: '5px 8px', borderBottom: '1px solid #eee', textAlign: 'center' }}>{item.examA}%</td>
                             <td style={{ padding: '5px 8px', borderBottom: '1px solid #eee', textAlign: 'center' }}>{item.examB}%</td>
@@ -5472,10 +5614,9 @@ export default function TeacherAcademicPage() {
                     </p>
                   </div>
 
-                  {/* Footer */}
-                  <div className="footer" style={{ textAlign: 'center', fontSize: '8px', color: '#666', marginTop: '15px', paddingTop: '8px', borderTop: '1px solid #ddd' }}>
-                    <p>This report was generated automatically by the School Management System</p>
-                    <p>© {new Date().getFullYear()} All Rights Reserved</p>
+                  {/* Footer - Professional Style */}
+                  <div className="footer" style={{ marginTop: '12px', textAlign: 'center', fontSize: '8px', color: '#9ca3af', paddingTop: '8px', borderTop: '1px solid #d1d5db' }}>
+                    This is a computer-generated report. Generated on {new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}.
                   </div>
                 </div>
               );
