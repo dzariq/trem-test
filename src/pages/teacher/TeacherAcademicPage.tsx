@@ -214,14 +214,21 @@ export default function TeacherAcademicPage() {
   const [comparisonReportDialogOpen, setComparisonReportDialogOpen] = useState(false);
   const comparisonReportRef = useRef<HTMLDivElement>(null);
   const handleTouchStart = useCallback((e: React.TouchEvent) => {
+    // Only handle pinch-to-zoom with 2 fingers, allow single-finger scrolling to pass through
     if (e.touches.length === 2) {
+      e.preventDefault();
+      e.stopPropagation();
       const touch1 = e.touches[0];
       const touch2 = e.touches[1];
       lastTouchDistance.current = Math.hypot(touch2.clientX - touch1.clientX, touch2.clientY - touch1.clientY);
     }
+    // Single finger touches are allowed to pass through for normal scrolling
   }, []);
   const handleTouchMove = useCallback((e: React.TouchEvent) => {
+    // Only intercept 2-finger pinch gestures
     if (e.touches.length === 2 && lastTouchDistance.current !== null) {
+      e.preventDefault();
+      e.stopPropagation();
       const touch1 = e.touches[0];
       const touch2 = e.touches[1];
       const currentDistance = Math.hypot(touch2.clientX - touch1.clientX, touch2.clientY - touch1.clientY);
@@ -229,6 +236,7 @@ export default function TeacherAcademicPage() {
       setChartZoom(prev => Math.min(3, Math.max(0.5, prev * scale)));
       lastTouchDistance.current = currentDistance;
     }
+    // Single finger touches pass through for normal page scrolling
   }, []);
   const handleTouchEnd = useCallback(() => {
     lastTouchDistance.current = null;
@@ -3490,7 +3498,7 @@ export default function TeacherAcademicPage() {
                   <div ref={chartContainerRef} className={cn("h-64 overflow-x-auto overflow-y-hidden scrollbar-thin scrollbar-thumb-muted scrollbar-track-transparent", isMobile && "h-52")} style={{
                   WebkitOverflowScrolling: 'touch',
                   scrollBehavior: 'smooth',
-                  touchAction: 'pan-x pinch-zoom'
+                  touchAction: 'pan-x pan-y pinch-zoom'
                 }} onTouchStart={handleTouchStart} onTouchMove={handleTouchMove} onTouchEnd={handleTouchEnd}>
                     <div style={{
                     width: Math.max(100, trendData.length / 4 * 100 * chartZoom) + '%',
