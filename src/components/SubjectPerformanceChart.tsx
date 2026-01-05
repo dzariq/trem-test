@@ -19,12 +19,15 @@ interface SubjectData {
   fullName?: string;
   score: number;
   goal: number;
+  cohortAvg?: number;
 }
 
 interface SubjectPerformanceChartProps {
   data: SubjectData[];
   lineColors?: string[];
   showGoalBadge?: boolean;
+  title?: string;
+  showCohortDot?: boolean;
 }
 
 // Default colors
@@ -43,6 +46,8 @@ export function SubjectPerformanceChart({
   data,
   lineColors = defaultLineColors,
   showGoalBadge = true,
+  title = "Subject Performance",
+  showCohortDot = false,
 }: SubjectPerformanceChartProps) {
   const totalSubjects = data.length;
   const MIN_VISIBLE = 3;
@@ -269,11 +274,17 @@ export function SubjectPerformanceChart({
     <div className="space-y-2">
       <div className="flex items-center justify-between">
         <h4 className="text-sm font-medium text-foreground flex items-center gap-2">
-          Subject Performance
+          {title}
           {showGoalBadge && (
             <Badge variant="outline" className="text-[10px] px-1.5 py-0">
               <span className="w-2 h-2 rounded-full mr-1" style={{ backgroundColor: "hsl(var(--foreground))" }} />
               Goal
+            </Badge>
+          )}
+          {showCohortDot && (
+            <Badge variant="outline" className="text-[10px] px-1.5 py-0">
+              <span className="w-2 h-2 rounded-full mr-1 bg-black dark:bg-white" />
+              Cohort Avg
             </Badge>
           )}
         </h4>
@@ -412,7 +423,7 @@ export function SubjectPerformanceChart({
                   <Cell key={index} fill={lineColors[(scrollOffset + index) % lineColors.length]} />
                 ))}
               </Bar>
-              {visibleData.map((entry) => (
+              {showGoalBadge && visibleData.map((entry) => (
                 <ReferenceDot
                   key={`goal-${entry.displayName}`}
                   x={entry.goal}
@@ -421,6 +432,18 @@ export function SubjectPerformanceChart({
                   fill="hsl(var(--foreground))"
                   stroke="hsl(var(--background))"
                   strokeWidth={1}
+                />
+              ))}
+              {showCohortDot && visibleData.map((entry) => entry.cohortAvg !== undefined && (
+                <ReferenceDot
+                  key={`cohort-${entry.displayName}`}
+                  x={entry.cohortAvg}
+                  y={entry.displayName}
+                  r={4}
+                  fill="#000000"
+                  stroke="hsl(var(--background))"
+                  strokeWidth={1}
+                  className="dark:fill-white"
                 />
               ))}
             </BarChart>
