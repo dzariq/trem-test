@@ -297,6 +297,16 @@ export default function TeacherHomePage() {
 
         <AnnouncementCarousel />
         <UpcomingEvents />
+        
+        {/* Footer with faded school badge */}
+        <div className="flex flex-col items-center justify-center py-8 mt-4">
+          <img 
+            src={schoolBadge} 
+            alt="School Badge" 
+            className="h-20 w-auto opacity-20 grayscale"
+          />
+          <p className="text-muted-foreground/50 text-xs mt-2">Collinz International School</p>
+        </div>
         </div>
       </div>
 
