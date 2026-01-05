@@ -414,12 +414,25 @@ const TeacherLessonPlansPage = () => {
                                     week.lessonPlans.map(lp => lp.subtopic).filter(Boolean)
                                   )];
                                   return weekSubtopics.length > 0 ? (
-                                    <span className="text-sm font-medium truncate min-w-0">
-                                      {weekSubtopics.join(", ")}
-                                    </span>
+                                    <div className="flex flex-wrap gap-1 min-w-0 overflow-hidden">
+                                      {weekSubtopics.slice(0, 2).map((subtopic, idx) => (
+                                        <Badge 
+                                          key={idx} 
+                                          variant="outline" 
+                                          className="text-xs font-normal px-2 py-0.5 max-w-[120px] truncate"
+                                        >
+                                          {subtopic}
+                                        </Badge>
+                                      ))}
+                                      {weekSubtopics.length > 2 && (
+                                        <Badge variant="outline" className="text-xs font-normal px-2 py-0.5">
+                                          +{weekSubtopics.length - 2}
+                                        </Badge>
+                                      )}
+                                    </div>
                                   ) : (
-                                    <span className="text-sm text-muted-foreground italic truncate min-w-0">
-                                      No subtopics assigned
+                                    <span className="text-xs text-muted-foreground italic">
+                                      No subtopics
                                     </span>
                                   );
                                 })()}
