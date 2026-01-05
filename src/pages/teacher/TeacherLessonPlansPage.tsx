@@ -1,0 +1,242 @@
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { TeacherAppLayout } from "@/components/layout/TeacherAppLayout";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
+import { 
+  Plus, 
+  ChevronRight, 
+  BookOpen, 
+  CheckCircle2, 
+  Clock, 
+  AlertCircle,
+  FileText 
+} from "lucide-react";
+import { cn } from "@/lib/utils";
+import { 
+  mockLessonPlans, 
+  getAvailableSubjects, 
+  getLessonPlanStatus,
+  type LessonPlan,
+  type SubjectCurriculum 
+} from "@/data/lessonPlanData";
+
+const TeacherLessonPlansPage = () => {
+  const navigate = useNavigate();
+  const [selectedSubject, setSelectedSubject] = useState<string>(mockLessonPlans[0]?.subject || "");
+  
+  const subjects = getAvailableSubjects();
+  const curriculum = mockLessonPlans.find(s => s.subject === selectedSubject);
+
+  const getStatusIcon = (status: "complete" | "incomplete" | "draft" | "empty") => {
+    switch (status) {
+      case "complete":
+        return <CheckCircle2 className="h-3 w-3 text-emerald-500" />;
+      case "incomplete":
+        return <AlertCircle className="h-3 w-3 text-amber-500" />;
+      case "draft":
+        return <Clock className="h-3 w-3 text-muted-foreground" />;
+      default:
+        return null;
+    }
+  };
+
+  const getStatusBadgeVariant = (status: "complete" | "incomplete" | "draft" | "empty") => {
+    switch (status) {
+      case "complete":
+        return "default";
+      case "incomplete":
+        return "secondary";
+      case "draft":
+        return "outline";
+      default:
+        return "outline";
+    }
+  };
+
+  const handleLessonPlanClick = (lp: LessonPlan) => {
+    navigate(`/teacher/lesson-plans/${lp.id}`);
+  };
+
+  const handleCreateNew = () => {
+    navigate("/teacher/lesson-plans/new");
+  };
+
+  const renderLessonPlanBadge = (lp: LessonPlan | undefined, lessonNumber: number, weekId: string) => {
+    if (!lp) {
+      return (
+        <Button
+          variant="outline"
+          size="sm"
+          className="h-8 w-8 p-0 border-dashed"
+          onClick={() => navigate(`/teacher/lesson-plans/new?week=${weekId}&lesson=${lessonNumber}`)}
+        >
+          <Plus className="h-3 w-3 text-muted-foreground" />
+        </Button>
+      );
+    }
+
+    const status = getLessonPlanStatus(lp);
+    
+    return (
+      <Button
+        variant={status === "complete" ? "default" : status === "incomplete" ? "secondary" : "outline"}
+        size="sm"
+        className={cn(
+          "h-8 min-w-[2rem] px-2 gap-1",
+          status === "complete" && "bg-emerald-500 hover:bg-emerald-600",
+          status === "incomplete" && "border-amber-300 bg-amber-50 text-amber-700 hover:bg-amber-100"
+        )}
+        onClick={() => handleLessonPlanClick(lp)}
+      >
+        {getStatusIcon(status)}
+        <span className="text-xs font-medium">LP{lp.lessonNumber}</span>
+      </Button>
+    );
+  };
+
+  return (
+    <TeacherAppLayout>
+      <div className="flex flex-col h-full">
+        {/* Header with Subject Selector */}
+        <div className="px-4 py-3 border-b border-border bg-card/50">
+          <div className="flex items-center justify-between gap-3">
+            <Select value={selectedSubject} onValueChange={setSelectedSubject}>
+              <SelectTrigger className="w-[180px]">
+                <SelectValue placeholder="Select subject" />
+              </SelectTrigger>
+              <SelectContent>
+                {subjects.map((subject) => (
+                  <SelectItem key={subject} value={subject}>
+                    {subject}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            
+            <Button size="sm" onClick={handleCreateNew} className="gap-1.5">
+              <Plus className="h-4 w-4" />
+              <span className="hidden sm:inline">New LP</span>
+            </Button>
+          </div>
+        </div>
+
+        {/* Topics and Weeks List */}
+        <ScrollArea className="flex-1">
+          <div className="p-4 space-y-4">
+            {curriculum?.topics.map((topic) => (
+              <Card key={topic.id} className="overflow-hidden">
+                <CardHeader className="py-3 px-4 bg-muted/30">
+                  <div className="flex items-center gap-2">
+                    <BookOpen className="h-4 w-4 text-primary" />
+                    <CardTitle className="text-sm font-semibold">{topic.title}</CardTitle>
+                  </div>
+                </CardHeader>
+                <CardContent className="p-0">
+                  <Accordion type="multiple" className="w-full">
+                    {topic.weeks.map((week) => {
+                      const lpCount = week.lessonPlans.length;
+                      const completedCount = week.lessonPlans.filter(
+                        lp => getLessonPlanStatus(lp) === "complete"
+                      ).length;
+                      
+                      return (
+                        <AccordionItem 
+                          key={week.id} 
+                          value={week.id}
+                          className="border-b last:border-b-0"
+                        >
+                          <AccordionTrigger className="px-4 py-3 hover:no-underline hover:bg-muted/20">
+                            <div className="flex items-center justify-between w-full pr-2">
+                              <div className="flex items-center gap-2">
+                                <Badge variant="outline" className="text-xs font-normal">
+                                  Week {week.weekNumber}
+                                </Badge>
+                                <span className="text-sm font-medium">{week.title}</span>
+                              </div>
+                              <Badge 
+                                variant="secondary" 
+                                className="text-xs ml-2"
+                              >
+                                {completedCount}/{lpCount > 0 ? lpCount : 5}
+                              </Badge>
+                            </div>
+                          </AccordionTrigger>
+                          <AccordionContent className="px-4 pb-3">
+                            <div className="flex flex-wrap gap-2 pt-2">
+                              {[1, 2, 3, 4, 5].map((lessonNum) => {
+                                const lp = week.lessonPlans.find(p => p.lessonNumber === lessonNum);
+                                return (
+                                  <div key={lessonNum} className="flex flex-col items-center gap-1">
+                                    {renderLessonPlanBadge(lp, lessonNum, week.id)}
+                                    {lp && (
+                                      <span className="text-[10px] text-muted-foreground max-w-[60px] truncate text-center">
+                                        {lp.title.substring(0, 15)}...
+                                      </span>
+                                    )}
+                                  </div>
+                                );
+                              })}
+                            </div>
+                            
+                            {/* Week Summary */}
+                            {week.lessonPlans.length > 0 && (
+                              <div className="mt-3 pt-3 border-t border-border">
+                                <div className="flex items-center gap-4 text-xs text-muted-foreground">
+                                  <div className="flex items-center gap-1">
+                                    <CheckCircle2 className="h-3 w-3 text-emerald-500" />
+                                    <span>{week.lessonPlans.filter(lp => getLessonPlanStatus(lp) === "complete").length} Complete</span>
+                                  </div>
+                                  <div className="flex items-center gap-1">
+                                    <AlertCircle className="h-3 w-3 text-amber-500" />
+                                    <span>{week.lessonPlans.filter(lp => getLessonPlanStatus(lp) === "incomplete").length} Incomplete</span>
+                                  </div>
+                                  <div className="flex items-center gap-1">
+                                    <Clock className="h-3 w-3 text-muted-foreground" />
+                                    <span>{week.lessonPlans.filter(lp => getLessonPlanStatus(lp) === "draft").length} Draft</span>
+                                  </div>
+                                </div>
+                              </div>
+                            )}
+                          </AccordionContent>
+                        </AccordionItem>
+                      );
+                    })}
+                  </Accordion>
+                </CardContent>
+              </Card>
+            ))}
+
+            {(!curriculum || curriculum.topics.length === 0) && (
+              <Card className="p-8 text-center">
+                <FileText className="h-12 w-12 mx-auto text-muted-foreground/50 mb-3" />
+                <p className="text-muted-foreground">No lesson plans found for this subject.</p>
+                <Button className="mt-4" onClick={handleCreateNew}>
+                  <Plus className="h-4 w-4 mr-2" />
+                  Create First Lesson Plan
+                </Button>
+              </Card>
+            )}
+          </div>
+        </ScrollArea>
+      </div>
+    </TeacherAppLayout>
+  );
+};
+
+export default TeacherLessonPlansPage;
