@@ -2199,16 +2199,16 @@ export default function AcademicPage() {
                     <span className="text-xs font-bold text-muted-foreground">vs</span>
                   </div>
                   
-                  {/* Exam B - Light Purple Box */}
+                  {/* Exam B - Light Amber Box */}
                   <div className="flex-1 space-y-2 p-3 rounded-xl border" style={{
-                  backgroundColor: 'rgba(139, 92, 246, 0.08)',
-                  borderColor: 'rgba(139, 92, 246, 0.25)'
+                  backgroundColor: 'rgba(245, 158, 11, 0.08)',
+                  borderColor: 'rgba(245, 158, 11, 0.25)'
                 }}>
                     <label className="text-xs font-semibold flex items-center gap-1.5" style={{
-                    color: '#8b5cf6'
+                    color: '#d97706'
                   }}>
                       <div className="w-2 h-2 rounded-full" style={{
-                      backgroundColor: '#8b5cf6'
+                      backgroundColor: '#f59e0b'
                     }} />
                       Exam B
                     </label>
@@ -2301,10 +2301,10 @@ export default function AcademicPage() {
                     <span className="text-xs font-bold text-muted-foreground">vs</span>
                   </div>
                   
-                  <div className="flex-1 p-4 rounded-xl bg-gradient-to-br from-violet-500/10 to-violet-600/5 border border-violet-500/20">
+                  <div className="flex-1 p-4 rounded-xl bg-gradient-to-br from-amber-500/10 to-amber-600/5 border border-amber-500/20">
                     <div className="flex items-center gap-2 mb-2">
-                      <div className="w-8 h-8 rounded-lg bg-violet-500/20 flex items-center justify-center">
-                        <BarChart3 className="h-4 w-4 text-violet-500" />
+                      <div className="w-8 h-8 rounded-lg bg-amber-500/20 flex items-center justify-center">
+                        <BarChart3 className="h-4 w-4 text-amber-500" />
                       </div>
                       <div>
                         <span className="text-xs font-semibold text-foreground">Exam B</span>
@@ -2404,7 +2404,7 @@ export default function AcademicPage() {
                                           }
                                           return null;
                                         }} />
-                                        <Bar dataKey="examB" fill="hsl(263, 70%, 75%)" stroke="hsl(263, 70%, 55%)" strokeWidth={1.5} radius={[4, 4, 0, 0]} name="Exam B" />
+                                        <Bar dataKey="examB" fill="hsl(38, 92%, 70%)" stroke="hsl(38, 92%, 50%)" strokeWidth={1.5} radius={[4, 4, 0, 0]} name="Exam B" />
                                         <Bar dataKey="examA" fill="hsl(217, 91%, 75%)" stroke="hsl(217, 91%, 50%)" strokeWidth={1.5} radius={[4, 4, 0, 0]} name="Exam A" />
                                       </BarChart>
                                     </ResponsiveContainer>
@@ -2413,7 +2413,7 @@ export default function AcademicPage() {
                                   {/* Legend */}
                                   <div className="flex items-center justify-center gap-4 text-[10px]">
                                     <div className="flex items-center gap-1">
-                                      <div className="w-3 h-3 rounded-sm bg-violet-300 border border-violet-500" />
+                                      <div className="w-3 h-3 rounded-sm bg-amber-300 border border-amber-500" />
                                       <span className="text-muted-foreground">Exam B</span>
                                     </div>
                                     <div className="flex items-center gap-1">
@@ -2523,7 +2523,7 @@ export default function AcademicPage() {
                                           }
                                           return null;
                                         }} />
-                                        <Bar dataKey="examB" fill="hsl(263, 70%, 75%)" stroke="hsl(263, 70%, 55%)" strokeWidth={1.5} radius={[4, 4, 0, 0]} name="Exam B" />
+                                        <Bar dataKey="examB" fill="hsl(38, 92%, 70%)" stroke="hsl(38, 92%, 50%)" strokeWidth={1.5} radius={[4, 4, 0, 0]} name="Exam B" />
                                         <Bar dataKey="examA" fill="hsl(217, 91%, 75%)" stroke="hsl(217, 91%, 50%)" strokeWidth={1.5} radius={[4, 4, 0, 0]} name="Exam A" />
                                       </BarChart>
                                     </ResponsiveContainer>
@@ -2532,7 +2532,7 @@ export default function AcademicPage() {
                                   {/* Legend */}
                                   <div className="flex items-center justify-center gap-4 text-[10px]">
                                     <div className="flex items-center gap-1">
-                                      <div className="w-3 h-3 rounded-sm bg-violet-300 border border-violet-500" />
+                                      <div className="w-3 h-3 rounded-sm bg-amber-300 border border-amber-500" />
                                       <span className="text-muted-foreground">Exam B</span>
                                     </div>
                                     <div className="flex items-center gap-1">
@@ -2632,11 +2632,11 @@ export default function AcademicPage() {
                           
                           {/* Visual Bars */}
                           <div className="space-y-1.5">
-                            {/* Exam B (Previous) - Blue */}
+                            {/* Exam B (Previous) - Amber */}
                             <div className="flex items-center gap-2">
                               <span className="text-[10px] text-muted-foreground w-16 truncate">{getExamLabelForComparison(compareExamB).split(' ')[0]}</span>
                               <div className="flex-1 h-5 bg-muted/30 rounded-full overflow-hidden relative">
-                                <div className="h-full bg-blue-500 rounded-full transition-all duration-500" style={{
+                                <div className="h-full bg-amber-500 rounded-full transition-all duration-500" style={{
                               width: `${item.examB / 100 * 100}%`
                             }} />
                                 {/* Goal marker line */}
@@ -2649,11 +2649,11 @@ export default function AcademicPage() {
                               </div>
                             </div>
                             
-                            {/* Exam A (Current) - Orange */}
+                            {/* Exam A (Current) - Blue */}
                             <div className="flex items-center gap-2">
                               <span className="text-[10px] text-muted-foreground w-16 truncate">{getExamLabelForComparison(compareExamA).split(' ')[0]}</span>
                               <div className="flex-1 h-5 bg-muted/30 rounded-full overflow-hidden relative">
-                                <div className="h-full bg-orange-500 rounded-full transition-all duration-500" style={{
+                                <div className="h-full bg-blue-500 rounded-full transition-all duration-500" style={{
                               width: `${item.examA / 100 * 100}%`
                             }} />
                                 {/* Goal marker line */}
