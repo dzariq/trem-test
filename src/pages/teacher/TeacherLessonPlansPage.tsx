@@ -240,8 +240,8 @@ const TeacherLessonPlansPage = () => {
                     </div>
                   </div>
                 </CardHeader>
-                <CardContent className="p-0">
-                  <Accordion type="multiple" className="w-full">
+                <CardContent className="p-0 overflow-hidden">
+                  <Accordion type="multiple" className="w-full overflow-hidden">
                     {topic.weeks.map((week) => {
                       const lpCount = week.lessonPlans.length;
                       const completedCount = week.lessonPlans.filter(
@@ -252,19 +252,19 @@ const TeacherLessonPlansPage = () => {
                         <AccordionItem 
                           key={week.id} 
                           value={week.id}
-                          className="border-b last:border-b-0"
+                          className="border-b last:border-b-0 overflow-hidden"
                         >
-                          <AccordionTrigger className="px-4 py-3 hover:no-underline hover:bg-muted/20">
-                            <div className="flex items-center justify-between w-full pr-2">
-                              <div className="flex items-center gap-2">
-                                <Badge variant="outline" className="text-xs font-normal">
+                          <AccordionTrigger className="px-4 py-3 hover:no-underline hover:bg-muted/20 [&>svg]:flex-shrink-0">
+                            <div className="flex items-center justify-between w-full pr-2 min-w-0">
+                              <div className="flex items-center gap-2 min-w-0 flex-1">
+                                <Badge variant="outline" className="text-xs font-normal flex-shrink-0">
                                   Week {week.weekNumber}
                                 </Badge>
-                                <span className="text-sm font-medium">{week.title}</span>
+                                <span className="text-sm font-medium truncate">{week.title}</span>
                               </div>
                               <Badge 
                                 variant="secondary" 
-                                className="text-xs ml-2"
+                                className="text-xs ml-2 flex-shrink-0"
                               >
                                 {completedCount}/{lpCount > 0 ? lpCount : 5}
                               </Badge>
