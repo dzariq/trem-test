@@ -73,7 +73,7 @@ export default function TeacherAttendancePage() {
       <button
         onClick={() => handleStatusChange(studentId, status)}
         className={cn(
-          "w-12 h-10 rounded-lg transition-all duration-200 flex items-center justify-center",
+          "w-16 h-14 rounded-xl transition-all duration-200 flex items-center justify-center",
           isActive ? activeColor : "bg-muted hover:bg-muted/80"
         )}
         title={label}
@@ -250,28 +250,28 @@ export default function TeacherAttendancePage() {
                     {getStatusButton(
                       student.id,
                       "present",
-                      <Check className="h-4 w-4 text-white" />,
+                      <Check className="h-5 w-5 text-white" />,
                       "Present",
                       "bg-emerald-500"
                     )}
                     {getStatusButton(
                       student.id,
                       "absent",
-                      <X className="h-4 w-4 text-white" />,
+                      <X className="h-5 w-5 text-white" />,
                       "Absent",
                       "bg-red-500"
                     )}
                     {getStatusButton(
                       student.id,
                       "late",
-                      <Clock className="h-4 w-4 text-white" />,
+                      <Clock className="h-5 w-5 text-white" />,
                       "Late",
                       "bg-amber-500"
                     )}
                     {getStatusButton(
                       student.id,
                       "excused",
-                      <AlertCircle className="h-4 w-4 text-white" />,
+                      <AlertCircle className="h-5 w-5 text-white" />,
                       "Excused",
                       "bg-purple-500"
                     )}
