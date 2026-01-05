@@ -11,7 +11,7 @@ import { CalendarIcon, Check, X, Clock, AlertCircle, Save, ChevronLeft, ChevronR
 import { format, startOfWeek, endOfWeek, isToday, parseISO } from "date-fns";
 import { cn } from "@/lib/utils";
 import { toast } from "@/hooks/use-toast";
-import schoolLogo from "@/assets/school-badge.png";
+
 import { teacherProfile, classRosters, teacherAttendanceStats, DailyAttendanceDetail } from "@/data/teacherMockData";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -142,12 +142,8 @@ export default function TeacherAttendancePage() {
   return (
     <TeacherAppLayout>
       <AppHeader 
-        showBack
         leftContent={
-          <div className="flex items-center gap-2">
-            <img src={schoolLogo} alt="School Logo" className="h-12 w-auto -my-2 drop-shadow-md" />
-            <h1 className="text-xl font-semibold text-foreground">Attendance</h1>
-          </div>
+          <h1 className="text-xl font-semibold text-foreground">Attendance</h1>
         }
       />
 
