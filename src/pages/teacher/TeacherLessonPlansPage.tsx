@@ -434,12 +434,25 @@ const TeacherLessonPlansPage = () => {
                                   );
                                 })()}
                               </div>
-                              <Badge 
-                                variant="secondary" 
-                                className="text-xs shrink-0"
-                              >
-                                {completedCount}/{lpCount > 0 ? lpCount : 5}
-                              </Badge>
+                              {(() => {
+                                const total = lpCount > 0 ? lpCount : 5;
+                                const isAllComplete = completedCount === total && total > 0;
+                                const isNoneComplete = completedCount === 0;
+                                
+                                return (
+                                  <Badge 
+                                    variant="secondary" 
+                                    className={cn(
+                                      "text-xs shrink-0",
+                                      isAllComplete && "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/50 dark:text-emerald-300",
+                                      isNoneComplete && "bg-red-100 text-red-700 dark:bg-red-900/50 dark:text-red-300",
+                                      !isAllComplete && !isNoneComplete && "bg-amber-100 text-amber-700 dark:bg-amber-900/50 dark:text-amber-300"
+                                    )}
+                                  >
+                                    {completedCount}/{total}
+                                  </Badge>
+                                );
+                              })()}
                             </div>
                           </AccordionTrigger>
                             <AccordionContent className="px-4 pb-3">
