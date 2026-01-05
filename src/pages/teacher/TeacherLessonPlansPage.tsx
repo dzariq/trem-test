@@ -46,7 +46,8 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { toast } from "@/hooks/use-toast";
-import { startOfWeek, addWeeks, format, isWithinInterval, addDays } from "date-fns";
+import { startOfWeek, endOfWeek, addWeeks, format, isWithinInterval, addDays, isSameWeek, eachDayOfInterval } from "date-fns";
+import { DateRange } from "react-day-picker";
 import { 
   mockLessonPlans, 
   getAvailableSubjects, 
@@ -77,6 +78,20 @@ const isHoliday = (date: Date): boolean => {
   );
 };
 
+// Get Monday to Friday of the week containing the date
+const getSchoolWeek = (date: Date): { start: Date; end: Date } => {
+  const weekStart = startOfWeek(date, { weekStartsOn: 1 }); // Monday
+  const weekEnd = addDays(weekStart, 4); // Friday
+  return { start: weekStart, end: weekEnd };
+};
+
+// Check if any day in the school week is a holiday
+const isWeekHoliday = (date: Date): boolean => {
+  const { start, end } = getSchoolWeek(date);
+  const weekDays = eachDayOfInterval({ start, end });
+  return weekDays.some(day => isHoliday(day));
+};
+
 const TeacherLessonPlansPage = () => {
   const navigate = useNavigate();
   const [selectedSubject, setSelectedSubject] = useState<string>(mockLessonPlans[0]?.subject || "");
@@ -96,11 +111,13 @@ const TeacherLessonPlansPage = () => {
   const handleWeekChange = (weekId: string, selectedDate: Date | undefined) => {
     if (!selectedDate) return;
     
-    // Check if it's a holiday
-    if (isHoliday(selectedDate)) {
+    const { start, end } = getSchoolWeek(selectedDate);
+    
+    // Check if any day in the week is a holiday
+    if (isWeekHoliday(selectedDate)) {
       toast({
         title: "Holiday Period",
-        description: "This week is a holiday period and cannot be selected.",
+        description: "This week includes a holiday period and cannot be selected.",
         variant: "destructive"
       });
       return;
@@ -109,9 +126,15 @@ const TeacherLessonPlansPage = () => {
     const newWeekNumber = getWeekNumber(selectedDate, termStart);
     toast({
       title: "Week Changed",
-      description: `Week updated to Week ${newWeekNumber} (${format(selectedDate, "MMM d, yyyy")})`,
+      description: `Week updated to Week ${newWeekNumber} (${format(start, "MMM d")} - ${format(end, "MMM d, yyyy")})`,
     });
     setWeekCalendarOpen(null);
+  };
+
+  // Get week range for display
+  const getWeekRange = (weekNumber: number): { start: Date; end: Date } => {
+    const weekStart = addWeeks(termStart, weekNumber - 1);
+    return getSchoolWeek(weekStart);
   };
 
   const getStatusIcon = (status: "complete" | "incomplete" | "draft" | "empty") => {
@@ -324,23 +347,35 @@ const TeacherLessonPlansPage = () => {
                                   </PopoverTrigger>
                                   <PopoverContent className="w-auto p-0 z-50" align="start" onClick={(e) => e.stopPropagation()}>
                                     <div className="p-2 border-b border-border">
-                                      <p className="text-xs font-medium">Select Week</p>
-                                      <p className="text-xs text-muted-foreground">Holiday periods are disabled</p>
+                                      <p className="text-xs font-medium">Select Week (Mon-Fri)</p>
+                                      <p className="text-xs text-muted-foreground">Click any day to select the school week</p>
                                     </div>
                                     <Calendar
                                       mode="single"
                                       selected={addWeeks(termStart, week.weekNumber - 1)}
                                       onSelect={(date) => handleWeekChange(week.id, date)}
-                                      disabled={(date) => isHoliday(date)}
+                                      disabled={(date) => {
+                                        // Disable weekends and holidays
+                                        const day = date.getDay();
+                                        return day === 0 || day === 6 || isHoliday(date);
+                                      }}
                                       className={cn("p-3 pointer-events-auto")}
                                       modifiers={{
-                                        holiday: (date) => isHoliday(date)
+                                        holiday: (date) => isHoliday(date),
+                                        selectedWeek: (date) => {
+                                          const currentWeekStart = addWeeks(termStart, week.weekNumber - 1);
+                                          return isSameWeek(date, currentWeekStart, { weekStartsOn: 1 });
+                                        }
                                       }}
                                       modifiersStyles={{
                                         holiday: { 
                                           backgroundColor: 'hsl(var(--destructive) / 0.1)',
                                           color: 'hsl(var(--muted-foreground))',
                                           textDecoration: 'line-through'
+                                        },
+                                        selectedWeek: {
+                                          backgroundColor: 'hsl(var(--primary) / 0.15)',
+                                          fontWeight: 600
                                         }
                                       }}
                                     />
