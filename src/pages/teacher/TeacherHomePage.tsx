@@ -197,14 +197,12 @@ export default function TeacherHomePage() {
         )}
 
         {/* Upcoming Deadlines Section */}
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm flex items-center gap-2">
-              <Clock className="h-4 w-4 text-primary" />
-              Upcoming Deadlines
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-2">
+        <div>
+          <h3 className="text-sm font-semibold flex items-center gap-2 mb-3">
+            <Clock className="h-4 w-4 text-primary" />
+            Upcoming Deadlines
+          </h3>
+          <div className="space-y-2">
             {upcomingDeadlines.length === 0 ? (
               <p className="text-sm text-muted-foreground text-center py-4">
                 No upcoming deadlines
@@ -291,8 +289,8 @@ export default function TeacherHomePage() {
                 );
               })
             )}
-          </CardContent>
-          </Card>
+          </div>
+        </div>
         </div>
 
         <AnnouncementCarousel />
