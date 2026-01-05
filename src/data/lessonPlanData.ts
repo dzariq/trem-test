@@ -97,6 +97,7 @@ export interface Week {
 export interface Topic {
   id: string;
   title: string;
+  subtopics: string[];
   weeks: Week[];
 }
 
@@ -121,6 +122,7 @@ export const mockLessonPlans: SubjectCurriculum[] = [
       {
         id: "topic-1",
         title: "Algebra Basics",
+        subtopics: ["Variables and Constants", "Algebraic Expressions", "Evaluating Expressions", "One-Step Equations"],
         weeks: [
           {
             id: "week-1",
@@ -412,6 +414,7 @@ export const mockLessonPlans: SubjectCurriculum[] = [
       {
         id: "topic-2",
         title: "Linear Equations",
+        subtopics: ["Introduction to Linear Equations", "Graphing Linear Equations", "Slope and Intercept"],
         weeks: [
           {
             id: "week-3",
@@ -429,6 +432,7 @@ export const mockLessonPlans: SubjectCurriculum[] = [
       {
         id: "sci-topic-1",
         title: "Forces and Motion",
+        subtopics: ["Introduction to Forces", "Types of Forces", "Newton's Laws", "Friction"],
         weeks: [
           {
             id: "sci-week-1",
@@ -601,6 +605,23 @@ export const getLessonPlanById = (id: string): LessonPlan | undefined => {
         if (lp) return lp;
       }
     }
+  }
+  return undefined;
+};
+
+// Get subtopics for a specific topic
+export const getSubtopicsForTopic = (subject: string, topicTitle: string): string[] => {
+  const curriculum = mockLessonPlans.find(s => s.subject === subject);
+  if (!curriculum) return [];
+  const topic = curriculum.topics.find(t => t.title === topicTitle);
+  return topic?.subtopics || [];
+};
+
+// Get topic by ID
+export const getTopicById = (topicId: string): { topic: Topic; subject: string } | undefined => {
+  for (const curriculum of mockLessonPlans) {
+    const topic = curriculum.topics.find(t => t.id === topicId);
+    if (topic) return { topic, subject: curriculum.subject };
   }
   return undefined;
 };

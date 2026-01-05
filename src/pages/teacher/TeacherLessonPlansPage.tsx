@@ -52,6 +52,9 @@ const TeacherLessonPlansPage = () => {
   const [selectedSubject, setSelectedSubject] = useState<string>(mockLessonPlans[0]?.subject || "");
   const [isAddTopicOpen, setIsAddTopicOpen] = useState(false);
   const [newTopicTitle, setNewTopicTitle] = useState("");
+  const [isAddSubtopicOpen, setIsAddSubtopicOpen] = useState(false);
+  const [currentTopicId, setCurrentTopicId] = useState<string>("");
+  const [newSubtopicTitle, setNewSubtopicTitle] = useState("");
   
   const subjects = getAvailableSubjects();
   const curriculum = mockLessonPlans.find(s => s.subject === selectedSubject);
@@ -97,6 +100,26 @@ const TeacherLessonPlansPage = () => {
     
     setNewTopicTitle("");
     setIsAddTopicOpen(false);
+  };
+
+  const handleOpenAddSubtopic = (topicId: string) => {
+    setCurrentTopicId(topicId);
+    setIsAddSubtopicOpen(true);
+  };
+
+  const handleAddSubtopic = () => {
+    if (!newSubtopicTitle.trim()) return;
+    
+    const topic = curriculum?.topics.find(t => t.id === currentTopicId);
+    // In a real app, this would save to the database
+    toast({
+      title: "Subtopic Added",
+      description: `"${newSubtopicTitle}" has been added to ${topic?.title || "topic"}.`,
+    });
+    
+    setNewSubtopicTitle("");
+    setIsAddSubtopicOpen(false);
+    setCurrentTopicId("");
   };
 
   const handleCreateNew = () => {
@@ -182,11 +205,39 @@ const TeacherLessonPlansPage = () => {
             {curriculum?.topics.map((topic, topicIndex) => (
               <Card key={topic.id} className="overflow-hidden">
                 <CardHeader className="py-3 px-4 bg-muted/30">
-                  <div className="flex items-center gap-2">
-                    <BookOpen className="h-4 w-4 text-primary" />
-                    <CardTitle className="text-sm font-semibold">
-                      Topic {topicIndex + 1}: {topic.title}
-                    </CardTitle>
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="flex items-center gap-2">
+                      <BookOpen className="h-4 w-4 text-primary" />
+                      <CardTitle className="text-sm font-semibold">
+                        Topic {topicIndex + 1}: {topic.title}
+                      </CardTitle>
+                    </div>
+                  </div>
+                  
+                  {/* Subtopics Section */}
+                  <div className="mt-3 pt-3 border-t border-border/50">
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-xs font-medium text-muted-foreground">Subtopics:</span>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-6 w-6 p-0"
+                        onClick={() => handleOpenAddSubtopic(topic.id)}
+                      >
+                        <Plus className="h-3.5 w-3.5" />
+                      </Button>
+                    </div>
+                    <div className="flex flex-wrap gap-1.5">
+                      {topic.subtopics && topic.subtopics.length > 0 ? (
+                        topic.subtopics.map((subtopic, idx) => (
+                          <Badge key={idx} variant="secondary" className="text-xs font-normal">
+                            {subtopic}
+                          </Badge>
+                        ))
+                      ) : (
+                        <span className="text-xs text-muted-foreground italic">No subtopics added</span>
+                      )}
+                    </div>
                   </div>
                 </CardHeader>
                 <CardContent className="p-0">
@@ -302,6 +353,37 @@ const TeacherLessonPlansPage = () => {
             </Button>
             <Button onClick={handleAddTopic} disabled={!newTopicTitle.trim()}>
               Add Topic
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Add Subtopic Dialog */}
+      <Dialog open={isAddSubtopicOpen} onOpenChange={setIsAddSubtopicOpen}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Add Subtopic</DialogTitle>
+            <DialogDescription>
+              Add a new subtopic to "{curriculum?.topics.find(t => t.id === currentTopicId)?.title}".
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="subtopic-title">Subtopic Title</Label>
+              <Input
+                id="subtopic-title"
+                placeholder="e.g., Solving Quadratic Equations"
+                value={newSubtopicTitle}
+                onChange={(e) => setNewSubtopicTitle(e.target.value)}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsAddSubtopicOpen(false)}>
+              Cancel
+            </Button>
+            <Button onClick={handleAddSubtopic} disabled={!newSubtopicTitle.trim()}>
+              Add Subtopic
             </Button>
           </DialogFooter>
         </DialogContent>
