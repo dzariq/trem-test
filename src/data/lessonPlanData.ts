@@ -15,8 +15,7 @@ export interface LessonFlow {
 }
 
 export interface LessonPlanReflection {
-  objectivesAchieved: boolean;
-  objectivesNotAchieved: boolean;
+  objectivesAchievementPercent: number; // 0-100 percentage
   objectivesRealistic: string;
   learnersLearned: string;
   learningAtmosphere: string;
@@ -180,8 +179,7 @@ export const mockLessonPlans: SubjectCurriculum[] = [
                 attachments: [],
                 homework: "Worksheet 3.1: Identifying Variables (10 questions)",
                 reflection: {
-                  objectivesAchieved: true,
-                  objectivesNotAchieved: false,
+                  objectivesAchievementPercent: 85,
                   objectivesRealistic: "Yes, objectives were achievable within the time frame.",
                   learnersLearned: "Students learned to identify variables and constants in expressions.",
                   learningAtmosphere: "Positive and engaging. Students were curious and asked questions.",
@@ -250,8 +248,7 @@ export const mockLessonPlans: SubjectCurriculum[] = [
                 attachments: [],
                 homework: "Complete exercises 1-15 on page 52",
                 reflection: {
-                  objectivesAchieved: true,
-                  objectivesNotAchieved: false,
+                  objectivesAchievementPercent: 90,
                   objectivesRealistic: "Yes, well-paced for the class level.",
                   learnersLearned: "Students can now translate verbal phrases to algebraic expressions.",
                   learningAtmosphere: "Energetic and collaborative during the game activity.",
@@ -319,8 +316,7 @@ export const mockLessonPlans: SubjectCurriculum[] = [
                 attachments: [],
                 homework: "None",
                 reflection: {
-                  objectivesAchieved: false,
-                  objectivesNotAchieved: true,
+                  objectivesAchievementPercent: 0,
                   objectivesRealistic: "",
                   learnersLearned: "",
                   learningAtmosphere: "",
@@ -391,8 +387,7 @@ export const mockLessonPlans: SubjectCurriculum[] = [
                 attachments: [],
                 homework: "Worksheet 4.1",
                 reflection: {
-                  objectivesAchieved: false,
-                  objectivesNotAchieved: false,
+                  objectivesAchievementPercent: 50,
                   objectivesRealistic: "",
                   learnersLearned: "",
                   learningAtmosphere: "",
@@ -452,8 +447,7 @@ export const mockLessonPlans: SubjectCurriculum[] = [
                 attachments: [],
                 homework: "Exercises 1-10 page 66",
                 reflection: {
-                  objectivesAchieved: true,
-                  objectivesNotAchieved: false,
+                  objectivesAchievementPercent: 95,
                   objectivesRealistic: "Yes, students understood the concept well.",
                   learnersLearned: "Students can now identify linear equations.",
                   learningAtmosphere: "Focused and engaged throughout.",
@@ -493,8 +487,7 @@ export const mockLessonPlans: SubjectCurriculum[] = [
                 attachments: [],
                 homework: "Graph 5 linear equations",
                 reflection: {
-                  objectivesAchieved: false,
-                  objectivesNotAchieved: false,
+                  objectivesAchievementPercent: 50,
                   objectivesRealistic: "",
                   learnersLearned: "",
                   learningAtmosphere: "",
@@ -541,8 +534,7 @@ export const mockLessonPlans: SubjectCurriculum[] = [
                 attachments: [],
                 homework: "Worksheet 5.1",
                 reflection: {
-                  objectivesAchieved: false,
-                  objectivesNotAchieved: false,
+                  objectivesAchievementPercent: 50,
                   objectivesRealistic: "",
                   learnersLearned: "",
                   learningAtmosphere: "",
@@ -596,8 +588,7 @@ export const mockLessonPlans: SubjectCurriculum[] = [
                 attachments: [],
                 homework: "Draw 3 examples of each concept",
                 reflection: {
-                  objectivesAchieved: true,
-                  objectivesNotAchieved: false,
+                  objectivesAchievementPercent: 100,
                   objectivesRealistic: "Very achievable for this age group.",
                   learnersLearned: "Students can identify basic geometric elements.",
                   learningAtmosphere: "Interactive and curious.",
@@ -637,8 +628,7 @@ export const mockLessonPlans: SubjectCurriculum[] = [
                 attachments: [],
                 homework: "Measure 10 angles at home",
                 reflection: {
-                  objectivesAchieved: true,
-                  objectivesNotAchieved: false,
+                  objectivesAchievementPercent: 75,
                   objectivesRealistic: "Yes, but protractor use needs more practice.",
                   learnersLearned: "Students can identify angle types and use protractors.",
                   learningAtmosphere: "Hands-on and engaged.",
@@ -678,8 +668,7 @@ export const mockLessonPlans: SubjectCurriculum[] = [
                 attachments: [],
                 homework: "Find and classify 5 triangles at home",
                 reflection: {
-                  objectivesAchieved: true,
-                  objectivesNotAchieved: false,
+                  objectivesAchievementPercent: 88,
                   objectivesRealistic: "Yes, students grasped triangle classification well.",
                   learnersLearned: "Students can classify triangles by both sides and angles.",
                   learningAtmosphere: "Very engaging with the sorting activity.",
@@ -780,8 +769,7 @@ export const mockLessonPlans: SubjectCurriculum[] = [
                 attachments: [],
                 homework: "Draw 5 examples of forces at home",
                 reflection: {
-                  objectivesAchieved: true,
-                  objectivesNotAchieved: false,
+                  objectivesAchievementPercent: 70,
                   objectivesRealistic: "Yes, but measurement accuracy needs more time.",
                   learnersLearned: "Students can identify different types of forces.",
                   learningAtmosphere: "Very enthusiastic during the hands-on experiments.",
@@ -858,8 +846,7 @@ export const createEmptyLessonPlan = (
   attachments: [],
   homework: "",
   reflection: {
-    objectivesAchieved: false,
-    objectivesNotAchieved: false,
+    objectivesAchievementPercent: 50,
     objectivesRealistic: "",
     learnersLearned: "",
     learningAtmosphere: "",
