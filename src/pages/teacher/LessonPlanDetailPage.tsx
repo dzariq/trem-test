@@ -36,7 +36,9 @@ import {
   ClipboardList,
   Check,
   ChevronsUpDown,
-  Settings
+  Settings,
+  Pencil,
+  Eye
 } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
@@ -71,6 +73,7 @@ const LessonPlanDetailPage = () => {
   const [lessonPlan, setLessonPlan] = useState<LessonPlan | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
+  const [isEditMode, setIsEditMode] = useState(false); // Default to view mode
 
   useEffect(() => {
     if (isNew) {
@@ -83,10 +86,12 @@ const LessonPlanDetailPage = () => {
         parseInt(lessonParam || "1")
       );
       setLessonPlan(newLP);
+      setIsEditMode(true); // New lesson plans start in edit mode
     } else if (id) {
       const existingLP = getLessonPlanById(id);
       if (existingLP) {
         setLessonPlan(existingLP);
+        setIsEditMode(false); // Existing lesson plans start in view mode
       } else {
         toast.error("Lesson plan not found");
         navigate("/teacher/lesson-plans");
@@ -171,6 +176,27 @@ const LessonPlanDetailPage = () => {
           </div>
           
           <div className="flex items-center gap-2">
+            {!isEditMode ? (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setIsEditMode(true)}
+                className="h-8 gap-1"
+              >
+                <Pencil className="h-3.5 w-3.5" />
+                <span className="hidden sm:inline">Edit</span>
+              </Button>
+            ) : (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setIsEditMode(false)}
+                className="h-8 gap-1"
+              >
+                <Eye className="h-3.5 w-3.5" />
+                <span className="hidden sm:inline">View</span>
+              </Button>
+            )}
             <Button
               variant="outline"
               size="sm"
@@ -181,15 +207,17 @@ const LessonPlanDetailPage = () => {
               <FileDown className="h-3.5 w-3.5" />
               <span className="hidden sm:inline">PDF</span>
             </Button>
-            <Button
-              size="sm"
-              onClick={handleSave}
-              disabled={isSaving}
-              className="h-8 gap-1"
-            >
-              <Save className="h-3.5 w-3.5" />
-              <span className="hidden sm:inline">Save</span>
-            </Button>
+            {isEditMode && (
+              <Button
+                size="sm"
+                onClick={handleSave}
+                disabled={isSaving}
+                className="h-8 gap-1"
+              >
+                <Save className="h-3.5 w-3.5" />
+                <span className="hidden sm:inline">Save</span>
+              </Button>
+            )}
           </div>
         </div>
       </div>
@@ -219,12 +247,18 @@ const LessonPlanDetailPage = () => {
               {/* Lesson Title - Prominent at top */}
               <div className="space-y-1.5">
                 <Label className="text-xs text-muted-foreground">Lesson Title</Label>
-                <Input
-                  value={lessonPlan.title}
-                  onChange={(e) => updateField("title", e.target.value)}
-                  placeholder="Enter lesson title..."
-                  className="h-10"
-                />
+                {isEditMode ? (
+                  <Input
+                    value={lessonPlan.title}
+                    onChange={(e) => updateField("title", e.target.value)}
+                    placeholder="Enter lesson title..."
+                    className="h-10"
+                  />
+                ) : (
+                  <div className="h-10 px-3 flex items-center rounded-md border border-input bg-muted/50 text-sm">
+                    {lessonPlan.title || <span className="italic text-muted-foreground">No title</span>}
+                  </div>
+                )}
               </div>
 
               {/* Subject & Topic - Side by side */}
@@ -324,76 +358,100 @@ const LessonPlanDetailPage = () => {
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                 <div className="space-y-1.5">
                   <Label className="text-xs text-muted-foreground">Week</Label>
-                  <Select 
-                    value={lessonPlan.weekNumber.toString()} 
-                    onValueChange={(v) => {
-                      const weekNum = parseInt(v);
-                      updateField("weekNumber", weekNum);
-                      const newDate = getLessonDate(weekNum, lessonPlan.lessonNumber);
-                      if (newDate) updateField("date", newDate);
-                    }}
-                  >
-                    <SelectTrigger className="h-9">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <ScrollArea className="h-60">
-                        {getWeekConfigs().map((week) => (
-                          <SelectItem key={week.weekNumber} value={week.weekNumber.toString()}>
-                            W{week.weekNumber}
-                          </SelectItem>
-                        ))}
-                      </ScrollArea>
-                    </SelectContent>
-                  </Select>
+                  {isEditMode ? (
+                    <Select 
+                      value={lessonPlan.weekNumber.toString()} 
+                      onValueChange={(v) => {
+                        const weekNum = parseInt(v);
+                        updateField("weekNumber", weekNum);
+                        const newDate = getLessonDate(weekNum, lessonPlan.lessonNumber);
+                        if (newDate) updateField("date", newDate);
+                      }}
+                    >
+                      <SelectTrigger className="h-9">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <ScrollArea className="h-60">
+                          {getWeekConfigs().map((week) => (
+                            <SelectItem key={week.weekNumber} value={week.weekNumber.toString()}>
+                              W{week.weekNumber}
+                            </SelectItem>
+                          ))}
+                        </ScrollArea>
+                      </SelectContent>
+                    </Select>
+                  ) : (
+                    <div className="h-9 px-3 flex items-center rounded-md border border-input bg-muted/50 text-sm">
+                      W{lessonPlan.weekNumber}
+                    </div>
+                  )}
                 </div>
                 <div className="space-y-1.5">
                   <Label className="text-xs text-muted-foreground">Lesson</Label>
-                  <Select 
-                    value={lessonPlan.lessonNumber.toString()} 
-                    onValueChange={(v) => {
-                      const lessonNum = parseInt(v);
-                      updateField("lessonNumber", lessonNum);
-                      const newDate = getLessonDate(lessonPlan.weekNumber, lessonNum);
-                      if (newDate) updateField("date", newDate);
-                    }}
-                  >
-                    <SelectTrigger className="h-9">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {[1, 2, 3, 4, 5].map((num) => (
-                        <SelectItem key={num} value={num.toString()}>
-                          L{num}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  {isEditMode ? (
+                    <Select 
+                      value={lessonPlan.lessonNumber.toString()} 
+                      onValueChange={(v) => {
+                        const lessonNum = parseInt(v);
+                        updateField("lessonNumber", lessonNum);
+                        const newDate = getLessonDate(lessonPlan.weekNumber, lessonNum);
+                        if (newDate) updateField("date", newDate);
+                      }}
+                    >
+                      <SelectTrigger className="h-9">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {[1, 2, 3, 4, 5].map((num) => (
+                          <SelectItem key={num} value={num.toString()}>
+                            L{num}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  ) : (
+                    <div className="h-9 px-3 flex items-center rounded-md border border-input bg-muted/50 text-sm">
+                      L{lessonPlan.lessonNumber}
+                    </div>
+                  )}
                 </div>
                 <div className="space-y-1.5">
                   <Label className="text-xs text-muted-foreground">Date</Label>
-                  <Input
-                    type="date"
-                    value={lessonPlan.date}
-                    onChange={(e) => updateField("date", e.target.value)}
-                    className="h-9"
-                  />
+                  {isEditMode ? (
+                    <Input
+                      type="date"
+                      value={lessonPlan.date}
+                      onChange={(e) => updateField("date", e.target.value)}
+                      className="h-9"
+                    />
+                  ) : (
+                    <div className="h-9 px-3 flex items-center rounded-md border border-input bg-muted/50 text-sm">
+                      {lessonPlan.date || <span className="italic text-muted-foreground">No date</span>}
+                    </div>
+                  )}
                 </div>
                 <div className="space-y-1.5">
                   <Label className="text-xs text-muted-foreground">Class</Label>
-                  <Select 
-                    value={lessonPlan.className} 
-                    onValueChange={(v) => updateField("className", v)}
-                  >
-                    <SelectTrigger className="h-9">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {teacherProfile.classes.map((cls) => (
-                        <SelectItem key={cls} value={cls}>{cls}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                  {isEditMode ? (
+                    <Select 
+                      value={lessonPlan.className} 
+                      onValueChange={(v) => updateField("className", v)}
+                    >
+                      <SelectTrigger className="h-9">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {teacherProfile.classes.map((cls) => (
+                          <SelectItem key={cls} value={cls}>{cls}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  ) : (
+                    <div className="h-9 px-3 flex items-center rounded-md border border-input bg-muted/50 text-sm">
+                      {lessonPlan.className}
+                    </div>
+                  )}
                 </div>
               </div>
 
@@ -415,6 +473,7 @@ const LessonPlanDetailPage = () => {
           <ObjectivesEditor
             objectives={lessonPlan.learningObjectives}
             onChange={(objectives) => updateField("learningObjectives", objectives)}
+            isEditMode={isEditMode}
           />
 
           {/* Section 3: Vocabulary / Terminology */}
@@ -430,6 +489,7 @@ const LessonPlanDetailPage = () => {
                 tags={lessonPlan.vocabulary}
                 onChange={(tags) => updateField("vocabulary", tags)}
                 placeholder="Add vocabulary term..."
+                isEditMode={isEditMode}
               />
             </CardContent>
           </Card>
@@ -475,6 +535,7 @@ const LessonPlanDetailPage = () => {
           <LessonFlowEditor
             lessonFlow={lessonPlan.lessonFlow}
             onChange={(flow) => updateField("lessonFlow", flow)}
+            isEditMode={isEditMode}
           />
 
           {/* Section 6: Resources */}
@@ -483,15 +544,23 @@ const LessonPlanDetailPage = () => {
               <CardTitle className="text-sm font-semibold">Resources</CardTitle>
             </CardHeader>
             <CardContent className="px-4 pb-4 space-y-3">
-              <Textarea
-                value={lessonPlan.resources}
-                onChange={(e) => updateField("resources", e.target.value)}
-                placeholder="List resources needed: worksheets, textbook pages, materials, etc."
-                className="min-h-[80px]"
-              />
-              <div className="text-xs text-muted-foreground">
-                Attachments feature coming soon
-              </div>
+              {isEditMode ? (
+                <Textarea
+                  value={lessonPlan.resources}
+                  onChange={(e) => updateField("resources", e.target.value)}
+                  placeholder="List resources needed: worksheets, textbook pages, materials, etc."
+                  className="min-h-[80px]"
+                />
+              ) : (
+                <div className="min-h-[60px] p-3 rounded-md border border-input bg-muted/50 text-sm whitespace-pre-wrap">
+                  {lessonPlan.resources || <span className="italic text-muted-foreground">No resources listed</span>}
+                </div>
+              )}
+              {isEditMode && (
+                <div className="text-xs text-muted-foreground">
+                  Attachments feature coming soon
+                </div>
+              )}
             </CardContent>
           </Card>
 
@@ -500,23 +569,31 @@ const LessonPlanDetailPage = () => {
             <CardHeader className="py-3 px-4">
               <div className="flex items-center justify-between">
                 <CardTitle className="text-sm font-semibold">Homework</CardTitle>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => updateField("homework", "None")}
-                  className="h-7 text-xs"
-                >
-                  Set as None
-                </Button>
+                {isEditMode && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => updateField("homework", "None")}
+                    className="h-7 text-xs"
+                  >
+                    Set as None
+                  </Button>
+                )}
               </div>
             </CardHeader>
             <CardContent className="px-4 pb-4">
-              <Textarea
-                value={lessonPlan.homework}
-                onChange={(e) => updateField("homework", e.target.value)}
-                placeholder="Describe homework assignment..."
-                className="min-h-[60px]"
-              />
+              {isEditMode ? (
+                <Textarea
+                  value={lessonPlan.homework}
+                  onChange={(e) => updateField("homework", e.target.value)}
+                  placeholder="Describe homework assignment..."
+                  className="min-h-[60px]"
+                />
+              ) : (
+                <div className="min-h-[40px] p-3 rounded-md border border-input bg-muted/50 text-sm whitespace-pre-wrap">
+                  {lessonPlan.homework || <span className="italic text-muted-foreground">No homework assigned</span>}
+                </div>
+              )}
             </CardContent>
           </Card>
 
