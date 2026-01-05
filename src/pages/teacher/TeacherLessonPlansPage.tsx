@@ -414,21 +414,16 @@ const TeacherLessonPlansPage = () => {
                                     week.lessonPlans.map(lp => lp.subtopic).filter(Boolean)
                                   )];
                                   return weekSubtopics.length > 0 ? (
-                                    <div className="flex flex-wrap gap-1 min-w-0 overflow-hidden">
-                                      {weekSubtopics.slice(0, 2).map((subtopic, idx) => (
+                                    <div className="flex gap-1.5 min-w-0 overflow-x-auto scrollbar-thin">
+                                      {weekSubtopics.map((subtopic, idx) => (
                                         <Badge 
                                           key={idx} 
                                           variant="outline" 
-                                          className="text-xs font-normal px-2 py-0.5 max-w-[120px] truncate"
+                                          className="text-xs font-normal px-2 py-0.5 whitespace-nowrap shrink-0"
                                         >
                                           {subtopic}
                                         </Badge>
                                       ))}
-                                      {weekSubtopics.length > 2 && (
-                                        <Badge variant="outline" className="text-xs font-normal px-2 py-0.5">
-                                          +{weekSubtopics.length - 2}
-                                        </Badge>
-                                      )}
                                     </div>
                                   ) : (
                                     <span className="text-xs text-muted-foreground italic">
