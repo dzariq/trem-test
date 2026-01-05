@@ -123,6 +123,8 @@ const TeacherLessonPlansPage = () => {
   const [selectedSubject, setSelectedSubject] = useState<string>(
     mockLessonPlans[0]?.subject || ""
   );
+  const [selectedClass, setSelectedClass] = useState<string>("5A");
+  const availableClasses = ["5A", "5B", "6A", "6B", "7A", "7B"];
   const [lessonPlansBySubject, setLessonPlansBySubject] = useState(mockLessonPlans);
   const [isAddTopicOpen, setIsAddTopicOpen] = useState(false);
   const [newTopicTitle, setNewTopicTitle] = useState("");
@@ -388,13 +390,27 @@ const TeacherLessonPlansPage = () => {
 
                 {/* Subject Selector */}
                 <Select value={selectedSubject} onValueChange={setSelectedSubject}>
-                  <SelectTrigger className="w-full sm:w-[180px]">
-                    <SelectValue placeholder="Select subject" />
+                  <SelectTrigger className="w-[120px] sm:w-[150px]">
+                    <SelectValue placeholder="Subject" />
                   </SelectTrigger>
                   <SelectContent>
                     {subjects.map((subject) => (
                       <SelectItem key={subject} value={subject}>
                         {subject}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+
+                {/* Class Selector */}
+                <Select value={selectedClass} onValueChange={setSelectedClass}>
+                  <SelectTrigger className="w-16">
+                    <SelectValue placeholder="Class" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {availableClasses.map((cls) => (
+                      <SelectItem key={cls} value={cls}>
+                        {cls}
                       </SelectItem>
                     ))}
                   </SelectContent>
