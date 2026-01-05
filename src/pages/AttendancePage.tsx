@@ -23,11 +23,18 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 const months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
 
 type StatusFilter = "all" | "present" | "absent" | "late" | "excused";
 type ZoomLevel = 3 | 6 | 12;
+type DayRecord = { date: string; status: string; reason: string | null; remarks: string | null };
 
 export default function AttendancePage() {
   const [selectedMonth, setSelectedMonth] = useState("December");
@@ -39,6 +46,7 @@ export default function AttendancePage() {
   const [isPinching, setIsPinching] = useState(false);
   const lastPinchDistance = useRef<number | null>(null);
   const [activeTooltip, setActiveTooltip] = useState<string | null>(null);
+  const [selectedDay, setSelectedDay] = useState<DayRecord | null>(null);
   
   // Swipe navigation state
   const [monthOffset, setMonthOffset] = useState(0); // 0 = most recent months
@@ -517,7 +525,8 @@ export default function AttendancePage() {
                     return (
                       <div 
                         key={dayIndex}
-                        className={`flex items-center gap-2 p-2 rounded-md transition-all border ${
+                        onClick={() => setSelectedDay(day as DayRecord)}
+                        className={`flex items-center gap-2 p-2 rounded-md transition-all border cursor-pointer active:scale-95 ${
                           today 
                             ? "ring-2 ring-primary/50 " 
                             : ""
@@ -552,6 +561,58 @@ export default function AttendancePage() {
           </CardContent>
         </Card>
       </section>
+
+      {/* Attendance Details Dialog */}
+      <Dialog open={!!selectedDay} onOpenChange={(open) => !open && setSelectedDay(null)}>
+        <DialogContent className="max-w-sm mx-4">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <div className={`w-8 h-8 rounded-full flex items-center justify-center ${selectedDay ? getStatusColor(selectedDay.status) : ''}`}>
+                {selectedDay && getStatusIcon(selectedDay.status)}
+              </div>
+              <div>
+                <p className="text-base font-semibold">
+                  {selectedDay && new Date(selectedDay.date).toLocaleDateString("en-US", { 
+                    weekday: "long", 
+                    day: "numeric", 
+                    month: "long",
+                    year: "numeric"
+                  })}
+                </p>
+                <p className={`text-sm ${
+                  selectedDay?.status === 'present' ? "text-emerald-600" :
+                  selectedDay?.status === 'absent' ? "text-destructive" :
+                  selectedDay?.status === 'late' ? "text-amber-600" :
+                  selectedDay?.status === 'excused' ? "text-purple-600" :
+                  "text-muted-foreground"
+                }`}>
+                  {selectedDay && getStatusLabel(selectedDay.status)}
+                </p>
+              </div>
+            </DialogTitle>
+          </DialogHeader>
+          
+          <div className="space-y-4 pt-2">
+            {selectedDay?.reason && (
+              <div className="space-y-1">
+                <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Reason</p>
+                <p className="text-sm text-foreground">{selectedDay.reason}</p>
+              </div>
+            )}
+            
+            {selectedDay?.remarks && (
+              <div className="space-y-1">
+                <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Remarks</p>
+                <p className="text-sm text-foreground leading-relaxed">{selectedDay.remarks}</p>
+              </div>
+            )}
+            
+            {!selectedDay?.reason && !selectedDay?.remarks && selectedDay?.status === 'present' && (
+              <p className="text-sm text-muted-foreground">No additional remarks for this day.</p>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
     </AppLayout>
   );
 }
