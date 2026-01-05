@@ -309,13 +309,13 @@ const TeacherLessonPlansPage = () => {
                         <Plus className="h-3.5 w-3.5" />
                       </Button>
                     </div>
-                    <div className="flex flex-wrap gap-1.5 min-w-0">
+                    <div className="flex flex-wrap gap-1.5">
                       {topic.subtopics && topic.subtopics.length > 0 ? (
                         topic.subtopics.map((subtopic, idx) => (
                           <Badge
                             key={idx}
                             variant="secondary"
-                            className="text-xs font-normal min-w-0 overflow-hidden max-w-[calc(50%-0.375rem)] sm:max-w-full"
+                            className="text-xs font-normal max-w-full"
                           >
                             <span className="truncate">{subtopic}</span>
                           </Badge>
@@ -340,8 +340,8 @@ const TeacherLessonPlansPage = () => {
                           value={week.id}
                           className="border-b last:border-b-0 overflow-hidden"
                         >
-                          <AccordionTrigger className="px-4 py-3 hover:no-underline hover:bg-muted/20 overflow-hidden gap-2 [&>svg]:flex-shrink-0">
-                            <div className="flex flex-col gap-2 flex-1 min-w-0 sm:flex-row sm:items-center sm:justify-between">
+                          <AccordionTrigger className="relative px-4 py-3 pr-10 hover:no-underline hover:bg-muted/20 [&>svg]:absolute [&>svg]:right-3 [&>svg]:top-1/2 [&>svg]:-translate-y-1/2 [&>svg]:shrink-0">
+                            <div className="flex flex-col gap-2 w-full min-w-0 sm:flex-row sm:items-center sm:justify-between">
                               <div className="flex items-center gap-2 min-w-0 flex-1">
                                 <Popover 
                                   open={weekCalendarOpen === week.id} 
@@ -389,11 +389,11 @@ const TeacherLessonPlansPage = () => {
                                     />
                                   </PopoverContent>
                                 </Popover>
-                                <span className="text-sm font-medium truncate">{week.title}</span>
+                                <span className="text-sm font-medium truncate min-w-0">{week.title}</span>
                               </div>
                               <Badge 
                                 variant="secondary" 
-                                className="text-xs self-end sm:self-auto"
+                                className="text-xs shrink-0"
                               >
                                 {completedCount}/{lpCount > 0 ? lpCount : 5}
                               </Badge>
