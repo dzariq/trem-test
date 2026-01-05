@@ -41,7 +41,7 @@ const gradeCategories = [{
   max: 70
 }];
 
-// Import centralized subjects config
+// Import centralized subjects config  
 import { allSubjects, getShortSubjectName, getTinySubjectCode, getSubjectColor, subjectGroups } from "@/data/subjectsConfig";
 import { SubjectGroupPill } from "@/components/SubjectGroupPill";
 import { SubjectPerformanceChart } from "@/components/SubjectPerformanceChart";
