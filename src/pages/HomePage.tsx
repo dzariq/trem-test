@@ -34,10 +34,12 @@ export default function HomePage() {
         <WelcomeTypingAnimation />
       </div>
       
-      <QuickLinks />
+      <div className="-mt-4">
+        <QuickLinks />
+      </div>
       
       {/* Background pattern that overlaps with announcements */}
-      <div className="relative z-0 -mb-28 -mt-4">
+      <div className="relative z-0 -mb-28 -mt-8">
         <img 
           src={teacherHomePattern} 
           alt="" 
