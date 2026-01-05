@@ -31,7 +31,7 @@ export function TeacherQuickLinks({ onTimetableClick }: TeacherQuickLinksProps) 
 
   return (
     <section className="px-4 -mt-6 relative z-10">
-      <div className="bg-card/80 backdrop-blur-sm rounded-2xl px-3 py-2.5 shadow-md border border-border">
+      <div className="bg-background/40 backdrop-blur-xl rounded-2xl px-3 py-2.5 shadow-lg border border-white/20">
         <div className="grid grid-cols-4 gap-0.5">
           {quickLinks.map((link) => (
             <button
