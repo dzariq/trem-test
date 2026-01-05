@@ -35,10 +35,13 @@ export function UpcomingEvents() {
   return (
     <section className="px-4 py-4">
       <div className="flex items-center justify-between mb-3">
-        <h2 className="text-lg font-semibold text-foreground">Upcoming Events</h2>
+        <div className="bg-primary/80 backdrop-blur-sm px-4 py-1.5 rounded-full shadow-md">
+          <h2 className="text-base font-semibold text-white">Upcoming Events</h2>
+        </div>
         <Button 
-          variant="link" 
-          className="text-primary p-0 h-auto text-sm"
+          variant="secondary"
+          size="sm"
+          className="bg-white/90 backdrop-blur-sm text-primary hover:bg-white shadow-md rounded-full px-4"
           onClick={() => navigate("/parent/calendar")}
         >
           See all <ChevronRight className="h-4 w-4 ml-1" />
