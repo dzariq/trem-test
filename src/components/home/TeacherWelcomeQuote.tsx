@@ -57,18 +57,18 @@ const TeacherWelcomeQuote = () => {
   if (!isVisible) return null;
 
   return (
-    <div className="absolute bottom-6 right-6 z-10 max-w-[200px]">
+    <div className="absolute bottom-12 right-20 z-10 max-w-[200px]">
       {/* Speech bubble */}
-      <div className="relative bg-white rounded-2xl rounded-br-sm p-2.5 shadow-lg">
+      <div className="relative bg-white rounded-2xl p-2.5 shadow-lg">
         <p className="text-xs text-gray-700 italic leading-relaxed">
           "{displayedText}"
           {!isComplete && <span className="animate-pulse text-primary">|</span>}
         </p>
-        {/* Speech bubble tail pointing down-right */}
-        <div className="absolute -bottom-1.5 right-3 w-0 h-0 
-          border-l-[6px] border-l-transparent 
-          border-t-[8px] border-t-white 
-          border-r-[6px] border-r-transparent" />
+        {/* Speech bubble tail pointing right toward teacher */}
+        <div className="absolute top-1/2 -right-2 -translate-y-1/2 w-0 h-0 
+          border-t-[6px] border-t-transparent 
+          border-l-[8px] border-l-white 
+          border-b-[6px] border-b-transparent" />
       </div>
     </div>
   );
