@@ -35,6 +35,7 @@ import TeacherTimetablePage from "./pages/teacher/TeacherTimetablePage";
 import TeacherHandbookPage from "./pages/teacher/TeacherHandbookPage";
 import TeacherLessonPlansPage from "./pages/teacher/TeacherLessonPlansPage";
 import LessonPlanDetailPage from "./pages/teacher/LessonPlanDetailPage";
+import WeekConfigPage from "./pages/teacher/WeekConfigPage";
 
 import NotFound from "./pages/NotFound";
 
@@ -92,6 +93,7 @@ const App = () => (
               path="/teacher/lesson-plans/:id"
               element={<LessonPlanDetailPage />}
             />
+            <Route path="/teacher/week-config" element={<WeekConfigPage />} />
             <Route
               path="/teacher/security-privacy"
               element={<SecurityPrivacyPage />}
