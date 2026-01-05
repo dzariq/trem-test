@@ -9,9 +9,10 @@ interface TagInputProps {
   onChange: (tags: string[]) => void;
   placeholder?: string;
   className?: string;
+  isEditMode?: boolean;
 }
 
-export function TagInput({ tags, onChange, placeholder = "Add tag...", className }: TagInputProps) {
+export function TagInput({ tags, onChange, placeholder = "Add tag...", className, isEditMode = true }: TagInputProps) {
   const [inputValue, setInputValue] = useState("");
 
   const handleKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
@@ -40,25 +41,34 @@ export function TagInput({ tags, onChange, placeholder = "Add tag...", className
             className="gap-1 pr-1 text-xs"
           >
             {tag}
-            <button
-              type="button"
-              onClick={() => removeTag(tag)}
-              className="ml-0.5 rounded-full hover:bg-muted p-0.5"
-            >
-              <X className="h-3 w-3" />
-            </button>
+            {isEditMode && (
+              <button
+                type="button"
+                onClick={() => removeTag(tag)}
+                className="ml-0.5 rounded-full hover:bg-muted p-0.5"
+              >
+                <X className="h-3 w-3" />
+              </button>
+            )}
           </Badge>
         ))}
+        {tags.length === 0 && !isEditMode && (
+          <span className="text-sm text-muted-foreground italic">No vocabulary terms</span>
+        )}
       </div>
-      <Input
-        type="text"
-        value={inputValue}
-        onChange={(e) => setInputValue(e.target.value)}
-        onKeyDown={handleKeyDown}
-        placeholder={placeholder}
-        className="h-9"
-      />
-      <p className="text-xs text-muted-foreground">Press Enter to add a tag</p>
+      {isEditMode && (
+        <>
+          <Input
+            type="text"
+            value={inputValue}
+            onChange={(e) => setInputValue(e.target.value)}
+            onKeyDown={handleKeyDown}
+            placeholder={placeholder}
+            className="h-9"
+          />
+          <p className="text-xs text-muted-foreground">Press Enter to add a tag</p>
+        </>
+      )}
     </div>
   );
 }

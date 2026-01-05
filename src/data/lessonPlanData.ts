@@ -106,11 +106,25 @@ export interface SubjectCurriculum {
   topics: Topic[];
 }
 
+// Check if reflection section is complete
+export const isReflectionComplete = (reflection: LessonPlanReflection): boolean => {
+  return (
+    reflection.comments.trim() !== "" &&
+    reflection.objectivesRealistic.trim() !== "" &&
+    reflection.learnersLearned.trim() !== "" &&
+    reflection.learningAtmosphere.trim() !== "" &&
+    reflection.differentiationWorked.trim() !== "" &&
+    reflection.timingsAndChanges.trim() !== "" &&
+    reflection.nextLessonImprovements.trim() !== ""
+  );
+};
+
 // Helper to get lesson plan status
 export const getLessonPlanStatus = (lp: LessonPlan): "complete" | "incomplete" | "draft" | "empty" => {
   if (!lp.title) return "empty";
   if (lp.approval.status === "draft") return "draft";
-  if (!lp.reflection.comments && lp.approval.status !== "approved") return "incomplete";
+  // Check if reflection is complete - this is the main indicator
+  if (!isReflectionComplete(lp.reflection)) return "incomplete";
   return "complete";
 };
 
