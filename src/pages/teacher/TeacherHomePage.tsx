@@ -121,106 +121,107 @@ export default function TeacherHomePage() {
           {/* Quick Links */}
           <TeacherQuickLinks onTimetableClick={() => setTimetablePdfOpen(true)} />
 
-          <div className="px-4 space-y-4 mt-4">
-        {/* Class Selector */}
-        <Select value={selectedClass} onValueChange={setSelectedClass}>
-          <SelectTrigger className="w-full">
-            <SelectValue placeholder="Select Class" />
-          </SelectTrigger>
-          <SelectContent>
-            {teacherProfile.classes.map((cls) => (
-              <SelectItem key={cls} value={cls}>Class {cls}</SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+          <div className="px-4 mt-4">
+            <div className="bg-background/20 backdrop-blur-md rounded-2xl p-4 shadow-lg border border-white/20 space-y-4">
+              {/* Class Selector */}
+              <Select value={selectedClass} onValueChange={setSelectedClass}>
+                <SelectTrigger className="w-full bg-white/30 backdrop-blur-sm border-white/30">
+                  <SelectValue placeholder="Select Class" />
+                </SelectTrigger>
+                <SelectContent>
+                  {teacherProfile.classes.map((cls) => (
+                    <SelectItem key={cls} value={cls}>Class {cls}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
 
-        {/* Quick Stats - Now 2 columns */}
-        <div className="grid grid-cols-2 gap-3">
-          <Card className="bg-emerald-50 dark:bg-emerald-950/30 border-emerald-200 dark:border-emerald-800">
-            <CardContent className="p-3 text-center">
-              <Users className="h-5 w-5 mx-auto mb-1 text-emerald-600" />
-              <p className="text-lg font-bold text-emerald-700 dark:text-emerald-400">
-                {teacherQuickStats.todayAttendance.present}/{teacherQuickStats.todayAttendance.total}
-              </p>
-              <p className="text-xs text-emerald-600 dark:text-emerald-500">Present Today</p>
-            </CardContent>
-          </Card>
-          <Card 
-            className="bg-amber-50 dark:bg-amber-950/30 border-amber-200 dark:border-amber-800 cursor-pointer transition-all hover:shadow-md"
-            onClick={() => setShowPendingGrades(!showPendingGrades)}
-          >
-            <CardContent className="p-3 text-center">
-              <BookOpen className="h-5 w-5 mx-auto mb-1 text-amber-600" />
-              <p className="text-lg font-bold text-amber-700 dark:text-amber-400">
-                {totalPendingGrades}
-              </p>
-              <p className="text-xs text-amber-600 dark:text-amber-500">Pending Grades</p>
-              <p className="text-[10px] text-amber-500 dark:text-amber-400 mt-1 flex items-center justify-center gap-0.5">
-                {showPendingGrades ? (
-                  <>Hide <ChevronUp className="h-3 w-3" /></>
-                ) : (
-                  <>View <ChevronDown className="h-3 w-3" /></>
-                )}
-              </p>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Pending Grades Details */}
-        {showPendingGrades && (
-          <Card className="border-amber-200 dark:border-amber-800">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm flex items-center gap-2 text-amber-700 dark:text-amber-400">
-                <BookOpen className="h-4 w-4" />
-                Pending Grades by Class
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-2">
-              {teacherQuickStats.pendingGrades.map((item, index) => (
-                <div 
-                  key={index}
-                  className="flex items-center justify-between p-2 rounded-lg bg-amber-50 dark:bg-amber-950/30 border border-amber-100 dark:border-amber-900"
+              {/* Quick Stats - Now 2 columns */}
+              <div className="grid grid-cols-2 gap-3">
+                <Card className="bg-emerald-500/20 backdrop-blur-sm border-emerald-500/30">
+                  <CardContent className="p-3 text-center">
+                    <Users className="h-5 w-5 mx-auto mb-1 text-emerald-600" />
+                    <p className="text-lg font-bold text-emerald-700 dark:text-emerald-400">
+                      {teacherQuickStats.todayAttendance.present}/{teacherQuickStats.todayAttendance.total}
+                    </p>
+                    <p className="text-xs text-emerald-600 dark:text-emerald-500">Present Today</p>
+                  </CardContent>
+                </Card>
+                <Card 
+                  className="bg-amber-500/20 backdrop-blur-sm border-amber-500/30 cursor-pointer transition-all hover:shadow-md"
+                  onClick={() => setShowPendingGrades(!showPendingGrades)}
                 >
-                  <div className="flex items-center gap-2">
-                    <Badge variant="outline" className="text-xs">
-                      {item.class}
-                    </Badge>
-                    <span className="text-sm text-foreground">{item.subject}</span>
-                  </div>
-                  <Badge className="bg-amber-500 text-white">
-                    {item.count} students
-                  </Badge>
-                </div>
-              ))}
-            </CardContent>
-          </Card>
-        )}
+                  <CardContent className="p-3 text-center">
+                    <BookOpen className="h-5 w-5 mx-auto mb-1 text-amber-600" />
+                    <p className="text-lg font-bold text-amber-700 dark:text-amber-400">
+                      {totalPendingGrades}
+                    </p>
+                    <p className="text-xs text-amber-600 dark:text-amber-500">Pending Grades</p>
+                    <p className="text-[10px] text-amber-500 dark:text-amber-400 mt-1 flex items-center justify-center gap-0.5">
+                      {showPendingGrades ? (
+                        <>Hide <ChevronUp className="h-3 w-3" /></>
+                      ) : (
+                        <>View <ChevronDown className="h-3 w-3" /></>
+                      )}
+                    </p>
+                  </CardContent>
+                </Card>
+              </div>
 
-        {/* Upcoming Deadlines Section */}
-        <div>
-          <h3 className="text-sm font-semibold flex items-center gap-2 mb-3">
-            <Clock className="h-4 w-4 text-primary" />
-            Upcoming Deadlines
-          </h3>
-          <div className="space-y-2">
-            {upcomingDeadlines.length === 0 ? (
-              <p className="text-sm text-muted-foreground text-center py-4">
-                No upcoming deadlines
-              </p>
-            ) : (
-              upcomingDeadlines.map((deadline) => {
-                const Icon = getDeadlineIcon(deadline.type);
-                const badgeInfo = getDaysLeftBadge(deadline.daysLeft, deadline.isCompleted);
-                const isExpanded = expandedDeadline === deadline.id;
-                
-                return (
-                  <div 
-                    key={deadline.id}
-                    className={cn(
-                      "rounded-lg border transition-all",
-                      getDeadlineColor(deadline.daysLeft, deadline.isCompleted),
-                      deadline.isCompleted && "opacity-60"
-                    )}
+              {/* Pending Grades Details */}
+              {showPendingGrades && (
+                <Card className="bg-amber-500/10 backdrop-blur-sm border-amber-500/30">
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-sm flex items-center gap-2 text-amber-700 dark:text-amber-400">
+                      <BookOpen className="h-4 w-4" />
+                      Pending Grades by Class
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-2">
+                    {teacherQuickStats.pendingGrades.map((item, index) => (
+                      <div 
+                        key={index}
+                        className="flex items-center justify-between p-2 rounded-lg bg-white/30 backdrop-blur-sm border border-amber-500/20"
+                      >
+                        <div className="flex items-center gap-2">
+                          <Badge variant="outline" className="text-xs">
+                            {item.class}
+                          </Badge>
+                          <span className="text-sm text-foreground">{item.subject}</span>
+                        </div>
+                        <Badge className="bg-amber-500 text-white">
+                          {item.count} students
+                        </Badge>
+                      </div>
+                    ))}
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* Upcoming Deadlines Section */}
+              <div>
+                <h3 className="text-sm font-semibold flex items-center gap-2 mb-3 text-foreground">
+                  <Clock className="h-4 w-4 text-primary" />
+                  Upcoming Deadlines
+                </h3>
+                <div className="space-y-2">
+                  {upcomingDeadlines.length === 0 ? (
+                    <p className="text-sm text-muted-foreground text-center py-4">
+                      No upcoming deadlines
+                    </p>
+                  ) : (
+                    upcomingDeadlines.map((deadline) => {
+                      const Icon = getDeadlineIcon(deadline.type);
+                      const badgeInfo = getDaysLeftBadge(deadline.daysLeft, deadline.isCompleted);
+                      const isExpanded = expandedDeadline === deadline.id;
+                      
+                      return (
+                        <div 
+                          key={deadline.id}
+                          className={cn(
+                            "rounded-lg border transition-all backdrop-blur-sm",
+                            getDeadlineColor(deadline.daysLeft, deadline.isCompleted),
+                            deadline.isCompleted && "opacity-60"
+                          )}
                   >
                     {/* Collapsed View - Always Visible */}
                     <div 
@@ -288,10 +289,11 @@ export default function TeacherHomePage() {
                   </div>
                 );
               })
-            )}
+              )}
+                </div>
+              </div>
+            </div>
           </div>
-        </div>
-        </div>
 
         <AnnouncementCarousel />
         <UpcomingEvents />
