@@ -890,6 +890,34 @@ export const getLessonPlanById = (id: string): LessonPlan | undefined => {
   return undefined;
 };
 
+// Get the previous lesson plan for a given lesson plan
+export const getPreviousLessonPlan = (currentLessonPlan: LessonPlan): LessonPlan | undefined => {
+  for (const curriculum of mockLessonPlans) {
+    if (curriculum.subject !== currentLessonPlan.subject) continue;
+    
+    // Collect all lesson plans for this subject in order
+    const allLessons: LessonPlan[] = [];
+    for (const topic of curriculum.topics) {
+      for (const week of topic.weeks) {
+        allLessons.push(...week.lessonPlans.sort((a, b) => a.lessonNumber - b.lessonNumber));
+      }
+    }
+    
+    // Sort by week then lesson number
+    allLessons.sort((a, b) => {
+      if (a.weekNumber !== b.weekNumber) return a.weekNumber - b.weekNumber;
+      return a.lessonNumber - b.lessonNumber;
+    });
+    
+    // Find current lesson's index and return previous
+    const currentIndex = allLessons.findIndex(lp => lp.id === currentLessonPlan.id);
+    if (currentIndex > 0) {
+      return allLessons[currentIndex - 1];
+    }
+  }
+  return undefined;
+};
+
 // Get subtopics for a specific topic
 export const getSubtopicsForTopic = (subject: string, topicTitle: string): string[] => {
   const curriculum = mockLessonPlans.find(s => s.subject === subject);
