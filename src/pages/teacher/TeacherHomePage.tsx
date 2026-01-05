@@ -104,11 +104,11 @@ export default function TeacherHomePage() {
       />
 
       {/* Hero Banner */}
-      <div className="w-full relative -mx-3 sm:-mx-4">
+      <div className="relative w-screen left-1/2 right-1/2 -ml-[50vw] -mr-[50vw] overflow-hidden">
         <img 
           src={heroBanner} 
           alt="School Banner" 
-          className="w-full h-auto"
+          className="block w-full h-auto"
         />
         <TeacherWelcomeQuote />
       </div>
