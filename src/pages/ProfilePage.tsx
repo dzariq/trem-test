@@ -64,6 +64,7 @@ export default function ProfilePage() {
   const navigate = useNavigate();
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [isPdfOpen, setIsPdfOpen] = useState(false);
+  const [isTimetablePdfOpen, setIsTimetablePdfOpen] = useState(false);
   const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
   const [isPhotoEditOpen, setIsPhotoEditOpen] = useState(false);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
@@ -294,7 +295,7 @@ export default function ProfilePage() {
           </CardContent>
         </Card>
 
-        {/* Resources - Student Handbook */}
+        {/* Resources - Student Handbook & Timetable */}
         <Card className="bg-card border-border shadow-sm">
           <CardHeader className="pb-2">
             <CardTitle className="text-base font-semibold flex items-center gap-2">
@@ -304,7 +305,7 @@ export default function ProfilePage() {
           </CardHeader>
           <CardContent className="p-0">
             <button 
-              className="w-full flex items-center justify-between p-4 hover:bg-accent/30 transition-colors"
+              className="w-full flex items-center justify-between p-4 hover:bg-accent/30 transition-colors border-b border-border"
               onClick={() => setIsPdfOpen(true)}
             >
               <div className="flex items-center gap-3">
@@ -313,6 +314,21 @@ export default function ProfilePage() {
                 </div>
                 <div className="text-left">
                   <span className="font-medium text-foreground block">Student Handbook</span>
+                  <span className="text-xs text-muted-foreground">PDF • 2026 Edition</span>
+                </div>
+              </div>
+              <Eye className="h-5 w-5 text-muted-foreground" />
+            </button>
+            <button 
+              className="w-full flex items-center justify-between p-4 hover:bg-accent/30 transition-colors"
+              onClick={() => setIsTimetablePdfOpen(true)}
+            >
+              <div className="flex items-center gap-3">
+                <div className="p-2 rounded-full bg-blue-100">
+                  <FileText className="h-4 w-4 text-blue-600" />
+                </div>
+                <div className="text-left">
+                  <span className="font-medium text-foreground block">Student Timetable</span>
                   <span className="text-xs text-muted-foreground">PDF • 2026 Edition</span>
                 </div>
               </div>
@@ -414,13 +430,20 @@ export default function ProfilePage() {
         </DialogContent>
       </Dialog>
 
-      {/* PDF Viewer Dialog */}
+      {/* PDF Viewer Dialogs */}
       <PDFViewerDialog
         open={isPdfOpen}
         onOpenChange={setIsPdfOpen}
         pdfUrl="/documents/student-handbook.pdf"
         title="Student Handbook"
         downloadFileName="Student_Handbook_2026.pdf"
+      />
+      <PDFViewerDialog
+        open={isTimetablePdfOpen}
+        onOpenChange={setIsTimetablePdfOpen}
+        pdfUrl="/documents/student-timetable.pdf"
+        title="Student Timetable"
+        downloadFileName="Student_Timetable_2026.pdf"
       />
 
       {/* Student Details Drawer - Mobile friendly with drag to close */}
