@@ -11,7 +11,7 @@ import { CalendarIcon, Check, X, Clock, AlertCircle, Save, ChevronLeft, ChevronR
 import schoolLogo from "@/assets/school-badge.png";
 import collinzLogo from "@/assets/collinz-school-logo.png";
 import cambridgeLogo from "@/assets/cambridge-logo.jpg";
-import { format, startOfWeek, endOfWeek, isToday, parseISO, addWeeks, subWeeks, isSameWeek } from "date-fns";
+import { format, startOfWeek, endOfWeek, isToday, parseISO, addWeeks, subWeeks, isSameWeek, startOfMonth, endOfMonth, startOfYear, endOfYear, subMonths } from "date-fns";
 import { cn } from "@/lib/utils";
 import { toast } from "@/hooks/use-toast";
 
@@ -65,7 +65,14 @@ export default function TeacherAttendancePage() {
   const [weeklyAbsentDialogOpen, setWeeklyAbsentDialogOpen] = useState(false);
   const [weeklyAbsentReportOpen, setWeeklyAbsentReportOpen] = useState(false);
   const [selectedReportWeek, setSelectedReportWeek] = useState<Date>(new Date());
+  const [frequentReportDialogOpen, setFrequentReportDialogOpen] = useState(false);
   const [frequentAbsentReportOpen, setFrequentAbsentReportOpen] = useState(false);
+  const [frequentReportStartDate, setFrequentReportStartDate] = useState<Date>(subMonths(new Date(), 3));
+  const [frequentReportEndDate, setFrequentReportEndDate] = useState<Date>(new Date());
+  
+  // Concerns visualization states
+  const [concernsTimeRange, setConcernsTimeRange] = useState<"week" | "month" | "year">("month");
+  const [concernsDate, setConcernsDate] = useState<Date>(new Date());
   
   const weeklyReportRef = useRef<HTMLDivElement>(null);
   const frequentReportRef = useRef<HTMLDivElement>(null);
@@ -174,8 +181,13 @@ export default function TeacherAttendancePage() {
     return { weekStart, weekEnd, absentByDay, totalAbsences, uniqueStudents };
   }, [dailyBreakdown, selectedReportWeek]);
 
-  // Frequent Absent/Late Data
+  // Frequent Absent/Late Data (for the report - with date range filter)
   const frequentAbsentLateData = useMemo(() => {
+    const filteredDays = dailyBreakdown.filter(day => {
+      const date = parseISO(day.date);
+      return date >= frequentReportStartDate && date <= frequentReportEndDate;
+    });
+    
     const studentStats: Record<string, {
       name: string;
       absent: number;
@@ -184,7 +196,7 @@ export default function TeacherAttendancePage() {
       totalDays: number;
     }> = {};
     
-    dailyBreakdown.forEach(day => {
+    filteredDays.forEach(day => {
       day.students?.forEach(student => {
         if (!studentStats[student.id]) {
           studentStats[student.id] = {
@@ -213,7 +225,77 @@ export default function TeacherAttendancePage() {
       topAbsent: [...students].sort((a, b) => b.absent - a.absent).slice(0, 10).filter(s => s.absent > 0),
       topLate: [...students].sort((a, b) => b.late - a.late).slice(0, 10).filter(s => s.late > 0)
     };
-  }, [dailyBreakdown]);
+  }, [dailyBreakdown, frequentReportStartDate, frequentReportEndDate]);
+
+  // Concerns Visualization Data (for the card below Yearly Overview)
+  const filteredConcernsData = useMemo(() => {
+    let startDate: Date;
+    let endDate: Date;
+    
+    if (concernsTimeRange === "week") {
+      startDate = startOfWeek(concernsDate, { weekStartsOn: 1 });
+      endDate = endOfWeek(concernsDate, { weekStartsOn: 1 });
+    } else if (concernsTimeRange === "month") {
+      startDate = startOfMonth(concernsDate);
+      endDate = endOfMonth(concernsDate);
+    } else {
+      startDate = startOfYear(concernsDate);
+      endDate = endOfYear(concernsDate);
+    }
+    
+    const filteredDays = dailyBreakdown.filter(day => {
+      const date = parseISO(day.date);
+      return date >= startDate && date <= endDate;
+    });
+    
+    const studentStats: Record<string, {
+      name: string;
+      absent: number;
+      late: number;
+      totalDays: number;
+    }> = {};
+    
+    filteredDays.forEach(day => {
+      day.students?.forEach(student => {
+        if (!studentStats[student.id]) {
+          studentStats[student.id] = {
+            name: student.name,
+            absent: 0,
+            late: 0,
+            totalDays: 0
+          };
+        }
+        studentStats[student.id].totalDays++;
+        if (student.status === "absent") studentStats[student.id].absent++;
+        if (student.status === "late") studentStats[student.id].late++;
+      });
+    });
+    
+    const students = Object.entries(studentStats).map(([id, stats]) => ({
+      id,
+      ...stats,
+      absentRate: stats.totalDays > 0 ? (stats.absent / stats.totalDays) * 100 : 0,
+      lateRate: stats.totalDays > 0 ? (stats.late / stats.totalDays) * 100 : 0
+    }));
+    
+    return {
+      startDate,
+      endDate,
+      topAbsent: [...students].sort((a, b) => b.absent - a.absent).slice(0, 5).filter(s => s.absent > 0),
+      topLate: [...students].sort((a, b) => b.late - a.late).slice(0, 5).filter(s => s.late > 0),
+      totalDays: filteredDays.length
+    };
+  }, [dailyBreakdown, concernsTimeRange, concernsDate]);
+
+  const getConcernsDateLabel = () => {
+    if (concernsTimeRange === "week") {
+      return `${format(filteredConcernsData.startDate, "MMM d")} - ${format(filteredConcernsData.endDate, "MMM d, yyyy")}`;
+    } else if (concernsTimeRange === "month") {
+      return format(concernsDate, "MMMM yyyy");
+    } else {
+      return format(concernsDate, "yyyy");
+    }
+  };
 
   const handlePrintWeeklyReport = () => {
     const printContent = weeklyReportRef.current;
@@ -443,6 +525,134 @@ export default function TeacherAttendancePage() {
             </CardContent>
           </Card>
 
+          {/* Attendance Concerns Visualization */}
+          <Card>
+            <CardHeader className="pb-2">
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-base flex items-center gap-2">
+                  <AlertCircle className="h-4 w-4 text-amber-500" />
+                  Attendance Concerns
+                </CardTitle>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button variant="outline" size="sm" className="h-8 gap-1.5">
+                      <CalendarIcon className="h-3.5 w-3.5" />
+                      <span className="text-xs">{getConcernsDateLabel()}</span>
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="end">
+                    <Calendar
+                      mode="single"
+                      selected={concernsDate}
+                      onSelect={(date) => date && setConcernsDate(date)}
+                      initialFocus
+                      className="pointer-events-auto"
+                    />
+                  </PopoverContent>
+                </Popover>
+              </div>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {/* Time Range Tabs */}
+              <div className="flex gap-1 p-1 bg-muted/50 rounded-lg">
+                {(["week", "month", "year"] as const).map((range) => (
+                  <button
+                    key={range}
+                    onClick={() => setConcernsTimeRange(range)}
+                    className={cn(
+                      "flex-1 py-1.5 px-3 rounded-md text-xs font-medium transition-all capitalize",
+                      concernsTimeRange === range
+                        ? "bg-background text-foreground shadow-sm"
+                        : "text-muted-foreground hover:text-foreground"
+                    )}
+                  >
+                    {range}
+                  </button>
+                ))}
+              </div>
+
+              {/* Data Display */}
+              {filteredConcernsData.topAbsent.length === 0 && filteredConcernsData.topLate.length === 0 ? (
+                <div className="text-center py-6 text-muted-foreground">
+                  <Check className="h-8 w-8 mx-auto mb-2 text-emerald-500" />
+                  <p className="text-sm font-medium">No attendance concerns</p>
+                  <p className="text-xs">All students have good attendance in this period</p>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {/* Top Absent Students */}
+                  {filteredConcernsData.topAbsent.length > 0 && (
+                    <div>
+                      <div className="flex items-center gap-2 mb-2">
+                        <X className="h-3.5 w-3.5 text-red-500" />
+                        <span className="text-xs font-semibold text-red-600 dark:text-red-400">Top Absent</span>
+                      </div>
+                      <div className="space-y-1.5">
+                        {filteredConcernsData.topAbsent.map((student, idx) => (
+                          <div 
+                            key={student.id}
+                            className="flex items-center justify-between p-2.5 rounded-lg bg-red-50/50 dark:bg-red-950/20 border border-red-100 dark:border-red-900/30"
+                          >
+                            <div className="flex items-center gap-2">
+                              <span className="flex items-center justify-center h-5 w-5 rounded-full bg-red-100 dark:bg-red-900/50 text-[10px] font-bold text-red-600">
+                                {idx + 1}
+                              </span>
+                              <span className="text-sm font-medium text-foreground">{student.name}</span>
+                            </div>
+                            <div className="flex items-center gap-3 text-xs">
+                              <span className="text-red-600 dark:text-red-400 font-semibold">{student.absent} days</span>
+                              <Badge variant="secondary" className="bg-red-100 dark:bg-red-900/50 text-red-600 dark:text-red-400 text-[10px] h-5">
+                                {student.absentRate.toFixed(1)}%
+                              </Badge>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Top Late Students */}
+                  {filteredConcernsData.topLate.length > 0 && (
+                    <div>
+                      <div className="flex items-center gap-2 mb-2">
+                        <Clock className="h-3.5 w-3.5 text-amber-500" />
+                        <span className="text-xs font-semibold text-amber-600 dark:text-amber-400">Top Late</span>
+                      </div>
+                      <div className="space-y-1.5">
+                        {filteredConcernsData.topLate.map((student, idx) => (
+                          <div 
+                            key={student.id}
+                            className="flex items-center justify-between p-2.5 rounded-lg bg-amber-50/50 dark:bg-amber-950/20 border border-amber-100 dark:border-amber-900/30"
+                          >
+                            <div className="flex items-center gap-2">
+                              <span className="flex items-center justify-center h-5 w-5 rounded-full bg-amber-100 dark:bg-amber-900/50 text-[10px] font-bold text-amber-600">
+                                {idx + 1}
+                              </span>
+                              <span className="text-sm font-medium text-foreground">{student.name}</span>
+                            </div>
+                            <div className="flex items-center gap-3 text-xs">
+                              <span className="text-amber-600 dark:text-amber-400 font-semibold">{student.late} times</span>
+                              <Badge variant="secondary" className="bg-amber-100 dark:bg-amber-900/50 text-amber-600 dark:text-amber-400 text-[10px] h-5">
+                                {student.lateRate.toFixed(1)}%
+                              </Badge>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Period Summary */}
+              <div className="text-center pt-2 border-t border-border">
+                <span className="text-xs text-muted-foreground">
+                  Based on {filteredConcernsData.totalDays} school days
+                </span>
+              </div>
+            </CardContent>
+          </Card>
+
           {/* Monthly Summary */}
           <Card>
             <CardHeader className="pb-2">
@@ -602,7 +812,7 @@ export default function TeacherAttendancePage() {
               </button>
               
               <button
-                onClick={() => setFrequentAbsentReportOpen(true)}
+                onClick={() => setFrequentReportDialogOpen(true)}
                 className="w-full p-4 rounded-xl border border-amber-200 bg-amber-50 dark:bg-amber-950/20 dark:border-amber-900/30 hover:bg-amber-100 dark:hover:bg-amber-950/40 transition-colors text-left"
               >
                 <div className="flex items-center gap-3">
@@ -969,6 +1179,134 @@ export default function TeacherAttendancePage() {
         </DialogContent>
       </Dialog>
 
+      {/* Frequent Absent/Late Report - Date Range Selection Dialog */}
+      <Dialog open={frequentReportDialogOpen} onOpenChange={setFrequentReportDialogOpen}>
+        <DialogContent className="max-w-sm mx-auto">
+          <DialogHeader>
+            <DialogTitle className="text-center">Select Date Range</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            {/* Quick Presets */}
+            <div className="grid grid-cols-2 gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  setFrequentReportStartDate(subWeeks(new Date(), 1));
+                  setFrequentReportEndDate(new Date());
+                }}
+                className="text-xs"
+              >
+                Last Week
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  setFrequentReportStartDate(subMonths(new Date(), 1));
+                  setFrequentReportEndDate(new Date());
+                }}
+                className="text-xs"
+              >
+                Last Month
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  setFrequentReportStartDate(subMonths(new Date(), 3));
+                  setFrequentReportEndDate(new Date());
+                }}
+                className="text-xs bg-primary/5"
+              >
+                Last 3 Months
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  setFrequentReportStartDate(startOfYear(new Date()));
+                  setFrequentReportEndDate(new Date());
+                }}
+                className="text-xs"
+              >
+                This Year
+              </Button>
+            </div>
+
+            {/* Custom Date Range */}
+            <div className="space-y-3 p-3 rounded-lg bg-muted/50">
+              <p className="text-xs font-medium text-muted-foreground text-center">Or select custom range</p>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1">
+                  <label className="text-xs text-muted-foreground">Start Date</label>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button variant="outline" size="sm" className="w-full justify-start text-left text-xs">
+                        <CalendarIcon className="mr-1.5 h-3 w-3" />
+                        {format(frequentReportStartDate, "MMM d, yy")}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <Calendar
+                        mode="single"
+                        selected={frequentReportStartDate}
+                        onSelect={(date) => date && setFrequentReportStartDate(date)}
+                        initialFocus
+                        className="pointer-events-auto"
+                      />
+                    </PopoverContent>
+                  </Popover>
+                </div>
+                <div className="space-y-1">
+                  <label className="text-xs text-muted-foreground">End Date</label>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button variant="outline" size="sm" className="w-full justify-start text-left text-xs">
+                        <CalendarIcon className="mr-1.5 h-3 w-3" />
+                        {format(frequentReportEndDate, "MMM d, yy")}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <Calendar
+                        mode="single"
+                        selected={frequentReportEndDate}
+                        onSelect={(date) => date && setFrequentReportEndDate(date)}
+                        initialFocus
+                        className="pointer-events-auto"
+                      />
+                    </PopoverContent>
+                  </Popover>
+                </div>
+              </div>
+            </div>
+
+            {/* Selected Range Display */}
+            <div className="text-center p-3 rounded-lg bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-900/30">
+              <p className="text-xs text-muted-foreground">Selected Range</p>
+              <p className="font-semibold text-amber-700 dark:text-amber-400">
+                {format(frequentReportStartDate, "MMM d, yyyy")} - {format(frequentReportEndDate, "MMM d, yyyy")}
+              </p>
+            </div>
+
+            <div className="text-center text-sm text-muted-foreground">
+              Class: <span className="font-semibold text-foreground">{selectedClass}</span>
+            </div>
+            
+            <Button 
+              className="w-full" 
+              onClick={() => {
+                setFrequentReportDialogOpen(false);
+                setFrequentAbsentReportOpen(true);
+              }}
+            >
+              <FileText className="h-4 w-4 mr-2" />
+              Generate Report
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
       {/* Frequent Absent/Late Report Dialog */}
       <Dialog open={frequentAbsentReportOpen} onOpenChange={setFrequentAbsentReportOpen}>
         <DialogContent className="w-full max-w-none p-0 overflow-hidden flex flex-col max-h-[90vh]">
@@ -990,7 +1328,9 @@ export default function TeacherAttendancePage() {
                   <div style={{ textAlign: 'center' }}>
                     <div style={{ fontSize: '10px', fontWeight: '600', color: '#065f46', letterSpacing: '0.5px', textTransform: 'uppercase' }}>Attendance Concerns Report</div>
                     <div style={{ fontSize: '14px', fontWeight: '700', color: '#374151' }}>Class {selectedClass}</div>
-                    <div style={{ fontSize: '11px', color: '#6b7280' }}>{selectedYear} Academic Year</div>
+                    <div style={{ fontSize: '11px', color: '#6b7280' }}>
+                      {format(frequentReportStartDate, "MMM d, yyyy")} - {format(frequentReportEndDate, "MMM d, yyyy")}
+                    </div>
                   </div>
                   <img src={cambridgeLogo} alt="Cambridge Assessment" style={{ height: '40px', objectFit: 'contain' }} />
                 </div>
