@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useRef } from "react";
 import { TeacherAppLayout } from "@/components/layout/TeacherAppLayout";
 import { AppHeader } from "@/components/layout/AppHeader";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -7,9 +7,11 @@ import { Badge } from "@/components/ui/badge";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { CalendarIcon, Check, X, Clock, AlertCircle, Save, ChevronLeft, ChevronRight as ChevronRightIcon, Users } from "lucide-react";
+import { CalendarIcon, Check, X, Clock, AlertCircle, Save, ChevronLeft, ChevronRight as ChevronRightIcon, Users, FileText, TrendingUp, Printer } from "lucide-react";
 import schoolLogo from "@/assets/school-badge.png";
-import { format, startOfWeek, endOfWeek, isToday, parseISO } from "date-fns";
+import collinzLogo from "@/assets/collinz-school-logo.png";
+import cambridgeLogo from "@/assets/cambridge-logo.jpg";
+import { format, startOfWeek, endOfWeek, isToday, parseISO, addWeeks, subWeeks, isSameWeek } from "date-fns";
 import { cn } from "@/lib/utils";
 import { toast } from "@/hooks/use-toast";
 
@@ -58,6 +60,15 @@ export default function TeacherAttendancePage() {
   const [selectedYear, setSelectedYear] = useState("2026");
   const [selectedMonth, setSelectedMonth] = useState(0); // January
   const [selectedDayStats, setSelectedDayStats] = useState<DailyAttendanceDetail | null>(null);
+  
+  // Report states
+  const [weeklyAbsentDialogOpen, setWeeklyAbsentDialogOpen] = useState(false);
+  const [weeklyAbsentReportOpen, setWeeklyAbsentReportOpen] = useState(false);
+  const [selectedReportWeek, setSelectedReportWeek] = useState<Date>(new Date());
+  const [frequentAbsentReportOpen, setFrequentAbsentReportOpen] = useState(false);
+  
+  const weeklyReportRef = useRef<HTMLDivElement>(null);
+  const frequentReportRef = useRef<HTMLDivElement>(null);
   
 
   const students = classRosters[selectedClass as keyof typeof classRosters] || [];
@@ -139,6 +150,90 @@ export default function TeacherAttendancePage() {
 
   const goToPrevMonth = () => setSelectedMonth(m => (m === 0 ? 11 : m - 1));
   const goToNextMonth = () => setSelectedMonth(m => (m === 11 ? 0 : m + 1));
+
+  // Weekly Absent Report Data
+  const weeklyAbsentData = useMemo(() => {
+    const weekStart = startOfWeek(selectedReportWeek, { weekStartsOn: 1 });
+    const weekEnd = endOfWeek(selectedReportWeek, { weekStartsOn: 1 });
+    
+    const weekDays = dailyBreakdown.filter(day => {
+      const date = parseISO(day.date);
+      return date >= weekStart && date <= weekEnd;
+    });
+    
+    const absentByDay = weekDays.map(day => ({
+      date: day.date,
+      absentStudents: day.students?.filter(s => 
+        s.status === "absent" || s.status === "excused"
+      ) || []
+    }));
+
+    const totalAbsences = absentByDay.reduce((sum, day) => sum + day.absentStudents.length, 0);
+    const uniqueStudents = new Set(absentByDay.flatMap(d => d.absentStudents.map(s => s.id))).size;
+
+    return { weekStart, weekEnd, absentByDay, totalAbsences, uniqueStudents };
+  }, [dailyBreakdown, selectedReportWeek]);
+
+  // Frequent Absent/Late Data
+  const frequentAbsentLateData = useMemo(() => {
+    const studentStats: Record<string, {
+      name: string;
+      absent: number;
+      late: number;
+      excused: number;
+      totalDays: number;
+    }> = {};
+    
+    dailyBreakdown.forEach(day => {
+      day.students?.forEach(student => {
+        if (!studentStats[student.id]) {
+          studentStats[student.id] = {
+            name: student.name,
+            absent: 0,
+            late: 0,
+            excused: 0,
+            totalDays: 0
+          };
+        }
+        studentStats[student.id].totalDays++;
+        if (student.status === "absent") studentStats[student.id].absent++;
+        if (student.status === "late") studentStats[student.id].late++;
+        if (student.status === "excused") studentStats[student.id].excused++;
+      });
+    });
+    
+    const students = Object.entries(studentStats).map(([id, stats]) => ({
+      id,
+      ...stats,
+      absentRate: stats.totalDays > 0 ? (stats.absent / stats.totalDays) * 100 : 0,
+      lateRate: stats.totalDays > 0 ? (stats.late / stats.totalDays) * 100 : 0
+    }));
+    
+    return {
+      topAbsent: [...students].sort((a, b) => b.absent - a.absent).slice(0, 10).filter(s => s.absent > 0),
+      topLate: [...students].sort((a, b) => b.late - a.late).slice(0, 10).filter(s => s.late > 0)
+    };
+  }, [dailyBreakdown]);
+
+  const handlePrintWeeklyReport = () => {
+    const printContent = weeklyReportRef.current;
+    if (!printContent) return;
+    const printWindow = window.open('', '_blank');
+    if (!printWindow) return;
+    printWindow.document.write(`<!DOCTYPE html><html><head><title>Weekly Absent Report</title><style>@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');*{margin:0;padding:0;box-sizing:border-box;}body{font-family:'Inter',sans-serif;background:#fff;color:#1a1a1a;line-height:1.5;}@page{size:A4;margin:12mm;}@media print{body{-webkit-print-color-adjust:exact;print-color-adjust:exact;}}</style></head><body>${printContent.innerHTML}</body></html>`);
+    printWindow.document.close();
+    printWindow.onload = () => printWindow.print();
+  };
+
+  const handlePrintFrequentReport = () => {
+    const printContent = frequentReportRef.current;
+    if (!printContent) return;
+    const printWindow = window.open('', '_blank');
+    if (!printWindow) return;
+    printWindow.document.write(`<!DOCTYPE html><html><head><title>Attendance Concerns Report</title><style>@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');*{margin:0;padding:0;box-sizing:border-box;}body{font-family:'Inter',sans-serif;background:#fff;color:#1a1a1a;line-height:1.5;}@page{size:A4;margin:12mm;}@media print{body{-webkit-print-color-adjust:exact;print-color-adjust:exact;}}</style></head><body>${printContent.innerHTML}</body></html>`);
+    printWindow.document.close();
+    printWindow.onload = () => printWindow.print();
+  };
 
   return (
     <TeacherAppLayout>
@@ -481,6 +576,47 @@ export default function TeacherAttendancePage() {
               )}
             </CardContent>
           </Card>
+
+          {/* Generate Reports Section */}
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-base flex items-center gap-2">
+                <FileText className="h-4 w-4 text-primary" />
+                Generate Reports
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <button
+                onClick={() => setWeeklyAbsentDialogOpen(true)}
+                className="w-full p-4 rounded-xl border border-red-200 bg-red-50 dark:bg-red-950/20 dark:border-red-900/30 hover:bg-red-100 dark:hover:bg-red-950/40 transition-colors text-left"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="h-10 w-10 rounded-lg bg-red-500 flex items-center justify-center">
+                    <CalendarIcon className="h-5 w-5 text-white" />
+                  </div>
+                  <div>
+                    <p className="font-semibold text-red-700 dark:text-red-400">Weekly Absent Report</p>
+                    <p className="text-xs text-red-600/70 dark:text-red-400/70">Generate absence report for a selected week</p>
+                  </div>
+                </div>
+              </button>
+              
+              <button
+                onClick={() => setFrequentAbsentReportOpen(true)}
+                className="w-full p-4 rounded-xl border border-amber-200 bg-amber-50 dark:bg-amber-950/20 dark:border-amber-900/30 hover:bg-amber-100 dark:hover:bg-amber-950/40 transition-colors text-left"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="h-10 w-10 rounded-lg bg-amber-500 flex items-center justify-center">
+                    <TrendingUp className="h-5 w-5 text-white" />
+                  </div>
+                  <div>
+                    <p className="font-semibold text-amber-700 dark:text-amber-400">Frequent Absent/Late Report</p>
+                    <p className="text-xs text-amber-600/70 dark:text-amber-400/70">View students with highest absence and late counts</p>
+                  </div>
+                </div>
+              </button>
+            </CardContent>
+          </Card>
         </div>
       )}
 
@@ -677,6 +813,265 @@ export default function TeacherAttendancePage() {
               </>
             );
           })()}
+        </DialogContent>
+      </Dialog>
+
+      {/* Weekly Absent Report - Week Selection Dialog */}
+      <Dialog open={weeklyAbsentDialogOpen} onOpenChange={setWeeklyAbsentDialogOpen}>
+        <DialogContent className="max-w-sm mx-auto">
+          <DialogHeader>
+            <DialogTitle className="text-center">Select Week for Report</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="flex items-center justify-between p-4 rounded-xl bg-muted/50">
+              <button
+                onClick={() => setSelectedReportWeek(subWeeks(selectedReportWeek, 1))}
+                className="p-2 rounded-lg hover:bg-muted transition-colors"
+              >
+                <ChevronLeft className="h-5 w-5" />
+              </button>
+              <div className="text-center">
+                <p className="font-semibold text-foreground">
+                  {format(startOfWeek(selectedReportWeek, { weekStartsOn: 1 }), "MMM d")} - {format(endOfWeek(selectedReportWeek, { weekStartsOn: 1 }), "MMM d, yyyy")}
+                </p>
+                <p className="text-xs text-muted-foreground">Week of {format(startOfWeek(selectedReportWeek, { weekStartsOn: 1 }), "MMMM d")}</p>
+              </div>
+              <button
+                onClick={() => setSelectedReportWeek(addWeeks(selectedReportWeek, 1))}
+                className="p-2 rounded-lg hover:bg-muted transition-colors"
+              >
+                <ChevronRightIcon className="h-5 w-5" />
+              </button>
+            </div>
+            
+            <div className="text-center text-sm text-muted-foreground">
+              Class: <span className="font-semibold text-foreground">{selectedClass}</span>
+            </div>
+            
+            <Button 
+              className="w-full" 
+              onClick={() => {
+                setWeeklyAbsentDialogOpen(false);
+                setWeeklyAbsentReportOpen(true);
+              }}
+            >
+              <FileText className="h-4 w-4 mr-2" />
+              Generate Report
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Weekly Absent Report - Printable Dialog */}
+      <Dialog open={weeklyAbsentReportOpen} onOpenChange={setWeeklyAbsentReportOpen}>
+        <DialogContent className="w-full max-w-none p-0 overflow-hidden flex flex-col max-h-[90vh]">
+          <DialogHeader className="flex flex-row items-center justify-between px-4 py-3 border-b border-border bg-background sticky top-0 z-10">
+            <DialogTitle className="text-sm sm:text-base">Weekly Absent Report</DialogTitle>
+            <Button onClick={handlePrintWeeklyReport} className="gap-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs sm:text-sm px-3 py-2">
+              <Printer className="h-4 w-4" />
+              <span className="hidden sm:inline">Print / Save PDF</span>
+              <span className="sm:hidden">PDF</span>
+            </Button>
+          </DialogHeader>
+          
+          <div className="flex-1 overflow-auto bg-muted/30 p-2 sm:p-4">
+            <div className="flex justify-center">
+              <div ref={weeklyReportRef} className="bg-white rounded-lg shadow-lg" style={{ width: 'min(100%, 210mm)', padding: '20px', fontSize: '11px', color: '#1a1a1a' }}>
+                {/* Header */}
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '2px solid #065f46', paddingBottom: '12px', marginBottom: '16px' }}>
+                  <img src={collinzLogo} alt="Collinz School" style={{ height: '45px', objectFit: 'contain' }} />
+                  <div style={{ textAlign: 'center' }}>
+                    <div style={{ fontSize: '10px', fontWeight: '600', color: '#065f46', letterSpacing: '0.5px', textTransform: 'uppercase' }}>Weekly Absence Report</div>
+                    <div style={{ fontSize: '14px', fontWeight: '700', color: '#374151' }}>
+                      {format(weeklyAbsentData.weekStart, "MMM d")} - {format(weeklyAbsentData.weekEnd, "MMM d, yyyy")}
+                    </div>
+                    <div style={{ fontSize: '11px', color: '#6b7280' }}>Class {selectedClass}</div>
+                  </div>
+                  <img src={cambridgeLogo} alt="Cambridge Assessment" style={{ height: '40px', objectFit: 'contain' }} />
+                </div>
+
+                {/* Summary Stats */}
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '20px' }}>
+                  <div style={{ padding: '12px', borderRadius: '10px', background: '#fef2f2', border: '1px solid #fecaca', textAlign: 'center' }}>
+                    <div style={{ fontSize: '24px', fontWeight: '700', color: '#dc2626' }}>{weeklyAbsentData.totalAbsences}</div>
+                    <div style={{ fontSize: '10px', color: '#dc2626', fontWeight: '500' }}>Total Absences</div>
+                  </div>
+                  <div style={{ padding: '12px', borderRadius: '10px', background: '#fef3c7', border: '1px solid #fde68a', textAlign: 'center' }}>
+                    <div style={{ fontSize: '24px', fontWeight: '700', color: '#d97706' }}>{weeklyAbsentData.uniqueStudents}</div>
+                    <div style={{ fontSize: '10px', color: '#d97706', fontWeight: '500' }}>Students Affected</div>
+                  </div>
+                </div>
+
+                {/* Daily Breakdown */}
+                <div style={{ marginBottom: '16px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px', paddingBottom: '6px', borderBottom: '1px solid #065f46' }}>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#065f46" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                    <span style={{ fontSize: '12px', fontWeight: '700', color: '#065f46' }}>Daily Breakdown</span>
+                  </div>
+                  
+                  {weeklyAbsentData.absentByDay.length === 0 ? (
+                    <div style={{ textAlign: 'center', padding: '20px', color: '#6b7280' }}>No attendance data for selected week</div>
+                  ) : (
+                    <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '10px' }}>
+                      <thead>
+                        <tr style={{ background: '#f3f4f6' }}>
+                          <th style={{ padding: '8px 10px', textAlign: 'left', fontWeight: '600', borderBottom: '1px solid #e5e7eb' }}>Date</th>
+                          <th style={{ padding: '8px 10px', textAlign: 'left', fontWeight: '600', borderBottom: '1px solid #e5e7eb' }}>Student Name</th>
+                          <th style={{ padding: '8px 10px', textAlign: 'center', fontWeight: '600', borderBottom: '1px solid #e5e7eb' }}>Status</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {weeklyAbsentData.absentByDay.flatMap((day, dayIdx) =>
+                          day.absentStudents.length === 0 ? (
+                            <tr key={`${day.date}-empty`} style={{ background: dayIdx % 2 === 0 ? '#ffffff' : '#f9fafb' }}>
+                              <td style={{ padding: '8px 10px', borderBottom: '1px solid #e5e7eb', fontWeight: '500' }}>
+                                {format(parseISO(day.date), "EEE, MMM d")}
+                              </td>
+                              <td colSpan={2} style={{ padding: '8px 10px', borderBottom: '1px solid #e5e7eb', color: '#16a34a', fontStyle: 'italic' }}>
+                                All students present
+                              </td>
+                            </tr>
+                          ) : (
+                            day.absentStudents.map((student, idx) => (
+                              <tr key={`${day.date}-${student.id}`} style={{ background: dayIdx % 2 === 0 ? '#ffffff' : '#f9fafb' }}>
+                                <td style={{ padding: '8px 10px', borderBottom: '1px solid #e5e7eb', fontWeight: '500' }}>
+                                  {idx === 0 ? format(parseISO(day.date), "EEE, MMM d") : ''}
+                                </td>
+                                <td style={{ padding: '8px 10px', borderBottom: '1px solid #e5e7eb' }}>{student.name}</td>
+                                <td style={{ padding: '8px 10px', borderBottom: '1px solid #e5e7eb', textAlign: 'center' }}>
+                                  <span style={{ 
+                                    padding: '2px 8px', 
+                                    borderRadius: '12px', 
+                                    fontSize: '9px', 
+                                    fontWeight: '600',
+                                    background: student.status === 'absent' ? '#fee2e2' : '#ede9fe',
+                                    color: student.status === 'absent' ? '#dc2626' : '#7c3aed'
+                                  }}>
+                                    {student.status === 'absent' ? 'Absent' : 'Excused'}
+                                  </span>
+                                </td>
+                              </tr>
+                            ))
+                          )
+                        )}
+                      </tbody>
+                    </table>
+                  )}
+                </div>
+
+                {/* Footer */}
+                <div style={{ borderTop: '1px solid #e5e7eb', paddingTop: '12px', marginTop: '16px', fontSize: '9px', color: '#9ca3af', textAlign: 'center' }}>
+                  This is a computer-generated report. Generated on {format(new Date(), "MMMM d, yyyy 'at' h:mm a")}
+                </div>
+              </div>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Frequent Absent/Late Report Dialog */}
+      <Dialog open={frequentAbsentReportOpen} onOpenChange={setFrequentAbsentReportOpen}>
+        <DialogContent className="w-full max-w-none p-0 overflow-hidden flex flex-col max-h-[90vh]">
+          <DialogHeader className="flex flex-row items-center justify-between px-4 py-3 border-b border-border bg-background sticky top-0 z-10">
+            <DialogTitle className="text-sm sm:text-base">Attendance Concerns Report</DialogTitle>
+            <Button onClick={handlePrintFrequentReport} className="gap-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs sm:text-sm px-3 py-2">
+              <Printer className="h-4 w-4" />
+              <span className="hidden sm:inline">Print / Save PDF</span>
+              <span className="sm:hidden">PDF</span>
+            </Button>
+          </DialogHeader>
+          
+          <div className="flex-1 overflow-auto bg-muted/30 p-2 sm:p-4">
+            <div className="flex justify-center">
+              <div ref={frequentReportRef} className="bg-white rounded-lg shadow-lg" style={{ width: 'min(100%, 210mm)', padding: '20px', fontSize: '11px', color: '#1a1a1a' }}>
+                {/* Header */}
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '2px solid #065f46', paddingBottom: '12px', marginBottom: '16px' }}>
+                  <img src={collinzLogo} alt="Collinz School" style={{ height: '45px', objectFit: 'contain' }} />
+                  <div style={{ textAlign: 'center' }}>
+                    <div style={{ fontSize: '10px', fontWeight: '600', color: '#065f46', letterSpacing: '0.5px', textTransform: 'uppercase' }}>Attendance Concerns Report</div>
+                    <div style={{ fontSize: '14px', fontWeight: '700', color: '#374151' }}>Class {selectedClass}</div>
+                    <div style={{ fontSize: '11px', color: '#6b7280' }}>{selectedYear} Academic Year</div>
+                  </div>
+                  <img src={cambridgeLogo} alt="Cambridge Assessment" style={{ height: '40px', objectFit: 'contain' }} />
+                </div>
+
+                {/* Top Absent Students */}
+                <div style={{ marginBottom: '20px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px', paddingBottom: '6px', borderBottom: '1px solid #dc2626' }}>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#dc2626" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                    <span style={{ fontSize: '12px', fontWeight: '700', color: '#dc2626' }}>Top Absent Students</span>
+                  </div>
+                  
+                  {frequentAbsentLateData.topAbsent.length === 0 ? (
+                    <div style={{ textAlign: 'center', padding: '20px', color: '#16a34a', background: '#f0fdf4', borderRadius: '8px' }}>
+                      No students with absences recorded
+                    </div>
+                  ) : (
+                    <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '10px' }}>
+                      <thead>
+                        <tr style={{ background: '#fef2f2' }}>
+                          <th style={{ padding: '8px 10px', textAlign: 'center', fontWeight: '600', borderBottom: '1px solid #fecaca', width: '50px' }}>Rank</th>
+                          <th style={{ padding: '8px 10px', textAlign: 'left', fontWeight: '600', borderBottom: '1px solid #fecaca' }}>Student Name</th>
+                          <th style={{ padding: '8px 10px', textAlign: 'center', fontWeight: '600', borderBottom: '1px solid #fecaca' }}>Total Absences</th>
+                          <th style={{ padding: '8px 10px', textAlign: 'center', fontWeight: '600', borderBottom: '1px solid #fecaca' }}>Absence Rate</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {frequentAbsentLateData.topAbsent.map((student, idx) => (
+                          <tr key={student.id} style={{ background: idx % 2 === 0 ? '#ffffff' : '#fef2f2' }}>
+                            <td style={{ padding: '8px 10px', textAlign: 'center', borderBottom: '1px solid #e5e7eb', fontWeight: '600' }}>{idx + 1}</td>
+                            <td style={{ padding: '8px 10px', borderBottom: '1px solid #e5e7eb' }}>{student.name}</td>
+                            <td style={{ padding: '8px 10px', textAlign: 'center', borderBottom: '1px solid #e5e7eb', fontWeight: '600', color: '#dc2626' }}>{student.absent}</td>
+                            <td style={{ padding: '8px 10px', textAlign: 'center', borderBottom: '1px solid #e5e7eb' }}>{student.absentRate.toFixed(1)}%</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  )}
+                </div>
+
+                {/* Top Late Students */}
+                <div style={{ marginBottom: '16px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px', paddingBottom: '6px', borderBottom: '1px solid #d97706' }}>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#d97706" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                    <span style={{ fontSize: '12px', fontWeight: '700', color: '#d97706' }}>Top Late Students</span>
+                  </div>
+                  
+                  {frequentAbsentLateData.topLate.length === 0 ? (
+                    <div style={{ textAlign: 'center', padding: '20px', color: '#16a34a', background: '#f0fdf4', borderRadius: '8px' }}>
+                      No students with late arrivals recorded
+                    </div>
+                  ) : (
+                    <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '10px' }}>
+                      <thead>
+                        <tr style={{ background: '#fef3c7' }}>
+                          <th style={{ padding: '8px 10px', textAlign: 'center', fontWeight: '600', borderBottom: '1px solid #fde68a', width: '50px' }}>Rank</th>
+                          <th style={{ padding: '8px 10px', textAlign: 'left', fontWeight: '600', borderBottom: '1px solid #fde68a' }}>Student Name</th>
+                          <th style={{ padding: '8px 10px', textAlign: 'center', fontWeight: '600', borderBottom: '1px solid #fde68a' }}>Total Late</th>
+                          <th style={{ padding: '8px 10px', textAlign: 'center', fontWeight: '600', borderBottom: '1px solid #fde68a' }}>Late Rate</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {frequentAbsentLateData.topLate.map((student, idx) => (
+                          <tr key={student.id} style={{ background: idx % 2 === 0 ? '#ffffff' : '#fef3c7' }}>
+                            <td style={{ padding: '8px 10px', textAlign: 'center', borderBottom: '1px solid #e5e7eb', fontWeight: '600' }}>{idx + 1}</td>
+                            <td style={{ padding: '8px 10px', borderBottom: '1px solid #e5e7eb' }}>{student.name}</td>
+                            <td style={{ padding: '8px 10px', textAlign: 'center', borderBottom: '1px solid #e5e7eb', fontWeight: '600', color: '#d97706' }}>{student.late}</td>
+                            <td style={{ padding: '8px 10px', textAlign: 'center', borderBottom: '1px solid #e5e7eb' }}>{student.lateRate.toFixed(1)}%</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  )}
+                </div>
+
+                {/* Footer */}
+                <div style={{ borderTop: '1px solid #e5e7eb', paddingTop: '12px', marginTop: '16px', fontSize: '9px', color: '#9ca3af', textAlign: 'center' }}>
+                  This is a computer-generated report. Generated on {format(new Date(), "MMMM d, yyyy 'at' h:mm a")}
+                </div>
+              </div>
+            </div>
+          </div>
         </DialogContent>
       </Dialog>
     </TeacherAppLayout>
