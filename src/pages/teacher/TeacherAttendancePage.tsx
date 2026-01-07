@@ -71,8 +71,9 @@ export default function TeacherAttendancePage() {
   const [frequentReportEndDate, setFrequentReportEndDate] = useState<Date>(new Date());
   
   // Concerns visualization states
-  const [concernsTimeRange, setConcernsTimeRange] = useState<"week" | "month" | "year">("month");
-  const [concernsDate, setConcernsDate] = useState<Date>(new Date());
+  const [concernsTimeRange, setConcernsTimeRange] = useState<"week" | "month" | "custom">("month");
+  const [concernsCustomStartDate, setConcernsCustomStartDate] = useState<Date>(subMonths(new Date(), 3));
+  const [concernsCustomEndDate, setConcernsCustomEndDate] = useState<Date>(new Date());
   
   const weeklyReportRef = useRef<HTMLDivElement>(null);
   const frequentReportRef = useRef<HTMLDivElement>(null);
@@ -233,14 +234,17 @@ export default function TeacherAttendancePage() {
     let endDate: Date;
     
     if (concernsTimeRange === "week") {
-      startDate = startOfWeek(concernsDate, { weekStartsOn: 1 });
-      endDate = endOfWeek(concernsDate, { weekStartsOn: 1 });
+      // Current week
+      startDate = startOfWeek(new Date(), { weekStartsOn: 1 });
+      endDate = endOfWeek(new Date(), { weekStartsOn: 1 });
     } else if (concernsTimeRange === "month") {
-      startDate = startOfMonth(concernsDate);
-      endDate = endOfMonth(concernsDate);
+      // Current month
+      startDate = startOfMonth(new Date());
+      endDate = endOfMonth(new Date());
     } else {
-      startDate = startOfYear(concernsDate);
-      endDate = endOfYear(concernsDate);
+      // Custom date range
+      startDate = concernsCustomStartDate;
+      endDate = concernsCustomEndDate;
     }
     
     const filteredDays = dailyBreakdown.filter(day => {
@@ -285,15 +289,15 @@ export default function TeacherAttendancePage() {
       topLate: [...students].sort((a, b) => b.late - a.late).slice(0, 5).filter(s => s.late > 0),
       totalDays: filteredDays.length
     };
-  }, [dailyBreakdown, concernsTimeRange, concernsDate]);
+  }, [dailyBreakdown, concernsTimeRange, concernsCustomStartDate, concernsCustomEndDate]);
 
   const getConcernsDateLabel = () => {
     if (concernsTimeRange === "week") {
       return `${format(filteredConcernsData.startDate, "MMM d")} - ${format(filteredConcernsData.endDate, "MMM d, yyyy")}`;
     } else if (concernsTimeRange === "month") {
-      return format(concernsDate, "MMMM yyyy");
+      return format(new Date(), "MMMM yyyy");
     } else {
-      return format(concernsDate, "yyyy");
+      return `${format(concernsCustomStartDate, "MMM d, yyyy")} - ${format(concernsCustomEndDate, "MMM d, yyyy")}`;
     }
   };
 
@@ -533,29 +537,13 @@ export default function TeacherAttendancePage() {
                   <AlertCircle className="h-4 w-4 text-amber-500" />
                   Attendance Concerns
                 </CardTitle>
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <Button variant="outline" size="sm" className="h-8 gap-1.5">
-                      <CalendarIcon className="h-3.5 w-3.5" />
-                      <span className="text-xs">{getConcernsDateLabel()}</span>
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0" align="end">
-                    <Calendar
-                      mode="single"
-                      selected={concernsDate}
-                      onSelect={(date) => date && setConcernsDate(date)}
-                      initialFocus
-                      className="pointer-events-auto"
-                    />
-                  </PopoverContent>
-                </Popover>
+                <span className="text-xs text-muted-foreground">{getConcernsDateLabel()}</span>
               </div>
             </CardHeader>
             <CardContent className="space-y-4">
               {/* Time Range Tabs */}
               <div className="flex gap-1 p-1 bg-muted/50 rounded-lg">
-                {(["week", "month", "year"] as const).map((range) => (
+                {(["week", "month", "custom"] as const).map((range) => (
                   <button
                     key={range}
                     onClick={() => setConcernsTimeRange(range)}
@@ -570,6 +558,47 @@ export default function TeacherAttendancePage() {
                   </button>
                 ))}
               </div>
+
+              {/* Custom Date Range Pickers - only show when custom is selected */}
+              {concernsTimeRange === "custom" && (
+                <div className="flex items-center gap-2">
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button variant="outline" size="sm" className="flex-1 h-9 justify-start text-left">
+                        <CalendarIcon className="h-3.5 w-3.5 mr-2" />
+                        <span className="text-xs">{format(concernsCustomStartDate, "MMM d, yyyy")}</span>
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <Calendar
+                        mode="single"
+                        selected={concernsCustomStartDate}
+                        onSelect={(date) => date && setConcernsCustomStartDate(date)}
+                        initialFocus
+                        className="pointer-events-auto"
+                      />
+                    </PopoverContent>
+                  </Popover>
+                  <span className="text-xs text-muted-foreground">to</span>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button variant="outline" size="sm" className="flex-1 h-9 justify-start text-left">
+                        <CalendarIcon className="h-3.5 w-3.5 mr-2" />
+                        <span className="text-xs">{format(concernsCustomEndDate, "MMM d, yyyy")}</span>
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="end">
+                      <Calendar
+                        mode="single"
+                        selected={concernsCustomEndDate}
+                        onSelect={(date) => date && setConcernsCustomEndDate(date)}
+                        initialFocus
+                        className="pointer-events-auto"
+                      />
+                    </PopoverContent>
+                  </Popover>
+                </div>
+              )}
 
               {/* Data Display */}
               {filteredConcernsData.topAbsent.length === 0 && filteredConcernsData.topLate.length === 0 ? (
