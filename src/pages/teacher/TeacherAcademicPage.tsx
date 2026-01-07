@@ -292,12 +292,12 @@ export default function TeacherAcademicPage() {
   const [boxPlotGrade, setBoxPlotGrade] = useState<string>("5");
   const [boxPlotClass, setBoxPlotClass] = useState<string>("5A");
   const [boxPlotStudentId, setBoxPlotStudentId] = useState<string>("");
-  const [boxPlotStudentSubject, setBoxPlotStudentSubject] = useState<string>(""); // optional - empty means all
-  const [boxPlotStudentExamType, setBoxPlotStudentExamType] = useState<string>(""); // optional - empty means all
+  const [boxPlotStudentSubject, setBoxPlotStudentSubject] = useState<string>("all"); // optional - "all" means all
+  const [boxPlotStudentExamType, setBoxPlotStudentExamType] = useState<string>("all"); // optional - "all" means all
   // Mode B: Subject filters
   const [boxPlotSubject, setBoxPlotSubject] = useState<string>("Mathematics");
   const [boxPlotCohortScope, setBoxPlotCohortScope] = useState<"class" | "yearGroup" | "school">("yearGroup");
-  const [boxPlotSubjectExamType, setBoxPlotSubjectExamType] = useState<string>(""); // optional
+  const [boxPlotSubjectExamType, setBoxPlotSubjectExamType] = useState<string>("all"); // optional
   const handleTouchStart = useCallback((e: React.TouchEvent) => {
     // Only handle pinch-to-zoom with 2 fingers, allow single-finger scrolling to pass through
     if (e.touches.length === 2) {
@@ -4721,7 +4721,7 @@ export default function TeacherAcademicPage() {
                               <SelectValue placeholder="All Subjects" />
                             </SelectTrigger>
                             <SelectContent>
-                              <SelectItem value="">All Subjects</SelectItem>
+                              <SelectItem value="all">All Subjects</SelectItem>
                               {allSubjects.map((subject) => (
                                 <SelectItem key={subject} value={subject}>
                                   {shortenSubjectName(subject)}
@@ -4737,7 +4737,7 @@ export default function TeacherAcademicPage() {
                               <SelectValue placeholder="All Exams" />
                             </SelectTrigger>
                             <SelectContent>
-                              <SelectItem value="">All Exams</SelectItem>
+                              <SelectItem value="all">All Exams</SelectItem>
                               <SelectItem value="Mid-Year">Mid-Year</SelectItem>
                               <SelectItem value="Year-End">Year-End</SelectItem>
                             </SelectContent>
@@ -4809,7 +4809,7 @@ export default function TeacherAcademicPage() {
                             <SelectValue placeholder="All Exams" />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="">All Exams</SelectItem>
+                            <SelectItem value="all">All Exams</SelectItem>
                             <SelectItem value="Mid-Year">Mid-Year</SelectItem>
                             <SelectItem value="Year-End">Year-End</SelectItem>
                           </SelectContent>
@@ -4844,8 +4844,8 @@ export default function TeacherAcademicPage() {
                     boxPlotData = calculateStudentBoxPlotData(
                       assessmentRecords,
                       boxPlotStudentId,
-                      boxPlotStudentSubject || undefined,
-                      boxPlotStudentExamType || undefined
+                      boxPlotStudentSubject && boxPlotStudentSubject !== "all" ? boxPlotStudentSubject : undefined,
+                      boxPlotStudentExamType && boxPlotStudentExamType !== "all" ? boxPlotStudentExamType : undefined
                     );
                   } else {
                     const yearGroup = `Year ${selectedClass.charAt(0)}`;
@@ -4861,7 +4861,7 @@ export default function TeacherAcademicPage() {
                       boxPlotCohortScope,
                       selectedClass,
                       yearGroup,
-                      boxPlotSubjectExamType || undefined
+                      boxPlotSubjectExamType && boxPlotSubjectExamType !== "all" ? boxPlotSubjectExamType : undefined
                     );
                   }
                   
