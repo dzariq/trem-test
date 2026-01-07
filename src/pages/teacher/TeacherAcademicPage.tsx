@@ -1569,6 +1569,69 @@ export default function TeacherAcademicPage() {
                 </CardContent>
               </Card>
 
+              {/* CSV Export/Import Buttons */}
+              <div className="flex gap-2">
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  className="flex-1 text-xs h-9"
+                  onClick={() => {
+                    // Generate CSV template with student names and empty grade columns
+                    const csvHeader = "Student ID,Student Name,Attitude (10),Homework (10),Quiz (10),Exam (70),Report Card Comments,Study Recommendations";
+                    const csvRows = students.map(s => `${s.id},"${s.name}",,,,,,""`);
+                    const csvContent = [csvHeader, ...csvRows].join("\n");
+                    
+                    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+                    const url = URL.createObjectURL(blob);
+                    const link = document.createElement("a");
+                    link.href = url;
+                    link.download = `${selectedClass}_${selectedEntrySubject}_template.csv`;
+                    link.click();
+                    URL.revokeObjectURL(url);
+                    
+                    toast({
+                      title: "Template Downloaded",
+                      description: `CSV template for ${selectedEntrySubject} has been downloaded.`,
+                    });
+                  }}
+                >
+                  <Download className="h-3.5 w-3.5 mr-1.5" />
+                  Download Template
+                </Button>
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  className="flex-1 text-xs h-9"
+                  onClick={() => {
+                    // Export current grades to CSV
+                    const csvHeader = "Student ID,Student Name,Attitude (10),Homework (10),Quiz (10),Exam (70),Total,Grade,Report Card Comments,Study Recommendations";
+                    const csvRows = students.map(s => {
+                      const grades = getStudentSubjectGrades(s.id, selectedEntrySubject);
+                      const total = calculateTotal(grades);
+                      const { grade: letterGrade } = getLetterGrade(total);
+                      return `${s.id},"${s.name}",${grades.attitude || ""},${grades.homework || ""},${grades.quiz || ""},${grades.exam || ""},${total},${letterGrade},"${(grades.reportComment || "").replace(/"/g, '""')}","${(grades.studyRecommendation || "").replace(/"/g, '""')}"`;
+                    });
+                    const csvContent = [csvHeader, ...csvRows].join("\n");
+                    
+                    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+                    const url = URL.createObjectURL(blob);
+                    const link = document.createElement("a");
+                    link.href = url;
+                    link.download = `${selectedClass}_${selectedEntrySubject}_grades.csv`;
+                    link.click();
+                    URL.revokeObjectURL(url);
+                    
+                    toast({
+                      title: "Grades Exported",
+                      description: `${selectedEntrySubject} grades for ${selectedClass} exported to CSV.`,
+                    });
+                  }}
+                >
+                  <FileSpreadsheet className="h-3.5 w-3.5 mr-1.5" />
+                  Export CSV
+                </Button>
+              </div>
+
               {/* Quick Stats */}
               <div className="grid grid-cols-4 gap-2">
                 {(() => {
@@ -1622,8 +1685,10 @@ export default function TeacherAcademicPage() {
                   <Textarea 
                     placeholder="Enter a study recommendation for all students in this subject..." 
                     value={classStudyRecommendation[selectedClass]?.[selectedEntrySubject] || ""} 
+                    maxLength={300}
                     onChange={e => {
                       const value = e.target.value;
+                      if (value.length > 300) return;
                       setClassStudyRecommendation(prev => ({
                         ...prev,
                         [selectedClass]: {
@@ -1638,6 +1703,9 @@ export default function TeacherAcademicPage() {
                     }} 
                     className="min-h-[60px] text-sm resize-none border-amber-200 bg-background" 
                   />
+                  <p className="text-[10px] text-muted-foreground text-right mt-1">
+                    {(classStudyRecommendation[selectedClass]?.[selectedEntrySubject] || "").length}/300
+                  </p>
                 </CardContent>
               </Card>
 
@@ -1733,9 +1801,17 @@ export default function TeacherAcademicPage() {
                                 <Textarea 
                                   placeholder="Comments visible on report card..." 
                                   value={grades.reportComment} 
-                                  onChange={e => updateGrade(student.id, selectedEntrySubject, "reportComment", e.target.value)} 
+                                  maxLength={500}
+                                  onChange={e => {
+                                    if (e.target.value.length <= 500) {
+                                      updateGrade(student.id, selectedEntrySubject, "reportComment", e.target.value);
+                                    }
+                                  }} 
                                   className="min-h-[70px] text-sm resize-none border-emerald-200 bg-emerald-50/50 dark:bg-emerald-950/20" 
                                 />
+                                <p className="text-[10px] text-muted-foreground text-right mt-1">
+                                  {(grades.reportComment || "").length}/500
+                                </p>
                               </div>
                               
                               {/* Study Recommendations */}
@@ -1746,9 +1822,17 @@ export default function TeacherAcademicPage() {
                                 <Textarea 
                                   placeholder="e.g., Focus on Chapter 5, practice more word problems..." 
                                   value={grades.studyRecommendation} 
-                                  onChange={e => updateGrade(student.id, selectedEntrySubject, "studyRecommendation", e.target.value)} 
+                                  maxLength={300}
+                                  onChange={e => {
+                                    if (e.target.value.length <= 300) {
+                                      updateGrade(student.id, selectedEntrySubject, "studyRecommendation", e.target.value);
+                                    }
+                                  }} 
                                   className="min-h-[70px] text-sm resize-none border-amber-200 bg-amber-50/50 dark:bg-amber-950/20" 
                                 />
+                                <p className="text-[10px] text-muted-foreground text-right mt-1">
+                                  {(grades.studyRecommendation || "").length}/300
+                                </p>
                               </div>
                               
                               {/* Authentic Comments (Internal) */}
