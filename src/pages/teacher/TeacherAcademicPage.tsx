@@ -81,6 +81,11 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContaine
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { cn } from "@/lib/utils";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { assessmentRecords, getAllStudents } from "@/data/boxPlotMockData";
+import { BoxPlotStats, calculateStudentBoxPlotData, calculateSubjectBoxPlotData, generateInsights, Insight } from "@/utils/boxPlotCalculations";
+import { BoxPlotChart } from "@/components/BoxPlotChart";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Label } from "@/components/ui/label";
 
 // Grade categories with max scores
 const gradeCategories = [{
@@ -279,7 +284,20 @@ export default function TeacherAcademicPage() {
   const [heatmapExpanded, setHeatmapExpanded] = useState(false);
   const [growthCarouselApi, setGrowthCarouselApi] = useState<any>(null);
   const [growthCarouselSlide, setGrowthCarouselSlide] = useState(0);
-  const [analysisSubTab, setAnalysisSubTab] = useState<"overview" | "distribution" | "trends" | "comparison">("overview");
+  const [analysisSubTab, setAnalysisSubTab] = useState<"overview" | "distribution" | "trends" | "comparison" | "boxplot">("overview");
+  
+  // Box & Whisker state
+  const [boxPlotViewMode, setBoxPlotViewMode] = useState<"student" | "subject">("student");
+  // Mode A: Student filters
+  const [boxPlotGrade, setBoxPlotGrade] = useState<string>("5");
+  const [boxPlotClass, setBoxPlotClass] = useState<string>("5A");
+  const [boxPlotStudentId, setBoxPlotStudentId] = useState<string>("");
+  const [boxPlotStudentSubject, setBoxPlotStudentSubject] = useState<string>(""); // optional - empty means all
+  const [boxPlotStudentExamType, setBoxPlotStudentExamType] = useState<string>(""); // optional - empty means all
+  // Mode B: Subject filters
+  const [boxPlotSubject, setBoxPlotSubject] = useState<string>("Mathematics");
+  const [boxPlotCohortScope, setBoxPlotCohortScope] = useState<"class" | "yearGroup" | "school">("yearGroup");
+  const [boxPlotSubjectExamType, setBoxPlotSubjectExamType] = useState<string>(""); // optional
   const handleTouchStart = useCallback((e: React.TouchEvent) => {
     // Only handle pinch-to-zoom with 2 fingers, allow single-finger scrolling to pass through
     if (e.touches.length === 2) {
@@ -1881,12 +1899,13 @@ export default function TeacherAcademicPage() {
 
           <TabsContent value="analysis" className="space-y-4">
             {/* Sub-tabs for Class Analysis */}
-            <Tabs defaultValue="overview" className="w-full" onValueChange={(v) => setAnalysisSubTab(v as "overview" | "distribution" | "trends" | "comparison")}>
-              <TabsList className="grid w-full grid-cols-4 mb-4 bg-muted/50">
+            <Tabs defaultValue="overview" className="w-full" onValueChange={(v) => setAnalysisSubTab(v as "overview" | "distribution" | "trends" | "comparison" | "boxplot")}>
+              <TabsList className="grid w-full grid-cols-5 mb-4 bg-muted/50">
                 <TabsTrigger value="overview" className="text-xs">Overview</TabsTrigger>
                 <TabsTrigger value="distribution" className="text-xs">Bands</TabsTrigger>
                 <TabsTrigger value="trends" className="text-xs">Trends</TabsTrigger>
                 <TabsTrigger value="comparison" className="text-xs">Compare</TabsTrigger>
+                <TabsTrigger value="boxplot" className="text-xs">Box Plot</TabsTrigger>
               </TabsList>
 
               {/* ==================== OVERVIEW SUB-TAB ==================== */}
@@ -4589,7 +4608,374 @@ export default function TeacherAcademicPage() {
               })()}
               </TabsContent>
 
-              {/* Floating Generate Report FAB - for all tabs */}
+              {/* ==================== BOX & WHISKER SUB-TAB ==================== */}
+              <TabsContent value="boxplot" className="space-y-4">
+                {/* Header */}
+                <div className="flex flex-col gap-1">
+                  <h3 className="text-sm font-semibold text-foreground">Box & Whisker Analysis</h3>
+                  <p className="text-xs text-muted-foreground">Score distribution over the past 6 academic years</p>
+                </div>
+
+                {/* View Mode Toggle */}
+                <div className="flex gap-1 bg-muted p-1 rounded-lg">
+                  <button
+                    onClick={() => setBoxPlotViewMode("student")}
+                    className={cn(
+                      "flex-1 px-3 py-2 text-xs font-medium rounded-md transition-all",
+                      boxPlotViewMode === "student" 
+                        ? "bg-primary text-primary-foreground shadow-sm" 
+                        : "text-muted-foreground hover:text-foreground"
+                    )}
+                  >
+                    Student (Past 6 Years)
+                  </button>
+                  <button
+                    onClick={() => setBoxPlotViewMode("subject")}
+                    className={cn(
+                      "flex-1 px-3 py-2 text-xs font-medium rounded-md transition-all",
+                      boxPlotViewMode === "subject" 
+                        ? "bg-primary text-primary-foreground shadow-sm" 
+                        : "text-muted-foreground hover:text-foreground"
+                    )}
+                  >
+                    Subject (Past 6 Years)
+                  </button>
+                </div>
+
+                {/* Filters based on mode */}
+                {boxPlotViewMode === "student" ? (
+                  <Card className="border-border/50">
+                    <CardHeader className="pb-3">
+                      <CardTitle className="text-sm flex items-center gap-2">
+                        <Users className="h-4 w-4 text-primary" />
+                        Select Student
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-3">
+                      {/* Grade and Class selectors */}
+                      <div className="grid grid-cols-2 gap-2">
+                        <div>
+                          <label className="text-xs text-muted-foreground mb-1 block">Grade</label>
+                          <Select value={boxPlotGrade} onValueChange={(v) => {
+                            setBoxPlotGrade(v);
+                            // Update class based on grade
+                            const newClass = v === "5" ? "5A" : "4A";
+                            setBoxPlotClass(newClass);
+                            setBoxPlotStudentId("");
+                          }}>
+                            <SelectTrigger className="h-9 text-xs">
+                              <SelectValue placeholder="Grade" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="5">Year 5</SelectItem>
+                              <SelectItem value="4">Year 4</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <div>
+                          <label className="text-xs text-muted-foreground mb-1 block">Class</label>
+                          <Select value={boxPlotClass} onValueChange={(v) => {
+                            setBoxPlotClass(v);
+                            setBoxPlotStudentId("");
+                          }}>
+                            <SelectTrigger className="h-9 text-xs">
+                              <SelectValue placeholder="Class" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {boxPlotGrade === "5" ? (
+                                <>
+                                  <SelectItem value="5A">5A</SelectItem>
+                                  <SelectItem value="5B">5B</SelectItem>
+                                </>
+                              ) : (
+                                <SelectItem value="4A">4A</SelectItem>
+                              )}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      </div>
+
+                      {/* Student selector */}
+                      <div>
+                        <label className="text-xs text-muted-foreground mb-1 block">Student</label>
+                        <Select value={boxPlotStudentId} onValueChange={setBoxPlotStudentId}>
+                          <SelectTrigger className="h-9 text-xs">
+                            <SelectValue placeholder="Select a student..." />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {(classRosters[boxPlotClass as keyof typeof classRosters] || []).map((student) => (
+                              <SelectItem key={student.id} value={student.id}>
+                                {student.name}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      {/* Optional filters */}
+                      <div className="grid grid-cols-2 gap-2">
+                        <div>
+                          <label className="text-xs text-muted-foreground mb-1 block">Subject (Optional)</label>
+                          <Select value={boxPlotStudentSubject} onValueChange={setBoxPlotStudentSubject}>
+                            <SelectTrigger className="h-9 text-xs">
+                              <SelectValue placeholder="All Subjects" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="">All Subjects</SelectItem>
+                              {allSubjects.map((subject) => (
+                                <SelectItem key={subject} value={subject}>
+                                  {shortenSubjectName(subject)}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <div>
+                          <label className="text-xs text-muted-foreground mb-1 block">Exam Type (Optional)</label>
+                          <Select value={boxPlotStudentExamType} onValueChange={setBoxPlotStudentExamType}>
+                            <SelectTrigger className="h-9 text-xs">
+                              <SelectValue placeholder="All Exams" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="">All Exams</SelectItem>
+                              <SelectItem value="Mid-Year">Mid-Year</SelectItem>
+                              <SelectItem value="Year-End">Year-End</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ) : (
+                  <Card className="border-border/50">
+                    <CardHeader className="pb-3">
+                      <CardTitle className="text-sm flex items-center gap-2">
+                        <BookOpen className="h-4 w-4 text-primary" />
+                        Select Subject & Cohort
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-3">
+                      {/* Subject selector */}
+                      <div>
+                        <label className="text-xs text-muted-foreground mb-1 block">Subject</label>
+                        <Select value={boxPlotSubject} onValueChange={setBoxPlotSubject}>
+                          <SelectTrigger className="h-9 text-xs">
+                            <SelectValue placeholder="Select subject" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {allSubjects.map((subject) => (
+                              <SelectItem key={subject} value={subject}>
+                                {subject}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      {/* Cohort scope */}
+                      <div>
+                        <label className="text-xs text-muted-foreground mb-2 block">Cohort Scope</label>
+                        <RadioGroup 
+                          value={boxPlotCohortScope} 
+                          onValueChange={(v) => setBoxPlotCohortScope(v as "class" | "yearGroup" | "school")}
+                          className="space-y-2"
+                        >
+                          <div className="flex items-center space-x-2">
+                            <RadioGroupItem value="class" id="cohort-class" />
+                            <Label htmlFor="cohort-class" className="text-xs font-normal">
+                              Same Class ({selectedClass})
+                            </Label>
+                          </div>
+                          <div className="flex items-center space-x-2">
+                            <RadioGroupItem value="yearGroup" id="cohort-year" />
+                            <Label htmlFor="cohort-year" className="text-xs font-normal">
+                              Same Year Group (Year {selectedClass.charAt(0)})
+                            </Label>
+                          </div>
+                          <div className="flex items-center space-x-2">
+                            <RadioGroupItem value="school" id="cohort-school" />
+                            <Label htmlFor="cohort-school" className="text-xs font-normal">
+                              Entire School
+                            </Label>
+                          </div>
+                        </RadioGroup>
+                      </div>
+
+                      {/* Optional exam type filter */}
+                      <div>
+                        <label className="text-xs text-muted-foreground mb-1 block">Exam Type (Optional)</label>
+                        <Select value={boxPlotSubjectExamType} onValueChange={setBoxPlotSubjectExamType}>
+                          <SelectTrigger className="h-9 text-xs">
+                            <SelectValue placeholder="All Exams" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="">All Exams</SelectItem>
+                            <SelectItem value="Mid-Year">Mid-Year</SelectItem>
+                            <SelectItem value="Year-End">Year-End</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
+
+                {/* Box Plot Chart */}
+                {(() => {
+                  // Calculate box plot data based on mode
+                  let boxPlotData: BoxPlotStats[] = [];
+                  let chartTitle = "";
+                  
+                  if (boxPlotViewMode === "student") {
+                    if (!boxPlotStudentId) {
+                      return (
+                        <Card className="border-dashed border-2 border-muted-foreground/20">
+                          <CardContent className="flex flex-col items-center justify-center py-12 text-center">
+                            <Users className="h-12 w-12 text-muted-foreground/30 mb-3" />
+                            <p className="text-sm text-muted-foreground">Select a student to view their score distribution</p>
+                          </CardContent>
+                        </Card>
+                      );
+                    }
+                    
+                    const student = (classRosters[boxPlotClass as keyof typeof classRosters] || [])
+                      .find(s => s.id === boxPlotStudentId);
+                    chartTitle = student ? `${student.name}'s Score Distribution` : "Student Score Distribution";
+                    
+                    boxPlotData = calculateStudentBoxPlotData(
+                      assessmentRecords,
+                      boxPlotStudentId,
+                      boxPlotStudentSubject || undefined,
+                      boxPlotStudentExamType || undefined
+                    );
+                  } else {
+                    const yearGroup = `Year ${selectedClass.charAt(0)}`;
+                    chartTitle = `${boxPlotSubject} - ${
+                      boxPlotCohortScope === "class" ? selectedClass :
+                      boxPlotCohortScope === "yearGroup" ? yearGroup :
+                      "Entire School"
+                    }`;
+                    
+                    boxPlotData = calculateSubjectBoxPlotData(
+                      assessmentRecords,
+                      boxPlotSubject,
+                      boxPlotCohortScope,
+                      selectedClass,
+                      yearGroup,
+                      boxPlotSubjectExamType || undefined
+                    );
+                  }
+                  
+                  const insights = generateInsights(boxPlotData);
+                  
+                  return (
+                    <>
+                      {/* Chart */}
+                      <Card>
+                        <CardHeader className="pb-2">
+                          <CardTitle className="text-sm">{chartTitle}</CardTitle>
+                        </CardHeader>
+                        <CardContent className="relative">
+                          <div className="overflow-x-auto">
+                            <BoxPlotChart 
+                              data={boxPlotData} 
+                              showMean={true} 
+                              height={280} 
+                            />
+                          </div>
+                        </CardContent>
+                      </Card>
+
+                      {/* Insights Panel */}
+                      {insights.length > 0 && (
+                        <Card className="bg-accent/30 border-accent">
+                          <CardHeader className="pb-2">
+                            <CardTitle className="text-sm flex items-center gap-2">
+                              <Lightbulb className="h-4 w-4 text-amber-500" />
+                              Insights
+                            </CardTitle>
+                          </CardHeader>
+                          <CardContent className="space-y-2">
+                            {insights.map((insight, idx) => (
+                              <div key={idx} className="flex items-start gap-2 text-xs">
+                                <span className="mt-0.5">
+                                  {insight.icon === "up" && <TrendingUp className="h-3.5 w-3.5 text-emerald-500" />}
+                                  {insight.icon === "down" && <TrendingDown className="h-3.5 w-3.5 text-red-500" />}
+                                  {insight.icon === "flat" && <Minus className="h-3.5 w-3.5 text-muted-foreground" />}
+                                  {insight.icon === "warning" && <AlertTriangle className="h-3.5 w-3.5 text-amber-500" />}
+                                  {insight.icon === "info" && <BarChart3 className="h-3.5 w-3.5 text-blue-500" />}
+                                </span>
+                                <div>
+                                  <span className="font-medium text-foreground">{insight.title}</span>
+                                  <span className="text-muted-foreground ml-1">{insight.description}</span>
+                                </div>
+                              </div>
+                            ))}
+                          </CardContent>
+                        </Card>
+                      )}
+
+                      {/* Statistics Table */}
+                      <Card>
+                        <CardHeader className="pb-2">
+                          <CardTitle className="text-sm flex items-center gap-2">
+                            <BarChart3 className="h-4 w-4 text-primary" />
+                            Year-by-Year Statistics
+                          </CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                          <div className="overflow-x-auto">
+                            <table className="w-full text-xs">
+                              <thead>
+                                <tr className="border-b border-border">
+                                  <th className="text-left py-2 px-2 font-medium text-muted-foreground">Year</th>
+                                  <th className="text-center py-2 px-2 font-medium text-muted-foreground">n</th>
+                                  <th className="text-center py-2 px-2 font-medium text-muted-foreground">Q1</th>
+                                  <th className="text-center py-2 px-2 font-medium text-muted-foreground">Median</th>
+                                  <th className="text-center py-2 px-2 font-medium text-muted-foreground">Q3</th>
+                                  <th className="text-center py-2 px-2 font-medium text-muted-foreground">IQR</th>
+                                  <th className="text-center py-2 px-2 font-medium text-muted-foreground">Outliers</th>
+                                </tr>
+                              </thead>
+                              <tbody>
+                                {boxPlotData.map((stat) => (
+                                  <tr key={stat.year} className="border-b border-border/50 last:border-0">
+                                    <td className="py-2 px-2 font-medium">{stat.year}</td>
+                                    <td className={cn(
+                                      "text-center py-2 px-2",
+                                      stat.n < 5 && stat.n > 0 && "text-amber-600 font-medium"
+                                    )}>
+                                      {stat.n}{stat.n < 5 && stat.n > 0 && " ⚠"}
+                                    </td>
+                                    <td className="text-center py-2 px-2">{stat.q1}</td>
+                                    <td className="text-center py-2 px-2 font-semibold text-primary">{stat.median}</td>
+                                    <td className="text-center py-2 px-2">{stat.q3}</td>
+                                    <td className="text-center py-2 px-2">{stat.iqr}</td>
+                                    <td className={cn(
+                                      "text-center py-2 px-2",
+                                      stat.outliers.length > 0 && "text-red-500 font-medium"
+                                    )}>
+                                      {stat.outliers.length}
+                                    </td>
+                                  </tr>
+                                ))}
+                              </tbody>
+                            </table>
+                          </div>
+                          
+                          {/* Low sample warning */}
+                          {boxPlotData.some(s => s.n > 0 && s.n < 5) && (
+                            <div className="mt-3 flex items-center gap-2 text-xs text-amber-600 bg-amber-50 p-2 rounded-lg">
+                              <AlertTriangle className="h-3.5 w-3.5" />
+                              <span>Years with n &lt; 5 have low statistical significance</span>
+                            </div>
+                          )}
+                        </CardContent>
+                      </Card>
+                    </>
+                  );
+                })()}
+              </TabsContent>
+
               {!isAtBottom && (
                 <Button
                   className="fixed z-50 shadow-xl bottom-24 right-4 h-14 w-14 rounded-full p-0 bg-emerald-600 hover:bg-emerald-700 transition-all duration-300"
