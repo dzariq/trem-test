@@ -4937,6 +4937,23 @@ export default function TeacherAcademicPage() {
                               <SelectItem value="Year-End">Year-End</SelectItem>
                             </SelectContent>
                           </Select>
+                          {/* Show selected exams as tags */}
+                          <div className="flex flex-wrap gap-1 mt-2">
+                            {boxPlotStudentExamType === "all" ? (
+                              <>
+                                <Badge variant="secondary" className="text-[10px] px-2 py-0.5 bg-muted text-muted-foreground">
+                                  Mid-Year
+                                </Badge>
+                                <Badge variant="secondary" className="text-[10px] px-2 py-0.5 bg-muted text-muted-foreground">
+                                  Year-End
+                                </Badge>
+                              </>
+                            ) : (
+                              <Badge variant="secondary" className="text-[10px] px-2 py-0.5 bg-muted text-muted-foreground">
+                                {boxPlotStudentExamType}
+                              </Badge>
+                            )}
+                          </div>
                         </div>
                       </div>
                     </CardContent>
@@ -5055,6 +5072,23 @@ export default function TeacherAcademicPage() {
                             <SelectItem value="Year-End">Year-End</SelectItem>
                           </SelectContent>
                         </Select>
+                        {/* Show selected exams as tags */}
+                        <div className="flex flex-wrap gap-1 mt-2">
+                          {boxPlotSubjectExamType === "all" ? (
+                            <>
+                              <Badge variant="secondary" className="text-[10px] px-2 py-0.5 bg-muted text-muted-foreground">
+                                Mid-Year
+                              </Badge>
+                              <Badge variant="secondary" className="text-[10px] px-2 py-0.5 bg-muted text-muted-foreground">
+                                Year-End
+                              </Badge>
+                            </>
+                          ) : (
+                            <Badge variant="secondary" className="text-[10px] px-2 py-0.5 bg-muted text-muted-foreground">
+                              {boxPlotSubjectExamType}
+                            </Badge>
+                          )}
+                        </div>
                       </div>
                     </CardContent>
                   </Card>
