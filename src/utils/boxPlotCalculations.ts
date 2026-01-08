@@ -274,7 +274,7 @@ export function generateInsights(stats: BoxPlotStats[]): Insight[] {
 export function calculateStudentBoxPlotData(
   records: AssessmentRecord[],
   studentId: string,
-  subject?: string,
+  subjects?: string[],
   examType?: string,
   startYear: string = "2021",
   endYear: string = "2026"
@@ -282,9 +282,9 @@ export function calculateStudentBoxPlotData(
   // Filter by student
   let filtered = records.filter(r => r.student_id === studentId);
   
-  // Optionally filter by subject
-  if (subject) {
-    filtered = filtered.filter(r => r.subject === subject);
+  // Optionally filter by subjects (multiple)
+  if (subjects && subjects.length > 0) {
+    filtered = filtered.filter(r => subjects.includes(r.subject));
   }
   
   // Optionally filter by exam type
@@ -308,7 +308,7 @@ export function calculateStudentBoxPlotData(
  */
 export function calculateSubjectBoxPlotData(
   records: AssessmentRecord[],
-  subject: string,
+  subjects: string[],
   cohortScope: "class" | "yearGroup" | "school",
   referenceClassId?: string,
   referenceYearGroup?: string,
@@ -316,8 +316,10 @@ export function calculateSubjectBoxPlotData(
   startYear: string = "2021",
   endYear: string = "2026"
 ): BoxPlotStats[] {
-  // Filter by subject
-  let filtered = records.filter(r => r.subject === subject);
+  // Filter by subjects (multiple)
+  let filtered = subjects.length > 0 
+    ? records.filter(r => subjects.includes(r.subject))
+    : records;
   
   // Filter by cohort scope
   if (cohortScope === "class" && referenceClassId) {
