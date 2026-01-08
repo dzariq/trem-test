@@ -8,7 +8,7 @@
 import React, { useState } from "react";
 import { ResponsiveContainer, XAxis, YAxis, CartesianGrid, Tooltip, ReferenceLine } from "recharts";
 import { cn } from "@/lib/utils";
-import { BoxPlotStats } from "@/utils/boxPlotCalculations";
+import { BoxPlotStats, OutlierInfo } from "@/utils/boxPlotCalculations";
 
 interface BoxPlotChartProps {
   data: BoxPlotStats[];
@@ -53,10 +53,22 @@ const BoxPlotTooltip = ({ active, payload }: any) => {
             <span className="text-muted-foreground">Mean:</span>
             <span className="font-medium text-cyan-600">{data.mean}</span>
           </div>
-          {data.outliers.length > 0 && (
-            <div className="flex justify-between text-amber-600">
-              <span>Outliers:</span>
-              <span>{data.outliers.length} ({data.outliers.slice(0, 3).join(", ")}{data.outliers.length > 3 ? "..." : ""})</span>
+          {data.outlierDetails && data.outlierDetails.length > 0 && (
+            <div className="text-amber-600">
+              <span className="font-medium">Outliers ({data.outlierDetails.length}):</span>
+              <div className="mt-1 space-y-0.5">
+                {data.outlierDetails.slice(0, 5).map((outlier, idx) => (
+                  <div key={idx} className="flex justify-between text-[10px]">
+                    <span className="truncate max-w-[100px]">{outlier.label}</span>
+                    <span className="ml-2 font-medium">{outlier.score}</span>
+                  </div>
+                ))}
+                {data.outlierDetails.length > 5 && (
+                  <div className="text-[10px] text-muted-foreground">
+                    +{data.outlierDetails.length - 5} more...
+                  </div>
+                )}
+              </div>
             </div>
           )}
         </div>
@@ -194,18 +206,37 @@ const BoxPlotShape = ({
         />
       )}
       
-      {/* Outliers */}
-      {data.outliers.map((outlier, idx) => (
-        <circle
-          key={idx}
-          cx={boxX + boxWidth / 2}
-          cy={yScale(outlier)}
-          r={4}
-          fill={outlierColor}
-          stroke="white"
-          strokeWidth={1}
-        />
-      ))}
+      {/* Outliers with labels */}
+      {data.outlierDetails && data.outlierDetails.map((outlier, idx) => {
+        const cy = yScale(outlier.score);
+        const isAboveMedian = outlier.score > data.median;
+        // Shorten label for display (first name or first 8 chars)
+        const shortLabel = outlier.label.split(' ')[0].substring(0, 8);
+        
+        return (
+          <g key={idx}>
+            <circle
+              cx={boxX + boxWidth / 2}
+              cy={cy}
+              r={4}
+              fill={outlierColor}
+              stroke="white"
+              strokeWidth={1}
+            />
+            {/* Label next to outlier dot */}
+            <text
+              x={boxX + boxWidth / 2 + 8}
+              y={cy + 3}
+              fontSize={8}
+              fill={outlierColor}
+              fontWeight={500}
+              textAnchor="start"
+            >
+              {shortLabel}
+            </text>
+          </g>
+        );
+      })}
       
       {/* Low sample size indicator */}
       {isLowSample && (
