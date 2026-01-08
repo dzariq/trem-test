@@ -337,8 +337,21 @@ export default function TeacherAcademicPage() {
   const [boxPlotSubjects, setBoxPlotSubjects] = useState<string[]>(["Mathematics"]); // multiple subjects
   const [boxPlotStudentSubjectSearch, setBoxPlotStudentSubjectSearch] = useState("");
   const [boxPlotSubjectSearch, setBoxPlotSubjectSearch] = useState("");
-  const [boxPlotCohortScope, setBoxPlotCohortScope] = useState<"class" | "yearGroup" | "school">("yearGroup");
+  // Enhanced cohort scope with multi-select
+  const [boxPlotCohortType, setBoxPlotCohortType] = useState<"classes" | "yearGroups" | "school">("classes");
+  const [boxPlotSelectedClasses, setBoxPlotSelectedClasses] = useState<string[]>(["5A"]);
+  const [boxPlotSelectedYearGroups, setBoxPlotSelectedYearGroups] = useState<string[]>(["Year 5"]);
+  const [boxPlotCohortPopoverOpen, setBoxPlotCohortPopoverOpen] = useState(false);
   const [boxPlotSubjectExamType, setBoxPlotSubjectExamType] = useState<string>("all"); // optional
+  
+  // Available classes and year groups for cohort selection
+  const allAvailableClasses = ["5A", "5B", "4A", "4B", "3A", "3B"];
+  const allAvailableYearGroups = ["Year 5", "Year 4", "Year 3"];
+  const classesByYearGroup: Record<string, string[]> = {
+    "Year 5": ["5A", "5B"],
+    "Year 4": ["4A", "4B"],
+    "Year 3": ["3A", "3B"],
+  };
   
   // Available years from data
   const availableBoxPlotYears = useMemo(() => getAvailableYears(assessmentRecords), []);
@@ -5030,33 +5043,194 @@ export default function TeacherAcademicPage() {
                         </Popover>
                       </div>
 
-                      {/* Cohort scope */}
-                      <div>
-                        <label className="text-xs text-muted-foreground mb-2 block">Cohort Scope</label>
-                        <RadioGroup 
-                          value={boxPlotCohortScope} 
-                          onValueChange={(v) => setBoxPlotCohortScope(v as "class" | "yearGroup" | "school")}
-                          className="space-y-2"
-                        >
-                          <div className="flex items-center space-x-2">
-                            <RadioGroupItem value="class" id="cohort-class" />
-                            <Label htmlFor="cohort-class" className="text-xs font-normal">
-                              Same Class ({selectedClass})
-                            </Label>
+                      {/* Cohort scope - Enhanced with multi-select */}
+                      <div className="space-y-3">
+                        <label className="text-xs text-muted-foreground block">Cohort Scope</label>
+                        
+                        {/* Cohort type tabs */}
+                        <div className="flex rounded-lg border bg-muted/30 p-0.5">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className={cn(
+                              "flex-1 h-7 text-[10px] rounded-md",
+                              boxPlotCohortType === "classes" && "bg-background shadow-sm"
+                            )}
+                            onClick={() => setBoxPlotCohortType("classes")}
+                          >
+                            Classes
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className={cn(
+                              "flex-1 h-7 text-[10px] rounded-md",
+                              boxPlotCohortType === "yearGroups" && "bg-background shadow-sm"
+                            )}
+                            onClick={() => setBoxPlotCohortType("yearGroups")}
+                          >
+                            Year Groups
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className={cn(
+                              "flex-1 h-7 text-[10px] rounded-md",
+                              boxPlotCohortType === "school" && "bg-background shadow-sm"
+                            )}
+                            onClick={() => setBoxPlotCohortType("school")}
+                          >
+                            School
+                          </Button>
+                        </div>
+                        
+                        {/* Conditional multi-select based on cohort type */}
+                        {boxPlotCohortType === "classes" && (
+                          <div>
+                            <Popover open={boxPlotCohortPopoverOpen} onOpenChange={setBoxPlotCohortPopoverOpen}>
+                              <PopoverTrigger asChild>
+                                <Button variant="outline" size="sm" className="w-full h-9 justify-between text-xs">
+                                  <span>{boxPlotSelectedClasses.length} class{boxPlotSelectedClasses.length !== 1 ? "es" : ""} selected</span>
+                                  <ChevronDown className="h-3 w-3 opacity-50" />
+                                </Button>
+                              </PopoverTrigger>
+                              <PopoverContent className="w-56 p-3 z-50 bg-background" align="start">
+                                <div className="space-y-3">
+                                  <div className="flex gap-2">
+                                    <Button
+                                      variant="outline"
+                                      size="sm"
+                                      className="flex-1 h-6 text-[10px]"
+                                      onClick={() => setBoxPlotSelectedClasses([...allAvailableClasses])}
+                                    >
+                                      Select All
+                                    </Button>
+                                    <Button
+                                      variant="outline"
+                                      size="sm"
+                                      className="flex-1 h-6 text-[10px]"
+                                      onClick={() => setBoxPlotSelectedClasses([])}
+                                    >
+                                      Clear
+                                    </Button>
+                                  </div>
+                                  
+                                  {Object.entries(classesByYearGroup).map(([yearGroup, classes]) => (
+                                    <div key={yearGroup} className="space-y-1">
+                                      <div className="flex items-center gap-2">
+                                        <span className="text-[10px] font-medium text-muted-foreground">{yearGroup}</span>
+                                        <Button
+                                          variant="ghost"
+                                          size="sm"
+                                          className="h-4 text-[9px] px-1 text-primary"
+                                          onClick={() => {
+                                            const allSelected = classes.every(c => boxPlotSelectedClasses.includes(c));
+                                            if (allSelected) {
+                                              setBoxPlotSelectedClasses(boxPlotSelectedClasses.filter(c => !classes.includes(c)));
+                                            } else {
+                                              setBoxPlotSelectedClasses([...new Set([...boxPlotSelectedClasses, ...classes])]);
+                                            }
+                                          }}
+                                        >
+                                          {classes.every(c => boxPlotSelectedClasses.includes(c)) ? "Deselect" : "Select"} all
+                                        </Button>
+                                      </div>
+                                      <div className="flex flex-wrap gap-1">
+                                        {classes.map(cls => (
+                                          <Button
+                                            key={cls}
+                                            variant="outline"
+                                            size="sm"
+                                            className={cn(
+                                              "h-7 text-[10px] px-2",
+                                              boxPlotSelectedClasses.includes(cls) && "bg-primary text-primary-foreground hover:bg-primary/90"
+                                            )}
+                                            onClick={() => {
+                                              if (boxPlotSelectedClasses.includes(cls)) {
+                                                setBoxPlotSelectedClasses(boxPlotSelectedClasses.filter(c => c !== cls));
+                                              } else {
+                                                setBoxPlotSelectedClasses([...boxPlotSelectedClasses, cls]);
+                                              }
+                                            }}
+                                          >
+                                            {boxPlotSelectedClasses.includes(cls) && <Check className="h-2.5 w-2.5 mr-1" />}
+                                            {cls}
+                                          </Button>
+                                        ))}
+                                      </div>
+                                    </div>
+                                  ))}
+                                </div>
+                              </PopoverContent>
+                            </Popover>
+                            
+                            {/* Selected classes badges */}
+                            <div className="flex flex-wrap gap-1 mt-2">
+                              {boxPlotSelectedClasses.length === 0 ? (
+                                <span className="text-[10px] text-muted-foreground italic">No classes selected</span>
+                              ) : boxPlotSelectedClasses.length <= 4 ? (
+                                boxPlotSelectedClasses.map(cls => (
+                                  <Badge key={cls} variant="secondary" className="text-[10px] px-2 py-0.5 bg-muted text-muted-foreground">
+                                    {cls}
+                                  </Badge>
+                                ))
+                              ) : (
+                                <Badge variant="secondary" className="text-[10px] px-2 py-0.5 bg-muted text-muted-foreground">
+                                  {boxPlotSelectedClasses.length} classes
+                                </Badge>
+                              )}
+                            </div>
                           </div>
-                          <div className="flex items-center space-x-2">
-                            <RadioGroupItem value="yearGroup" id="cohort-year" />
-                            <Label htmlFor="cohort-year" className="text-xs font-normal">
-                              Same Year Group (Year {selectedClass.charAt(0)})
-                            </Label>
+                        )}
+                        
+                        {boxPlotCohortType === "yearGroups" && (
+                          <div>
+                            <div className="flex flex-wrap gap-1.5">
+                              {allAvailableYearGroups.map(yg => (
+                                <Button
+                                  key={yg}
+                                  variant="outline"
+                                  size="sm"
+                                  className={cn(
+                                    "h-7 text-[10px] px-2.5",
+                                    boxPlotSelectedYearGroups.includes(yg) && "bg-primary text-primary-foreground hover:bg-primary/90"
+                                  )}
+                                  onClick={() => {
+                                    if (boxPlotSelectedYearGroups.includes(yg)) {
+                                      setBoxPlotSelectedYearGroups(boxPlotSelectedYearGroups.filter(y => y !== yg));
+                                    } else {
+                                      setBoxPlotSelectedYearGroups([...boxPlotSelectedYearGroups, yg]);
+                                    }
+                                  }}
+                                >
+                                  {boxPlotSelectedYearGroups.includes(yg) && <Check className="h-2.5 w-2.5 mr-1" />}
+                                  {yg}
+                                </Button>
+                              ))}
+                            </div>
+                            
+                            {/* Selected year groups badges */}
+                            <div className="flex flex-wrap gap-1 mt-2">
+                              {boxPlotSelectedYearGroups.length === 0 ? (
+                                <span className="text-[10px] text-muted-foreground italic">No year groups selected</span>
+                              ) : (
+                                boxPlotSelectedYearGroups.map(yg => (
+                                  <Badge key={yg} variant="secondary" className="text-[10px] px-2 py-0.5 bg-muted text-muted-foreground">
+                                    {yg}
+                                  </Badge>
+                                ))
+                              )}
+                            </div>
                           </div>
-                          <div className="flex items-center space-x-2">
-                            <RadioGroupItem value="school" id="cohort-school" />
-                            <Label htmlFor="cohort-school" className="text-xs font-normal">
-                              Entire School
-                            </Label>
+                        )}
+                        
+                        {boxPlotCohortType === "school" && (
+                          <div className="flex flex-wrap gap-1">
+                            <Badge variant="secondary" className="text-[10px] px-2 py-0.5 bg-muted text-muted-foreground">
+                              All Classes
+                            </Badge>
                           </div>
-                        </RadioGroup>
+                        )}
                       </div>
 
                       {/* Optional exam type filter */}
@@ -5125,24 +5299,38 @@ export default function TeacherAcademicPage() {
                       boxPlotEndYear
                     );
                   } else {
-                    const yearGroup = `Year ${selectedClass.charAt(0)}`;
                     const subjectLabel = boxPlotSubjects.length === 1 
                       ? boxPlotSubjects[0] 
                       : boxPlotSubjects.length > 1 
                         ? `${boxPlotSubjects.length} Subjects`
                         : "No Subject";
-                    chartTitle = `${subjectLabel} - ${
-                      boxPlotCohortScope === "class" ? selectedClass :
-                      boxPlotCohortScope === "yearGroup" ? yearGroup :
-                      "Entire School"
-                    }`;
+                    
+                    // Build cohort label based on type
+                    let cohortLabel = "";
+                    if (boxPlotCohortType === "classes") {
+                      cohortLabel = boxPlotSelectedClasses.length === 0 
+                        ? "No Classes" 
+                        : boxPlotSelectedClasses.length <= 2 
+                          ? boxPlotSelectedClasses.join(", ")
+                          : `${boxPlotSelectedClasses.length} Classes`;
+                    } else if (boxPlotCohortType === "yearGroups") {
+                      cohortLabel = boxPlotSelectedYearGroups.length === 0 
+                        ? "No Year Groups" 
+                        : boxPlotSelectedYearGroups.length <= 2 
+                          ? boxPlotSelectedYearGroups.join(", ")
+                          : `${boxPlotSelectedYearGroups.length} Year Groups`;
+                    } else {
+                      cohortLabel = "Entire School";
+                    }
+                    
+                    chartTitle = `${subjectLabel} - ${cohortLabel}`;
                     
                     boxPlotData = calculateSubjectBoxPlotData(
                       assessmentRecords,
                       boxPlotSubjects,
-                      boxPlotCohortScope,
-                      selectedClass,
-                      yearGroup,
+                      boxPlotCohortType,
+                      boxPlotSelectedClasses,
+                      boxPlotSelectedYearGroups,
                       boxPlotSubjectExamType && boxPlotSubjectExamType !== "all" ? boxPlotSubjectExamType : undefined,
                       boxPlotStartYear,
                       boxPlotEndYear
