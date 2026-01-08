@@ -325,13 +325,14 @@ export function calculateStudentBoxPlotData(
 
 /**
  * Filter records and calculate box plot stats for Subject (Cohort) mode
+ * Enhanced to support multi-select classes and year groups
  */
 export function calculateSubjectBoxPlotData(
   records: AssessmentRecord[],
   subjects: string[],
-  cohortScope: "class" | "yearGroup" | "school",
-  referenceClassId?: string,
-  referenceYearGroup?: string,
+  cohortType: "classes" | "yearGroups" | "school",
+  selectedClasses?: string[],
+  selectedYearGroups?: string[],
   examType?: string,
   startYear: string = "2021",
   endYear: string = "2026"
@@ -341,11 +342,11 @@ export function calculateSubjectBoxPlotData(
     ? records.filter(r => subjects.includes(r.subject))
     : records;
   
-  // Filter by cohort scope
-  if (cohortScope === "class" && referenceClassId) {
-    filtered = filtered.filter(r => r.class_id === referenceClassId);
-  } else if (cohortScope === "yearGroup" && referenceYearGroup) {
-    filtered = filtered.filter(r => r.year_group === referenceYearGroup);
+  // Filter by cohort type with multi-select support
+  if (cohortType === "classes" && selectedClasses && selectedClasses.length > 0) {
+    filtered = filtered.filter(r => selectedClasses.includes(r.class_id));
+  } else if (cohortType === "yearGroups" && selectedYearGroups && selectedYearGroups.length > 0) {
+    filtered = filtered.filter(r => selectedYearGroups.includes(r.year_group));
   }
   // "school" = no additional filtering
   
