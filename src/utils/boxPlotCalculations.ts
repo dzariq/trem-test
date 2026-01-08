@@ -122,19 +122,35 @@ export function calculateBoxPlotStats(scores: number[], year: string): BoxPlotSt
 }
 
 /**
- * Get latest N academic years with data (default 6)
+ * Get years within a date range
  * 
  * @param records - Array of assessment records
- * @param count - Number of years to return (default: 6)
- * @returns Array of N most recent years with data (descending order)
+ * @param startYear - Start year (inclusive)
+ * @param endYear - End year (inclusive)
+ * @returns Array of years within range (ascending order)
  */
-export function getLatestYears(records: AssessmentRecord[], count: number = 6): string[] {
+export function getYearsInRange(records: AssessmentRecord[], startYear: string, endYear: string): string[] {
   const years = new Set<string>();
   records.forEach(r => years.add(r.academic_year));
   
+  const start = parseInt(startYear);
+  const end = parseInt(endYear);
+  
   return Array.from(years)
-    .sort((a, b) => parseInt(b) - parseInt(a)) // Descending
-    .slice(0, count);
+    .filter(y => {
+      const year = parseInt(y);
+      return year >= start && year <= end;
+    })
+    .sort((a, b) => parseInt(a) - parseInt(b)); // Ascending
+}
+
+/**
+ * Get all available years from records
+ */
+export function getAvailableYears(records: AssessmentRecord[]): string[] {
+  const years = new Set<string>();
+  records.forEach(r => years.add(r.academic_year));
+  return Array.from(years).sort((a, b) => parseInt(a) - parseInt(b));
 }
 
 /**
@@ -260,7 +276,8 @@ export function calculateStudentBoxPlotData(
   studentId: string,
   subject?: string,
   examType?: string,
-  yearCount: number = 6
+  startYear: string = "2021",
+  endYear: string = "2026"
 ): BoxPlotStats[] {
   // Filter by student
   let filtered = records.filter(r => r.student_id === studentId);
@@ -275,8 +292,8 @@ export function calculateStudentBoxPlotData(
     filtered = filtered.filter(r => r.exam_type === examType);
   }
   
-  // Get latest N years
-  const years = getLatestYears(filtered, yearCount);
+  // Get years in range
+  const years = getYearsInRange(filtered, startYear, endYear);
   
   // Calculate stats for each year
   return years.map(year => {
@@ -296,7 +313,8 @@ export function calculateSubjectBoxPlotData(
   referenceClassId?: string,
   referenceYearGroup?: string,
   examType?: string,
-  yearCount: number = 6
+  startYear: string = "2021",
+  endYear: string = "2026"
 ): BoxPlotStats[] {
   // Filter by subject
   let filtered = records.filter(r => r.subject === subject);
@@ -314,8 +332,8 @@ export function calculateSubjectBoxPlotData(
     filtered = filtered.filter(r => r.exam_type === examType);
   }
   
-  // Get latest N years
-  const years = getLatestYears(filtered, yearCount);
+  // Get years in range
+  const years = getYearsInRange(filtered, startYear, endYear);
   
   // Calculate stats for each year (aggregate all students' scores)
   return years.map(year => {
