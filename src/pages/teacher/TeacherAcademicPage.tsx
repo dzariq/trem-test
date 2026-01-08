@@ -82,7 +82,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import { cn } from "@/lib/utils";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { assessmentRecords, getAllStudents } from "@/data/boxPlotMockData";
-import { BoxPlotStats, calculateStudentBoxPlotData, calculateSubjectBoxPlotData, generateInsights, Insight } from "@/utils/boxPlotCalculations";
+import { BoxPlotStats, calculateStudentBoxPlotData, calculateSubjectBoxPlotData, generateInsights, Insight, getAvailableYears } from "@/utils/boxPlotCalculations";
 import { BoxPlotChart } from "@/components/BoxPlotChart";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
@@ -288,7 +288,8 @@ export default function TeacherAcademicPage() {
   
   // Box & Whisker state
   const [boxPlotViewMode, setBoxPlotViewMode] = useState<"student" | "subject">("student");
-  const [boxPlotYearCount, setBoxPlotYearCount] = useState<number>(6); // 1-6 years to show
+  const [boxPlotStartYear, setBoxPlotStartYear] = useState<string>("2021");
+  const [boxPlotEndYear, setBoxPlotEndYear] = useState<string>("2026");
   // Mode A: Student filters
   const [boxPlotGrade, setBoxPlotGrade] = useState<string>("5");
   const [boxPlotClass, setBoxPlotClass] = useState<string>("5A");
@@ -299,6 +300,9 @@ export default function TeacherAcademicPage() {
   const [boxPlotSubject, setBoxPlotSubject] = useState<string>("Mathematics");
   const [boxPlotCohortScope, setBoxPlotCohortScope] = useState<"class" | "yearGroup" | "school">("yearGroup");
   const [boxPlotSubjectExamType, setBoxPlotSubjectExamType] = useState<string>("all"); // optional
+  
+  // Available years from data
+  const availableBoxPlotYears = useMemo(() => getAvailableYears(assessmentRecords), []);
   const handleTouchStart = useCallback((e: React.TouchEvent) => {
     // Only handle pinch-to-zoom with 2 fingers, allow single-finger scrolling to pass through
     if (e.touches.length === 2) {
@@ -4643,22 +4647,47 @@ export default function TeacherAcademicPage() {
                   </button>
                 </div>
 
-                {/* Year Count Selector */}
-                <div className="flex gap-1 bg-muted/50 p-1 rounded-lg">
-                  {[1, 2, 3, 4, 5, 6].map((yearNum) => (
-                    <button
-                      key={yearNum}
-                      onClick={() => setBoxPlotYearCount(yearNum)}
-                      className={cn(
-                        "flex-1 px-2 py-1.5 text-xs font-medium rounded-md transition-all",
-                        boxPlotYearCount === yearNum 
-                          ? "bg-primary text-primary-foreground shadow-sm" 
-                          : "text-muted-foreground hover:text-foreground hover:bg-muted"
-                      )}
-                    >
-                      {yearNum}Y
-                    </button>
-                  ))}
+                {/* Year Range Selector */}
+                <div className="flex items-center gap-2 bg-muted/50 p-2 rounded-lg">
+                  <div className="flex-1">
+                    <label className="text-xs text-muted-foreground mb-1 block">Start Year</label>
+                    <Select value={boxPlotStartYear} onValueChange={(v) => {
+                      setBoxPlotStartYear(v);
+                      // Ensure end year is not before start year
+                      if (parseInt(v) > parseInt(boxPlotEndYear)) {
+                        setBoxPlotEndYear(v);
+                      }
+                    }}>
+                      <SelectTrigger className="h-8 text-xs">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {availableBoxPlotYears.map(year => (
+                          <SelectItem key={year} value={year}>{year}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <span className="text-muted-foreground text-xs mt-5">to</span>
+                  <div className="flex-1">
+                    <label className="text-xs text-muted-foreground mb-1 block">End Year</label>
+                    <Select value={boxPlotEndYear} onValueChange={(v) => {
+                      setBoxPlotEndYear(v);
+                      // Ensure start year is not after end year
+                      if (parseInt(v) < parseInt(boxPlotStartYear)) {
+                        setBoxPlotStartYear(v);
+                      }
+                    }}>
+                      <SelectTrigger className="h-8 text-xs">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {availableBoxPlotYears.filter(y => parseInt(y) >= parseInt(boxPlotStartYear)).map(year => (
+                          <SelectItem key={year} value={year}>{year}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
                 </div>
 
                 {/* Filters based on mode */}
@@ -4865,7 +4894,8 @@ export default function TeacherAcademicPage() {
                       boxPlotStudentId,
                       boxPlotStudentSubject && boxPlotStudentSubject !== "all" ? boxPlotStudentSubject : undefined,
                       boxPlotStudentExamType && boxPlotStudentExamType !== "all" ? boxPlotStudentExamType : undefined,
-                      boxPlotYearCount
+                      boxPlotStartYear,
+                      boxPlotEndYear
                     );
                   } else {
                     const yearGroup = `Year ${selectedClass.charAt(0)}`;
@@ -4882,7 +4912,8 @@ export default function TeacherAcademicPage() {
                       selectedClass,
                       yearGroup,
                       boxPlotSubjectExamType && boxPlotSubjectExamType !== "all" ? boxPlotSubjectExamType : undefined,
-                      boxPlotYearCount
+                      boxPlotStartYear,
+                      boxPlotEndYear
                     );
                   }
                   
