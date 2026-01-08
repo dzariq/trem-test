@@ -122,18 +122,19 @@ export function calculateBoxPlotStats(scores: number[], year: string): BoxPlotSt
 }
 
 /**
- * Get latest 6 academic years with data
+ * Get latest N academic years with data (default 6)
  * 
  * @param records - Array of assessment records
- * @returns Array of 6 most recent years with data (descending order)
+ * @param count - Number of years to return (default: 6)
+ * @returns Array of N most recent years with data (descending order)
  */
-export function getLatest6Years(records: AssessmentRecord[]): string[] {
+export function getLatestYears(records: AssessmentRecord[], count: number = 6): string[] {
   const years = new Set<string>();
   records.forEach(r => years.add(r.academic_year));
   
   return Array.from(years)
     .sort((a, b) => parseInt(b) - parseInt(a)) // Descending
-    .slice(0, 6);
+    .slice(0, count);
 }
 
 /**
@@ -258,7 +259,8 @@ export function calculateStudentBoxPlotData(
   records: AssessmentRecord[],
   studentId: string,
   subject?: string,
-  examType?: string
+  examType?: string,
+  yearCount: number = 6
 ): BoxPlotStats[] {
   // Filter by student
   let filtered = records.filter(r => r.student_id === studentId);
@@ -273,8 +275,8 @@ export function calculateStudentBoxPlotData(
     filtered = filtered.filter(r => r.exam_type === examType);
   }
   
-  // Get latest 6 years
-  const years = getLatest6Years(filtered);
+  // Get latest N years
+  const years = getLatestYears(filtered, yearCount);
   
   // Calculate stats for each year
   return years.map(year => {
@@ -293,7 +295,8 @@ export function calculateSubjectBoxPlotData(
   cohortScope: "class" | "yearGroup" | "school",
   referenceClassId?: string,
   referenceYearGroup?: string,
-  examType?: string
+  examType?: string,
+  yearCount: number = 6
 ): BoxPlotStats[] {
   // Filter by subject
   let filtered = records.filter(r => r.subject === subject);
@@ -311,8 +314,8 @@ export function calculateSubjectBoxPlotData(
     filtered = filtered.filter(r => r.exam_type === examType);
   }
   
-  // Get latest 6 years
-  const years = getLatest6Years(filtered);
+  // Get latest N years
+  const years = getLatestYears(filtered, yearCount);
   
   // Calculate stats for each year (aggregate all students' scores)
   return years.map(year => {

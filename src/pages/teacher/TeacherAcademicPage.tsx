@@ -288,6 +288,7 @@ export default function TeacherAcademicPage() {
   
   // Box & Whisker state
   const [boxPlotViewMode, setBoxPlotViewMode] = useState<"student" | "subject">("student");
+  const [boxPlotYearCount, setBoxPlotYearCount] = useState<number>(6); // 1-6 years to show
   // Mode A: Student filters
   const [boxPlotGrade, setBoxPlotGrade] = useState<string>("5");
   const [boxPlotClass, setBoxPlotClass] = useState<string>("5A");
@@ -4613,7 +4614,7 @@ export default function TeacherAcademicPage() {
                 {/* Header */}
                 <div className="flex flex-col gap-1">
                   <h3 className="text-sm font-semibold text-foreground">Box & Whisker Analysis</h3>
-                  <p className="text-xs text-muted-foreground">Score distribution over the past 6 academic years</p>
+                  <p className="text-xs text-muted-foreground">Score distribution over academic years</p>
                 </div>
 
                 {/* View Mode Toggle */}
@@ -4627,7 +4628,7 @@ export default function TeacherAcademicPage() {
                         : "text-muted-foreground hover:text-foreground"
                     )}
                   >
-                    Student (Past 6 Years)
+                    Student
                   </button>
                   <button
                     onClick={() => setBoxPlotViewMode("subject")}
@@ -4638,8 +4639,26 @@ export default function TeacherAcademicPage() {
                         : "text-muted-foreground hover:text-foreground"
                     )}
                   >
-                    Subject (Past 6 Years)
+                    Subject
                   </button>
+                </div>
+
+                {/* Year Count Selector */}
+                <div className="flex gap-1 bg-muted/50 p-1 rounded-lg">
+                  {[1, 2, 3, 4, 5, 6].map((yearNum) => (
+                    <button
+                      key={yearNum}
+                      onClick={() => setBoxPlotYearCount(yearNum)}
+                      className={cn(
+                        "flex-1 px-2 py-1.5 text-xs font-medium rounded-md transition-all",
+                        boxPlotYearCount === yearNum 
+                          ? "bg-primary text-primary-foreground shadow-sm" 
+                          : "text-muted-foreground hover:text-foreground hover:bg-muted"
+                      )}
+                    >
+                      {yearNum}Y
+                    </button>
+                  ))}
                 </div>
 
                 {/* Filters based on mode */}
@@ -4845,7 +4864,8 @@ export default function TeacherAcademicPage() {
                       assessmentRecords,
                       boxPlotStudentId,
                       boxPlotStudentSubject && boxPlotStudentSubject !== "all" ? boxPlotStudentSubject : undefined,
-                      boxPlotStudentExamType && boxPlotStudentExamType !== "all" ? boxPlotStudentExamType : undefined
+                      boxPlotStudentExamType && boxPlotStudentExamType !== "all" ? boxPlotStudentExamType : undefined,
+                      boxPlotYearCount
                     );
                   } else {
                     const yearGroup = `Year ${selectedClass.charAt(0)}`;
@@ -4861,7 +4881,8 @@ export default function TeacherAcademicPage() {
                       boxPlotCohortScope,
                       selectedClass,
                       yearGroup,
-                      boxPlotSubjectExamType && boxPlotSubjectExamType !== "all" ? boxPlotSubjectExamType : undefined
+                      boxPlotSubjectExamType && boxPlotSubjectExamType !== "all" ? boxPlotSubjectExamType : undefined,
+                      boxPlotYearCount
                     );
                   }
                   
