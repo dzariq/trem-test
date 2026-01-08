@@ -294,10 +294,10 @@ export default function TeacherAcademicPage() {
   const [boxPlotGrade, setBoxPlotGrade] = useState<string>("5");
   const [boxPlotClass, setBoxPlotClass] = useState<string>("5A");
   const [boxPlotStudentId, setBoxPlotStudentId] = useState<string>("");
-  const [boxPlotStudentSubject, setBoxPlotStudentSubject] = useState<string>("all"); // optional - "all" means all
+  const [boxPlotStudentSubjects, setBoxPlotStudentSubjects] = useState<string[]>([]); // multiple subjects
   const [boxPlotStudentExamType, setBoxPlotStudentExamType] = useState<string>("all"); // optional - "all" means all
   // Mode B: Subject filters
-  const [boxPlotSubject, setBoxPlotSubject] = useState<string>("Mathematics");
+  const [boxPlotSubjects, setBoxPlotSubjects] = useState<string[]>(["Mathematics"]); // multiple subjects
   const [boxPlotCohortScope, setBoxPlotCohortScope] = useState<"class" | "yearGroup" | "school">("yearGroup");
   const [boxPlotSubjectExamType, setBoxPlotSubjectExamType] = useState<string>("all"); // optional
   
@@ -4761,22 +4761,54 @@ export default function TeacherAcademicPage() {
                       </div>
 
                       {/* Optional filters */}
-                      <div className="grid grid-cols-2 gap-2">
+                      <div className="space-y-3">
                         <div>
-                          <label className="text-xs text-muted-foreground mb-1 block">Subject (Optional)</label>
-                          <Select value={boxPlotStudentSubject} onValueChange={setBoxPlotStudentSubject}>
-                            <SelectTrigger className="h-9 text-xs">
-                              <SelectValue placeholder="All Subjects" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="all">All Subjects</SelectItem>
-                              {allSubjects.map((subject) => (
-                                <SelectItem key={subject} value={subject}>
-                                  {shortenSubjectName(subject)}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
+                          <label className="text-xs text-muted-foreground mb-1 block">
+                            Subjects (Optional) {boxPlotStudentSubjects.length > 0 && `(${boxPlotStudentSubjects.length} selected)`}
+                          </label>
+                          <Popover>
+                            <PopoverTrigger asChild>
+                              <Button variant="outline" className="w-full h-9 justify-between text-xs font-normal">
+                                {boxPlotStudentSubjects.length === 0 
+                                  ? "All Subjects" 
+                                  : boxPlotStudentSubjects.length === 1 
+                                    ? shortenSubjectName(boxPlotStudentSubjects[0])
+                                    : `${boxPlotStudentSubjects.length} subjects`}
+                                <ChevronDown className="h-3 w-3 opacity-50" />
+                              </Button>
+                            </PopoverTrigger>
+                            <PopoverContent className="w-56 p-2 bg-popover z-50" align="start">
+                              <div className="space-y-1 max-h-60 overflow-y-auto">
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  className={cn("w-full justify-start text-xs", boxPlotStudentSubjects.length === 0 && "bg-accent")}
+                                  onClick={() => setBoxPlotStudentSubjects([])}
+                                >
+                                  <Check className={cn("h-3 w-3 mr-2", boxPlotStudentSubjects.length === 0 ? "opacity-100" : "opacity-0")} />
+                                  All Subjects
+                                </Button>
+                                {allSubjects.map((subject) => (
+                                  <Button
+                                    key={subject}
+                                    variant="ghost"
+                                    size="sm"
+                                    className={cn("w-full justify-start text-xs", boxPlotStudentSubjects.includes(subject) && "bg-accent")}
+                                    onClick={() => {
+                                      setBoxPlotStudentSubjects(prev => 
+                                        prev.includes(subject)
+                                          ? prev.filter(s => s !== subject)
+                                          : [...prev, subject]
+                                      );
+                                    }}
+                                  >
+                                    <Check className={cn("h-3 w-3 mr-2", boxPlotStudentSubjects.includes(subject) ? "opacity-100" : "opacity-0")} />
+                                    {shortenSubjectName(subject)}
+                                  </Button>
+                                ))}
+                              </div>
+                            </PopoverContent>
+                          </Popover>
                         </div>
                         <div>
                           <label className="text-xs text-muted-foreground mb-1 block">Exam Type (Optional)</label>
@@ -4803,21 +4835,45 @@ export default function TeacherAcademicPage() {
                       </CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-3">
-                      {/* Subject selector */}
+                      {/* Subject selector - multi-select */}
                       <div>
-                        <label className="text-xs text-muted-foreground mb-1 block">Subject</label>
-                        <Select value={boxPlotSubject} onValueChange={setBoxPlotSubject}>
-                          <SelectTrigger className="h-9 text-xs">
-                            <SelectValue placeholder="Select subject" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {allSubjects.map((subject) => (
-                              <SelectItem key={subject} value={subject}>
-                                {subject}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
+                        <label className="text-xs text-muted-foreground mb-1 block">
+                          Subjects {boxPlotSubjects.length > 0 && `(${boxPlotSubjects.length} selected)`}
+                        </label>
+                        <Popover>
+                          <PopoverTrigger asChild>
+                            <Button variant="outline" className="w-full h-9 justify-between text-xs font-normal">
+                              {boxPlotSubjects.length === 0 
+                                ? "Select subjects..." 
+                                : boxPlotSubjects.length === 1 
+                                  ? boxPlotSubjects[0]
+                                  : `${boxPlotSubjects.length} subjects`}
+                              <ChevronDown className="h-3 w-3 opacity-50" />
+                            </Button>
+                          </PopoverTrigger>
+                          <PopoverContent className="w-56 p-2 bg-popover z-50" align="start">
+                            <div className="space-y-1 max-h-60 overflow-y-auto">
+                              {allSubjects.map((subject) => (
+                                <Button
+                                  key={subject}
+                                  variant="ghost"
+                                  size="sm"
+                                  className={cn("w-full justify-start text-xs", boxPlotSubjects.includes(subject) && "bg-accent")}
+                                  onClick={() => {
+                                    setBoxPlotSubjects(prev => 
+                                      prev.includes(subject)
+                                        ? prev.filter(s => s !== subject)
+                                        : [...prev, subject]
+                                    );
+                                  }}
+                                >
+                                  <Check className={cn("h-3 w-3 mr-2", boxPlotSubjects.includes(subject) ? "opacity-100" : "opacity-0")} />
+                                  {subject}
+                                </Button>
+                              ))}
+                            </div>
+                          </PopoverContent>
+                        </Popover>
                       </div>
 
                       {/* Cohort scope */}
@@ -4892,14 +4948,19 @@ export default function TeacherAcademicPage() {
                     boxPlotData = calculateStudentBoxPlotData(
                       assessmentRecords,
                       boxPlotStudentId,
-                      boxPlotStudentSubject && boxPlotStudentSubject !== "all" ? boxPlotStudentSubject : undefined,
+                      boxPlotStudentSubjects.length > 0 ? boxPlotStudentSubjects : undefined,
                       boxPlotStudentExamType && boxPlotStudentExamType !== "all" ? boxPlotStudentExamType : undefined,
                       boxPlotStartYear,
                       boxPlotEndYear
                     );
                   } else {
                     const yearGroup = `Year ${selectedClass.charAt(0)}`;
-                    chartTitle = `${boxPlotSubject} - ${
+                    const subjectLabel = boxPlotSubjects.length === 1 
+                      ? boxPlotSubjects[0] 
+                      : boxPlotSubjects.length > 1 
+                        ? `${boxPlotSubjects.length} Subjects`
+                        : "No Subject";
+                    chartTitle = `${subjectLabel} - ${
                       boxPlotCohortScope === "class" ? selectedClass :
                       boxPlotCohortScope === "yearGroup" ? yearGroup :
                       "Entire School"
@@ -4907,7 +4968,7 @@ export default function TeacherAcademicPage() {
                     
                     boxPlotData = calculateSubjectBoxPlotData(
                       assessmentRecords,
-                      boxPlotSubject,
+                      boxPlotSubjects,
                       boxPlotCohortScope,
                       selectedClass,
                       yearGroup,
