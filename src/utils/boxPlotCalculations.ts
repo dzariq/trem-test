@@ -7,6 +7,11 @@
 
 import { AssessmentRecord } from "@/data/boxPlotMockData";
 
+export interface OutlierInfo {
+  score: number;
+  label: string;  // subject name (Student mode) or student name (Subject mode)
+}
+
 export interface BoxPlotStats {
   year: string;
   n: number;           // sample size
@@ -15,7 +20,8 @@ export interface BoxPlotStats {
   q3: number;          // 75th percentile
   whiskerLow: number;  // lowest score >= (Q1 - 1.5*IQR)
   whiskerHigh: number; // highest score <= (Q3 + 1.5*IQR)
-  outliers: number[];  // scores outside whiskers
+  outliers: number[];  // scores outside whiskers (for backward compatibility)
+  outlierDetails: OutlierInfo[]; // detailed outlier info with labels
   mean: number;        // mean value
   iqr: number;         // Q3 - Q1
   min: number;         // minimum value
@@ -64,7 +70,7 @@ export function percentile(sortedData: number[], p: number): number {
  * @param year - Academic year label
  * @returns Complete box plot statistics
  */
-export function calculateBoxPlotStats(scores: number[], year: string): BoxPlotStats {
+export function calculateBoxPlotStats(scores: number[], year: string, labels?: string[]): BoxPlotStats {
   if (scores.length === 0) {
     return {
       year,
@@ -75,12 +81,19 @@ export function calculateBoxPlotStats(scores: number[], year: string): BoxPlotSt
       whiskerLow: 0,
       whiskerHigh: 0,
       outliers: [],
+      outlierDetails: [],
       mean: 0,
       iqr: 0,
       min: 0,
       max: 0,
     };
   }
+
+  // Create array of score-label pairs for tracking
+  const scoreLabelPairs = scores.map((score, idx) => ({
+    score,
+    label: labels?.[idx] || `Item ${idx + 1}`
+  }));
 
   // Sort scores in ascending order
   const sorted = [...scores].sort((a, b) => a - b);
@@ -99,8 +112,13 @@ export function calculateBoxPlotStats(scores: number[], year: string): BoxPlotSt
   const whiskerLow = sorted.find(v => v >= lowerBound) ?? sorted[0];
   const whiskerHigh = [...sorted].reverse().find(v => v <= upperBound) ?? sorted[sorted.length - 1];
   
-  // Identify outliers (values outside whisker range)
-  const outliers = sorted.filter(v => v < whiskerLow || v > whiskerHigh);
+  // Identify outliers (values outside whisker range) with their labels
+  const outlierDetails: OutlierInfo[] = scoreLabelPairs
+    .filter(pair => pair.score < whiskerLow || pair.score > whiskerHigh)
+    .map(pair => ({
+      score: Math.round(pair.score),
+      label: pair.label
+    }));
   
   // Calculate mean
   const mean = Math.round(scores.reduce((sum, v) => sum + v, 0) / scores.length);
@@ -113,7 +131,8 @@ export function calculateBoxPlotStats(scores: number[], year: string): BoxPlotSt
     q3: Math.round(q3 * 10) / 10,
     whiskerLow: Math.round(whiskerLow * 10) / 10,
     whiskerHigh: Math.round(whiskerHigh * 10) / 10,
-    outliers: outliers.map(o => Math.round(o)),
+    outliers: outlierDetails.map(o => o.score),
+    outlierDetails,
     mean,
     iqr: Math.round(iqr * 10) / 10,
     min: sorted[0],
@@ -295,11 +314,12 @@ export function calculateStudentBoxPlotData(
   // Get years in range
   const years = getYearsInRange(filtered, startYear, endYear);
   
-  // Calculate stats for each year
+  // Calculate stats for each year with subject names as labels for outliers
   return years.map(year => {
     const yearRecords = filtered.filter(r => r.academic_year === year);
     const scores = yearRecords.map(r => r.score_numeric);
-    return calculateBoxPlotStats(scores, year);
+    const labels = yearRecords.map(r => r.subject); // Subject names for Student mode
+    return calculateBoxPlotStats(scores, year, labels);
   }).sort((a, b) => parseInt(a.year) - parseInt(b.year)); // Ascending for display
 }
 
@@ -337,10 +357,11 @@ export function calculateSubjectBoxPlotData(
   // Get years in range
   const years = getYearsInRange(filtered, startYear, endYear);
   
-  // Calculate stats for each year (aggregate all students' scores)
+  // Calculate stats for each year with student names as labels for outliers
   return years.map(year => {
     const yearRecords = filtered.filter(r => r.academic_year === year);
     const scores = yearRecords.map(r => r.score_numeric);
-    return calculateBoxPlotStats(scores, year);
+    const labels = yearRecords.map(r => r.student_name); // Student names for Subject mode
+    return calculateBoxPlotStats(scores, year, labels);
   }).sort((a, b) => parseInt(a.year) - parseInt(b.year)); // Ascending for display
 }
