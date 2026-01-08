@@ -4937,6 +4937,31 @@ export default function TeacherAcademicPage() {
                               </div>
                             </PopoverContent>
                           </Popover>
+                          {/* Show selected subjects as badges */}
+                          <div className="flex flex-wrap gap-1 mt-2">
+                            {boxPlotStudentSubjects.length === 0 ? (
+                              <Badge variant="secondary" className="text-[10px] px-2 py-0.5 bg-muted text-muted-foreground">
+                                All Subjects
+                              </Badge>
+                            ) : boxPlotStudentSubjects.length <= 4 ? (
+                              boxPlotStudentSubjects.map(subject => (
+                                <Badge key={subject} variant="secondary" className="text-[10px] px-2 py-0.5 bg-muted text-muted-foreground">
+                                  {shortenSubjectName(subject)}
+                                </Badge>
+                              ))
+                            ) : (
+                              <>
+                                {boxPlotStudentSubjects.slice(0, 3).map(subject => (
+                                  <Badge key={subject} variant="secondary" className="text-[10px] px-2 py-0.5 bg-muted text-muted-foreground">
+                                    {shortenSubjectName(subject)}
+                                  </Badge>
+                                ))}
+                                <Badge variant="secondary" className="text-[10px] px-2 py-0.5 bg-muted text-muted-foreground">
+                                  +{boxPlotStudentSubjects.length - 3} more
+                                </Badge>
+                              </>
+                            )}
+                          </div>
                         </div>
                         <div>
                           <label className="text-xs text-muted-foreground mb-1 block">Exam Type (Optional)</label>
