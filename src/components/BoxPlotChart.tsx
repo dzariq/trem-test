@@ -98,13 +98,18 @@ const BoxPlotShape = ({
   
   const isLowSample = data.n > 0 && data.n < 5;
   
-  // Colors - using hsl values that work with the design system
-  const boxFill = isLowSample ? "hsl(45, 93%, 47%)" : "hsl(158, 64%, 52%)"; // amber or emerald
-  const boxStroke = isLowSample ? "hsl(45, 93%, 37%)" : "hsl(158, 64%, 42%)";
-  const medianColor = "hsl(158, 64%, 32%)";
+  // Calculate heights for upper and lower portions of the box
+  const upperBoxHeight = medianY - q3Y; // Q3 to Median (green)
+  const lowerBoxHeight = q1Y - medianY; // Median to Q1 (red)
+  
+  // Colors - bicolor box: green for upper (above median), red for lower (below median)
+  const upperBoxFill = isLowSample ? "hsl(45, 93%, 47%)" : "hsl(142, 71%, 45%)"; // amber or green
+  const lowerBoxFill = isLowSample ? "hsl(45, 93%, 47%)" : "hsl(0, 84%, 60%)"; // amber or red
+  const boxStroke = isLowSample ? "hsl(45, 93%, 37%)" : "hsl(215, 16%, 47%)";
+  const medianColor = "hsl(215, 25%, 27%)";
   const whiskerColor = "hsl(215, 16%, 47%)";
   const meanColor = "hsl(199, 89%, 48%)";
-  const outlierColor = "hsl(0, 84%, 60%)";
+  const outlierColor = "hsl(280, 70%, 50%)"; // purple for outliers
   
   return (
     <g className={cn("transition-opacity", isHovered ? "opacity-100" : "opacity-90")}>
@@ -138,16 +143,29 @@ const BoxPlotShape = ({
         strokeWidth={2}
       />
       
-      {/* Box (Q1 to Q3) */}
+      {/* Upper Box (Median to Q3) - Green */}
       <rect
         x={boxX}
         y={q3Y}
         width={boxWidth}
-        height={Math.max(boxHeight, 2)}
-        fill={boxFill}
-        fillOpacity={0.6}
+        height={Math.max(upperBoxHeight, 1)}
+        fill={upperBoxFill}
+        fillOpacity={0.7}
         stroke={boxStroke}
-        strokeWidth={2}
+        strokeWidth={1.5}
+        rx={3}
+      />
+      
+      {/* Lower Box (Q1 to Median) - Red */}
+      <rect
+        x={boxX}
+        y={medianY}
+        width={boxWidth}
+        height={Math.max(lowerBoxHeight, 1)}
+        fill={lowerBoxFill}
+        fillOpacity={0.7}
+        stroke={boxStroke}
+        strokeWidth={1.5}
         rx={3}
       />
       
@@ -345,24 +363,32 @@ export const BoxPlotChart: React.FC<BoxPlotChartProps> = ({
           
           {/* Legend */}
           <g transform={`translate(${data.length * 80 - 30}, 15)`}>
+            {/* Upper (Green) */}
+            <rect x={0} y={0} width={15} height={8} fill="hsl(142, 71%, 45%)" fillOpacity={0.7} rx={2} />
+            <text x={20} y={7} fontSize={9} fill="hsl(var(--muted-foreground))">Above Median</text>
+            
+            {/* Lower (Red) */}
+            <rect x={0} y={14} width={15} height={8} fill="hsl(0, 84%, 60%)" fillOpacity={0.7} rx={2} />
+            <text x={20} y={21} fontSize={9} fill="hsl(var(--muted-foreground))">Below Median</text>
+            
             {/* Median */}
-            <line x1={0} y1={0} x2={15} y2={0} stroke="hsl(158, 64%, 32%)" strokeWidth={3} />
-            <text x={20} y={4} fontSize={9} fill="hsl(var(--muted-foreground))">Median</text>
+            <line x1={0} y1={32} x2={15} y2={32} stroke="hsl(215, 25%, 27%)" strokeWidth={3} />
+            <text x={20} y={35} fontSize={9} fill="hsl(var(--muted-foreground))">Median</text>
             
             {/* Mean */}
             {showMean && (
               <>
                 <polygon
-                  points="7,15 12,20 7,25 2,20"
+                  points="7,45 12,50 7,55 2,50"
                   fill="hsl(199, 89%, 48%)"
                 />
-                <text x={20} y={24} fontSize={9} fill="hsl(var(--muted-foreground))">Mean</text>
+                <text x={20} y={53} fontSize={9} fill="hsl(var(--muted-foreground))">Mean</text>
               </>
             )}
             
             {/* Outlier */}
-            <circle cx={7} cy={40} r={4} fill="hsl(0, 84%, 60%)" />
-            <text x={20} y={44} fontSize={9} fill="hsl(var(--muted-foreground))">Outlier</text>
+            <circle cx={7} cy={68} r={4} fill="hsl(280, 70%, 50%)" />
+            <text x={20} y={72} fontSize={9} fill="hsl(var(--muted-foreground))">Outlier</text>
           </g>
         </svg>
       </ResponsiveContainer>
