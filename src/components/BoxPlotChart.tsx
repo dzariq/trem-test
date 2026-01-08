@@ -102,10 +102,10 @@ const BoxPlotShape = ({
   const upperBoxHeight = medianY - q3Y; // Q3 to Median (green)
   const lowerBoxHeight = q1Y - medianY; // Median to Q1 (red)
   
-  // Colors - bicolor box: green for upper (above median), red for lower (below median)
-  const upperBoxFill = isLowSample ? "hsl(45, 93%, 47%)" : "hsl(142, 71%, 45%)"; // amber or green
-  const lowerBoxFill = isLowSample ? "hsl(45, 93%, 47%)" : "hsl(0, 84%, 60%)"; // amber or red
-  const boxStroke = isLowSample ? "hsl(45, 93%, 37%)" : "hsl(215, 16%, 47%)";
+  // Colors - always bicolor: green for upper (above median), red for lower (below median)
+  const upperBoxFill = "hsl(142, 71%, 45%)"; // green
+  const lowerBoxFill = "hsl(0, 84%, 60%)"; // red
+  const boxStroke = "hsl(215, 16%, 47%)";
   const medianColor = "hsl(215, 25%, 27%)";
   const whiskerColor = "hsl(215, 16%, 47%)";
   const meanColor = "hsl(199, 89%, 48%)";
