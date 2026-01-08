@@ -1,4 +1,4 @@
-import { useState, useMemo, useRef, useCallback, useEffect } from "react";
+import React, { useState, useMemo, useRef, useCallback, useEffect } from "react";
 import { TeacherAppLayout } from "@/components/layout/TeacherAppLayout";
 import { AppHeader } from "@/components/layout/AppHeader";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -807,14 +807,19 @@ export default function TeacherAcademicPage() {
   const bandsCompareClass = bandsAdditionalSelections[0]?.className || teacherProfile.classes[0];
   const bandsCompareSubject = bandsAdditionalSelections[0]?.subject || "Mathematics";
 
-  // Comparison chart data
+  // Comparison chart data - now supports all selections
   const bandsComparisonChartData = useMemo(() => {
-    return bandsGradeDistribution.map((item, index) => ({
-      grade: item.range,
-      primary: item.count,
-      compare: bandsCompareGradeDistribution[index]?.count || 0
-    }));
-  }, [bandsGradeDistribution, bandsCompareGradeDistribution]);
+    return bandsGradeDistribution.map((item, index) => {
+      const dataPoint: Record<string, number | string> = {
+        grade: item.range,
+        selectionA: item.count
+      };
+      bandsAdditionalSelections.forEach((selection, selIndex) => {
+        dataPoint[`selection${selection.id}`] = bandsSelectionsData[selIndex]?.gradeDistribution[index]?.count || 0;
+      });
+      return dataPoint;
+    });
+  }, [bandsGradeDistribution, bandsAdditionalSelections, bandsSelectionsData]);
 
   // Calculate category averages from detailed grades
   const categoryTotals = {
@@ -2598,16 +2603,22 @@ export default function TeacherAcademicPage() {
                     <div className="space-y-2">
                       <div className="flex items-center justify-between">
                         <h4 className="text-sm font-medium text-foreground">Grade Comparison</h4>
-                        <div className="flex items-center gap-3">
-                          <div className="flex items-center gap-1">
-                            <div className="w-3 h-3 rounded-full bg-blue-500" />
-                            <span className="text-[10px] text-muted-foreground">{selectedClass} - {bandsSelectedSubject}</span>
-                          </div>
-                          <div className="flex items-center gap-1">
-                            <div className="w-3 h-3 rounded-full bg-amber-500" />
-                            <span className="text-[10px] text-muted-foreground">{bandsCompareClass} - {bandsCompareSubject}</span>
-                          </div>
+                      </div>
+                      {/* Dynamic Legend */}
+                      <div className="flex flex-wrap items-center gap-2">
+                        <div className="flex items-center gap-1">
+                          <div className="w-3 h-3 rounded-full" style={{ backgroundColor: getSelectionColor(0).hex }} />
+                          <span className="text-[10px] text-muted-foreground">{selectedClass} - {bandsSelectedSubject}</span>
                         </div>
+                        {bandsAdditionalSelections.map((selection, index) => {
+                          const color = getSelectionColor(index + 1);
+                          return (
+                            <div key={selection.id} className="flex items-center gap-1">
+                              <div className="w-3 h-3 rounded-full" style={{ backgroundColor: color.hex }} />
+                              <span className="text-[10px] text-muted-foreground">{selection.className} - {selection.subject}</span>
+                            </div>
+                          );
+                        })}
                       </div>
                       <div className={cn("h-[200px]", isMobile && "h-[160px]")}>
                         <ResponsiveContainer width="100%" height="100%">
@@ -2621,25 +2632,41 @@ export default function TeacherAcademicPage() {
                                 border: "1px solid hsl(var(--border))",
                                 borderRadius: "8px"
                               }}
-                              formatter={(value: number, name: string) => [
-                                `${value} students`,
-                                name === "primary" ? `${selectedClass} - ${bandsSelectedSubject}` : `${bandsCompareClass} - ${bandsCompareSubject}`
-                              ]}
+                              formatter={(value: number, name: string) => {
+                                if (name === "selectionA") {
+                                  return [`${value} students`, `${selectedClass} - ${bandsSelectedSubject}`];
+                                }
+                                const selId = name.replace("selection", "");
+                                const selection = bandsAdditionalSelections.find(s => s.id === selId);
+                                return [`${value} students`, selection ? `${selection.className} - ${selection.subject}` : name];
+                              }}
                             />
-                            <Bar dataKey="primary" fill="#3b82f6" radius={[4, 4, 0, 0]} name="primary" />
-                            <Bar dataKey="compare" fill="#f59e0b" radius={[4, 4, 0, 0]} name="compare" />
+                            <Bar dataKey="selectionA" fill={getSelectionColor(0).hex} radius={[4, 4, 0, 0]} name="selectionA" />
+                            {bandsAdditionalSelections.map((selection, index) => (
+                              <Bar 
+                                key={selection.id} 
+                                dataKey={`selection${selection.id}`} 
+                                fill={getSelectionColor(index + 1).hex} 
+                                radius={[4, 4, 0, 0]} 
+                                name={`selection${selection.id}`} 
+                              />
+                            ))}
                           </BarChart>
                         </ResponsiveContainer>
                       </div>
                     </div>
 
-                    {/* Stacked Comparison Cards for Mobile */}
+                    {/* Stacked Comparison Cards for Mobile - Dynamic */}
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                       {/* Selection A Distribution */}
-                      <div className="space-y-2 p-3 rounded-lg bg-blue-50/50 border border-blue-200">
+                      <div className="space-y-2 p-3 rounded-lg" style={{
+                        backgroundColor: `${getSelectionColor(0).hex}10`,
+                        borderWidth: 1,
+                        borderColor: `${getSelectionColor(0).hex}40`
+                      }}>
                         <div className="flex items-center gap-2">
-                          <div className="w-3 h-3 rounded-full bg-blue-500" />
-                          <span className="text-xs font-semibold text-blue-700">{selectedClass} - {bandsSelectedSubject}</span>
+                          <div className="w-3 h-3 rounded-full" style={{ backgroundColor: getSelectionColor(0).hex }} />
+                          <span className="text-xs font-semibold" style={{ color: getSelectionColor(0).hex }}>{selectedClass} - {bandsSelectedSubject}</span>
                         </div>
                         <div className="grid grid-cols-6 gap-1">
                           {bandsGradeDistribution.map(g => {
@@ -2648,7 +2675,8 @@ export default function TeacherAcademicPage() {
                             return (
                               <div 
                                 key={g.range} 
-                                className="flex flex-col items-center p-1.5 rounded-md border border-blue-200/50 bg-background"
+                                className="flex flex-col items-center p-1.5 rounded-md border bg-background"
+                                style={{ borderColor: `${getSelectionColor(0).hex}30` }}
                               >
                                 <span className="text-xs font-bold" style={{
                                   color: GRADE_COLORS[g.range as keyof typeof GRADE_COLORS]
@@ -2661,45 +2689,65 @@ export default function TeacherAcademicPage() {
                             );
                           })}
                         </div>
-                        <div className="flex justify-between text-[10px] text-muted-foreground pt-1 border-t border-blue-200/50">
+                        <div className="flex justify-between text-[10px] text-muted-foreground pt-1 border-t" style={{ borderColor: `${getSelectionColor(0).hex}30` }}>
                           <span>Top: {bandsTopPerformers.length}</span>
                           <span>Middle: {bandsMiddlePerformers.length}</span>
                           <span>At-Risk: {bandsAtRiskStudents.length}</span>
                         </div>
                       </div>
 
-                      {/* Selection B Distribution */}
-                      <div className="space-y-2 p-3 rounded-lg bg-amber-50/50 border border-amber-200">
-                        <div className="flex items-center gap-2">
-                          <div className="w-3 h-3 rounded-full bg-amber-500" />
-                          <span className="text-xs font-semibold text-amber-700">{bandsCompareClass} - {bandsCompareSubject}</span>
-                        </div>
-                        <div className="grid grid-cols-6 gap-1">
-                          {bandsCompareGradeDistribution.map(g => {
-                            const total = bandsCompareGradeDistribution.reduce((sum, d) => sum + d.count, 0);
-                            const percentage = total > 0 ? Math.round(g.count / total * 100) : 0;
-                            return (
-                              <div 
-                                key={g.range} 
-                                className="flex flex-col items-center p-1.5 rounded-md border border-amber-200/50 bg-background"
-                              >
-                                <span className="text-xs font-bold" style={{
-                                  color: GRADE_COLORS[g.range as keyof typeof GRADE_COLORS]
-                                }}>
-                                  {g.range}
-                                </span>
-                                <span className="text-sm font-semibold text-foreground">{g.count}</span>
-                                <span className="text-[9px] text-muted-foreground">{percentage}%</span>
-                              </div>
-                            );
-                          })}
-                        </div>
-                        <div className="flex justify-between text-[10px] text-muted-foreground pt-1 border-t border-amber-200/50">
-                          <span>Top: {bandsCompareTopPerformers.length}</span>
-                          <span>Middle: {bandsCompareMiddlePerformers.length}</span>
-                          <span>At-Risk: {bandsCompareAtRiskStudents.length}</span>
-                        </div>
-                      </div>
+                      {/* Dynamic Additional Selection Distribution Cards */}
+                      {bandsAdditionalSelections.map((selection, index) => {
+                        const color = getSelectionColor(index + 1);
+                        const selectionData = bandsSelectionsData[index];
+                        const gradeDistribution = selectionData?.gradeDistribution || [];
+                        const topPerformers = selectionData?.topPerformers || [];
+                        const middlePerformers = selectionData?.middlePerformers || [];
+                        const atRiskStudents = selectionData?.atRiskStudents || [];
+
+                        return (
+                          <div 
+                            key={selection.id} 
+                            className="space-y-2 p-3 rounded-lg"
+                            style={{
+                              backgroundColor: `${color.hex}10`,
+                              borderWidth: 1,
+                              borderColor: `${color.hex}40`
+                            }}
+                          >
+                            <div className="flex items-center gap-2">
+                              <div className="w-3 h-3 rounded-full" style={{ backgroundColor: color.hex }} />
+                              <span className="text-xs font-semibold" style={{ color: color.hex }}>{selection.className} - {selection.subject}</span>
+                            </div>
+                            <div className="grid grid-cols-6 gap-1">
+                              {gradeDistribution.map(g => {
+                                const total = gradeDistribution.reduce((sum, d) => sum + d.count, 0);
+                                const percentage = total > 0 ? Math.round(g.count / total * 100) : 0;
+                                return (
+                                  <div 
+                                    key={g.range} 
+                                    className="flex flex-col items-center p-1.5 rounded-md border bg-background"
+                                    style={{ borderColor: `${color.hex}30` }}
+                                  >
+                                    <span className="text-xs font-bold" style={{
+                                      color: GRADE_COLORS[g.range as keyof typeof GRADE_COLORS]
+                                    }}>
+                                      {g.range}
+                                    </span>
+                                    <span className="text-sm font-semibold text-foreground">{g.count}</span>
+                                    <span className="text-[9px] text-muted-foreground">{percentage}%</span>
+                                  </div>
+                                );
+                              })}
+                            </div>
+                            <div className="flex justify-between text-[10px] text-muted-foreground pt-1 border-t" style={{ borderColor: `${color.hex}30` }}>
+                              <span>Top: {topPerformers.length}</span>
+                              <span>Middle: {middlePerformers.length}</span>
+                              <span>At-Risk: {atRiskStudents.length}</span>
+                            </div>
+                          </div>
+                        );
+                      })}
                     </div>
                   </div>
                 )}
@@ -4282,17 +4330,22 @@ export default function TeacherAcademicPage() {
 
                 {/* Comparison Content */}
                 {(() => {
-                const examAKey = `${examAYear}-${examAPeriod}`;
-                const examBKey = `${examBYear}-${examBPeriod}`;
-                const subjectDataA = subjectExamData[examAClass as keyof typeof subjectExamData]?.[examAKey];
-                const subjectDataB = subjectExamData[examBClass as keyof typeof subjectExamData]?.[examBKey];
                 const getExamLabelForComparison = (cls: string, year: string, period: string) => {
                   const periodLabel = period === "midYear" ? "Mid-Year" : "Year-End";
                   return `${cls} ${periodLabel} ${year}`;
                 };
-                const examALabel = getExamLabelForComparison(examAClass, examAYear, examAPeriod);
-                const examBLabel = getExamLabelForComparison(examBClass, examBYear, examBPeriod);
-                if (!subjectDataA || !subjectDataB) {
+
+                // Build data for all exam selections
+                const allExamData = examSelections.map((exam, index) => {
+                  const key = `${exam.year}-${exam.period}`;
+                  const data = subjectExamData[exam.className as keyof typeof subjectExamData]?.[key] || {};
+                  const label = getExamLabelForComparison(exam.className, exam.year, exam.period);
+                  const color = getSelectionColor(index);
+                  return { id: exam.id, data, label, color, className: exam.className, year: exam.year, period: exam.period };
+                });
+
+                // Check if at least first exam has data
+                if (!allExamData[0]?.data || Object.keys(allExamData[0].data).length === 0) {
                   return <Card className="bg-muted/30">
                         <CardContent className="p-8 text-center">
                           <Scale className="h-8 w-8 mx-auto mb-2 text-muted-foreground" />
@@ -4301,52 +4354,85 @@ export default function TeacherAcademicPage() {
                       </Card>;
                 }
 
-                // Build comparison data based on selected subjects
+                // Build comparison data with all exams
                 const comparisonData = compareSubjects.map(subjectName => {
-                  const scoreA = subjectDataA[subjectName] ?? 0;
-                  const scoreB = subjectDataB[subjectName] ?? 0;
-                  const delta = scoreA - scoreB;
+                  const dataPoint: Record<string, any> = { name: subjectName };
+                  examSelections.forEach((exam) => {
+                    const key = `${exam.year}-${exam.period}`;
+                    const examData = subjectExamData[exam.className as keyof typeof subjectExamData]?.[key] || {};
+                    dataPoint[`exam${exam.id}`] = examData[subjectName] ?? 0;
+                  });
+                  // Calculate delta as first exam minus second exam (for backward compatibility)
+                  if (examSelections.length >= 2) {
+                    dataPoint.delta = (dataPoint[`exam${examSelections[0].id}`] || 0) - (dataPoint[`exam${examSelections[1].id}`] || 0);
+                    dataPoint.improved = dataPoint.delta > 0;
+                  }
+                  return dataPoint;
+                });
+
+                // Calculate averages for all exams
+                const examAverages = examSelections.map(exam => {
+                  const sum = comparisonData.reduce((acc, d) => acc + (d[`exam${exam.id}`] || 0), 0);
                   return {
-                    name: subjectName,
-                    examA: scoreA,
-                    examB: scoreB,
-                    delta,
-                    improved: delta > 0
+                    id: exam.id,
+                    avg: comparisonData.length > 0 ? Math.round(sum / comparisonData.length) : 0
                   };
                 });
-                const avgA = comparisonData.length > 0 ? Math.round(comparisonData.reduce((sum, d) => sum + d.examA, 0) / comparisonData.length) : 0;
-                const avgB = comparisonData.length > 0 ? Math.round(comparisonData.reduce((sum, d) => sum + d.examB, 0) / comparisonData.length) : 0;
+
+                // Backward compatibility labels
+                const examALabel = allExamData[0]?.label || "";
+                const examBLabel = allExamData[1]?.label || "";
+
                 return <>
-                      {/* Comparison Summary Cards */}
-                      <div className="flex items-center gap-2">
-                        <div className="flex-1 p-4 rounded-xl bg-gradient-to-br from-blue-500/10 to-blue-600/5 border border-blue-500/20">
-                          <div className="mb-2">
-                            <span className="text-xs font-semibold text-foreground">Exam A</span>
-                            <p className="text-[10px] text-muted-foreground">{examALabel}</p>
-                          </div>
-                          <p className="text-2xl font-bold text-foreground">{avgA}%</p>
-                          <p className="text-[10px] text-muted-foreground">Average Score</p>
-                        </div>
-                        
-                        {/* VS Divider */}
-                        <div className="flex flex-col items-center justify-center">
-                          <span className="text-xs font-bold text-muted-foreground">vs</span>
-                        </div>
-                        
-                        <div className="flex-1 p-4 rounded-xl bg-gradient-to-br from-amber-500/10 to-amber-600/5 border border-amber-500/20">
-                          <div className="mb-2">
-                            <span className="text-xs font-semibold text-foreground">Exam B</span>
-                            <p className="text-[10px] text-muted-foreground">{examBLabel}</p>
-                          </div>
-                          <p className="text-2xl font-bold text-foreground">{avgB}%</p>
-                          <p className="text-[10px] text-muted-foreground">Average Score</p>
+                      {/* Comparison Summary Cards - Dynamic for all exams */}
+                      <div className="overflow-x-auto pb-2 -mx-1 px-1">
+                        <div className="flex items-center gap-2" style={{ minWidth: examSelections.length > 2 ? `${examSelections.length * 140}px` : 'auto' }}>
+                          {examSelections.map((exam, index) => {
+                            const color = getSelectionColor(index);
+                            const avg = examAverages.find(a => a.id === exam.id)?.avg || 0;
+                            const label = allExamData[index]?.label || "";
+                            
+                            return (
+                              <React.Fragment key={exam.id}>
+                                {index > 0 && (
+                                  <div className="flex flex-col items-center justify-center shrink-0">
+                                    <span className="text-xs font-bold text-muted-foreground">vs</span>
+                                  </div>
+                                )}
+                                <div 
+                                  className="flex-1 min-w-[120px] p-3 rounded-xl border"
+                                  style={{
+                                    background: `linear-gradient(to bottom right, ${color.hex}15, ${color.hex}08)`,
+                                    borderColor: `${color.hex}30`
+                                  }}
+                                >
+                                  <div className="mb-1.5">
+                                    <span className="text-xs font-semibold text-foreground">Exam {exam.id}</span>
+                                    <p className="text-[9px] text-muted-foreground truncate">{label}</p>
+                                  </div>
+                                  <p className="text-xl font-bold text-foreground">{avg}%</p>
+                                  <p className="text-[9px] text-muted-foreground">Average</p>
+                                </div>
+                              </React.Fragment>
+                            );
+                          })}
                         </div>
                       </div>
 
                       {/* Top 5 Growth/Decline Leaders - Swipeable Carousel */}
-                      {(() => {
-                        const top5Growth = [...comparisonData].filter(item => item.delta > 0).sort((a, b) => b.delta - a.delta).slice(0, 5);
-                        const top5Decline = [...comparisonData].filter(item => item.delta < 0).sort((a, b) => a.delta - b.delta).slice(0, 3);
+                      {examSelections.length >= 2 && (() => {
+                        // Get first two exam IDs for comparison
+                        const examAId = examSelections[0].id;
+                        const examBId = examSelections[1].id;
+                        
+                        const top5Growth = [...comparisonData]
+                          .filter(item => item.delta > 0)
+                          .sort((a, b) => b.delta - a.delta)
+                          .slice(0, 5);
+                        const top5Decline = [...comparisonData]
+                          .filter(item => item.delta < 0)
+                          .sort((a, b) => a.delta - b.delta)
+                          .slice(0, 3);
 
                         return (
                           <div className="relative">
@@ -4373,7 +4459,7 @@ export default function TeacherAcademicPage() {
                                         </div>
                                         <div className="text-center">
                                           <h4 className="text-sm font-semibold text-foreground">Top Growth Subjects</h4>
-                                          <p className="text-[10px] text-muted-foreground">Best performing subjects</p>
+                                          <p className="text-[10px] text-muted-foreground">A vs B comparison</p>
                                         </div>
                                       </div>
                                     </div>
@@ -4387,7 +4473,8 @@ export default function TeacherAcademicPage() {
                                         {/* Individual Subject Badges */}
                                         <div className="flex flex-wrap justify-center gap-1.5">
                                           {top5Growth.map(item => {
-                                            const percentChange = item.examB > 0 ? (item.delta / item.examB * 100).toFixed(0) : '0';
+                                            const examBScore = item[`exam${examBId}`] || 0;
+                                            const percentChange = examBScore > 0 ? (item.delta / examBScore * 100).toFixed(0) : '0';
                                             return (
                                               <div key={item.name} className="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-emerald-500/10 border border-emerald-500/20">
                                                 <ArrowUp className="h-3 w-3 text-emerald-500" />
@@ -4398,15 +4485,22 @@ export default function TeacherAcademicPage() {
                                           })}
                                         </div>
                                         
-                                        {/* Bar Chart - Before/After Comparison */}
+                                        {/* Bar Chart - All exams comparison */}
                                         <div className="h-36 -mx-2">
                                           <ResponsiveContainer width="100%" height="100%">
-                                            <BarChart data={top5Growth.map(item => ({
-                                              name: shortenSubjectName(item.name),
-                                              examA: item.examA,
-                                              examB: item.examB,
-                                              delta: item.delta
-                                            }))} margin={{ top: 10, right: 10, left: 10, bottom: 0 }} barGap={2} barCategoryGap="20%">
+                                            <BarChart 
+                                              data={top5Growth.map(item => {
+                                                const dataPoint: Record<string, any> = { name: shortenSubjectName(item.name) };
+                                                examSelections.forEach(exam => {
+                                                  dataPoint[`exam${exam.id}`] = item[`exam${exam.id}`] || 0;
+                                                });
+                                                dataPoint.delta = item.delta;
+                                                return dataPoint;
+                                              })} 
+                                              margin={{ top: 10, right: 10, left: 10, bottom: 0 }} 
+                                              barGap={2} 
+                                              barCategoryGap="20%"
+                                            >
                                               <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 9, fill: 'hsl(var(--muted-foreground))' }} interval={0} height={30} />
                                               <YAxis hide domain={[0, 100]} />
                                               <Tooltip content={({ active, payload }) => {
@@ -4415,39 +4509,62 @@ export default function TeacherAcademicPage() {
                                                   return (
                                                     <div className="bg-popover border border-border rounded-lg shadow-lg p-2">
                                                       <p className="text-xs font-medium text-foreground">{data.name}</p>
-                                                      <div className="flex items-center gap-2 mt-1">
-                                                        <span className="text-[10px] text-blue-500">A: {data.examA}</span>
-                                                        <span className="text-[10px] text-muted-foreground">vs</span>
-                                                        <span className="text-[10px] text-amber-500">B: {data.examB}</span>
+                                                      <div className="flex flex-wrap items-center gap-2 mt-1">
+                                                        {examSelections.map((exam, idx) => {
+                                                          const color = getSelectionColor(idx);
+                                                          return (
+                                                            <span key={exam.id} className="text-[10px]" style={{ color: color.hex }}>
+                                                              {exam.id}: {data[`exam${exam.id}`]}
+                                                            </span>
+                                                          );
+                                                        })}
                                                       </div>
-                                                      <p className="text-xs text-emerald-500 font-bold mt-1">+{data.delta} pts</p>
+                                                      {data.delta !== undefined && (
+                                                        <p className={`text-xs font-bold mt-1 ${data.delta > 0 ? 'text-emerald-500' : 'text-red-500'}`}>
+                                                          {data.delta > 0 ? '+' : ''}{data.delta} pts
+                                                        </p>
+                                                      )}
                                                     </div>
                                                   );
                                                 }
                                                 return null;
                                               }} />
-                                              <Bar dataKey="examB" fill="hsl(38, 92%, 70%)" stroke="hsl(38, 92%, 50%)" strokeWidth={1.5} radius={[4, 4, 0, 0]} name="Exam B" />
-                                              <Bar dataKey="examA" fill="hsl(217, 91%, 75%)" stroke="hsl(217, 91%, 50%)" strokeWidth={1.5} radius={[4, 4, 0, 0]} name="Exam A" />
+                                              {examSelections.map((exam, idx) => {
+                                                const color = getSelectionColor(idx);
+                                                return (
+                                                  <Bar 
+                                                    key={exam.id}
+                                                    dataKey={`exam${exam.id}`} 
+                                                    fill={`${color.hex}80`}
+                                                    stroke={color.hex}
+                                                    strokeWidth={1.5} 
+                                                    radius={[4, 4, 0, 0]} 
+                                                    name={`Exam ${exam.id}`} 
+                                                  />
+                                                );
+                                              })}
                                             </BarChart>
                                           </ResponsiveContainer>
                                         </div>
                                         
-                                        {/* Legend */}
-                                        <div className="flex items-center justify-center gap-4 text-[10px]">
-                                          <div className="flex items-center gap-1">
-                                            <div className="w-3 h-3 rounded-sm bg-amber-300 border border-amber-500" />
-                                            <span className="text-muted-foreground">Exam B</span>
-                                          </div>
-                                          <div className="flex items-center gap-1">
-                                            <div className="w-3 h-3 rounded-sm bg-blue-300 border border-blue-500" />
-                                            <span className="text-muted-foreground">Exam A</span>
-                                          </div>
+                                        {/* Dynamic Legend */}
+                                        <div className="flex flex-wrap items-center justify-center gap-3 text-[10px]">
+                                          {examSelections.map((exam, idx) => {
+                                            const color = getSelectionColor(idx);
+                                            return (
+                                              <div key={exam.id} className="flex items-center gap-1">
+                                                <div className="w-3 h-3 rounded-sm" style={{ backgroundColor: `${color.hex}80`, border: `1px solid ${color.hex}` }} />
+                                                <span className="text-muted-foreground">Exam {exam.id}</span>
+                                              </div>
+                                            );
+                                          })}
                                         </div>
                                         
                                         {/* Top 5 Rankings */}
                                         <div className="space-y-2">
                                           {top5Growth.map((item, index) => {
-                                            const percentChange = item.examB > 0 ? (item.delta / item.examB * 100).toFixed(1) : '0.0';
+                                            const examBScore = item[`exam${examBId}`] || 0;
+                                            const percentChange = examBScore > 0 ? (item.delta / examBScore * 100).toFixed(1) : '0.0';
                                             const maxDelta = Math.max(...top5Growth.map(t => t.delta));
                                             const barWidth = item.delta / maxDelta * 100;
                                             return (
@@ -4506,7 +4623,8 @@ export default function TeacherAcademicPage() {
                                         {/* Individual Subject Badges */}
                                         <div className="flex flex-wrap justify-center gap-1.5">
                                           {top5Decline.map(item => {
-                                            const percentChange = item.examB > 0 ? (Math.abs(item.delta) / item.examB * 100).toFixed(0) : '0';
+                                            const examBScore = item[`exam${examBId}`] || 0;
+                                            const percentChange = examBScore > 0 ? (Math.abs(item.delta) / examBScore * 100).toFixed(0) : '0';
                                             return (
                                               <div key={item.name} className="inline-flex items-center gap-1 px-2 py-1 rounded-md bg-red-500/10 border border-red-500/20">
                                                 <ArrowDown className="h-3 w-3 text-red-500" />
@@ -4517,15 +4635,22 @@ export default function TeacherAcademicPage() {
                                           })}
                                         </div>
                                         
-                                        {/* Bar Chart - Before/After Comparison */}
+                                        {/* Bar Chart - All exams comparison */}
                                         <div className="h-36 -mx-2">
                                           <ResponsiveContainer width="100%" height="100%">
-                                            <BarChart data={top5Decline.map(item => ({
-                                              name: shortenSubjectName(item.name),
-                                              examA: item.examA,
-                                              examB: item.examB,
-                                              delta: item.delta
-                                            }))} margin={{ top: 10, right: 10, left: 10, bottom: 0 }} barGap={2} barCategoryGap="20%">
+                                            <BarChart 
+                                              data={top5Decline.map(item => {
+                                                const dataPoint: Record<string, any> = { name: shortenSubjectName(item.name) };
+                                                examSelections.forEach(exam => {
+                                                  dataPoint[`exam${exam.id}`] = item[`exam${exam.id}`] || 0;
+                                                });
+                                                dataPoint.delta = item.delta;
+                                                return dataPoint;
+                                              })} 
+                                              margin={{ top: 10, right: 10, left: 10, bottom: 0 }} 
+                                              barGap={2} 
+                                              barCategoryGap="20%"
+                                            >
                                               <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 9, fill: 'hsl(var(--muted-foreground))' }} interval={0} height={30} />
                                               <YAxis hide domain={[0, 100]} />
                                               <Tooltip content={({ active, payload }) => {
@@ -4534,39 +4659,62 @@ export default function TeacherAcademicPage() {
                                                   return (
                                                     <div className="bg-popover border border-border rounded-lg shadow-lg p-2">
                                                       <p className="text-xs font-medium text-foreground">{data.name}</p>
-                                                      <div className="flex items-center gap-2 mt-1">
-                                                        <span className="text-[10px] text-blue-500">A: {data.examA}</span>
-                                                        <span className="text-[10px] text-muted-foreground">vs</span>
-                                                        <span className="text-[10px] text-amber-500">B: {data.examB}</span>
+                                                      <div className="flex flex-wrap items-center gap-2 mt-1">
+                                                        {examSelections.map((exam, idx) => {
+                                                          const color = getSelectionColor(idx);
+                                                          return (
+                                                            <span key={exam.id} className="text-[10px]" style={{ color: color.hex }}>
+                                                              {exam.id}: {data[`exam${exam.id}`]}
+                                                            </span>
+                                                          );
+                                                        })}
                                                       </div>
-                                                      <p className="text-xs text-red-500 font-bold mt-1">{data.delta} pts</p>
+                                                      {data.delta !== undefined && (
+                                                        <p className={`text-xs font-bold mt-1 text-red-500`}>
+                                                          {data.delta} pts
+                                                        </p>
+                                                      )}
                                                     </div>
                                                   );
                                                 }
                                                 return null;
                                               }} />
-                                              <Bar dataKey="examB" fill="hsl(38, 92%, 70%)" stroke="hsl(38, 92%, 50%)" strokeWidth={1.5} radius={[4, 4, 0, 0]} name="Exam B" />
-                                              <Bar dataKey="examA" fill="hsl(217, 91%, 75%)" stroke="hsl(217, 91%, 50%)" strokeWidth={1.5} radius={[4, 4, 0, 0]} name="Exam A" />
+                                              {examSelections.map((exam, idx) => {
+                                                const color = getSelectionColor(idx);
+                                                return (
+                                                  <Bar 
+                                                    key={exam.id}
+                                                    dataKey={`exam${exam.id}`} 
+                                                    fill={`${color.hex}80`}
+                                                    stroke={color.hex}
+                                                    strokeWidth={1.5} 
+                                                    radius={[4, 4, 0, 0]} 
+                                                    name={`Exam ${exam.id}`} 
+                                                  />
+                                                );
+                                              })}
                                             </BarChart>
                                           </ResponsiveContainer>
                                         </div>
                                         
-                                        {/* Legend */}
-                                        <div className="flex items-center justify-center gap-4 text-[10px]">
-                                          <div className="flex items-center gap-1">
-                                            <div className="w-3 h-3 rounded-sm bg-amber-300 border border-amber-500" />
-                                            <span className="text-muted-foreground">Exam B</span>
-                                          </div>
-                                          <div className="flex items-center gap-1">
-                                            <div className="w-3 h-3 rounded-sm bg-blue-300 border border-blue-500" />
-                                            <span className="text-muted-foreground">Exam A</span>
-                                          </div>
+                                        {/* Dynamic Legend */}
+                                        <div className="flex flex-wrap items-center justify-center gap-3 text-[10px]">
+                                          {examSelections.map((exam, idx) => {
+                                            const color = getSelectionColor(idx);
+                                            return (
+                                              <div key={exam.id} className="flex items-center gap-1">
+                                                <div className="w-3 h-3 rounded-sm" style={{ backgroundColor: `${color.hex}80`, border: `1px solid ${color.hex}` }} />
+                                                <span className="text-muted-foreground">Exam {exam.id}</span>
+                                              </div>
+                                            );
+                                          })}
                                         </div>
                                         
                                         {/* Top 5 Rankings */}
                                         <div className="space-y-2">
                                           {top5Decline.map((item, index) => {
-                                            const percentChange = item.examB > 0 ? (Math.abs(item.delta) / item.examB * 100).toFixed(1) : '0.0';
+                                            const examBScore = item[`exam${examBId}`] || 0;
+                                            const percentChange = examBScore > 0 ? (Math.abs(item.delta) / examBScore * 100).toFixed(1) : '0.0';
                                             const maxDelta = Math.max(...top5Decline.map(t => Math.abs(t.delta)));
                                             const barWidth = Math.abs(item.delta) / maxDelta * 100;
                                             return (
@@ -4634,66 +4782,77 @@ export default function TeacherAcademicPage() {
                         );
                       })()}
 
-                      {/* Subject Comparison - Moomoo Style */}
+                      {/* Subject Comparison - Dynamic for all exams */}
                       <div className="space-y-3">
                         <h4 className="text-sm font-medium text-foreground">Subject Performance</h4>
                         <div className="space-y-3">
                           {comparisonData.map(item => {
-                        const percentChange = item.examB > 0 ? (item.delta / item.examB * 100).toFixed(1) : '0.0';
-                        return <div key={item.name} className="p-3 rounded-xl bg-accent/30 border border-border/50">
+                            // Only show delta badge if we have 2+ exams
+                            const showDelta = examSelections.length >= 2 && item.delta !== undefined;
+                            const percentChange = showDelta && item[`exam${examSelections[1].id}`] > 0 
+                              ? (item.delta / item[`exam${examSelections[1].id}`] * 100).toFixed(1) 
+                              : '0.0';
+                            
+                            return (
+                              <div key={item.name} className="p-3 rounded-xl bg-accent/30 border border-border/50">
                                 <div className="flex items-center justify-between mb-2">
                                   <span className="text-sm font-semibold text-foreground">{shortenSubjectName(item.name)}</span>
-                                  <div className="flex items-center gap-2">
-                                    <Badge variant={item.delta > 0 ? "default" : item.delta < 0 ? "destructive" : "secondary"} className={`text-xs px-2 py-0.5 ${item.delta > 0 ? "bg-emerald-500/20 text-emerald-600 border-emerald-500/30" : item.delta < 0 ? "bg-red-500/20 text-red-600 border-red-500/30" : ""}`}>
+                                  {showDelta && (
+                                    <Badge 
+                                      variant={item.delta > 0 ? "default" : item.delta < 0 ? "destructive" : "secondary"} 
+                                      className={`text-xs px-2 py-0.5 ${item.delta > 0 ? "bg-emerald-500/20 text-emerald-600 border-emerald-500/30" : item.delta < 0 ? "bg-red-500/20 text-red-600 border-red-500/30" : ""}`}
+                                    >
                                       {item.delta > 0 ? <TrendingUp className="h-3 w-3 mr-1" /> : item.delta < 0 ? <TrendingDown className="h-3 w-3 mr-1" /> : <Minus className="h-3 w-3 mr-1" />}
                                       {item.delta > 0 ? "+" : ""}{item.delta}pts ({item.delta >= 0 ? "+" : ""}{percentChange}%)
                                     </Badge>
-                                  </div>
+                                  )}
                                 </div>
                                 
-                                {/* Visual Bars */}
+                                {/* Visual Bars - Dynamic for all exams */}
                                 <div className="space-y-1.5">
-                                  {/* Exam B (Previous) - Amber with outline */}
-                                  <div className="flex items-center gap-2">
-                                    <span className="text-[10px] text-muted-foreground w-16 truncate">{examBLabel.split(' ')[0]}</span>
-                                    <div className="flex-1 h-5 bg-muted/30 rounded-full overflow-hidden relative">
-                                      <div className="h-full bg-[hsl(38,92%,70%)] border-2 border-[hsl(38,92%,50%)] rounded-full transition-all duration-500" style={{
-                                        width: `${item.examB / 100 * 100}%`
-                                      }} />
-                                      <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] font-bold text-foreground">
-                                        {item.examB}
-                                      </span>
-                                    </div>
-                                  </div>
-                                  
-                                  {/* Exam A (Current) - Blue with outline */}
-                                  <div className="flex items-center gap-2">
-                                    <span className="text-[10px] text-muted-foreground w-16 truncate">{examALabel.split(' ')[0]}</span>
-                                    <div className="flex-1 h-5 bg-muted/30 rounded-full overflow-hidden relative">
-                                      <div className="h-full bg-[hsl(217,91%,75%)] border-2 border-[hsl(217,91%,50%)] rounded-full transition-all duration-500" style={{
-                                        width: `${item.examA / 100 * 100}%`
-                                      }} />
-                                      <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] font-bold text-foreground">
-                                        {item.examA}
-                                      </span>
-                                    </div>
-                                  </div>
+                                  {examSelections.map((exam, index) => {
+                                    const color = getSelectionColor(index);
+                                    const score = item[`exam${exam.id}`] || 0;
+                                    const label = allExamData[index]?.label?.split(' ')[0] || exam.id;
+                                    
+                                    return (
+                                      <div key={exam.id} className="flex items-center gap-2">
+                                        <span className="text-[10px] text-muted-foreground w-16 truncate">{label}</span>
+                                        <div className="flex-1 h-5 bg-muted/30 rounded-full overflow-hidden relative">
+                                          <div 
+                                            className="h-full rounded-full transition-all duration-500" 
+                                            style={{
+                                              width: `${score}%`,
+                                              backgroundColor: `${color.hex}80`,
+                                              border: `2px solid ${color.hex}`
+                                            }} 
+                                          />
+                                          <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] font-bold text-foreground">
+                                            {score}
+                                          </span>
+                                        </div>
+                                      </div>
+                                    );
+                                  })}
                                 </div>
                                 
-                                {/* Delta Line */}
-                                {item.delta !== 0 && <div className="mt-2 pt-2 border-t border-border/30 flex items-center justify-between">
-                                    <span className="text-[10px] text-muted-foreground">Change</span>
+                                {/* Delta Line - Only show if 2+ exams */}
+                                {showDelta && item.delta !== 0 && (
+                                  <div className="mt-2 pt-2 border-t border-border/30 flex items-center justify-between">
+                                    <span className="text-[10px] text-muted-foreground">A vs B</span>
                                     <div className="flex items-center gap-1">
                                       <span className={`text-xs font-bold ${item.delta > 0 ? "text-emerald-600" : "text-red-600"}`}>
-                                        {item.examB} → {item.examA}
+                                        {item[`exam${examSelections[1].id}`]} → {item[`exam${examSelections[0].id}`]}
                                       </span>
                                       <span className={`text-[10px] ${item.delta > 0 ? "text-emerald-600" : "text-red-600"}`}>
-                                        ({item.delta > 0 ? "↑" : "↓"} {Math.abs(item.delta)} points)
+                                        ({item.delta > 0 ? "↑" : "↓"} {Math.abs(item.delta)} pts)
                                       </span>
                                     </div>
-                                  </div>}
-                              </div>;
-                      })}
+                                  </div>
+                                )}
+                              </div>
+                            );
+                          })}
                         </div>
                       </div>
 
