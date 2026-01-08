@@ -9,7 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Save, TrendingUp, TrendingDown, Minus, ChevronDown, ChevronUp, Users, Target, Award, AlertTriangle, BookOpen, BarChart3, FileText, CheckCircle, XCircle, Lightbulb, Copy, Printer, ArrowRight, ArrowUpRight, ArrowDownRight, Scale, Download, FileSpreadsheet, Check, Calendar, UserCheck, Plus, X, ArrowUp, ArrowDown } from "lucide-react";
+import { Save, TrendingUp, TrendingDown, Minus, ChevronDown, ChevronUp, Users, Target, Award, AlertTriangle, BookOpen, BarChart3, FileText, CheckCircle, XCircle, Lightbulb, Copy, Printer, ArrowRight, ArrowUpRight, ArrowDownRight, Scale, Download, FileSpreadsheet, Check, Calendar, UserCheck, Plus, X, ArrowUp, ArrowDown, Search } from "lucide-react";
 import { Carousel, CarouselContent, CarouselItem } from "@/components/ui/carousel";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { toast } from "@/hooks/use-toast";
@@ -298,6 +298,8 @@ export default function TeacherAcademicPage() {
   const [boxPlotStudentExamType, setBoxPlotStudentExamType] = useState<string>("all"); // optional - "all" means all
   // Mode B: Subject filters
   const [boxPlotSubjects, setBoxPlotSubjects] = useState<string[]>(["Mathematics"]); // multiple subjects
+  const [boxPlotStudentSubjectSearch, setBoxPlotStudentSubjectSearch] = useState("");
+  const [boxPlotSubjectSearch, setBoxPlotSubjectSearch] = useState("");
   const [boxPlotCohortScope, setBoxPlotCohortScope] = useState<"class" | "yearGroup" | "school">("yearGroup");
   const [boxPlotSubjectExamType, setBoxPlotSubjectExamType] = useState<string>("all"); // optional
   
@@ -4764,7 +4766,7 @@ export default function TeacherAcademicPage() {
                       <div className="space-y-3">
                         <div>
                           <label className="text-xs text-muted-foreground mb-1 block">
-                            Subjects (Optional) {boxPlotStudentSubjects.length > 0 && `(${boxPlotStudentSubjects.length} selected)`}
+                            Subjects {boxPlotStudentSubjects.length > 0 && `(${boxPlotStudentSubjects.length} selected)`}
                           </label>
                           <Popover>
                             <PopoverTrigger asChild>
@@ -4778,7 +4780,7 @@ export default function TeacherAcademicPage() {
                               </Button>
                             </PopoverTrigger>
                             <PopoverContent className="w-56 p-2 bg-popover z-50" align="start">
-                              <div className="space-y-1 max-h-60 overflow-y-auto">
+                              <div className="space-y-1">
                                 <Button
                                   variant="ghost"
                                   size="sm"
@@ -4788,24 +4790,37 @@ export default function TeacherAcademicPage() {
                                   <Check className={cn("h-3 w-3 mr-2", boxPlotStudentSubjects.length === 0 ? "opacity-100" : "opacity-0")} />
                                   All Subjects
                                 </Button>
-                                {allSubjects.map((subject) => (
-                                  <Button
-                                    key={subject}
-                                    variant="ghost"
-                                    size="sm"
-                                    className={cn("w-full justify-start text-xs", boxPlotStudentSubjects.includes(subject) && "bg-accent")}
-                                    onClick={() => {
-                                      setBoxPlotStudentSubjects(prev => 
-                                        prev.includes(subject)
-                                          ? prev.filter(s => s !== subject)
-                                          : [...prev, subject]
-                                      );
-                                    }}
-                                  >
-                                    <Check className={cn("h-3 w-3 mr-2", boxPlotStudentSubjects.includes(subject) ? "opacity-100" : "opacity-0")} />
-                                    {shortenSubjectName(subject)}
-                                  </Button>
-                                ))}
+                                <div className="relative px-1 py-1">
+                                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3 w-3 text-muted-foreground" />
+                                  <Input
+                                    placeholder="Search subjects..."
+                                    className="h-7 pl-7 text-xs"
+                                    value={boxPlotStudentSubjectSearch}
+                                    onChange={(e) => setBoxPlotStudentSubjectSearch(e.target.value)}
+                                  />
+                                </div>
+                                <div className="max-h-48 overflow-y-auto space-y-1">
+                                  {allSubjects
+                                    .filter(subject => subject.toLowerCase().includes(boxPlotStudentSubjectSearch.toLowerCase()))
+                                    .map((subject) => (
+                                      <Button
+                                        key={subject}
+                                        variant="ghost"
+                                        size="sm"
+                                        className={cn("w-full justify-start text-xs", boxPlotStudentSubjects.includes(subject) && "bg-accent")}
+                                        onClick={() => {
+                                          setBoxPlotStudentSubjects(prev => 
+                                            prev.includes(subject)
+                                              ? prev.filter(s => s !== subject)
+                                              : [...prev, subject]
+                                          );
+                                        }}
+                                      >
+                                        <Check className={cn("h-3 w-3 mr-2", boxPlotStudentSubjects.includes(subject) ? "opacity-100" : "opacity-0")} />
+                                        {shortenSubjectName(subject)}
+                                      </Button>
+                                    ))}
+                                </div>
                               </div>
                             </PopoverContent>
                           </Popover>
@@ -4852,25 +4867,47 @@ export default function TeacherAcademicPage() {
                             </Button>
                           </PopoverTrigger>
                           <PopoverContent className="w-56 p-2 bg-popover z-50" align="start">
-                            <div className="space-y-1 max-h-60 overflow-y-auto">
-                              {allSubjects.map((subject) => (
-                                <Button
-                                  key={subject}
-                                  variant="ghost"
-                                  size="sm"
-                                  className={cn("w-full justify-start text-xs", boxPlotSubjects.includes(subject) && "bg-accent")}
-                                  onClick={() => {
-                                    setBoxPlotSubjects(prev => 
-                                      prev.includes(subject)
-                                        ? prev.filter(s => s !== subject)
-                                        : [...prev, subject]
-                                    );
-                                  }}
-                                >
-                                  <Check className={cn("h-3 w-3 mr-2", boxPlotSubjects.includes(subject) ? "opacity-100" : "opacity-0")} />
-                                  {subject}
-                                </Button>
-                              ))}
+                            <div className="space-y-1">
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className={cn("w-full justify-start text-xs", boxPlotSubjects.length === allSubjects.length && "bg-accent")}
+                                onClick={() => setBoxPlotSubjects([...allSubjects])}
+                              >
+                                <Check className={cn("h-3 w-3 mr-2", boxPlotSubjects.length === allSubjects.length ? "opacity-100" : "opacity-0")} />
+                                All Subjects
+                              </Button>
+                              <div className="relative px-1 py-1">
+                                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3 w-3 text-muted-foreground" />
+                                <Input
+                                  placeholder="Search subjects..."
+                                  className="h-7 pl-7 text-xs"
+                                  value={boxPlotSubjectSearch}
+                                  onChange={(e) => setBoxPlotSubjectSearch(e.target.value)}
+                                />
+                              </div>
+                              <div className="max-h-48 overflow-y-auto space-y-1">
+                                {allSubjects
+                                  .filter(subject => subject.toLowerCase().includes(boxPlotSubjectSearch.toLowerCase()))
+                                  .map((subject) => (
+                                    <Button
+                                      key={subject}
+                                      variant="ghost"
+                                      size="sm"
+                                      className={cn("w-full justify-start text-xs", boxPlotSubjects.includes(subject) && "bg-accent")}
+                                      onClick={() => {
+                                        setBoxPlotSubjects(prev => 
+                                          prev.includes(subject)
+                                            ? prev.filter(s => s !== subject)
+                                            : [...prev, subject]
+                                        );
+                                      }}
+                                    >
+                                      <Check className={cn("h-3 w-3 mr-2", boxPlotSubjects.includes(subject) ? "opacity-100" : "opacity-0")} />
+                                      {subject}
+                                    </Button>
+                                  ))}
+                              </div>
                             </div>
                           </PopoverContent>
                         </Popover>
