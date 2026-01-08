@@ -128,6 +128,25 @@ const examPeriods = [{
   label: "Year-End"
 }];
 
+// Selection colors for multiple comparisons
+const SELECTION_COLORS = [
+  { id: "A", bg: "bg-blue-50/50", border: "border-blue-200", dot: "bg-blue-500", text: "text-blue-700", hex: "#3b82f6", bgHex: "rgba(59, 130, 246, 0.08)", borderHex: "rgba(59, 130, 246, 0.25)" },
+  { id: "B", bg: "bg-amber-50/50", border: "border-amber-200", dot: "bg-amber-500", text: "text-amber-700", hex: "#f59e0b", bgHex: "rgba(245, 158, 11, 0.08)", borderHex: "rgba(245, 158, 11, 0.25)" },
+  { id: "C", bg: "bg-emerald-50/50", border: "border-emerald-200", dot: "bg-emerald-500", text: "text-emerald-700", hex: "#10b981", bgHex: "rgba(16, 185, 129, 0.08)", borderHex: "rgba(16, 185, 129, 0.25)" },
+  { id: "D", bg: "bg-purple-50/50", border: "border-purple-200", dot: "bg-purple-500", text: "text-purple-700", hex: "#8b5cf6", bgHex: "rgba(139, 92, 246, 0.08)", borderHex: "rgba(139, 92, 246, 0.25)" },
+  { id: "E", bg: "bg-rose-50/50", border: "border-rose-200", dot: "bg-rose-500", text: "text-rose-700", hex: "#f43f5e", bgHex: "rgba(244, 63, 94, 0.08)", borderHex: "rgba(244, 63, 94, 0.25)" },
+  { id: "F", bg: "bg-cyan-50/50", border: "border-cyan-200", dot: "bg-cyan-500", text: "text-cyan-700", hex: "#06b6d4", bgHex: "rgba(6, 182, 212, 0.08)", borderHex: "rgba(6, 182, 212, 0.25)" },
+];
+
+const getSelectionColor = (index: number) => SELECTION_COLORS[index % SELECTION_COLORS.length];
+const getNextSelectionId = (existingIds: string[]) => {
+  const letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+  for (let i = 0; i < letters.length; i++) {
+    if (!existingIds.includes(letters[i])) return letters[i];
+  }
+  return `${letters.length + 1}`;
+};
+
 // Use centralized short name function
 const shortenSubjectName = getShortSubjectName;
 interface StudentGrades {
@@ -190,10 +209,17 @@ export default function TeacherAcademicPage() {
   const [selectedSubjects, setSelectedSubjects] = useState<string[]>([...subjects]);
   const [bandsSelectedSubject, setBandsSelectedSubject] = useState<string>("Mathematics"); // Single subject for Bands tab
   const [bandsCompareMode, setBandsCompareMode] = useState(false);
-  const [bandsCompareClass, setBandsCompareClass] = useState(teacherProfile.classes[1] || teacherProfile.classes[0]);
-  const [bandsCompareYear, setBandsCompareYear] = useState(academicYears[0]);
-  const [bandsComparePeriod, setBandsComparePeriod] = useState<"midYear" | "yearEnd">("midYear");
-  const [bandsCompareSubject, setBandsCompareSubject] = useState<string>("Mathematics");
+  // Dynamic bands selections (Selection A is the main one, B, C, D... are additional)
+  interface BandsSelection {
+    id: string;
+    className: string;
+    year: string;
+    period: "midYear" | "yearEnd";
+    subject: string;
+  }
+  const [bandsAdditionalSelections, setBandsAdditionalSelections] = useState<BandsSelection[]>([
+    { id: "B", className: teacherProfile.classes[1] || teacherProfile.classes[0], year: academicYears[0], period: "midYear", subject: "Mathematics" }
+  ]);
   const [selectedCategory, setSelectedCategory] = useState<"attitude" | "homework" | "quiz" | "exam">("quiz");
 
   // Grade Entry category state (Grades, Behavior, Awards)
@@ -244,15 +270,26 @@ export default function TeacherAcademicPage() {
   const achievementEventOptions = ["None", "Sports Day", "Academic Competition", "Science Fair", "Art Competition", "Music Festival", "Leadership Camp", "Community Service"];
   const achievementAwardOptions = ["None", "Gold", "Silver", "Bronze", "Champion", "1st Runner-up", "2nd Runner-up", "Merit Award", "Participation"];
 
-  // Comparison tab state
-  const [comparisonClass, setComparisonClass] = useState(teacherProfile.classes[0]);
-  const [examAClass, setExamAClass] = useState(teacherProfile.classes[0]);
-  const [examAYear, setExamAYear] = useState("2026");
-  const [examAPeriod, setExamAPeriod] = useState<"midYear" | "yearEnd">("midYear");
-  const [examBClass, setExamBClass] = useState(teacherProfile.classes[0]);
-  const [examBYear, setExamBYear] = useState("2025");
-  const [examBPeriod, setExamBPeriod] = useState<"midYear" | "yearEnd">("yearEnd");
+  // Comparison tab state - dynamic exam selections
+  interface ExamSelection {
+    id: string;
+    className: string;
+    year: string;
+    period: "midYear" | "yearEnd";
+  }
+  const [examSelections, setExamSelections] = useState<ExamSelection[]>([
+    { id: "A", className: teacherProfile.classes[0], year: "2026", period: "midYear" },
+    { id: "B", className: teacherProfile.classes[0], year: "2025", period: "yearEnd" }
+  ]);
   const [compareSubjects, setCompareSubjects] = useState<string[]>([...subjects]);
+
+  // Backward compatibility getters for exam A and B (used in comparison logic)
+  const examAClass = examSelections[0]?.className || teacherProfile.classes[0];
+  const examAYear = examSelections[0]?.year || "2026";
+  const examAPeriod = examSelections[0]?.period || "midYear";
+  const examBClass = examSelections[1]?.className || teacherProfile.classes[0];
+  const examBYear = examSelections[1]?.year || "2025";
+  const examBPeriod = examSelections[1]?.period || "yearEnd";
 
   // Trends tab state - like student page
   const [trendPeriod, setTrendPeriod] = useState<"1year" | "2years" | "3years" | "4years" | "5years" | "6years">("6years");
@@ -694,67 +731,68 @@ export default function TeacherAcademicPage() {
   const bandsMiddlePerformers = bandsRankedStudents.filter(s => s.score >= 60 && s.score < 80);
   const bandsAtRiskStudents = bandsRankedStudents.filter(s => s.score < 60);
 
-  // ===== BANDS COMPARISON: Calculate comparison data =====
-  const bandsCompareGradesForClass = detailedClassGrades[bandsCompareClass as keyof typeof detailedClassGrades] || {};
-  const bandsCompareStudents = classRosters[bandsCompareClass as keyof typeof classRosters] || [];
-
-  const bandsCompareFilteredScores = useMemo(() => {
-    const scores: { studentId: string; score: number }[] = [];
-    const subjectsToInclude = bandsCompareSubject === "all" ? subjects : [bandsCompareSubject];
-    
-    Object.entries(bandsCompareGradesForClass).forEach(([studentId, studentGrades]) => {
-      let studentTotal = 0;
-      let subjectCount = 0;
-      Object.entries(studentGrades).forEach(([subject, grades]) => {
-        if (subjectsToInclude.includes(subject)) {
-          const total = grades.attitude + grades.homework + grades.quiz + grades.exam;
-          studentTotal += total;
-          subjectCount++;
+  // ===== BANDS COMPARISON: Calculate comparison data for all additional selections =====
+  const bandsSelectionsData = useMemo(() => {
+    return bandsAdditionalSelections.map((selection, index) => {
+      const gradesForClass = detailedClassGrades[selection.className as keyof typeof detailedClassGrades] || {};
+      const studentsForClass = classRosters[selection.className as keyof typeof classRosters] || [];
+      const subjectsToInclude = selection.subject === "all" ? subjects : [selection.subject];
+      
+      const filteredScores: { studentId: string; score: number }[] = [];
+      Object.entries(gradesForClass).forEach(([studentId, studentGrades]) => {
+        let studentTotal = 0;
+        let subjectCount = 0;
+        Object.entries(studentGrades).forEach(([subject, grades]) => {
+          if (subjectsToInclude.includes(subject)) {
+            const total = grades.attitude + grades.homework + grades.quiz + grades.exam;
+            studentTotal += total;
+            subjectCount++;
+          }
+        });
+        if (subjectCount > 0) {
+          filteredScores.push({ studentId, score: Math.round(studentTotal / subjectCount) });
         }
       });
-      if (subjectCount > 0) {
-        scores.push({ studentId, score: Math.round(studentTotal / subjectCount) });
-      }
+      
+      const scores = filteredScores.map(s => s.score);
+      const gradeDistribution = [
+        { range: "A*", count: scores.filter(g => g >= 90).length },
+        { range: "A", count: scores.filter(g => g >= 80 && g < 90).length },
+        { range: "B", count: scores.filter(g => g >= 70 && g < 80).length },
+        { range: "C", count: scores.filter(g => g >= 60 && g < 70).length },
+        { range: "D", count: scores.filter(g => g >= 50 && g < 60).length },
+        { range: "E", count: scores.filter(g => g < 50).length },
+      ];
+      
+      const rankedStudents = filteredScores
+        .map(({ studentId, score }) => {
+          const student = studentsForClass.find(s => s.id === studentId);
+          return student ? { ...student, score } : null;
+        })
+        .filter((s): s is NonNullable<typeof s> => s !== null)
+        .sort((a, b) => b.score - a.score);
+      
+      return {
+        ...selection,
+        color: getSelectionColor(index + 1), // +1 because Selection A is index 0
+        gradeDistribution,
+        rankedStudents,
+        topPerformers: rankedStudents.filter(s => s.score >= 80),
+        middlePerformers: rankedStudents.filter(s => s.score >= 60 && s.score < 80),
+        atRiskStudents: rankedStudents.filter(s => s.score < 60),
+      };
     });
-    return scores;
-  }, [bandsCompareGradesForClass, bandsCompareSubject, subjects]);
+  }, [bandsAdditionalSelections, subjects]);
 
-  const bandsCompareGradeDistribution = useMemo(() => {
-    const scores = bandsCompareFilteredScores.map(s => s.score);
-    return [{
-      range: "A*",
-      count: scores.filter(g => g >= 90).length
-    }, {
-      range: "A",
-      count: scores.filter(g => g >= 80 && g < 90).length
-    }, {
-      range: "B",
-      count: scores.filter(g => g >= 70 && g < 80).length
-    }, {
-      range: "C",
-      count: scores.filter(g => g >= 60 && g < 70).length
-    }, {
-      range: "D",
-      count: scores.filter(g => g >= 50 && g < 60).length
-    }, {
-      range: "E",
-      count: scores.filter(g => g < 50).length
-    }];
-  }, [bandsCompareFilteredScores]);
-
-  const bandsCompareRankedStudents = useMemo(() => {
-    return bandsCompareFilteredScores
-      .map(({ studentId, score }) => {
-        const student = bandsCompareStudents.find(s => s.id === studentId);
-        return student ? { ...student, score } : null;
-      })
-      .filter((s): s is { id: string; name: string; photo: string | null; mealPlan: boolean; outdoorCCA: boolean; sportsHouse: import("@/data/teacherMockData").SportsHouse; remarks: string; joinDate: string; score: number } => s !== null)
-      .sort((a, b) => b.score - a.score);
-  }, [bandsCompareFilteredScores, bandsCompareStudents]);
-
-  const bandsCompareTopPerformers = bandsCompareRankedStudents.filter(s => s.score >= 80);
-  const bandsCompareMiddlePerformers = bandsCompareRankedStudents.filter(s => s.score >= 60 && s.score < 80);
-  const bandsCompareAtRiskStudents = bandsCompareRankedStudents.filter(s => s.score < 60);
+  // Keep backward compatibility references for first comparison (Selection B)
+  const bandsCompareGradeDistribution = bandsSelectionsData[0]?.gradeDistribution || [];
+  const bandsCompareRankedStudents = bandsSelectionsData[0]?.rankedStudents || [];
+  const bandsCompareTopPerformers = bandsSelectionsData[0]?.topPerformers || [];
+  const bandsCompareMiddlePerformers = bandsSelectionsData[0]?.middlePerformers || [];
+  const bandsCompareAtRiskStudents = bandsSelectionsData[0]?.atRiskStudents || [];
+  // Backward compatibility getters for old variable names
+  const bandsCompareClass = bandsAdditionalSelections[0]?.className || teacherProfile.classes[0];
+  const bandsCompareSubject = bandsAdditionalSelections[0]?.subject || "Mathematics";
 
   // Comparison chart data
   const bandsComparisonChartData = useMemo(() => {
@@ -2389,67 +2427,122 @@ export default function TeacherAcademicPage() {
                     </div>
                   </div>
 
-                  {/* Comparison Selection - Only show when compare mode is on */}
-                  {bandsCompareMode && (
-                    <div className="space-y-3 p-3 rounded-lg bg-amber-50/50 border border-amber-200">
-                      <div className="flex items-center gap-2 mb-2">
-                        <div className="w-3 h-3 rounded-full bg-amber-500" />
-                        <span className="text-xs font-semibold text-amber-700">Selection B</span>
-                      </div>
-                      {/* Row 1: Class + Year + Exam Period */}
-                      <div className="flex items-center gap-2">
-                        <Select value={bandsCompareClass} onValueChange={setBandsCompareClass}>
-                          <SelectTrigger className="w-[80px]">
-                            <SelectValue placeholder="Class" />
-                          </SelectTrigger>
-                          <SelectContent className="bg-card">
-                            {teacherProfile.classes.map((cls) => (
-                              <SelectItem key={cls} value={cls}>{cls}</SelectItem>
+                  {/* Dynamic Additional Selections - Only show when compare mode is on */}
+                  {bandsCompareMode && bandsAdditionalSelections.map((selection, index) => {
+                    const color = getSelectionColor(index + 1);
+                    return (
+                      <div key={selection.id} className={cn("space-y-3 p-3 rounded-lg", color.bg, color.border, "border")}>
+                        <div className="flex items-center justify-between mb-2">
+                          <div className="flex items-center gap-2">
+                            <div className={cn("w-3 h-3 rounded-full", color.dot)} />
+                            <span className={cn("text-xs font-semibold", color.text)}>Selection {selection.id}</span>
+                          </div>
+                          {bandsAdditionalSelections.length > 1 && (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="h-6 w-6 p-0"
+                              onClick={() => setBandsAdditionalSelections(prev => prev.filter(s => s.id !== selection.id))}
+                            >
+                              <X className="h-3 w-3" />
+                            </Button>
+                          )}
+                        </div>
+                        {/* Row 1: Class + Year + Exam Period */}
+                        <div className="flex items-center gap-2">
+                          <Select 
+                            value={selection.className} 
+                            onValueChange={(v) => setBandsAdditionalSelections(prev => 
+                              prev.map(s => s.id === selection.id ? {...s, className: v} : s)
+                            )}
+                          >
+                            <SelectTrigger className="w-[80px]">
+                              <SelectValue placeholder="Class" />
+                            </SelectTrigger>
+                            <SelectContent className="bg-card">
+                              {teacherProfile.classes.map((cls) => (
+                                <SelectItem key={cls} value={cls}>{cls}</SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                          <Select 
+                            value={selection.year} 
+                            onValueChange={(v) => setBandsAdditionalSelections(prev => 
+                              prev.map(s => s.id === selection.id ? {...s, year: v} : s)
+                            )}
+                          >
+                            <SelectTrigger className="w-[90px]">
+                              <SelectValue placeholder="Year" />
+                            </SelectTrigger>
+                            <SelectContent className="bg-card">
+                              {academicYears.map((year) => (
+                                <SelectItem key={year} value={year}>{year}</SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                          <Select 
+                            value={selection.period} 
+                            onValueChange={(v) => setBandsAdditionalSelections(prev => 
+                              prev.map(s => s.id === selection.id ? {...s, period: v as "midYear" | "yearEnd"} : s)
+                            )}
+                          >
+                            <SelectTrigger className="flex-1">
+                              <SelectValue placeholder="Period" />
+                            </SelectTrigger>
+                            <SelectContent className="bg-card">
+                              {examPeriods.map((period) => (
+                                <SelectItem key={period.value} value={period.value}>{period.label}</SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        
+                        {/* Subject Filter */}
+                        <div className="space-y-2">
+                          <span className="text-sm font-medium text-foreground">Subject:</span>
+                          <div className="flex flex-wrap gap-1.5 p-2.5 rounded-lg border border-border bg-background">
+                            {subjectGroups.map((group) => (
+                              <SubjectGroupPill
+                                key={group.baseName}
+                                baseName={group.baseName}
+                                shortName={group.shortName}
+                                variants={group.variants || []}
+                                selectedSubjects={[selection.subject]}
+                                onToggle={(subjectName) => {
+                                  setBandsAdditionalSelections(prev => 
+                                    prev.map(s => s.id === selection.id ? {...s, subject: subjectName} : s)
+                                  );
+                                }}
+                                singleSelect={true}
+                              />
                             ))}
-                          </SelectContent>
-                        </Select>
-                        <Select value={bandsCompareYear} onValueChange={setBandsCompareYear}>
-                          <SelectTrigger className="w-[90px]">
-                            <SelectValue placeholder="Year" />
-                          </SelectTrigger>
-                          <SelectContent className="bg-card">
-                            {academicYears.map((year) => (
-                              <SelectItem key={year} value={year}>{year}</SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                        <Select value={bandsComparePeriod} onValueChange={(v) => setBandsComparePeriod(v as "midYear" | "yearEnd")}>
-                          <SelectTrigger className="flex-1">
-                            <SelectValue placeholder="Period" />
-                          </SelectTrigger>
-                          <SelectContent className="bg-card">
-                            {examPeriods.map((period) => (
-                              <SelectItem key={period.value} value={period.value}>{period.label}</SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
-                      
-                      {/* Subject Filter */}
-                      <div className="space-y-2">
-                        <span className="text-sm font-medium text-foreground">Subject:</span>
-                        <div className="flex flex-wrap gap-1.5 p-2.5 rounded-lg border border-border bg-background">
-                          {subjectGroups.map((group) => (
-                            <SubjectGroupPill
-                              key={group.baseName}
-                              baseName={group.baseName}
-                              shortName={group.shortName}
-                              variants={group.variants || []}
-                              selectedSubjects={[bandsCompareSubject]}
-                              onToggle={(subjectName) => {
-                                setBandsCompareSubject(subjectName);
-                              }}
-                              singleSelect={true}
-                            />
-                          ))}
+                          </div>
                         </div>
                       </div>
-                    </div>
+                    );
+                  })}
+                  
+                  {/* Add Selection Button */}
+                  {bandsCompareMode && bandsAdditionalSelections.length < 5 && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="w-full gap-2 border-dashed"
+                      onClick={() => {
+                        const existingIds = bandsAdditionalSelections.map(s => s.id);
+                        const newId = getNextSelectionId(existingIds);
+                        setBandsAdditionalSelections(prev => [...prev, {
+                          id: newId,
+                          className: teacherProfile.classes[0],
+                          year: academicYears[0],
+                          period: "midYear",
+                          subject: "Mathematics"
+                        }]);
+                      }}
+                    >
+                      <Plus className="h-3 w-3" />
+                      Add Selection {getNextSelectionId(bandsAdditionalSelections.map(s => s.id))}
+                    </Button>
                   )}
                 </div>
 
@@ -4041,90 +4134,97 @@ export default function TeacherAcademicPage() {
 
               {/* ==================== COMPARISON SUB-TAB ==================== */}
               <TabsContent value="comparison" className="space-y-4">
-                {/* Exam Selectors */}
-                <div className="flex items-center gap-2">
-                  {/* Exam A - Light Blue Box */}
-                  <div className="flex-1 space-y-2 p-3 rounded-xl border" style={{
-                    backgroundColor: 'rgba(59, 130, 246, 0.08)',
-                    borderColor: 'rgba(59, 130, 246, 0.25)'
-                  }}>
-                    <label className="text-xs font-semibold flex items-center gap-1.5" style={{
-                      color: '#3b82f6'
-                    }}>
-                      <div className="w-2 h-2 rounded-full" style={{
-                        backgroundColor: '#3b82f6'
-                      }} />
-                      Exam A
-                    </label>
-                    <Select value={examAClass} onValueChange={setExamAClass}>
-                      <SelectTrigger className="w-full h-8 text-xs bg-background/80">
-                        <SelectValue placeholder="Class" />
-                      </SelectTrigger>
-                      <SelectContent className="bg-card">
-                        {teacherProfile.classes.map(cls => <SelectItem key={cls} value={cls}>{cls}</SelectItem>)}
-                      </SelectContent>
-                    </Select>
-                    <Select value={examAYear} onValueChange={setExamAYear}>
-                      <SelectTrigger className="w-full h-8 text-xs bg-background/80">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent className="bg-card">
-                        {academicYears.slice(0, 4).map(year => <SelectItem key={year} value={year}>{year}</SelectItem>)}
-                      </SelectContent>
-                    </Select>
-                    <Select value={examAPeriod} onValueChange={v => setExamAPeriod(v as "midYear" | "yearEnd")}>
-                      <SelectTrigger className="w-full h-8 text-xs bg-background/80">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent className="bg-card">
-                        {examPeriods.map(period => <SelectItem key={period.value} value={period.value}>{period.label}</SelectItem>)}
-                      </SelectContent>
-                    </Select>
+                {/* Dynamic Exam Selectors */}
+                <div className="space-y-3">
+                  <div className="flex flex-wrap gap-2">
+                    {examSelections.map((exam, index) => {
+                      const color = getSelectionColor(index);
+                      return (
+                        <div key={exam.id} className="flex-1 min-w-[140px] space-y-2 p-3 rounded-xl border" style={{
+                          backgroundColor: color.bgHex,
+                          borderColor: color.borderHex
+                        }}>
+                          <div className="flex items-center justify-between">
+                            <label className="text-xs font-semibold flex items-center gap-1.5" style={{ color: color.hex }}>
+                              <div className="w-2 h-2 rounded-full" style={{ backgroundColor: color.hex }} />
+                              Exam {exam.id}
+                            </label>
+                            {examSelections.length > 2 && (
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="h-5 w-5 p-0"
+                                onClick={() => setExamSelections(prev => prev.filter(e => e.id !== exam.id))}
+                              >
+                                <X className="h-3 w-3" />
+                              </Button>
+                            )}
+                          </div>
+                          <Select 
+                            value={exam.className} 
+                            onValueChange={(v) => setExamSelections(prev => 
+                              prev.map(e => e.id === exam.id ? {...e, className: v} : e)
+                            )}
+                          >
+                            <SelectTrigger className="w-full h-8 text-xs bg-background/80">
+                              <SelectValue placeholder="Class" />
+                            </SelectTrigger>
+                            <SelectContent className="bg-card">
+                              {teacherProfile.classes.map(cls => <SelectItem key={cls} value={cls}>{cls}</SelectItem>)}
+                            </SelectContent>
+                          </Select>
+                          <Select 
+                            value={exam.year} 
+                            onValueChange={(v) => setExamSelections(prev => 
+                              prev.map(e => e.id === exam.id ? {...e, year: v} : e)
+                            )}
+                          >
+                            <SelectTrigger className="w-full h-8 text-xs bg-background/80">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent className="bg-card">
+                              {academicYears.slice(0, 4).map(year => <SelectItem key={year} value={year}>{year}</SelectItem>)}
+                            </SelectContent>
+                          </Select>
+                          <Select 
+                            value={exam.period} 
+                            onValueChange={(v) => setExamSelections(prev => 
+                              prev.map(e => e.id === exam.id ? {...e, period: v as "midYear" | "yearEnd"} : e)
+                            )}
+                          >
+                            <SelectTrigger className="w-full h-8 text-xs bg-background/80">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent className="bg-card">
+                              {examPeriods.map(period => <SelectItem key={period.value} value={period.value}>{period.label}</SelectItem>)}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      );
+                    })}
                   </div>
                   
-                  {/* VS Divider */}
-                  <div className="flex flex-col items-center justify-center">
-                    <span className="text-xs font-bold text-muted-foreground">vs</span>
-                  </div>
-                  
-                  {/* Exam B - Light Amber Box */}
-                  <div className="flex-1 space-y-2 p-3 rounded-xl border" style={{
-                    backgroundColor: 'rgba(245, 158, 11, 0.08)',
-                    borderColor: 'rgba(245, 158, 11, 0.25)'
-                  }}>
-                    <label className="text-xs font-semibold flex items-center gap-1.5" style={{
-                      color: '#d97706'
-                    }}>
-                      <div className="w-2 h-2 rounded-full" style={{
-                        backgroundColor: '#f59e0b'
-                      }} />
-                      Exam B
-                    </label>
-                    <Select value={examBClass} onValueChange={setExamBClass}>
-                      <SelectTrigger className="w-full h-8 text-xs bg-background/80">
-                        <SelectValue placeholder="Class" />
-                      </SelectTrigger>
-                      <SelectContent className="bg-card">
-                        {teacherProfile.classes.map(cls => <SelectItem key={cls} value={cls}>{cls}</SelectItem>)}
-                      </SelectContent>
-                    </Select>
-                    <Select value={examBYear} onValueChange={setExamBYear}>
-                      <SelectTrigger className="w-full h-8 text-xs bg-background/80">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent className="bg-card">
-                        {academicYears.slice(0, 4).map(year => <SelectItem key={year} value={year}>{year}</SelectItem>)}
-                      </SelectContent>
-                    </Select>
-                    <Select value={examBPeriod} onValueChange={v => setExamBPeriod(v as "midYear" | "yearEnd")}>
-                      <SelectTrigger className="w-full h-8 text-xs bg-background/80">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent className="bg-card">
-                        {examPeriods.map(period => <SelectItem key={period.value} value={period.value}>{period.label}</SelectItem>)}
-                      </SelectContent>
-                    </Select>
-                  </div>
+                  {/* Add Exam Button */}
+                  {examSelections.length < 5 && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="w-full gap-2 border-dashed"
+                      onClick={() => {
+                        const existingIds = examSelections.map(e => e.id);
+                        const newId = getNextSelectionId(existingIds);
+                        setExamSelections(prev => [...prev, {
+                          id: newId,
+                          className: teacherProfile.classes[0],
+                          year: academicYears[0],
+                          period: "midYear"
+                        }]);
+                      }}
+                    >
+                      <Plus className="h-3 w-3" />
+                      Add Exam {getNextSelectionId(examSelections.map(e => e.id))}
+                    </Button>
+                  )}
                 </div>
 
                 {/* Subject Multi-Select */}
