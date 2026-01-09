@@ -515,8 +515,13 @@ const TeacherLessonPlansPage = () => {
                                   open={weekCalendarOpen === week.id} 
                                   onOpenChange={(open) => {
                                     setWeekCalendarOpen(open ? week.id : null);
-                                    // Reset range each time the picker opens so it waits for 2 clicks
-                                    setDateRange({ from: undefined, to: undefined });
+                                    // Pre-populate with current week dates when opening
+                                    if (open) {
+                                      const weekRange = getWeekRange(week.weekNumber);
+                                      setDateRange({ from: weekRange.start, to: weekRange.end });
+                                    } else {
+                                      setDateRange({ from: undefined, to: undefined });
+                                    }
                                   }}
                                 >
                                   <PopoverTrigger asChild onClick={(e) => e.stopPropagation()}>
@@ -526,9 +531,41 @@ const TeacherLessonPlansPage = () => {
                                     </button>
                                   </PopoverTrigger>
                                   <PopoverContent className="w-auto p-0 z-50" align="start" onClick={(e) => e.stopPropagation()}>
-                                    <div className="p-2 border-b border-border">
-                                      <p className="text-xs font-medium">Select Date Range</p>
+                                    <div className="p-3 border-b border-border space-y-2">
+                                      <p className="text-sm font-medium">Select Date Range</p>
                                       <p className="text-xs text-muted-foreground">Click first date, then last date</p>
+                                      
+                                      {/* Date Range Display with Swap */}
+                                      <div className="flex items-center gap-2 pt-2">
+                                        <div className="flex-1 text-center p-2 rounded-md border border-border bg-muted/30">
+                                          <p className="text-[10px] text-muted-foreground uppercase font-medium">Start</p>
+                                          <p className="text-sm font-semibold">
+                                            {dateRange.from ? format(dateRange.from, "MMM d") : "—"}
+                                          </p>
+                                        </div>
+                                        <Button
+                                          variant="outline"
+                                          size="sm"
+                                          className="h-8 w-8 p-0 shrink-0"
+                                          onClick={(e) => {
+                                            e.stopPropagation();
+                                            if (dateRange.from && dateRange.to) {
+                                              setDateRange({ from: dateRange.to, to: dateRange.from });
+                                            }
+                                          }}
+                                          disabled={!dateRange.from || !dateRange.to}
+                                        >
+                                          <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
+                                          </svg>
+                                        </Button>
+                                        <div className="flex-1 text-center p-2 rounded-md border border-border bg-muted/30">
+                                          <p className="text-[10px] text-muted-foreground uppercase font-medium">End</p>
+                                          <p className="text-sm font-semibold">
+                                            {dateRange.to ? format(dateRange.to, "MMM d") : "—"}
+                                          </p>
+                                        </div>
+                                      </div>
                                     </div>
                                     <Calendar
                                       mode="range"
@@ -536,11 +573,6 @@ const TeacherLessonPlansPage = () => {
                                       selected={dateRange}
                                       onSelect={(range) => {
                                         setDateRange({ from: range?.from, to: range?.to });
-                                        if (range?.from && range?.to) {
-                                          handleWeekChange(week.id, range.from);
-                                          setWeekCalendarOpen(null);
-                                          setDateRange({ from: undefined, to: undefined });
-                                        }
                                       }}
                                       disabled={(date) => {
                                         // Disable weekends and holidays
@@ -559,6 +591,26 @@ const TeacherLessonPlansPage = () => {
                                         },
                                       }}
                                     />
+                                    {/* Apply Button */}
+                                    <div className="p-3 border-t border-border">
+                                      <Button
+                                        className="w-full"
+                                        size="sm"
+                                        disabled={!dateRange.from || !dateRange.to}
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          if (dateRange.from && dateRange.to) {
+                                            // Ensure from is before to
+                                            const start = dateRange.from < dateRange.to ? dateRange.from : dateRange.to;
+                                            handleWeekChange(week.id, start);
+                                            setWeekCalendarOpen(null);
+                                            setDateRange({ from: undefined, to: undefined });
+                                          }
+                                        }}
+                                      >
+                                        Apply Week
+                                      </Button>
+                                    </div>
                                   </PopoverContent>
                                 </Popover>
                                 {(() => {
