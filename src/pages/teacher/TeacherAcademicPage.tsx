@@ -318,6 +318,8 @@ export default function TeacherAcademicPage() {
   const trendsReportRef = useRef<HTMLDivElement>(null);
   const [comparisonReportDialogOpen, setComparisonReportDialogOpen] = useState(false);
   const comparisonReportRef = useRef<HTMLDivElement>(null);
+  const [boxPlotReportDialogOpen, setBoxPlotReportDialogOpen] = useState(false);
+  const boxPlotReportRef = useRef<HTMLDivElement>(null);
   const [heatmapExpanded, setHeatmapExpanded] = useState(false);
   const [growthCarouselApi, setGrowthCarouselApi] = useState<any>(null);
   const [growthCarouselSlide, setGrowthCarouselSlide] = useState(0);
@@ -5655,6 +5657,16 @@ export default function TeacherAcademicPage() {
                           )}
                         </CardContent>
                       </Card>
+
+                      {/* Generate Report Button */}
+                      <Button
+                        className="w-full gap-2 bg-emerald-600 hover:bg-emerald-700 text-white"
+                        size="lg"
+                        onClick={() => setBoxPlotReportDialogOpen(true)}
+                      >
+                        <FileText className="h-5 w-5" />
+                        Generate Report
+                      </Button>
                     </>
                   );
                 })()}
@@ -5672,6 +5684,8 @@ export default function TeacherAcademicPage() {
                       setTrendsReportDialogOpen(true);
                     } else if (analysisSubTab === 'comparison') {
                       setComparisonReportDialogOpen(true);
+                    } else if (analysisSubTab === 'boxplot') {
+                      setBoxPlotReportDialogOpen(true);
                     }
                   }}
                 >
@@ -6770,6 +6784,203 @@ export default function TeacherAcademicPage() {
 
                   {/* Footer - Professional Style */}
                   <div className="footer" style={{ marginTop: '12px', textAlign: 'center', fontSize: '8px', color: '#9ca3af', paddingTop: '8px', borderTop: '1px solid #d1d5db' }}>
+                    This is a computer-generated report. Generated on {new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}.
+                  </div>
+                </div>
+              );
+            })()}
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Box Plot Report Dialog */}
+      <Dialog open={boxPlotReportDialogOpen} onOpenChange={setBoxPlotReportDialogOpen}>
+        <DialogContent className="w-[95vw] max-w-2xl max-h-[90vh] rounded-2xl overflow-hidden flex flex-col">
+          <DialogHeader className="flex flex-row items-center justify-between pr-10">
+            <DialogTitle>Box Plot Report</DialogTitle>
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                className="gap-2"
+                onClick={() => {
+                  // Generate CSV data for box plot
+                  const boxPlotData = boxPlotViewMode === "student" && boxPlotStudentId
+                    ? calculateStudentBoxPlotData(
+                        assessmentRecords, 
+                        boxPlotStudentId, 
+                        boxPlotStudentSubjects.length > 0 ? boxPlotStudentSubjects : undefined, 
+                        boxPlotStudentExamType && boxPlotStudentExamType !== "all" ? boxPlotStudentExamType : undefined, 
+                        boxPlotStartYear, 
+                        boxPlotEndYear
+                      )
+                    : calculateSubjectBoxPlotData(
+                        assessmentRecords,
+                        boxPlotSubjects,
+                        boxPlotCohortType,
+                        boxPlotSelectedClasses,
+                        boxPlotSelectedYearGroups,
+                        boxPlotSubjectExamType && boxPlotSubjectExamType !== "all" ? boxPlotSubjectExamType : undefined,
+                        boxPlotStartYear,
+                        boxPlotEndYear
+                      );
+                  const csvRows = [
+                    ['Year', 'n', 'Min', 'Q1', 'Median', 'Q3', 'Max', 'Mean', 'IQR', 'Outliers'],
+                    ...boxPlotData.map(stat => [
+                      stat.year,
+                      stat.n.toString(),
+                      stat.min.toString(),
+                      stat.q1.toString(),
+                      stat.median.toString(),
+                      stat.q3.toString(),
+                      stat.max.toString(),
+                      stat.mean.toString(),
+                      stat.iqr.toString(),
+                      stat.outliers.length.toString()
+                    ])
+                  ];
+                  const csvContent = csvRows.map(row => row.join(',')).join('\n');
+                  const blob = new Blob([csvContent], { type: 'text/csv' });
+                  const url = URL.createObjectURL(blob);
+                  const a = document.createElement('a');
+                  a.href = url;
+                  a.download = `boxplot-report-${boxPlotViewMode}-${new Date().toISOString().split('T')[0]}.csv`;
+                  a.click();
+                  URL.revokeObjectURL(url);
+                }}
+              >
+                <Download className="h-4 w-4" />
+                CSV
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                className="gap-2"
+                onClick={() => {
+                  if (boxPlotReportRef.current) {
+                    const printWindow = window.open('', '_blank');
+                    if (printWindow) {
+                      printWindow.document.write(`
+                        <html>
+                          <head><title>Box Plot Report</title></head>
+                          <body>${boxPlotReportRef.current.innerHTML}</body>
+                        </html>
+                      `);
+                      printWindow.document.close();
+                      printWindow.print();
+                    }
+                  }
+                }}
+              >
+                <Printer className="h-4 w-4" />
+                PDF
+              </Button>
+            </div>
+          </DialogHeader>
+          <div className="flex-1 overflow-y-auto p-4">
+            {(() => {
+              const boxPlotData = boxPlotViewMode === "student" && boxPlotStudentId
+                ? calculateStudentBoxPlotData(
+                    assessmentRecords, 
+                    boxPlotStudentId, 
+                    boxPlotStudentSubjects.length > 0 ? boxPlotStudentSubjects : undefined, 
+                    boxPlotStudentExamType && boxPlotStudentExamType !== "all" ? boxPlotStudentExamType : undefined, 
+                    boxPlotStartYear, 
+                    boxPlotEndYear
+                  )
+                : calculateSubjectBoxPlotData(
+                    assessmentRecords,
+                    boxPlotSubjects,
+                    boxPlotCohortType,
+                    boxPlotSelectedClasses,
+                    boxPlotSelectedYearGroups,
+                    boxPlotSubjectExamType && boxPlotSubjectExamType !== "all" ? boxPlotSubjectExamType : undefined,
+                    boxPlotStartYear,
+                    boxPlotEndYear
+                  );
+              
+              const insights = generateInsights(boxPlotData);
+              const selectedStudent = getAllStudents().find(s => s.id === boxPlotStudentId);
+              const reportTitle = boxPlotViewMode === "student" 
+                ? `Student: ${selectedStudent?.name || 'N/A'}`
+                : `Subjects: ${boxPlotSubjects.length === 0 ? 'All' : boxPlotSubjects.join(', ')}`;
+
+              return (
+                <div ref={boxPlotReportRef} style={{ padding: '20px', fontFamily: 'Arial, sans-serif', fontSize: '12px', color: '#1a1a1a', backgroundColor: '#ffffff' }}>
+                  {/* Header */}
+                  <div style={{ textAlign: 'center', marginBottom: '16px', paddingBottom: '12px', borderBottom: '2px solid #10b981' }}>
+                    <h1 style={{ fontSize: '18px', fontWeight: 'bold', color: '#10b981', margin: '0 0 4px 0' }}>Box Plot Analysis Report</h1>
+                    <p style={{ fontSize: '11px', color: '#6b7280', margin: 0 }}>{reportTitle}</p>
+                    <p style={{ fontSize: '10px', color: '#9ca3af', margin: '4px 0 0 0' }}>
+                      Period: {boxPlotStartYear} - {boxPlotEndYear}
+                    </p>
+                  </div>
+
+                  {/* Statistics Table */}
+                  <div style={{ marginBottom: '16px' }}>
+                    <h3 style={{ fontSize: '12px', fontWeight: 'bold', color: '#374151', marginBottom: '8px' }}>Year-by-Year Statistics</h3>
+                    <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '10px' }}>
+                      <thead>
+                        <tr style={{ backgroundColor: '#f3f4f6' }}>
+                          <th style={{ padding: '8px', textAlign: 'left', borderBottom: '1px solid #d1d5db' }}>Year</th>
+                          <th style={{ padding: '8px', textAlign: 'center', borderBottom: '1px solid #d1d5db' }}>n</th>
+                          <th style={{ padding: '8px', textAlign: 'center', borderBottom: '1px solid #d1d5db' }}>Min</th>
+                          <th style={{ padding: '8px', textAlign: 'center', borderBottom: '1px solid #d1d5db' }}>Q1</th>
+                          <th style={{ padding: '8px', textAlign: 'center', borderBottom: '1px solid #d1d5db' }}>Median</th>
+                          <th style={{ padding: '8px', textAlign: 'center', borderBottom: '1px solid #d1d5db' }}>Q3</th>
+                          <th style={{ padding: '8px', textAlign: 'center', borderBottom: '1px solid #d1d5db' }}>Max</th>
+                          <th style={{ padding: '8px', textAlign: 'center', borderBottom: '1px solid #d1d5db' }}>Mean</th>
+                          <th style={{ padding: '8px', textAlign: 'center', borderBottom: '1px solid #d1d5db' }}>IQR</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {boxPlotData.map((stat, idx) => (
+                          <tr key={stat.year} style={{ backgroundColor: idx % 2 === 0 ? '#ffffff' : '#f9fafb' }}>
+                            <td style={{ padding: '8px', fontWeight: '500' }}>{stat.year}</td>
+                            <td style={{ padding: '8px', textAlign: 'center' }}>{stat.n}</td>
+                            <td style={{ padding: '8px', textAlign: 'center' }}>{stat.min}</td>
+                            <td style={{ padding: '8px', textAlign: 'center' }}>{stat.q1}</td>
+                            <td style={{ padding: '8px', textAlign: 'center', fontWeight: 'bold', color: '#10b981' }}>{stat.median}</td>
+                            <td style={{ padding: '8px', textAlign: 'center' }}>{stat.q3}</td>
+                            <td style={{ padding: '8px', textAlign: 'center' }}>{stat.max}</td>
+                            <td style={{ padding: '8px', textAlign: 'center' }}>{stat.mean}</td>
+                            <td style={{ padding: '8px', textAlign: 'center' }}>{stat.iqr}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+
+                  {/* Insights */}
+                  {insights.length > 0 && (
+                    <div style={{ marginBottom: '16px', padding: '12px', backgroundColor: '#f0fdf4', borderRadius: '8px', border: '1px solid #86efac' }}>
+                      <h3 style={{ fontSize: '12px', fontWeight: 'bold', color: '#166534', marginBottom: '8px' }}>Key Insights</h3>
+                      <ul style={{ margin: 0, paddingLeft: '16px' }}>
+                        {insights.map((insight, idx) => (
+                          <li key={idx} style={{ fontSize: '10px', color: '#374151', marginBottom: '4px' }}>
+                            <strong>{insight.title}:</strong> {insight.description}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+
+                  {/* Outliers Summary */}
+                  {boxPlotData.some(s => s.outliers.length > 0) && (
+                    <div style={{ marginBottom: '16px' }}>
+                      <h3 style={{ fontSize: '12px', fontWeight: 'bold', color: '#374151', marginBottom: '8px' }}>Outliers Summary</h3>
+                      <div style={{ fontSize: '10px', color: '#6b7280' }}>
+                        {boxPlotData.filter(s => s.outliers.length > 0).map(stat => (
+                          <div key={stat.year} style={{ marginBottom: '4px' }}>
+                            <strong>{stat.year}:</strong> {stat.outlierDetails?.map(o => `${o.label} (${o.score})`).join(', ') || stat.outliers.join(', ')}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Footer */}
+                  <div style={{ marginTop: '20px', textAlign: 'center', fontSize: '8px', color: '#9ca3af', paddingTop: '8px', borderTop: '1px solid #d1d5db' }}>
                     This is a computer-generated report. Generated on {new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}.
                   </div>
                 </div>
