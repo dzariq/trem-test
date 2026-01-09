@@ -281,10 +281,10 @@ export const BoxPlotChart: React.FC<BoxPlotChartProps> = ({
   const maxY = Math.min(100, Math.max(...allValues) + 5);
   
   return (
-    <div className="w-full" style={{ height }}>
+    <div className="w-full" style={{ height: height + 50 }}>
       <ResponsiveContainer width="100%" height="100%">
         <svg
-          viewBox={`0 0 ${data.length * 80 + 60} ${height}`}
+          viewBox={`0 0 ${data.length * 80 + 60} ${height + 50}`}
           preserveAspectRatio="xMidYMid meet"
           style={{ overflow: 'visible' }}
         >
@@ -392,34 +392,34 @@ export const BoxPlotChart: React.FC<BoxPlotChartProps> = ({
             );
           })}
           
-          {/* Legend */}
-          <g transform={`translate(${data.length * 80 - 30}, 15)`}>
+          {/* Legend - Horizontal at bottom */}
+          <g transform={`translate(50, ${height - 5})`}>
             {/* Upper (Green) */}
-            <rect x={0} y={0} width={15} height={8} fill="hsl(142, 71%, 45%)" fillOpacity={0.7} rx={2} />
-            <text x={20} y={7} fontSize={9} fill="hsl(var(--muted-foreground))">Above Median</text>
+            <rect x={0} y={0} width={12} height={8} fill="hsl(142, 71%, 45%)" fillOpacity={0.7} rx={2} />
+            <text x={16} y={7} fontSize={9} fill="hsl(var(--muted-foreground))">Above Median</text>
             
             {/* Lower (Red) */}
-            <rect x={0} y={14} width={15} height={8} fill="hsl(0, 84%, 60%)" fillOpacity={0.7} rx={2} />
-            <text x={20} y={21} fontSize={9} fill="hsl(var(--muted-foreground))">Below Median</text>
+            <rect x={90} y={0} width={12} height={8} fill="hsl(0, 84%, 60%)" fillOpacity={0.7} rx={2} />
+            <text x={106} y={7} fontSize={9} fill="hsl(var(--muted-foreground))">Below Median</text>
             
             {/* Median */}
-            <line x1={0} y1={32} x2={15} y2={32} stroke="hsl(215, 25%, 27%)" strokeWidth={3} />
-            <text x={20} y={35} fontSize={9} fill="hsl(var(--muted-foreground))">Median</text>
+            <line x1={180} y1={4} x2={192} y2={4} stroke="hsl(215, 25%, 27%)" strokeWidth={3} />
+            <text x={196} y={7} fontSize={9} fill="hsl(var(--muted-foreground))">Median</text>
             
             {/* Mean */}
             {showMean && (
               <>
                 <polygon
-                  points="7,45 12,50 7,55 2,50"
+                  points="250,4 254,8 250,12 246,8"
                   fill="hsl(199, 89%, 48%)"
                 />
-                <text x={20} y={53} fontSize={9} fill="hsl(var(--muted-foreground))">Mean</text>
+                <text x={260} y={7} fontSize={9} fill="hsl(var(--muted-foreground))">Mean</text>
               </>
             )}
             
             {/* Outlier */}
-            <circle cx={7} cy={68} r={4} fill="hsl(280, 70%, 50%)" />
-            <text x={20} y={72} fontSize={9} fill="hsl(var(--muted-foreground))">Outlier</text>
+            <circle cx={showMean ? 315 : 250} cy={4} r={4} fill="hsl(280, 70%, 50%)" />
+            <text x={showMean ? 323 : 258} y={7} fontSize={9} fill="hsl(var(--muted-foreground))">Outlier</text>
           </g>
         </svg>
       </ResponsiveContainer>
