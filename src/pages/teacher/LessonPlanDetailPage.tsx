@@ -79,7 +79,6 @@ const sections = [
   { id: "resources", title: "Resources", shortTitle: "Resources" },
   { id: "homework", title: "Homework", shortTitle: "HW" },
   { id: "reflection", title: "Reflection", shortTitle: "Reflect" },
-  { id: "attendance", title: "Attendance", shortTitle: "Attend" },
 ];
 
 const LessonPlanDetailPage = () => {
@@ -749,39 +748,6 @@ const LessonPlanDetailPage = () => {
           />
         </div>
 
-        {/* Section 9: Attendance Summary */}
-        <CollapsibleSection
-          id="attendance"
-          title="Attendance"
-          icon={Users}
-          sectionNumber={9}
-          defaultOpen={false}
-        >
-          {lessonPlan.attendance ? (
-            <div className="grid grid-cols-4 gap-2 text-center">
-              <div className="p-2 rounded-lg bg-emerald-50 dark:bg-emerald-950/30">
-                <div className="text-lg font-bold text-emerald-600">{lessonPlan.attendance.present}</div>
-                <div className="text-[10px] text-muted-foreground">Present</div>
-              </div>
-              <div className="p-2 rounded-lg bg-destructive/10">
-                <div className="text-lg font-bold text-destructive">{lessonPlan.attendance.absent}</div>
-                <div className="text-[10px] text-muted-foreground">Absent</div>
-              </div>
-              <div className="p-2 rounded-lg bg-amber-50 dark:bg-amber-950/30">
-                <div className="text-lg font-bold text-amber-600">{lessonPlan.attendance.late}</div>
-                <div className="text-[10px] text-muted-foreground">Late</div>
-              </div>
-              <div className="p-2 rounded-lg bg-blue-50 dark:bg-blue-950/30">
-                <div className="text-lg font-bold text-blue-600">{lessonPlan.attendance.excused}</div>
-                <div className="text-[10px] text-muted-foreground">Excused</div>
-              </div>
-            </div>
-          ) : (
-            <div className="text-center py-4 text-sm text-muted-foreground">
-              Attendance not yet recorded for this lesson.
-            </div>
-          )}
-        </CollapsibleSection>
 
         {/* Bottom Padding */}
         <div className="h-20" />
