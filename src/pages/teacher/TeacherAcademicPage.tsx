@@ -2547,7 +2547,7 @@ export default function TeacherAcademicPage() {
                       size="sm"
                       className="w-full gap-2 border-dashed"
                       onClick={() => {
-                        const existingIds = bandsAdditionalSelections.map(s => s.id);
+                        const existingIds = ["A", ...bandsAdditionalSelections.map(s => s.id)];
                         const newId = getNextSelectionId(existingIds);
                         setBandsAdditionalSelections(prev => [...prev, {
                           id: newId,
@@ -2559,7 +2559,7 @@ export default function TeacherAcademicPage() {
                       }}
                     >
                       <Plus className="h-3 w-3" />
-                      Add Selection {getNextSelectionId(bandsAdditionalSelections.map(s => s.id))}
+                      Add Selection {getNextSelectionId(["A", ...bandsAdditionalSelections.map(s => s.id)])}
                     </Button>
                   )}
                 </div>
