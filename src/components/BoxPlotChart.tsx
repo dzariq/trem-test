@@ -616,18 +616,31 @@ export const BoxPlotChart: React.FC<BoxPlotChartProps> = ({
       </ResponsiveContainer>
       
       {/* Custom tooltip overlay */}
-      {hoveredYear && (
-        <div className="pointer-events-none absolute z-10" style={{ 
-          top: '20%', 
-          left: `${(visibleData.findIndex(d => d.year === hoveredYear) + 0.5) * (100 / visibleData.length)}%`,
-          transform: 'translateX(-50%)'
-        }}>
-          <BoxPlotTooltip 
-            active={true} 
-            payload={[{ payload: visibleData.find(d => d.year === hoveredYear) }]} 
-          />
-        </div>
-      )}
+      {hoveredYear && (() => {
+        const idx = visibleData.findIndex(d => d.year === hoveredYear);
+        const positionPercent = (idx + 0.5) * (100 / visibleData.length);
+        // If tooltip would go off right edge (past 60%), position it to the left of center
+        // If tooltip would go off left edge (below 40%), position it to the right of center
+        const isRightSide = positionPercent > 50;
+        
+        return (
+          <div 
+            className="pointer-events-none absolute z-10" 
+            style={{ 
+              top: '25%', 
+              left: isRightSide ? 'auto' : `${positionPercent}%`,
+              right: isRightSide ? `${100 - positionPercent}%` : 'auto',
+              transform: isRightSide ? 'translateX(50%)' : 'translateX(-50%)',
+              maxWidth: '90%'
+            }}
+          >
+            <BoxPlotTooltip 
+              active={true} 
+              payload={[{ payload: visibleData.find(d => d.year === hoveredYear) }]} 
+            />
+          </div>
+        );
+      })()}
     </div>
   );
 };
