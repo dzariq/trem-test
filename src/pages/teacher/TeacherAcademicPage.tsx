@@ -3435,12 +3435,69 @@ export default function TeacherAcademicPage() {
                         ) : (
                           /* Comparison Report */
                           <>
-                            <div className="comparison-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '12px' }}>
-                              {/* Selection A */}
-                              <div className="comparison-box blue" style={{ padding: '10px', borderRadius: '6px', backgroundColor: '#eff6ff', border: '1px solid #3b82f6' }}>
+                            {/* Grade Comparison Chart for Report */}
+                            <div className="section" style={{ marginBottom: '16px', pageBreakInside: 'avoid' }}>
+                              <h3 style={{ fontSize: '12px', fontWeight: 600, marginBottom: '10px', paddingBottom: '4px', borderBottom: '1px solid #ddd' }}>
+                                Grade Comparison Chart
+                              </h3>
+                              {/* Dynamic Legend */}
+                              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px', marginBottom: '12px' }}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                  <div style={{ width: '12px', height: '12px', borderRadius: '50%', backgroundColor: getSelectionColor(0).hex }} />
+                                  <span style={{ fontSize: '9px', color: '#666' }}>{selectedClass} - {bandsSelectedSubject}</span>
+                                </div>
+                                {bandsAdditionalSelections.map((selection, index) => {
+                                  const color = getSelectionColor(index + 1);
+                                  return (
+                                    <div key={selection.id} style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                      <div style={{ width: '12px', height: '12px', borderRadius: '50%', backgroundColor: color.hex }} />
+                                      <span style={{ fontSize: '9px', color: '#666' }}>{selection.className} - {selection.subject}</span>
+                                    </div>
+                                  );
+                                })}
+                              </div>
+                              <div style={{ height: '200px', width: '100%' }}>
+                                <ResponsiveContainer width="100%" height="100%">
+                                  <BarChart data={bandsComparisonChartData} barGap={2} margin={{ left: 5, right: 10 }}>
+                                    <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" strokeOpacity={0.5} vertical={false} />
+                                    <XAxis dataKey="grade" tick={{ fontSize: 11, fill: "#374151" }} />
+                                    <YAxis tick={{ fontSize: 10, fill: "#6b7280" }} width={30} />
+                                    <Tooltip
+                                      contentStyle={{
+                                        backgroundColor: "#fff",
+                                        border: "1px solid #e5e7eb",
+                                        borderRadius: "8px"
+                                      }}
+                                      formatter={(value: number, name: string) => {
+                                        if (name === "selectionA") {
+                                          return [`${value} students`, `${selectedClass} - ${bandsSelectedSubject}`];
+                                        }
+                                        const selId = name.replace("selection", "");
+                                        const selection = bandsAdditionalSelections.find(s => s.id === selId);
+                                        return [`${value} students`, selection ? `${selection.className} - ${selection.subject}` : name];
+                                      }}
+                                    />
+                                    <Bar dataKey="selectionA" fill={getSelectionColor(0).hex} radius={[4, 4, 0, 0]} name="selectionA" />
+                                    {bandsAdditionalSelections.map((selection, index) => (
+                                      <Bar 
+                                        key={selection.id} 
+                                        dataKey={`selection${selection.id}`} 
+                                        fill={getSelectionColor(index + 1).hex} 
+                                        radius={[4, 4, 0, 0]} 
+                                        name={`selection${selection.id}`} 
+                                      />
+                                    ))}
+                                  </BarChart>
+                                </ResponsiveContainer>
+                              </div>
+                            </div>
+
+                            <div className="comparison-grid" style={{ display: 'grid', gridTemplateColumns: `repeat(${Math.min(bandsAdditionalSelections.length + 1, 2)}, 1fr)`, gap: '12px' }}>
+                              {/* Selection A - Primary */}
+                              <div className="comparison-box" style={{ padding: '10px', borderRadius: '6px', backgroundColor: `${getSelectionColor(0).hex}15`, border: `1px solid ${getSelectionColor(0).hex}` }}>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '10px' }}>
-                                  <div style={{ width: '10px', height: '10px', borderRadius: '50%', backgroundColor: '#3b82f6' }} />
-                                  <span style={{ fontSize: '11px', fontWeight: 600, color: '#1d4ed8' }}>
+                                  <div style={{ width: '10px', height: '10px', borderRadius: '50%', backgroundColor: getSelectionColor(0).hex }} />
+                                  <span style={{ fontSize: '11px', fontWeight: 600, color: getSelectionColor(0).hex }}>
                                     {selectedClass} - {bandsSelectedSubject}
                                   </span>
                                 </div>
@@ -3459,144 +3516,53 @@ export default function TeacherAcademicPage() {
                                     );
                                   })}
                                 </div>
-                                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '9px', color: '#666', paddingTop: '6px', borderTop: '1px solid #3b82f640' }}>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '9px', color: '#666', paddingTop: '6px', borderTop: `1px solid ${getSelectionColor(0).hex}40` }}>
                                   <span>Top: {bandsTopPerformers.length}</span>
                                   <span>Middle: {bandsMiddlePerformers.length}</span>
                                   <span>At-Risk: {bandsAtRiskStudents.length}</span>
                                 </div>
-                                {/* Categorized student lists for Selection A */}
-                                <div className="student-section" style={{ marginTop: '10px', paddingTop: '8px', borderTop: '1px solid #3b82f640' }}>
-                                  {/* Top Performers */}
-                                  {bandsTopPerformers.length > 0 && (
-                                    <div style={{ marginBottom: '8px' }}>
-                                      <div style={{ fontSize: '9px', fontWeight: 600, color: '#059669', marginBottom: '4px', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                                        <Award className="h-3 w-3" /> Top (A*/A): {bandsTopPerformers.length}
-                                      </div>
-                                      <div className="student-list" style={{ backgroundColor: '#dcfce7', borderRadius: '4px', padding: '4px' }}>
-                                        {bandsTopPerformers.map((s, i) => (
-                                          <div key={s.id} className="student-row" style={{ display: 'flex', justifyContent: 'space-between', padding: '2px 4px', fontSize: '8px', borderBottom: i < bandsTopPerformers.length - 1 ? '1px solid #bbf7d020' : 'none' }}>
-                                            <span>{i + 1}. {s.name}</span>
-                                            <span style={{ fontWeight: 600, color: '#059669' }}>{s.score}%</span>
-                                          </div>
-                                        ))}
-                                      </div>
-                                    </div>
-                                  )}
-                                  {/* Middle Performers */}
-                                  {bandsMiddlePerformers.length > 0 && (
-                                    <div style={{ marginBottom: '8px' }}>
-                                      <div style={{ fontSize: '9px', fontWeight: 600, color: '#2563eb', marginBottom: '4px', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                                        <Users className="h-3 w-3" /> Middle (B/C): {bandsMiddlePerformers.length}
-                                      </div>
-                                      <div className="student-list" style={{ backgroundColor: '#dbeafe', borderRadius: '4px', padding: '4px' }}>
-                                        {bandsMiddlePerformers.map((s, i) => (
-                                          <div key={s.id} className="student-row" style={{ display: 'flex', justifyContent: 'space-between', padding: '2px 4px', fontSize: '8px', borderBottom: i < bandsMiddlePerformers.length - 1 ? '1px solid #bfdbfe20' : 'none' }}>
-                                            <span>{i + 1}. {s.name}</span>
-                                            <span style={{ fontWeight: 600, color: '#2563eb' }}>{s.score}%</span>
-                                          </div>
-                                        ))}
-                                      </div>
-                                    </div>
-                                  )}
-                                  {/* At-Risk Students */}
-                                  {bandsAtRiskStudents.length > 0 && (
-                                    <div>
-                                      <div style={{ fontSize: '9px', fontWeight: 600, color: '#dc2626', marginBottom: '4px', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                                        <AlertTriangle className="h-3 w-3" /> At-Risk (D/E): {bandsAtRiskStudents.length}
-                                      </div>
-                                      <div className="student-list" style={{ backgroundColor: '#fee2e2', borderRadius: '4px', padding: '4px' }}>
-                                        {bandsAtRiskStudents.map((s, i) => (
-                                          <div key={s.id} className="student-row" style={{ display: 'flex', justifyContent: 'space-between', padding: '2px 4px', fontSize: '8px', borderBottom: i < bandsAtRiskStudents.length - 1 ? '1px solid #fecaca20' : 'none' }}>
-                                            <span>{i + 1}. {s.name}</span>
-                                            <span style={{ fontWeight: 600, color: '#dc2626' }}>{s.score}%</span>
-                                          </div>
-                                        ))}
-                                      </div>
-                                    </div>
-                                  )}
-                                </div>
                               </div>
 
-                              {/* Selection B */}
-                              <div className="comparison-box amber" style={{ padding: '10px', borderRadius: '6px', backgroundColor: '#fffbeb', border: '1px solid #f59e0b' }}>
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '10px' }}>
-                                  <div style={{ width: '10px', height: '10px', borderRadius: '50%', backgroundColor: '#f59e0b' }} />
-                                  <span style={{ fontSize: '11px', fontWeight: 600, color: '#b45309' }}>
-                                    {bandsCompareClass} - {bandsCompareSubject}
-                                  </span>
-                                </div>
-                                <div className="grade-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: '4px', marginBottom: '10px' }}>
-                                  {bandsCompareGradeDistribution.map(g => {
-                                    const total = bandsCompareGradeDistribution.reduce((sum, d) => sum + d.count, 0);
-                                    const percentage = total > 0 ? Math.round(g.count / total * 100) : 0;
-                                    return (
-                                      <div key={g.range} className="grade-card" style={{ textAlign: 'center', padding: '4px 2px', border: '1px solid #ddd', borderRadius: '4px', backgroundColor: '#fff' }}>
-                                        <div className="grade" style={{ fontSize: '10px', fontWeight: 700, color: GRADE_COLORS[g.range as keyof typeof GRADE_COLORS] }}>
-                                          {g.range}
-                                        </div>
-                                        <div className="count" style={{ fontSize: '12px', fontWeight: 700, color: '#1a1a1a' }}>{g.count}</div>
-                                        <div className="percent" style={{ fontSize: '8px', color: '#666' }}>{percentage}%</div>
-                                      </div>
-                                    );
-                                  })}
-                                </div>
-                                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '9px', color: '#666', paddingTop: '6px', borderTop: '1px solid #f59e0b40' }}>
-                                  <span>Top: {bandsCompareTopPerformers.length}</span>
-                                  <span>Middle: {bandsCompareMiddlePerformers.length}</span>
-                                  <span>At-Risk: {bandsCompareAtRiskStudents.length}</span>
-                                </div>
-                                {/* Categorized student lists for Selection B */}
-                                <div className="student-section" style={{ marginTop: '10px', paddingTop: '8px', borderTop: '1px solid #f59e0b40' }}>
-                                  {/* Top Performers */}
-                                  {bandsCompareTopPerformers.length > 0 && (
-                                    <div style={{ marginBottom: '8px' }}>
-                                      <div style={{ fontSize: '9px', fontWeight: 600, color: '#059669', marginBottom: '4px', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                                        <Award className="h-3 w-3" /> Top (A*/A): {bandsCompareTopPerformers.length}
-                                      </div>
-                                      <div className="student-list" style={{ backgroundColor: '#dcfce7', borderRadius: '4px', padding: '4px' }}>
-                                        {bandsCompareTopPerformers.map((s, i) => (
-                                          <div key={s.id} className="student-row" style={{ display: 'flex', justifyContent: 'space-between', padding: '2px 4px', fontSize: '8px', borderBottom: i < bandsCompareTopPerformers.length - 1 ? '1px solid #bbf7d020' : 'none' }}>
-                                            <span>{i + 1}. {s.name}</span>
-                                            <span style={{ fontWeight: 600, color: '#059669' }}>{s.score}%</span>
-                                          </div>
-                                        ))}
-                                      </div>
+                              {/* Dynamic Additional Selections */}
+                              {bandsAdditionalSelections.map((selection, index) => {
+                                const color = getSelectionColor(index + 1);
+                                const selectionData = bandsSelectionsData[index];
+                                const gradeDistribution = selectionData?.gradeDistribution || [];
+                                const topPerformers = selectionData?.topPerformers || [];
+                                const middlePerformers = selectionData?.middlePerformers || [];
+                                const atRiskStudents = selectionData?.atRiskStudents || [];
+
+                                return (
+                                  <div key={selection.id} className="comparison-box" style={{ padding: '10px', borderRadius: '6px', backgroundColor: `${color.hex}15`, border: `1px solid ${color.hex}` }}>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '10px' }}>
+                                      <div style={{ width: '10px', height: '10px', borderRadius: '50%', backgroundColor: color.hex }} />
+                                      <span style={{ fontSize: '11px', fontWeight: 600, color: color.hex }}>
+                                        {selection.className} - {selection.subject}
+                                      </span>
                                     </div>
-                                  )}
-                                  {/* Middle Performers */}
-                                  {bandsCompareMiddlePerformers.length > 0 && (
-                                    <div style={{ marginBottom: '8px' }}>
-                                      <div style={{ fontSize: '9px', fontWeight: 600, color: '#2563eb', marginBottom: '4px', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                                        <Users className="h-3 w-3" /> Middle (B/C): {bandsCompareMiddlePerformers.length}
-                                      </div>
-                                      <div className="student-list" style={{ backgroundColor: '#dbeafe', borderRadius: '4px', padding: '4px' }}>
-                                        {bandsCompareMiddlePerformers.map((s, i) => (
-                                          <div key={s.id} className="student-row" style={{ display: 'flex', justifyContent: 'space-between', padding: '2px 4px', fontSize: '8px', borderBottom: i < bandsCompareMiddlePerformers.length - 1 ? '1px solid #bfdbfe20' : 'none' }}>
-                                            <span>{i + 1}. {s.name}</span>
-                                            <span style={{ fontWeight: 600, color: '#2563eb' }}>{s.score}%</span>
+                                    <div className="grade-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: '4px', marginBottom: '10px' }}>
+                                      {gradeDistribution.map(g => {
+                                        const total = gradeDistribution.reduce((sum, d) => sum + d.count, 0);
+                                        const percentage = total > 0 ? Math.round(g.count / total * 100) : 0;
+                                        return (
+                                          <div key={g.range} className="grade-card" style={{ textAlign: 'center', padding: '4px 2px', border: '1px solid #ddd', borderRadius: '4px', backgroundColor: '#fff' }}>
+                                            <div className="grade" style={{ fontSize: '10px', fontWeight: 700, color: GRADE_COLORS[g.range as keyof typeof GRADE_COLORS] }}>
+                                              {g.range}
+                                            </div>
+                                            <div className="count" style={{ fontSize: '12px', fontWeight: 700, color: '#1a1a1a' }}>{g.count}</div>
+                                            <div className="percent" style={{ fontSize: '8px', color: '#666' }}>{percentage}%</div>
                                           </div>
-                                        ))}
-                                      </div>
+                                        );
+                                      })}
                                     </div>
-                                  )}
-                                  {/* At-Risk Students */}
-                                  {bandsCompareAtRiskStudents.length > 0 && (
-                                    <div>
-                                      <div style={{ fontSize: '9px', fontWeight: 600, color: '#dc2626', marginBottom: '4px', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                                        <AlertTriangle className="h-3 w-3" /> At-Risk (D/E): {bandsCompareAtRiskStudents.length}
-                                      </div>
-                                      <div className="student-list" style={{ backgroundColor: '#fee2e2', borderRadius: '4px', padding: '4px' }}>
-                                        {bandsCompareAtRiskStudents.map((s, i) => (
-                                          <div key={s.id} className="student-row" style={{ display: 'flex', justifyContent: 'space-between', padding: '2px 4px', fontSize: '8px', borderBottom: i < bandsCompareAtRiskStudents.length - 1 ? '1px solid #fecaca20' : 'none' }}>
-                                            <span>{i + 1}. {s.name}</span>
-                                            <span style={{ fontWeight: 600, color: '#dc2626' }}>{s.score}%</span>
-                                          </div>
-                                        ))}
-                                      </div>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '9px', color: '#666', paddingTop: '6px', borderTop: `1px solid ${color.hex}40` }}>
+                                      <span>Top: {topPerformers.length}</span>
+                                      <span>Middle: {middlePerformers.length}</span>
+                                      <span>At-Risk: {atRiskStudents.length}</span>
                                     </div>
-                                  )}
-                                </div>
-                              </div>
+                                  </div>
+                                );
+                              })}
                             </div>
 
                             {/* Comparison Summary */}
@@ -3606,60 +3572,55 @@ export default function TeacherAcademicPage() {
                                 <thead>
                                   <tr style={{ borderBottom: '1px solid #ddd' }}>
                                     <th style={{ textAlign: 'left', padding: '4px 6px', backgroundColor: '#e5e5e5' }}>Metric</th>
-                                    <th style={{ textAlign: 'center', padding: '4px 6px', backgroundColor: '#e5e5e5', color: '#1d4ed8' }}>{selectedClass}</th>
-                                    <th style={{ textAlign: 'center', padding: '4px 6px', backgroundColor: '#e5e5e5', color: '#b45309' }}>{bandsCompareClass}</th>
-                                    <th style={{ textAlign: 'center', padding: '4px 6px', backgroundColor: '#e5e5e5' }}>Difference</th>
+                                    <th style={{ textAlign: 'center', padding: '4px 6px', backgroundColor: '#e5e5e5', color: getSelectionColor(0).hex }}>{selectedClass}</th>
+                                    {bandsAdditionalSelections.map((selection, index) => (
+                                      <th key={selection.id} style={{ textAlign: 'center', padding: '4px 6px', backgroundColor: '#e5e5e5', color: getSelectionColor(index + 1).hex }}>{selection.className}</th>
+                                    ))}
                                   </tr>
                                 </thead>
                                 <tbody>
                                   <tr style={{ borderBottom: '1px solid #eee' }}>
                                     <td style={{ padding: '4px 6px' }}>Total Students</td>
                                     <td style={{ textAlign: 'center', padding: '4px 6px', fontWeight: 600 }}>{bandsRankedStudents.length}</td>
-                                    <td style={{ textAlign: 'center', padding: '4px 6px', fontWeight: 600 }}>{bandsCompareRankedStudents.length}</td>
-                                    <td style={{ textAlign: 'center', padding: '4px 6px' }}>{bandsRankedStudents.length - bandsCompareRankedStudents.length}</td>
+                                    {bandsAdditionalSelections.map((selection, index) => (
+                                      <td key={selection.id} style={{ textAlign: 'center', padding: '4px 6px', fontWeight: 600 }}>{bandsSelectionsData[index]?.rankedStudents?.length || 0}</td>
+                                    ))}
                                   </tr>
                                   <tr style={{ borderBottom: '1px solid #eee' }}>
                                     <td style={{ padding: '4px 6px' }}>Top Performers (A*/A)</td>
                                     <td style={{ textAlign: 'center', padding: '4px 6px', fontWeight: 600, color: '#059669' }}>{bandsTopPerformers.length}</td>
-                                    <td style={{ textAlign: 'center', padding: '4px 6px', fontWeight: 600, color: '#059669' }}>{bandsCompareTopPerformers.length}</td>
-                                    <td style={{ textAlign: 'center', padding: '4px 6px', fontWeight: 600, color: bandsTopPerformers.length > bandsCompareTopPerformers.length ? '#059669' : bandsTopPerformers.length < bandsCompareTopPerformers.length ? '#dc2626' : '#1a1a1a' }}>
-                                      {bandsTopPerformers.length > bandsCompareTopPerformers.length ? "+" : ""}{bandsTopPerformers.length - bandsCompareTopPerformers.length}
-                                    </td>
+                                    {bandsAdditionalSelections.map((selection, index) => (
+                                      <td key={selection.id} style={{ textAlign: 'center', padding: '4px 6px', fontWeight: 600, color: '#059669' }}>{bandsSelectionsData[index]?.topPerformers?.length || 0}</td>
+                                    ))}
                                   </tr>
                                   <tr style={{ borderBottom: '1px solid #eee' }}>
                                     <td style={{ padding: '4px 6px' }}>Middle Performers (B/C)</td>
                                     <td style={{ textAlign: 'center', padding: '4px 6px', fontWeight: 600, color: '#2563eb' }}>{bandsMiddlePerformers.length}</td>
-                                    <td style={{ textAlign: 'center', padding: '4px 6px', fontWeight: 600, color: '#2563eb' }}>{bandsCompareMiddlePerformers.length}</td>
-                                    <td style={{ textAlign: 'center', padding: '4px 6px' }}>{bandsMiddlePerformers.length - bandsCompareMiddlePerformers.length}</td>
+                                    {bandsAdditionalSelections.map((selection, index) => (
+                                      <td key={selection.id} style={{ textAlign: 'center', padding: '4px 6px', fontWeight: 600, color: '#2563eb' }}>{bandsSelectionsData[index]?.middlePerformers?.length || 0}</td>
+                                    ))}
                                   </tr>
                                   <tr style={{ borderBottom: '1px solid #eee' }}>
                                     <td style={{ padding: '4px 6px' }}>At-Risk (D/E)</td>
                                     <td style={{ textAlign: 'center', padding: '4px 6px', fontWeight: 600, color: '#dc2626' }}>{bandsAtRiskStudents.length}</td>
-                                    <td style={{ textAlign: 'center', padding: '4px 6px', fontWeight: 600, color: '#dc2626' }}>{bandsCompareAtRiskStudents.length}</td>
-                                    <td style={{ textAlign: 'center', padding: '4px 6px', fontWeight: 600, color: bandsAtRiskStudents.length < bandsCompareAtRiskStudents.length ? '#059669' : bandsAtRiskStudents.length > bandsCompareAtRiskStudents.length ? '#dc2626' : '#1a1a1a' }}>
-                                      {bandsAtRiskStudents.length > bandsCompareAtRiskStudents.length ? "+" : ""}{bandsAtRiskStudents.length - bandsCompareAtRiskStudents.length}
-                                    </td>
+                                    {bandsAdditionalSelections.map((selection, index) => (
+                                      <td key={selection.id} style={{ textAlign: 'center', padding: '4px 6px', fontWeight: 600, color: '#dc2626' }}>{bandsSelectionsData[index]?.atRiskStudents?.length || 0}</td>
+                                    ))}
                                   </tr>
                                   <tr style={{ backgroundColor: '#f0f0f0' }}>
                                     <td style={{ padding: '4px 6px', fontWeight: 600 }}>Passing Rate (≥50%)</td>
                                     <td style={{ textAlign: 'center', padding: '4px 6px', fontWeight: 700, color: '#7c3aed' }}>
                                       {bandsRankedStudents.length > 0 ? Math.round((bandsRankedStudents.filter(s => s.score >= 50).length / bandsRankedStudents.length) * 100) : 0}%
                                     </td>
-                                    <td style={{ textAlign: 'center', padding: '4px 6px', fontWeight: 700, color: '#7c3aed' }}>
-                                      {bandsCompareRankedStudents.length > 0 ? Math.round((bandsCompareRankedStudents.filter(s => s.score >= 50).length / bandsCompareRankedStudents.length) * 100) : 0}%
-                                    </td>
-                                    <td style={{ textAlign: 'center', padding: '4px 6px', fontWeight: 600, color: (() => {
-                                      const passRateA = bandsRankedStudents.length > 0 ? Math.round((bandsRankedStudents.filter(s => s.score >= 50).length / bandsRankedStudents.length) * 100) : 0;
-                                      const passRateB = bandsCompareRankedStudents.length > 0 ? Math.round((bandsCompareRankedStudents.filter(s => s.score >= 50).length / bandsCompareRankedStudents.length) * 100) : 0;
-                                      return passRateA > passRateB ? '#059669' : passRateA < passRateB ? '#dc2626' : '#1a1a1a';
-                                    })() }}>
-                                      {(() => {
-                                        const passRateA = bandsRankedStudents.length > 0 ? Math.round((bandsRankedStudents.filter(s => s.score >= 50).length / bandsRankedStudents.length) * 100) : 0;
-                                        const passRateB = bandsCompareRankedStudents.length > 0 ? Math.round((bandsCompareRankedStudents.filter(s => s.score >= 50).length / bandsCompareRankedStudents.length) * 100) : 0;
-                                        const diff = passRateA - passRateB;
-                                        return `${diff > 0 ? '+' : ''}${diff}%`;
-                                      })()}
-                                    </td>
+                                    {bandsAdditionalSelections.map((selection, index) => {
+                                      const rankedStudents = bandsSelectionsData[index]?.rankedStudents || [];
+                                      const passingRate = rankedStudents.length > 0 ? Math.round((rankedStudents.filter(s => s.score >= 50).length / rankedStudents.length) * 100) : 0;
+                                      return (
+                                        <td key={selection.id} style={{ textAlign: 'center', padding: '4px 6px', fontWeight: 700, color: '#7c3aed' }}>
+                                          {passingRate}%
+                                        </td>
+                                      );
+                                    })}
                                   </tr>
                                 </tbody>
                               </table>
