@@ -3,12 +3,13 @@
  * 
  * Renders a custom SVG-based box and whisker plot using Recharts containers.
  * Supports multiple years of data with tooltips showing full statistics.
+ * Features pinch-to-zoom for mobile and legend at the top.
  */
 
-import React, { useState } from "react";
-import { ResponsiveContainer, XAxis, YAxis, CartesianGrid, Tooltip, ReferenceLine } from "recharts";
+import React, { useState, useRef, useMemo } from "react";
+import { ResponsiveContainer } from "recharts";
 import { cn } from "@/lib/utils";
-import { BoxPlotStats, OutlierInfo } from "@/utils/boxPlotCalculations";
+import { BoxPlotStats } from "@/utils/boxPlotCalculations";
 
 interface BoxPlotChartProps {
   data: BoxPlotStats[];
@@ -85,7 +86,8 @@ const BoxPlotShape = ({
   data, 
   yScale, 
   showMean,
-  isHovered 
+  isHovered,
+  zoomLevel = 1
 }: { 
   x: number; 
   y: number; 
@@ -94,8 +96,9 @@ const BoxPlotShape = ({
   yScale: (value: number) => number;
   showMean: boolean;
   isHovered: boolean;
+  zoomLevel?: number;
 }) => {
-  const boxWidth = Math.min(width * 0.6, 50);
+  const boxWidth = Math.min(width * 0.6, zoomLevel > 1 ? 60 : 50);
   const boxX = x + (width - boxWidth) / 2;
   
   const whiskerTop = yScale(data.whiskerHigh);
@@ -105,7 +108,6 @@ const BoxPlotShape = ({
   const whiskerBottom = yScale(data.whiskerLow);
   const meanY = showMean ? yScale(data.mean) : 0;
   
-  const boxHeight = q1Y - q3Y;
   const whiskerWidth = boxWidth * 0.3;
   
   const isLowSample = data.n > 0 && data.n < 5;
@@ -122,6 +124,9 @@ const BoxPlotShape = ({
   const whiskerColor = "hsl(215, 16%, 47%)";
   const meanColor = "hsl(199, 89%, 48%)";
   const outlierColor = "hsl(280, 70%, 50%)"; // purple for outliers
+  
+  // Outlier size scales with zoom
+  const outlierSize = zoomLevel > 1.5 ? 6 : 4;
   
   return (
     <g className={cn("transition-opacity", isHovered ? "opacity-100" : "opacity-90")}>
@@ -209,7 +214,6 @@ const BoxPlotShape = ({
       {/* Outliers with labels */}
       {data.outlierDetails && data.outlierDetails.map((outlier, idx) => {
         const cy = yScale(outlier.score);
-        const isAboveMedian = outlier.score > data.median;
         // Shorten label for display (first name or first 8 chars)
         const shortLabel = outlier.label.split(' ')[0].substring(0, 8);
         
@@ -218,22 +222,36 @@ const BoxPlotShape = ({
             <circle
               cx={boxX + boxWidth / 2}
               cy={cy}
-              r={4}
+              r={outlierSize}
               fill={outlierColor}
               stroke="white"
               strokeWidth={1}
             />
-            {/* Label next to outlier dot */}
-            <text
-              x={boxX + boxWidth / 2 + 8}
-              y={cy + 3}
-              fontSize={8}
-              fill={outlierColor}
-              fontWeight={500}
-              textAnchor="start"
-            >
-              {shortLabel}
-            </text>
+            {/* Label next to outlier dot - show more when zoomed */}
+            {zoomLevel > 1.2 && (
+              <text
+                x={boxX + boxWidth / 2 + outlierSize + 4}
+                y={cy + 3}
+                fontSize={zoomLevel > 1.5 ? 10 : 8}
+                fill={outlierColor}
+                fontWeight={500}
+                textAnchor="start"
+              >
+                {shortLabel} ({outlier.score})
+              </text>
+            )}
+            {zoomLevel <= 1.2 && (
+              <text
+                x={boxX + boxWidth / 2 + 8}
+                y={cy + 3}
+                fontSize={8}
+                fill={outlierColor}
+                fontWeight={500}
+                textAnchor="start"
+              >
+                {shortLabel}
+              </text>
+            )}
           </g>
         );
       })}
@@ -262,6 +280,115 @@ export const BoxPlotChart: React.FC<BoxPlotChartProps> = ({
 }) => {
   const [hoveredYear, setHoveredYear] = useState<string | null>(null);
   
+  // Zoom state
+  const [zoomLevel, setZoomLevel] = useState<number>(1);
+  const [scrollOffset, setScrollOffset] = useState<number>(0);
+  const [isPinching, setIsPinching] = useState(false);
+  const [zoomFeedback, setZoomFeedback] = useState<string | null>(null);
+
+  // Refs for gesture tracking
+  const initialTouchDistance = useRef<number | null>(null);
+  const initialZoomLevel = useRef<number>(1);
+  const chartContainerRef = useRef<HTMLDivElement>(null);
+  const swipeStartX = useRef<number | null>(null);
+  const swipeStartOffset = useRef<number>(0);
+  
+  // Calculate visible data based on zoom
+  const visibleData = useMemo(() => {
+    if (zoomLevel <= 1) return data;
+    
+    const visibleCount = Math.max(2, Math.round(data.length / zoomLevel));
+    const maxOffset = Math.max(0, data.length - visibleCount);
+    const clampedOffset = Math.min(scrollOffset, maxOffset);
+    return data.slice(clampedOffset, clampedOffset + visibleCount);
+  }, [data, zoomLevel, scrollOffset]);
+
+  // Touch distance calculation
+  const getTouchDistance = (touches: React.TouchList): number => {
+    if (touches.length < 2) return 0;
+    const dx = touches[0].clientX - touches[1].clientX;
+    const dy = touches[0].clientY - touches[1].clientY;
+    return Math.sqrt(dx * dx + dy * dy);
+  };
+
+  // Haptic feedback
+  const triggerHaptic = (style: 'light' | 'medium' | 'heavy') => {
+    if ('vibrate' in navigator) {
+      const duration = style === 'light' ? 10 : style === 'medium' ? 20 : 30;
+      navigator.vibrate(duration);
+    }
+  };
+
+  // Touch handlers
+  const handleTouchStart = (e: React.TouchEvent) => {
+    if (e.touches.length === 2) {
+      // Pinch gesture start
+      e.preventDefault();
+      const distance = getTouchDistance(e.touches);
+      initialTouchDistance.current = distance;
+      initialZoomLevel.current = zoomLevel;
+      setIsPinching(true);
+    } else if (e.touches.length === 1 && zoomLevel > 1) {
+      // Swipe gesture start (when zoomed)
+      swipeStartX.current = e.touches[0].clientX;
+      swipeStartOffset.current = scrollOffset;
+    }
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (e.touches.length === 2 && initialTouchDistance.current !== null) {
+      // Pinch gesture
+      e.preventDefault();
+      const currentDistance = getTouchDistance(e.touches);
+      const scale = currentDistance / initialTouchDistance.current;
+      const newZoom = Math.max(1, Math.min(4, initialZoomLevel.current * scale));
+      
+      // Show feedback
+      const zoomPercent = Math.round(newZoom * 100);
+      setZoomFeedback(`${zoomPercent}%`);
+      
+      setZoomLevel(newZoom);
+      
+      // Adjust scroll offset if zooming out
+      if (newZoom < zoomLevel) {
+        const visibleCount = Math.max(2, Math.round(data.length / newZoom));
+        const maxOffset = Math.max(0, data.length - visibleCount);
+        setScrollOffset(Math.min(scrollOffset, maxOffset));
+      }
+    } else if (e.touches.length === 1 && swipeStartX.current !== null && zoomLevel > 1) {
+      // Swipe to navigate when zoomed
+      const deltaX = swipeStartX.current - e.touches[0].clientX;
+      const sensitivity = 50; // pixels per item
+      const itemDelta = Math.round(deltaX / sensitivity);
+      
+      const visibleCount = Math.max(2, Math.round(data.length / zoomLevel));
+      const maxOffset = Math.max(0, data.length - visibleCount);
+      const newOffset = Math.max(0, Math.min(maxOffset, swipeStartOffset.current + itemDelta));
+      
+      setScrollOffset(newOffset);
+    }
+  };
+
+  const handleTouchEnd = () => {
+    if (isPinching) {
+      triggerHaptic('light');
+      setIsPinching(false);
+      
+      // Clear feedback after delay
+      setTimeout(() => setZoomFeedback(null), 500);
+    }
+    
+    initialTouchDistance.current = null;
+    swipeStartX.current = null;
+  };
+
+  // Reset zoom
+  const handleResetZoom = () => {
+    setZoomLevel(1);
+    setScrollOffset(0);
+    triggerHaptic('medium');
+  };
+  
   if (!data || data.length === 0) {
     return (
       <div className="flex items-center justify-center h-[300px] text-muted-foreground text-sm">
@@ -280,146 +407,210 @@ export const BoxPlotChart: React.FC<BoxPlotChartProps> = ({
   const minY = Math.max(0, Math.min(...allValues) - 5);
   const maxY = Math.min(100, Math.max(...allValues) + 5);
   
+  // Chart dimensions
+  const legendHeight = 20;
+  const chartAreaHeight = height - legendHeight;
+  const boxSpacing = zoomLevel > 1 ? 100 : 80;
+  const chartWidth = visibleData.length * boxSpacing + 60;
+  
   return (
-    <div className="w-full" style={{ height: height + 50 }}>
+    <div 
+      ref={chartContainerRef}
+      className="w-full relative touch-none"
+      style={{ height: height + 30 }}
+      onTouchStart={handleTouchStart}
+      onTouchMove={handleTouchMove}
+      onTouchEnd={handleTouchEnd}
+    >
+      {/* Zoom Controls */}
+      {zoomLevel > 1 && (
+        <div className="absolute top-0 right-0 z-10 flex items-center gap-2 p-1">
+          <span className="text-xs text-muted-foreground bg-background/80 px-2 py-0.5 rounded">
+            {Math.round(zoomLevel * 100)}%
+          </span>
+          <button
+            onClick={handleResetZoom}
+            className="text-xs bg-primary/10 text-primary px-2 py-0.5 rounded hover:bg-primary/20 transition-colors"
+          >
+            Reset
+          </button>
+        </div>
+      )}
+
+      {/* Zoom Feedback Overlay */}
+      {zoomFeedback && (
+        <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-20">
+          <div className="bg-foreground/80 text-background px-4 py-2 rounded-lg text-lg font-bold animate-pulse">
+            {zoomFeedback}
+          </div>
+        </div>
+      )}
+
+      {/* Pinch Hint (shown initially) */}
+      {data.length > 3 && zoomLevel === 1 && (
+        <div className="absolute bottom-2 left-1/2 -translate-x-1/2 text-[10px] text-muted-foreground/60 z-10">
+          Pinch to zoom
+        </div>
+      )}
+
+      {/* Scroll Indicators */}
+      {zoomLevel > 1 && (
+        <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-1 z-10">
+          {Array.from({ length: Math.ceil(data.length / Math.max(2, Math.round(data.length / zoomLevel))) }).map((_, i) => (
+            <div
+              key={i}
+              className={`w-1.5 h-1.5 rounded-full transition-colors ${
+                i === Math.floor(scrollOffset / Math.max(1, Math.round(data.length / zoomLevel)))
+                  ? 'bg-primary'
+                  : 'bg-muted-foreground/30'
+              }`}
+            />
+          ))}
+        </div>
+      )}
+
       <ResponsiveContainer width="100%" height="100%">
         <svg
-          viewBox={`0 0 ${data.length * 80 + 60} ${height + 50}`}
+          viewBox={`0 0 ${chartWidth} ${height + 30}`}
           preserveAspectRatio="xMidYMid meet"
           style={{ overflow: 'visible' }}
         >
-          {/* Grid lines */}
-          {[0, 25, 50, 75, 100].map(tick => {
-            const y = height - 40 - ((tick - minY) / (maxY - minY)) * (height - 60);
-            return (
-              <g key={tick}>
-                <line
-                  x1={45}
-                  y1={y}
-                  x2={data.length * 80 + 50}
-                  y2={y}
-                  stroke="hsl(var(--border))"
-                  strokeDasharray="3,3"
-                  opacity={0.5}
-                />
-                <text
-                  x={40}
-                  y={y + 4}
-                  textAnchor="end"
-                  fontSize={10}
-                  fill="hsl(var(--muted-foreground))"
-                >
-                  {tick}
-                </text>
-              </g>
-            );
-          })}
-          
-          {/* Y-axis label */}
-          <text
-            x={12}
-            y={height / 2}
-            textAnchor="middle"
-            transform={`rotate(-90, 12, ${height / 2})`}
-            fontSize={11}
-            fill="hsl(var(--muted-foreground))"
-            fontWeight={500}
-          >
-            Score
-          </text>
-          
-          {/* Box plots */}
-          {data.map((d, idx) => {
-            const x = 50 + idx * 80;
-            const boxWidth = 60;
-            
-            // Y scale function
-            const yScale = (value: number) => 
-              height - 40 - ((value - minY) / (maxY - minY)) * (height - 60);
-            
-            return (
-              <g 
-                key={d.year}
-                onMouseEnter={() => setHoveredYear(d.year)}
-                onMouseLeave={() => setHoveredYear(null)}
-                style={{ cursor: 'pointer' }}
-              >
-                {/* Hover background */}
-                <rect
-                  x={x}
-                  y={10}
-                  width={boxWidth}
-                  height={height - 30}
-                  fill={hoveredYear === d.year ? "hsl(var(--accent))" : "transparent"}
-                  opacity={0.3}
-                  rx={4}
-                />
-                
-                {/* Box plot */}
-                <BoxPlotShape
-                  x={x}
-                  y={0}
-                  width={boxWidth}
-                  data={d}
-                  yScale={yScale}
-                  showMean={showMean}
-                  isHovered={hoveredYear === d.year}
-                />
-                
-                {/* Year label */}
-                <text
-                  x={x + boxWidth / 2}
-                  y={height - 15}
-                  textAnchor="middle"
-                  fontSize={11}
-                  fill="hsl(var(--foreground))"
-                  fontWeight={500}
-                >
-                  {d.year}
-                </text>
-                
-                {/* Sample size */}
-                <text
-                  x={x + boxWidth / 2}
-                  y={height - 3}
-                  textAnchor="middle"
-                  fontSize={9}
-                  fill="hsl(var(--muted-foreground))"
-                >
-                  n={d.n}
-                </text>
-              </g>
-            );
-          })}
-          
-          {/* Legend - Horizontal at bottom */}
-          <g transform={`translate(50, ${height - 5})`}>
+          {/* Legend - Horizontal at TOP */}
+          <g transform={`translate(50, 8)`}>
             {/* Upper (Green) */}
             <rect x={0} y={0} width={12} height={8} fill="hsl(142, 71%, 45%)" fillOpacity={0.7} rx={2} />
             <text x={16} y={7} fontSize={9} fill="hsl(var(--muted-foreground))">Above Median</text>
             
             {/* Lower (Red) */}
-            <rect x={90} y={0} width={12} height={8} fill="hsl(0, 84%, 60%)" fillOpacity={0.7} rx={2} />
-            <text x={106} y={7} fontSize={9} fill="hsl(var(--muted-foreground))">Below Median</text>
+            <rect x={95} y={0} width={12} height={8} fill="hsl(0, 84%, 60%)" fillOpacity={0.7} rx={2} />
+            <text x={111} y={7} fontSize={9} fill="hsl(var(--muted-foreground))">Below Median</text>
             
             {/* Median */}
-            <line x1={180} y1={4} x2={192} y2={4} stroke="hsl(215, 25%, 27%)" strokeWidth={3} />
-            <text x={196} y={7} fontSize={9} fill="hsl(var(--muted-foreground))">Median</text>
+            <line x1={185} y1={4} x2={197} y2={4} stroke="hsl(215, 25%, 27%)" strokeWidth={3} />
+            <text x={201} y={7} fontSize={9} fill="hsl(var(--muted-foreground))">Median</text>
             
             {/* Mean */}
             {showMean && (
               <>
                 <polygon
-                  points="250,4 254,8 250,12 246,8"
+                  points="255,4 259,8 255,12 251,8"
                   fill="hsl(199, 89%, 48%)"
                 />
-                <text x={260} y={7} fontSize={9} fill="hsl(var(--muted-foreground))">Mean</text>
+                <text x={265} y={7} fontSize={9} fill="hsl(var(--muted-foreground))">Mean</text>
               </>
             )}
             
             {/* Outlier */}
-            <circle cx={showMean ? 315 : 250} cy={4} r={4} fill="hsl(280, 70%, 50%)" />
-            <text x={showMean ? 323 : 258} y={7} fontSize={9} fill="hsl(var(--muted-foreground))">Outlier</text>
+            <circle cx={showMean ? 315 : 255} cy={4} r={4} fill="hsl(280, 70%, 50%)" />
+            <text x={showMean ? 323 : 263} y={7} fontSize={9} fill="hsl(var(--muted-foreground))">Outlier</text>
+          </g>
+          
+          {/* Chart Area - shifted down for legend */}
+          <g transform={`translate(0, ${legendHeight})`}>
+            {/* Grid lines */}
+            {[0, 25, 50, 75, 100].map(tick => {
+              const y = chartAreaHeight - 40 - ((tick - minY) / (maxY - minY)) * (chartAreaHeight - 60);
+              return (
+                <g key={tick}>
+                  <line
+                    x1={45}
+                    y1={y}
+                    x2={chartWidth - 10}
+                    y2={y}
+                    stroke="hsl(var(--border))"
+                    strokeDasharray="3,3"
+                    opacity={0.5}
+                  />
+                  <text
+                    x={40}
+                    y={y + 4}
+                    textAnchor="end"
+                    fontSize={10}
+                    fill="hsl(var(--muted-foreground))"
+                  >
+                    {tick}
+                  </text>
+                </g>
+              );
+            })}
+            
+            {/* Y-axis label */}
+            <text
+              x={12}
+              y={chartAreaHeight / 2}
+              textAnchor="middle"
+              transform={`rotate(-90, 12, ${chartAreaHeight / 2})`}
+              fontSize={11}
+              fill="hsl(var(--muted-foreground))"
+              fontWeight={500}
+            >
+              Score
+            </text>
+            
+            {/* Box plots */}
+            {visibleData.map((d, idx) => {
+              const x = 50 + idx * boxSpacing;
+              const boxWidth = zoomLevel > 1 ? 70 : 60;
+              
+              // Y scale function
+              const yScale = (value: number) => 
+                chartAreaHeight - 40 - ((value - minY) / (maxY - minY)) * (chartAreaHeight - 60);
+              
+              return (
+                <g 
+                  key={d.year}
+                  onMouseEnter={() => setHoveredYear(d.year)}
+                  onMouseLeave={() => setHoveredYear(null)}
+                  style={{ cursor: 'pointer' }}
+                >
+                  {/* Hover background */}
+                  <rect
+                    x={x}
+                    y={10}
+                    width={boxWidth}
+                    height={chartAreaHeight - 30}
+                    fill={hoveredYear === d.year ? "hsl(var(--accent))" : "transparent"}
+                    opacity={0.3}
+                    rx={4}
+                  />
+                  
+                  {/* Box plot */}
+                  <BoxPlotShape
+                    x={x}
+                    y={0}
+                    width={boxWidth}
+                    data={d}
+                    yScale={yScale}
+                    showMean={showMean}
+                    isHovered={hoveredYear === d.year}
+                    zoomLevel={zoomLevel}
+                  />
+                  
+                  {/* Year label */}
+                  <text
+                    x={x + boxWidth / 2}
+                    y={chartAreaHeight - 15}
+                    textAnchor="middle"
+                    fontSize={zoomLevel > 1 ? 12 : 11}
+                    fill="hsl(var(--foreground))"
+                    fontWeight={500}
+                  >
+                    {d.year}
+                  </text>
+                  
+                  {/* Sample size */}
+                  <text
+                    x={x + boxWidth / 2}
+                    y={chartAreaHeight - 3}
+                    textAnchor="middle"
+                    fontSize={9}
+                    fill="hsl(var(--muted-foreground))"
+                  >
+                    n={d.n}
+                  </text>
+                </g>
+              );
+            })}
           </g>
         </svg>
       </ResponsiveContainer>
@@ -428,12 +619,12 @@ export const BoxPlotChart: React.FC<BoxPlotChartProps> = ({
       {hoveredYear && (
         <div className="pointer-events-none absolute z-10" style={{ 
           top: '20%', 
-          left: `${(data.findIndex(d => d.year === hoveredYear) + 0.5) * (100 / data.length)}%`,
+          left: `${(visibleData.findIndex(d => d.year === hoveredYear) + 0.5) * (100 / visibleData.length)}%`,
           transform: 'translateX(-50%)'
         }}>
           <BoxPlotTooltip 
             active={true} 
-            payload={[{ payload: data.find(d => d.year === hoveredYear) }]} 
+            payload={[{ payload: visibleData.find(d => d.year === hoveredYear) }]} 
           />
         </div>
       )}
