@@ -644,6 +644,11 @@ const LessonPlanDetailPage = () => {
           <ReflectionSection
             reflection={lessonPlan.reflection}
             onChange={(reflection) => updateField("reflection", reflection)}
+            onSave={() => {
+              updateField("updatedAt", new Date().toISOString());
+              handleSave();
+            }}
+            lastEditedDate={lessonPlan.updatedAt}
           />
 
           {/* Section 9: Attendance Summary */}
