@@ -682,16 +682,24 @@ const LessonPlanDetailPage = () => {
             </CardContent>
           </Card>
 
-          {/* Section 10: Approval */}
-          <ApprovalSection
-            approval={lessonPlan.approval}
-            onChange={(approval) => updateField("approval", approval)}
-          />
-
           {/* Bottom Padding for Navigation */}
-          <div className="h-4" />
+          <div className="h-20" />
         </div>
       </ScrollArea>
+
+      {/* Floating Reflection Button */}
+      <button
+        onClick={() => {
+          const reflectionSection = document.getElementById("reflection-section");
+          if (reflectionSection) {
+            reflectionSection.scrollIntoView({ behavior: "smooth", block: "start" });
+          }
+        }}
+        className="fixed bottom-24 right-4 z-50 h-12 w-12 rounded-full bg-amber-500 text-white shadow-lg flex items-center justify-center hover:bg-amber-600 transition-colors"
+        aria-label="Jump to Reflection"
+      >
+        <span className="text-xl">📝</span>
+      </button>
     </TeacherAppLayout>
   );
 };

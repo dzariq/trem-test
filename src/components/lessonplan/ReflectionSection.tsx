@@ -1,8 +1,10 @@
+import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
-import { AlertCircle, CheckCircle2, MessageSquare } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { AlertCircle, CheckCircle2, MessageSquare, Check } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { LessonPlanReflection } from "@/data/lessonPlanData";
 
@@ -59,6 +61,8 @@ const differentiationQuestions = [
 ] as const;
 
 export function ReflectionSection({ reflection, onChange }: ReflectionSectionProps) {
+  const [expandedField, setExpandedField] = useState<string | null>(null);
+  
   const allFields = [
     ...successQuestions.map(q => q.key),
     ...challengeQuestions.map(q => q.key),
@@ -69,8 +73,20 @@ export function ReflectionSection({ reflection, onChange }: ReflectionSectionPro
   
   const isIncomplete = allFields.some(key => !reflection[key as keyof LessonPlanReflection]?.toString().trim());
   
+  const isLearnerFilled = (key: string) => {
+    return !!reflection[key as keyof LessonPlanReflection]?.toString().trim();
+  };
+
+  const handleFocus = (key: string) => {
+    setExpandedField(key);
+  };
+
+  const handleBlur = () => {
+    setExpandedField(null);
+  };
+  
   return (
-    <Card className={cn("bg-amber-50/50", isIncomplete && "border-amber-300")}>
+    <Card id="reflection-section" className={cn("bg-amber-50/50", isIncomplete && "border-amber-300")}>
       <CardHeader className="py-3 px-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
@@ -102,8 +118,14 @@ export function ReflectionSection({ reflection, onChange }: ReflectionSectionPro
               <Textarea
                 value={reflection[q.key] || ""}
                 onChange={(e) => onChange({ ...reflection, [q.key]: e.target.value })}
+                onFocus={() => handleFocus(q.key)}
+                onBlur={handleBlur}
                 placeholder={q.placeholder}
-                className={cn("min-h-[80px]", !reflection[q.key]?.trim() && "border-amber-300 focus-visible:ring-amber-500")}
+                className={cn(
+                  "transition-all duration-200",
+                  expandedField === q.key ? "min-h-[160px]" : "min-h-[80px]",
+                  !reflection[q.key]?.trim() && "border-amber-300 focus-visible:ring-amber-500"
+                )}
               />
             </div>
           ))}
@@ -125,32 +147,58 @@ export function ReflectionSection({ reflection, onChange }: ReflectionSectionPro
               <Textarea
                 value={reflection[q.key] || ""}
                 onChange={(e) => onChange({ ...reflection, [q.key]: e.target.value })}
+                onFocus={() => handleFocus(q.key)}
+                onBlur={handleBlur}
                 placeholder={q.placeholder}
-                className={cn("min-h-[80px]", !reflection[q.key]?.trim() && "border-amber-300 focus-visible:ring-amber-500")}
+                className={cn(
+                  "transition-all duration-200",
+                  expandedField === q.key ? "min-h-[160px]" : "min-h-[80px]",
+                  !reflection[q.key]?.trim() && "border-amber-300 focus-visible:ring-amber-500"
+                )}
               />
             </div>
           ))}
         </div>
 
-        {/* Lesson Delivery Section */}
+        {/* Lesson Delivery Section with Tabs */}
         <div className="space-y-4">
           <div className="bg-sky-100 px-3 py-2 rounded-md">
             <h3 className="font-semibold text-sm">How did your lesson delivery promote active student learning and participation?</h3>
           </div>
           
-          {/* Differentiation by learner level */}
-          {differentiationQuestions.map((q) => (
-            <div key={q.key} className="space-y-2 border-l-2 border-muted pl-4">
-              <Label className="text-sm font-semibold">{q.label}</Label>
-              <p className="text-xs text-muted-foreground">{q.sublabel}</p>
-              <Textarea
-                value={reflection[q.key] || ""}
-                onChange={(e) => onChange({ ...reflection, [q.key]: e.target.value })}
-                placeholder={q.placeholder}
-                className={cn("min-h-[80px]", !reflection[q.key]?.trim() && "border-amber-300 focus-visible:ring-amber-500")}
-              />
-            </div>
-          ))}
+          <Tabs defaultValue="noviceLearners" className="w-full">
+            <TabsList className="grid w-full grid-cols-3 h-auto">
+              {differentiationQuestions.map((q) => (
+                <TabsTrigger 
+                  key={q.key} 
+                  value={q.key}
+                  className="text-xs px-2 py-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground relative"
+                >
+                  <span className="truncate">{q.label.split(" ")[0]}</span>
+                  {isLearnerFilled(q.key) && (
+                    <Check className="h-3 w-3 ml-1 text-emerald-500 data-[state=active]:text-emerald-200 flex-shrink-0" />
+                  )}
+                </TabsTrigger>
+              ))}
+            </TabsList>
+            {differentiationQuestions.map((q) => (
+              <TabsContent key={q.key} value={q.key} className="mt-3 space-y-2">
+                <p className="text-xs text-muted-foreground">{q.sublabel}</p>
+                <Textarea
+                  value={reflection[q.key] || ""}
+                  onChange={(e) => onChange({ ...reflection, [q.key]: e.target.value })}
+                  onFocus={() => handleFocus(q.key)}
+                  onBlur={handleBlur}
+                  placeholder={q.placeholder}
+                  className={cn(
+                    "transition-all duration-200",
+                    expandedField === q.key ? "min-h-[180px]" : "min-h-[100px]",
+                    !reflection[q.key]?.trim() && "border-amber-300 focus-visible:ring-amber-500"
+                  )}
+                />
+              </TabsContent>
+            ))}
+          </Tabs>
         </div>
 
         {/* Strategies Section */}
@@ -161,8 +209,14 @@ export function ReflectionSection({ reflection, onChange }: ReflectionSectionPro
           <Textarea
             value={reflection.strategiesNextLesson || ""}
             onChange={(e) => onChange({ ...reflection, strategiesNextLesson: e.target.value })}
+            onFocus={() => handleFocus("strategiesNextLesson")}
+            onBlur={handleBlur}
             placeholder="Describe specific strategies you will implement in the next lesson."
-            className={cn("min-h-[100px]", !reflection.strategiesNextLesson?.trim() && "border-amber-300 focus-visible:ring-amber-500")}
+            className={cn(
+              "transition-all duration-200",
+              expandedField === "strategiesNextLesson" ? "min-h-[160px]" : "min-h-[100px]",
+              !reflection.strategiesNextLesson?.trim() && "border-amber-300 focus-visible:ring-amber-500"
+            )}
           />
         </div>
 
