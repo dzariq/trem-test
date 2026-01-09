@@ -138,6 +138,7 @@ const TeacherLessonPlansPage = () => {
     from: undefined,
     to: undefined,
   });
+  const [editingDateField, setEditingDateField] = useState<"start" | "end" | null>(null);
   
   // Edit topic dialog state
   const [isEditTopicOpen, setIsEditTopicOpen] = useState(false);
@@ -515,12 +516,13 @@ const TeacherLessonPlansPage = () => {
                                   open={weekCalendarOpen === week.id} 
                                   onOpenChange={(open) => {
                                     setWeekCalendarOpen(open ? week.id : null);
-                                    // Pre-populate with current week dates when opening
                                     if (open) {
                                       const weekRange = getWeekRange(week.weekNumber);
                                       setDateRange({ from: weekRange.start, to: weekRange.end });
+                                      setEditingDateField(null); // Start with no calendar shown
                                     } else {
                                       setDateRange({ from: undefined, to: undefined });
+                                      setEditingDateField(null);
                                     }
                                   }}
                                 >
@@ -531,22 +533,13 @@ const TeacherLessonPlansPage = () => {
                                     </button>
                                   </PopoverTrigger>
                                   <PopoverContent className="w-auto p-0 z-50" align="start" onClick={(e) => e.stopPropagation()}>
-                                    <div className="p-3 border-b border-border space-y-2">
-                                      <p className="text-sm font-medium">Select Date Range</p>
-                                      <p className="text-xs text-muted-foreground">Click first date, then last date</p>
-                                      
-                                      {/* Date Range Display with Swap */}
-                                      <div className="flex items-center gap-2 pt-2">
-                                        <div className="flex-1 text-center p-2 rounded-md border border-border bg-muted/30">
-                                          <p className="text-[10px] text-muted-foreground uppercase font-medium">Start</p>
-                                          <p className="text-sm font-semibold">
-                                            {dateRange.from ? format(dateRange.from, "MMM d") : "—"}
-                                          </p>
-                                        </div>
+                                    <div className="p-3 border-b border-border space-y-3">
+                                      <div className="flex items-center justify-between">
+                                        <p className="text-sm font-medium">Week Date Range</p>
                                         <Button
-                                          variant="outline"
+                                          variant="ghost"
                                           size="sm"
-                                          className="h-8 w-8 p-0 shrink-0"
+                                          className="h-7 px-2 text-xs"
                                           onClick={(e) => {
                                             e.stopPropagation();
                                             if (dateRange.from && dateRange.to) {
@@ -555,60 +548,143 @@ const TeacherLessonPlansPage = () => {
                                           }}
                                           disabled={!dateRange.from || !dateRange.to}
                                         >
-                                          <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                          <svg className="h-3.5 w-3.5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
                                           </svg>
+                                          Swap
                                         </Button>
-                                        <div className="flex-1 text-center p-2 rounded-md border border-border bg-muted/30">
-                                          <p className="text-[10px] text-muted-foreground uppercase font-medium">End</p>
-                                          <p className="text-sm font-semibold">
-                                            {dateRange.to ? format(dateRange.to, "MMM d") : "—"}
+                                      </div>
+                                      
+                                      {/* Date Range Buttons - Click to show calendar */}
+                                      <div className="flex items-center gap-2">
+                                        <button
+                                          onClick={(e) => {
+                                            e.stopPropagation();
+                                            setEditingDateField(editingDateField === "start" ? null : "start");
+                                          }}
+                                          className={cn(
+                                            "flex-1 text-center p-3 rounded-lg border-2 transition-all",
+                                            editingDateField === "start" 
+                                              ? "border-primary bg-primary/5 ring-2 ring-primary/20" 
+                                              : "border-border hover:border-muted-foreground/50 hover:bg-muted/50"
+                                          )}
+                                        >
+                                          <p className="text-[10px] text-muted-foreground uppercase font-medium mb-1">Start Date</p>
+                                          <p className={cn(
+                                            "text-base font-semibold",
+                                            editingDateField === "start" && "text-primary"
+                                          )}>
+                                            {dateRange.from ? format(dateRange.from, "MMM d, yyyy") : "Select"}
+                                          </p>
+                                        </button>
+                                        
+                                        <div className="text-muted-foreground text-sm">→</div>
+                                        
+                                        <button
+                                          onClick={(e) => {
+                                            e.stopPropagation();
+                                            setEditingDateField(editingDateField === "end" ? null : "end");
+                                          }}
+                                          className={cn(
+                                            "flex-1 text-center p-3 rounded-lg border-2 transition-all",
+                                            editingDateField === "end" 
+                                              ? "border-primary bg-primary/5 ring-2 ring-primary/20" 
+                                              : "border-border hover:border-muted-foreground/50 hover:bg-muted/50"
+                                          )}
+                                        >
+                                          <p className="text-[10px] text-muted-foreground uppercase font-medium mb-1">End Date</p>
+                                          <p className={cn(
+                                            "text-base font-semibold",
+                                            editingDateField === "end" && "text-primary"
+                                          )}>
+                                            {dateRange.to ? format(dateRange.to, "MMM d, yyyy") : "Select"}
+                                          </p>
+                                        </button>
+                                      </div>
+                                      
+                                      {!editingDateField && (
+                                        <p className="text-xs text-muted-foreground text-center">
+                                          Tap Start or End to edit
+                                        </p>
+                                      )}
+                                    </div>
+                                    
+                                    {/* Calendar - Only shows when a date field is selected */}
+                                    {editingDateField && (
+                                      <div className="border-b border-border">
+                                        <div className="px-3 pt-2 pb-1">
+                                          <p className="text-xs font-medium text-primary">
+                                            Selecting {editingDateField === "start" ? "Start" : "End"} Date
                                           </p>
                                         </div>
+                                        <Calendar
+                                          mode="single"
+                                          defaultMonth={editingDateField === "start" 
+                                            ? (dateRange.from || addWeeks(termStart, week.weekNumber - 1))
+                                            : (dateRange.to || addWeeks(termStart, week.weekNumber - 1))
+                                          }
+                                          selected={editingDateField === "start" ? dateRange.from : dateRange.to}
+                                          onSelect={(date) => {
+                                            if (date) {
+                                              if (editingDateField === "start") {
+                                                setDateRange(prev => ({ ...prev, from: date }));
+                                              } else {
+                                                setDateRange(prev => ({ ...prev, to: date }));
+                                              }
+                                              setEditingDateField(null); // Close calendar after selection
+                                            }
+                                          }}
+                                          disabled={(date) => {
+                                            const day = date.getDay();
+                                            return day === 0 || day === 6 || isHoliday(date);
+                                          }}
+                                          className={cn("p-3 pointer-events-auto")}
+                                          modifiers={{
+                                            holiday: (date) => isHoliday(date),
+                                            rangeStart: dateRange.from ? [dateRange.from] : [],
+                                            rangeEnd: dateRange.to ? [dateRange.to] : [],
+                                          }}
+                                          modifiersStyles={{
+                                            holiday: {
+                                              backgroundColor: "hsl(var(--destructive) / 0.1)",
+                                              color: "hsl(var(--muted-foreground))",
+                                              textDecoration: "line-through",
+                                            },
+                                          }}
+                                        />
                                       </div>
-                                    </div>
-                                    <Calendar
-                                      mode="range"
-                                      defaultMonth={addWeeks(termStart, week.weekNumber - 1)}
-                                      selected={dateRange}
-                                      onSelect={(range) => {
-                                        setDateRange({ from: range?.from, to: range?.to });
-                                      }}
-                                      disabled={(date) => {
-                                        // Disable weekends and holidays
-                                        const day = date.getDay();
-                                        return day === 0 || day === 6 || isHoliday(date);
-                                      }}
-                                      className={cn("p-3 pointer-events-auto")}
-                                      modifiers={{
-                                        holiday: (date) => isHoliday(date),
-                                      }}
-                                      modifiersStyles={{
-                                        holiday: {
-                                          backgroundColor: "hsl(var(--destructive) / 0.1)",
-                                          color: "hsl(var(--muted-foreground))",
-                                          textDecoration: "line-through",
-                                        },
-                                      }}
-                                    />
+                                    )}
+                                    
                                     {/* Apply Button */}
-                                    <div className="p-3 border-t border-border">
+                                    <div className="p-3 flex gap-2">
                                       <Button
-                                        className="w-full"
+                                        variant="outline"
+                                        size="sm"
+                                        className="flex-1"
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          setWeekCalendarOpen(null);
+                                          setEditingDateField(null);
+                                        }}
+                                      >
+                                        Cancel
+                                      </Button>
+                                      <Button
+                                        className="flex-1"
                                         size="sm"
                                         disabled={!dateRange.from || !dateRange.to}
                                         onClick={(e) => {
                                           e.stopPropagation();
                                           if (dateRange.from && dateRange.to) {
-                                            // Ensure from is before to
                                             const start = dateRange.from < dateRange.to ? dateRange.from : dateRange.to;
                                             handleWeekChange(week.id, start);
                                             setWeekCalendarOpen(null);
                                             setDateRange({ from: undefined, to: undefined });
+                                            setEditingDateField(null);
                                           }
                                         }}
                                       >
-                                        Apply Week
+                                        Apply
                                       </Button>
                                     </div>
                                   </PopoverContent>
