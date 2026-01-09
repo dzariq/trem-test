@@ -1,8 +1,8 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
-import { Slider } from "@/components/ui/slider";
 import { Label } from "@/components/ui/label";
-import { AlertCircle, CheckCircle2, MessageSquare, Target } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { AlertCircle, CheckCircle2, MessageSquare } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { LessonPlanReflection } from "@/data/lessonPlanData";
 
@@ -11,42 +11,63 @@ interface ReflectionSectionProps {
   onChange: (reflection: LessonPlanReflection) => void;
 }
 
-const reflectionQuestions = [
+const successQuestions = [
   { 
-    key: "objectivesRealistic", 
-    label: "Were the lesson objectives achievable within the time?",
-    placeholder: "What made them achievable / not achievable?"
+    key: "objectivesAchieved", 
+    label: "Were the learning objectives achieved?",
+    placeholder: "Describe the extent to which objectives were met."
   },
   { 
-    key: "learnersLearned", 
-    label: "What did learners achieve today?",
-    placeholder: "State what most students can do now + any key misconceptions."
+    key: "topSuccesses", 
+    label: "What were the top two most successful learning outcomes or moments of strong student engagement? Why did they work?",
+    placeholder: "Describe the successful moments and why they worked."
+  },
+] as const;
+
+const challengeQuestions = [
+  { 
+    key: "objectivesNotAchieved", 
+    label: "What were the reasons if the learning objectives were not achieved?",
+    placeholder: "Explain factors that prevented achievement of objectives."
   },
   { 
-    key: "learningAtmosphere", 
-    label: "How was the learning atmosphere?",
-    placeholder: "Engagement level, participation, behaviour, energy."
+    key: "biggestObstacle", 
+    label: "What was the biggest obstacle to student learning or engagement, and what do you believe was the root cause?",
+    placeholder: "Identify the main challenge and its root cause."
+  },
+] as const;
+
+const differentiationQuestions = [
+  { 
+    key: "noviceLearners", 
+    label: "Novice learners",
+    sublabel: "Describe a task or support specifically given to this group.",
+    placeholder: "• Were they able to attempt the task?\n• Did they progress toward their learning objectives?"
   },
   { 
-    key: "differentiationWorked", 
-    label: "Did differentiation/support strategies work?",
-    placeholder: "Who needed extra support? What helped? What didn't?"
+    key: "intermediateLearners", 
+    label: "Intermediate learners",
+    sublabel: "Describe the core task assigned to this group.",
+    placeholder: "• Did they struggle or finish too quickly?\n• Did they progress toward their learning objectives?"
   },
   { 
-    key: "timingsAndChanges", 
-    label: "Did I follow the planned timing? If not, what changed and why?",
-    placeholder: "What activity took longer/shorter?"
-  },
-  { 
-    key: "nextLessonImprovements", 
-    label: "Next lesson improvements (must be specific)",
-    placeholder: 'Example: "Reduce worksheet Qs from 10 to 6", "Add 2 examples before independent work", "Prepare extension task".'
+    key: "advancedLearners", 
+    label: "Advanced learners",
+    sublabel: "Describe the extension or challenge activity provided.",
+    placeholder: "• Any evidence they achieved further mastery in the topic?"
   },
 ] as const;
 
 export function ReflectionSection({ reflection, onChange }: ReflectionSectionProps) {
-  const isIncomplete = !reflection.comments.trim() || 
-    reflectionQuestions.some(q => !reflection[q.key]?.trim());
+  const allFields = [
+    ...successQuestions.map(q => q.key),
+    ...challengeQuestions.map(q => q.key),
+    "lessonDelivery",
+    ...differentiationQuestions.map(q => q.key),
+    "strategiesNextLesson",
+  ];
+  
+  const isIncomplete = allFields.some(key => !reflection[key as keyof LessonPlanReflection]?.toString().trim());
   
   return (
     <Card className={cn("bg-amber-50/50", isIncomplete && "border-amber-300")}>
@@ -64,94 +85,97 @@ export function ReflectionSection({ reflection, onChange }: ReflectionSectionPro
           )}
         </div>
       </CardHeader>
-      <CardContent className="px-4 pb-4 space-y-4">
-        {/* Objectives Achievement Percentage Slider */}
-        <div className="space-y-3">
-          <div className="p-4 rounded-lg bg-amber-50 border border-amber-200">
-            <div className="flex items-center gap-2 mb-3">
-              <Target className="h-4 w-4 text-primary" />
-              <Label className="text-sm font-medium">
-                Learning Objectives Achievement
-              </Label>
-            </div>
-            <div className="space-y-3">
-              <Slider
-                value={[reflection.objectivesAchievementPercent]}
-                onValueChange={(value) => 
-                  onChange({ 
-                    ...reflection, 
-                    objectivesAchievementPercent: value[0]
-                  })
-                }
-                max={100}
-                min={0}
-                step={5}
-                className={cn(
-                  "[&_[role=slider]]:h-5 [&_[role=slider]]:w-5",
-                  reflection.objectivesAchievementPercent >= 70 && "[&_.relative]:bg-emerald-200 [&_[role=slider]]:border-emerald-500 [&_[role=slider]]:bg-emerald-500",
-                  reflection.objectivesAchievementPercent >= 40 && reflection.objectivesAchievementPercent < 70 && "[&_.relative]:bg-amber-200 [&_[role=slider]]:border-amber-500 [&_[role=slider]]:bg-amber-500",
-                  reflection.objectivesAchievementPercent < 40 && "[&_.relative]:bg-red-200 [&_[role=slider]]:border-destructive [&_[role=slider]]:bg-destructive"
-                )}
-              />
-              <div className="flex justify-between items-center">
-                <span className="text-xs text-muted-foreground">0% - Not achieved</span>
-                <span className={cn(
-                  "text-lg font-bold",
-                  reflection.objectivesAchievementPercent >= 70 && "text-emerald-600",
-                  reflection.objectivesAchievementPercent >= 40 && reflection.objectivesAchievementPercent < 70 && "text-amber-600",
-                  reflection.objectivesAchievementPercent < 40 && "text-destructive"
-                )}>
-                  {reflection.objectivesAchievementPercent}%
-                </span>
-                <span className="text-xs text-muted-foreground">100% - Fully achieved</span>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Reflection Questions */}
+      <CardContent className="px-4 pb-4 space-y-6">
+        {/* Successes Section */}
         <div className="space-y-4">
-          {reflectionQuestions.map((q) => (
+          <div className="bg-sky-100 px-3 py-2 rounded-md">
+            <h3 className="font-semibold text-sm">Successes</h3>
+          </div>
+          {successQuestions.map((q) => (
             <div key={q.key} className="space-y-2">
               <Label className="text-sm font-medium">
                 {q.label}
                 {!reflection[q.key]?.trim() && (
-                  <span className="text-amber-600 ml-2 text-xs font-normal">
-                    (Required)
-                  </span>
+                  <span className="text-amber-600 ml-2 text-xs font-normal">(Required)</span>
                 )}
               </Label>
               <Textarea
                 value={reflection[q.key] || ""}
                 onChange={(e) => onChange({ ...reflection, [q.key]: e.target.value })}
                 placeholder={q.placeholder}
-                className={cn(
-                  "min-h-[60px]",
-                  !reflection[q.key]?.trim() && "border-amber-300 focus-visible:ring-amber-500"
-                )}
+                className={cn("min-h-[80px]", !reflection[q.key]?.trim() && "border-amber-300 focus-visible:ring-amber-500")}
               />
             </div>
           ))}
         </div>
 
-        {/* Additional Comments */}
-        <div className="space-y-2">
-          <Label className="text-sm font-medium">
-            Additional notes / follow-up needed
-            {!reflection.comments.trim() && (
-              <span className="text-amber-600 ml-2 text-xs font-normal">
-                (Required)
-              </span>
-            )}
-          </Label>
+        {/* Challenges Section */}
+        <div className="space-y-4">
+          <div className="bg-sky-100 px-3 py-2 rounded-md">
+            <h3 className="font-semibold text-sm">Challenges</h3>
+          </div>
+          {challengeQuestions.map((q) => (
+            <div key={q.key} className="space-y-2">
+              <Label className="text-sm font-medium">
+                {q.label}
+                {!reflection[q.key]?.trim() && (
+                  <span className="text-amber-600 ml-2 text-xs font-normal">(Required)</span>
+                )}
+              </Label>
+              <Textarea
+                value={reflection[q.key] || ""}
+                onChange={(e) => onChange({ ...reflection, [q.key]: e.target.value })}
+                placeholder={q.placeholder}
+                className={cn("min-h-[80px]", !reflection[q.key]?.trim() && "border-amber-300 focus-visible:ring-amber-500")}
+              />
+            </div>
+          ))}
+        </div>
+
+        {/* Lesson Delivery Section */}
+        <div className="space-y-4">
+          <div className="bg-sky-100 px-3 py-2 rounded-md">
+            <h3 className="font-semibold text-sm">How did your lesson delivery promote active student learning and participation?</h3>
+          </div>
+          
+          {/* Differentiation by learner level */}
+          {differentiationQuestions.map((q) => (
+            <div key={q.key} className="space-y-2 border-l-2 border-muted pl-4">
+              <Label className="text-sm font-semibold">{q.label}</Label>
+              <p className="text-xs text-muted-foreground">{q.sublabel}</p>
+              <Textarea
+                value={reflection[q.key] || ""}
+                onChange={(e) => onChange({ ...reflection, [q.key]: e.target.value })}
+                placeholder={q.placeholder}
+                className={cn("min-h-[80px]", !reflection[q.key]?.trim() && "border-amber-300 focus-visible:ring-amber-500")}
+              />
+            </div>
+          ))}
+        </div>
+
+        {/* Strategies Section */}
+        <div className="space-y-4">
+          <div className="bg-sky-100 px-3 py-2 rounded-md">
+            <h3 className="font-semibold text-sm">Strategies for next lesson to address the challenges and to replicate the successes</h3>
+          </div>
           <Textarea
-            value={reflection.comments}
-            onChange={(e) => onChange({ ...reflection, comments: e.target.value })}
-            placeholder="Resources to improve, students to follow up, support needed."
-            className={cn(
-              "min-h-[80px]",
-              !reflection.comments.trim() && "border-amber-300 focus-visible:ring-amber-500"
-            )}
+            value={reflection.strategiesNextLesson || ""}
+            onChange={(e) => onChange({ ...reflection, strategiesNextLesson: e.target.value })}
+            placeholder="Describe specific strategies you will implement in the next lesson."
+            className={cn("min-h-[100px]", !reflection.strategiesNextLesson?.trim() && "border-amber-300 focus-visible:ring-amber-500")}
+          />
+        </div>
+
+        {/* Signature & Date */}
+        <div className="space-y-2">
+          <div className="bg-sky-100 px-3 py-2 rounded-md">
+            <h3 className="font-semibold text-sm">Signature & Date</h3>
+          </div>
+          <Input
+            value={reflection.signatureDate || ""}
+            onChange={(e) => onChange({ ...reflection, signatureDate: e.target.value })}
+            placeholder="Enter your name and date"
+            className="max-w-md"
           />
         </div>
 
