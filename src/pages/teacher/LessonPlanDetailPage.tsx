@@ -459,11 +459,22 @@ const LessonPlanDetailPage = () => {
               <div className="space-y-1.5">
                 <Label className="text-xs text-muted-foreground">Teacher(s)</Label>
                 <div className="flex flex-wrap gap-1.5 min-h-9 items-center px-3 py-2 rounded-md border border-input bg-muted/50">
-                  {lessonPlan.teacherNames.map((name, idx) => (
-                    <Badge key={idx} variant="secondary" className="text-xs">
-                      {name}
-                    </Badge>
-                  ))}
+                  {lessonPlan.teacherNames.map((name, idx) => {
+                    const isCurrentTeacher = name === teacherProfile.name;
+                    return (
+                      <Badge 
+                        key={idx} 
+                        variant={isCurrentTeacher ? "default" : "secondary"} 
+                        className={cn(
+                          "text-xs",
+                          isCurrentTeacher && "ring-2 ring-primary/30"
+                        )}
+                      >
+                        {name}
+                        {isCurrentTeacher && <span className="ml-1 text-[10px] opacity-75">(You)</span>}
+                      </Badge>
+                    );
+                  })}
                 </div>
               </div>
             </CardContent>

@@ -829,7 +829,7 @@ export const createEmptyLessonPlan = (
   subject,
   topic,
   subtopics: [],
-  date: new Date().toISOString().split("T")[0],
+  date: "", // Empty by default - teacher inputs their own date
   learningObjectives: [],
   vocabulary: [],
   previousLearning: "",
