@@ -65,6 +65,7 @@ const LessonPlanDetailPage = () => {
   const { id } = useParams();
   const [searchParams] = useSearchParams();
   const printRef = useRef<HTMLDivElement>(null);
+  const editButtonRef = useRef<HTMLButtonElement>(null);
   
   const isNew = id === "new";
   const weekParam = searchParams.get("week");
@@ -74,6 +75,15 @@ const LessonPlanDetailPage = () => {
   const [isSaving, setIsSaving] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false); // Default to view mode
+
+  const shakeEditButton = () => {
+    if (editButtonRef.current && !isEditMode) {
+      editButtonRef.current.classList.add("animate-shake");
+      setTimeout(() => {
+        editButtonRef.current?.classList.remove("animate-shake");
+      }, 500);
+    }
+  };
 
   useEffect(() => {
     if (isNew) {
@@ -178,6 +188,7 @@ const LessonPlanDetailPage = () => {
           <div className="flex items-center gap-2">
             {!isEditMode ? (
               <Button
+                ref={editButtonRef}
                 variant="outline"
                 size="sm"
                 onClick={() => setIsEditMode(true)}
@@ -255,7 +266,10 @@ const LessonPlanDetailPage = () => {
                     className="h-10"
                   />
                 ) : (
-                  <div className="h-10 px-3 flex items-center rounded-md border border-input bg-muted/50 text-sm">
+                  <div 
+                    className="h-10 px-3 flex items-center rounded-md border border-input bg-background text-sm cursor-pointer"
+                    onClick={shakeEditButton}
+                  >
                     {lessonPlan.title || <span className="italic text-muted-foreground">No title</span>}
                   </div>
                 )}
@@ -265,14 +279,20 @@ const LessonPlanDetailPage = () => {
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1.5">
                   <Label className="text-xs text-muted-foreground">Subject</Label>
-                  <div className="h-9 px-3 flex items-center rounded-md border border-input bg-muted/50 text-sm text-muted-foreground">
-                    {lessonPlan.subject || <span className="italic">No subject</span>}
+                  <div 
+                    className="h-9 px-3 flex items-center rounded-md border border-input bg-background text-sm cursor-pointer"
+                    onClick={shakeEditButton}
+                  >
+                    {lessonPlan.subject || <span className="italic text-muted-foreground">No subject</span>}
                   </div>
                 </div>
                 <div className="space-y-1.5">
                   <Label className="text-xs text-muted-foreground">Topic</Label>
-                  <div className="h-9 px-3 flex items-center rounded-md border border-input bg-muted/50 text-sm text-muted-foreground truncate">
-                    {lessonPlan.topic || <span className="italic">No topic</span>}
+                  <div 
+                    className="h-9 px-3 flex items-center rounded-md border border-input bg-background text-sm truncate cursor-pointer"
+                    onClick={shakeEditButton}
+                  >
+                    {lessonPlan.topic || <span className="italic text-muted-foreground">No topic</span>}
                   </div>
                 </div>
               </div>
@@ -382,7 +402,10 @@ const LessonPlanDetailPage = () => {
                       </SelectContent>
                     </Select>
                   ) : (
-                    <div className="h-9 px-3 flex items-center rounded-md border border-input bg-muted/50 text-sm">
+                    <div 
+                      className="h-9 px-3 flex items-center rounded-md border border-input bg-background text-sm cursor-pointer"
+                      onClick={shakeEditButton}
+                    >
                       W{lessonPlan.weekNumber}
                     </div>
                   )}
@@ -411,25 +434,22 @@ const LessonPlanDetailPage = () => {
                       </SelectContent>
                     </Select>
                   ) : (
-                    <div className="h-9 px-3 flex items-center rounded-md border border-input bg-muted/50 text-sm">
+                    <div 
+                      className="h-9 px-3 flex items-center rounded-md border border-input bg-background text-sm cursor-pointer"
+                      onClick={shakeEditButton}
+                    >
                       L{lessonPlan.lessonNumber}
                     </div>
                   )}
                 </div>
                 <div className="space-y-1.5">
                   <Label className="text-xs text-muted-foreground">Date</Label>
-                  {isEditMode ? (
-                    <Input
-                      type="date"
-                      value={lessonPlan.date}
-                      onChange={(e) => updateField("date", e.target.value)}
-                      className="h-9"
-                    />
-                  ) : (
-                    <div className="h-9 px-3 flex items-center rounded-md border border-input bg-muted/50 text-sm">
-                      {lessonPlan.date || <span className="italic text-muted-foreground">No date</span>}
-                    </div>
-                  )}
+                  <Input
+                    type="date"
+                    value={lessonPlan.date}
+                    onChange={(e) => updateField("date", e.target.value)}
+                    className="h-9"
+                  />
                 </div>
                 <div className="space-y-1.5">
                   <Label className="text-xs text-muted-foreground">Class</Label>
@@ -448,7 +468,10 @@ const LessonPlanDetailPage = () => {
                       </SelectContent>
                     </Select>
                   ) : (
-                    <div className="h-9 px-3 flex items-center rounded-md border border-input bg-muted/50 text-sm">
+                    <div 
+                      className="h-9 px-3 flex items-center rounded-md border border-input bg-background text-sm cursor-pointer"
+                      onClick={shakeEditButton}
+                    >
                       {lessonPlan.className}
                     </div>
                   )}
@@ -458,7 +481,10 @@ const LessonPlanDetailPage = () => {
               {/* Teacher(s) */}
               <div className="space-y-1.5">
                 <Label className="text-xs text-muted-foreground">Teacher(s)</Label>
-                <div className="flex flex-wrap gap-1.5 min-h-9 items-center px-3 py-2 rounded-md border border-input bg-muted/50">
+                <div 
+                  className="flex flex-wrap gap-1.5 min-h-9 items-center px-3 py-2 rounded-md border border-input bg-background cursor-pointer"
+                  onClick={shakeEditButton}
+                >
                   {lessonPlan.teacherNames.map((name, idx) => {
                     const isCurrentTeacher = name === teacherProfile.name;
                     return (
@@ -563,7 +589,10 @@ const LessonPlanDetailPage = () => {
                   className="min-h-[80px]"
                 />
               ) : (
-                <div className="min-h-[60px] p-3 rounded-md border border-input bg-muted/50 text-sm whitespace-pre-wrap">
+                <div 
+                  className="min-h-[60px] p-3 rounded-md border border-input bg-background text-sm whitespace-pre-wrap cursor-pointer"
+                  onClick={shakeEditButton}
+                >
                   {lessonPlan.resources || <span className="italic text-muted-foreground">No resources listed</span>}
                 </div>
               )}
@@ -601,7 +630,10 @@ const LessonPlanDetailPage = () => {
                   className="min-h-[60px]"
                 />
               ) : (
-                <div className="min-h-[40px] p-3 rounded-md border border-input bg-muted/50 text-sm whitespace-pre-wrap">
+                <div 
+                  className="min-h-[40px] p-3 rounded-md border border-input bg-background text-sm whitespace-pre-wrap cursor-pointer"
+                  onClick={shakeEditButton}
+                >
                   {lessonPlan.homework || <span className="italic text-muted-foreground">No homework assigned</span>}
                 </div>
               )}
