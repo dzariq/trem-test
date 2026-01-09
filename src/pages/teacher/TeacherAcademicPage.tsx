@@ -351,6 +351,7 @@ export default function TeacherAcademicPage() {
   
   // Whiskers Analysis year filter
   const [whiskersAnalysisYear, setWhiskersAnalysisYear] = useState<string>("all");
+  const [whiskersExpanded, setWhiskersExpanded] = useState(false);
   
   // Available classes and year groups for cohort selection
   const allAvailableClasses = ["5A", "5B", "4A", "4B", "3A", "3B"];
@@ -5709,13 +5710,18 @@ export default function TeacherAcademicPage() {
                               }
 
                               // Prepare data for horizontal bar chart grouped by year
-                              const chartData = whiskerData.map((r, idx) => ({
+                              const allChartData = whiskerData.map((r, idx) => ({
                                 id: idx,
                                 name: `${r.label} (${r.year})`,
                                 score: r.score,
                                 year: r.year,
                                 label: r.label
                               }));
+                              
+                              // Show only half the data initially
+                              const halfLength = Math.ceil(allChartData.length / 2);
+                              const chartData = whiskersExpanded ? allChartData : allChartData.slice(0, halfLength);
+                              const hasMoreData = allChartData.length > halfLength;
 
                               const barColor = boxPlotRiskView === "high" ? "#22c55e" : "#ef4444";
                               const bgColor = boxPlotRiskView === "high" ? "bg-emerald-50" : "bg-red-50";
@@ -5774,10 +5780,34 @@ export default function TeacherAcademicPage() {
                                     </ResponsiveContainer>
                                   </div>
 
+                                  {/* View More Button */}
+                                  {hasMoreData && (
+                                    <div className="flex justify-center pt-2">
+                                      <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        onClick={() => setWhiskersExpanded(!whiskersExpanded)}
+                                        className="text-xs text-muted-foreground hover:text-foreground"
+                                      >
+                                        {whiskersExpanded ? (
+                                          <>
+                                            <ChevronUp className="h-3 w-3 mr-1" />
+                                            View Less
+                                          </>
+                                        ) : (
+                                          <>
+                                            <ChevronDown className="h-3 w-3 mr-1" />
+                                            View More ({allChartData.length - halfLength} more)
+                                          </>
+                                        )}
+                                      </Button>
+                                    </div>
+                                  )}
+
                                   {/* Summary Cards by Year */}
                                   <div className="space-y-2">
-                                    {Array.from(new Set(whiskerData.map(r => r.year))).map((year: string) => {
-                                      const yearWhiskers = whiskerData.filter(r => r.year === year);
+                                    {Array.from(new Set(chartData.map(r => r.year))).map((year: string) => {
+                                      const yearWhiskers = chartData.filter(r => r.year === year);
                                       return (
                                         <div 
                                           key={year} 
