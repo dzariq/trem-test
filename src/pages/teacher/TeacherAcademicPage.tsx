@@ -5591,18 +5591,18 @@ export default function TeacherAcademicPage() {
                         </Card>
                       )}
 
-                      {/* Performance Outliers (Riskers) Chart */}
-                      {boxPlotData.some(s => s.outliers.length > 0) && (
+                      {/* Whiskers Analysis Chart */}
+                      {boxPlotData.length > 0 && (
                         <Card>
                           <CardHeader className="pb-2">
                             <CardTitle className="text-sm flex items-center gap-2">
                               <Users className="h-4 w-4 text-primary" />
-                              Performance Outliers
+                              Whiskers Analysis
                             </CardTitle>
                             <p className="text-xs text-muted-foreground mt-1">
                               {boxPlotViewMode === "student" 
-                                ? "Subjects where the student performed exceptionally high or low"
-                                : "Students who performed exceptionally high or low in the selected subjects"}
+                                ? "Subjects at the upper and lower whisker boundaries"
+                                : "Students at the upper and lower whisker boundaries"}
                             </p>
                           </CardHeader>
                           <CardContent>
@@ -5619,7 +5619,7 @@ export default function TeacherAcademicPage() {
                                   )}
                                 >
                                   <ArrowUp className="h-3 w-3" />
-                                  High Riskers
+                                  High Whiskers
                                 </button>
                                 <button
                                   onClick={() => setBoxPlotRiskView("low")}
@@ -5631,33 +5631,49 @@ export default function TeacherAcademicPage() {
                                   )}
                                 >
                                   <ArrowDown className="h-3 w-3" />
-                                  Low Riskers
+                                  Low Whiskers
                                 </button>
                               </div>
                             </div>
 
                             {(() => {
-                              // Collect all outliers from all years based on the selected view
-                              const allRiskers: { year: string; label: string; score: number }[] = [];
+                              // Collect data points near the whisker values (upper or lower)
+                              const whiskerData: { year: string; label: string; score: number }[] = [];
                               
                               boxPlotData.forEach(stat => {
+                                // Get the whisker value we're interested in
+                                const whiskerValue = boxPlotRiskView === "high" ? stat.whiskerHigh : stat.whiskerLow;
+                                
+                                // Find all data points that are at or near the whisker boundary
+                                // For high whiskers: scores between Q3 and whiskerHigh (top performers within normal range)
+                                // For low whiskers: scores between whiskerLow and Q1 (bottom performers within normal range)
                                 if (stat.outlierDetails && stat.outlierDetails.length > 0) {
                                   stat.outlierDetails.forEach(o => {
-                                    if (boxPlotRiskView === "high" && o.score > stat.q3) {
-                                      allRiskers.push({ year: stat.year, label: o.label, score: o.score });
-                                    } else if (boxPlotRiskView === "low" && o.score < stat.q1) {
-                                      allRiskers.push({ year: stat.year, label: o.label, score: o.score });
+                                    if (boxPlotRiskView === "high" && o.score >= stat.q3 && o.score <= stat.whiskerHigh) {
+                                      whiskerData.push({ year: stat.year, label: o.label, score: o.score });
+                                    } else if (boxPlotRiskView === "low" && o.score >= stat.whiskerLow && o.score <= stat.q1) {
+                                      whiskerData.push({ year: stat.year, label: o.label, score: o.score });
                                     }
+                                  });
+                                }
+                                
+                                // Also check if we have the whisker value itself as a data point
+                                // Show the whisker value info even if no specific labels
+                                if (whiskerData.filter(w => w.year === stat.year).length === 0) {
+                                  whiskerData.push({ 
+                                    year: stat.year, 
+                                    label: boxPlotRiskView === "high" ? "Top Performer" : "Bottom Performer", 
+                                    score: whiskerValue 
                                   });
                                 }
                               });
 
                               // Sort by score (descending for high, ascending for low)
-                              allRiskers.sort((a, b) => 
+                              whiskerData.sort((a, b) => 
                                 boxPlotRiskView === "high" ? b.score - a.score : a.score - b.score
                               );
 
-                              if (allRiskers.length === 0) {
+                              if (whiskerData.length === 0) {
                                 return (
                                   <div className="flex flex-col items-center justify-center py-8 text-center">
                                     <div className={cn(
@@ -5670,14 +5686,14 @@ export default function TeacherAcademicPage() {
                                       }
                                     </div>
                                     <p className="text-sm text-muted-foreground">
-                                      No {boxPlotRiskView === "high" ? "high performers" : "low performers"} found in the selected data
+                                      No {boxPlotRiskView === "high" ? "high whisker" : "low whisker"} data found
                                     </p>
                                   </div>
                                 );
                               }
 
                               // Prepare data for horizontal bar chart grouped by year
-                              const chartData = allRiskers.map((r, idx) => ({
+                              const chartData = whiskerData.map((r, idx) => ({
                                 id: idx,
                                 name: `${r.label} (${r.year})`,
                                 score: r.score,
@@ -5693,7 +5709,7 @@ export default function TeacherAcademicPage() {
                               return (
                                 <div className="space-y-4">
                                   {/* Horizontal Bar Chart */}
-                                  <div style={{ height: Math.max(200, allRiskers.length * 32 + 40) }}>
+                                  <div style={{ height: Math.max(200, whiskerData.length * 32 + 40) }}>
                                     <ResponsiveContainer width="100%" height="100%">
                                       <BarChart 
                                         data={chartData} 
@@ -5744,8 +5760,8 @@ export default function TeacherAcademicPage() {
 
                                   {/* Summary Cards by Year */}
                                   <div className="space-y-2">
-                                    {Array.from(new Set(allRiskers.map(r => r.year))).map(year => {
-                                      const yearRiskers = allRiskers.filter(r => r.year === year);
+                                    {Array.from(new Set(whiskerData.map(r => r.year))).map((year: string) => {
+                                      const yearWhiskers = whiskerData.filter(r => r.year === year);
                                       return (
                                         <div 
                                           key={year} 
@@ -5758,12 +5774,12 @@ export default function TeacherAcademicPage() {
                                           <div className="flex items-center gap-2 mb-2">
                                             <span className="text-xs font-semibold text-foreground">{year}</span>
                                             <Badge variant="secondary" className={cn("text-[9px] px-1.5 py-0", bgColor, textColor)}>
-                                              {yearRiskers.length} {boxPlotViewMode === "student" ? "subject" : "student"}{yearRiskers.length !== 1 ? "s" : ""}
+                                              {yearWhiskers.length} {boxPlotViewMode === "student" ? "subject" : "student"}{yearWhiskers.length !== 1 ? "s" : ""}
                                             </Badge>
                                           </div>
                                           <div className="flex flex-wrap gap-1.5">
-                                            {yearRiskers.map((r, i) => (
-                                              <Badge 
+                                            {yearWhiskers.map((r, i) => (
+                                              <Badge
                                                 key={i} 
                                                 className={cn(
                                                   "text-[10px] px-2 py-0.5",
