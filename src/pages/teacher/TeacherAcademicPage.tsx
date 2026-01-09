@@ -7111,11 +7111,134 @@ export default function TeacherAcademicPage() {
                     </div>
                   </div>
 
+                  {/* Grouped Bar Chart - SVG for print */}
+                  <div className="section" style={{ marginBottom: '12px', pageBreakInside: 'avoid' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '8px', paddingBottom: '6px', borderBottom: '1px solid #065f46' }}>
+                      <span style={{ color: '#065f46' }}><IconBarChart /></span>
+                      <h3 style={{ fontSize: '11px', fontWeight: 700, color: '#065f46', margin: 0 }}>Visual Comparison Chart</h3>
+                    </div>
+                    <div style={{ padding: '10px', backgroundColor: '#f9fafb', borderRadius: '6px', border: '1px solid #e5e7eb' }}>
+                      <svg width="100%" height="180" viewBox="0 0 500 180" preserveAspectRatio="xMidYMid meet">
+                        {/* Grid lines */}
+                        <line x1="80" y1="25" x2="480" y2="25" stroke="#e5e7eb" strokeWidth="1" strokeDasharray="4 4" />
+                        <line x1="80" y1="55" x2="480" y2="55" stroke="#e5e7eb" strokeWidth="1" strokeDasharray="4 4" />
+                        <line x1="80" y1="85" x2="480" y2="85" stroke="#f59e0b" strokeWidth="1" strokeDasharray="4 4" opacity="0.5" />
+                        <line x1="80" y1="115" x2="480" y2="115" stroke="#e5e7eb" strokeWidth="1" strokeDasharray="4 4" />
+                        <line x1="80" y1="145" x2="480" y2="145" stroke="#e5e7eb" strokeWidth="1" />
+                        {/* Y-axis labels */}
+                        <text x="75" y="29" fontSize="7" fill="#6b7280" textAnchor="end">100</text>
+                        <text x="75" y="59" fontSize="7" fill="#6b7280" textAnchor="end">75</text>
+                        <text x="75" y="89" fontSize="7" fill="#f59e0b" textAnchor="end">50</text>
+                        <text x="75" y="119" fontSize="7" fill="#6b7280" textAnchor="end">25</text>
+                        <text x="75" y="149" fontSize="7" fill="#6b7280" textAnchor="end">0</text>
+                        {/* Grouped bars for each subject */}
+                        {comparisonData.slice(0, 8).map((sub, i) => {
+                          const barWidth = 18;
+                          const groupWidth = barWidth * 2 + 4;
+                          const x = 90 + i * 50;
+                          const barHeightA = (sub.examA / 100) * 120;
+                          const barHeightB = (sub.examB / 100) * 120;
+                          const yA = 145 - barHeightA;
+                          const yB = 145 - barHeightB;
+                          return (
+                            <g key={sub.name}>
+                              <rect x={x} y={yA} width={barWidth} height={barHeightA} fill="#3b82f6" rx="2" opacity="0.85" />
+                              <rect x={x + barWidth + 2} y={yB} width={barWidth} height={barHeightB} fill="#ef4444" rx="2" opacity="0.85" />
+                              <text x={x + groupWidth / 2} y="158" fontSize="7" fill="#374151" textAnchor="middle">{shortenSubjectName(sub.name).slice(0, 4)}</text>
+                            </g>
+                          );
+                        })}
+                        {/* Legend */}
+                        <rect x="100" y="168" width="10" height="6" fill="#3b82f6" rx="1" />
+                        <text x="114" y="174" fontSize="7" fill="#374151">Exam A</text>
+                        <rect x="160" y="168" width="10" height="6" fill="#ef4444" rx="1" />
+                        <text x="174" y="174" fontSize="7" fill="#374151">Exam B</text>
+                      </svg>
+                    </div>
+                  </div>
+
+                  {/* Top Growth & Declining Subjects - Side by Side */}
+                  {(() => {
+                    const sortedByGrowth = [...comparisonData].sort((a, b) => b.delta - a.delta);
+                    const topGrowth = sortedByGrowth.filter(d => d.delta > 0).slice(0, 3);
+                    const topDecline = sortedByGrowth.filter(d => d.delta < 0).slice(-3).reverse();
+                    
+                    if (topGrowth.length === 0 && topDecline.length === 0) return null;
+                    
+                    return (
+                      <div style={{ display: 'grid', gridTemplateColumns: topGrowth.length > 0 && topDecline.length > 0 ? 'repeat(2, 1fr)' : '1fr', gap: '12px', marginBottom: '12px', pageBreakInside: 'avoid' }}>
+                        {/* Top Growth */}
+                        {topGrowth.length > 0 && (
+                          <div style={{ padding: '10px', borderRadius: '8px', background: 'linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%)', border: '1px solid #86efac' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '8px', paddingBottom: '6px', borderBottom: '1px solid #86efac' }}>
+                              <span style={{ color: '#22c55e', fontSize: '12px' }}>↑</span>
+                              <h4 style={{ fontSize: '10px', fontWeight: 700, color: '#166534', margin: 0 }}>Top Growth Subjects</h4>
+                            </div>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                              {topGrowth.map((item) => (
+                                <div 
+                                  key={item.name}
+                                  style={{ 
+                                    padding: '8px 10px', 
+                                    borderRadius: '6px', 
+                                    backgroundColor: 'rgba(255,255,255,0.6)',
+                                    border: '1px solid #86efac',
+                                    display: 'flex',
+                                    justifyContent: 'space-between',
+                                    alignItems: 'center'
+                                  }}
+                                >
+                                  <div style={{ fontSize: '9px', fontWeight: 600, color: '#166534' }}>{shortenSubjectName(item.name)}</div>
+                                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                    <div style={{ fontSize: '11px', fontWeight: 700, color: '#22c55e' }}>+{item.delta}%</div>
+                                    <div style={{ fontSize: '7px', color: '#15803d' }}>{item.examB}%→{item.examA}%</div>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                        
+                        {/* Declining Subjects */}
+                        {topDecline.length > 0 && (
+                          <div style={{ padding: '10px', borderRadius: '8px', background: 'linear-gradient(135deg, #fee2e2 0%, #fecaca 100%)', border: '1px solid #fca5a5' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '8px', paddingBottom: '6px', borderBottom: '1px solid #fca5a5' }}>
+                              <span style={{ color: '#dc2626', fontSize: '12px' }}>↓</span>
+                              <h4 style={{ fontSize: '10px', fontWeight: 700, color: '#991b1b', margin: 0 }}>Declining Subjects</h4>
+                            </div>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                              {topDecline.map((item) => (
+                                <div 
+                                  key={item.name}
+                                  style={{ 
+                                    padding: '8px 10px', 
+                                    borderRadius: '6px', 
+                                    backgroundColor: 'rgba(255,255,255,0.6)',
+                                    border: '1px solid #fca5a5',
+                                    display: 'flex',
+                                    justifyContent: 'space-between',
+                                    alignItems: 'center'
+                                  }}
+                                >
+                                  <div style={{ fontSize: '9px', fontWeight: 600, color: '#991b1b' }}>{shortenSubjectName(item.name)}</div>
+                                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                    <div style={{ fontSize: '11px', fontWeight: 700, color: '#dc2626' }}>{item.delta}%</div>
+                                    <div style={{ fontSize: '7px', color: '#b91c1c' }}>{item.examB}%→{item.examA}%</div>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })()}
+
                   {/* Subject-by-Subject Comparison */}
                   <div className="section" style={{ marginBottom: '12px', pageBreakInside: 'avoid' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '8px', paddingBottom: '6px', borderBottom: '1px solid #065f46' }}>
                       <span style={{ color: '#065f46' }}><IconBook /></span>
-                      <h3 style={{ fontSize: '11px', fontWeight: 700, color: '#065f46', margin: 0 }}>Subject Comparison</h3>
+                      <h3 style={{ fontSize: '11px', fontWeight: 700, color: '#065f46', margin: 0 }}>Subject Comparison Table</h3>
                     </div>
                     <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '9px' }}>
                       <thead>
@@ -7170,11 +7293,14 @@ export default function TeacherAcademicPage() {
         </DialogContent>
       </Dialog>
 
-      {/* Box Plot Report Dialog */}
+      {/* Box Plot Report Dialog - Enhanced with Professional Design */}
       <Dialog open={boxPlotReportDialogOpen} onOpenChange={setBoxPlotReportDialogOpen}>
-        <DialogContent className="w-[95vw] max-w-2xl max-h-[90vh] rounded-2xl overflow-hidden flex flex-col">
+        <DialogContent className="w-[95vw] max-w-3xl max-h-[90vh] rounded-2xl overflow-hidden flex flex-col">
           <DialogHeader className="flex flex-row items-center justify-between pr-10">
-            <DialogTitle>Box Plot Report</DialogTitle>
+            <DialogTitle className="flex items-center gap-2">
+              <BarChart3 className="h-5 w-5 text-primary" />
+              Box Plot Analysis Report
+            </DialogTitle>
             <div className="flex gap-2">
               <Button
                 variant="outline"
@@ -7226,7 +7352,7 @@ export default function TeacherAcademicPage() {
                   URL.revokeObjectURL(url);
                 }}
               >
-                <Download className="h-4 w-4" />
+                <FileSpreadsheet className="h-4 w-4" />
                 CSV
               </Button>
               <Button
@@ -7238,9 +7364,87 @@ export default function TeacherAcademicPage() {
                     const printWindow = window.open('', '_blank');
                     if (printWindow) {
                       printWindow.document.write(`
+                        <!DOCTYPE html>
                         <html>
-                          <head><title>Box Plot Report</title></head>
-                          <body>${boxPlotReportRef.current.innerHTML}</body>
+                          <head>
+                            <title>Box Plot Analysis Report</title>
+                            <style>
+                              @page { size: A4 portrait; margin: 15mm; }
+                              * { box-sizing: border-box; margin: 0; padding: 0; }
+                              body { 
+                                font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; 
+                                font-size: 10px; 
+                                line-height: 1.4; 
+                                color: #1a1a1a;
+                                padding: 10px;
+                                -webkit-print-color-adjust: exact !important;
+                                print-color-adjust: exact !important;
+                              }
+                              .report-header { 
+                                display: flex !important; 
+                                align-items: center !important; 
+                                justify-content: space-between !important;
+                                gap: 12px !important; 
+                                margin-bottom: 15px !important; 
+                                padding-bottom: 10px !important; 
+                                border-bottom: 2px solid #10b981 !important; 
+                              }
+                              .school-logo { width: 40px !important; height: 40px !important; object-fit: contain !important; }
+                              .section { margin-bottom: 12px; page-break-inside: avoid; }
+                              .section-header { 
+                                display: flex; 
+                                align-items: center; 
+                                gap: 6px; 
+                                margin-bottom: 8px; 
+                                padding-bottom: 6px; 
+                                border-bottom: 1px solid #065f46; 
+                              }
+                              .section-title { font-size: 11px; font-weight: 700; color: #065f46; margin: 0; }
+                              .stats-grid { display: grid !important; grid-template-columns: repeat(4, 1fr) !important; gap: 8px !important; }
+                              .stat-card { 
+                                position: relative; 
+                                padding: 10px 8px; 
+                                border-radius: 8px; 
+                                text-align: center; 
+                                overflow: hidden; 
+                                border: 1px solid #d1d5db; 
+                              }
+                              .stat-watermark { 
+                                position: absolute; 
+                                right: 4px; 
+                                bottom: -10px; 
+                                font-size: 36px; 
+                                font-weight: 800; 
+                                opacity: 0.15; 
+                              }
+                              table { width: 100% !important; border-collapse: collapse !important; font-size: 9px !important; }
+                              th, td { padding: 6px 8px !important; border-bottom: 1px solid #ddd !important; }
+                              th { background: #065f46 !important; color: white !important; font-weight: 600 !important; }
+                              .insight-card { 
+                                display: flex; 
+                                align-items: flex-start; 
+                                gap: 8px; 
+                                padding: 8px 10px; 
+                                border-radius: 6px; 
+                                margin-bottom: 6px; 
+                              }
+                              .footer { 
+                                text-align: center !important; 
+                                font-size: 8px !important; 
+                                color: #666 !important; 
+                                margin-top: 15px !important; 
+                                padding-top: 8px !important; 
+                                border-top: 1px solid #ddd !important; 
+                              }
+                              @media print { 
+                                body { padding: 0 !important; margin: 0 !important; } 
+                                .no-print { display: none !important; } 
+                              }
+                            </style>
+                          </head>
+                          <body>
+                            ${boxPlotReportRef.current.innerHTML}
+                          </body>
                         </html>
                       `);
                       printWindow.document.close();
@@ -7254,7 +7458,7 @@ export default function TeacherAcademicPage() {
               </Button>
             </div>
           </DialogHeader>
-          <div className="flex-1 overflow-y-auto p-4">
+          <div className="flex-1 overflow-y-auto" ref={boxPlotReportRef}>
             {(() => {
               const boxPlotData = boxPlotViewMode === "student" && boxPlotStudentId
                 ? calculateStudentBoxPlotData(
@@ -7280,147 +7484,315 @@ export default function TeacherAcademicPage() {
               const selectedStudent = getAllStudents().find(s => s.id === boxPlotStudentId);
               const reportTitle = boxPlotViewMode === "student" 
                 ? `Student: ${selectedStudent?.name || 'N/A'}`
-                : `Subjects: ${boxPlotSubjects.length === 0 ? 'All' : boxPlotSubjects.join(', ')}`;
+                : `Subjects: ${boxPlotSubjects.length === 0 ? 'All' : boxPlotSubjects.slice(0, 3).join(', ')}${boxPlotSubjects.length > 3 ? ` +${boxPlotSubjects.length - 3} more` : ''}`;
+              
+              // Calculate summary statistics
+              const latestYear = boxPlotData[boxPlotData.length - 1];
+              const earliestYear = boxPlotData[0];
+              const medianChange = latestYear && earliestYear ? latestYear.median - earliestYear.median : 0;
+              const avgMedian = boxPlotData.length > 0 ? Math.round(boxPlotData.reduce((sum, d) => sum + d.median, 0) / boxPlotData.length) : 0;
+              const totalOutliers = boxPlotData.reduce((sum, d) => sum + d.outliers.length, 0);
+              const avgIQR = boxPlotData.length > 0 ? Math.round(boxPlotData.reduce((sum, d) => sum + d.iqr, 0) / boxPlotData.length) : 0;
 
               return (
-                <div ref={boxPlotReportRef} style={{ padding: '20px', fontFamily: 'Arial, sans-serif', fontSize: '12px', color: '#1a1a1a', backgroundColor: '#ffffff' }}>
-                  {/* Header */}
-                  <div style={{ textAlign: 'center', marginBottom: '16px', paddingBottom: '12px', borderBottom: '2px solid #10b981' }}>
-                    <h1 style={{ fontSize: '18px', fontWeight: 'bold', color: '#10b981', margin: '0 0 4px 0' }}>Box Plot Analysis Report</h1>
-                    <p style={{ fontSize: '11px', color: '#6b7280', margin: 0 }}>{reportTitle}</p>
-                    <p style={{ fontSize: '10px', color: '#9ca3af', margin: '4px 0 0 0' }}>
-                      Period: {boxPlotStartYear} - {boxPlotEndYear}
-                    </p>
+                <div className="space-y-4 p-2">
+                  {/* Report Header - Dual Logo Style */}
+                  <div className="report-header" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '2px solid #10b981', paddingBottom: '10px', marginBottom: '10px', gap: '8px' }}>
+                    <img src={collinzLogo} alt="Collinz School" style={{ height: '40px', objectFit: 'contain' }} />
+                    <div style={{ textAlign: 'center' }}>
+                      <div style={{ fontSize: '10px', fontWeight: 600, color: '#374151', letterSpacing: '0.5px', textTransform: 'uppercase' }}>Box Plot Analysis Report</div>
+                      <div style={{ fontSize: '13px', fontWeight: 700, color: '#374151' }}>{reportTitle}</div>
+                      <div style={{ fontSize: '9px', color: '#6b7280', marginTop: '2px' }}>
+                        Period: {boxPlotStartYear} - {boxPlotEndYear} • Generated on {new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}
+                      </div>
+                    </div>
+                    <img src={cambridgeLogo} alt="Cambridge Assessment" style={{ height: '35px', objectFit: 'contain' }} />
                   </div>
 
-                  {/* Box Plot Chart - Bigger */}
-                  <div style={{ marginBottom: '16px', padding: '12px', backgroundColor: '#f9fafb', borderRadius: '8px', border: '1px solid #e5e7eb' }}>
-                    <h3 style={{ fontSize: '12px', fontWeight: 'bold', color: '#374151', marginBottom: '12px' }}>Box & Whisker Chart</h3>
-                    <div style={{ height: '480px' }}>
-                      <BoxPlotChart data={boxPlotData} showMean={true} height={460} hideZoomHint={true} />
+                  {/* Summary Statistics Cards with Watermarks */}
+                  <div className="section" style={{ marginBottom: '12px', pageBreakInside: 'avoid' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '8px', paddingBottom: '6px', borderBottom: '1px solid #065f46' }}>
+                      <span style={{ color: '#065f46' }}><IconBarChart /></span>
+                      <h3 style={{ fontSize: '11px', fontWeight: 700, color: '#065f46', margin: 0 }}>Summary Statistics</h3>
+                    </div>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '8px' }}>
+                      {/* Average Median */}
+                      <div style={{ position: 'relative', padding: '10px 8px', borderRadius: '8px', backgroundColor: '#dcfce7', border: '1px solid #86efac', textAlign: 'center', overflow: 'hidden' }}>
+                        <div style={{ position: 'absolute', right: '2px', bottom: '-10px', fontSize: '36px', fontWeight: 800, color: '#22c55e', opacity: 0.15 }}>{avgMedian}</div>
+                        <div style={{ position: 'relative', zIndex: 1 }}>
+                          <div style={{ fontSize: '18px', fontWeight: 700, color: '#22c55e' }}>{avgMedian}%</div>
+                          <div style={{ fontSize: '8px', color: '#166534' }}>Avg Median</div>
+                        </div>
+                      </div>
+                      {/* Median Change */}
+                      <div style={{ position: 'relative', padding: '10px 8px', borderRadius: '8px', backgroundColor: medianChange >= 0 ? '#dbeafe' : '#fee2e2', border: `1px solid ${medianChange >= 0 ? '#93c5fd' : '#fca5a5'}`, textAlign: 'center', overflow: 'hidden' }}>
+                        <div style={{ position: 'absolute', right: '2px', bottom: '-10px', fontSize: '36px', fontWeight: 800, color: medianChange >= 0 ? '#3b82f6' : '#ef4444', opacity: 0.15 }}>{Math.abs(medianChange)}</div>
+                        <div style={{ position: 'relative', zIndex: 1 }}>
+                          <div style={{ fontSize: '18px', fontWeight: 700, color: medianChange >= 0 ? '#3b82f6' : '#ef4444' }}>{medianChange >= 0 ? '+' : ''}{medianChange}</div>
+                          <div style={{ fontSize: '8px', color: medianChange >= 0 ? '#1d4ed8' : '#991b1b' }}>Median Δ</div>
+                        </div>
+                      </div>
+                      {/* Average IQR */}
+                      <div style={{ position: 'relative', padding: '10px 8px', borderRadius: '8px', backgroundColor: '#fef3c7', border: '1px solid #fde047', textAlign: 'center', overflow: 'hidden' }}>
+                        <div style={{ position: 'absolute', right: '2px', bottom: '-10px', fontSize: '36px', fontWeight: 800, color: '#d97706', opacity: 0.15 }}>{avgIQR}</div>
+                        <div style={{ position: 'relative', zIndex: 1 }}>
+                          <div style={{ fontSize: '18px', fontWeight: 700, color: '#d97706' }}>{avgIQR}</div>
+                          <div style={{ fontSize: '8px', color: '#92400e' }}>Avg IQR</div>
+                        </div>
+                      </div>
+                      {/* Total Outliers */}
+                      <div style={{ position: 'relative', padding: '10px 8px', borderRadius: '8px', backgroundColor: '#f3e8ff', border: '1px solid #c4b5fd', textAlign: 'center', overflow: 'hidden' }}>
+                        <div style={{ position: 'absolute', right: '2px', bottom: '-10px', fontSize: '36px', fontWeight: 800, color: '#9333ea', opacity: 0.15 }}>{totalOutliers}</div>
+                        <div style={{ position: 'relative', zIndex: 1 }}>
+                          <div style={{ fontSize: '18px', fontWeight: 700, color: '#9333ea' }}>{totalOutliers}</div>
+                          <div style={{ fontSize: '8px', color: '#6b21a8' }}>Outliers</div>
+                        </div>
+                      </div>
                     </div>
                   </div>
 
-                  {/* Statistics Table */}
-                  <div style={{ marginBottom: '16px' }}>
-                    <h3 style={{ fontSize: '12px', fontWeight: 'bold', color: '#374151', marginBottom: '8px' }}>Year-by-Year Statistics</h3>
-                    <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '10px' }}>
+                  {/* Box Plot Chart */}
+                  <div className="section" style={{ marginBottom: '12px', pageBreakInside: 'avoid' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '8px', paddingBottom: '6px', borderBottom: '1px solid #065f46' }}>
+                      <span style={{ color: '#065f46' }}><IconBarChart /></span>
+                      <h3 style={{ fontSize: '11px', fontWeight: 700, color: '#065f46', margin: 0 }}>Box & Whisker Chart</h3>
+                    </div>
+                    <div style={{ padding: '12px', backgroundColor: '#f9fafb', borderRadius: '8px', border: '1px solid #e5e7eb' }}>
+                      <div style={{ height: '320px' }}>
+                        <BoxPlotChart data={boxPlotData} showMean={true} height={300} hideZoomHint={true} />
+                      </div>
+                      {/* Chart Legend */}
+                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px', marginTop: '10px', paddingTop: '10px', borderTop: '1px solid #e5e7eb', justifyContent: 'center' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '9px', color: '#666' }}>
+                          <div style={{ width: '20px', height: '12px', backgroundColor: '#10b981', borderRadius: '2px' }} />
+                          <span>Box (Q1 to Q3)</span>
+                        </div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '9px', color: '#666' }}>
+                          <div style={{ width: '20px', height: '2px', backgroundColor: '#065f46' }} />
+                          <span>Median</span>
+                        </div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '9px', color: '#666' }}>
+                          <div style={{ width: '8px', height: '8px', backgroundColor: '#f59e0b', borderRadius: '50%' }} />
+                          <span>Mean</span>
+                        </div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '9px', color: '#666' }}>
+                          <div style={{ width: '1px', height: '12px', backgroundColor: '#6b7280' }} />
+                          <span>Whiskers (Min/Max)</span>
+                        </div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '9px', color: '#666' }}>
+                          <div style={{ width: '8px', height: '8px', backgroundColor: '#ef4444', borderRadius: '50%' }} />
+                          <span>Outliers</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Insights Section */}
+                  {insights.length > 0 && (
+                    <div className="section" style={{ marginBottom: '12px', pageBreakInside: 'avoid' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '8px', paddingBottom: '6px', borderBottom: '1px solid #065f46' }}>
+                        <span style={{ color: '#065f46' }}><IconStar /></span>
+                        <h3 style={{ fontSize: '11px', fontWeight: 700, color: '#065f46', margin: 0 }}>Key Insights</h3>
+                      </div>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                        {insights.slice(0, 5).map((insight, idx) => {
+                          // Map insight.icon to colors and symbols for display
+                          const bgColor = insight.icon === 'up' ? '#dcfce7' : insight.icon === 'down' ? '#fee2e2' : insight.icon === 'warning' ? '#fef3c7' : '#f3f4f6';
+                          const borderColor = insight.icon === 'up' ? '#86efac' : insight.icon === 'down' ? '#fca5a5' : insight.icon === 'warning' ? '#fde047' : '#d1d5db';
+                          const iconColor = insight.icon === 'up' ? '#22c55e' : insight.icon === 'down' ? '#ef4444' : insight.icon === 'warning' ? '#f59e0b' : '#6b7280';
+                          const iconSymbol = insight.icon === 'up' ? '↑' : insight.icon === 'down' ? '↓' : insight.icon === 'warning' ? '⚠' : insight.icon === 'flat' ? '→' : 'ℹ';
+                          return (
+                            <div key={idx} style={{ display: 'flex', alignItems: 'flex-start', gap: '8px', padding: '8px 10px', borderRadius: '6px', backgroundColor: bgColor, border: `1px solid ${borderColor}` }}>
+                              <span style={{ fontSize: '12px', color: iconColor, fontWeight: 700, flexShrink: 0 }}>{iconSymbol}</span>
+                              <div>
+                                <div style={{ fontSize: '10px', fontWeight: 600, color: '#1a1a1a', marginBottom: '2px' }}>{insight.title}</div>
+                                <div style={{ fontSize: '9px', color: '#666' }}>{insight.description}</div>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Year-by-Year Statistics Table */}
+                  <div className="section" style={{ marginBottom: '12px', pageBreakInside: 'avoid' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '8px', paddingBottom: '6px', borderBottom: '1px solid #065f46' }}>
+                      <span style={{ color: '#065f46' }}><IconBook /></span>
+                      <h3 style={{ fontSize: '11px', fontWeight: 700, color: '#065f46', margin: 0 }}>Year-by-Year Statistics</h3>
+                    </div>
+                    <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '9px' }}>
                       <thead>
-                        <tr style={{ backgroundColor: '#f3f4f6' }}>
-                          <th style={{ padding: '8px', textAlign: 'left', borderBottom: '1px solid #d1d5db' }}>Year</th>
-                          <th style={{ padding: '8px', textAlign: 'center', borderBottom: '1px solid #d1d5db' }}>n</th>
-                          <th style={{ padding: '8px', textAlign: 'center', borderBottom: '1px solid #d1d5db' }}>Min</th>
-                          <th style={{ padding: '8px', textAlign: 'center', borderBottom: '1px solid #d1d5db' }}>Q1</th>
-                          <th style={{ padding: '8px', textAlign: 'center', borderBottom: '1px solid #d1d5db' }}>Median</th>
-                          <th style={{ padding: '8px', textAlign: 'center', borderBottom: '1px solid #d1d5db' }}>Q3</th>
-                          <th style={{ padding: '8px', textAlign: 'center', borderBottom: '1px solid #d1d5db' }}>Max</th>
-                          <th style={{ padding: '8px', textAlign: 'center', borderBottom: '1px solid #d1d5db' }}>Mean</th>
-                          <th style={{ padding: '8px', textAlign: 'center', borderBottom: '1px solid #d1d5db' }}>IQR</th>
+                        <tr style={{ backgroundColor: '#065f46' }}>
+                          <th style={{ padding: '6px 8px', textAlign: 'left', color: 'white', fontWeight: 600 }}>Year</th>
+                          <th style={{ padding: '6px 8px', textAlign: 'center', color: 'white', fontWeight: 600 }}>n</th>
+                          <th style={{ padding: '6px 8px', textAlign: 'center', color: 'white', fontWeight: 600 }}>Min</th>
+                          <th style={{ padding: '6px 8px', textAlign: 'center', color: 'white', fontWeight: 600 }}>Q1</th>
+                          <th style={{ padding: '6px 8px', textAlign: 'center', color: 'white', fontWeight: 600 }}>Median</th>
+                          <th style={{ padding: '6px 8px', textAlign: 'center', color: 'white', fontWeight: 600 }}>Q3</th>
+                          <th style={{ padding: '6px 8px', textAlign: 'center', color: 'white', fontWeight: 600 }}>Max</th>
+                          <th style={{ padding: '6px 8px', textAlign: 'center', color: 'white', fontWeight: 600 }}>Mean</th>
+                          <th style={{ padding: '6px 8px', textAlign: 'center', color: 'white', fontWeight: 600 }}>IQR</th>
                         </tr>
                       </thead>
                       <tbody>
                         {boxPlotData.map((stat, idx) => (
-                          <tr key={stat.year} style={{ backgroundColor: idx % 2 === 0 ? '#ffffff' : '#f9fafb' }}>
-                            <td style={{ padding: '8px', fontWeight: '500' }}>{stat.year}</td>
-                            <td style={{ padding: '8px', textAlign: 'center' }}>{stat.n}</td>
-                            <td style={{ padding: '8px', textAlign: 'center' }}>{stat.min}</td>
-                            <td style={{ padding: '8px', textAlign: 'center' }}>{stat.q1}</td>
-                            <td style={{ padding: '8px', textAlign: 'center', fontWeight: 'bold', color: '#10b981' }}>{stat.median}</td>
-                            <td style={{ padding: '8px', textAlign: 'center' }}>{stat.q3}</td>
-                            <td style={{ padding: '8px', textAlign: 'center' }}>{stat.max}</td>
-                            <td style={{ padding: '8px', textAlign: 'center' }}>{stat.mean}</td>
-                            <td style={{ padding: '8px', textAlign: 'center' }}>{stat.iqr}</td>
+                          <tr key={stat.year} style={{ backgroundColor: idx % 2 === 0 ? '#fff' : '#f9fafb' }}>
+                            <td style={{ padding: '5px 8px', borderBottom: '1px solid #eee', fontWeight: 500 }}>{stat.year}</td>
+                            <td style={{ padding: '5px 8px', borderBottom: '1px solid #eee', textAlign: 'center' }}>{stat.n}</td>
+                            <td style={{ padding: '5px 8px', borderBottom: '1px solid #eee', textAlign: 'center' }}>{stat.min}</td>
+                            <td style={{ padding: '5px 8px', borderBottom: '1px solid #eee', textAlign: 'center' }}>{stat.q1}</td>
+                            <td style={{ padding: '5px 8px', borderBottom: '1px solid #eee', textAlign: 'center', fontWeight: 700, color: '#10b981' }}>{stat.median}</td>
+                            <td style={{ padding: '5px 8px', borderBottom: '1px solid #eee', textAlign: 'center' }}>{stat.q3}</td>
+                            <td style={{ padding: '5px 8px', borderBottom: '1px solid #eee', textAlign: 'center' }}>{stat.max}</td>
+                            <td style={{ padding: '5px 8px', borderBottom: '1px solid #eee', textAlign: 'center' }}>{stat.mean}</td>
+                            <td style={{ padding: '5px 8px', borderBottom: '1px solid #eee', textAlign: 'center' }}>{stat.iqr}</td>
                           </tr>
                         ))}
                       </tbody>
                     </table>
                   </div>
 
+                  {/* Whiskers Analysis - High and Low Performers by Year */}
+                  <div className="section" style={{ marginBottom: '12px', pageBreakInside: 'avoid' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '8px', paddingBottom: '6px', borderBottom: '1px solid #065f46' }}>
+                      <span style={{ color: '#065f46' }}><IconTrendingUp /></span>
+                      <h3 style={{ fontSize: '11px', fontWeight: 700, color: '#065f46', margin: 0 }}>Whiskers Analysis</h3>
+                    </div>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '10px' }}>
+                      {/* High Performers */}
+                      <div style={{ padding: '10px', borderRadius: '8px', background: 'linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%)', border: '1px solid #86efac' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '8px', paddingBottom: '6px', borderBottom: '1px solid #86efac' }}>
+                          <span style={{ fontSize: '12px', color: '#22c55e' }}>▲</span>
+                          <h4 style={{ fontSize: '10px', fontWeight: 700, color: '#166534', margin: 0 }}>High Performers (Above Q3)</h4>
+                        </div>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                          {boxPlotData.map(stat => {
+                            const highOutliers = stat.outlierDetails?.filter(o => o.score > stat.q3) || [];
+                            if (highOutliers.length === 0) return null;
+                            return (
+                              <div key={stat.year} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '4px 8px', backgroundColor: 'rgba(255,255,255,0.6)', borderRadius: '4px', fontSize: '9px' }}>
+                                <span style={{ fontWeight: 600, color: '#166534' }}>{stat.year}</span>
+                                <span style={{ color: '#15803d' }}>{highOutliers.length} student{highOutliers.length > 1 ? 's' : ''}</span>
+                              </div>
+                            );
+                          }).filter(Boolean)}
+                          {boxPlotData.every(stat => !(stat.outlierDetails?.filter(o => o.score > stat.q3).length)) && (
+                            <p style={{ fontSize: '9px', color: '#666', textAlign: 'center', padding: '8px' }}>No exceptional high performers identified</p>
+                          )}
+                        </div>
+                      </div>
+                      {/* Low Performers */}
+                      <div style={{ padding: '10px', borderRadius: '8px', background: 'linear-gradient(135deg, #fee2e2 0%, #fecaca 100%)', border: '1px solid #fca5a5' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '8px', paddingBottom: '6px', borderBottom: '1px solid #fca5a5' }}>
+                          <span style={{ fontSize: '12px', color: '#dc2626' }}>▼</span>
+                          <h4 style={{ fontSize: '10px', fontWeight: 700, color: '#991b1b', margin: 0 }}>Needs Attention (Below Q1)</h4>
+                        </div>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                          {boxPlotData.map(stat => {
+                            const lowOutliers = stat.outlierDetails?.filter(o => o.score < stat.q1) || [];
+                            if (lowOutliers.length === 0) return null;
+                            return (
+                              <div key={stat.year} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '4px 8px', backgroundColor: 'rgba(255,255,255,0.6)', borderRadius: '4px', fontSize: '9px' }}>
+                                <span style={{ fontWeight: 600, color: '#991b1b' }}>{stat.year}</span>
+                                <span style={{ color: '#b91c1c' }}>{lowOutliers.length} student{lowOutliers.length > 1 ? 's' : ''}</span>
+                              </div>
+                            );
+                          }).filter(Boolean)}
+                          {boxPlotData.every(stat => !(stat.outlierDetails?.filter(o => o.score < stat.q1).length)) && (
+                            <p style={{ fontSize: '9px', color: '#666', textAlign: 'center', padding: '8px' }}>No students identified as needing extra attention</p>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
                   {/* Detailed Outliers Section by Year */}
                   {boxPlotData.some(s => s.outliers.length > 0) && (
-                    <div style={{ marginBottom: '16px' }}>
-                      <h3 style={{ fontSize: '12px', fontWeight: 'bold', color: '#374151', marginBottom: '12px' }}>Outliers by Year</h3>
-                      {boxPlotData.filter(s => s.outliers.length > 0).map(stat => {
-                        const highOutliers = stat.outlierDetails?.filter(o => o.score > stat.q3) || [];
-                        const lowOutliers = stat.outlierDetails?.filter(o => o.score < stat.q1) || [];
-                        
-                        return (
-                          <div key={stat.year} style={{ marginBottom: '12px', padding: '10px', backgroundColor: '#f9fafb', borderRadius: '6px', border: '1px solid #e5e7eb' }}>
-                            <div style={{ display: 'flex', alignItems: 'center', marginBottom: '8px' }}>
-                              <span style={{ fontSize: '11px', fontWeight: 'bold', color: '#1a1a1a', marginRight: '8px' }}>{stat.year}</span>
-                              <span style={{ fontSize: '9px', color: '#6b7280', padding: '2px 6px', backgroundColor: '#e5e7eb', borderRadius: '4px' }}>
-                                {stat.outliers.length} outlier{stat.outliers.length !== 1 ? 's' : ''}
-                              </span>
+                    <div className="section" style={{ marginBottom: '12px', pageBreakInside: 'avoid' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '8px', paddingBottom: '6px', borderBottom: '1px solid #065f46' }}>
+                        <span style={{ color: '#065f46' }}><IconTarget /></span>
+                        <h3 style={{ fontSize: '11px', fontWeight: 700, color: '#065f46', margin: 0 }}>Outliers Detail by Year</h3>
+                      </div>
+                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '8px' }}>
+                        {boxPlotData.filter(s => s.outliers.length > 0).map(stat => {
+                          const highOutliers = stat.outlierDetails?.filter(o => o.score > stat.q3) || [];
+                          const lowOutliers = stat.outlierDetails?.filter(o => o.score < stat.q1) || [];
+                          
+                          return (
+                            <div key={stat.year} style={{ padding: '10px', backgroundColor: '#f9fafb', borderRadius: '6px', border: '1px solid #e5e7eb' }}>
+                              <div style={{ display: 'flex', alignItems: 'center', marginBottom: '8px' }}>
+                                <span style={{ fontSize: '11px', fontWeight: 'bold', color: '#1a1a1a', marginRight: '8px' }}>{stat.year}</span>
+                                <span style={{ fontSize: '8px', color: '#6b7280', padding: '2px 6px', backgroundColor: '#e5e7eb', borderRadius: '4px' }}>
+                                  {stat.outliers.length} outlier{stat.outliers.length !== 1 ? 's' : ''}
+                                </span>
+                              </div>
+                              
+                              {highOutliers.length > 0 && (
+                                <div style={{ marginBottom: '6px' }}>
+                                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
+                                    {highOutliers.slice(0, 4).map((o, i) => (
+                                      <span key={i} style={{ 
+                                        fontSize: '8px', 
+                                        padding: '2px 6px', 
+                                        backgroundColor: '#dcfce7', 
+                                        color: '#166534', 
+                                        borderRadius: '4px',
+                                        border: '1px solid #86efac'
+                                      }}>
+                                        {o.label}: {o.score}%
+                                      </span>
+                                    ))}
+                                    {highOutliers.length > 4 && <span style={{ fontSize: '8px', color: '#666' }}>+{highOutliers.length - 4} more</span>}
+                                  </div>
+                                </div>
+                              )}
+                              
+                              {lowOutliers.length > 0 && (
+                                <div>
+                                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
+                                    {lowOutliers.slice(0, 4).map((o, i) => (
+                                      <span key={i} style={{ 
+                                        fontSize: '8px', 
+                                        padding: '2px 6px', 
+                                        backgroundColor: '#fee2e2', 
+                                        color: '#991b1b', 
+                                        borderRadius: '4px',
+                                        border: '1px solid #fca5a5'
+                                      }}>
+                                        {o.label}: {o.score}%
+                                      </span>
+                                    ))}
+                                    {lowOutliers.length > 4 && <span style={{ fontSize: '8px', color: '#666' }}>+{lowOutliers.length - 4} more</span>}
+                                  </div>
+                                </div>
+                              )}
+                              
+                              {/* Show raw outliers if no details available */}
+                              {(!stat.outlierDetails || stat.outlierDetails.length === 0) && stat.outliers.length > 0 && (
+                                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
+                                  {stat.outliers.slice(0, 6).map((score, i) => (
+                                    <span key={i} style={{ 
+                                      fontSize: '8px', 
+                                      padding: '2px 6px', 
+                                      backgroundColor: score > stat.q3 ? '#dcfce7' : '#fee2e2', 
+                                      color: score > stat.q3 ? '#166534' : '#991b1b', 
+                                      borderRadius: '4px'
+                                    }}>
+                                      {score}%
+                                    </span>
+                                  ))}
+                                </div>
+                              )}
                             </div>
-                            
-                            {highOutliers.length > 0 && (
-                              <div style={{ marginBottom: '6px' }}>
-                                <div style={{ display: 'flex', alignItems: 'center', marginBottom: '4px' }}>
-                                  <span style={{ fontSize: '9px', fontWeight: '600', color: '#059669', marginRight: '6px' }}>▲ High Performers</span>
-                                </div>
-                                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
-                                  {highOutliers.map((o, i) => (
-                                    <span key={i} style={{ 
-                                      fontSize: '9px', 
-                                      padding: '3px 8px', 
-                                      backgroundColor: '#dcfce7', 
-                                      color: '#166534', 
-                                      borderRadius: '4px',
-                                      border: '1px solid #86efac'
-                                    }}>
-                                      {o.label}: {o.score}%
-                                    </span>
-                                  ))}
-                                </div>
-                              </div>
-                            )}
-                            
-                            {lowOutliers.length > 0 && (
-                              <div>
-                                <div style={{ display: 'flex', alignItems: 'center', marginBottom: '4px' }}>
-                                  <span style={{ fontSize: '9px', fontWeight: '600', color: '#dc2626', marginRight: '6px' }}>▼ Needs Attention</span>
-                                </div>
-                                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
-                                  {lowOutliers.map((o, i) => (
-                                    <span key={i} style={{ 
-                                      fontSize: '9px', 
-                                      padding: '3px 8px', 
-                                      backgroundColor: '#fee2e2', 
-                                      color: '#991b1b', 
-                                      borderRadius: '4px',
-                                      border: '1px solid #fca5a5'
-                                    }}>
-                                      {o.label}: {o.score}%
-                                    </span>
-                                  ))}
-                                </div>
-                              </div>
-                            )}
-                            
-                            {/* Show raw outliers if no details available */}
-                            {(!stat.outlierDetails || stat.outlierDetails.length === 0) && stat.outliers.length > 0 && (
-                              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
-                                {stat.outliers.map((score, i) => (
-                                  <span key={i} style={{ 
-                                    fontSize: '9px', 
-                                    padding: '3px 8px', 
-                                    backgroundColor: score > stat.q3 ? '#dcfce7' : '#fee2e2', 
-                                    color: score > stat.q3 ? '#166534' : '#991b1b', 
-                                    borderRadius: '4px'
-                                  }}>
-                                    {score}%
-                                  </span>
-                                ))}
-                              </div>
-                            )}
-                          </div>
-                        );
-                      })}
+                          );
+                        })}
+                      </div>
                     </div>
                   )}
 
-                  {/* Footer */}
-                  <div style={{ marginTop: '20px', textAlign: 'center', fontSize: '8px', color: '#9ca3af', paddingTop: '8px', borderTop: '1px solid #d1d5db' }}>
+                  {/* Footer - Professional Style */}
+                  <div className="footer" style={{ marginTop: '12px', textAlign: 'center', fontSize: '8px', color: '#9ca3af', paddingTop: '8px', borderTop: '1px solid #d1d5db' }}>
                     This is a computer-generated report. Generated on {new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}.
                   </div>
                 </div>
