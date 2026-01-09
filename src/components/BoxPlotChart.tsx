@@ -15,6 +15,7 @@ interface BoxPlotChartProps {
   data: BoxPlotStats[];
   showMean?: boolean;
   height?: number;
+  hideZoomHint?: boolean;
 }
 
 // Custom tooltip for box plot
@@ -276,7 +277,8 @@ const BoxPlotShape = ({
 export const BoxPlotChart: React.FC<BoxPlotChartProps> = ({ 
   data, 
   showMean = true, 
-  height = 300 
+  height = 300,
+  hideZoomHint = false
 }) => {
   const [hoveredYear, setHoveredYear] = useState<string | null>(null);
   
@@ -447,7 +449,7 @@ export const BoxPlotChart: React.FC<BoxPlotChartProps> = ({
       )}
 
       {/* Pinch Hint (shown initially) */}
-      {data.length > 3 && zoomLevel === 1 && (
+      {!hideZoomHint && data.length > 3 && zoomLevel === 1 && (
         <div className="absolute bottom-2 left-1/2 -translate-x-1/2 text-[10px] text-muted-foreground/60 z-10">
           Pinch to zoom
         </div>

@@ -6964,8 +6964,8 @@ export default function TeacherAcademicPage() {
                   {/* Box Plot Chart */}
                   <div style={{ marginBottom: '16px', padding: '12px', backgroundColor: '#f9fafb', borderRadius: '8px', border: '1px solid #e5e7eb' }}>
                     <h3 style={{ fontSize: '12px', fontWeight: 'bold', color: '#374151', marginBottom: '12px' }}>Box & Whisker Chart</h3>
-                    <div style={{ height: '280px' }}>
-                      <BoxPlotChart data={boxPlotData} showMean={true} height={260} />
+                    <div style={{ height: '360px' }}>
+                      <BoxPlotChart data={boxPlotData} showMean={true} height={340} hideZoomHint={true} />
                     </div>
                   </div>
 
