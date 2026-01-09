@@ -2,15 +2,18 @@ import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { AlertCircle, CheckCircle2, MessageSquare, Check } from "lucide-react";
+import { AlertCircle, CheckCircle2, MessageSquare, Check, Save, Calendar } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { format } from "date-fns";
 import type { LessonPlanReflection } from "@/data/lessonPlanData";
 
 interface ReflectionSectionProps {
   reflection: LessonPlanReflection;
   onChange: (reflection: LessonPlanReflection) => void;
+  onSave?: () => void;
+  lastEditedDate?: string;
 }
 
 const successQuestions = [
@@ -60,7 +63,7 @@ const differentiationQuestions = [
   },
 ] as const;
 
-export function ReflectionSection({ reflection, onChange }: ReflectionSectionProps) {
+export function ReflectionSection({ reflection, onChange, onSave, lastEditedDate }: ReflectionSectionProps) {
   const [expandedField, setExpandedField] = useState<string | null>(null);
   
   const allFields = [
@@ -220,17 +223,18 @@ export function ReflectionSection({ reflection, onChange }: ReflectionSectionPro
           />
         </div>
 
-        {/* Signature & Date */}
-        <div className="space-y-2">
-          <div className="bg-sky-100 px-3 py-2 rounded-md">
-            <h3 className="font-semibold text-sm">Signature & Date</h3>
+        {/* Last Edited & Save */}
+        <div className="flex items-center justify-between pt-2 border-t border-border/50">
+          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+            <Calendar className="h-4 w-4" />
+            <span>
+              Last edited: {lastEditedDate ? format(new Date(lastEditedDate), "dd MMM yyyy, h:mm a") : "Not yet saved"}
+            </span>
           </div>
-          <Input
-            value={reflection.signatureDate || ""}
-            onChange={(e) => onChange({ ...reflection, signatureDate: e.target.value })}
-            placeholder="Enter your name and date"
-            className="max-w-md"
-          />
+          <Button onClick={onSave} className="gap-2">
+            <Save className="h-4 w-4" />
+            Save Reflection
+          </Button>
         </div>
 
         {/* Completion Status */}
