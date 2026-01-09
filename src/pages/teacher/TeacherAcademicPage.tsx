@@ -5225,6 +5225,34 @@ export default function TeacherAcademicPage() {
                             </div>
                           </PopoverContent>
                         </Popover>
+                        
+                        {/* Subject pills display */}
+                        {boxPlotSubjects.length > 0 && (
+                          <div className="flex flex-wrap gap-1.5 mt-2">
+                            {boxPlotSubjects.length === allSubjects.length ? (
+                              <Badge variant="secondary" className="text-[10px] px-2 py-0.5 bg-muted">
+                                All Subjects
+                              </Badge>
+                            ) : boxPlotSubjects.length > 4 ? (
+                              <>
+                                {boxPlotSubjects.slice(0, 3).map((subject) => (
+                                  <Badge key={subject} variant="secondary" className="text-[10px] px-2 py-0.5 bg-muted">
+                                    {getShortSubjectName(subject)}
+                                  </Badge>
+                                ))}
+                                <Badge variant="secondary" className="text-[10px] px-2 py-0.5 bg-muted">
+                                  +{boxPlotSubjects.length - 3} more
+                                </Badge>
+                              </>
+                            ) : (
+                              boxPlotSubjects.map((subject) => (
+                                <Badge key={subject} variant="secondary" className="text-[10px] px-2 py-0.5 bg-muted">
+                                  {getShortSubjectName(subject)}
+                                </Badge>
+                              ))
+                            )}
+                          </div>
+                        )}
                       </div>
 
                       {/* Cohort scope - Enhanced with multi-select */}
