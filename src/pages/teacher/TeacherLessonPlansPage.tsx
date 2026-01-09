@@ -556,14 +556,14 @@ const TeacherLessonPlansPage = () => {
                                       </div>
                                       
                                       {/* Date Range Buttons - Click to show calendar */}
-                                      <div className="flex items-center gap-2">
+                                      <div className="flex items-stretch gap-2">
                                         <button
                                           onClick={(e) => {
                                             e.stopPropagation();
                                             setEditingDateField(editingDateField === "start" ? null : "start");
                                           }}
                                           className={cn(
-                                            "flex-1 text-center p-3 rounded-lg border-2 transition-all",
+                                            "flex-1 text-center p-3 rounded-lg border-2 transition-all min-h-[72px] flex flex-col justify-center",
                                             editingDateField === "start" 
                                               ? "border-primary bg-primary/5 ring-2 ring-primary/20" 
                                               : "border-border hover:border-muted-foreground/50 hover:bg-muted/50"
@@ -571,14 +571,14 @@ const TeacherLessonPlansPage = () => {
                                         >
                                           <p className="text-[10px] text-muted-foreground uppercase font-medium mb-1">Start Date</p>
                                           <p className={cn(
-                                            "text-base font-semibold",
+                                            "text-sm font-semibold whitespace-nowrap",
                                             editingDateField === "start" && "text-primary"
                                           )}>
                                             {dateRange.from ? format(dateRange.from, "MMM d, yyyy") : "Select"}
                                           </p>
                                         </button>
                                         
-                                        <div className="text-muted-foreground text-sm">→</div>
+                                        <div className="text-muted-foreground text-sm flex items-center">→</div>
                                         
                                         <button
                                           onClick={(e) => {
@@ -586,7 +586,7 @@ const TeacherLessonPlansPage = () => {
                                             setEditingDateField(editingDateField === "end" ? null : "end");
                                           }}
                                           className={cn(
-                                            "flex-1 text-center p-3 rounded-lg border-2 transition-all",
+                                            "flex-1 text-center p-3 rounded-lg border-2 transition-all min-h-[72px] flex flex-col justify-center",
                                             editingDateField === "end" 
                                               ? "border-primary bg-primary/5 ring-2 ring-primary/20" 
                                               : "border-border hover:border-muted-foreground/50 hover:bg-muted/50"
@@ -594,7 +594,7 @@ const TeacherLessonPlansPage = () => {
                                         >
                                           <p className="text-[10px] text-muted-foreground uppercase font-medium mb-1">End Date</p>
                                           <p className={cn(
-                                            "text-base font-semibold",
+                                            "text-sm font-semibold whitespace-nowrap",
                                             editingDateField === "end" && "text-primary"
                                           )}>
                                             {dateRange.to ? format(dateRange.to, "MMM d, yyyy") : "Select"}
