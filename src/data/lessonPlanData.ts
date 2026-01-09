@@ -15,14 +15,22 @@ export interface LessonFlow {
 }
 
 export interface LessonPlanReflection {
-  objectivesAchievementPercent: number; // 0-100 percentage
-  objectivesRealistic: string;
-  learnersLearned: string;
-  learningAtmosphere: string;
-  differentiationWorked: string;
-  timingsAndChanges: string;
-  nextLessonImprovements: string;
-  comments: string;
+  // Successes
+  objectivesAchieved: string;
+  topSuccesses: string;
+  // Challenges
+  objectivesNotAchieved: string;
+  biggestObstacle: string;
+  // Lesson delivery
+  lessonDelivery: string;
+  // Differentiation
+  noviceLearners: string;
+  intermediateLearners: string;
+  advancedLearners: string;
+  // Strategies
+  strategiesNextLesson: string;
+  // Signature
+  signatureDate: string;
 }
 
 export interface LessonPlanApproval {
@@ -109,13 +117,14 @@ export interface SubjectCurriculum {
 // Check if reflection section is complete
 export const isReflectionComplete = (reflection: LessonPlanReflection): boolean => {
   return (
-    reflection.comments.trim() !== "" &&
-    reflection.objectivesRealistic.trim() !== "" &&
-    reflection.learnersLearned.trim() !== "" &&
-    reflection.learningAtmosphere.trim() !== "" &&
-    reflection.differentiationWorked.trim() !== "" &&
-    reflection.timingsAndChanges.trim() !== "" &&
-    reflection.nextLessonImprovements.trim() !== ""
+    reflection.objectivesAchieved.trim() !== "" &&
+    reflection.topSuccesses.trim() !== "" &&
+    reflection.objectivesNotAchieved.trim() !== "" &&
+    reflection.biggestObstacle.trim() !== "" &&
+    reflection.noviceLearners.trim() !== "" &&
+    reflection.intermediateLearners.trim() !== "" &&
+    reflection.advancedLearners.trim() !== "" &&
+    reflection.strategiesNextLesson.trim() !== ""
   );
 };
 
@@ -193,14 +202,16 @@ export const mockLessonPlans: SubjectCurriculum[] = [
                 attachments: [],
                 homework: "Worksheet 3.1: Identifying Variables (10 questions)",
                 reflection: {
-                  objectivesAchievementPercent: 85,
-                  objectivesRealistic: "Yes, objectives were achievable within the time frame.",
-                  learnersLearned: "Students learned to identify variables and constants in expressions.",
-                  learningAtmosphere: "Positive and engaging. Students were curious and asked questions.",
-                  differentiationWorked: "Yes, the visual cards helped struggling learners.",
-                  timingsAndChanges: "Stuck to timings. Extended practice time by 5 minutes.",
-                  nextLessonImprovements: "Add more visual examples before independent work.",
-                  comments: "Students grasped the concept well. Some needed extra support with distinguishing coefficients from constants."
+                  objectivesAchieved: "Yes, all objectives achieved. Students can identify variables and constants in expressions.",
+                  topSuccesses: "1. Visual cards activity - students were highly engaged. 2. Peer explanations helped struggling students understand.",
+                  objectivesNotAchieved: "N/A - All objectives were met.",
+                  biggestObstacle: "Some students initially confused coefficients with constants. Root cause: insufficient prior examples.",
+                  lessonDelivery: "Used interactive whiteboard and physical manipulatives to promote active participation.",
+                  noviceLearners: "Provided extra visual cards and one-on-one support. They were able to attempt the task and made progress.",
+                  intermediateLearners: "Assigned core worksheet problems. Most completed on time with good understanding.",
+                  advancedLearners: "Given extension problems creating their own expressions. Evidence of mastery in peer teaching.",
+                  strategiesNextLesson: "Add more visual examples before independent work. Prepare additional extension tasks for advanced learners.",
+                  signatureDate: "Ms. Sarah Chen - 2026-01-06"
                 },
                 attendance: { present: 18, absent: 1, late: 1, excused: 0, total: 20 },
                 approval: {
@@ -262,14 +273,16 @@ export const mockLessonPlans: SubjectCurriculum[] = [
                 attachments: [],
                 homework: "Complete exercises 1-15 on page 52",
                 reflection: {
-                  objectivesAchievementPercent: 90,
-                  objectivesRealistic: "Yes, well-paced for the class level.",
-                  learnersLearned: "Students can now translate verbal phrases to algebraic expressions.",
-                  learningAtmosphere: "Energetic and collaborative during the game activity.",
-                  differentiationWorked: "The game format helped all learners participate.",
-                  timingsAndChanges: "Reduced intro by 5 mins to allow more game time.",
-                  nextLessonImprovements: "Prepare more challenging expressions for advanced students.",
-                  comments: "Good participation. The translation game was very effective."
+                  objectivesAchieved: "Yes, students can now translate verbal phrases to algebraic expressions.",
+                  topSuccesses: "1. Translation game was highly effective - 100% participation. 2. Real-world examples resonated well.",
+                  objectivesNotAchieved: "N/A - All objectives achieved.",
+                  biggestObstacle: "None significant. Some initial hesitation with more complex phrases.",
+                  lessonDelivery: "Game-based activity promoted active learning and healthy competition.",
+                  noviceLearners: "Given simpler phrases first. Were able to attempt and progress well with scaffolding.",
+                  intermediateLearners: "Core game activities at appropriate level. Good engagement throughout.",
+                  advancedLearners: "Created their own challenging expressions for peers. Showed strong mastery.",
+                  strategiesNextLesson: "Prepare more challenging expressions for advanced students. Continue with game format.",
+                  signatureDate: "Ms. Sarah Chen - 2026-01-07"
                 },
                 attendance: { present: 19, absent: 0, late: 1, excused: 0, total: 20 },
                 approval: {
@@ -330,14 +343,16 @@ export const mockLessonPlans: SubjectCurriculum[] = [
                 attachments: [],
                 homework: "None",
                 reflection: {
-                  objectivesAchievementPercent: 0,
-                  objectivesRealistic: "",
-                  learnersLearned: "",
-                  learningAtmosphere: "",
-                  differentiationWorked: "",
-                  timingsAndChanges: "",
-                  nextLessonImprovements: "",
-                  comments: ""
+                  objectivesAchieved: "",
+                  topSuccesses: "",
+                  objectivesNotAchieved: "",
+                  biggestObstacle: "",
+                  lessonDelivery: "",
+                  noviceLearners: "",
+                  intermediateLearners: "",
+                  advancedLearners: "",
+                  strategiesNextLesson: "",
+                  signatureDate: ""
                 },
                 attendance: null,
                 approval: {
@@ -401,14 +416,16 @@ export const mockLessonPlans: SubjectCurriculum[] = [
                 attachments: [],
                 homework: "Worksheet 4.1",
                 reflection: {
-                  objectivesAchievementPercent: 50,
-                  objectivesRealistic: "",
-                  learnersLearned: "",
-                  learningAtmosphere: "",
-                  differentiationWorked: "",
-                  timingsAndChanges: "",
-                  nextLessonImprovements: "",
-                  comments: ""
+                  objectivesAchieved: "",
+                  topSuccesses: "",
+                  objectivesNotAchieved: "",
+                  biggestObstacle: "",
+                  lessonDelivery: "",
+                  noviceLearners: "",
+                  intermediateLearners: "",
+                  advancedLearners: "",
+                  strategiesNextLesson: "",
+                  signatureDate: ""
                 },
                 attendance: null,
                 approval: {
@@ -461,14 +478,16 @@ export const mockLessonPlans: SubjectCurriculum[] = [
                 attachments: [],
                 homework: "Exercises 1-10 page 66",
                 reflection: {
-                  objectivesAchievementPercent: 95,
-                  objectivesRealistic: "Yes, students understood the concept well.",
-                  learnersLearned: "Students can now identify linear equations.",
-                  learningAtmosphere: "Focused and engaged throughout.",
-                  differentiationWorked: "Visual examples helped visual learners.",
-                  timingsAndChanges: "On track with timing.",
-                  nextLessonImprovements: "Add more graphing practice problems.",
-                  comments: "Good lesson. Students ready for graphing next."
+                  objectivesAchieved: "Yes, students can now identify linear equations confidently.",
+                  topSuccesses: "1. Visual graphing examples clicked well. 2. Students quickly grasped the linear relationship concept.",
+                  objectivesNotAchieved: "N/A - All objectives met.",
+                  biggestObstacle: "Minor confusion about constant terms initially.",
+                  lessonDelivery: "Visual examples and interactive whiteboard promoted active participation.",
+                  noviceLearners: "Given guided notes with examples. Were able to identify equations with support.",
+                  intermediateLearners: "Core exercises completed on time. Good understanding demonstrated.",
+                  advancedLearners: "Created their own linear equations. Evidence of mastery in explanations.",
+                  strategiesNextLesson: "Add more graphing practice problems. Prepare extension graphing challenges.",
+                  signatureDate: "Ms. Sarah Chen - 2026-01-20"
                 },
                 attendance: { present: 19, absent: 1, late: 0, excused: 0, total: 20 },
                 approval: { preparedBy: "Ms. Sarah Chen", preparedDate: "2026-01-19", checkedBy: "Mr. David Wong", checkedDate: "2026-01-19", status: "approved" },
@@ -501,14 +520,16 @@ export const mockLessonPlans: SubjectCurriculum[] = [
                 attachments: [],
                 homework: "Graph 5 linear equations",
                 reflection: {
-                  objectivesAchievementPercent: 50,
-                  objectivesRealistic: "",
-                  learnersLearned: "",
-                  learningAtmosphere: "",
-                  differentiationWorked: "",
-                  timingsAndChanges: "",
-                  nextLessonImprovements: "",
-                  comments: ""
+                  objectivesAchieved: "",
+                  topSuccesses: "",
+                  objectivesNotAchieved: "",
+                  biggestObstacle: "",
+                  lessonDelivery: "",
+                  noviceLearners: "",
+                  intermediateLearners: "",
+                  advancedLearners: "",
+                  strategiesNextLesson: "",
+                  signatureDate: ""
                 },
                 attendance: null,
                 approval: { preparedBy: "Ms. Sarah Chen", preparedDate: "2026-01-20", checkedBy: null, checkedDate: null, status: "pending_review" },
@@ -548,14 +569,16 @@ export const mockLessonPlans: SubjectCurriculum[] = [
                 attachments: [],
                 homework: "Worksheet 5.1",
                 reflection: {
-                  objectivesAchievementPercent: 50,
-                  objectivesRealistic: "",
-                  learnersLearned: "",
-                  learningAtmosphere: "",
-                  differentiationWorked: "",
-                  timingsAndChanges: "",
-                  nextLessonImprovements: "",
-                  comments: ""
+                  objectivesAchieved: "",
+                  topSuccesses: "",
+                  objectivesNotAchieved: "",
+                  biggestObstacle: "",
+                  lessonDelivery: "",
+                  noviceLearners: "",
+                  intermediateLearners: "",
+                  advancedLearners: "",
+                  strategiesNextLesson: "",
+                  signatureDate: ""
                 },
                 attendance: null,
                 approval: { preparedBy: "Ms. Sarah Chen", preparedDate: "2026-01-26", checkedBy: null, checkedDate: null, status: "draft" },
@@ -602,14 +625,16 @@ export const mockLessonPlans: SubjectCurriculum[] = [
                 attachments: [],
                 homework: "Draw 3 examples of each concept",
                 reflection: {
-                  objectivesAchievementPercent: 100,
-                  objectivesRealistic: "Very achievable for this age group.",
-                  learnersLearned: "Students can identify basic geometric elements.",
-                  learningAtmosphere: "Interactive and curious.",
-                  differentiationWorked: "Concrete examples helped struggling students.",
-                  timingsAndChanges: "Slightly extended hands-on time.",
-                  nextLessonImprovements: "Prepare more hands-on activities for next lesson.",
-                  comments: "Great start to geometry unit. Students excited about the topic."
+                  objectivesAchieved: "Yes, 100% achieved. Students can identify basic geometric elements.",
+                  topSuccesses: "1. Hands-on exploration kept students curious. 2. Real-world examples of points, lines, and rays resonated.",
+                  objectivesNotAchieved: "N/A - All objectives met.",
+                  biggestObstacle: "None significant - great introductory lesson.",
+                  lessonDelivery: "Interactive exploration and hands-on activities promoted participation.",
+                  noviceLearners: "Given guided worksheets with visual supports. All were able to identify basic elements.",
+                  intermediateLearners: "Core activities well-paced. Good engagement throughout.",
+                  advancedLearners: "Asked to find and draw examples around classroom. Showed strong understanding.",
+                  strategiesNextLesson: "Prepare more hands-on activities for next lesson. Continue with exploration approach.",
+                  signatureDate: "Ms. Sarah Chen - 2026-02-03"
                 },
                 attendance: { present: 20, absent: 0, late: 0, excused: 0, total: 20 },
                 approval: { preparedBy: "Ms. Sarah Chen", preparedDate: "2026-02-02", checkedBy: "Mr. David Wong", checkedDate: "2026-02-02", status: "approved" },
@@ -642,14 +667,16 @@ export const mockLessonPlans: SubjectCurriculum[] = [
                 attachments: [],
                 homework: "Measure 10 angles at home",
                 reflection: {
-                  objectivesAchievementPercent: 75,
-                  objectivesRealistic: "Yes, but protractor use needs more practice.",
-                  learnersLearned: "Students can identify angle types and use protractors.",
-                  learningAtmosphere: "Hands-on and engaged.",
-                  differentiationWorked: "Peer tutoring worked well.",
-                  timingsAndChanges: "Added extra protractor practice.",
-                  nextLessonImprovements: "Add 3 more protractor alignment exercises.",
-                  comments: "Some students need more practice with protractor alignment."
+                  objectivesAchieved: "Partially - students can identify angle types but protractor use needs more practice.",
+                  topSuccesses: "1. Angle classification activity was engaging. 2. Peer tutoring pairs worked well together.",
+                  objectivesNotAchieved: "Protractor alignment accuracy not fully achieved by all students.",
+                  biggestObstacle: "Protractor alignment technique. Root cause: insufficient initial demonstration time.",
+                  lessonDelivery: "Hands-on measurement activities promoted active learning.",
+                  noviceLearners: "Paired with peer tutors. Were able to identify angle types. Protractor use still developing.",
+                  intermediateLearners: "Most completed measurement tasks. Some struggled with acute angle alignment.",
+                  advancedLearners: "Helped peers and measured complex angles. Good mastery demonstrated.",
+                  strategiesNextLesson: "Add 3 more protractor alignment exercises at start of next lesson.",
+                  signatureDate: "Ms. Sarah Chen - 2026-02-04"
                 },
                 attendance: { present: 18, absent: 2, late: 0, excused: 0, total: 20 },
                 approval: { preparedBy: "Ms. Sarah Chen", preparedDate: "2026-02-03", checkedBy: "Mr. David Wong", checkedDate: "2026-02-03", status: "approved" },
@@ -682,14 +709,16 @@ export const mockLessonPlans: SubjectCurriculum[] = [
                 attachments: [],
                 homework: "Find and classify 5 triangles at home",
                 reflection: {
-                  objectivesAchievementPercent: 88,
-                  objectivesRealistic: "Yes, students grasped triangle classification well.",
-                  learnersLearned: "Students can classify triangles by both sides and angles.",
-                  learningAtmosphere: "Very engaging with the sorting activity.",
-                  differentiationWorked: "Triangle cutouts helped tactile learners.",
-                  timingsAndChanges: "Perfect timing throughout.",
-                  nextLessonImprovements: "Prepare quadrilateral cutouts for next lesson.",
-                  comments: "Excellent lesson. The hands-on sorting activity was very effective. Students are ready for quadrilaterals."
+                  objectivesAchieved: "Yes, students can classify triangles by both sides and angles.",
+                  topSuccesses: "1. Sorting activity was very effective. 2. Students made strong connections between types.",
+                  objectivesNotAchieved: "N/A - All objectives achieved.",
+                  biggestObstacle: "Minor confusion between isoceles and equilateral initially.",
+                  lessonDelivery: "Hands-on sorting with triangle cutouts promoted active classification.",
+                  noviceLearners: "Given labeled cutouts first. All could sort by end of lesson.",
+                  intermediateLearners: "Core sorting activities at appropriate challenge level.",
+                  advancedLearners: "Created own triangle examples and taught peers. Strong mastery evident.",
+                  strategiesNextLesson: "Prepare quadrilateral cutouts for next lesson. Replicate sorting approach.",
+                  signatureDate: "Ms. Sarah Chen - 2026-02-05"
                 },
                 attendance: { present: 20, absent: 0, late: 0, excused: 0, total: 20 },
                 approval: { preparedBy: "Ms. Sarah Chen", preparedDate: "2026-02-04", checkedBy: "Mr. David Wong", checkedDate: "2026-02-05", status: "approved" },
@@ -783,14 +812,16 @@ export const mockLessonPlans: SubjectCurriculum[] = [
                 attachments: [],
                 homework: "Draw 5 examples of forces at home",
                 reflection: {
-                  objectivesAchievementPercent: 70,
-                  objectivesRealistic: "Yes, but measurement accuracy needs more time.",
-                  learnersLearned: "Students can identify different types of forces.",
-                  learningAtmosphere: "Very enthusiastic during the hands-on experiments.",
-                  differentiationWorked: "Paired stronger students with those needing support.",
-                  timingsAndChanges: "Extended experiment time, shortened summary.",
-                  nextLessonImprovements: "Add 5 more minutes for measurement practice.",
-                  comments: "Students enjoyed the hands-on activity. Will need more time for measurement practice."
+                  objectivesAchieved: "Partially - students can identify forces but measurement accuracy needs more time.",
+                  topSuccesses: "1. Hands-on experiments generated enthusiasm. 2. Real-world force examples were relatable.",
+                  objectivesNotAchieved: "Force measurement accuracy not fully achieved.",
+                  biggestObstacle: "Measurement technique with spring scales. Root cause: rushed instruction due to time.",
+                  lessonDelivery: "Experiments and hands-on activities promoted active investigation.",
+                  noviceLearners: "Paired with stronger students. Able to identify force types but struggle with measurement.",
+                  intermediateLearners: "Most completed experiments. Measurement accuracy varied.",
+                  advancedLearners: "Explored additional force types independently. Good understanding shown.",
+                  strategiesNextLesson: "Add 5 more minutes for measurement practice at start of next lesson.",
+                  signatureDate: "Ms. Sarah Chen - 2026-01-06"
                 },
                 attendance: { present: 20, absent: 0, late: 0, excused: 0, total: 20 },
                 approval: {
@@ -860,14 +891,16 @@ export const createEmptyLessonPlan = (
   attachments: [],
   homework: "",
   reflection: {
-    objectivesAchievementPercent: 50,
-    objectivesRealistic: "",
-    learnersLearned: "",
-    learningAtmosphere: "",
-    differentiationWorked: "",
-    timingsAndChanges: "",
-    nextLessonImprovements: "",
-    comments: ""
+    objectivesAchieved: "",
+    topSuccesses: "",
+    objectivesNotAchieved: "",
+    biggestObstacle: "",
+    lessonDelivery: "",
+    noviceLearners: "",
+    intermediateLearners: "",
+    advancedLearners: "",
+    strategiesNextLesson: "",
+    signatureDate: ""
   },
   attendance: null,
   approval: {
