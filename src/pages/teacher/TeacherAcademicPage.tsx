@@ -3305,62 +3305,111 @@ export default function TeacherAcademicPage() {
                     <div className="flex-1 overflow-y-auto" ref={bandsReportRef}>
                       {/* Report Content */}
                       <div className="space-y-4 p-2">
-                        {/* Report Header */}
-                        <div className="report-header">
-                          <img 
-                            src={schoolLogo} 
-                            alt="School Logo" 
-                            className="school-logo"
-                            style={{ width: '40px', height: '40px', objectFit: 'contain' }}
-                          />
-                          <div style={{ textAlign: 'left' }}>
-                            <h1 style={{ fontSize: '16px', fontWeight: 700, margin: '0 0 2px 0' }}>Grade Distribution Report</h1>
-                            <p style={{ fontSize: '10px', color: '#666', margin: 0 }}>
-                              {bandsCompareMode ? "Comparison Report" : `Class ${selectedClass} - ${bandsSelectedSubject}`}
-                            </p>
-                            <p style={{ fontSize: '9px', color: '#888', margin: '2px 0 0 0' }}>
+                        {/* Report Header - Dual Logo Style */}
+                        <div className="report-header" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid #d1d5db', paddingBottom: '10px', marginBottom: '10px', gap: '8px' }}>
+                          <img src={collinzLogo} alt="Collinz School" style={{ height: '40px', objectFit: 'contain' }} />
+                          <div style={{ textAlign: 'center' }}>
+                            <div style={{ fontSize: '10px', fontWeight: 600, color: '#374151', letterSpacing: '0.5px', textTransform: 'uppercase' }}>Grade Distribution Report</div>
+                            <div style={{ fontSize: '13px', fontWeight: 700, color: '#374151' }}>
+                              {bandsCompareMode ? "Class Comparison Analysis" : `Class ${selectedClass} - ${bandsSelectedSubject}`}
+                            </div>
+                            <div style={{ fontSize: '9px', color: '#6b7280', marginTop: '2px' }}>
                               Generated on {new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}
                               {' • '}{selectedYear} {selectedPeriod === 'midYear' ? 'Mid-Year' : 'Year-End'} Examination
-                            </p>
+                            </div>
                           </div>
+                          <img src={cambridgeLogo} alt="Cambridge Assessment" style={{ height: '35px', objectFit: 'contain' }} />
                         </div>
 
                         {!bandsCompareMode ? (
-                          /* Normal Report */
+                          /* Normal Report - Professional Redesign */
                           <>
-                            <div className="section" style={{ marginBottom: '12px', pageBreakInside: 'avoid' }}>
-                              <h3 style={{ fontSize: '12px', fontWeight: 600, marginBottom: '8px', paddingBottom: '4px', borderBottom: '1px solid #ddd' }}>
-                                Grade Distribution - {bandsSelectedSubject}
-                              </h3>
-                              <div className="grade-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: '6px' }}>
-                                {bandsGradeDistribution.map(g => {
-                                  const total = bandsGradeDistribution.reduce((sum, d) => sum + d.count, 0);
-                                  const percentage = total > 0 ? Math.round(g.count / total * 100) : 0;
-                                  return (
-                                    <div key={g.range} className="grade-card" style={{
-                                      textAlign: 'center',
-                                      padding: '8px 4px',
-                                      border: '1px solid #ddd',
-                                      borderRadius: '6px',
-                                      backgroundColor: '#fff'
-                                    }}>
-                                      <div className="grade" style={{ fontSize: '12px', fontWeight: 700, color: GRADE_COLORS[g.range as keyof typeof GRADE_COLORS] }}>
-                                        {g.range}
-                                      </div>
-                                      <div className="count" style={{ fontSize: '16px', fontWeight: 700, color: '#1a1a1a' }}>{g.count}</div>
-                                      <div className="percent" style={{ fontSize: '9px', color: '#666' }}>{percentage}%</div>
-                                    </div>
-                                  );
-                                })}
+                            {/* Grade Distribution Bar Chart - SVG for print */}
+                            <div className="section" style={{ marginBottom: '14px', pageBreakInside: 'avoid' }}>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '8px', paddingBottom: '6px', borderBottom: '1px solid #065f46' }}>
+                                <span style={{ color: '#065f46' }}><IconBarChart /></span>
+                                <h3 style={{ fontSize: '11px', fontWeight: 700, color: '#065f46', margin: 0 }}>Grade Distribution - {bandsSelectedSubject}</h3>
+                              </div>
+                              <div style={{ padding: '12px', backgroundColor: '#f9fafb', borderRadius: '8px', border: '1px solid #e5e7eb' }}>
+                                <svg width="100%" height="140" viewBox="0 0 500 140" preserveAspectRatio="xMidYMid meet">
+                                  {/* Grid lines */}
+                                  <line x1="40" y1="100" x2="460" y2="100" stroke="#e5e7eb" strokeWidth="1" />
+                                  {/* Bars */}
+                                  {(() => {
+                                    const total = bandsGradeDistribution.reduce((sum, d) => sum + d.count, 0);
+                                    const maxCount = Math.max(...bandsGradeDistribution.map(d => d.count), 1);
+                                    return bandsGradeDistribution.map((g, i) => {
+                                      const barWidth = 60;
+                                      const x = 50 + i * 70;
+                                      const barHeight = (g.count / maxCount) * 75;
+                                      const y = 100 - barHeight;
+                                      const percentage = total > 0 ? Math.round(g.count / total * 100) : 0;
+                                      return (
+                                        <g key={g.range}>
+                                          <defs>
+                                            <linearGradient id={`gradeGradient${g.range}`} x1="0%" y1="0%" x2="0%" y2="100%">
+                                              <stop offset="0%" stopColor={GRADE_COLORS[g.range as keyof typeof GRADE_COLORS]} stopOpacity="1" />
+                                              <stop offset="100%" stopColor={GRADE_COLORS[g.range as keyof typeof GRADE_COLORS]} stopOpacity="0.7" />
+                                            </linearGradient>
+                                          </defs>
+                                          <rect x={x} y={y} width={barWidth} height={barHeight} fill={`url(#gradeGradient${g.range})`} rx="4" />
+                                          <text x={x + barWidth / 2} y={y - 6} fontSize="11" fill="#374151" textAnchor="middle" fontWeight="700">{g.count}</text>
+                                          <text x={x + barWidth / 2} y="115" fontSize="12" fill={GRADE_COLORS[g.range as keyof typeof GRADE_COLORS]} textAnchor="middle" fontWeight="700">{g.range}</text>
+                                          <text x={x + barWidth / 2} y="128" fontSize="9" fill="#6b7280" textAnchor="middle">{percentage}%</text>
+                                        </g>
+                                      );
+                                    });
+                                  })()}
+                                </svg>
+                              </div>
+                            </div>
+
+                            {/* Summary Stats with Watermarks */}
+                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '8px', marginBottom: '14px', pageBreakInside: 'avoid' }}>
+                              <div style={{ position: 'relative', padding: '10px', borderRadius: '8px', backgroundColor: '#eff6ff', border: '1px solid #d1d5db', textAlign: 'center', overflow: 'hidden' }}>
+                                <div style={{ position: 'absolute', right: '2px', bottom: '-10px', fontSize: '36px', fontWeight: 800, color: '#3b82f6', opacity: 0.15 }}>{bandsRankedStudents.length}</div>
+                                <div style={{ position: 'relative', zIndex: 1 }}>
+                                  <div style={{ fontSize: '16px', fontWeight: 700, color: '#3b82f6' }}>{bandsRankedStudents.length}</div>
+                                  <div style={{ fontSize: '8px', color: '#1d4ed8' }}>Total</div>
+                                </div>
+                              </div>
+                              <div style={{ position: 'relative', padding: '10px', borderRadius: '8px', backgroundColor: '#f3e8ff', border: '1px solid #d1d5db', textAlign: 'center', overflow: 'hidden' }}>
+                                <div style={{ position: 'absolute', right: '2px', bottom: '-10px', fontSize: '36px', fontWeight: 800, color: '#9333ea', opacity: 0.15 }}>{bandsRankedStudents.length > 0 ? Math.round((bandsRankedStudents.filter(s => s.score >= 50).length / bandsRankedStudents.length) * 100) : 0}</div>
+                                <div style={{ position: 'relative', zIndex: 1 }}>
+                                  <div style={{ fontSize: '16px', fontWeight: 700, color: '#9333ea' }}>{bandsRankedStudents.length > 0 ? Math.round((bandsRankedStudents.filter(s => s.score >= 50).length / bandsRankedStudents.length) * 100) : 0}%</div>
+                                  <div style={{ fontSize: '8px', color: '#6b21a8' }}>Pass Rate</div>
+                                </div>
+                              </div>
+                              <div style={{ position: 'relative', padding: '10px', borderRadius: '8px', backgroundColor: '#dcfce7', border: '1px solid #86efac', textAlign: 'center', overflow: 'hidden' }}>
+                                <div style={{ position: 'absolute', right: '2px', bottom: '-10px', fontSize: '36px', fontWeight: 800, color: '#22c55e', opacity: 0.15 }}>{bandsTopPerformers.length}</div>
+                                <div style={{ position: 'relative', zIndex: 1 }}>
+                                  <div style={{ fontSize: '16px', fontWeight: 700, color: '#22c55e' }}>{bandsTopPerformers.length}</div>
+                                  <div style={{ fontSize: '8px', color: '#166534' }}>Top (A*/A)</div>
+                                </div>
+                              </div>
+                              <div style={{ position: 'relative', padding: '10px', borderRadius: '8px', backgroundColor: '#dbeafe', border: '1px solid #93c5fd', textAlign: 'center', overflow: 'hidden' }}>
+                                <div style={{ position: 'absolute', right: '2px', bottom: '-10px', fontSize: '36px', fontWeight: 800, color: '#3b82f6', opacity: 0.15 }}>{bandsMiddlePerformers.length}</div>
+                                <div style={{ position: 'relative', zIndex: 1 }}>
+                                  <div style={{ fontSize: '16px', fontWeight: 700, color: '#3b82f6' }}>{bandsMiddlePerformers.length}</div>
+                                  <div style={{ fontSize: '8px', color: '#1d4ed8' }}>Middle (B/C)</div>
+                                </div>
+                              </div>
+                              <div style={{ position: 'relative', padding: '10px', borderRadius: '8px', backgroundColor: '#fee2e2', border: '1px solid #fca5a5', textAlign: 'center', overflow: 'hidden' }}>
+                                <div style={{ position: 'absolute', right: '2px', bottom: '-10px', fontSize: '36px', fontWeight: 800, color: '#ef4444', opacity: 0.15 }}>{bandsAtRiskStudents.length}</div>
+                                <div style={{ position: 'relative', zIndex: 1 }}>
+                                  <div style={{ fontSize: '16px', fontWeight: 700, color: '#ef4444' }}>{bandsAtRiskStudents.length}</div>
+                                  <div style={{ fontSize: '8px', color: '#991b1b' }}>At-Risk (D/E)</div>
+                                </div>
                               </div>
                             </div>
 
                             {/* Student Lists - All students shown for printing */}
                             <div className="performers-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '10px', marginBottom: '12px' }}>
-                              <div className="performer-box top" style={{ padding: '10px', borderRadius: '6px', backgroundColor: '#fef3c7', border: '1px solid #fcd34d' }}>
-                                <h4 style={{ fontSize: '10px', fontWeight: 600, color: '#b45309', marginBottom: '6px' }}>
-                                  Top Performers ({bandsTopPerformers.length})
-                                </h4>
+                              <div style={{ padding: '10px', borderRadius: '8px', background: 'linear-gradient(135deg, #fef9c3 0%, #fef3c7 100%)', border: '1px solid #fde047' }}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '6px', paddingBottom: '6px', borderBottom: '1px solid #fde047' }}>
+                                  <span style={{ color: '#ca8a04' }}><IconTrophy /></span>
+                                  <h4 style={{ fontSize: '10px', fontWeight: 700, color: '#ca8a04', margin: 0 }}>Top Performers ({bandsTopPerformers.length})</h4>
+                                </div>
                                 <div className="student-list">
                                   {bandsTopPerformers.map((s, i) => (
                                     <div key={s.id} className="student-row" style={{ display: 'flex', justifyContent: 'space-between', padding: '3px 6px', fontSize: '9px', borderBottom: '1px solid #fcd34d40' }}>
@@ -3372,10 +3421,11 @@ export default function TeacherAcademicPage() {
                                 </div>
                               </div>
                               
-                              <div className="performer-box middle" style={{ padding: '10px', borderRadius: '6px', backgroundColor: '#dbeafe', border: '1px solid #93c5fd' }}>
-                                <h4 style={{ fontSize: '10px', fontWeight: 600, color: '#1d4ed8', marginBottom: '6px' }}>
-                                  Middle Performers ({bandsMiddlePerformers.length})
-                                </h4>
+                              <div style={{ padding: '10px', borderRadius: '8px', background: 'linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%)', border: '1px solid #93c5fd' }}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '6px', paddingBottom: '6px', borderBottom: '1px solid #93c5fd' }}>
+                                  <span style={{ color: '#2563eb' }}><IconBook /></span>
+                                  <h4 style={{ fontSize: '10px', fontWeight: 700, color: '#1d4ed8', margin: 0 }}>Middle Performers ({bandsMiddlePerformers.length})</h4>
+                                </div>
                                 <div className="student-list">
                                   {bandsMiddlePerformers.map((s, i) => (
                                     <div key={s.id} className="student-row" style={{ display: 'flex', justifyContent: 'space-between', padding: '3px 6px', fontSize: '9px', borderBottom: '1px solid #93c5fd40' }}>
@@ -3387,10 +3437,11 @@ export default function TeacherAcademicPage() {
                                 </div>
                               </div>
                               
-                              <div className="performer-box risk" style={{ padding: '10px', borderRadius: '6px', backgroundColor: '#fee2e2', border: '1px solid #fca5a5' }}>
-                                <h4 style={{ fontSize: '10px', fontWeight: 600, color: '#dc2626', marginBottom: '6px' }}>
-                                  At-Risk ({bandsAtRiskStudents.length})
-                                </h4>
+                              <div style={{ padding: '10px', borderRadius: '8px', background: 'linear-gradient(135deg, #fee2e2 0%, #fecaca 100%)', border: '1px solid #fca5a5' }}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '6px', paddingBottom: '6px', borderBottom: '1px solid #fca5a5' }}>
+                                  <span style={{ color: '#dc2626' }}><IconTarget /></span>
+                                  <h4 style={{ fontSize: '10px', fontWeight: 700, color: '#dc2626', margin: 0 }}>At-Risk ({bandsAtRiskStudents.length})</h4>
+                                </div>
                                 <div className="student-list">
                                   {bandsAtRiskStudents.map((s, i) => (
                                     <div key={s.id} className="student-row" style={{ display: 'flex', justifyContent: 'space-between', padding: '3px 6px', fontSize: '9px', borderBottom: '1px solid #fca5a540' }}>
@@ -3403,33 +3454,9 @@ export default function TeacherAcademicPage() {
                               </div>
                             </div>
 
-                            {/* Summary Stats */}
-                            <div className="stats-box" style={{ padding: '10px', backgroundColor: '#f5f5f5', borderRadius: '6px', marginTop: '12px' }}>
-                              <h4 style={{ fontSize: '11px', fontWeight: 600, marginBottom: '8px' }}>Summary Statistics</h4>
-                              <div className="stats-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '8px', textAlign: 'center' }}>
-                                <div>
-                                  <div style={{ fontSize: '14px', fontWeight: 700, color: '#1a1a1a' }}>{bandsRankedStudents.length}</div>
-                                  <div style={{ fontSize: '9px', color: '#666' }}>Total Students</div>
-                                </div>
-                                <div>
-                                  <div style={{ fontSize: '14px', fontWeight: 700, color: '#7c3aed' }}>
-                                    {bandsRankedStudents.length > 0 ? Math.round((bandsRankedStudents.filter(s => s.score >= 50).length / bandsRankedStudents.length) * 100) : 0}%
-                                  </div>
-                                  <div style={{ fontSize: '9px', color: '#666' }}>Passing Rate</div>
-                                </div>
-                                <div>
-                                  <div style={{ fontSize: '14px', fontWeight: 700, color: '#059669' }}>{bandsTopPerformers.length}</div>
-                                  <div style={{ fontSize: '9px', color: '#666' }}>Top (A*/A)</div>
-                                </div>
-                                <div>
-                                  <div style={{ fontSize: '14px', fontWeight: 700, color: '#2563eb' }}>{bandsMiddlePerformers.length}</div>
-                                  <div style={{ fontSize: '9px', color: '#666' }}>Middle (B/C)</div>
-                                </div>
-                                <div>
-                                  <div style={{ fontSize: '14px', fontWeight: 700, color: '#dc2626' }}>{bandsAtRiskStudents.length}</div>
-                                  <div style={{ fontSize: '9px', color: '#666' }}>At-Risk (D/E)</div>
-                                </div>
-                              </div>
+                            {/* Footer - Professional Style */}
+                            <div className="footer" style={{ marginTop: '12px', textAlign: 'center', fontSize: '8px', color: '#9ca3af', paddingTop: '8px', borderTop: '1px solid #d1d5db' }}>
+                              This is a computer-generated report. Generated on {new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}.
                             </div>
                           </>
                         ) : (
@@ -5832,11 +5859,58 @@ export default function TeacherAcademicPage() {
                 </div>
               </div>
 
-              {/* Subject Performance - with icon header */}
+              {/* Subject Performance Bar Chart - SVG for print */}
+              <div className="section" style={{ marginBottom: '12px', pageBreakInside: 'avoid' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '8px', paddingBottom: '6px', borderBottom: '1px solid #065f46' }}>
+                  <span style={{ color: '#065f46' }}><IconBarChart /></span>
+                  <h3 style={{ fontSize: '11px', fontWeight: 700, color: '#065f46', margin: 0 }}>Subject Performance Chart</h3>
+                </div>
+                <div style={{ padding: '10px', backgroundColor: '#f9fafb', borderRadius: '6px', border: '1px solid #e5e7eb' }}>
+                  <svg width="100%" height="180" viewBox="0 0 500 180" preserveAspectRatio="xMidYMid meet">
+                    {/* Grid lines */}
+                    <line x1="100" y1="20" x2="480" y2="20" stroke="#e5e7eb" strokeWidth="1" />
+                    <line x1="100" y1="50" x2="480" y2="50" stroke="#e5e7eb" strokeWidth="1" strokeDasharray="4 4" />
+                    <line x1="100" y1="80" x2="480" y2="80" stroke="#f59e0b" strokeWidth="1" strokeDasharray="4 4" opacity="0.5" />
+                    <line x1="100" y1="110" x2="480" y2="110" stroke="#e5e7eb" strokeWidth="1" strokeDasharray="4 4" />
+                    <line x1="100" y1="140" x2="480" y2="140" stroke="#e5e7eb" strokeWidth="1" />
+                    {/* X-axis labels */}
+                    <text x="95" y="24" fontSize="7" fill="#6b7280" textAnchor="end">100%</text>
+                    <text x="95" y="54" fontSize="7" fill="#6b7280" textAnchor="end">75%</text>
+                    <text x="95" y="84" fontSize="7" fill="#f59e0b" textAnchor="end">50%</text>
+                    <text x="95" y="114" fontSize="7" fill="#6b7280" textAnchor="end">25%</text>
+                    <text x="95" y="144" fontSize="7" fill="#6b7280" textAnchor="end">0%</text>
+                    {/* Horizontal bars for each subject */}
+                    {subjectAverages.slice(0, 8).map((sub, i) => {
+                      const barHeight = 14;
+                      const y = 20 + i * 15;
+                      const barWidth = (sub.average / 100) * 380;
+                      const color = sub.average >= 80 ? '#22c55e' : sub.average >= 60 ? '#3b82f6' : sub.average >= 50 ? '#f59e0b' : '#ef4444';
+                      return (
+                        <g key={sub.fullName}>
+                          <rect x="100" y={y} width={barWidth} height={barHeight} fill={color} rx="2" opacity="0.85" />
+                          <text x="100" y={y + 10} fontSize="7" fill="#374151" textAnchor="end" dx="-4">{shortenSubjectName(sub.fullName)}</text>
+                          <text x={105 + barWidth} y={y + 10} fontSize="7" fill="#374151" fontWeight="600">{sub.average.toFixed(0)}%</text>
+                        </g>
+                      );
+                    })}
+                    {/* Legend */}
+                    <rect x="100" y="160" width="10" height="8" fill="#22c55e" rx="1" />
+                    <text x="114" y="167" fontSize="7" fill="#374151">A Grade (80%+)</text>
+                    <rect x="180" y="160" width="10" height="8" fill="#3b82f6" rx="1" />
+                    <text x="194" y="167" fontSize="7" fill="#374151">B/C (60-79%)</text>
+                    <rect x="260" y="160" width="10" height="8" fill="#f59e0b" rx="1" />
+                    <text x="274" y="167" fontSize="7" fill="#374151">D (50-59%)</text>
+                    <rect x="330" y="160" width="10" height="8" fill="#ef4444" rx="1" />
+                    <text x="344" y="167" fontSize="7" fill="#374151">E (&lt;50%)</text>
+                  </svg>
+                </div>
+              </div>
+
+              {/* Subject Performance List */}
               <div className="section" style={{ marginBottom: '12px', pageBreakInside: 'avoid' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '8px', paddingBottom: '6px', borderBottom: '1px solid #065f46' }}>
                   <span style={{ color: '#065f46' }}><IconBook /></span>
-                  <h3 style={{ fontSize: '11px', fontWeight: 700, color: '#065f46', margin: 0 }}>Subject Performance</h3>
+                  <h3 style={{ fontSize: '11px', fontWeight: 700, color: '#065f46', margin: 0 }}>Subject Rankings</h3>
                 </div>
                 <div className="subject-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '6px' }}>
                   {subjectAverages.map((sub, idx) => (
@@ -5855,27 +5929,37 @@ export default function TeacherAcademicPage() {
                 </div>
               </div>
 
-              {/* Grade Distribution - with icon header */}
+              {/* Grade Distribution Bar Chart - SVG for print */}
               <div className="section" style={{ marginBottom: '12px', pageBreakInside: 'avoid' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '8px', paddingBottom: '6px', borderBottom: '1px solid #065f46' }}>
                   <span style={{ color: '#065f46' }}><IconBarChart /></span>
                   <h3 style={{ fontSize: '11px', fontWeight: 700, color: '#065f46', margin: 0 }}>Grade Distribution</h3>
                 </div>
-                <div className="grade-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: '6px' }}>
-                  {gradeDistribution.map(g => {
-                    const total = gradeDistribution.reduce((sum, d) => sum + d.count, 0);
-                    const percentage = total > 0 ? Math.round(g.count / total * 100) : 0;
-                    return (
-                      <div key={g.range} className="grade-card" style={{ position: 'relative', textAlign: 'center', padding: '8px 4px', border: '1px solid #d1d5db', borderRadius: '6px', backgroundColor: '#fff', overflow: 'hidden' }}>
-                        <div style={{ position: 'absolute', right: '2px', bottom: '-8px', fontSize: '36px', fontWeight: 800, color: GRADE_COLORS[g.range as keyof typeof GRADE_COLORS], opacity: 0.1 }}>{g.range}</div>
-                        <div style={{ position: 'relative', zIndex: 1 }}>
-                          <div style={{ fontSize: '12px', fontWeight: 700, color: GRADE_COLORS[g.range as keyof typeof GRADE_COLORS] }}>{g.range}</div>
-                          <div style={{ fontSize: '16px', fontWeight: 700, color: '#1a1a1a' }}>{g.count}</div>
-                          <div style={{ fontSize: '9px', color: '#666' }}>{percentage}%</div>
-                        </div>
-                      </div>
-                    );
-                  })}
+                <div style={{ padding: '10px', backgroundColor: '#f9fafb', borderRadius: '6px', border: '1px solid #e5e7eb' }}>
+                  <svg width="100%" height="120" viewBox="0 0 500 120" preserveAspectRatio="xMidYMid meet">
+                    {/* Grid lines */}
+                    <line x1="40" y1="90" x2="460" y2="90" stroke="#e5e7eb" strokeWidth="1" />
+                    {/* Bars */}
+                    {(() => {
+                      const total = gradeDistribution.reduce((sum, d) => sum + d.count, 0);
+                      const maxCount = Math.max(...gradeDistribution.map(d => d.count), 1);
+                      return gradeDistribution.map((g, i) => {
+                        const barWidth = 55;
+                        const x = 50 + i * 70;
+                        const barHeight = (g.count / maxCount) * 65;
+                        const y = 90 - barHeight;
+                        const percentage = total > 0 ? Math.round(g.count / total * 100) : 0;
+                        return (
+                          <g key={g.range}>
+                            <rect x={x} y={y} width={barWidth} height={barHeight} fill={GRADE_COLORS[g.range as keyof typeof GRADE_COLORS]} rx="3" />
+                            <text x={x + barWidth / 2} y={y - 4} fontSize="9" fill="#374151" textAnchor="middle" fontWeight="700">{g.count}</text>
+                            <text x={x + barWidth / 2} y="103" fontSize="10" fill={GRADE_COLORS[g.range as keyof typeof GRADE_COLORS]} textAnchor="middle" fontWeight="700">{g.range}</text>
+                            <text x={x + barWidth / 2} y="113" fontSize="7" fill="#6b7280" textAnchor="middle">{percentage}%</text>
+                          </g>
+                        );
+                      });
+                    })()}
+                  </svg>
                 </div>
               </div>
 
