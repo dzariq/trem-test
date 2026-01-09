@@ -167,16 +167,21 @@ export function ReflectionSection({ reflection, onChange }: ReflectionSectionPro
           </div>
           
           <Tabs defaultValue="noviceLearners" className="w-full">
-            <TabsList className="grid w-full grid-cols-3 h-auto">
+            <TabsList className="grid w-full grid-cols-3 h-auto bg-sky-100">
               {differentiationQuestions.map((q) => (
                 <TabsTrigger 
                   key={q.key} 
                   value={q.key}
-                  className="text-xs px-2 py-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground relative"
+                  className={cn(
+                    "text-xs px-2 py-2 gap-1",
+                    isLearnerFilled(q.key) 
+                      ? "data-[state=active]:bg-emerald-500 data-[state=active]:text-white bg-emerald-100 text-emerald-700" 
+                      : "data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+                  )}
                 >
                   <span className="truncate">{q.label.split(" ")[0]}</span>
                   {isLearnerFilled(q.key) && (
-                    <Check className="h-3 w-3 ml-1 text-emerald-500 data-[state=active]:text-emerald-200 flex-shrink-0" />
+                    <Check className="h-3.5 w-3.5 flex-shrink-0" />
                   )}
                 </TabsTrigger>
               ))}
