@@ -5729,56 +5729,47 @@ export default function TeacherAcademicPage() {
                               const borderColor = boxPlotRiskView === "high" ? "border-emerald-200" : "border-red-200";
 
                               return (
-                                <div className="space-y-4">
-                                  {/* Horizontal Bar Chart */}
-                                  <div style={{ height: Math.max(200, whiskerData.length * 32 + 40) }}>
-                                    <ResponsiveContainer width="100%" height="100%">
-                                      <BarChart 
-                                        data={chartData} 
-                                        layout="vertical"
-                                        margin={{ top: 5, right: 30, left: 100, bottom: 5 }}
+                                <div className="space-y-2">
+                                  {/* Summary Cards by Year */}
+                                  {Array.from(new Set(chartData.map(r => r.year))).map((year: string) => {
+                                    const yearWhiskers = chartData.filter(r => r.year === year);
+                                    return (
+                                      <div 
+                                        key={year} 
+                                        className={cn(
+                                          "p-3 rounded-lg border",
+                                          bgColor,
+                                          borderColor
+                                        )}
                                       >
-                                        <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.5} horizontal={true} vertical={false} />
-                                        <XAxis 
-                                          type="number" 
-                                          domain={[0, 100]}
-                                          tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }}
-                                          axisLine={{ stroke: 'hsl(var(--border))' }}
-                                        />
-                                        <YAxis 
-                                          type="category" 
-                                          dataKey="name"
-                                          tick={{ fontSize: 10, fill: 'hsl(var(--foreground))' }}
-                                          axisLine={{ stroke: 'hsl(var(--border))' }}
-                                          width={95}
-                                        />
-                                        <Tooltip 
-                                          contentStyle={{ 
-                                            backgroundColor: 'hsl(var(--card))', 
-                                            border: '1px solid hsl(var(--border))',
-                                            borderRadius: '8px',
-                                            fontSize: '11px'
-                                          }}
-                                          formatter={(value: number) => [`${value}%`, 'Score']}
-                                          labelFormatter={(label) => label}
-                                        />
-                                        <Bar 
-                                          dataKey="score" 
-                                          fill={barColor} 
-                                          radius={[0, 4, 4, 0]}
-                                          barSize={20}
-                                        >
-                                          {chartData.map((entry, index) => (
-                                            <Cell 
-                                              key={`cell-${index}`} 
-                                              fill={barColor}
-                                              fillOpacity={0.8 + (boxPlotRiskView === "high" ? (entry.score - 80) / 100 : (50 - entry.score) / 200)}
-                                            />
+                                        <div className="flex items-center gap-2 mb-2">
+                                          <span className="text-xs font-semibold text-foreground">{year}</span>
+                                          <Badge variant="secondary" className={cn("text-[9px] px-1.5 py-0", bgColor, textColor)}>
+                                            {yearWhiskers.length} {boxPlotViewMode === "student" ? "subject" : "student"}{yearWhiskers.length !== 1 ? "s" : ""}
+                                          </Badge>
+                                        </div>
+                                        <div className="flex flex-wrap gap-1.5">
+                                          {yearWhiskers.map((r, i) => (
+                                            <Badge
+                                              key={i} 
+                                              className={cn(
+                                                "text-[10px] px-2 py-0.5",
+                                                boxPlotRiskView === "high" 
+                                                  ? "bg-emerald-100 text-emerald-700 border-emerald-300" 
+                                                  : "bg-red-100 text-red-700 border-red-300"
+                                              )}
+                                            >
+                                              {boxPlotRiskView === "high" 
+                                                ? <ArrowUp className="h-2.5 w-2.5 mr-0.5" />
+                                                : <ArrowDown className="h-2.5 w-2.5 mr-0.5" />
+                                              }
+                                              {r.label}: {r.score}%
+                                            </Badge>
                                           ))}
-                                        </Bar>
-                                      </BarChart>
-                                    </ResponsiveContainer>
-                                  </div>
+                                        </div>
+                                      </div>
+                                    );
+                                  })}
 
                                   {/* View More Button */}
                                   {hasMoreData && (
@@ -5803,49 +5794,6 @@ export default function TeacherAcademicPage() {
                                       </Button>
                                     </div>
                                   )}
-
-                                  {/* Summary Cards by Year */}
-                                  <div className="space-y-2">
-                                    {Array.from(new Set(chartData.map(r => r.year))).map((year: string) => {
-                                      const yearWhiskers = chartData.filter(r => r.year === year);
-                                      return (
-                                        <div 
-                                          key={year} 
-                                          className={cn(
-                                            "p-3 rounded-lg border",
-                                            bgColor,
-                                            borderColor
-                                          )}
-                                        >
-                                          <div className="flex items-center gap-2 mb-2">
-                                            <span className="text-xs font-semibold text-foreground">{year}</span>
-                                            <Badge variant="secondary" className={cn("text-[9px] px-1.5 py-0", bgColor, textColor)}>
-                                              {yearWhiskers.length} {boxPlotViewMode === "student" ? "subject" : "student"}{yearWhiskers.length !== 1 ? "s" : ""}
-                                            </Badge>
-                                          </div>
-                                          <div className="flex flex-wrap gap-1.5">
-                                            {yearWhiskers.map((r, i) => (
-                                              <Badge
-                                                key={i} 
-                                                className={cn(
-                                                  "text-[10px] px-2 py-0.5",
-                                                  boxPlotRiskView === "high" 
-                                                    ? "bg-emerald-100 text-emerald-700 border-emerald-300" 
-                                                    : "bg-red-100 text-red-700 border-red-300"
-                                                )}
-                                              >
-                                                {boxPlotRiskView === "high" 
-                                                  ? <ArrowUp className="h-2.5 w-2.5 mr-0.5" />
-                                                  : <ArrowDown className="h-2.5 w-2.5 mr-0.5" />
-                                                }
-                                                {r.label}: {r.score}%
-                                              </Badge>
-                                            ))}
-                                          </div>
-                                        </div>
-                                      );
-                                    })}
-                                  </div>
                                 </div>
                               );
                             })()}
