@@ -349,6 +349,9 @@ export default function TeacherAcademicPage() {
   // Riskers chart toggle (high/low performers)
   const [boxPlotRiskView, setBoxPlotRiskView] = useState<"high" | "low">("high");
   
+  // Whiskers Analysis year filter
+  const [whiskersAnalysisYear, setWhiskersAnalysisYear] = useState<string>("all");
+  
   // Available classes and year groups for cohort selection
   const allAvailableClasses = ["5A", "5B", "4A", "4B", "3A", "3B"];
   const allAvailableYearGroups = ["Year 5", "Year 4", "Year 3"];
@@ -5606,41 +5609,65 @@ export default function TeacherAcademicPage() {
                             </p>
                           </CardHeader>
                           <CardContent>
-                            {/* Toggle Buttons */}
-                            <div className="flex justify-center mb-4">
-                              <div className="flex rounded-lg border bg-muted/30 p-0.5">
-                                <button
-                                  onClick={() => setBoxPlotRiskView("high")}
-                                  className={cn(
-                                    "px-4 py-2 text-xs font-medium rounded-md transition-all flex items-center gap-1.5",
-                                    boxPlotRiskView === "high" 
-                                      ? "bg-emerald-500 text-white shadow-sm" 
-                                      : "text-muted-foreground hover:text-foreground"
-                                  )}
-                                >
-                                  <ArrowUp className="h-3 w-3" />
-                                  High Whiskers
-                                </button>
-                                <button
-                                  onClick={() => setBoxPlotRiskView("low")}
-                                  className={cn(
-                                    "px-4 py-2 text-xs font-medium rounded-md transition-all flex items-center gap-1.5",
-                                    boxPlotRiskView === "low" 
-                                      ? "bg-red-500 text-white shadow-sm" 
-                                      : "text-muted-foreground hover:text-foreground"
-                                  )}
-                                >
-                                  <ArrowDown className="h-3 w-3" />
-                                  Low Whiskers
-                                </button>
+                            {/* Year Selector and Toggle Buttons */}
+                            <div className="flex flex-col gap-3 mb-4">
+                              {/* Year Selector */}
+                              <div className="flex items-center gap-2">
+                                <span className="text-xs text-muted-foreground">Year:</span>
+                                <Select value={whiskersAnalysisYear} onValueChange={setWhiskersAnalysisYear}>
+                                  <SelectTrigger className="h-8 w-[120px] text-xs">
+                                    <SelectValue />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    <SelectItem value="all">All Years</SelectItem>
+                                    {availableBoxPlotYears.map(year => (
+                                      <SelectItem key={year} value={year}>{year}</SelectItem>
+                                    ))}
+                                  </SelectContent>
+                                </Select>
+                              </div>
+                              
+                              {/* Toggle Buttons */}
+                              <div className="flex justify-center">
+                                <div className="flex rounded-lg border bg-muted/30 p-0.5">
+                                  <button
+                                    onClick={() => setBoxPlotRiskView("high")}
+                                    className={cn(
+                                      "px-4 py-2 text-xs font-medium rounded-md transition-all flex items-center gap-1.5",
+                                      boxPlotRiskView === "high" 
+                                        ? "bg-emerald-500 text-white shadow-sm" 
+                                        : "text-muted-foreground hover:text-foreground"
+                                    )}
+                                  >
+                                    <ArrowUp className="h-3 w-3" />
+                                    High Whiskers
+                                  </button>
+                                  <button
+                                    onClick={() => setBoxPlotRiskView("low")}
+                                    className={cn(
+                                      "px-4 py-2 text-xs font-medium rounded-md transition-all flex items-center gap-1.5",
+                                      boxPlotRiskView === "low" 
+                                        ? "bg-red-500 text-white shadow-sm" 
+                                        : "text-muted-foreground hover:text-foreground"
+                                    )}
+                                  >
+                                    <ArrowDown className="h-3 w-3" />
+                                    Low Whiskers
+                                  </button>
+                                </div>
                               </div>
                             </div>
 
                             {(() => {
+                              // Filter boxPlotData by selected year
+                              const filteredData = whiskersAnalysisYear === "all" 
+                                ? boxPlotData 
+                                : boxPlotData.filter(stat => stat.year === whiskersAnalysisYear);
+                              
                               // Collect data points at the whisker boundaries using the new whiskerDetails arrays
                               const whiskerData: { year: string; label: string; score: number }[] = [];
                               
-                              boxPlotData.forEach(stat => {
+                              filteredData.forEach(stat => {
                                 // Use the new whiskerHighDetails and whiskerLowDetails arrays
                                 const details = boxPlotRiskView === "high" 
                                   ? stat.whiskerHighDetails 
