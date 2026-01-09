@@ -5637,33 +5637,22 @@ export default function TeacherAcademicPage() {
                             </div>
 
                             {(() => {
-                              // Collect data points near the whisker values (upper or lower)
+                              // Collect data points at the whisker boundaries using the new whiskerDetails arrays
                               const whiskerData: { year: string; label: string; score: number }[] = [];
                               
                               boxPlotData.forEach(stat => {
-                                // Get the whisker value we're interested in
-                                const whiskerValue = boxPlotRiskView === "high" ? stat.whiskerHigh : stat.whiskerLow;
+                                // Use the new whiskerHighDetails and whiskerLowDetails arrays
+                                const details = boxPlotRiskView === "high" 
+                                  ? stat.whiskerHighDetails 
+                                  : stat.whiskerLowDetails;
                                 
-                                // Find all data points that are at or near the whisker boundary
-                                // For high whiskers: scores between Q3 and whiskerHigh (top performers within normal range)
-                                // For low whiskers: scores between whiskerLow and Q1 (bottom performers within normal range)
-                                if (stat.outlierDetails && stat.outlierDetails.length > 0) {
-                                  stat.outlierDetails.forEach(o => {
-                                    if (boxPlotRiskView === "high" && o.score >= stat.q3 && o.score <= stat.whiskerHigh) {
-                                      whiskerData.push({ year: stat.year, label: o.label, score: o.score });
-                                    } else if (boxPlotRiskView === "low" && o.score >= stat.whiskerLow && o.score <= stat.q1) {
-                                      whiskerData.push({ year: stat.year, label: o.label, score: o.score });
-                                    }
-                                  });
-                                }
-                                
-                                // Also check if we have the whisker value itself as a data point
-                                // Show the whisker value info even if no specific labels
-                                if (whiskerData.filter(w => w.year === stat.year).length === 0) {
-                                  whiskerData.push({ 
-                                    year: stat.year, 
-                                    label: boxPlotRiskView === "high" ? "Top Performer" : "Bottom Performer", 
-                                    score: whiskerValue 
+                                if (details && details.length > 0) {
+                                  details.forEach(d => {
+                                    whiskerData.push({ 
+                                      year: stat.year, 
+                                      label: d.label, 
+                                      score: d.score 
+                                    });
                                   });
                                 }
                               });
