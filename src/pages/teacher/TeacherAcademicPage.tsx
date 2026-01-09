@@ -5588,6 +5588,125 @@ export default function TeacherAcademicPage() {
                         </Card>
                       )}
 
+                      {/* Outliers Trend Chart */}
+                      {boxPlotData.some(s => s.outliers.length > 0) && (
+                        <Card>
+                          <CardHeader className="pb-2">
+                            <CardTitle className="text-sm flex items-center gap-2">
+                              <AlertTriangle className="h-4 w-4 text-amber-500" />
+                              Outliers Trend by Year
+                            </CardTitle>
+                          </CardHeader>
+                          <CardContent>
+                            {(() => {
+                              // Prepare data for the outliers trend chart
+                              const outliersTrendData = boxPlotData.map(stat => {
+                                const highOutliers = stat.outlierDetails?.filter(o => o.score > stat.q3).length || 
+                                  stat.outliers.filter(score => score > stat.q3).length;
+                                const lowOutliers = stat.outlierDetails?.filter(o => o.score < stat.q1).length || 
+                                  stat.outliers.filter(score => score < stat.q1).length;
+                                return {
+                                  year: stat.year,
+                                  high: highOutliers,
+                                  low: lowOutliers,
+                                  total: stat.outliers.length
+                                };
+                              });
+
+                              return (
+                                <div className="space-y-4">
+                                  {/* Chart */}
+                                  <div className="h-[180px]">
+                                    <ResponsiveContainer width="100%" height="100%">
+                                      <BarChart data={outliersTrendData} margin={{ top: 10, right: 10, left: -10, bottom: 0 }}>
+                                        <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.5} />
+                                        <XAxis 
+                                          dataKey="year" 
+                                          tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }}
+                                          axisLine={{ stroke: 'hsl(var(--border))' }}
+                                        />
+                                        <YAxis 
+                                          tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }}
+                                          axisLine={{ stroke: 'hsl(var(--border))' }}
+                                          allowDecimals={false}
+                                        />
+                                        <Tooltip 
+                                          contentStyle={{ 
+                                            backgroundColor: 'hsl(var(--card))', 
+                                            border: '1px solid hsl(var(--border))',
+                                            borderRadius: '8px',
+                                            fontSize: '11px'
+                                          }}
+                                          formatter={(value: number, name: string) => [
+                                            value, 
+                                            name === 'high' ? 'High Performers' : 'Needs Attention'
+                                          ]}
+                                        />
+                                        <Legend 
+                                          wrapperStyle={{ fontSize: '10px' }}
+                                          formatter={(value) => value === 'high' ? 'High Performers' : 'Needs Attention'}
+                                        />
+                                        <Bar dataKey="high" fill="#22c55e" name="high" radius={[4, 4, 0, 0]} />
+                                        <Bar dataKey="low" fill="#ef4444" name="low" radius={[4, 4, 0, 0]} />
+                                      </BarChart>
+                                    </ResponsiveContainer>
+                                  </div>
+
+                                  {/* Outliers Details List */}
+                                  <div className="space-y-2">
+                                    {boxPlotData.filter(s => s.outliers.length > 0).map(stat => {
+                                      const highOutliers = stat.outlierDetails?.filter(o => o.score > stat.q3) || [];
+                                      const lowOutliers = stat.outlierDetails?.filter(o => o.score < stat.q1) || [];
+                                      
+                                      return (
+                                        <div key={stat.year} className="p-2.5 rounded-lg bg-muted/30 border border-border/50">
+                                          <div className="flex items-center gap-2 mb-2">
+                                            <span className="text-xs font-semibold text-foreground">{stat.year}</span>
+                                            <Badge variant="secondary" className="text-[9px] px-1.5 py-0">
+                                              {stat.outliers.length} outlier{stat.outliers.length !== 1 ? 's' : ''}
+                                            </Badge>
+                                          </div>
+                                          
+                                          <div className="space-y-1.5">
+                                            {highOutliers.length > 0 && (
+                                              <div className="flex flex-wrap items-center gap-1">
+                                                <span className="text-[9px] font-medium text-emerald-600 flex items-center gap-1">
+                                                  <ArrowUp className="h-2.5 w-2.5" />
+                                                  High:
+                                                </span>
+                                                {highOutliers.map((o, i) => (
+                                                  <Badge key={i} className="text-[9px] px-1.5 py-0 bg-emerald-100 text-emerald-700 border-emerald-200">
+                                                    {o.label} ({o.score}%)
+                                                  </Badge>
+                                                ))}
+                                              </div>
+                                            )}
+                                            
+                                            {lowOutliers.length > 0 && (
+                                              <div className="flex flex-wrap items-center gap-1">
+                                                <span className="text-[9px] font-medium text-red-600 flex items-center gap-1">
+                                                  <ArrowDown className="h-2.5 w-2.5" />
+                                                  Low:
+                                                </span>
+                                                {lowOutliers.map((o, i) => (
+                                                  <Badge key={i} className="text-[9px] px-1.5 py-0 bg-red-100 text-red-700 border-red-200">
+                                                    {o.label} ({o.score}%)
+                                                  </Badge>
+                                                ))}
+                                              </div>
+                                            )}
+                                          </div>
+                                        </div>
+                                      );
+                                    })}
+                                  </div>
+                                </div>
+                              );
+                            })()}
+                          </CardContent>
+                        </Card>
+                      )}
+
                       {/* Statistics Table */}
                       <Card>
                         <CardHeader className="pb-2">
