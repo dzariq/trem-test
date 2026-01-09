@@ -22,6 +22,8 @@ export interface BoxPlotStats {
   whiskerHigh: number; // highest score <= (Q3 + 1.5*IQR)
   outliers: number[];  // scores outside whiskers (for backward compatibility)
   outlierDetails: OutlierInfo[]; // detailed outlier info with labels
+  whiskerHighDetails: OutlierInfo[]; // data points at/near upper whisker (Q3 to whiskerHigh)
+  whiskerLowDetails: OutlierInfo[];  // data points at/near lower whisker (whiskerLow to Q1)
   mean: number;        // mean value
   iqr: number;         // Q3 - Q1
   min: number;         // minimum value
@@ -82,6 +84,8 @@ export function calculateBoxPlotStats(scores: number[], year: string, labels?: s
       whiskerHigh: 0,
       outliers: [],
       outlierDetails: [],
+      whiskerHighDetails: [],
+      whiskerLowDetails: [],
       mean: 0,
       iqr: 0,
       min: 0,
@@ -120,6 +124,24 @@ export function calculateBoxPlotStats(scores: number[], year: string, labels?: s
       label: pair.label
     }));
   
+  // Identify data points at/near upper whisker (between Q3 and whiskerHigh, inclusive)
+  const whiskerHighDetails: OutlierInfo[] = scoreLabelPairs
+    .filter(pair => pair.score >= q3 && pair.score <= whiskerHigh)
+    .map(pair => ({
+      score: Math.round(pair.score),
+      label: pair.label
+    }))
+    .sort((a, b) => b.score - a.score); // Sort descending (highest first)
+  
+  // Identify data points at/near lower whisker (between whiskerLow and Q1, inclusive)
+  const whiskerLowDetails: OutlierInfo[] = scoreLabelPairs
+    .filter(pair => pair.score >= whiskerLow && pair.score <= q1)
+    .map(pair => ({
+      score: Math.round(pair.score),
+      label: pair.label
+    }))
+    .sort((a, b) => a.score - b.score); // Sort ascending (lowest first)
+  
   // Calculate mean
   const mean = Math.round(scores.reduce((sum, v) => sum + v, 0) / scores.length);
   
@@ -133,6 +155,8 @@ export function calculateBoxPlotStats(scores: number[], year: string, labels?: s
     whiskerHigh: Math.round(whiskerHigh * 10) / 10,
     outliers: outlierDetails.map(o => o.score),
     outlierDetails,
+    whiskerHighDetails,
+    whiskerLowDetails,
     mean,
     iqr: Math.round(iqr * 10) / 10,
     min: sorted[0],
