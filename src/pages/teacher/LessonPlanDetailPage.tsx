@@ -448,7 +448,7 @@ const LessonPlanDetailPage = () => {
                     type="date"
                     value={lessonPlan.date}
                     onChange={(e) => updateField("date", e.target.value)}
-                    className="h-9"
+                    className="h-9 w-full [&::-webkit-calendar-picker-indicator]:opacity-100 [&::-webkit-calendar-picker-indicator]:cursor-pointer"
                   />
                 </div>
                 <div className="space-y-1.5">

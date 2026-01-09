@@ -33,12 +33,12 @@ export function TagInput({ tags, onChange, placeholder = "Add tag...", className
 
   return (
     <div className={cn("space-y-2", className)}>
-      <div className="flex flex-wrap gap-1.5 min-h-[32px]">
+      <div className="flex flex-wrap gap-1.5 min-h-[32px] items-center">
         {tags.map((tag) => (
           <Badge
             key={tag}
             variant="secondary"
-            className="gap-1 pr-1 text-xs"
+            className={cn("text-xs flex items-center", isEditMode ? "gap-1 pr-1" : "px-3 py-1")}
           >
             {tag}
             {isEditMode && (
