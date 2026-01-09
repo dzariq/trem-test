@@ -346,6 +346,9 @@ export default function TeacherAcademicPage() {
   const [boxPlotCohortPopoverOpen, setBoxPlotCohortPopoverOpen] = useState(false);
   const [boxPlotSubjectExamType, setBoxPlotSubjectExamType] = useState<string>("all"); // optional
   
+  // Riskers chart toggle (high/low performers)
+  const [boxPlotRiskView, setBoxPlotRiskView] = useState<"high" | "low">("high");
+  
   // Available classes and year groups for cohort selection
   const allAvailableClasses = ["5A", "5B", "4A", "4B", "3A", "3B"];
   const allAvailableYearGroups = ["Year 5", "Year 4", "Year 3"];
@@ -5584,6 +5587,206 @@ export default function TeacherAcademicPage() {
                                 </div>
                               </div>
                             ))}
+                          </CardContent>
+                        </Card>
+                      )}
+
+                      {/* Performance Outliers (Riskers) Chart */}
+                      {boxPlotData.some(s => s.outliers.length > 0) && (
+                        <Card>
+                          <CardHeader className="pb-2">
+                            <CardTitle className="text-sm flex items-center gap-2">
+                              <Users className="h-4 w-4 text-primary" />
+                              Performance Outliers
+                            </CardTitle>
+                            <p className="text-xs text-muted-foreground mt-1">
+                              {boxPlotViewMode === "student" 
+                                ? "Subjects where the student performed exceptionally high or low"
+                                : "Students who performed exceptionally high or low in the selected subjects"}
+                            </p>
+                          </CardHeader>
+                          <CardContent>
+                            {/* Toggle Buttons */}
+                            <div className="flex justify-center mb-4">
+                              <div className="flex rounded-lg border bg-muted/30 p-0.5">
+                                <button
+                                  onClick={() => setBoxPlotRiskView("high")}
+                                  className={cn(
+                                    "px-4 py-2 text-xs font-medium rounded-md transition-all flex items-center gap-1.5",
+                                    boxPlotRiskView === "high" 
+                                      ? "bg-emerald-500 text-white shadow-sm" 
+                                      : "text-muted-foreground hover:text-foreground"
+                                  )}
+                                >
+                                  <ArrowUp className="h-3 w-3" />
+                                  High Riskers
+                                </button>
+                                <button
+                                  onClick={() => setBoxPlotRiskView("low")}
+                                  className={cn(
+                                    "px-4 py-2 text-xs font-medium rounded-md transition-all flex items-center gap-1.5",
+                                    boxPlotRiskView === "low" 
+                                      ? "bg-red-500 text-white shadow-sm" 
+                                      : "text-muted-foreground hover:text-foreground"
+                                  )}
+                                >
+                                  <ArrowDown className="h-3 w-3" />
+                                  Low Riskers
+                                </button>
+                              </div>
+                            </div>
+
+                            {(() => {
+                              // Collect all outliers from all years based on the selected view
+                              const allRiskers: { year: string; label: string; score: number }[] = [];
+                              
+                              boxPlotData.forEach(stat => {
+                                if (stat.outlierDetails && stat.outlierDetails.length > 0) {
+                                  stat.outlierDetails.forEach(o => {
+                                    if (boxPlotRiskView === "high" && o.score > stat.q3) {
+                                      allRiskers.push({ year: stat.year, label: o.label, score: o.score });
+                                    } else if (boxPlotRiskView === "low" && o.score < stat.q1) {
+                                      allRiskers.push({ year: stat.year, label: o.label, score: o.score });
+                                    }
+                                  });
+                                }
+                              });
+
+                              // Sort by score (descending for high, ascending for low)
+                              allRiskers.sort((a, b) => 
+                                boxPlotRiskView === "high" ? b.score - a.score : a.score - b.score
+                              );
+
+                              if (allRiskers.length === 0) {
+                                return (
+                                  <div className="flex flex-col items-center justify-center py-8 text-center">
+                                    <div className={cn(
+                                      "h-12 w-12 rounded-full flex items-center justify-center mb-3",
+                                      boxPlotRiskView === "high" ? "bg-emerald-100" : "bg-red-100"
+                                    )}>
+                                      {boxPlotRiskView === "high" 
+                                        ? <ArrowUp className="h-6 w-6 text-emerald-500" />
+                                        : <ArrowDown className="h-6 w-6 text-red-500" />
+                                      }
+                                    </div>
+                                    <p className="text-sm text-muted-foreground">
+                                      No {boxPlotRiskView === "high" ? "high performers" : "low performers"} found in the selected data
+                                    </p>
+                                  </div>
+                                );
+                              }
+
+                              // Prepare data for horizontal bar chart grouped by year
+                              const chartData = allRiskers.map((r, idx) => ({
+                                id: idx,
+                                name: `${r.label} (${r.year})`,
+                                score: r.score,
+                                year: r.year,
+                                label: r.label
+                              }));
+
+                              const barColor = boxPlotRiskView === "high" ? "#22c55e" : "#ef4444";
+                              const bgColor = boxPlotRiskView === "high" ? "bg-emerald-50" : "bg-red-50";
+                              const textColor = boxPlotRiskView === "high" ? "text-emerald-700" : "text-red-700";
+                              const borderColor = boxPlotRiskView === "high" ? "border-emerald-200" : "border-red-200";
+
+                              return (
+                                <div className="space-y-4">
+                                  {/* Horizontal Bar Chart */}
+                                  <div style={{ height: Math.max(200, allRiskers.length * 32 + 40) }}>
+                                    <ResponsiveContainer width="100%" height="100%">
+                                      <BarChart 
+                                        data={chartData} 
+                                        layout="vertical"
+                                        margin={{ top: 5, right: 30, left: 100, bottom: 5 }}
+                                      >
+                                        <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.5} horizontal={true} vertical={false} />
+                                        <XAxis 
+                                          type="number" 
+                                          domain={[0, 100]}
+                                          tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }}
+                                          axisLine={{ stroke: 'hsl(var(--border))' }}
+                                        />
+                                        <YAxis 
+                                          type="category" 
+                                          dataKey="name"
+                                          tick={{ fontSize: 10, fill: 'hsl(var(--foreground))' }}
+                                          axisLine={{ stroke: 'hsl(var(--border))' }}
+                                          width={95}
+                                        />
+                                        <Tooltip 
+                                          contentStyle={{ 
+                                            backgroundColor: 'hsl(var(--card))', 
+                                            border: '1px solid hsl(var(--border))',
+                                            borderRadius: '8px',
+                                            fontSize: '11px'
+                                          }}
+                                          formatter={(value: number) => [`${value}%`, 'Score']}
+                                          labelFormatter={(label) => label}
+                                        />
+                                        <Bar 
+                                          dataKey="score" 
+                                          fill={barColor} 
+                                          radius={[0, 4, 4, 0]}
+                                          barSize={20}
+                                        >
+                                          {chartData.map((entry, index) => (
+                                            <Cell 
+                                              key={`cell-${index}`} 
+                                              fill={barColor}
+                                              fillOpacity={0.8 + (boxPlotRiskView === "high" ? (entry.score - 80) / 100 : (50 - entry.score) / 200)}
+                                            />
+                                          ))}
+                                        </Bar>
+                                      </BarChart>
+                                    </ResponsiveContainer>
+                                  </div>
+
+                                  {/* Summary Cards by Year */}
+                                  <div className="space-y-2">
+                                    {Array.from(new Set(allRiskers.map(r => r.year))).map(year => {
+                                      const yearRiskers = allRiskers.filter(r => r.year === year);
+                                      return (
+                                        <div 
+                                          key={year} 
+                                          className={cn(
+                                            "p-3 rounded-lg border",
+                                            bgColor,
+                                            borderColor
+                                          )}
+                                        >
+                                          <div className="flex items-center gap-2 mb-2">
+                                            <span className="text-xs font-semibold text-foreground">{year}</span>
+                                            <Badge variant="secondary" className={cn("text-[9px] px-1.5 py-0", bgColor, textColor)}>
+                                              {yearRiskers.length} {boxPlotViewMode === "student" ? "subject" : "student"}{yearRiskers.length !== 1 ? "s" : ""}
+                                            </Badge>
+                                          </div>
+                                          <div className="flex flex-wrap gap-1.5">
+                                            {yearRiskers.map((r, i) => (
+                                              <Badge 
+                                                key={i} 
+                                                className={cn(
+                                                  "text-[10px] px-2 py-0.5",
+                                                  boxPlotRiskView === "high" 
+                                                    ? "bg-emerald-100 text-emerald-700 border-emerald-300" 
+                                                    : "bg-red-100 text-red-700 border-red-300"
+                                                )}
+                                              >
+                                                {boxPlotRiskView === "high" 
+                                                  ? <ArrowUp className="h-2.5 w-2.5 mr-0.5" />
+                                                  : <ArrowDown className="h-2.5 w-2.5 mr-0.5" />
+                                                }
+                                                {r.label}: {r.score}%
+                                              </Badge>
+                                            ))}
+                                          </div>
+                                        </div>
+                                      );
+                                    })}
+                                  </div>
+                                </div>
+                              );
+                            })()}
                           </CardContent>
                         </Card>
                       )}
