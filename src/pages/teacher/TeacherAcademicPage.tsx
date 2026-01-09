@@ -6961,11 +6961,11 @@ export default function TeacherAcademicPage() {
                     </p>
                   </div>
 
-                  {/* Box Plot Chart */}
+                  {/* Box Plot Chart - Bigger */}
                   <div style={{ marginBottom: '16px', padding: '12px', backgroundColor: '#f9fafb', borderRadius: '8px', border: '1px solid #e5e7eb' }}>
                     <h3 style={{ fontSize: '12px', fontWeight: 'bold', color: '#374151', marginBottom: '12px' }}>Box & Whisker Chart</h3>
-                    <div style={{ height: '360px' }}>
-                      <BoxPlotChart data={boxPlotData} showMean={true} height={340} hideZoomHint={true} />
+                    <div style={{ height: '480px' }}>
+                      <BoxPlotChart data={boxPlotData} showMean={true} height={460} hideZoomHint={true} />
                     </div>
                   </div>
 
@@ -7004,31 +7004,86 @@ export default function TeacherAcademicPage() {
                     </table>
                   </div>
 
-                  {/* Insights */}
-                  {insights.length > 0 && (
-                    <div style={{ marginBottom: '16px', padding: '12px', backgroundColor: '#f0fdf4', borderRadius: '8px', border: '1px solid #86efac' }}>
-                      <h3 style={{ fontSize: '12px', fontWeight: 'bold', color: '#166534', marginBottom: '8px' }}>Key Insights</h3>
-                      <ul style={{ margin: 0, paddingLeft: '16px' }}>
-                        {insights.map((insight, idx) => (
-                          <li key={idx} style={{ fontSize: '10px', color: '#374151', marginBottom: '4px' }}>
-                            <strong>{insight.title}:</strong> {insight.description}
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                  )}
-
-                  {/* Outliers Summary */}
+                  {/* Detailed Outliers Section by Year */}
                   {boxPlotData.some(s => s.outliers.length > 0) && (
                     <div style={{ marginBottom: '16px' }}>
-                      <h3 style={{ fontSize: '12px', fontWeight: 'bold', color: '#374151', marginBottom: '8px' }}>Outliers Summary</h3>
-                      <div style={{ fontSize: '10px', color: '#6b7280' }}>
-                        {boxPlotData.filter(s => s.outliers.length > 0).map(stat => (
-                          <div key={stat.year} style={{ marginBottom: '4px' }}>
-                            <strong>{stat.year}:</strong> {stat.outlierDetails?.map(o => `${o.label} (${o.score})`).join(', ') || stat.outliers.join(', ')}
+                      <h3 style={{ fontSize: '12px', fontWeight: 'bold', color: '#374151', marginBottom: '12px' }}>Outliers by Year</h3>
+                      {boxPlotData.filter(s => s.outliers.length > 0).map(stat => {
+                        const highOutliers = stat.outlierDetails?.filter(o => o.score > stat.q3) || [];
+                        const lowOutliers = stat.outlierDetails?.filter(o => o.score < stat.q1) || [];
+                        
+                        return (
+                          <div key={stat.year} style={{ marginBottom: '12px', padding: '10px', backgroundColor: '#f9fafb', borderRadius: '6px', border: '1px solid #e5e7eb' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', marginBottom: '8px' }}>
+                              <span style={{ fontSize: '11px', fontWeight: 'bold', color: '#1a1a1a', marginRight: '8px' }}>{stat.year}</span>
+                              <span style={{ fontSize: '9px', color: '#6b7280', padding: '2px 6px', backgroundColor: '#e5e7eb', borderRadius: '4px' }}>
+                                {stat.outliers.length} outlier{stat.outliers.length !== 1 ? 's' : ''}
+                              </span>
+                            </div>
+                            
+                            {highOutliers.length > 0 && (
+                              <div style={{ marginBottom: '6px' }}>
+                                <div style={{ display: 'flex', alignItems: 'center', marginBottom: '4px' }}>
+                                  <span style={{ fontSize: '9px', fontWeight: '600', color: '#059669', marginRight: '6px' }}>▲ High Performers</span>
+                                </div>
+                                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
+                                  {highOutliers.map((o, i) => (
+                                    <span key={i} style={{ 
+                                      fontSize: '9px', 
+                                      padding: '3px 8px', 
+                                      backgroundColor: '#dcfce7', 
+                                      color: '#166534', 
+                                      borderRadius: '4px',
+                                      border: '1px solid #86efac'
+                                    }}>
+                                      {o.label}: {o.score}%
+                                    </span>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
+                            
+                            {lowOutliers.length > 0 && (
+                              <div>
+                                <div style={{ display: 'flex', alignItems: 'center', marginBottom: '4px' }}>
+                                  <span style={{ fontSize: '9px', fontWeight: '600', color: '#dc2626', marginRight: '6px' }}>▼ Needs Attention</span>
+                                </div>
+                                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
+                                  {lowOutliers.map((o, i) => (
+                                    <span key={i} style={{ 
+                                      fontSize: '9px', 
+                                      padding: '3px 8px', 
+                                      backgroundColor: '#fee2e2', 
+                                      color: '#991b1b', 
+                                      borderRadius: '4px',
+                                      border: '1px solid #fca5a5'
+                                    }}>
+                                      {o.label}: {o.score}%
+                                    </span>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
+                            
+                            {/* Show raw outliers if no details available */}
+                            {(!stat.outlierDetails || stat.outlierDetails.length === 0) && stat.outliers.length > 0 && (
+                              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
+                                {stat.outliers.map((score, i) => (
+                                  <span key={i} style={{ 
+                                    fontSize: '9px', 
+                                    padding: '3px 8px', 
+                                    backgroundColor: score > stat.q3 ? '#dcfce7' : '#fee2e2', 
+                                    color: score > stat.q3 ? '#166534' : '#991b1b', 
+                                    borderRadius: '4px'
+                                  }}>
+                                    {score}%
+                                  </span>
+                                ))}
+                              </div>
+                            )}
                           </div>
-                        ))}
-                      </div>
+                        );
+                      })}
                     </div>
                   )}
 
