@@ -469,7 +469,18 @@ const LessonPlanDetailPage = () => {
             {/* Week, Lesson, Date, Class */}
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
               <div className="space-y-1.5">
-                <Label className="text-xs text-muted-foreground">Week</Label>
+                <div className="flex items-center justify-between">
+                  <Label className="text-xs text-muted-foreground">Week</Label>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-5 w-5 p-0"
+                    onClick={() => navigate(`/teacher/week-config?week=${lessonPlan.weekNumber}`)}
+                    title="Open Week Config"
+                  >
+                    <Maximize2 className="h-3 w-3 text-muted-foreground hover:text-primary" />
+                  </Button>
+                </div>
                 {isEditMode ? (
                   <Select 
                     value={lessonPlan.weekNumber.toString()} 
@@ -496,7 +507,7 @@ const LessonPlanDetailPage = () => {
                 ) : (
                   <div 
                     className="h-9 px-3 flex items-center rounded-md border border-input bg-background text-sm cursor-pointer"
-                    onClick={shakeEditButton}
+                    onClick={() => navigate(`/teacher/week-config?week=${lessonPlan.weekNumber}`)}
                   >
                     W{lessonPlan.weekNumber}
                   </div>
