@@ -223,12 +223,12 @@ export function ReflectionSection({ reflection, onChange, onSave, lastEditedDate
           />
         </div>
 
-        {/* Last Edited & Save */}
+        {/* Reflection Saved Date & Save */}
         <div className="flex items-center justify-between pt-2 border-t border-border/50">
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
             <Calendar className="h-4 w-4" />
             <span>
-              Last edited: {lastEditedDate ? format(new Date(lastEditedDate), "dd MMM yyyy, h:mm a") : "Not yet saved"}
+              Reflection saved: {lastEditedDate ? format(new Date(lastEditedDate), "dd MMM yyyy, h:mm a") : "Not yet saved"}
             </span>
           </div>
           <Button onClick={onSave} className="gap-2">

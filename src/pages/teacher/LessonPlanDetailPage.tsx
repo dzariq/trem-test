@@ -10,6 +10,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Calendar as CalendarComponent } from "@/components/ui/calendar";
 import {
   Popover,
   PopoverContent,
@@ -29,6 +30,7 @@ import {
   Printer,
   BookOpen,
   Calendar,
+  CalendarIcon,
   User,
   GraduationCap,
   Users,
@@ -50,6 +52,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import { format, parseISO } from "date-fns";
 import { TagInput } from "@/components/lessonplan/TagInput";
 import { LessonFlowEditor } from "@/components/lessonplan/LessonFlowEditor";
 import { ObjectivesEditor } from "@/components/lessonplan/ObjectivesEditor";
@@ -532,15 +535,6 @@ const LessonPlanDetailPage = () => {
                 )}
               </div>
               <div className="space-y-1.5">
-                <Label className="text-xs text-muted-foreground">Date</Label>
-                <Input
-                  type="date"
-                  value={lessonPlan.date}
-                  onChange={(e) => updateField("date", e.target.value)}
-                  className="h-9 w-full [&::-webkit-calendar-picker-indicator]:opacity-100 [&::-webkit-calendar-picker-indicator]:cursor-pointer"
-                />
-              </div>
-              <div className="space-y-1.5">
                 <Label className="text-xs text-muted-foreground">Class</Label>
                 {isEditMode ? (
                   <Select 
@@ -747,6 +741,52 @@ const LessonPlanDetailPage = () => {
             lastEditedDate={lessonPlan.updatedAt}
           />
         </div>
+
+        {/* Section 9: Lesson Date */}
+        <Card className="bg-muted/30">
+          <CardHeader className="py-3 px-4">
+            <div className="flex items-center gap-2">
+              <CalendarIcon className="h-4 w-4 text-primary" />
+              <CardTitle className="text-sm font-semibold">Lesson Date</CardTitle>
+            </div>
+            <p className="text-xs text-muted-foreground mt-1">
+              Select the date when this lesson takes place
+            </p>
+          </CardHeader>
+          <CardContent className="px-4 pb-4">
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="outline"
+                  className={cn(
+                    "w-full justify-start text-left font-normal h-11",
+                    !lessonPlan.date && "text-muted-foreground"
+                  )}
+                >
+                  <CalendarIcon className="mr-2 h-4 w-4" />
+                  {lessonPlan.date ? (
+                    format(parseISO(lessonPlan.date), "EEEE, d MMMM yyyy")
+                  ) : (
+                    <span>Select lesson date...</span>
+                  )}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0" align="start">
+                <CalendarComponent
+                  mode="single"
+                  selected={lessonPlan.date ? parseISO(lessonPlan.date) : undefined}
+                  onSelect={(date) => {
+                    if (date) {
+                      updateField("date", format(date, "yyyy-MM-dd"));
+                    }
+                  }}
+                  initialFocus
+                  className="pointer-events-auto"
+                />
+              </PopoverContent>
+            </Popover>
+          </CardContent>
+        </Card>
 
 
         {/* Bottom Padding */}
