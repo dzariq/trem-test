@@ -985,6 +985,189 @@ export type Database = {
         }
         Relationships: []
       }
+      lesson_plan_details: {
+        Row: {
+          approval: Json | null
+          attachments: string[] | null
+          attendance: Json | null
+          created_at: string | null
+          date: string | null
+          homework: string | null
+          id: string
+          learning_objectives: string[] | null
+          lesson_flow: Json | null
+          lesson_number: number
+          previous_learning: string | null
+          reflection: Json | null
+          resources: string | null
+          subtopics: string[] | null
+          teacher_names: string[] | null
+          title: string
+          topic: string | null
+          updated_at: string | null
+          vocabulary: string[] | null
+          week_id: string
+        }
+        Insert: {
+          approval?: Json | null
+          attachments?: string[] | null
+          attendance?: Json | null
+          created_at?: string | null
+          date?: string | null
+          homework?: string | null
+          id?: string
+          learning_objectives?: string[] | null
+          lesson_flow?: Json | null
+          lesson_number: number
+          previous_learning?: string | null
+          reflection?: Json | null
+          resources?: string | null
+          subtopics?: string[] | null
+          teacher_names?: string[] | null
+          title?: string
+          topic?: string | null
+          updated_at?: string | null
+          vocabulary?: string[] | null
+          week_id: string
+        }
+        Update: {
+          approval?: Json | null
+          attachments?: string[] | null
+          attendance?: Json | null
+          created_at?: string | null
+          date?: string | null
+          homework?: string | null
+          id?: string
+          learning_objectives?: string[] | null
+          lesson_flow?: Json | null
+          lesson_number?: number
+          previous_learning?: string | null
+          reflection?: Json | null
+          resources?: string | null
+          subtopics?: string[] | null
+          teacher_names?: string[] | null
+          title?: string
+          topic?: string | null
+          updated_at?: string | null
+          vocabulary?: string[] | null
+          week_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lesson_plan_details_week_id_fkey"
+            columns: ["week_id"]
+            isOneToOne: false
+            referencedRelation: "lesson_weeks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      lesson_plans: {
+        Row: {
+          academic_year: number
+          class: string
+          created_at: string | null
+          id: string
+          subject: string
+          teacher_id: string
+          updated_at: string | null
+        }
+        Insert: {
+          academic_year: number
+          class: string
+          created_at?: string | null
+          id?: string
+          subject: string
+          teacher_id: string
+          updated_at?: string | null
+        }
+        Update: {
+          academic_year?: number
+          class?: string
+          created_at?: string | null
+          id?: string
+          subject?: string
+          teacher_id?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      lesson_topics: {
+        Row: {
+          created_at: string | null
+          id: string
+          lesson_plan_id: string
+          subtopics: string[] | null
+          title: string
+          topic_order: number
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          lesson_plan_id: string
+          subtopics?: string[] | null
+          title: string
+          topic_order?: number
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          lesson_plan_id?: string
+          subtopics?: string[] | null
+          title?: string
+          topic_order?: number
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lesson_topics_lesson_plan_id_fkey"
+            columns: ["lesson_plan_id"]
+            isOneToOne: false
+            referencedRelation: "lesson_plans"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      lesson_weeks: {
+        Row: {
+          created_at: string | null
+          id: string
+          title: string
+          topic_id: string
+          updated_at: string | null
+          week_number: number
+          week_order: number
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          title: string
+          topic_id: string
+          updated_at?: string | null
+          week_number: number
+          week_order?: number
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          title?: string
+          topic_id?: string
+          updated_at?: string | null
+          week_number?: number
+          week_order?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lesson_weeks_topic_id_fkey"
+            columns: ["topic_id"]
+            isOneToOne: false
+            referencedRelation: "lesson_topics"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       parent_tickets: {
         Row: {
           assigned_to: string | null
@@ -1619,6 +1802,7 @@ export type Database = {
         Row: {
           assigned_campus_id: string | null
           can_access_all_campuses: boolean
+          can_manage_lesson_plans: boolean | null
           created_at: string
           email: string
           full_name: string | null
@@ -1632,6 +1816,7 @@ export type Database = {
         Insert: {
           assigned_campus_id?: string | null
           can_access_all_campuses?: boolean
+          can_manage_lesson_plans?: boolean | null
           created_at?: string
           email: string
           full_name?: string | null
@@ -1645,6 +1830,7 @@ export type Database = {
         Update: {
           assigned_campus_id?: string | null
           can_access_all_campuses?: boolean
+          can_manage_lesson_plans?: boolean | null
           created_at?: string
           email?: string
           full_name?: string | null
