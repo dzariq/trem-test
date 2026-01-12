@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { TeacherAppLayout } from "@/components/layout/TeacherAppLayout";
 import { AppHeader } from "@/components/layout/AppHeader";
@@ -54,6 +54,7 @@ import {
   Settings,
   Trash2,
   Pencil,
+  Loader2,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { toast } from "@/hooks/use-toast";
@@ -67,7 +68,6 @@ import {
   eachDayOfInterval,
 } from "date-fns";
 import {
-  getAvailableSubjects,
   getLessonPlanStatus,
   type LessonPlan,
 } from "@/data/lessonPlanData";
@@ -76,7 +76,13 @@ import {
   getActiveYear,
   setActiveYear,
 } from "@/data/weekConfigData";
-import { useLessonPlans } from "@/hooks/useLessonPlans";
+import { useLessonPlans, useLessonPlanSubjects } from "@/hooks/useLessonPlans";
+import { useAcademicFilters } from "@/hooks/useAcademicFilters";
+
+// LocalStorage keys for persisting selections
+const LS_LESSON_PLAN_YEAR = "lessonPlan_selectedYear";
+const LS_LESSON_PLAN_SUBJECT = "lessonPlan_selectedSubject";
+const LS_LESSON_PLAN_CLASS = "lessonPlan_selectedClass";
 
 // Holiday periods (blocked weeks)
 const holidayPeriods = [
@@ -117,14 +123,65 @@ const isWeekHoliday = (date: Date): boolean => {
 const TeacherLessonPlansPage = () => {
   const navigate = useNavigate();
   
-  // Year selection
-  const academicYears = getAcademicYears();
-  const [selectedYear, setSelectedYear] = useState<string>(getActiveYear()?.id || academicYears[0]?.id || "");
+  // Load subjects from Supabase (same source as Academic module)
+  const { subjectNames: dbSubjects, loading: subjectsLoading } = useLessonPlanSubjects();
   
-  const subjects = getAvailableSubjects();
-  const [selectedSubject, setSelectedSubject] = useState<string>(subjects[0] || "Mathematics");
-  const [selectedClass, setSelectedClass] = useState<string>("5A");
-  const availableClasses = ["5A", "5B", "6A", "6B", "7A", "7B"];
+  // Load classes from Supabase (same source as Academic module)
+  const { 
+    classes: dbClasses, 
+    loadingClasses 
+  } = useAcademicFilters();
+  
+  // Year selection (static for now, can be derived from academic_periods if needed)
+  const academicYears = getAcademicYears();
+  
+  // Initialize state from localStorage or defaults
+  const [selectedYear, setSelectedYear] = useState<string>(() => {
+    const saved = localStorage.getItem(LS_LESSON_PLAN_YEAR);
+    return saved || getActiveYear()?.id || academicYears[0]?.id || "";
+  });
+  
+  const [selectedSubject, setSelectedSubject] = useState<string>(() => {
+    return localStorage.getItem(LS_LESSON_PLAN_SUBJECT) || "";
+  });
+  
+  const [selectedClass, setSelectedClass] = useState<string>(() => {
+    return localStorage.getItem(LS_LESSON_PLAN_CLASS) || "";
+  });
+  
+  // Set defaults when data loads
+  useEffect(() => {
+    if (dbSubjects.length > 0 && !selectedSubject) {
+      const defaultSubject = dbSubjects[0];
+      setSelectedSubject(defaultSubject);
+      localStorage.setItem(LS_LESSON_PLAN_SUBJECT, defaultSubject);
+    }
+  }, [dbSubjects, selectedSubject]);
+  
+  useEffect(() => {
+    if (dbClasses.length > 0 && !selectedClass) {
+      const defaultClass = dbClasses[0];
+      setSelectedClass(defaultClass);
+      localStorage.setItem(LS_LESSON_PLAN_CLASS, defaultClass);
+    }
+  }, [dbClasses, selectedClass]);
+  
+  // Persist selections to localStorage
+  const handleYearChange = (year: string) => {
+    setSelectedYear(year);
+    setActiveYear(year);
+    localStorage.setItem(LS_LESSON_PLAN_YEAR, year);
+  };
+  
+  const handleSubjectChange = (subject: string) => {
+    setSelectedSubject(subject);
+    localStorage.setItem(LS_LESSON_PLAN_SUBJECT, subject);
+  };
+  
+  const handleClassChange = (cls: string) => {
+    setSelectedClass(cls);
+    localStorage.setItem(LS_LESSON_PLAN_CLASS, cls);
+  };
   
   // Use Supabase hook for lesson plans data
   const academicYearNum = parseInt(selectedYear) || 2026;
@@ -135,6 +192,9 @@ const TeacherLessonPlansPage = () => {
     addTopic, 
     updateTopic 
   } = useLessonPlans(academicYearNum, selectedSubject, selectedClass);
+  
+  // Combined loading state for dropdowns
+  const dropdownsLoading = subjectsLoading || loadingClasses;
   
   const [isAddTopicOpen, setIsAddTopicOpen] = useState(false);
   const [newTopicTitle, setNewTopicTitle] = useState("");
@@ -357,10 +417,7 @@ const TeacherLessonPlansPage = () => {
                 {/* Year Selector */}
                 <Select 
                   value={selectedYear} 
-                  onValueChange={(year) => {
-                    setSelectedYear(year);
-                    setActiveYear(year);
-                  }}
+                  onValueChange={handleYearChange}
                 >
                   <SelectTrigger className="w-20">
                     <SelectValue placeholder="Year" />
@@ -374,13 +431,24 @@ const TeacherLessonPlansPage = () => {
                   </SelectContent>
                 </Select>
 
-                {/* Subject Selector */}
-                <Select value={selectedSubject} onValueChange={setSelectedSubject}>
+                {/* Subject Selector - from Supabase */}
+                <Select 
+                  value={selectedSubject} 
+                  onValueChange={handleSubjectChange}
+                  disabled={subjectsLoading}
+                >
                   <SelectTrigger className="w-[120px] sm:w-[150px]">
-                    <SelectValue placeholder="Subject" />
+                    {subjectsLoading ? (
+                      <div className="flex items-center gap-1">
+                        <Loader2 className="h-3 w-3 animate-spin" />
+                        <span className="text-xs">Loading...</span>
+                      </div>
+                    ) : (
+                      <SelectValue placeholder="Subject" />
+                    )}
                   </SelectTrigger>
                   <SelectContent>
-                    {subjects.map((subject) => (
+                    {dbSubjects.map((subject) => (
                       <SelectItem key={subject} value={subject}>
                         {subject}
                       </SelectItem>
@@ -388,13 +456,23 @@ const TeacherLessonPlansPage = () => {
                   </SelectContent>
                 </Select>
 
-                {/* Class Selector */}
-                <Select value={selectedClass} onValueChange={setSelectedClass}>
-                  <SelectTrigger className="w-16">
-                    <SelectValue placeholder="Class" />
+                {/* Class Selector - from Supabase (same as Academic) */}
+                <Select 
+                  value={selectedClass} 
+                  onValueChange={handleClassChange}
+                  disabled={loadingClasses}
+                >
+                  <SelectTrigger className="w-20">
+                    {loadingClasses ? (
+                      <div className="flex items-center gap-1">
+                        <Loader2 className="h-3 w-3 animate-spin" />
+                      </div>
+                    ) : (
+                      <SelectValue placeholder="Class" />
+                    )}
                   </SelectTrigger>
                   <SelectContent>
-                    {availableClasses.map((cls) => (
+                    {dbClasses.map((cls) => (
                       <SelectItem key={cls} value={cls}>
                         {cls}
                       </SelectItem>
