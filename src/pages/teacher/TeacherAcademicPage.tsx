@@ -11,6 +11,7 @@ import { Progress } from "@/components/ui/progress";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Save, TrendingUp, TrendingDown, Minus, ChevronDown, ChevronUp, Users, Target, Award, AlertTriangle, BookOpen, BarChart3, FileText, CheckCircle, XCircle, Lightbulb, Copy, Printer, ArrowRight, ArrowUpRight, ArrowDownRight, Scale, Download, FileSpreadsheet, Check, Calendar, UserCheck, Plus, X, ArrowUp, ArrowDown, Search, Loader2 } from "lucide-react";
 import { useGradeEntry } from "@/hooks/useGradeEntry";
+import { useClassAnalysis } from "@/hooks/useClassAnalysis";
 import { Carousel, CarouselContent, CarouselItem } from "@/components/ui/carousel";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { toast } from "@/hooks/use-toast";
@@ -196,6 +197,9 @@ export default function TeacherAcademicPage() {
   
   // Grade Entry hook (Supabase integration)
   const gradeEntry = useGradeEntry();
+  
+  // Class Analysis hook (Supabase integration for Overview tab)
+  const classAnalysis = useClassAnalysis();
   
   // Analysis tab still uses mock data for selectedClass
   const [selectedClass, setSelectedClass] = useState(teacherProfile.classes[0]);
@@ -1816,109 +1820,162 @@ export default function TeacherAcademicPage() {
 
               {/* ==================== OVERVIEW SUB-TAB ==================== */}
               <TabsContent value="overview" className="space-y-4">
-                {/* Filters Row - Class and Year selectors */}
-                <div className="flex gap-2">
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <Button variant="outline" className="text-xs h-9 justify-between flex-1">
-                        {selectedClasses.length === 1 ? selectedClasses[0] : `${selectedClasses.length} Classes`}
-                        <ChevronDown className="h-3 w-3 ml-1 opacity-50" />
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-40 p-2 bg-background z-50" align="start">
-                      <div className="space-y-2">
-                        {teacherProfile.classes.map(cls => <label key={cls} className="flex items-center gap-2 cursor-pointer hover:bg-accent/50 p-1 rounded">
-                            <Checkbox checked={selectedClasses.includes(cls)} onCheckedChange={() => toggleClass(cls)} />
-                            <span className="text-xs">{cls}</span>
-                          </label>)}
-                      </div>
-                    </PopoverContent>
-                  </Popover>
+                {/* Loading State */}
+                {classAnalysis.loading && (
+                  <Card>
+                    <CardContent className="p-6 text-center">
+                      <Loader2 className="h-8 w-8 animate-spin text-primary mx-auto mb-3" />
+                      <p className="text-sm text-muted-foreground">Loading class analysis data...</p>
+                    </CardContent>
+                  </Card>
+                )}
 
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <Button variant="outline" className="text-xs h-9 justify-between flex-1">
-                        {selectedYears.length === 1 ? selectedYears[0] : `${selectedYears.length} Years`}
-                        <ChevronDown className="h-3 w-3 ml-1 opacity-50" />
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-40 p-2 bg-background z-50" align="start">
-                      <div className="space-y-2">
-                        {academicYears.map(year => <label key={year} className="flex items-center gap-2 cursor-pointer hover:bg-accent/50 p-1 rounded">
-                            <Checkbox checked={selectedYears.includes(year)} onCheckedChange={() => toggleYear(year)} />
-                            <span className="text-xs">{year}</span>
-                          </label>)}
-                      </div>
-                    </PopoverContent>
-                  </Popover>
+                {/* Error State */}
+                {classAnalysis.error && (
+                  <Card className="border-destructive">
+                    <CardContent className="p-6 text-center">
+                      <AlertTriangle className="h-8 w-8 text-destructive mx-auto mb-3" />
+                      <p className="text-sm text-destructive">{classAnalysis.error}</p>
+                    </CardContent>
+                  </Card>
+                )}
 
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <Button variant="outline" className="text-xs h-9 justify-between flex-1">
-                        {selectedPeriods.length === 1 ? examPeriods.find(p => p.value === selectedPeriods[0])?.label : `${selectedPeriods.length} Periods`}
-                        <ChevronDown className="h-3 w-3 ml-1 opacity-50" />
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="w-40 p-2 bg-background z-50" align="start">
-                      <div className="space-y-2">
-                        {examPeriods.map(period => <label key={period.value} className="flex items-center gap-2 cursor-pointer hover:bg-accent/50 p-1 rounded">
-                            <Checkbox checked={selectedPeriods.includes(period.value)} onCheckedChange={() => togglePeriod(period.value)} />
-                            <span className="text-xs">{period.label}</span>
-                          </label>)}
-                      </div>
-                    </PopoverContent>
-                  </Popover>
-                </div>
-
-                {/* Selected filters badge */}
-                <div className="flex flex-wrap items-center gap-1 text-xs">
-                  {selectedClasses.map(cls => <Badge key={cls} variant="secondary" className="text-[10px] font-medium">
-                      {cls}
-                    </Badge>)}
-                  {selectedYears.map(year => <Badge key={year} variant="outline" className="text-[10px] font-normal">
-                      {year}
-                    </Badge>)}
-                  {selectedPeriods.map(period => <Badge key={period} variant="outline" className="text-[10px] font-normal">
-                      {examPeriods.find(p => p.value === period)?.label}
-                    </Badge>)}
-                </div>
-
-                {/* Subject Selector - Toggle Chips */}
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between">
-                    <h4 className="text-sm font-medium text-foreground">Subjects</h4>
+                {!classAnalysis.loading && !classAnalysis.error && (
+                  <>
+                    {/* Filters Row - Class and Period selectors */}
                     <div className="flex gap-2">
-                      <button
-                        className="text-sm font-medium text-foreground hover:text-primary transition-colors"
-                        onClick={() => setSelectedSubjects([...subjects])}
+                      {/* Class Dropdown */}
+                      <Select 
+                        value={classAnalysis.selectedClass || ""} 
+                        onValueChange={(v) => classAnalysis.setSelectedClass(v)}
                       >
-                        Select All
-                      </button>
-                      <button
-                        className="text-sm font-medium text-foreground hover:text-primary transition-colors"
-                        onClick={() => setSelectedSubjects([])}
+                        <SelectTrigger className="flex-1 h-9">
+                          <SelectValue placeholder="Select Class" />
+                        </SelectTrigger>
+                        <SelectContent className="bg-card">
+                          {classAnalysis.classes.length === 0 ? (
+                            <SelectItem value="_none" disabled>No classes found</SelectItem>
+                          ) : (
+                            classAnalysis.classes.map((cls) => (
+                              <SelectItem key={cls} value={cls}>{cls}</SelectItem>
+                            ))
+                          )}
+                        </SelectContent>
+                      </Select>
+
+                      {/* Academic Period Dropdown */}
+                      <Select 
+                        value={classAnalysis.selectedPeriodId || ""} 
+                        onValueChange={(v) => classAnalysis.setSelectedPeriodId(v)}
                       >
-                        Clear
-                      </button>
+                        <SelectTrigger className="flex-1 h-9">
+                          <SelectValue placeholder="Select Period" />
+                        </SelectTrigger>
+                        <SelectContent className="bg-card">
+                          {classAnalysis.academicPeriods.map((period) => (
+                            <SelectItem key={period.id} value={period.id}>{period.name}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+
+                      {/* Compare Period for Rising/Falling */}
+                      <Select 
+                        value={classAnalysis.comparePeriodId || ""} 
+                        onValueChange={(v) => classAnalysis.setComparePeriodId(v)}
+                      >
+                        <SelectTrigger className="flex-1 h-9">
+                          <SelectValue placeholder="Compare To" />
+                        </SelectTrigger>
+                        <SelectContent className="bg-card">
+                          {classAnalysis.academicPeriods.filter(p => p.id !== classAnalysis.selectedPeriodId).map((period) => (
+                            <SelectItem key={period.id} value={period.id}>{period.name}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
                     </div>
-                  </div>
-                  <div className="flex flex-wrap gap-1.5 p-2.5 rounded-lg border border-border bg-background">
-                    {/* Grouped subject pills with dropdowns */}
-                    {subjectGroups.map((group) => (
-                      <SubjectGroupPill
-                        key={group.baseName}
-                        baseName={group.baseName}
-                        shortName={group.shortName}
-                        variants={group.variants || []}
-                        selectedSubjects={selectedSubjects}
-                        onToggle={toggleSubjectFilter}
-                      />
-                    ))}
-                  </div>
-                </div>
+
+                    {/* Selected filters badge */}
+                    <div className="flex flex-wrap items-center gap-1 text-xs">
+                      {classAnalysis.selectedClass && (
+                        <Badge variant="secondary" className="text-[10px] font-medium">
+                          {classAnalysis.selectedClass}
+                        </Badge>
+                      )}
+                      {classAnalysis.selectedPeriodId && (
+                        <Badge variant="outline" className="text-[10px] font-normal">
+                          {classAnalysis.academicPeriods.find(p => p.id === classAnalysis.selectedPeriodId)?.name}
+                        </Badge>
+                      )}
+                      {classAnalysis.comparePeriodId && (
+                        <Badge variant="outline" className="text-[10px] font-normal">
+                          vs {classAnalysis.academicPeriods.find(p => p.id === classAnalysis.comparePeriodId)?.name}
+                        </Badge>
+                      )}
+                    </div>
+
+                    {/* Empty State */}
+                    {!classAnalysis.selectedClass && (
+                      <Card className="border-dashed">
+                        <CardContent className="p-6 text-center">
+                          <BookOpen className="h-10 w-10 text-muted-foreground/50 mx-auto mb-3" />
+                          <p className="text-sm text-muted-foreground">Select a class to view analysis</p>
+                        </CardContent>
+                      </Card>
+                    )}
+
+                    {classAnalysis.selectedClass && !classAnalysis.hasData && !classAnalysis.loadingData && (
+                      <Card className="border-dashed">
+                        <CardContent className="p-6 text-center">
+                          <BarChart3 className="h-10 w-10 text-muted-foreground/50 mx-auto mb-3" />
+                          <p className="text-sm text-muted-foreground">No grades recorded for this class/period yet.</p>
+                        </CardContent>
+                      </Card>
+                    )}
+
+                    {classAnalysis.selectedClass && classAnalysis.hasData && (
+                      <>
+                        {/* Subject Selector - Toggle Chips */}
+                        <div className="space-y-2">
+                          <div className="flex items-center justify-between">
+                            <h4 className="text-sm font-medium text-foreground">Subjects ({classAnalysis.subjects.length})</h4>
+                            <div className="flex gap-2">
+                              <button
+                                className="text-sm font-medium text-foreground hover:text-primary transition-colors"
+                                onClick={() => classAnalysis.selectAllSubjects()}
+                              >
+                                Select All
+                              </button>
+                              <button
+                                className="text-sm font-medium text-foreground hover:text-primary transition-colors"
+                                onClick={() => classAnalysis.clearSubjects()}
+                              >
+                                Clear
+                              </button>
+                            </div>
+                          </div>
+                          <div className="flex flex-wrap gap-1.5 p-2.5 rounded-lg border border-border bg-background">
+                            {classAnalysis.subjects.map((subject) => {
+                              const isSelected = classAnalysis.selectedSubjectIds.includes(subject.id);
+                              return (
+                                <button
+                                  key={subject.id}
+                                  onClick={() => classAnalysis.toggleSubject(subject.id)}
+                                  className={cn(
+                                    "px-2.5 py-1 rounded-full text-xs font-medium transition-all",
+                                    isSelected
+                                      ? "bg-primary text-primary-foreground"
+                                      : "bg-muted text-muted-foreground hover:bg-muted/80"
+                                  )}
+                                >
+                                  {subject.name.length > 15 ? subject.name.substring(0, 15) + "..." : subject.name}
+                                </button>
+                              );
+                            })}
+                          </div>
+                        </div>
 
                 {/* Rising Subjects - Star pattern design like student page */}
-                {risingSubjects.length > 0 && <div className="space-y-2">
+                {classAnalysis.risingSubjects.length > 0 && <div className="space-y-2">
                     <h4 className="text-sm font-medium text-foreground flex items-center gap-1.5">
                       <TrendingUp className="h-4 w-4" style={{
                     color: '#d97706'
@@ -1926,7 +1983,7 @@ export default function TeacherAcademicPage() {
                     </h4>
                     <p className="text-[10px] text-muted-foreground -mt-1">Biggest improvements from previous exam</p>
                     <div className="grid grid-cols-3 gap-2">
-                      {risingSubjects.map(item => <div key={item.name} className="relative flex flex-col items-center p-2.5 rounded-lg border overflow-hidden" style={{
+                      {classAnalysis.risingSubjects.map(item => <div key={item.name} className="relative flex flex-col items-center p-2.5 rounded-lg border overflow-hidden" style={{
                     background: 'linear-gradient(135deg, #fef3c7 0%, #fcd34d 50%, #f59e0b 100%)',
                     borderColor: 'rgba(251, 191, 36, 0.5)'
                   }}>
@@ -1956,7 +2013,7 @@ export default function TeacherAcademicPage() {
                       }} />
                             <span className="text-sm font-bold" style={{
                         color: '#d97706'
-                      }}>+{item.improvement}%</span>
+                      }}>+{item.change}%</span>
                           </div>
                           <div className="flex items-center gap-1 mt-1 relative z-10">
                             <span className="text-[10px] font-medium px-2 py-0.5 rounded-full" style={{
@@ -2191,6 +2248,10 @@ export default function TeacherAcademicPage() {
                   <FileText className="h-4 w-4" />
                   Generate Report
                 </Button>
+                      </>
+                    )}
+                  </>
+                )}
               </TabsContent>
 
               {/* ==================== DISTRIBUTION SUB-TAB ==================== */}
