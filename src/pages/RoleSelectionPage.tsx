@@ -1,10 +1,50 @@
+import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
-import { Users, GraduationCap } from "lucide-react";
+import { Users, GraduationCap, Loader2 } from "lucide-react";
 import schoolBadge from "@/assets/school-badge.png";
+import { useAuth } from "@/contexts/AuthContext";
 
 export default function RoleSelectionPage() {
   const navigate = useNavigate();
+  const { user, profile, loading, setPortal } = useAuth();
+
+  // If user is already authenticated, redirect to appropriate portal
+  useEffect(() => {
+    if (loading) return;
+
+    if (user && profile) {
+      // User is logged in with a valid profile, redirect to their portal
+      if (profile.role === "teacher") {
+        navigate("/teacher", { replace: true });
+      } else {
+        navigate("/portal", { replace: true });
+      }
+    }
+  }, [user, profile, loading, navigate]);
+
+  const handlePortalSelect = (portalType: "teacher" | "family") => {
+    setPortal(portalType);
+    navigate(`/login?portal=${portalType}`);
+  };
+
+  // Show loading while checking auth state
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  // If user is authenticated but we haven't redirected yet, show loading
+  if (user && profile) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background flex flex-col items-center justify-center p-6">
@@ -17,7 +57,7 @@ export default function RoleSelectionPage() {
       <div className="grid gap-6 w-full max-w-md">
         <Card 
           className="cursor-pointer transition-all duration-200 hover:shadow-lg hover:scale-[1.02] border-2 hover:border-primary"
-          onClick={() => navigate("/login?portal=family")}
+          onClick={() => handlePortalSelect("family")}
         >
           <CardContent className="p-6 flex items-center gap-4">
             <div className="p-4 rounded-full bg-primary/10">
@@ -32,7 +72,7 @@ export default function RoleSelectionPage() {
 
         <Card 
           className="cursor-pointer transition-all duration-200 hover:shadow-lg hover:scale-[1.02] border-2 hover:border-primary"
-          onClick={() => navigate("/login?portal=teacher")}
+          onClick={() => handlePortalSelect("teacher")}
         >
           <CardContent className="p-6 flex items-center gap-4">
             <div className="p-4 rounded-full bg-primary/10">

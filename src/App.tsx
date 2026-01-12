@@ -40,6 +40,7 @@ import TeacherAnnouncementsPage from "./pages/teacher/TeacherAnnouncementsPage";
 import TeacherLessonPlansPage from "./pages/teacher/TeacherLessonPlansPage";
 import LessonPlanDetailPage from "./pages/teacher/LessonPlanDetailPage";
 import WeekConfigPage from "./pages/teacher/WeekConfigPage";
+import TeacherGuard from "./components/auth/TeacherGuard";
 
 import NotFound from "./pages/NotFound";
 
@@ -58,7 +59,7 @@ const App = () => (
               <Route path="/" element={<RoleSelectionPage />} />
               <Route path="/login" element={<Login />} />
 
-              {/* Parent/Student Routes */}
+              {/* Parent/Student Routes - Protected */}
               <Route element={<ParentStudentGuard />}>
                 <Route path="/portal" element={<HomePage />} />
                 <Route path="/parent" element={<HomePage />} />
@@ -84,33 +85,35 @@ const App = () => (
               </Route>
               <Route path="/privacy-policy" element={<PrivacyPolicyPage />} />
 
-              {/* Teacher Routes */}
-              <Route path="/teacher" element={<TeacherHomePage />} />
-              <Route path="/teacher/attendance" element={<TeacherAttendancePage />} />
-              <Route path="/teacher/academic" element={<TeacherAcademicPage />} />
-              <Route path="/teacher/calendar" element={<TeacherCalendarPage />} />
-              <Route path="/teacher/profile" element={<TeacherProfilePage />} />
-              <Route
-                path="/teacher/notifications"
-                element={<TeacherNotificationsPage />}
-              />
-              <Route path="/teacher/dna" element={<TeacherDNAPage />} />
-              <Route path="/teacher/timetable" element={<TeacherTimetablePage />} />
-              <Route path="/teacher/handbook" element={<TeacherHandbookPage />} />
-              <Route
-                path="/teacher/announcements"
-                element={<TeacherAnnouncementsPage />}
-              />
-              <Route path="/teacher/lesson-plans" element={<TeacherLessonPlansPage />} />
-              <Route
-                path="/teacher/lesson-plans/:id"
-                element={<LessonPlanDetailPage />}
-              />
-              <Route path="/teacher/week-config" element={<WeekConfigPage />} />
-              <Route
-                path="/teacher/security-privacy"
-                element={<SecurityPrivacyPage />}
-              />
+              {/* Teacher Routes - Protected */}
+              <Route element={<TeacherGuard />}>
+                <Route path="/teacher" element={<TeacherHomePage />} />
+                <Route path="/teacher/attendance" element={<TeacherAttendancePage />} />
+                <Route path="/teacher/academic" element={<TeacherAcademicPage />} />
+                <Route path="/teacher/calendar" element={<TeacherCalendarPage />} />
+                <Route path="/teacher/profile" element={<TeacherProfilePage />} />
+                <Route
+                  path="/teacher/notifications"
+                  element={<TeacherNotificationsPage />}
+                />
+                <Route path="/teacher/dna" element={<TeacherDNAPage />} />
+                <Route path="/teacher/timetable" element={<TeacherTimetablePage />} />
+                <Route path="/teacher/handbook" element={<TeacherHandbookPage />} />
+                <Route
+                  path="/teacher/announcements"
+                  element={<TeacherAnnouncementsPage />}
+                />
+                <Route path="/teacher/lesson-plans" element={<TeacherLessonPlansPage />} />
+                <Route
+                  path="/teacher/lesson-plans/:id"
+                  element={<LessonPlanDetailPage />}
+                />
+                <Route path="/teacher/week-config" element={<WeekConfigPage />} />
+                <Route
+                  path="/teacher/security-privacy"
+                  element={<SecurityPrivacyPage />}
+                />
+              </Route>
 
               <Route path="*" element={<NotFound />} />
             </Routes>

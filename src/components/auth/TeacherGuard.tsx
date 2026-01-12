@@ -4,9 +4,7 @@ import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
 import { Loader2 } from "lucide-react";
 
-const allowedRoles = new Set(["parent", "student", "user"]);
-
-export default function ParentStudentGuard() {
+export default function TeacherGuard() {
   const { loading, user, profile } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
@@ -17,15 +15,15 @@ export default function ParentStudentGuard() {
     
     // If no user, redirect to login
     if (!user) {
-      navigate("/login?portal=family", { replace: true, state: { from: location.pathname } });
+      navigate("/login?portal=teacher", { replace: true, state: { from: location.pathname } });
       return;
     }
     
     // If no profile or wrong role, redirect with error
-    if (!profile || !allowedRoles.has(profile.role)) {
+    if (!profile || profile.role !== "teacher") {
       if (!didRedirect.current) {
         didRedirect.current = true;
-        toast.error("This portal is only available to parent/student accounts.");
+        toast.error("This portal is only available to teacher accounts.");
       }
       navigate("/", { replace: true, state: { from: location.pathname } });
     }
@@ -40,7 +38,7 @@ export default function ParentStudentGuard() {
     );
   }
   
-  if (!user || !profile || !allowedRoles.has(profile.role)) return null;
+  if (!user || !profile || profile.role !== "teacher") return null;
 
   return <Outlet />;
 }

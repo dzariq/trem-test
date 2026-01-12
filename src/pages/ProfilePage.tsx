@@ -1,4 +1,6 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
+import { useAuth } from "@/contexts/AuthContext";
+import { useQueryClient } from "@tanstack/react-query";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { AppHeader } from "@/components/layout/AppHeader";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -64,9 +66,17 @@ const sportsHouseColors: Record<string, { bg: string; text: string; label: strin
 
 export default function ProfilePage() {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
+  const { signOut } = useAuth();
   const { profile, loading: profileLoading, error: profileError, refetch } = useMyProfile();
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [isPdfOpen, setIsPdfOpen] = useState(false);
+  
+  const handleLogout = useCallback(async () => {
+    await signOut();
+    queryClient.clear();
+    navigate("/", { replace: true });
+  }, [signOut, queryClient, navigate]);
   const [isTimetablePdfOpen, setIsTimetablePdfOpen] = useState(false);
   const [selectedStudent, setSelectedStudent] = useState<LinkedStudent | null>(null);
   const [isPhotoEditOpen, setIsPhotoEditOpen] = useState(false);
@@ -459,7 +469,7 @@ export default function ProfilePage() {
         <Button 
           variant="outline" 
           className="w-full border-destructive/50 text-destructive hover:bg-destructive/10"
-          onClick={() => navigate("/")}
+          onClick={handleLogout}
         >
           <LogOut className="h-4 w-4 mr-2" />
           Logout

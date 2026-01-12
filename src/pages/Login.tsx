@@ -16,14 +16,29 @@ type PortalType = "teacher" | "family";
 
 export default function Login() {
   const navigate = useNavigate();
-  const { user, loading: authLoading } = useAuth();
+  const { user, profile, loading: authLoading, portal: storedPortal, setPortal } = useAuth();
   const [searchParams] = useSearchParams();
   
+  // Get portal from URL params first, fallback to stored portal
   const portal = useMemo<PortalType | null>(() => {
-    const value = searchParams.get("portal");
-    if (value === "teacher" || value === "family") return value;
+    const urlPortal = searchParams.get("portal");
+    if (urlPortal === "teacher" || urlPortal === "family") {
+      return urlPortal;
+    }
+    // Fallback to stored portal
+    if (storedPortal === "teacher" || storedPortal === "family") {
+      return storedPortal;
+    }
     return null;
-  }, [searchParams]);
+  }, [searchParams, storedPortal]);
+
+  // Update stored portal when URL portal changes
+  useEffect(() => {
+    const urlPortal = searchParams.get("portal");
+    if (urlPortal === "teacher" || urlPortal === "family") {
+      setPortal(urlPortal);
+    }
+  }, [searchParams, setPortal]);
 
   const portalLabel =
     portal === "teacher" ? "Teacher Portal" : "Parent / Student Portal";
@@ -38,24 +53,23 @@ export default function Login() {
   useEffect(() => {
     if (authLoading) return;
     
-    if (user) {
-      // User is already logged in, check their profile and redirect
-      supabase
-        .from("user_profiles")
-        .select("role")
-        .eq("user_id", user.id)
-        .maybeSingle()
-        .then(({ data: profile }) => {
-          if (profile) {
-            if (profile.role === "teacher") {
-              navigate("/teacher", { replace: true });
-            } else {
-              navigate("/portal", { replace: true });
-            }
-          }
-        });
+    if (user && profile) {
+      // User is already logged in with a profile, redirect based on role
+      if (profile.role === "teacher") {
+        navigate("/teacher", { replace: true });
+      } else {
+        navigate("/portal", { replace: true });
+      }
     }
-  }, [user, authLoading, navigate]);
+  }, [user, profile, authLoading, navigate]);
+
+  // If no portal selected, redirect to portal selector
+  useEffect(() => {
+    if (authLoading) return;
+    if (!user && !portal) {
+      navigate("/", { replace: true });
+    }
+  }, [user, portal, authLoading, navigate]);
 
   // Email + Password login
   const handleLogin = async () => {
@@ -90,20 +104,20 @@ export default function Login() {
       }
 
       // Fetch profile to verify and get role
-      const { data: profile, error: profileError } = await supabase
+      const { data: profileData, error: profileError } = await supabase
         .from("user_profiles")
         .select("*")
         .eq("user_id", authData.user.id)
         .maybeSingle();
 
-      if (profileError || !profile) {
+      if (profileError || !profileData) {
         await supabase.auth.signOut();
         setError("Account profile not found. Contact admin.");
         setLoading(false);
         return;
       }
 
-      if (!profile.is_active) {
+      if (!profileData.is_active) {
         await supabase.auth.signOut();
         setError("Account disabled. Contact admin.");
         setLoading(false);
@@ -111,8 +125,8 @@ export default function Login() {
       }
 
       // Verify portal matches role
-      const isTeacherPortalOk = portal === "teacher" && profile.role === "teacher";
-      const isFamilyPortalOk = portal === "family" && (profile.role === "parent" || profile.role === "student" || profile.role === "user");
+      const isTeacherPortalOk = portal === "teacher" && profileData.role === "teacher";
+      const isFamilyPortalOk = portal === "family" && (profileData.role === "parent" || profileData.role === "student" || profileData.role === "user");
 
       if (!isTeacherPortalOk && !isFamilyPortalOk) {
         await supabase.auth.signOut();
@@ -122,7 +136,7 @@ export default function Login() {
       }
 
       // Redirect based on role
-      if (profile.role === "teacher") {
+      if (profileData.role === "teacher") {
         navigate("/teacher", { replace: true });
       } else {
         navigate("/portal", { replace: true });
@@ -137,6 +151,15 @@ export default function Login() {
 
   // Show loading while checking auth
   if (authLoading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  // If already logged in, show loading (redirect is happening)
+  if (user && profile) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -228,198 +251,3 @@ export default function Login() {
     </div>
   );
 }
-
-/* =============================================================================
-   PHONE OTP LOGIN CODE - DISABLED FOR FUTURE USE
-   Set ENABLE_PHONE_LOGIN = true to re-enable
-   =============================================================================
-
-import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
-import { Phone, ArrowLeft } from "lucide-react";
-
-type LoginStep = "phone" | "otp";
-
-// Normalize phone to E.164 format (Malaysia default)
-function normalizePhone(phone: string): string {
-  let digits = phone.replace(/\D/g, "");
-  if (digits.startsWith("0")) {
-    digits = "60" + digits.slice(1);
-  } else if (!digits.startsWith("60") && digits.length >= 9 && digits.length <= 10) {
-    digits = "60" + digits;
-  }
-  return "+" + digits;
-}
-
-// State needed for phone OTP:
-// const [step, setStep] = useState<LoginStep>("phone");
-// const [phone, setPhone] = useState("");
-// const [normalizedPhone, setNormalizedPhone] = useState("");
-// const [otp, setOtp] = useState("");
-// const [userRole, setUserRole] = useState<string | null>(null);
-
-// Check if phone exists in our system
-const handleSendOtp = async () => {
-  if (!portal) {
-    setError("Please select a portal to continue.");
-    return;
-  }
-  
-  if (!phone.trim()) {
-    setError("Please enter your phone number.");
-    return;
-  }
-
-  setError(null);
-  setLoading(true);
-
-  const normalized = normalizePhone(phone);
-  setNormalizedPhone(normalized);
-
-  try {
-    const { data, error: checkError } = await supabase.rpc("check_phone_exists", {
-      phone_number: normalized,
-    });
-
-    if (checkError) {
-      console.error("Phone check error:", checkError);
-      setError("Unable to verify phone number. Please try again.");
-      setLoading(false);
-      return;
-    }
-
-    if (!data?.exists) {
-      setError("Phone number not registered. Please contact admin.");
-      setLoading(false);
-      return;
-    }
-
-    const role = data.role;
-    setUserRole(role);
-    
-    const isTeacherPortalOk = portal === "teacher" && role === "teacher";
-    const isFamilyPortalOk = portal === "family" && (role === "parent" || role === "student");
-
-    if (!isTeacherPortalOk && !isFamilyPortalOk) {
-      setError("Wrong portal for this account.");
-      setLoading(false);
-      return;
-    }
-
-    const { error: otpError } = await supabase.auth.signInWithOtp({
-      phone: normalized,
-    });
-
-    if (otpError) {
-      console.error("OTP send error:", otpError);
-      setError(otpError.message || "Failed to send OTP. Please try again.");
-      setLoading(false);
-      return;
-    }
-
-    setStep("otp");
-  } catch (err) {
-    console.error("Unexpected error:", err);
-    setError("An unexpected error occurred. Please try again.");
-  } finally {
-    setLoading(false);
-  }
-};
-
-// Verify OTP
-const handleVerifyOtp = async () => {
-  if (otp.length !== 6) {
-    setError("Please enter the complete 6-digit code.");
-    return;
-  }
-
-  setError(null);
-  setLoading(true);
-
-  try {
-    const { data: authData, error: verifyError } = await supabase.auth.verifyOtp({
-      phone: normalizedPhone,
-      token: otp,
-      type: "sms",
-    });
-
-    if (verifyError || !authData.user) {
-      setError(verifyError?.message || "Invalid OTP. Please try again.");
-      setLoading(false);
-      return;
-    }
-
-    const { data: profile, error: profileError } = await supabase
-      .from("user_profiles")
-      .select("*")
-      .eq("user_id", authData.user.id)
-      .maybeSingle();
-
-    if (profileError || !profile) {
-      await supabase.auth.signOut();
-      setError("Account profile not found. Contact admin.");
-      setLoading(false);
-      return;
-    }
-
-    if (!profile.is_active) {
-      await supabase.auth.signOut();
-      setError("Account disabled. Contact admin.");
-      setLoading(false);
-      return;
-    }
-
-    if (profile.role === "teacher") {
-      navigate("/teacher", { replace: true });
-    } else {
-      navigate("/portal", { replace: true });
-    }
-  } catch (err) {
-    console.error("Verify error:", err);
-    setError("An unexpected error occurred. Please try again.");
-  } finally {
-    setLoading(false);
-  }
-};
-
-// Go back to phone step
-const handleBack = () => {
-  setStep("phone");
-  setOtp("");
-  setError(null);
-};
-
-// Phone input UI:
-<div className="space-y-2">
-  <Label htmlFor="phone">Phone Number</Label>
-  <div className="relative">
-    <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-    <Input
-      id="phone"
-      type="tel"
-      autoComplete="tel"
-      value={phone}
-      onChange={(e) => setPhone(e.target.value)}
-      placeholder="e.g. 0123456789"
-      className="pl-10"
-      onKeyDown={(e) => {
-        if (e.key === "Enter") handleSendOtp();
-      }}
-    />
-  </div>
-</div>
-
-// OTP input UI:
-<div className="flex justify-center">
-  <InputOTP value={otp} onChange={setOtp} maxLength={6} onComplete={handleVerifyOtp}>
-    <InputOTPGroup>
-      <InputOTPSlot index={0} />
-      <InputOTPSlot index={1} />
-      <InputOTPSlot index={2} />
-      <InputOTPSlot index={3} />
-      <InputOTPSlot index={4} />
-      <InputOTPSlot index={5} />
-    </InputOTPGroup>
-  </InputOTP>
-</div>
-
-============================================================================= */

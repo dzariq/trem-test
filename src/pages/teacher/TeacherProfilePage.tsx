@@ -1,4 +1,6 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
+import { useAuth } from "@/contexts/AuthContext";
+import { useQueryClient } from "@tanstack/react-query";
 import { TeacherAppLayout } from "@/components/layout/TeacherAppLayout";
 import { AppHeader } from "@/components/layout/AppHeader";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -69,10 +71,18 @@ const schoolAccounts = [
 
 export default function TeacherProfilePage() {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
+  const { signOut } = useAuth();
   const { profile, loading: profileLoading, error: profileError, refetch } = useMyProfile();
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [isAccountsOpen, setIsAccountsOpen] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  
+  const handleLogout = useCallback(async () => {
+    await signOut();
+    queryClient.clear();
+    navigate("/", { replace: true });
+  }, [signOut, queryClient, navigate]);
   
   const [formProfile, setFormProfile] = useState({
     name: "",
@@ -301,7 +311,7 @@ export default function TeacherProfilePage() {
         <Button 
           variant="outline" 
           className="w-full border-destructive/50 text-destructive hover:bg-destructive/10"
-          onClick={() => navigate("/")}
+          onClick={handleLogout}
         >
           <LogOut className="h-4 w-4 mr-2" />
           Logout
