@@ -1,7 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { AppHeader } from "@/components/layout/AppHeader";
-import { attendanceData } from "@/data/mockData";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -30,6 +29,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { useStudentSelection } from "@/hooks/useStudentSelection";
+import { useParentAttendance, seedParentAttendanceDemo } from "@/hooks/useParentAttendance";
 
 const months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
 
@@ -38,16 +38,18 @@ type ZoomLevel = 3 | 6 | 12;
 type DayRecord = { date: string; status: string; reason: string | null; remarks: string | null };
 
 export default function AttendancePage() {
-  const [selectedMonth, setSelectedMonth] = useState("December");
-  const [currentMonthIndex, setCurrentMonthIndex] = useState(11);
+  const [selectedMonth, setSelectedMonth] = useState("January");
+  const [currentMonthIndex, setCurrentMonthIndex] = useState(0); // January = 0
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
-  const [selectedYear, setSelectedYear] = useState("2025");
+  const [selectedYear, setSelectedYear] = useState("2026");
   const [zoomLevel, setZoomLevel] = useState<ZoomLevel>(3);
   const chartContainerRef = useRef<HTMLDivElement>(null);
   const [isPinching, setIsPinching] = useState(false);
   const lastPinchDistance = useRef<number | null>(null);
   const [activeTooltip, setActiveTooltip] = useState<string | null>(null);
   const [selectedDay, setSelectedDay] = useState<DayRecord | null>(null);
+  const [seedingDone, setSeedingDone] = useState(false);
+
   const {
     linkedStudents,
     loading: studentsLoading,
@@ -55,6 +57,31 @@ export default function AttendancePage() {
     selectedStudentId,
     setSelectedStudentId,
   } = useStudentSelection();
+
+  // Use real DB attendance data
+  const {
+    records,
+    loading: attendanceLoading,
+    error: attendanceError,
+    chartData: allChartData,
+    getMonthlySummary,
+    getDailyBreakdown,
+  } = useParentAttendance(selectedStudentId, selectedYear);
+
+  // Seed demo data on page load (dev only)
+  useEffect(() => {
+    if (!seedingDone && selectedStudentId) {
+      seedParentAttendanceDemo().then((result) => {
+        console.log("[attendance] Seeding result:", result);
+        setSeedingDone(true);
+        // Trigger refetch by updating year temporarily
+        if (result.inserted > 0) {
+          setSelectedYear("2025");
+          setTimeout(() => setSelectedYear("2026"), 100);
+        }
+      });
+    }
+  }, [selectedStudentId, seedingDone]);
   
   // Swipe navigation state
   const [monthOffset, setMonthOffset] = useState(0); // 0 = most recent months
@@ -62,7 +89,7 @@ export default function AttendancePage() {
   const swipeDirectionRef = useRef<'horizontal' | 'vertical' | null>(null);
   const swipeDistanceRef = useRef(0);
 
-  const yearOptions = ["2025", "2024", "2023"];
+  const yearOptions = ["2026", "2025", "2024"];
   const zoomOptions: { value: ZoomLevel; label: string }[] = [
     { value: 3, label: "3 Months" },
     { value: 6, label: "6 Months" },
@@ -221,17 +248,17 @@ export default function AttendancePage() {
     return status.charAt(0).toUpperCase() + status.slice(1);
   };
 
-  const allChartData = attendanceData.monthly.map(item => ({
+  const chartDataWithTotal = allChartData.map(item => ({
     ...item,
     total: item.present + item.absent + item.late + item.excused
   }));
 
   // Get visible chart data based on zoom level and offset
   const chartData = (() => {
-    if (zoomLevel === 12) return allChartData;
-    const endIndex = allChartData.length - monthOffset;
+    if (zoomLevel === 12) return chartDataWithTotal;
+    const endIndex = chartDataWithTotal.length - monthOffset;
     const startIndex = Math.max(0, endIndex - zoomLevel);
-    return allChartData.slice(startIndex, endIndex);
+    return chartDataWithTotal.slice(startIndex, endIndex);
   })();
 
   // Reset offset when zoom level shows all months
@@ -241,21 +268,19 @@ export default function AttendancePage() {
     }
   }, [zoomLevel]);
 
-  // Calculate monthly summary
-  const monthlySummary = {
-    present: attendanceData.dailyBreakdown.filter(d => d.status === "present").length,
-    absent: attendanceData.dailyBreakdown.filter(d => d.status === "absent").length,
-    late: attendanceData.dailyBreakdown.filter(d => d.status === "late").length,
-    excused: attendanceData.dailyBreakdown.filter(d => d.status === "excused").length,
-  };
+  // Calculate monthly summary from real data
+  const monthlySummary = getMonthlySummary(currentMonthIndex);
+
+  // Get daily breakdown from real data
+  const dailyBreakdown = getDailyBreakdown(currentMonthIndex);
 
   // Filter daily breakdown by status
   const filteredBreakdown = statusFilter === "all" 
-    ? attendanceData.dailyBreakdown 
-    : attendanceData.dailyBreakdown.filter(d => d.status === statusFilter);
+    ? dailyBreakdown 
+    : dailyBreakdown.filter(d => d.status === statusFilter);
 
   // Group by week
-  const groupByWeek = (days: typeof attendanceData.dailyBreakdown) => {
+  const groupByWeek = (days: typeof dailyBreakdown) => {
     const weeks: { weekStart: string; days: typeof days }[] = [];
     let currentWeek: typeof days = [];
     let currentWeekStart = "";
@@ -292,12 +317,14 @@ export default function AttendancePage() {
   };
 
   const filterOptions: { value: StatusFilter; label: string; count: number }[] = [
-    { value: "all", label: "All", count: attendanceData.dailyBreakdown.length },
+    { value: "all", label: "All", count: dailyBreakdown.length },
     { value: "present", label: "Present", count: monthlySummary.present },
     { value: "absent", label: "Absent", count: monthlySummary.absent },
     { value: "late", label: "Late", count: monthlySummary.late },
     { value: "excused", label: "Excused", count: monthlySummary.excused },
   ];
+
+  const isLoading = studentsLoading || attendanceLoading;
 
   return (
     <AppLayout>
@@ -405,64 +432,70 @@ export default function AttendancePage() {
                 }
               }}
             >
-              <div 
-                className="transition-all duration-300 ease-out"
-                style={{ 
-                  width: '100%', 
-                  height: '100%' 
-                }}
-              >
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart 
-                    data={chartData} 
-                    barCategoryGap={zoomLevel === 3 ? "20%" : zoomLevel === 6 ? "15%" : "10%"}
-                    onClick={(data) => {
-                      if (data && data.activeLabel) {
-                        setActiveTooltip(prev => prev === data.activeLabel ? null : data.activeLabel);
-                      }
-                    }}
-                  >
-                    <XAxis 
-                      dataKey="month" 
-                      tick={{ fontSize: zoomLevel === 12 ? 9 : 11, fill: "hsl(var(--muted-foreground))" }}
-                      axisLine={false}
-                      tickLine={false}
-                    />
-                    <YAxis 
-                      tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }}
-                      axisLine={false}
-                      tickLine={false}
-                      width={30}
-                    />
-                    <Tooltip 
-                      contentStyle={{ 
-                        backgroundColor: "hsl(var(--card))",
-                        border: "1px solid hsl(var(--border))",
-                        borderRadius: "8px",
-                        boxShadow: "0 4px 12px rgba(0,0,0,0.15)"
+              {isLoading ? (
+                <div className="h-full flex items-center justify-center">
+                  <p className="text-muted-foreground text-sm">Loading attendance data...</p>
+                </div>
+              ) : (
+                <div 
+                  className="transition-all duration-300 ease-out"
+                  style={{ 
+                    width: '100%', 
+                    height: '100%' 
+                  }}
+                >
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart 
+                      data={chartData} 
+                      barCategoryGap={zoomLevel === 3 ? "20%" : zoomLevel === 6 ? "15%" : "10%"}
+                      onClick={(data) => {
+                        if (data && data.activeLabel) {
+                          setActiveTooltip(prev => prev === data.activeLabel ? null : data.activeLabel);
+                        }
                       }}
-                      cursor={{ fill: 'hsl(var(--muted)/0.3)' }}
-                      active={activeTooltip !== null}
-                      payload={activeTooltip ? chartData.filter(d => d.month === activeTooltip).map(d => [
-                        { name: 'Present', value: d.present, color: 'hsl(160, 84%, 39%)' },
-                        { name: 'Absent', value: d.absent, color: 'hsl(var(--destructive))' },
-                        { name: 'Late', value: d.late, color: 'hsl(38, 92%, 50%)' },
-                        { name: 'Excused', value: d.excused, color: 'hsl(271, 91%, 65%)' }
-                      ]).flat() : undefined}
-                      label={activeTooltip || undefined}
-                    />
-                    <Legend 
-                      wrapperStyle={{ fontSize: 10, paddingTop: 8 }}
-                      iconType="circle"
-                      iconSize={6}
-                    />
-                    <Bar dataKey="present" stackId="a" fill="hsl(160, 84%, 39%)" name="Present" radius={[0, 0, 0, 0]} />
-                    <Bar dataKey="absent" stackId="a" fill="hsl(var(--destructive))" name="Absent" radius={[0, 0, 0, 0]} />
-                    <Bar dataKey="late" stackId="a" fill="hsl(38, 92%, 50%)" name="Late" radius={[0, 0, 0, 0]} />
-                    <Bar dataKey="excused" stackId="a" fill="hsl(271, 91%, 65%)" name="Excused" radius={[4, 4, 0, 0]} />
-                  </BarChart>
-                </ResponsiveContainer>
-              </div>
+                    >
+                      <XAxis 
+                        dataKey="month" 
+                        tick={{ fontSize: zoomLevel === 12 ? 9 : 11, fill: "hsl(var(--muted-foreground))" }}
+                        axisLine={false}
+                        tickLine={false}
+                      />
+                      <YAxis 
+                        tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }}
+                        axisLine={false}
+                        tickLine={false}
+                        width={30}
+                      />
+                      <Tooltip 
+                        contentStyle={{ 
+                          backgroundColor: "hsl(var(--card))",
+                          border: "1px solid hsl(var(--border))",
+                          borderRadius: "8px",
+                          boxShadow: "0 4px 12px rgba(0,0,0,0.15)"
+                        }}
+                        cursor={{ fill: 'hsl(var(--muted)/0.3)' }}
+                        active={activeTooltip !== null}
+                        payload={activeTooltip ? chartData.filter(d => d.month === activeTooltip).map(d => [
+                          { name: 'Present', value: d.present, color: 'hsl(160, 84%, 39%)' },
+                          { name: 'Absent', value: d.absent, color: 'hsl(var(--destructive))' },
+                          { name: 'Late', value: d.late, color: 'hsl(38, 92%, 50%)' },
+                          { name: 'Excused', value: d.excused, color: 'hsl(271, 91%, 65%)' }
+                        ]).flat() : undefined}
+                        label={activeTooltip || undefined}
+                      />
+                      <Legend 
+                        wrapperStyle={{ fontSize: 10, paddingTop: 8 }}
+                        iconType="circle"
+                        iconSize={6}
+                      />
+                      <Bar dataKey="present" stackId="a" fill="hsl(160, 84%, 39%)" name="Present" radius={[0, 0, 0, 0]} />
+                      <Bar dataKey="absent" stackId="a" fill="hsl(var(--destructive))" name="Absent" radius={[0, 0, 0, 0]} />
+                      <Bar dataKey="late" stackId="a" fill="hsl(38, 92%, 50%)" name="Late" radius={[0, 0, 0, 0]} />
+                      <Bar dataKey="excused" stackId="a" fill="hsl(271, 91%, 65%)" name="Excused" radius={[4, 4, 0, 0]} />
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
+              )}
             </div>
           </CardContent>
         </Card>
@@ -477,7 +510,7 @@ export default function AttendancePage() {
               <Button variant="ghost" size="icon" onClick={goToPrevMonth}>
                 <ChevronLeft className="h-5 w-5" />
               </Button>
-              <span className="font-semibold text-foreground">{selectedMonth} 2025</span>
+              <span className="font-semibold text-foreground">{selectedMonth} {selectedYear}</span>
               <Button variant="ghost" size="icon" onClick={goToNextMonth}>
                 <ChevronRight className="h-5 w-5" />
               </Button>
@@ -530,6 +563,19 @@ export default function AttendancePage() {
                 </Button>
               ))}
             </div>
+
+            {/* Loading / Empty State */}
+            {isLoading && (
+              <div className="py-8 text-center">
+                <p className="text-muted-foreground text-sm">Loading...</p>
+              </div>
+            )}
+
+            {!isLoading && weeklyBreakdown.length === 0 && (
+              <div className="py-8 text-center">
+                <p className="text-muted-foreground text-sm">No attendance records for this month.</p>
+              </div>
+            )}
 
             {/* Weekly Groups */}
             {weeklyBreakdown.map((week, weekIndex) => (
