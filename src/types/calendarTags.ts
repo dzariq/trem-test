@@ -51,7 +51,7 @@ export type TagCategory =
   | "parents";
 
 // User roles for visibility
-export type UserRole = "teacher" | "admin" | "parent";
+export type UserRole = "teacher" | "admin" | "parent" | "student";
 
 // Tags hidden from teachers (admin-only)
 export const TEACHER_HIDDEN_TAGS: CalendarTag[] = [
@@ -164,10 +164,17 @@ export const CATEGORY_DISPLAY_NAMES: Record<TagCategory, string> = {
 
 // Calendar event interface with multi-tag support
 export interface CalendarEvent {
-  id: number;
+  id: string | number;
   title: string;
   date: string;
   time: string;
   tags: CalendarTag[];
   location?: string;
+  startDay?: string;
+  endDay?: string;
+  allDay?: boolean;
+  start?: Date | null;
+  end?: Date | null;
+  description?: string;
+  category?: string;
 }

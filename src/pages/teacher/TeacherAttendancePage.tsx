@@ -7,15 +7,18 @@ import { Badge } from "@/components/ui/badge";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { CalendarIcon, Check, X, Clock, AlertCircle, Save, ChevronLeft, ChevronRight as ChevronRightIcon, Users, FileText, TrendingUp, Printer } from "lucide-react";
+import { CalendarIcon, Check, X, Clock, AlertCircle, Save, ChevronLeft, ChevronRight as ChevronRightIcon, Users, FileText, TrendingUp, Printer, Loader2 } from "lucide-react";
 import schoolLogo from "@/assets/school-badge.png";
 import collinzLogo from "@/assets/collinz-school-logo.png";
 import cambridgeLogo from "@/assets/cambridge-logo.jpg";
 import { format, startOfWeek, endOfWeek, isToday, parseISO, addWeeks, subWeeks, isSameWeek, startOfMonth, endOfMonth, startOfYear, endOfYear, subMonths } from "date-fns";
 import { cn } from "@/lib/utils";
 import { toast } from "@/hooks/use-toast";
+import { Input } from "@/components/ui/input";
 
 import { teacherProfile, classRosters, teacherAttendanceStats, DailyAttendanceDetail } from "@/data/teacherMockData";
+import { useTeacherAttendance } from "@/hooks/useTeacherAttendance";
+import { type AttendanceStatus } from "@/data/teacherAttendance";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
@@ -40,7 +43,6 @@ import {
   ChartTooltipContent,
 } from "@/components/ui/chart";
 
-type AttendanceStatus = "present" | "absent" | "late" | "excused";
 type TabType = "take" | "statistics";
 
 const chartConfig = {
@@ -52,11 +54,30 @@ const chartConfig = {
 
 export default function TeacherAttendancePage() {
   const [activeTab, setActiveTab] = useState<TabType>("take");
-  const [selectedClass, setSelectedClass] = useState(teacherProfile.classes[0]);
-  const [selectedDate, setSelectedDate] = useState<Date>(new Date());
-  const [attendance, setAttendance] = useState<Record<string, AttendanceStatus>>({});
   
-  // Statistics state
+  // Use the new Supabase-connected hook for Take Attendance tab
+  const {
+    classes,
+    selectedClass,
+    setSelectedClass,
+    selectedDate,
+    setSelectedDate,
+    students,
+    attendanceState,
+    summary,
+    loadingClasses,
+    loadingStudents,
+    loadingAttendance,
+    saving,
+    isLoading,
+    error,
+    setStudentStatus,
+    setStudentRemarks,
+    save,
+  } = useTeacherAttendance();
+  
+  // Statistics state (still using mock data)
+  const [statsSelectedClass, setStatsSelectedClass] = useState(teacherProfile.classes[0]);
   const [selectedYear, setSelectedYear] = useState("2026");
   const [selectedMonth, setSelectedMonth] = useState(0); // January
   const [selectedDayStats, setSelectedDayStats] = useState<DailyAttendanceDetail | null>(null);
@@ -78,16 +99,16 @@ export default function TeacherAttendancePage() {
   const weeklyReportRef = useRef<HTMLDivElement>(null);
   const frequentReportRef = useRef<HTMLDivElement>(null);
   
-
-  const students = classRosters[selectedClass as keyof typeof classRosters] || [];
-  const statsData = teacherAttendanceStats[selectedClass as keyof typeof teacherAttendanceStats];
+  // For statistics tab - still using mock data
+  const mockStudents = classRosters[statsSelectedClass as keyof typeof classRosters] || [];
+  const statsData = teacherAttendanceStats[statsSelectedClass as keyof typeof teacherAttendanceStats];
 
   const handleStatusChange = (studentId: string, status: AttendanceStatus) => {
-    setAttendance(prev => ({ ...prev, [studentId]: status }));
+    setStudentStatus(studentId, status);
   };
 
   const getStatusButton = (studentId: string, status: AttendanceStatus, icon: React.ReactNode, label: string, activeColor: string) => {
-    const isActive = attendance[studentId] === status;
+    const isActive = attendanceState[studentId]?.status === status;
     return (
       <button
         onClick={() => handleStatusChange(studentId, status)}
@@ -96,32 +117,33 @@ export default function TeacherAttendancePage() {
           isActive ? activeColor : "bg-muted hover:bg-muted/80"
         )}
         title={label}
+        disabled={saving}
       >
         {icon}
       </button>
     );
   };
 
-  const handleSubmit = () => {
-    const unmarked = students.filter(s => !attendance[s.id]);
-    if (unmarked.length > 0) {
+  const handleSubmit = async () => {
+    const result = await save();
+    if (result.success) {
       toast({
-        title: "Incomplete Attendance",
-        description: `${unmarked.length} students haven't been marked yet.`,
+        title: "Attendance Submitted",
+        description: result.message,
+      });
+    } else {
+      toast({
+        title: "Error",
+        description: result.message,
         variant: "destructive"
       });
-      return;
     }
-    toast({
-      title: "Attendance Submitted",
-      description: `Attendance for Class ${selectedClass} on ${format(selectedDate, "PPP")} has been saved.`,
-    });
   };
 
-  const presentCount = Object.values(attendance).filter(s => s === "present").length;
-  const absentCount = Object.values(attendance).filter(s => s === "absent").length;
-  const lateCount = Object.values(attendance).filter(s => s === "late").length;
-  const excusedCount = Object.values(attendance).filter(s => s === "excused").length;
+  const presentCount = summary.present;
+  const absentCount = summary.absent;
+  const lateCount = summary.late;
+  const excusedCount = summary.excused;
 
   // Statistics calculations
   const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
@@ -363,14 +385,25 @@ export default function TeacherAttendancePage() {
       {/* Tab Content */}
       {activeTab === "take" ? (
         <div className="px-4 space-y-4 mt-4">
+          {/* Error Message */}
+          {error && (
+            <div className="p-3 bg-destructive/10 border border-destructive/30 rounded-lg text-destructive text-sm">
+              {error}
+            </div>
+          )}
+
           {/* Filters */}
           <div className="flex gap-3">
-            <Select value={selectedClass} onValueChange={setSelectedClass}>
+            <Select 
+              value={selectedClass} 
+              onValueChange={setSelectedClass}
+              disabled={loadingClasses}
+            >
               <SelectTrigger className="flex-1">
-                <SelectValue placeholder="Select Class" />
+                <SelectValue placeholder={loadingClasses ? "Loading..." : "Select Class"} />
               </SelectTrigger>
               <SelectContent>
-                {teacherProfile.classes.map((cls) => (
+                {classes.map((cls) => (
                   <SelectItem key={cls} value={cls}>Class {cls}</SelectItem>
                 ))}
               </SelectContent>
@@ -420,50 +453,72 @@ export default function TeacherAttendancePage() {
             <CardHeader className="pb-2">
               <CardTitle className="text-base flex items-center justify-between">
                 <span>Class {selectedClass} ({students.length} students)</span>
+                {(loadingStudents || loadingAttendance) && (
+                  <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+                )}
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-2">
-              {students.map((student, index) => (
-                <div 
-                  key={student.id} 
-                  className="flex flex-col p-3 rounded-xl border border-border/50 bg-card hover:bg-muted/30 transition-colors gap-3"
-                >
-                  <div className="flex items-center gap-2">
-                    <span className="flex items-center justify-center h-6 w-6 rounded-full bg-primary/10 text-xs font-medium text-primary flex-shrink-0">{index + 1}</span>
-                    <span className="font-medium text-foreground text-sm">{student.name}</span>
-                  </div>
-                  <div className="flex gap-3 justify-center">
-                    {getStatusButton(
-                      student.id,
-                      "present",
-                      <Check className="h-4 w-4 text-white" />,
-                      "Present",
-                      "bg-emerald-500"
-                    )}
-                    {getStatusButton(
-                      student.id,
-                      "absent",
-                      <X className="h-4 w-4 text-white" />,
-                      "Absent",
-                      "bg-red-500"
-                    )}
-                    {getStatusButton(
-                      student.id,
-                      "late",
-                      <Clock className="h-4 w-4 text-white" />,
-                      "Late",
-                      "bg-amber-500"
-                    )}
-                    {getStatusButton(
-                      student.id,
-                      "excused",
-                      <AlertCircle className="h-4 w-4 text-white" />,
-                      "Excused",
-                      "bg-purple-500"
-                    )}
-                  </div>
+              {loadingStudents ? (
+                <div className="py-8 text-center text-muted-foreground">
+                  <Loader2 className="h-6 w-6 animate-spin mx-auto mb-2" />
+                  <p className="text-sm">Loading students...</p>
                 </div>
-              ))}
+              ) : students.length === 0 ? (
+                <div className="py-8 text-center text-muted-foreground">
+                  <p className="text-sm">No students found for this class.</p>
+                </div>
+              ) : (
+                students.map((student, index) => (
+                  <div 
+                    key={student.id} 
+                    className="flex flex-col p-3 rounded-xl border border-border/50 bg-card hover:bg-muted/30 transition-colors gap-3"
+                  >
+                    <div className="flex items-center gap-2">
+                      <span className="flex items-center justify-center h-6 w-6 rounded-full bg-primary/10 text-xs font-medium text-primary flex-shrink-0">{index + 1}</span>
+                      <span className="font-medium text-foreground text-sm">{student.name}</span>
+                    </div>
+                    <div className="flex gap-3 justify-center">
+                      {getStatusButton(
+                        student.id,
+                        "present",
+                        <Check className="h-4 w-4 text-white" />,
+                        "Present",
+                        "bg-emerald-500"
+                      )}
+                      {getStatusButton(
+                        student.id,
+                        "absent",
+                        <X className="h-4 w-4 text-white" />,
+                        "Absent",
+                        "bg-red-500"
+                      )}
+                      {getStatusButton(
+                        student.id,
+                        "late",
+                        <Clock className="h-4 w-4 text-white" />,
+                        "Late",
+                        "bg-amber-500"
+                      )}
+                      {getStatusButton(
+                        student.id,
+                        "excused",
+                        <AlertCircle className="h-4 w-4 text-white" />,
+                        "Excused",
+                        "bg-purple-500"
+                      )}
+                    </div>
+                    {/* Optional Remarks Input */}
+                    <Input
+                      placeholder="Remarks (optional)"
+                      value={attendanceState[student.id]?.remarks || ""}
+                      onChange={(e) => setStudentRemarks(student.id, e.target.value)}
+                      className="text-sm h-8"
+                      disabled={saving}
+                    />
+                  </div>
+                ))
+              )}
             </CardContent>
           </Card>
 
@@ -472,15 +527,25 @@ export default function TeacherAttendancePage() {
             className="w-full" 
             size="lg"
             onClick={handleSubmit}
+            disabled={saving || students.length === 0}
           >
-            <Save className="h-4 w-4 mr-2" />
-            Submit Attendance
+            {saving ? (
+              <>
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                Saving...
+              </>
+            ) : (
+              <>
+                <Save className="h-4 w-4 mr-2" />
+                Submit Attendance
+              </>
+            )}
           </Button>
         </div>
       ) : (
         <div className="px-4 space-y-4 mt-4 pb-4">
           {/* Class Selector for Statistics */}
-          <Select value={selectedClass} onValueChange={setSelectedClass}>
+          <Select value={statsSelectedClass} onValueChange={setStatsSelectedClass}>
             <SelectTrigger>
               <SelectValue placeholder="Select Class" />
             </SelectTrigger>
