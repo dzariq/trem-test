@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ChevronRight, ChevronDown } from "lucide-react";
@@ -10,57 +10,41 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { listMonthlyAttendanceSummary, type MonthlyAttendanceSummary } from "@/data/attendance";
+import { useStudentSelection } from "@/hooks/useStudentSelection";
+import { useStudentAttendanceSummary } from "@/hooks/useStudentAttendanceSummary";
+
+const PERIOD_OPTIONS = [
+  { label: "30 Days", days: 30 },
+  { label: "60 Days", days: 60 },
+  { label: "90 Days", days: 90 },
+];
 
 export function AttendanceSummary() {
   const navigate = useNavigate();
-  const [summary, setSummary] = useState<MonthlyAttendanceSummary[]>([]);
-  const [selectedMonth, setSelectedMonth] = useState<MonthlyAttendanceSummary | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const {
+    linkedStudents,
+    loading: studentsLoading,
+    selectedStudentId,
+    setSelectedStudentId,
+    selectedStudent,
+  } = useStudentSelection();
 
-  useEffect(() => {
-    let isMounted = true;
-    const loadSummary = async () => {
-      setLoading(true);
-      setError(null);
-      try {
-        const data = await listMonthlyAttendanceSummary();
-        if (isMounted) {
-          setSummary(data);
-          if (data.length > 0 && !selectedMonth) {
-            setSelectedMonth(data[0]);
-          }
-        }
-      } catch (err) {
-        const message = err instanceof Error ? err.message : "Failed to load attendance summary.";
-        if (isMounted) {
-          setError(message);
-          setSummary([]);
-        }
-      } finally {
-        if (isMounted) {
-          setLoading(false);
-        }
-      }
-    };
+  const [selectedPeriod, setSelectedPeriod] = useState(PERIOD_OPTIONS[0]);
 
-    loadSummary();
-    return () => {
-      isMounted = false;
-    };
-  }, []);
+  const {
+    totals,
+    loading: attendanceLoading,
+    error: attendanceError,
+  } = useStudentAttendanceSummary(selectedStudentId, selectedPeriod.days);
 
-  const monthData = selectedMonth;
-  const total = monthData
-    ? monthData.present + monthData.absent + monthData.late + monthData.excused
-    : 0;
+  const loading = studentsLoading || attendanceLoading;
+  const total = totals.total;
 
-  const chartData = monthData && total > 0 ? [
-    { name: "Present", value: Math.round((monthData.present / total) * 100), color: "hsl(160, 84%, 39%)" },
-    { name: "Absent", value: Math.round((monthData.absent / total) * 100), color: "hsl(var(--destructive))" },
-    { name: "Late", value: Math.round((monthData.late / total) * 100), color: "hsl(38, 92%, 50%)" },
-    { name: "Excused", value: Math.round((monthData.excused / total) * 100), color: "hsl(271, 91%, 65%)" },
+  const chartData = total > 0 ? [
+    { name: "Present", value: Math.round((totals.present / total) * 100), color: "hsl(160, 84%, 39%)" },
+    { name: "Absent", value: Math.round((totals.absent / total) * 100), color: "hsl(var(--destructive))" },
+    { name: "Late", value: Math.round((totals.late / total) * 100), color: "hsl(38, 92%, 50%)" },
+    { name: "Excused", value: Math.round((totals.excused / total) * 100), color: "hsl(271, 91%, 65%)" },
   ] : [];
 
   return (
@@ -68,31 +52,60 @@ export function AttendanceSummary() {
       <Card className="bg-card border-border shadow-sm">
         <CardHeader className="pb-2">
           <CardTitle className="text-lg font-semibold flex items-center justify-between">
-            Attendance Overview
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="text-sm font-normal text-muted-foreground h-auto py-1 px-2"
-                  disabled={loading || summary.length === 0}
-                >
-                  {selectedMonth?.month || "No data"}
-                  <ChevronDown className="h-3 w-3 ml-1" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="bg-card border-border">
-                {summary.map((month) => (
-                  <DropdownMenuItem
-                    key={month.month}
-                    onClick={() => setSelectedMonth(month)}
-                    className={selectedMonth?.month === month.month ? "bg-muted" : ""}
+            <span>Attendance Overview</span>
+            <div className="flex items-center gap-2">
+              {/* Student Selector */}
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="text-sm font-normal text-muted-foreground h-auto py-1 px-2"
+                    disabled={studentsLoading || linkedStudents.length === 0}
                   >
-                    {month.month}
-                  </DropdownMenuItem>
-                ))}
-              </DropdownMenuContent>
-            </DropdownMenu>
+                    {selectedStudent?.name ?? "Select Student"}
+                    <ChevronDown className="h-3 w-3 ml-1" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="bg-card border-border">
+                  {linkedStudents.map((student) => (
+                    <DropdownMenuItem
+                      key={student.id}
+                      onClick={() => setSelectedStudentId(student.id)}
+                      className={selectedStudentId === student.id ? "bg-muted" : ""}
+                    >
+                      {student.name}
+                    </DropdownMenuItem>
+                  ))}
+                </DropdownMenuContent>
+              </DropdownMenu>
+
+              {/* Period Selector */}
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="text-sm font-normal text-muted-foreground h-auto py-1 px-2"
+                    disabled={loading}
+                  >
+                    {selectedPeriod.label}
+                    <ChevronDown className="h-3 w-3 ml-1" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="bg-card border-border">
+                  {PERIOD_OPTIONS.map((option) => (
+                    <DropdownMenuItem
+                      key={option.days}
+                      onClick={() => setSelectedPeriod(option)}
+                      className={selectedPeriod.days === option.days ? "bg-muted" : ""}
+                    >
+                      {option.label}
+                    </DropdownMenuItem>
+                  ))}
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
           </CardTitle>
         </CardHeader>
         <CardContent className="pb-4">
@@ -101,17 +114,22 @@ export function AttendanceSummary() {
               Loading attendance...
             </p>
           )}
-          {!loading && error && (
+          {!loading && attendanceError && (
             <p className="text-sm text-destructive text-center py-6">
-              {error}
+              {attendanceError}
             </p>
           )}
-          {!loading && !error && chartData.length === 0 && (
+          {!loading && !attendanceError && !selectedStudentId && (
             <p className="text-sm text-muted-foreground text-center py-6">
-              No attendance data available yet.
+              No linked students found.
             </p>
           )}
-          {!loading && !error && chartData.length > 0 && (
+          {!loading && !attendanceError && selectedStudentId && chartData.length === 0 && (
+            <p className="text-sm text-muted-foreground text-center py-6">
+              No attendance records for this period.
+            </p>
+          )}
+          {!loading && !attendanceError && chartData.length > 0 && (
             <div className="flex items-center gap-4">
               <div className="w-32 h-32">
                 <ResponsiveContainer width="100%" height="100%">
