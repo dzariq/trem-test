@@ -173,6 +173,9 @@ export async function saveGrades(
     gradeInput: GradeInput;
   }>
 ): Promise<{ success: boolean; error?: string }> {
+  // NOTE: We do NOT include total_marks or letter_grade in the payload
+  // because total_marks is a generated column in Supabase (computed automatically)
+  // and letter_grade may also be computed. Sending them causes a 400 error.
   const updates: Array<{
     id?: string;
     student_id: string;
@@ -182,8 +185,6 @@ export async function saveGrades(
     homework_marks: number;
     quiz_marks: number;
     exam_marks: number;
-    total_marks: number;
-    letter_grade: string;
     teacher_comment: string | null;
     subject_comment: string | null;
   }> = [];
@@ -193,7 +194,6 @@ export async function saveGrades(
     const homework = parseInt(grade.gradeInput.homework) || 0;
     const quiz = parseInt(grade.gradeInput.quiz) || 0;
     const exam = parseInt(grade.gradeInput.exam) || 0;
-    const total = attitude + homework + quiz + exam;
 
     // Skip if no data entered
     if (attitude === 0 && homework === 0 && quiz === 0 && exam === 0 && 
@@ -201,6 +201,7 @@ export async function saveGrades(
       continue;
     }
 
+    // Record WITHOUT generated columns (total_marks, letter_grade)
     const record = {
       student_id: grade.studentId,
       subject_id: grade.subjectId,
@@ -209,8 +210,6 @@ export async function saveGrades(
       homework_marks: homework,
       quiz_marks: quiz,
       exam_marks: exam,
-      total_marks: total,
-      letter_grade: calculateLetterGrade(total),
       teacher_comment: grade.gradeInput.comment || null,
       subject_comment: grade.gradeInput.reportComment || null,
     };

@@ -287,6 +287,45 @@ export function computeGradeDistribution(studentScores: StudentScore[]): {
   ];
 }
 
+// Compute grade distribution for a single subject
+export function computeSingleSubjectDistribution(
+  grades: SubjectGrade[],
+  students: ClassAnalysisStudent[],
+  subjectId: number
+): {
+  distribution: { range: string; count: number }[];
+  rankedStudents: { studentId: string; studentName: string; score: number }[];
+} {
+  const subjectGrades = grades.filter((g) => g.subject_id === subjectId);
+  const studentIdToName = new Map(students.map((s) => [s.id, s.name]));
+  
+  // Get scores per student for the subject
+  const studentScores: { studentId: string; studentName: string; score: number }[] = [];
+  subjectGrades.forEach((g) => {
+    studentScores.push({
+      studentId: g.student_id,
+      studentName: studentIdToName.get(g.student_id) || "Unknown",
+      score: g.total_marks,
+    });
+  });
+  
+  // Sort by score descending
+  studentScores.sort((a, b) => b.score - a.score);
+  
+  // Compute distribution
+  const scores = studentScores.map((s) => s.score);
+  const distribution = [
+    { range: "A*", count: scores.filter((g) => g >= 90).length },
+    { range: "A", count: scores.filter((g) => g >= 80 && g < 90).length },
+    { range: "B", count: scores.filter((g) => g >= 70 && g < 80).length },
+    { range: "C", count: scores.filter((g) => g >= 60 && g < 70).length },
+    { range: "D", count: scores.filter((g) => g >= 50 && g < 60).length },
+    { range: "E", count: scores.filter((g) => g < 50).length },
+  ];
+  
+  return { distribution, rankedStudents: studentScores };
+}
+
 // Compute subject changes between two periods (for Rising/At-Risk)
 export function computeSubjectChanges(
   grades: SubjectGrade[],
@@ -406,4 +445,138 @@ export function computeSummaryStats(
     passRate,
     studentCount: studentScores.length,
   };
+}
+
+// Compute trend data across multiple periods
+export function computeTrendData(
+  grades: SubjectGrade[],
+  subjects: SubjectInfo[],
+  academicPeriods: AcademicPeriodInfo[],
+  selectedSubjectIds: number[]
+): { period: string; periodId: string; [key: string]: number | string }[] {
+  // Group grades by academic period
+  const periodData = new Map<string, Map<number, { sum: number; count: number }>>();
+  
+  grades.forEach((g) => {
+    if (selectedSubjectIds.length > 0 && !selectedSubjectIds.includes(g.subject_id)) {
+      return;
+    }
+    
+    if (!periodData.has(g.academic_period_id)) {
+      periodData.set(g.academic_period_id, new Map());
+    }
+    const subjectMap = periodData.get(g.academic_period_id)!;
+    
+    if (!subjectMap.has(g.subject_id)) {
+      subjectMap.set(g.subject_id, { sum: 0, count: 0 });
+    }
+    const entry = subjectMap.get(g.subject_id)!;
+    entry.sum += g.total_marks;
+    entry.count++;
+  });
+  
+  const subjectIdToName = new Map(subjects.map((s) => [s.id, s.name]));
+  
+  // Sort periods by their order
+  const orderedPeriods = academicPeriods
+    .filter((p) => periodData.has(p.id))
+    .sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0));
+  
+  return orderedPeriods.map((period) => {
+    const subjectMap = periodData.get(period.id) || new Map();
+    const result: { period: string; periodId: string; [key: string]: number | string } = {
+      period: period.name,
+      periodId: period.id,
+    };
+    
+    let totalScore = 0;
+    let subjectCount = 0;
+    
+    subjectMap.forEach((data, subjectId) => {
+      const avg = data.count > 0 ? Math.round(data.sum / data.count) : 0;
+      const subjectName = subjectIdToName.get(subjectId) || `Subject ${subjectId}`;
+      result[subjectName] = avg;
+      totalScore += avg;
+      subjectCount++;
+    });
+    
+    result["Average"] = subjectCount > 0 ? Math.round(totalScore / subjectCount) : 0;
+    return result;
+  });
+}
+
+// Compute box plot statistics for a single subject
+export interface BoxPlotStats {
+  subjectName: string;
+  subjectId: number;
+  min: number;
+  q1: number;
+  median: number;
+  q3: number;
+  max: number;
+  count: number;
+  outliers: number[];
+}
+
+export function computeBoxPlotStats(
+  grades: SubjectGrade[],
+  subjects: SubjectInfo[],
+  selectedSubjectIds: number[]
+): BoxPlotStats[] {
+  const subjectIdToName = new Map(subjects.map((s) => [s.id, s.name]));
+  const subjectScores = new Map<number, number[]>();
+  
+  grades.forEach((g) => {
+    if (selectedSubjectIds.length > 0 && !selectedSubjectIds.includes(g.subject_id)) {
+      return;
+    }
+    
+    if (!subjectScores.has(g.subject_id)) {
+      subjectScores.set(g.subject_id, []);
+    }
+    subjectScores.get(g.subject_id)!.push(g.total_marks);
+  });
+  
+  const results: BoxPlotStats[] = [];
+  
+  subjectScores.forEach((scores, subjectId) => {
+    if (scores.length === 0) return;
+    
+    // Sort scores
+    const sorted = [...scores].sort((a, b) => a - b);
+    const n = sorted.length;
+    
+    const getPercentile = (arr: number[], p: number): number => {
+      const index = (p / 100) * (arr.length - 1);
+      const lower = Math.floor(index);
+      const upper = Math.ceil(index);
+      if (lower === upper) return arr[lower];
+      return arr[lower] * (upper - index) + arr[upper] * (index - lower);
+    };
+    
+    const min = sorted[0];
+    const max = sorted[n - 1];
+    const q1 = getPercentile(sorted, 25);
+    const median = getPercentile(sorted, 50);
+    const q3 = getPercentile(sorted, 75);
+    const iqr = q3 - q1;
+    const lowerBound = q1 - 1.5 * iqr;
+    const upperBound = q3 + 1.5 * iqr;
+    
+    const outliers = sorted.filter((s) => s < lowerBound || s > upperBound);
+    
+    results.push({
+      subjectName: subjectIdToName.get(subjectId) || `Subject ${subjectId}`,
+      subjectId,
+      min,
+      q1: Math.round(q1),
+      median: Math.round(median),
+      q3: Math.round(q3),
+      max,
+      count: n,
+      outliers,
+    });
+  });
+  
+  return results.sort((a, b) => b.median - a.median);
 }
