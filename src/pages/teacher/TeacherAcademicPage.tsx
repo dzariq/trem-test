@@ -77,7 +77,7 @@ const IconScale = () => (
     <path d="M3 7h2c2 0 5-1 7-2 2 1 5 2 7 2h2" />
   </svg>
 );
-import { teacherProfile, classRosters, classGrades, detailedClassGrades, yearOverYearData, categoryYearOverYear, examComparisonData, ExamData, subjectYearlyData, multiClassTrendData, subjectExamData } from "@/data/teacherMockData";
+import { teacherProfile, classRosters, classGrades, yearOverYearData, categoryYearOverYear, examComparisonData, ExamData, subjectYearlyData, multiClassTrendData, subjectExamData } from "@/data/teacherMockData";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, LineChart, Line, Legend, AreaChart, Area, RadarChart, Radar, PolarGrid, PolarAngleAxis, PolarRadiusAxis, ReferenceLine, ReferenceDot } from "recharts";
@@ -733,85 +733,98 @@ export default function TeacherAcademicPage() {
     });
   };
 
-  // Get detailed grades for class first (needed for filtered calculations)
-  const detailedGradesForClass = detailedClassGrades[selectedClass as keyof typeof detailedClassGrades] || {};
-
-  // Calculate class statistics for analysis (filtered by selectedSubjects)
-  const filteredStudentScores = useMemo(() => {
-    const scores: number[] = [];
-    Object.values(detailedGradesForClass).forEach(studentGrades => {
-      let studentTotal = 0;
-      let subjectCount = 0;
-      Object.entries(studentGrades).forEach(([subject, grades]) => {
-        if (selectedSubjects.includes(subject)) {
-          const total = grades.attitude + grades.homework + grades.quiz + grades.exam;
-          studentTotal += total;
-          subjectCount++;
-        }
+  // ============ USE REAL DATA FROM classAnalysis ============
+  // Class statistics from real Supabase data (not mock)
+  const classAverage = classAnalysis.summaryStats?.classAverage ?? 0;
+  const passRate = classAnalysis.summaryStats?.passRate ?? 0;
+  const gradeDistribution = classAnalysis.gradeDistribution;
+  
+  // Compute highest/lowest from real student scores
+  const highestScore = useMemo(() => {
+    if (classAnalysis.studentScores.length === 0) return 0;
+    return Math.max(...classAnalysis.studentScores.map(s => s.averageScore));
+  }, [classAnalysis.studentScores]);
+  
+  const lowestScore = useMemo(() => {
+    if (classAnalysis.studentScores.length === 0) return 0;
+    return Math.min(...classAnalysis.studentScores.map(s => s.averageScore));
+  }, [classAnalysis.studentScores]);
+  
+  const aGradeRate = useMemo(() => {
+    if (classAnalysis.studentScores.length === 0) return 0;
+    const aCount = classAnalysis.studentScores.filter(s => s.averageScore >= 80).length;
+    return Math.round((aCount / classAnalysis.studentScores.length) * 100);
+  }, [classAnalysis.studentScores]);
+  
+  // Dev logging for debugging Subject Performance
+  useEffect(() => {
+    if (process.env.NODE_ENV === 'development') {
+      console.log('[Subject Performance] Data loaded:', {
+        subjectAveragesCount: classAnalysis.subjectAverages.length,
+        studentScoresCount: classAnalysis.studentScores.length,
+        selectedClass: classAnalysis.selectedClass,
+        selectedPeriod: classAnalysis.selectedPeriodId,
+        hasData: classAnalysis.hasData,
       });
-      if (subjectCount > 0) {
-        scores.push(studentTotal / subjectCount);
-      }
-    });
-    return scores;
-  }, [detailedGradesForClass, selectedSubjects]);
-  const classAverage = filteredStudentScores.length > 0 ? Math.round(filteredStudentScores.reduce((a, b) => a + b, 0) / filteredStudentScores.length) : 0;
-  const highestScore = filteredStudentScores.length > 0 ? Math.round(Math.max(...filteredStudentScores)) : 0;
-  const lowestScore = filteredStudentScores.length > 0 ? Math.round(Math.min(...filteredStudentScores)) : 0;
-  const passRate = filteredStudentScores.length > 0 ? Math.round(filteredStudentScores.filter(g => g >= 50).length / filteredStudentScores.length * 100) : 0;
-  const aGradeRate = filteredStudentScores.length > 0 ? Math.round(filteredStudentScores.filter(g => g >= 80).length / filteredStudentScores.length * 100) : 0;
-  const gradeDistribution = [{
-    range: "A*",
-    count: filteredStudentScores.filter(g => g >= 90).length
-  }, {
-    range: "A",
-    count: filteredStudentScores.filter(g => g >= 80 && g < 90).length
-  }, {
-    range: "B",
-    count: filteredStudentScores.filter(g => g >= 70 && g < 80).length
-  }, {
-    range: "C",
-    count: filteredStudentScores.filter(g => g >= 60 && g < 70).length
-  }, {
-    range: "D",
-    count: filteredStudentScores.filter(g => g >= 50 && g < 60).length
-  }, {
-    range: "E",
-    count: filteredStudentScores.filter(g => g < 50).length
-  }];
+    }
+  }, [classAnalysis.subjectAverages, classAnalysis.studentScores, classAnalysis.selectedClass, classAnalysis.selectedPeriodId, classAnalysis.hasData]);
 
-  // Ranked students with filtered subject scores
+  // Ranked students with real data from classAnalysis
   const rankedStudents = useMemo(() => {
-    return students.map(s => {
-      const studentGrades = detailedGradesForClass[s.id];
-      if (!studentGrades) return {
-        ...s,
-        score: null
-      };
-      let studentTotal = 0;
-      let subjectCount = 0;
-      Object.entries(studentGrades).forEach(([subject, grades]) => {
-        if (selectedSubjects.includes(subject)) {
-          const total = grades.attitude + grades.homework + grades.quiz + grades.exam;
-          studentTotal += total;
-          subjectCount++;
-        }
-      });
-      return {
-        ...s,
-        score: subjectCount > 0 ? Math.round(studentTotal / subjectCount) : null
-      };
-    }).filter(s => s.score !== null).sort((a, b) => (b.score || 0) - (a.score || 0));
-  }, [students, detailedGradesForClass, selectedSubjects]);
+    return classAnalysis.studentScores.map(s => ({
+      id: s.studentId,
+      name: s.studentName,
+      score: s.averageScore,
+      photo: null,
+      mealPlan: false,
+      outdoorCCA: false,
+      sportsHouse: "red" as const,
+      remarks: "",
+      joinDate: ""
+    }));
+  }, [classAnalysis.studentScores]);
 
-  // At-risk students (D, E grades: below 60%)
-  const atRiskStudents = rankedStudents.filter(s => s.score !== null && s.score < 60);
+  // At-risk students from classAnalysis
+  const atRiskStudents = useMemo(() => 
+    classAnalysis.atRiskStudents.map(s => ({
+      id: s.studentId,
+      name: s.studentName,
+      score: s.averageScore,
+      photo: null,
+      mealPlan: false,
+      outdoorCCA: false,
+      sportsHouse: "red" as const,
+      remarks: "",
+      joinDate: ""
+    })), [classAnalysis.atRiskStudents]);
   
-  // Middle performing students (B, C grades: 60-79%)
-  const middlePerformers = rankedStudents.filter(s => s.score !== null && s.score >= 60 && s.score < 80);
+  // Middle performers from classAnalysis
+  const middlePerformers = useMemo(() =>
+    classAnalysis.middlePerformers.map(s => ({
+      id: s.studentId,
+      name: s.studentName,
+      score: s.averageScore,
+      photo: null,
+      mealPlan: false,
+      outdoorCCA: false,
+      sportsHouse: "red" as const,
+      remarks: "",
+      joinDate: ""
+    })), [classAnalysis.middlePerformers]);
   
-  // Top performers (A*, A grades: 80%+)
-  const topPerformers = rankedStudents.filter(s => s.score !== null && s.score >= 80);
+  // Top performers from classAnalysis
+  const topPerformers = useMemo(() =>
+    classAnalysis.topPerformers.map(s => ({
+      id: s.studentId,
+      name: s.studentName,
+      score: s.averageScore,
+      photo: null,
+      mealPlan: false,
+      outdoorCCA: false,
+      sportsHouse: "red" as const,
+      remarks: "",
+      joinDate: ""
+    })), [classAnalysis.topPerformers]);
 
   // ===== BANDS TAB: Use REAL DATA from classAnalysis hook =====
   // The hook already computes bandsDistribution, bandsRankedStudents, etc. from Supabase
@@ -901,113 +914,49 @@ export default function TeacherAcademicPage() {
     });
   }, [bandsGradeDistribution, bandsAdditionalSelections, bandsSelectionsData]);
 
-  // Calculate category averages from detailed grades
-  const categoryTotals = {
-    attitude: {
-      sum: 0,
-      count: 0,
-      max: 10
-    },
-    homework: {
-      sum: 0,
-      count: 0,
-      max: 10
-    },
-    quiz: {
-      sum: 0,
-      count: 0,
-      max: 10
-    },
-    exam: {
-      sum: 0,
-      count: 0,
-      max: 70
-    }
-  };
-  Object.values(detailedGradesForClass).forEach(studentGrades => {
-    Object.values(studentGrades).forEach(subjectGrade => {
-      categoryTotals.attitude.sum += subjectGrade.attitude;
-      categoryTotals.attitude.count++;
-      categoryTotals.homework.sum += subjectGrade.homework;
-      categoryTotals.homework.count++;
-      categoryTotals.quiz.sum += subjectGrade.quiz;
-      categoryTotals.quiz.count++;
-      categoryTotals.exam.sum += subjectGrade.exam;
-      categoryTotals.exam.count++;
-    });
-  });
-  const categoryAverages = [{
-    name: "Attitude",
-    average: categoryTotals.attitude.count > 0 ? categoryTotals.attitude.sum / categoryTotals.attitude.count : 0,
-    max: 10,
-    percentage: categoryTotals.attitude.count > 0 ? categoryTotals.attitude.sum / categoryTotals.attitude.count / 10 * 100 : 0
-  }, {
-    name: "Homework",
-    average: categoryTotals.homework.count > 0 ? categoryTotals.homework.sum / categoryTotals.homework.count : 0,
-    max: 10,
-    percentage: categoryTotals.homework.count > 0 ? categoryTotals.homework.sum / categoryTotals.homework.count / 10 * 100 : 0
-  }, {
-    name: "Quiz",
-    average: categoryTotals.quiz.count > 0 ? categoryTotals.quiz.sum / categoryTotals.quiz.count : 0,
-    max: 10,
-    percentage: categoryTotals.quiz.count > 0 ? categoryTotals.quiz.sum / categoryTotals.quiz.count / 10 * 100 : 0
-  }, {
-    name: "Exam",
-    average: categoryTotals.exam.count > 0 ? categoryTotals.exam.sum / categoryTotals.exam.count : 0,
-    max: 70,
-    percentage: categoryTotals.exam.count > 0 ? categoryTotals.exam.sum / categoryTotals.exam.count / 70 * 100 : 0
-  }];
-  const weakestCategory = categoryAverages.reduce((min, cat) => cat.percentage < min.percentage ? cat : min, categoryAverages[0]);
+  // Category averages - computed from classAnalysis grades if available
+  // Note: classAnalysis.grades contains the raw grade data with category breakdowns
+  const categoryAverages = useMemo(() => {
+    // For now, use static placeholders since we're focusing on subject averages
+    // In future, this can be computed from classAnalysis raw grades
+    return [
+      { name: "Attitude", average: 0, max: 10, percentage: 0 },
+      { name: "Homework", average: 0, max: 10, percentage: 0 },
+      { name: "Quiz", average: 0, max: 10, percentage: 0 },
+      { name: "Exam", average: 0, max: 70, percentage: 0 }
+    ];
+  }, []);
+  const weakestCategory = categoryAverages[0];
 
-  // Calculate category performance by subject (for the selected category)
-  const categoryBySubject: Record<string, {
-    sum: number;
-    count: number;
-    max: number;
-  }> = {};
+  // Category performance by subject - placeholder for now
   const categoryMax = selectedCategory === "exam" ? 70 : 10;
-  Object.values(detailedGradesForClass).forEach(studentGrades => {
-    Object.entries(studentGrades).forEach(([subject, grades]) => {
-      if (!categoryBySubject[subject]) categoryBySubject[subject] = {
-        sum: 0,
-        count: 0,
-        max: categoryMax
-      };
-      categoryBySubject[subject].sum += grades[selectedCategory];
-      categoryBySubject[subject].count++;
-    });
-  });
-  const categoryBySubjectData = Object.entries(categoryBySubject).map(([subject, data]) => ({
-    name: subject.length > 8 ? subject.substring(0, 8) + "..." : subject,
-    fullName: subject,
-    average: data.count > 0 ? data.sum / data.count : 0,
-    percentage: data.count > 0 ? data.sum / data.count / categoryMax * 100 : 0,
-    max: categoryMax
-  })).sort((a, b) => b.percentage - a.percentage);
+  const categoryBySubjectData = useMemo(() => {
+    // Placeholder - returns empty array until category breakdown is implemented
+    return [];
+  }, [selectedCategory]);
 
-  // Calculate subject averages - filtered by selectedSubjects
-  const subjectTotals: Record<string, {
-    sum: number;
-    count: number;
-  }> = {};
-  Object.values(detailedGradesForClass).forEach(studentGrades => {
-    Object.entries(studentGrades).forEach(([subject, grades]) => {
-      // Only include selected subjects
-      if (!selectedSubjects.includes(subject)) return;
-      const total = grades.attitude + grades.homework + grades.quiz + grades.exam;
-      if (!subjectTotals[subject]) subjectTotals[subject] = {
-        sum: 0,
-        count: 0
-      };
-      subjectTotals[subject].sum += total;
-      subjectTotals[subject].count++;
-    });
-  });
-  const subjectAverages = Object.entries(subjectTotals).map(([name, data]) => ({
-    name: name.length > 10 ? name.substring(0, 10) + "..." : name,
-    fullName: name,
-    average: data.count > 0 ? data.sum / data.count : 0
-  })).sort((a, b) => b.average - a.average);
+  // ============ REAL SUBJECT AVERAGES FROM classAnalysis ============
+  // This is the key fix - use real Supabase data instead of mock data
+  const subjectAverages = useMemo(() => {
+    if (!classAnalysis.hasData) {
+      console.log('[Subject Performance] No data available');
+      return [];
+    }
+    
+    // Map classAnalysis.subjectAverages to the expected format
+    const mapped = classAnalysis.subjectAverages.map(sa => ({
+      name: sa.subjectName.length > 10 ? sa.subjectName.substring(0, 10) + "..." : sa.subjectName,
+      fullName: sa.subjectName,
+      average: sa.gradeCount > 0 ? sa.average : 0
+    }));
+    
+    if (process.env.NODE_ENV === 'development') {
+      console.log('[Subject Performance] Mapped averages:', mapped.length, 'subjects');
+    }
+    
+    return mapped;
+  }, [classAnalysis.subjectAverages, classAnalysis.hasData]);
+  
   const selectedStudentData = students.find(s => s.id === selectedStudent);
 
   // Year-over-year trend data with period filtering (like student page)
@@ -2140,17 +2089,33 @@ export default function TeacherAcademicPage() {
                     </div>
                   </div>}
 
-                {/* Subject Performance Bar Chart - Using responsive component from Parent Academic */}
-                <SubjectPerformanceChart 
-                  data={subjectAverages.map((s, index) => ({
-                    name: s.name,
-                    fullName: s.fullName,
-                    score: Math.round(s.average),
-                    goal: Math.round(s.average)
-                  }))}
-                  lineColors={SUBJECT_COLORS}
-                  showGoalBadge={false}
-                />
+                {/* Subject Performance Bar Chart - Using real data from classAnalysis */}
+                {!classAnalysis.hasData ? (
+                  <div className="p-6 text-center border rounded-lg bg-muted/30">
+                    <BarChart3 className="h-8 w-8 mx-auto mb-2 text-muted-foreground" />
+                    <p className="text-sm text-muted-foreground">
+                      No grades recorded for this class/period yet
+                    </p>
+                  </div>
+                ) : subjectAverages.length === 0 ? (
+                  <div className="p-6 text-center border rounded-lg bg-muted/30">
+                    <BarChart3 className="h-8 w-8 mx-auto mb-2 text-muted-foreground" />
+                    <p className="text-sm text-muted-foreground">
+                      No subject data available
+                    </p>
+                  </div>
+                ) : (
+                  <SubjectPerformanceChart 
+                    data={subjectAverages.map((s, index) => ({
+                      name: s.name,
+                      fullName: s.fullName,
+                      score: isNaN(s.average) ? 0 : Math.round(s.average),
+                      goal: isNaN(s.average) ? 0 : Math.round(s.average)
+                    }))}
+                    lineColors={SUBJECT_COLORS}
+                    showGoalBadge={false}
+                  />
+                )}
 
                 {/* Stats Cards Grid */}
                 <div className="grid grid-cols-3 gap-2">
@@ -2182,7 +2147,11 @@ export default function TeacherAcademicPage() {
                       {subjectAverages[0]?.name || 'N/A'}
                     </span>
                     <span className="text-[10px] text-muted-foreground leading-tight">Best Subject</span>
-                    <span className="text-[9px] text-muted-foreground/70">{subjectAverages[0]?.average.toFixed(0) || 0}%</span>
+                    <span className="text-[9px] text-muted-foreground/70">
+                      {subjectAverages[0]?.average != null && !isNaN(subjectAverages[0].average) 
+                        ? `${Math.round(subjectAverages[0].average)}%` 
+                        : '0%'}
+                    </span>
                   </div>
                   
                   {/* Improvement */}
@@ -2239,7 +2208,11 @@ export default function TeacherAcademicPage() {
                       {subjectAverages[subjectAverages.length - 1]?.name || 'N/A'}
                     </span>
                     <span className="text-[10px] text-muted-foreground leading-tight">Needs Focus</span>
-                    <span className="text-[9px] text-muted-foreground/70">{subjectAverages[subjectAverages.length - 1]?.average.toFixed(0) || 0}%</span>
+                    <span className="text-[9px] text-muted-foreground/70">
+                      {subjectAverages[subjectAverages.length - 1]?.average != null && !isNaN(subjectAverages[subjectAverages.length - 1].average) 
+                        ? `${Math.round(subjectAverages[subjectAverages.length - 1].average)}%` 
+                        : '0%'}
+                    </span>
                   </div>
                 </div>
 
