@@ -16,8 +16,9 @@ import { cn } from "@/lib/utils";
 import { toast } from "@/hooks/use-toast";
 import { Input } from "@/components/ui/input";
 
-import { teacherProfile, classRosters, teacherAttendanceStats, DailyAttendanceDetail } from "@/data/teacherMockData";
+import { teacherProfile, classRosters, DailyAttendanceDetail } from "@/data/teacherMockData";
 import { useTeacherAttendance } from "@/hooks/useTeacherAttendance";
+import { useAttendanceStatistics, type DailyBreakdown } from "@/hooks/useAttendanceStatistics";
 import { type AttendanceStatus } from "@/data/teacherAttendance";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -76,11 +77,11 @@ export default function TeacherAttendancePage() {
     save,
   } = useTeacherAttendance();
   
-  // Statistics state (still using mock data)
-  const [statsSelectedClass, setStatsSelectedClass] = useState(teacherProfile.classes[0]);
+  // Statistics state - now using Supabase data
+  const [statsSelectedClass, setStatsSelectedClass] = useState("");
   const [selectedYear, setSelectedYear] = useState("2026");
   const [selectedMonth, setSelectedMonth] = useState(0); // January
-  const [selectedDayStats, setSelectedDayStats] = useState<DailyAttendanceDetail | null>(null);
+  const [selectedDayStats, setSelectedDayStats] = useState<DailyBreakdown | null>(null);
   
   // Report states
   const [weeklyAbsentDialogOpen, setWeeklyAbsentDialogOpen] = useState(false);
@@ -99,9 +100,29 @@ export default function TeacherAttendancePage() {
   const weeklyReportRef = useRef<HTMLDivElement>(null);
   const frequentReportRef = useRef<HTMLDivElement>(null);
   
-  // For statistics tab - still using mock data
+  // Use the hook for statistics data from Supabase
+  const {
+    chartData,
+    monthlySummary,
+    dailyBreakdown,
+    concerns: filteredConcernsData,
+    loadingYearly,
+    loadingMonthly,
+    loadingConcerns,
+    isLoading: statsLoading,
+    error: statsError,
+  } = useAttendanceStatistics({
+    selectedClass: statsSelectedClass,
+    selectedYear: parseInt(selectedYear),
+    selectedMonth,
+    concernsTimeRange,
+    concernsCustomStartDate,
+    concernsCustomEndDate,
+  });
+  
+  // For statistics tab - use classes from the Take Attendance tab
+  const statsClasses = classes;
   const mockStudents = classRosters[statsSelectedClass as keyof typeof classRosters] || [];
-  const statsData = teacherAttendanceStats[statsSelectedClass as keyof typeof teacherAttendanceStats];
 
   const handleStatusChange = (studentId: string, status: AttendanceStatus) => {
     setStudentStatus(studentId, status);
@@ -147,19 +168,6 @@ export default function TeacherAttendancePage() {
 
   // Statistics calculations
   const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
-
-  const chartData = statsData?.monthly || [];
-
-  const monthlySummary = useMemo(() => {
-    if (!statsData) return { present: 0, absent: 0, late: 0, excused: 0 };
-    const monthData = statsData.monthly[selectedMonth] || { present: 0, absent: 0, late: 0, excused: 0 };
-    return monthData;
-  }, [statsData, selectedMonth]);
-
-  const dailyBreakdown = useMemo(() => {
-    if (!statsData) return [];
-    return statsData.dailyBreakdown;
-  }, [statsData]);
 
   const groupByWeek = (items: typeof dailyBreakdown) => {
     const groups: Record<string, typeof items> = {};
@@ -249,69 +257,6 @@ export default function TeacherAttendancePage() {
       topLate: [...students].sort((a, b) => b.late - a.late).slice(0, 10).filter(s => s.late > 0)
     };
   }, [dailyBreakdown, frequentReportStartDate, frequentReportEndDate]);
-
-  // Concerns Visualization Data (for the card below Yearly Overview)
-  const filteredConcernsData = useMemo(() => {
-    let startDate: Date;
-    let endDate: Date;
-    
-    if (concernsTimeRange === "week") {
-      // Current week
-      startDate = startOfWeek(new Date(), { weekStartsOn: 1 });
-      endDate = endOfWeek(new Date(), { weekStartsOn: 1 });
-    } else if (concernsTimeRange === "month") {
-      // Current month
-      startDate = startOfMonth(new Date());
-      endDate = endOfMonth(new Date());
-    } else {
-      // Custom date range
-      startDate = concernsCustomStartDate;
-      endDate = concernsCustomEndDate;
-    }
-    
-    const filteredDays = dailyBreakdown.filter(day => {
-      const date = parseISO(day.date);
-      return date >= startDate && date <= endDate;
-    });
-    
-    const studentStats: Record<string, {
-      name: string;
-      absent: number;
-      late: number;
-      totalDays: number;
-    }> = {};
-    
-    filteredDays.forEach(day => {
-      day.students?.forEach(student => {
-        if (!studentStats[student.id]) {
-          studentStats[student.id] = {
-            name: student.name,
-            absent: 0,
-            late: 0,
-            totalDays: 0
-          };
-        }
-        studentStats[student.id].totalDays++;
-        if (student.status === "absent") studentStats[student.id].absent++;
-        if (student.status === "late") studentStats[student.id].late++;
-      });
-    });
-    
-    const students = Object.entries(studentStats).map(([id, stats]) => ({
-      id,
-      ...stats,
-      absentRate: stats.totalDays > 0 ? (stats.absent / stats.totalDays) * 100 : 0,
-      lateRate: stats.totalDays > 0 ? (stats.late / stats.totalDays) * 100 : 0
-    }));
-    
-    return {
-      startDate,
-      endDate,
-      topAbsent: [...students].sort((a, b) => b.absent - a.absent).slice(0, 5).filter(s => s.absent > 0),
-      topLate: [...students].sort((a, b) => b.late - a.late).slice(0, 5).filter(s => s.late > 0),
-      totalDays: filteredDays.length
-    };
-  }, [dailyBreakdown, concernsTimeRange, concernsCustomStartDate, concernsCustomEndDate]);
 
   const getConcernsDateLabel = () => {
     if (concernsTimeRange === "week") {
@@ -544,59 +489,87 @@ export default function TeacherAttendancePage() {
         </div>
       ) : (
         <div className="px-4 space-y-4 mt-4 pb-4">
+          {/* Error Message */}
+          {statsError && (
+            <div className="p-3 bg-destructive/10 border border-destructive/30 rounded-lg text-destructive text-sm">
+              {statsError}
+            </div>
+          )}
+
           {/* Class Selector for Statistics */}
-          <Select value={statsSelectedClass} onValueChange={setStatsSelectedClass}>
+          <Select 
+            value={statsSelectedClass} 
+            onValueChange={setStatsSelectedClass}
+            disabled={loadingClasses}
+          >
             <SelectTrigger>
-              <SelectValue placeholder="Select Class" />
+              <SelectValue placeholder={loadingClasses ? "Loading..." : "Select Class"} />
             </SelectTrigger>
             <SelectContent>
-              {teacherProfile.classes.map((cls) => (
+              {statsClasses.map((cls) => (
                 <SelectItem key={cls} value={cls}>Class {cls}</SelectItem>
               ))}
             </SelectContent>
           </Select>
 
-          {/* Yearly Overview Chart */}
-          <Card>
-            <CardHeader className="pb-2">
-              <div className="flex items-center justify-between">
-                <CardTitle className="text-base">Yearly Overview</CardTitle>
-                <Select value={selectedYear} onValueChange={setSelectedYear}>
-                  <SelectTrigger className="w-24 h-8">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="2026">2026</SelectItem>
-                    <SelectItem value="2025">2025</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <ChartContainer config={chartConfig} className="h-[200px] w-full">
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={chartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                    <XAxis dataKey="month" tick={{ fontSize: 12 }} axisLine={false} tickLine={false} />
-                    <YAxis tick={{ fontSize: 10 }} axisLine={false} tickLine={false} />
-                    <ChartTooltip content={<ChartTooltipContent />} />
-                    <Legend 
-                      wrapperStyle={{ fontSize: '10px' }}
-                      iconType="circle"
-                      iconSize={8}
-                    />
-                    <Bar dataKey="present" stackId="a" fill="hsl(142, 76%, 36%)" radius={[0, 0, 0, 0]} />
-                    <Bar dataKey="absent" stackId="a" fill="hsl(0, 84%, 60%)" radius={[0, 0, 0, 0]} />
-                    <Bar dataKey="late" stackId="a" fill="hsl(45, 93%, 47%)" radius={[0, 0, 0, 0]} />
-                    <Bar dataKey="excused" stackId="a" fill="hsl(262, 83%, 58%)" radius={[4, 4, 0, 0]} />
-                  </BarChart>
-                </ResponsiveContainer>
-              </ChartContainer>
-            </CardContent>
-          </Card>
+          {/* Empty State when no class is selected */}
+          {!statsSelectedClass && (
+            <Card>
+              <CardContent className="py-12 text-center">
+                <Users className="h-12 w-12 mx-auto mb-3 text-muted-foreground/50" />
+                <p className="text-muted-foreground font-medium">Select a class to view statistics</p>
+                <p className="text-sm text-muted-foreground/70 mt-1">Choose a class from the dropdown above</p>
+              </CardContent>
+            </Card>
+          )}
 
-          {/* Attendance Concerns Visualization */}
-          <Card>
-            <CardHeader className="pb-2">
+          {/* Show statistics content when class is selected */}
+          {statsSelectedClass && (
+            <>
+              {/* Yearly Overview Chart */}
+              <Card>
+                <CardHeader className="pb-2">
+                  <div className="flex items-center justify-between">
+                    <CardTitle className="text-base">Yearly Overview</CardTitle>
+                    <div className="flex items-center gap-2">
+                      {loadingYearly && <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />}
+                      <Select value={selectedYear} onValueChange={setSelectedYear}>
+                        <SelectTrigger className="w-24 h-8">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="2026">2026</SelectItem>
+                          <SelectItem value="2025">2025</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <ChartContainer config={chartConfig} className="h-[200px] w-full">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <BarChart data={chartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                        <XAxis dataKey="month" tick={{ fontSize: 12 }} axisLine={false} tickLine={false} />
+                        <YAxis tick={{ fontSize: 10 }} axisLine={false} tickLine={false} />
+                        <ChartTooltip content={<ChartTooltipContent />} />
+                        <Legend 
+                          wrapperStyle={{ fontSize: '10px' }}
+                          iconType="circle"
+                          iconSize={8}
+                        />
+                        <Bar dataKey="present" stackId="a" fill="hsl(142, 76%, 36%)" radius={[0, 0, 0, 0]} />
+                        <Bar dataKey="absent" stackId="a" fill="hsl(0, 84%, 60%)" radius={[0, 0, 0, 0]} />
+                        <Bar dataKey="late" stackId="a" fill="hsl(45, 93%, 47%)" radius={[0, 0, 0, 0]} />
+                        <Bar dataKey="excused" stackId="a" fill="hsl(262, 83%, 58%)" radius={[4, 4, 0, 0]} />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </ChartContainer>
+                </CardContent>
+              </Card>
+
+              {/* Attendance Concerns Visualization */}
+              <Card>
+                <CardHeader className="pb-2">
               <div className="flex items-center justify-between">
                 <CardTitle className="text-base flex items-center gap-2">
                   <AlertCircle className="h-4 w-4 text-amber-500" />
@@ -921,6 +894,8 @@ export default function TeacherAttendancePage() {
               </button>
             </CardContent>
           </Card>
+            </>
+          )}
         </div>
       )}
 
