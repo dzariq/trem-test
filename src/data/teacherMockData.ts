@@ -2,8 +2,8 @@
 
 export const teacherProfile = {
   id: "TCH-2024-001",
-  name: "Ms. Sarah Chen",
-  email: "sarah.chen@school.edu",
+  name: "Teacher",
+  email: "teacher@school.edu",
   phone: "+1 234 567 8901",
   subjects: ["Mathematics (Y7)", "Mathematics (Y10)", "Science (Y1)"],
   classes: ["5A", "5B", "4A"]

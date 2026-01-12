@@ -1,13 +1,14 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { AppHeader } from "@/components/layout/AppHeader";
-import { announcements } from "@/data/mockData";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Megaphone, Calendar, ChevronLeft } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { AnnouncementDrawer } from "@/components/AnnouncementDrawer";
+import { listAnnouncements, markAnnouncementRead, type Announcement } from "@/data/announcements";
+import { useStudentSelection } from "@/hooks/useStudentSelection";
 
 type CategoryFilter = "all" | "Event" | "Academic" | "General";
 
@@ -16,6 +17,39 @@ export default function AnnouncementsPage() {
   const [categoryFilter, setCategoryFilter] = useState<CategoryFilter>("all");
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [currentAnnouncementIndex, setCurrentAnnouncementIndex] = useState(0);
+  const [announcements, setAnnouncements] = useState<Announcement[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const { selectedStudentId } = useStudentSelection();
+
+  useEffect(() => {
+    let isMounted = true;
+    const loadAnnouncements = async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        const data = await listAnnouncements({ limit: 50, studentId: selectedStudentId });
+        if (isMounted) {
+          setAnnouncements(data);
+        }
+      } catch (err) {
+        const message = err instanceof Error ? err.message : "Failed to load announcements.";
+        if (isMounted) {
+          setError(message);
+          setAnnouncements([]);
+        }
+      } finally {
+        if (isMounted) {
+          setLoading(false);
+        }
+      }
+    };
+
+    loadAnnouncements();
+    return () => {
+      isMounted = false;
+    };
+  }, [selectedStudentId]);
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
@@ -28,22 +62,39 @@ export default function AnnouncementsPage() {
 
   const categories: CategoryFilter[] = ["all", "Event", "Academic", "General"];
 
-  const filteredAnnouncements = categoryFilter === "all"
-    ? announcements
-    : announcements.filter(a => a.category === categoryFilter);
+  const matchesCategory = (category: string, filter: CategoryFilter) => {
+    if (filter === "all") return true;
+    return category.toLowerCase() === filter.toLowerCase();
+  };
+
+  const filteredAnnouncements = announcements.filter(a =>
+    matchesCategory(a.category, categoryFilter)
+  );
 
   const getCategoryColor = (category: string) => {
-    switch (category) {
-      case "Event": return "bg-blue-500 text-white";
-      case "Academic": return "bg-amber-500 text-white";
-      case "General": return "bg-primary text-primary-foreground";
-      default: return "bg-muted text-muted-foreground";
+    const normalized = category.toLowerCase();
+    switch (normalized) {
+      case "event":
+        return "bg-blue-500 text-white";
+      case "academic":
+        return "bg-amber-500 text-white";
+      case "general":
+        return "bg-primary text-primary-foreground";
+      default:
+        return "bg-muted text-muted-foreground";
     }
   };
 
   const handleAnnouncementClick = (index: number) => {
     setCurrentAnnouncementIndex(index);
     setDrawerOpen(true);
+    const announcement = filteredAnnouncements[index];
+    if (announcement) {
+      void markAnnouncementRead(announcement.id);
+      setAnnouncements(prev =>
+        prev.map(item => (item.id === announcement.id ? { ...item, is_read: true } : item))
+      );
+    }
   };
 
   return (
@@ -76,7 +127,21 @@ export default function AnnouncementsPage() {
 
         {/* Announcements List */}
         <div className="space-y-4">
-          {filteredAnnouncements.map((announcement, index) => (
+          {loading && (
+            <div className="text-center py-12">
+              <Megaphone className="h-12 w-12 mx-auto text-muted-foreground/50 mb-3" />
+              <p className="text-muted-foreground">Loading announcements...</p>
+            </div>
+          )}
+
+          {!loading && error && (
+            <div className="text-center py-12">
+              <Megaphone className="h-12 w-12 mx-auto text-muted-foreground/50 mb-3" />
+              <p className="text-destructive">{error}</p>
+            </div>
+          )}
+
+          {!loading && !error && filteredAnnouncements.map((announcement, index) => (
             <Card 
               key={announcement.id} 
               className="bg-card border-border shadow-sm overflow-hidden cursor-pointer active:scale-[0.98] transition-transform"
@@ -137,7 +202,7 @@ export default function AnnouncementsPage() {
             </Card>
           ))}
 
-          {filteredAnnouncements.length === 0 && (
+          {!loading && !error && filteredAnnouncements.length === 0 && (
             <div className="text-center py-12">
               <Megaphone className="h-12 w-12 mx-auto text-muted-foreground/50 mb-3" />
               <p className="text-muted-foreground">No announcements in this category</p>

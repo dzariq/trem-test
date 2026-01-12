@@ -6,9 +6,11 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Calendar, Check, ChevronLeft, ChevronRight, Download, FileText, Megaphone, X, List } from "lucide-react";
 
+type AnnouncementId = number | string;
+
 const READ_ANNOUNCEMENTS_KEY = "readAnnouncementIds";
 
-export const getReadAnnouncementIds = (): number[] => {
+export const getReadAnnouncementIds = (): AnnouncementId[] => {
   try {
     const stored = localStorage.getItem(READ_ANNOUNCEMENTS_KEY);
     return stored ? JSON.parse(stored) : [];
@@ -17,7 +19,7 @@ export const getReadAnnouncementIds = (): number[] => {
   }
 };
 
-export const markAnnouncementAsRead = (id: number): void => {
+export const markAnnouncementAsRead = (id: AnnouncementId): void => {
   const readIds = getReadAnnouncementIds();
   if (!readIds.includes(id)) {
     readIds.push(id);
@@ -27,7 +29,7 @@ export const markAnnouncementAsRead = (id: number): void => {
 import { ScrollArea } from "@/components/ui/scroll-area";
 
 interface Announcement {
-  id: number;
+  id: AnnouncementId;
   title: string;
   snippet: string;
   content: string;
@@ -35,6 +37,7 @@ interface Announcement {
   category: string;
   image: string | null;
   attachments?: { name: string; url: string }[];
+  is_read?: boolean;
 }
 
 interface AnnouncementDrawerProps {
@@ -81,8 +84,12 @@ export function AnnouncementDrawer({
   // Check read status when announcement changes
   useEffect(() => {
     if (currentAnnouncement) {
-      const readIds = getReadAnnouncementIds();
-      setIsRead(readIds.includes(currentAnnouncement.id));
+      if (currentAnnouncement.is_read !== undefined) {
+        setIsRead(currentAnnouncement.is_read);
+      } else {
+        const readIds = getReadAnnouncementIds();
+        setIsRead(readIds.includes(currentAnnouncement.id));
+      }
     }
   }, [currentAnnouncement]);
 
@@ -97,12 +104,13 @@ export function AnnouncementDrawer({
   };
 
   const getCategoryColor = (category: string) => {
-    switch (category) {
-      case "Event":
+    const normalized = category.toLowerCase();
+    switch (normalized) {
+      case "event":
         return "bg-blue-500 text-white";
-      case "Academic":
+      case "academic":
         return "bg-amber-500 text-white";
-      case "General":
+      case "general":
         return "bg-primary text-primary-foreground";
       default:
         return "bg-muted text-muted-foreground";

@@ -1,7 +1,6 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { TeacherAppLayout } from "@/components/layout/TeacherAppLayout";
 import { AppHeader } from "@/components/layout/AppHeader";
-import { teacherProfile, classRosters, ClassStudent, SportsHouse } from "@/data/teacherMockData";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
@@ -26,31 +25,14 @@ import {
   Shield,
   Pencil,
   BookOpen,
-  Users,
-  GraduationCap,
   FileText,
   KeyRound,
-  Utensils,
-  TreePine,
-  Flag,
-  MessageSquare,
-  Check,
-  X,
-  ChevronLeft,
-  Calendar
 } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
-import { cn } from "@/lib/utils";
-
-const sportsHouseColors: Record<SportsHouse, { bg: string; text: string; label: string }> = {
-  red: { bg: "bg-red-500", text: "text-white", label: "Red House" },
-  blue: { bg: "bg-blue-500", text: "text-white", label: "Blue House" },
-  green: { bg: "bg-green-500", text: "text-white", label: "Green House" },
-  yellow: { bg: "bg-yellow-400", text: "text-yellow-900", label: "Yellow House" },
-};
-
+import { useMyProfile } from "@/hooks/useMyProfile";
+import { updateMyProfile } from "@/data/profile";
 
 const schoolAccounts = [
   {
@@ -87,51 +69,85 @@ const schoolAccounts = [
 
 export default function TeacherProfilePage() {
   const navigate = useNavigate();
+  const { profile, loading: profileLoading, error: profileError, refetch } = useMyProfile();
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [isAccountsOpen, setIsAccountsOpen] = useState(false);
-  const [selectedClass, setSelectedClass] = useState<string | null>(null);
-  const [selectedStudent, setSelectedStudent] = useState<ClassStudent | null>(null);
+  const [isSaving, setIsSaving] = useState(false);
   
-  const [profile, setProfile] = useState({
-    name: teacherProfile.name,
-    email: teacherProfile.email,
-    phone: teacherProfile.phone,
+  const [formProfile, setFormProfile] = useState({
+    name: "",
+    email: "",
+    phone: "",
   });
-  const [editForm, setEditForm] = useState(profile);
+  const [editForm, setEditForm] = useState(formProfile);
 
-  const handleSave = () => {
-    setProfile(editForm);
-    setIsEditOpen(false);
-    toast.success("Profile updated successfully");
+  useEffect(() => {
+    if (profileLoading) return;
+    if (!profile) return;
+    const name = profile.full_name ?? "";
+    const email = profile.email ?? "";
+    const phone = profile.phone ?? "";
+    setFormProfile({ name, email, phone });
+    setEditForm({ name, email, phone });
+  }, [profile, profileLoading]);
+
+  const handleSave = async () => {
+    setIsSaving(true);
+
+    try {
+      await updateMyProfile({
+        full_name: editForm.name,
+        phone: editForm.phone,
+      });
+
+      setFormProfile(editForm);
+      setIsEditOpen(false);
+      toast.success("Profile updated successfully");
+      refetch();
+    } catch (err) {
+      toast.error("Unexpected error updating profile.");
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const handleOpenEdit = () => {
-    setEditForm(profile);
+    setEditForm(formProfile);
     setIsEditOpen(true);
   };
 
-  const totalStudents = teacherProfile.classes.reduce((acc, cls) => {
-    return acc + (classRosters[cls as keyof typeof classRosters]?.length || 0);
-  }, 0);
+  const displayName = profile?.full_name || profile?.email || (profileLoading ? "Loading..." : "-");
+  const displayEmail = profile?.email || (profileLoading ? "Loading..." : "-");
+  const displayRole = profile?.role || "Teacher";
 
   return (
     <TeacherAppLayout>
       <AppHeader title="Profile" showBack />
 
       <section className="px-4 pt-4 space-y-4">
+        {profileError && (
+          <Card className="bg-card border-border shadow-sm">
+            <CardContent className="p-4 text-sm text-destructive">
+              Unable to load profile.
+            </CardContent>
+          </Card>
+        )}
+
         {/* Teacher Info Card */}
         <Card className="bg-card border-border shadow-sm">
           <CardContent className="p-6">
             <div className="flex items-center gap-4">
               <Avatar className="h-20 w-20 border-2 border-primary/20">
                 <AvatarFallback className="bg-primary/10 text-primary text-2xl font-semibold">
-                  {profile.name.split(' ').map(n => n[0]).join('')}
+                  {displayName.split(' ').map(n => n[0]).join('')}
                 </AvatarFallback>
               </Avatar>
               <div>
-                <h2 className="text-xl font-semibold text-foreground">{profile.name}</h2>
-                <p className="text-sm text-muted-foreground">Teacher</p>
-                <p className="text-xs text-muted-foreground mt-1">ID: {teacherProfile.id}</p>
+                <h2 className="text-xl font-semibold text-foreground">{displayName}</h2>
+                <p className="text-sm text-muted-foreground">{displayRole}</p>
+                {profile?.staff_id && (
+                  <p className="text-xs text-muted-foreground mt-1">ID: {profile.staff_id}</p>
+                )}
               </div>
             </div>
           </CardContent>
@@ -152,7 +168,7 @@ export default function TeacherProfilePage() {
               </div>
               <div>
                 <p className="text-xs text-muted-foreground">Email</p>
-                <p className="text-sm font-medium text-foreground">{profile.email}</p>
+                <p className="text-sm font-medium text-foreground">{displayEmail}</p>
               </div>
             </div>
             <div className="flex items-center gap-3">
@@ -161,7 +177,7 @@ export default function TeacherProfilePage() {
               </div>
               <div>
                 <p className="text-xs text-muted-foreground">Phone</p>
-                <p className="text-sm font-medium text-foreground">{profile.phone}</p>
+                <p className="text-sm font-medium text-foreground">{profile?.phone || "-"}</p>
               </div>
             </div>
           </CardContent>
@@ -176,58 +192,7 @@ export default function TeacherProfilePage() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="flex flex-wrap gap-2">
-              {teacherProfile.subjects.map((subject) => (
-                <Badge 
-                  key={subject} 
-                  variant="secondary"
-                  className="px-3 py-1.5 text-sm"
-                >
-                  {subject}
-                </Badge>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Classes Assigned */}
-        <Card className="bg-card border-border shadow-sm">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-base font-semibold flex items-center gap-2">
-              <GraduationCap className="h-4 w-4" />
-              Classes Assigned
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            {teacherProfile.classes.map((cls) => {
-              const studentCount = classRosters[cls as keyof typeof classRosters]?.length || 0;
-              return (
-                <button 
-                  key={cls}
-                  onClick={() => setSelectedClass(cls)}
-                  className="w-full flex items-center justify-between p-3 rounded-xl border border-border hover:bg-accent/30 transition-colors"
-                >
-                  <div className="flex items-center gap-3">
-                    <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
-                      <span className="text-sm font-semibold text-primary">{cls}</span>
-                    </div>
-                    <div className="text-left">
-                      <h3 className="font-medium text-foreground">Class {cls}</h3>
-                      <p className="text-xs text-muted-foreground flex items-center gap-1">
-                        <Users className="h-3 w-3" />
-                        {studentCount} students
-                      </p>
-                    </div>
-                  </div>
-                  <ChevronRight className="h-5 w-5 text-muted-foreground" />
-                </button>
-              );
-            })}
-            <div className="pt-2 border-t border-border">
-              <p className="text-sm text-muted-foreground">
-                Total Students: <span className="font-semibold text-foreground">{totalStudents}</span>
-              </p>
-            </div>
+            <p className="text-sm text-muted-foreground">No subjects available.</p>
           </CardContent>
         </Card>
 
@@ -369,17 +334,22 @@ export default function TeacherProfilePage() {
               <Input
                 id="email"
                 type="email"
-                value={editForm.email}
-                onChange={(e) => setEditForm({ ...editForm, email: e.target.value })}
-                placeholder="Enter your email"
+                value={profile?.email ?? editForm.email}
+                disabled
+                readOnly
               />
             </div>
             <div className="space-y-2">
               <Label htmlFor="phone">Phone Number</Label>
               <Input
                 id="phone"
+                type="tel"
+                inputMode="numeric"
                 value={editForm.phone}
-                onChange={(e) => setEditForm({ ...editForm, phone: e.target.value })}
+                onChange={(e) => {
+                  const sanitized = e.target.value.replace(/[^0-9+ ]/g, "");
+                  setEditForm({ ...editForm, phone: sanitized });
+                }}
                 placeholder="Enter your phone number"
               />
             </div>
@@ -388,7 +358,9 @@ export default function TeacherProfilePage() {
             <Button variant="outline" onClick={() => setIsEditOpen(false)}>
               Cancel
             </Button>
-            <Button onClick={handleSave}>Save Changes</Button>
+            <Button onClick={handleSave} disabled={isSaving}>
+              {isSaving ? "Saving..." : "Save Changes"}
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -432,189 +404,6 @@ export default function TeacherProfilePage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-
-      {/* Class Students Dialog */}
-      <Dialog open={!!selectedClass && !selectedStudent} onOpenChange={(open) => !open && setSelectedClass(null)}>
-        <DialogContent className="sm:max-w-md max-h-[85vh]">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <GraduationCap className="h-5 w-5" />
-              Class {selectedClass}
-            </DialogTitle>
-          </DialogHeader>
-          <ScrollArea className="max-h-[60vh] pr-4">
-            <div className="space-y-2">
-              {selectedClass && classRosters[selectedClass as keyof typeof classRosters]?.map((student, index) => (
-                <button
-                  key={student.id}
-                  onClick={() => setSelectedStudent(student)}
-                  className="w-full flex items-center gap-3 p-3 rounded-xl border border-border hover:bg-accent/30 transition-colors text-left"
-                >
-                  <Avatar className="h-10 w-10 border-2 border-background shadow-sm shrink-0">
-                    <AvatarFallback className={cn(
-                      "text-white text-sm font-semibold",
-                      index % 5 === 0 ? "bg-gradient-to-br from-blue-400 to-blue-600" :
-                      index % 5 === 1 ? "bg-gradient-to-br from-teal-400 to-teal-600" :
-                      index % 5 === 2 ? "bg-gradient-to-br from-purple-400 to-purple-600" :
-                      index % 5 === 3 ? "bg-gradient-to-br from-pink-400 to-pink-600" :
-                      "bg-gradient-to-br from-orange-400 to-orange-600"
-                    )}>
-                      {student.name.split(' ').map(n => n[0]).join('')}
-                    </AvatarFallback>
-                  </Avatar>
-                  <div className="flex-1 min-w-0">
-                    <h3 className="font-medium text-foreground truncate">{student.name}</h3>
-                    <p className="text-xs text-muted-foreground">{student.id}</p>
-                  </div>
-                  <div className="flex items-center gap-2 shrink-0">
-                    {student.outdoorCCA && (
-                      <TreePine className="h-4 w-4 text-green-500" />
-                    )}
-                    {student.remarks && (
-                      <MessageSquare className="h-4 w-4 text-amber-500" />
-                    )}
-                    <Flag className={cn(
-                      "h-4 w-4",
-                      student.sportsHouse === "red" ? "text-red-500" :
-                      student.sportsHouse === "blue" ? "text-blue-500" :
-                      student.sportsHouse === "green" ? "text-green-600" :
-                      "text-yellow-500"
-                    )} />
-                  </div>
-                  <ChevronRight className="h-5 w-5 text-muted-foreground shrink-0" />
-                </button>
-              ))}
-            </div>
-          </ScrollArea>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setSelectedClass(null)}>
-              Close
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* Student Details Dialog */}
-      <Dialog open={!!selectedStudent} onOpenChange={(open) => !open && setSelectedStudent(null)}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <div className="flex items-center gap-2">
-              <Button 
-                variant="ghost" 
-                size="icon" 
-                className="h-8 w-8"
-                onClick={() => setSelectedStudent(null)}
-              >
-                <ChevronLeft className="h-4 w-4" />
-              </Button>
-              <DialogTitle>Student Details</DialogTitle>
-            </div>
-          </DialogHeader>
-          
-          {selectedStudent && (
-            <div className="space-y-5 py-2">
-              {/* Student Avatar & Info */}
-              <div className="flex flex-col items-center gap-3">
-                <Avatar className="h-20 w-20 border-4 border-primary/20">
-                  <AvatarFallback className="bg-gradient-to-br from-blue-400 to-blue-600 text-white text-2xl font-semibold">
-                    {selectedStudent.name.split(' ').map(n => n[0]).join('')}
-                  </AvatarFallback>
-                </Avatar>
-                <div className="text-center">
-                  <h3 className="text-lg font-semibold text-foreground">{selectedStudent.name}</h3>
-                  <p className="text-sm text-muted-foreground">{selectedStudent.id}</p>
-                </div>
-              </div>
-
-              <Separator />
-
-              {/* Student Options */}
-              <div className="space-y-3">
-                <span className="font-medium text-foreground text-sm">Student Options</span>
-                <div className="grid grid-cols-3 gap-3">
-                  {/* Meal Plan */}
-                  <div className="flex flex-col items-center gap-1.5 p-3 rounded-lg bg-muted/50 border border-border">
-                    <Utensils className="w-5 h-5 text-muted-foreground" />
-                    <span className="text-xs font-medium text-muted-foreground text-center">Meal Plan</span>
-                    <div className={cn(
-                      "w-6 h-6 rounded-full flex items-center justify-center",
-                      selectedStudent.mealPlan ? "bg-green-500" : "bg-muted"
-                    )}>
-                      {selectedStudent.mealPlan ? (
-                        <Check className="w-4 h-4 text-white" />
-                      ) : (
-                        <X className="w-4 h-4 text-muted-foreground" />
-                      )}
-                    </div>
-                  </div>
-                  
-                  {/* Outdoor CCA */}
-                  <div className="flex flex-col items-center gap-1.5 p-3 rounded-lg bg-muted/50 border border-border">
-                    <TreePine className="w-5 h-5 text-muted-foreground" />
-                    <span className="text-xs font-medium text-muted-foreground text-center">Outdoor CCA</span>
-                    <div className={cn(
-                      "w-6 h-6 rounded-full flex items-center justify-center",
-                      selectedStudent.outdoorCCA ? "bg-green-500" : "bg-muted"
-                    )}>
-                      {selectedStudent.outdoorCCA ? (
-                        <Check className="w-4 h-4 text-white" />
-                      ) : (
-                        <X className="w-4 h-4 text-muted-foreground" />
-                      )}
-                    </div>
-                  </div>
-                  
-                  {/* Sports House */}
-                  <div className="flex flex-col items-center gap-1.5 p-3 rounded-lg bg-muted/50 border border-border">
-                    <Flag className="w-5 h-5 text-muted-foreground" />
-                    <span className="text-xs font-medium text-muted-foreground text-center">Sports House</span>
-                    <Badge className={cn("text-xs px-2", sportsHouseColors[selectedStudent.sportsHouse].bg, sportsHouseColors[selectedStudent.sportsHouse].text)}>
-                      {sportsHouseColors[selectedStudent.sportsHouse].label.split(' ')[0]}
-                    </Badge>
-                  </div>
-                </div>
-              </div>
-
-              {/* Join Date */}
-              <div className="space-y-2">
-                <span className="font-medium text-foreground text-sm flex items-center gap-2">
-                  <Calendar className="h-4 w-4" />
-                  Date Joined
-                </span>
-                <div className="p-3 rounded-lg bg-muted/50 border border-border">
-                  <p className="text-sm text-foreground">
-                    {new Date(selectedStudent.joinDate).toLocaleDateString('en-GB', { 
-                      day: 'numeric', 
-                      month: 'long', 
-                      year: 'numeric' 
-                    })}
-                  </p>
-                </div>
-              </div>
-
-              {/* Special Remarks */}
-              <div className="space-y-2">
-                <span className="font-medium text-foreground text-sm flex items-center gap-2">
-                  <MessageSquare className="h-4 w-4" />
-                  Special Remarks
-                </span>
-                <div className="p-3 rounded-lg bg-muted/50 border border-border min-h-[60px]">
-                  {selectedStudent.remarks ? (
-                    <p className="text-sm text-foreground">{selectedStudent.remarks}</p>
-                  ) : (
-                    <p className="text-sm text-muted-foreground italic">No special remarks</p>
-                  )}
-                </div>
-              </div>
-            </div>
-          )}
-
-          <DialogFooter>
-            <Button onClick={() => setSelectedStudent(null)}>Close</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
     </TeacherAppLayout>
   );
 }

@@ -1,5 +1,4 @@
 import { useState, useEffect } from "react";
-import { parentProfile } from "@/data/mockData";
 
 function getTimeGreeting() {
   const hour = new Date().getHours();
@@ -8,15 +7,23 @@ function getTimeGreeting() {
   return "Good evening";
 }
 
-export function WelcomeTypingAnimation() {
+type WelcomeTypingAnimationProps = {
+  name?: string | null;
+};
+
+export function WelcomeTypingAnimation({ name }: WelcomeTypingAnimationProps) {
   const [displayText, setDisplayText] = useState("");
   const [isComplete, setIsComplete] = useState(false);
   const [isVisible, setIsVisible] = useState(true);
   
-  const fullText = `${getTimeGreeting()}, Mr. ${parentProfile.name}!`;
+  const displayName = name?.trim() || "there";
+  const fullText = `${getTimeGreeting()}, ${displayName}!`;
 
   useEffect(() => {
     let currentIndex = 0;
+    setDisplayText("");
+    setIsComplete(false);
+    setIsVisible(true);
     const typingInterval = setInterval(() => {
       if (currentIndex <= fullText.length) {
         setDisplayText(fullText.slice(0, currentIndex));

@@ -1,18 +1,15 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { AppHeader } from "@/components/layout/AppHeader";
-import { calendarEvents, ccaActivities, students } from "@/data/mockData";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Progress } from "@/components/ui/progress";
-import { MapPin, Clock, User, ChevronDown, Users, CalendarDays, ClipboardList } from "lucide-react";
+import { MapPin, Clock, User, ChevronDown, CalendarDays, ClipboardList } from "lucide-react";
 import schoolLogo from "@/assets/school-badge.png";
-import { format, parseISO } from "date-fns";
 import {
   Select,
   SelectContent,
@@ -37,21 +34,49 @@ import {
   getCategoryColor,
   getTagsByCategory,
 } from "@/lib/calendarUtils";
+import { listCalendarEvents, type UpcomingEvent } from "@/data/calendar";
+import { useMyProfile } from "@/hooks/useMyProfile";
+import { useStudentSelection } from "@/hooks/useStudentSelection";
 
-type CCAActivity = typeof ccaActivities[0];
+type CCAActivity = {
+  id: string;
+  name: string;
+  category: string;
+  day: string;
+  time: string;
+  venue: string;
+  coach: string;
+  description: string;
+  requirements: string;
+};
 
 export default function CalendarPage() {
+  const { profile } = useMyProfile();
   const [searchParams] = useSearchParams();
   const initialTab = searchParams.get("tab") || "calendar";
   
-  const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
+  const today = new Date();
+  const todayYmd = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
+  const [selectedDay, setSelectedDay] = useState<string>(todayYmd);
+  const [currentMonth, setCurrentMonth] = useState<Date>(new Date());
   const [categoryFilter, setCategoryFilter] = useState<TagCategory | "all">("all");
   const [selectedTag, setSelectedTag] = useState<CalendarTag | null>(null);
   const [ccaCategoryFilter, setCcaCategoryFilter] = useState("all");
   const [selectedCCA, setSelectedCCA] = useState<CCAActivity | null>(null);
+  const [events, setEvents] = useState<UpcomingEvent[]>([]);
+  const {
+    linkedStudents,
+    loading: studentsLoading,
+    error: studentsError,
+    selectedStudentId,
+    setSelectedStudentId,
+  } = useStudentSelection();
 
-  // Filter events for parent role
-  const visibleEvents = filterEventsByRole(calendarEvents, "parent");
+  const ccaActivities: CCAActivity[] = [];
+
+  const roleForFilters = profile?.role === "student" ? "student" : "parent";
+  // Filter events for parent/student role
+  const visibleEvents = filterEventsByRole(events, roleForFilters);
   let filteredEvents = filterEventsByCategory(visibleEvents, categoryFilter);
   
   // Apply tag filter if a specific tag is selected
@@ -69,14 +94,72 @@ export default function CalendarPage() {
     }
   };
 
-  // Get events for selected date
-  const selectedDateStr = selectedDate?.toISOString().split('T')[0];
+  const toDayString = (date: Date) => {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const day = String(date.getDate()).padStart(2, "0");
+    return `${year}-${month}-${day}`;
+  };
+
+  const toMonthString = (date: Date) => {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    return `${year}-${month}`;
+  };
+
+  const parseDayKey = (dayKey: string) => {
+    const [year, month, day] = dayKey.split("-").map(Number);
+    return new Date(year, month - 1, day);
+  };
+
   const eventsForSelectedDate = filteredEvents.filter(
-    event => event.date === selectedDateStr
+    (event) => selectedDay >= event.startDay && selectedDay <= event.endDay
   );
 
-  // Get dates with events for calendar highlighting
-  const datesWithEvents = filteredEvents.map(e => new Date(e.date));
+  const eventDaySet = new Set<string>();
+  const addRangeDays = (startDay: string, endDay: string) => {
+    const cursor = parseDayKey(startDay);
+    const end = parseDayKey(endDay);
+    if (Number.isNaN(cursor.getTime()) || Number.isNaN(end.getTime())) return;
+    while (cursor <= end) {
+      eventDaySet.add(toDayString(cursor));
+      cursor.setDate(cursor.getDate() + 1);
+    }
+  };
+
+  filteredEvents.forEach((event) => {
+    if (event.startDay && event.endDay) {
+      addRangeDays(event.startDay, event.endDay);
+    }
+  });
+
+  const visibleMonth = toMonthString(currentMonth);
+  const hasEventsSet = new Set(
+    Array.from(eventDaySet).filter((day) => day.startsWith(visibleMonth))
+  );
+
+  useEffect(() => {
+    let isMounted = true;
+    const loadEvents = async () => {
+      try {
+        const year = currentMonth.getFullYear();
+        const month = currentMonth.getMonth() + 1;
+        const data = await listCalendarEvents(year, month, { role: profile?.role });
+        if (isMounted) {
+          setEvents(data);
+        }
+      } catch {
+        if (isMounted) {
+          setEvents([]);
+        }
+      }
+    };
+
+    loadEvents();
+    return () => {
+      isMounted = false;
+    };
+  }, [currentMonth, profile?.role]);
 
   // Filter CCA activities
   const filteredCCA = ccaCategoryFilter === "all" 
@@ -118,14 +201,33 @@ export default function CalendarPage() {
           </div>
         }
         rightContent={
-          <Select defaultValue={students[0]?.id}>
+          <Select
+            value={selectedStudentId}
+            onValueChange={setSelectedStudentId}
+            disabled={studentsLoading || linkedStudents.length === 0}
+          >
             <SelectTrigger className="w-32 h-8 text-sm">
               <SelectValue placeholder="Student" />
             </SelectTrigger>
             <SelectContent className="bg-card">
-              {students.map((student) => (
+              {studentsLoading && (
+                <SelectItem value="loading" disabled>
+                  Loading...
+                </SelectItem>
+              )}
+              {!studentsLoading && studentsError && (
+                <SelectItem value="error" disabled>
+                  {studentsError}
+                </SelectItem>
+              )}
+              {!studentsLoading && !studentsError && linkedStudents.length === 0 && (
+                <SelectItem value="empty" disabled>
+                  No linked students yet. Please contact admin.
+                </SelectItem>
+              )}
+              {!studentsLoading && !studentsError && linkedStudents.map((student) => (
                 <SelectItem key={student.id} value={student.id}>
-                  {student.name.split(' ')[0]} {student.name.split(' ')[1]?.[0]}.
+                  {student.name}
                 </SelectItem>
               ))}
             </SelectContent>
@@ -212,17 +314,27 @@ export default function CalendarPage() {
                 <div className="flex justify-center">
                   <Calendar
                     mode="single"
-                    selected={selectedDate}
-                    onSelect={setSelectedDate}
+                    onSelect={(date) => date && setSelectedDay(toDayString(date))}
+                    onMonthChange={(date) => {
+                      setCurrentMonth(date);
+                      const month = String(date.getMonth() + 1).padStart(2, "0");
+                      setSelectedDay(`${date.getFullYear()}-${month}-01`);
+                    }}
                     className="rounded-md w-full max-w-md mx-auto"
                     modifiers={{
-                      hasEvent: datesWithEvents
+                      hasEvent: (date) => hasEventsSet.has(toDayString(date)),
+                      selected: (date) => toDayString(date) === selectedDay,
                     }}
                     modifiersStyles={{
                       hasEvent: { 
                         backgroundColor: "hsl(var(--primary) / 0.1)",
                         fontWeight: "bold"
-                      }
+                      },
+                      selected: {
+                        backgroundColor: "hsl(var(--primary))",
+                        color: "hsl(var(--primary-foreground))",
+                        fontWeight: "bold",
+                      },
                     }}
                   />
                 </div>
@@ -233,7 +345,7 @@ export default function CalendarPage() {
             <Card className="bg-card border-border shadow-sm">
               <CardHeader className="pb-2">
                 <CardTitle className="text-lg font-semibold">
-                  {selectedDate?.toLocaleDateString("en-US", { 
+                  {parseDayKey(selectedDay).toLocaleDateString("en-US", { 
                     weekday: "long", 
                     month: "long", 
                     day: "numeric" 
@@ -288,7 +400,7 @@ export default function CalendarPage() {
                 {filteredEvents
                   .slice(0, 5)
                   .map((event) => {
-                    const eventDate = new Date(event.date);
+                    const eventDate = new Date(`${event.startDay}T00:00:00Z`);
                     return (
                       <div 
                         key={event.id}
@@ -300,7 +412,9 @@ export default function CalendarPage() {
                         </div>
                         <div className="flex-1 min-w-0">
                           <h3 className="font-medium text-foreground truncate">{event.title}</h3>
-                          <p className="text-sm text-muted-foreground mb-1">{event.time}</p>
+                          <p className="text-sm text-muted-foreground mb-1">
+                            {event.allDay ? "All Day" : event.time}
+                          </p>
                           <div className="flex flex-wrap gap-1">
                             {event.tags.slice(0, 2).map((tag) => (
                               <Badge key={tag} className={`text-xs ${getTagColor(tag)}`}>
@@ -398,6 +512,11 @@ export default function CalendarPage() {
                   </CardContent>
                 </Card>
               ))}
+              {filteredCCA.length === 0 && (
+                <p className="text-sm text-muted-foreground text-center py-4">
+                  No CCA activities available.
+                </p>
+              )}
             </div>
           </TabsContent>
         </Tabs>

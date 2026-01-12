@@ -1,5 +1,4 @@
-import { useState, useEffect } from "react";
-import { announcements } from "@/data/mockData";
+import { useState, useEffect, useMemo } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -13,12 +12,30 @@ import {
 } from "@/components/ui/carousel";
 import { AnnouncementDrawer, getReadAnnouncementIds } from "@/components/AnnouncementDrawer";
 import { AnnouncementsListDrawer } from "@/components/AnnouncementsListDrawer";
+import type { Announcement, AnnouncementId } from "@/data/announcements";
 
-export function AnnouncementCarousel() {
+interface AnnouncementCarouselProps {
+  announcements?: Announcement[];
+  onSeeAll?: () => void;
+  onMarkRead?: (id: AnnouncementId) => void;
+  enableListDrawer?: boolean;
+}
+
+export function AnnouncementCarousel({
+  announcements,
+  onSeeAll,
+  onMarkRead,
+  enableListDrawer = true,
+}: AnnouncementCarouselProps) {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [listDrawerOpen, setListDrawerOpen] = useState(false);
   const [currentAnnouncementIndex, setCurrentAnnouncementIndex] = useState(0);
-  const [readIds, setReadIds] = useState<number[]>([]);
+  const [readIds, setReadIds] = useState<AnnouncementId[]>([]);
+
+  const resolvedAnnouncements = useMemo(
+    () => announcements ?? [],
+    [announcements]
+  );
 
   // Load read status on mount and when drawer closes
   useEffect(() => {
@@ -32,20 +49,44 @@ export function AnnouncementCarousel() {
     }
   }, [drawerOpen, listDrawerOpen]);
 
-  const isRead = (id: number) => readIds.includes(id);
+  const isRead = (announcement: Announcement) => {
+    if (announcement.is_read !== undefined) return announcement.is_read;
+    return readIds.includes(announcement.id);
+  };
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
     return date.toLocaleDateString("en-US", { month: "short", day: "numeric" });
   };
 
-  const mainAnnouncement = announcements[0];
-  const otherAnnouncements = announcements.slice(1, 4);
+  const mainAnnouncement = resolvedAnnouncements[0];
+  const otherAnnouncements = resolvedAnnouncements.slice(1, 4);
 
   const handleAnnouncementClick = (index: number) => {
     setCurrentAnnouncementIndex(index);
     setDrawerOpen(true);
+    const announcement = resolvedAnnouncements[index];
+    if (announcement && onMarkRead) {
+      onMarkRead(announcement.id);
+    }
   };
+
+  if (resolvedAnnouncements.length === 0) {
+    return (
+      <section className="py-4">
+        <div className="flex items-center justify-between mb-3 px-4">
+          <h2 className="text-lg font-semibold text-foreground">Announcements</h2>
+        </div>
+        <div className="px-4">
+          <Card className="bg-card border-border shadow-sm">
+            <CardContent className="p-6 text-center text-sm text-muted-foreground">
+              No announcements available.
+            </CardContent>
+          </Card>
+        </div>
+      </section>
+    );
+  }
 
   return (
     <section className="py-4">
@@ -55,7 +96,7 @@ export function AnnouncementCarousel() {
         <Button 
           variant="link" 
           className="text-primary p-0 h-auto text-sm"
-          onClick={() => setListDrawerOpen(true)}
+          onClick={onSeeAll ?? (() => setListDrawerOpen(true))}
         >
           See all <ChevronRight className="h-4 w-4 ml-1" />
         </Button>
@@ -92,7 +133,10 @@ export function AnnouncementCarousel() {
               <Badge className="bg-primary text-primary-foreground text-xs">
                 Featured
               </Badge>
-              {isRead(mainAnnouncement.id) && (
+              {!isRead(mainAnnouncement) && (
+                <span className="h-2 w-2 rounded-full bg-primary" />
+              )}
+              {isRead(mainAnnouncement) && (
                 <Badge variant="outline" className="text-xs gap-1 text-green-600 border-green-600/30 bg-green-500/10 backdrop-blur-sm">
                   <Check className="h-3 w-3" />
                   Read
@@ -101,21 +145,24 @@ export function AnnouncementCarousel() {
             </div>
             {/* Category and Date */}
             <div className="absolute bottom-3 left-4 flex items-center gap-2">
-              <Badge variant="secondary" className="text-xs">
-                {mainAnnouncement.category}
-              </Badge>
-              <Badge variant="outline" className="text-xs bg-card/80 backdrop-blur-sm">
-                {formatDate(mainAnnouncement.date)}
-              </Badge>
+                <Badge variant="secondary" className="text-xs">
+                  {mainAnnouncement.category}
+                </Badge>
+                {!isRead(mainAnnouncement) && (
+                  <span className="h-1.5 w-1.5 rounded-full bg-primary" />
+                )}
+                <Badge variant="outline" className="text-xs bg-card/80 backdrop-blur-sm">
+                  {formatDate(mainAnnouncement.date)}
+                </Badge>
+              </div>
             </div>
-          </div>
           <CardContent className="p-4">
-            <h3 className="font-bold text-foreground text-lg mb-2">
-              {mainAnnouncement.title}
-            </h3>
-            <p className="text-sm text-muted-foreground mb-4">
-              {mainAnnouncement.snippet}
-            </p>
+              <h3 className="font-bold text-foreground text-lg mb-2">
+                {mainAnnouncement.title}
+              </h3>
+              <p className="text-sm text-muted-foreground mb-4">
+                {mainAnnouncement.snippet}
+              </p>
             <Button 
               className="w-full"
               onClick={(e) => {
@@ -163,7 +210,10 @@ export function AnnouncementCarousel() {
                         <Badge variant="secondary" className="text-[10px]">
                           {announcement.category}
                         </Badge>
-                        {isRead(announcement.id) && (
+                        {!isRead(announcement) && (
+                          <span className="h-1.5 w-1.5 rounded-full bg-primary" />
+                        )}
+                        {isRead(announcement) && (
                           <Badge variant="outline" className="text-[10px] gap-0.5 text-green-600 border-green-600/30 bg-green-500/10 backdrop-blur-sm px-1.5">
                             <Check className="h-2.5 w-2.5" />
                             Read
@@ -191,19 +241,21 @@ export function AnnouncementCarousel() {
 
       {/* Announcement Drawer */}
       <AnnouncementDrawer
-        announcements={announcements}
+        announcements={resolvedAnnouncements}
         currentIndex={currentAnnouncementIndex}
         isOpen={drawerOpen}
         onOpenChange={setDrawerOpen}
         onNavigate={setCurrentAnnouncementIndex}
-        onSeeAll={() => setListDrawerOpen(true)}
+        onSeeAll={onSeeAll ?? (() => setListDrawerOpen(true))}
       />
 
       {/* Announcements List Drawer */}
-      <AnnouncementsListDrawer
-        isOpen={listDrawerOpen}
-        onOpenChange={setListDrawerOpen}
-      />
+      {enableListDrawer && (
+        <AnnouncementsListDrawer
+          isOpen={listDrawerOpen}
+          onOpenChange={setListDrawerOpen}
+        />
+      )}
     </section>
   );
 }

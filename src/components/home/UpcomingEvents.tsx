@@ -1,22 +1,38 @@
-import { useState } from "react";
-import { upcomingEvents } from "@/data/mockData";
+import { useState, useMemo } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ChevronRight, MapPin, Clock } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { useNavigate } from "react-router-dom";
+import type { UpcomingEvent } from "@/data/calendar";
 
 type EventCategory = "all" | "academic" | "sports" | "arts" | "meeting";
 
-export function UpcomingEvents() {
+interface UpcomingEventsProps {
+  events?: UpcomingEvent[];
+  seeAllPath?: string;
+}
+
+export function UpcomingEvents({ events, seeAllPath = "/parent/calendar" }: UpcomingEventsProps) {
   const navigate = useNavigate();
   const [activeFilter, setActiveFilter] = useState<EventCategory>("all");
+  const resolvedEvents = useMemo(
+    () => events ?? [],
+    [events]
+  );
 
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
+  const formatDateParts = (dateString: string) => {
+    const [year, month, day] = dateString.split("-").map(Number);
+    const date = new Date(Date.UTC(year, month - 1, day));
     return {
-      day: date.getDate(),
-      month: date.toLocaleDateString("en-US", { month: "short" })
+      day: date.getUTCDate(),
+      month: date.toLocaleDateString("en-US", { month: "short", timeZone: "UTC" }),
+      full: date.toLocaleDateString("en-GB", {
+        day: "2-digit",
+        month: "short",
+        year: "numeric",
+        timeZone: "UTC",
+      }),
     };
   };
 
@@ -29,8 +45,8 @@ export function UpcomingEvents() {
   ];
 
   const filteredEvents = activeFilter === "all"
-    ? upcomingEvents
-    : upcomingEvents.filter(e => e.category === activeFilter);
+    ? resolvedEvents
+    : resolvedEvents.filter(e => e.category === activeFilter);
 
   return (
     <section className="px-4 py-4">
@@ -39,7 +55,7 @@ export function UpcomingEvents() {
         <Button 
           variant="link" 
           className="text-primary p-0 h-auto text-sm"
-          onClick={() => navigate("/parent/calendar")}
+          onClick={() => navigate(seeAllPath)}
         >
           See all <ChevronRight className="h-4 w-4 ml-1" />
         </Button>
@@ -61,7 +77,10 @@ export function UpcomingEvents() {
       
       <div className="space-y-3">
         {filteredEvents.slice(0, 3).map((event) => {
-          const { day, month } = formatDate(event.date);
+          const startDate = (event as UpcomingEvent).startDay ?? (event as any).date;
+          const allDay = (event as UpcomingEvent).allDay ?? true;
+          const timeLabel = allDay ? "All Day" : (event as UpcomingEvent).time;
+          const { day, month, full } = formatDateParts(startDate);
           return (
             <Card key={event.id} className="bg-card border-border shadow-sm">
               <CardContent className="p-3 flex items-center gap-4">
@@ -74,8 +93,9 @@ export function UpcomingEvents() {
                   <div className="flex items-center gap-3 text-sm text-muted-foreground mt-1">
                     <span className="flex items-center gap-1">
                       <Clock className="h-3 w-3" />
-                      {event.time}
+                      {timeLabel}
                     </span>
+                    <span className="text-xs">{full}</span>
                   </div>
                   <div className="flex items-center gap-1 text-sm text-muted-foreground mt-0.5">
                     <MapPin className="h-3 w-3" />

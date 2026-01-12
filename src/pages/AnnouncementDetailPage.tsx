@@ -1,8 +1,7 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { AppHeader } from "@/components/layout/AppHeader";
-import { announcements } from "@/data/mockData";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -10,11 +9,11 @@ import {
   ChevronLeft, 
   Calendar, 
   Megaphone, 
-  FileText, 
-  Download,
+  FileText,
   Eye
 } from "lucide-react";
 import { PDFViewerDialog } from "@/components/PDFViewerDialog";
+import { getAnnouncementAttachments, getAnnouncementById, markAnnouncementRead, type Announcement, type AnnouncementAttachment } from "@/data/announcements";
 
 export default function AnnouncementDetailPage() {
   const { id } = useParams();
@@ -24,10 +23,54 @@ export default function AnnouncementDetailPage() {
     url: "",
     title: ""
   });
+  const [announcement, setAnnouncement] = useState<Announcement | null>(null);
+  const [attachments, setAttachments] = useState<AnnouncementAttachment[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  const announcement = announcements.find(a => a.id === Number(id));
+  useEffect(() => {
+    let isMounted = true;
+    const loadAnnouncement = async () => {
+      if (!id) return;
+      setLoading(true);
+      setError(null);
+      try {
+        const data = await getAnnouncementById(id);
+        if (isMounted) {
+          setAnnouncement(data);
+        }
+        if (data) {
+          try {
+            const fileRows = await getAnnouncementAttachments(data.id);
+            if (isMounted) {
+              setAttachments(fileRows);
+            }
+          } catch {
+            if (isMounted) {
+              setAttachments([]);
+            }
+          }
+          void markAnnouncementRead(data.id);
+        }
+      } catch (err) {
+        const message = err instanceof Error ? err.message : "Failed to load announcement.";
+        if (isMounted) {
+          setError(message);
+        }
+      } finally {
+        if (isMounted) {
+          setLoading(false);
+        }
+      }
+    };
 
-  if (!announcement) {
+    loadAnnouncement();
+    return () => {
+      isMounted = false;
+    };
+  }, [id]);
+
+  if (loading) {
     return (
       <AppLayout>
         <AppHeader 
@@ -42,9 +85,35 @@ export default function AnnouncementDetailPage() {
         />
         <div className="flex flex-col items-center justify-center py-20 px-4">
           <Megaphone className="h-16 w-16 text-muted-foreground/50 mb-4" />
-          <h2 className="text-lg font-semibold text-foreground mb-2">Announcement Not Found</h2>
+          <h2 className="text-lg font-semibold text-foreground mb-2">Loading announcement</h2>
           <p className="text-muted-foreground text-center mb-4">
-            The announcement you're looking for doesn't exist or has been removed.
+            Fetching announcement details...
+          </p>
+        </div>
+      </AppLayout>
+    );
+  }
+
+  if (error || !announcement) {
+    return (
+      <AppLayout>
+        <AppHeader 
+          leftContent={
+            <div className="flex items-center gap-2">
+              <Button variant="ghost" size="icon" onClick={() => navigate(-1)}>
+                <ChevronLeft className="h-5 w-5" />
+              </Button>
+              <h1 className="text-xl font-semibold text-foreground">Announcement</h1>
+            </div>
+          }
+        />
+        <div className="flex flex-col items-center justify-center py-20 px-4">
+          <Megaphone className="h-16 w-16 text-muted-foreground/50 mb-4" />
+          <h2 className="text-lg font-semibold text-foreground mb-2">
+            {error ? "Unable to load announcement" : "Announcement Not Found"}
+          </h2>
+          <p className="text-muted-foreground text-center mb-4">
+            {error || "The announcement you're looking for doesn't exist or has been removed."}
           </p>
           <Button onClick={() => navigate("/parent/announcements")}>
             Back to Announcements
@@ -65,11 +134,16 @@ export default function AnnouncementDetailPage() {
   };
 
   const getCategoryColor = (category: string) => {
-    switch (category) {
-      case "Event": return "bg-blue-500 text-white";
-      case "Academic": return "bg-amber-500 text-white";
-      case "General": return "bg-primary text-primary-foreground";
-      default: return "bg-muted text-muted-foreground";
+    const normalized = category.toLowerCase();
+    switch (normalized) {
+      case "event":
+        return "bg-blue-500 text-white";
+      case "academic":
+        return "bg-amber-500 text-white";
+      case "general":
+        return "bg-primary text-primary-foreground";
+      default:
+        return "bg-muted text-muted-foreground";
     }
   };
 
@@ -136,15 +210,15 @@ export default function AnnouncementDetailPage() {
           </h1>
 
           {/* PDF Attachments - Prominent Section */}
-          {announcement.attachments && announcement.attachments.length > 0 && (
+          {attachments.length > 0 && (
             <Card className="bg-primary/5 border-primary/20 mb-6">
               <CardContent className="p-4">
                 <h3 className="font-semibold text-foreground flex items-center gap-2 mb-3">
                   <FileText className="h-5 w-5 text-primary" />
-                  Attachments ({announcement.attachments.length})
+                  Attachments ({attachments.length})
                 </h3>
                 <div className="space-y-2">
-                  {announcement.attachments.map((attachment, index) => (
+                  {attachments.map((attachment, index) => (
                     <div 
                       key={index}
                       className="flex items-center justify-between p-3 bg-background rounded-lg border border-border"

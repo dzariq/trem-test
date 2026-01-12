@@ -157,7 +157,7 @@ export const mockLessonPlans: SubjectCurriculum[] = [
                 title: "Understanding Variables and Constants",
                 weekNumber: 1,
                 lessonNumber: 1,
-                teacherNames: ["Ms. Sarah Chen", "Mr. James Wong", "Ms. Emily Tan"],
+                teacherNames: ["Teacher", "Mr. James Wong", "Ms. Emily Tan"],
                 className: "5A",
                 subject: "Mathematics",
                 topic: "Algebra Basics",
@@ -215,7 +215,7 @@ export const mockLessonPlans: SubjectCurriculum[] = [
                 },
                 attendance: { present: 18, absent: 1, late: 1, excused: 0, total: 20 },
                 approval: {
-                  preparedBy: "Ms. Sarah Chen",
+                  preparedBy: "Teacher",
                   preparedDate: "2026-01-05",
                   checkedBy: "Mr. David Wong",
                   checkedDate: "2026-01-05",
@@ -229,7 +229,7 @@ export const mockLessonPlans: SubjectCurriculum[] = [
                 title: "Writing Algebraic Expressions",
                 weekNumber: 1,
                 lessonNumber: 2,
-                teacherNames: ["Ms. Sarah Chen", "Mr. James Wong", "Ms. Emily Tan"],
+                teacherNames: ["Teacher", "Mr. James Wong", "Ms. Emily Tan"],
                 className: "5A",
                 subject: "Mathematics",
                 topic: "Algebra Basics",
@@ -286,7 +286,7 @@ export const mockLessonPlans: SubjectCurriculum[] = [
                 },
                 attendance: { present: 19, absent: 0, late: 1, excused: 0, total: 20 },
                 approval: {
-                  preparedBy: "Ms. Sarah Chen",
+                  preparedBy: "Teacher",
                   preparedDate: "2026-01-06",
                   checkedBy: "Mr. David Wong",
                   checkedDate: "2026-01-06",
@@ -300,7 +300,7 @@ export const mockLessonPlans: SubjectCurriculum[] = [
                 title: "Evaluating Expressions",
                 weekNumber: 1,
                 lessonNumber: 3,
-                teacherNames: ["Ms. Sarah Chen", "Mr. James Wong", "Ms. Emily Tan"],
+                teacherNames: ["Teacher", "Mr. James Wong", "Ms. Emily Tan"],
                 className: "5A",
                 subject: "Mathematics",
                 topic: "Algebra Basics",
@@ -356,7 +356,7 @@ export const mockLessonPlans: SubjectCurriculum[] = [
                 },
                 attendance: null,
                 approval: {
-                  preparedBy: "Ms. Sarah Chen",
+                  preparedBy: "Teacher",
                   preparedDate: "2026-01-07",
                   checkedBy: null,
                   checkedDate: null,
@@ -377,7 +377,7 @@ export const mockLessonPlans: SubjectCurriculum[] = [
                 title: "One-Step Equations",
                 weekNumber: 2,
                 lessonNumber: 1,
-                teacherNames: ["Ms. Sarah Chen", "Mr. James Wong", "Ms. Emily Tan"],
+                teacherNames: ["Teacher", "Mr. James Wong", "Ms. Emily Tan"],
                 className: "5A",
                 subject: "Mathematics",
                 topic: "Algebra Basics",
@@ -429,7 +429,7 @@ export const mockLessonPlans: SubjectCurriculum[] = [
                 },
                 attendance: null,
                 approval: {
-                  preparedBy: "Ms. Sarah Chen",
+                  preparedBy: "Teacher",
                   preparedDate: "2026-01-12",
                   checkedBy: null,
                   checkedDate: null,
@@ -457,7 +457,7 @@ export const mockLessonPlans: SubjectCurriculum[] = [
                 title: "Understanding Linear Equations",
                 weekNumber: 3,
                 lessonNumber: 1,
-                teacherNames: ["Ms. Sarah Chen", "Mr. James Wong", "Ms. Emily Tan"],
+                teacherNames: ["Teacher", "Mr. James Wong", "Ms. Emily Tan"],
                 className: "5A",
                 subject: "Mathematics",
                 topic: "Linear Equations",
@@ -490,7 +490,7 @@ export const mockLessonPlans: SubjectCurriculum[] = [
                   signatureDate: "Ms. Sarah Chen - 2026-01-20"
                 },
                 attendance: { present: 19, absent: 1, late: 0, excused: 0, total: 20 },
-                approval: { preparedBy: "Ms. Sarah Chen", preparedDate: "2026-01-19", checkedBy: "Mr. David Wong", checkedDate: "2026-01-19", status: "approved" },
+                approval: { preparedBy: "Teacher", preparedDate: "2026-01-19", checkedBy: "Mr. David Wong", checkedDate: "2026-01-19", status: "approved" },
                 createdAt: "2026-01-18T10:00:00Z",
                 updatedAt: "2026-01-20T15:00:00Z"
               },
@@ -499,7 +499,7 @@ export const mockLessonPlans: SubjectCurriculum[] = [
                 title: "Graphing Linear Equations",
                 weekNumber: 3,
                 lessonNumber: 2,
-                teacherNames: ["Ms. Sarah Chen", "Mr. James Wong", "Ms. Emily Tan"],
+                teacherNames: ["Teacher", "Mr. James Wong", "Ms. Emily Tan"],
                 className: "5A",
                 subject: "Mathematics",
                 topic: "Linear Equations",
@@ -532,7 +532,7 @@ export const mockLessonPlans: SubjectCurriculum[] = [
                   signatureDate: ""
                 },
                 attendance: null,
-                approval: { preparedBy: "Ms. Sarah Chen", preparedDate: "2026-01-20", checkedBy: null, checkedDate: null, status: "pending_review" },
+                approval: { preparedBy: "Teacher", preparedDate: "2026-01-20", checkedBy: null, checkedDate: null, status: "pending_review" },
                 createdAt: "2026-01-19T10:00:00Z",
                 updatedAt: "2026-01-20T10:00:00Z"
               }
@@ -548,7 +548,7 @@ export const mockLessonPlans: SubjectCurriculum[] = [
                 title: "Understanding Slope",
                 weekNumber: 4,
                 lessonNumber: 1,
-                teacherNames: ["Ms. Sarah Chen", "Mr. James Wong", "Ms. Emily Tan"],
+                teacherNames: ["Teacher", "Mr. James Wong", "Ms. Emily Tan"],
                 className: "5A",
                 subject: "Mathematics",
                 topic: "Linear Equations",
@@ -581,7 +581,7 @@ export const mockLessonPlans: SubjectCurriculum[] = [
                   signatureDate: ""
                 },
                 attendance: null,
-                approval: { preparedBy: "Ms. Sarah Chen", preparedDate: "2026-01-26", checkedBy: null, checkedDate: null, status: "draft" },
+                approval: { preparedBy: "Teacher", preparedDate: "2026-01-26", checkedBy: null, checkedDate: null, status: "draft" },
                 createdAt: "2026-01-25T10:00:00Z",
                 updatedAt: "2026-01-26T10:00:00Z"
               }
@@ -604,7 +604,7 @@ export const mockLessonPlans: SubjectCurriculum[] = [
                 title: "Points, Lines, and Planes",
                 weekNumber: 5,
                 lessonNumber: 1,
-                teacherNames: ["Ms. Sarah Chen", "Mr. James Wong", "Ms. Emily Tan"],
+                teacherNames: ["Teacher", "Mr. James Wong", "Ms. Emily Tan"],
                 className: "5A",
                 subject: "Mathematics",
                 topic: "Geometry Fundamentals",
@@ -637,7 +637,7 @@ export const mockLessonPlans: SubjectCurriculum[] = [
                   signatureDate: "Ms. Sarah Chen - 2026-02-03"
                 },
                 attendance: { present: 20, absent: 0, late: 0, excused: 0, total: 20 },
-                approval: { preparedBy: "Ms. Sarah Chen", preparedDate: "2026-02-02", checkedBy: "Mr. David Wong", checkedDate: "2026-02-02", status: "approved" },
+                approval: { preparedBy: "Teacher", preparedDate: "2026-02-02", checkedBy: "Mr. David Wong", checkedDate: "2026-02-02", status: "approved" },
                 createdAt: "2026-02-01T10:00:00Z",
                 updatedAt: "2026-02-03T15:00:00Z"
               },
@@ -646,7 +646,7 @@ export const mockLessonPlans: SubjectCurriculum[] = [
                 title: "Types of Angles",
                 weekNumber: 5,
                 lessonNumber: 2,
-                teacherNames: ["Ms. Sarah Chen", "Mr. James Wong", "Ms. Emily Tan"],
+                teacherNames: ["Teacher", "Mr. James Wong", "Ms. Emily Tan"],
                 className: "5A",
                 subject: "Mathematics",
                 topic: "Geometry Fundamentals",
@@ -679,7 +679,7 @@ export const mockLessonPlans: SubjectCurriculum[] = [
                   signatureDate: "Ms. Sarah Chen - 2026-02-04"
                 },
                 attendance: { present: 18, absent: 2, late: 0, excused: 0, total: 20 },
-                approval: { preparedBy: "Ms. Sarah Chen", preparedDate: "2026-02-03", checkedBy: "Mr. David Wong", checkedDate: "2026-02-03", status: "approved" },
+                approval: { preparedBy: "Teacher", preparedDate: "2026-02-03", checkedBy: "Mr. David Wong", checkedDate: "2026-02-03", status: "approved" },
                 createdAt: "2026-02-02T10:00:00Z",
                 updatedAt: "2026-02-04T15:00:00Z"
               },
@@ -688,7 +688,7 @@ export const mockLessonPlans: SubjectCurriculum[] = [
                 title: "Introduction to Triangles",
                 weekNumber: 5,
                 lessonNumber: 3,
-                teacherNames: ["Ms. Sarah Chen", "Mr. James Wong", "Ms. Emily Tan"],
+                teacherNames: ["Teacher", "Mr. James Wong", "Ms. Emily Tan"],
                 className: "5A",
                 subject: "Mathematics",
                 topic: "Geometry Fundamentals",
@@ -721,7 +721,7 @@ export const mockLessonPlans: SubjectCurriculum[] = [
                   signatureDate: "Ms. Sarah Chen - 2026-02-05"
                 },
                 attendance: { present: 20, absent: 0, late: 0, excused: 0, total: 20 },
-                approval: { preparedBy: "Ms. Sarah Chen", preparedDate: "2026-02-04", checkedBy: "Mr. David Wong", checkedDate: "2026-02-05", status: "approved" },
+                approval: { preparedBy: "Teacher", preparedDate: "2026-02-04", checkedBy: "Mr. David Wong", checkedDate: "2026-02-05", status: "approved" },
                 createdAt: "2026-02-03T10:00:00Z",
                 updatedAt: "2026-02-05T15:00:00Z"
               }
@@ -768,7 +768,7 @@ export const mockLessonPlans: SubjectCurriculum[] = [
                 title: "What is a Force?",
                 weekNumber: 1,
                 lessonNumber: 1,
-                teacherNames: ["Ms. Sarah Chen", "Mr. James Wong", "Ms. Emily Tan"],
+                teacherNames: ["Teacher", "Mr. James Wong", "Ms. Emily Tan"],
                 className: "5A",
                 subject: "Science",
                 topic: "Forces and Motion",
@@ -825,7 +825,7 @@ export const mockLessonPlans: SubjectCurriculum[] = [
                 },
                 attendance: { present: 20, absent: 0, late: 0, excused: 0, total: 20 },
                 approval: {
-                  preparedBy: "Ms. Sarah Chen",
+                  preparedBy: "Teacher",
                   preparedDate: "2026-01-05",
                   checkedBy: "Dr. Lisa Park",
                   checkedDate: "2026-01-05",

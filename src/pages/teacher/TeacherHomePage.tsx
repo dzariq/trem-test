@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { TeacherAppLayout } from "@/components/layout/TeacherAppLayout";
 import { AppHeader } from "@/components/layout/AppHeader";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -23,6 +23,10 @@ import {
 } from "@/components/ui/select";
 import { differenceInDays, format, parseISO } from "date-fns";
 import { cn } from "@/lib/utils";
+import { listAnnouncements, markAnnouncementRead, type Announcement } from "@/data/announcements";
+import { useNavigate } from "react-router-dom";
+import { listUpcomingEvents, type UpcomingEvent } from "@/data/calendar";
+import { useMyProfile } from "@/hooks/useMyProfile";
 
 const getDeadlineIcon = (type: Deadline["type"]) => {
   switch (type) {
@@ -48,11 +52,19 @@ const getDaysLeftBadge = (daysLeft: number, isCompleted: boolean) => {
 };
 
 export default function TeacherHomePage() {
+  const navigate = useNavigate();
+  const { profile, loading: profileLoading } = useMyProfile();
   const [selectedClass, setSelectedClass] = useState(teacherProfile.classes[0]);
   const [completedDeadlines, setCompletedDeadlines] = useState<string[]>([]);
   const [expandedDeadline, setExpandedDeadline] = useState<string | null>(null);
   const [showPendingGrades, setShowPendingGrades] = useState(false);
   const [timetablePdfOpen, setTimetablePdfOpen] = useState(false);
+  const [announcements, setAnnouncements] = useState<Announcement[]>([]);
+  const [announcementsLoading, setAnnouncementsLoading] = useState(true);
+  const [announcementsError, setAnnouncementsError] = useState<string | null>(null);
+  const [events, setEvents] = useState<UpcomingEvent[]>([]);
+  const [eventsLoading, setEventsLoading] = useState(true);
+  const [eventsError, setEventsError] = useState<string | null>(null);
 
   const totalPendingGrades = teacherQuickStats.pendingGrades.reduce((sum, item) => sum + item.count, 0);
 
@@ -82,6 +94,73 @@ export default function TeacherHomePage() {
     setExpandedDeadline(prev => prev === id ? null : id);
   };
 
+  useEffect(() => {
+    let isMounted = true;
+    const loadAnnouncements = async () => {
+      setAnnouncementsLoading(true);
+      setAnnouncementsError(null);
+      try {
+        const data = await listAnnouncements({ limit: 10 });
+        if (isMounted) {
+          setAnnouncements(data);
+        }
+      } catch (error) {
+        if (isMounted) {
+          const message = error instanceof Error ? error.message : "Failed to load announcements.";
+          setAnnouncementsError(message);
+        }
+      } finally {
+        if (isMounted) {
+          setAnnouncementsLoading(false);
+        }
+      }
+    };
+
+    loadAnnouncements();
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    let isMounted = true;
+    const loadEvents = async () => {
+      setEventsLoading(true);
+      setEventsError(null);
+      try {
+        const data = await listUpcomingEvents({ role: "teacher", limit: 10 });
+        if (isMounted) {
+          setEvents(data);
+        }
+      } catch (error) {
+        if (isMounted) {
+          const message = error instanceof Error ? error.message : "Failed to load events.";
+          setEventsError(message);
+        }
+      } finally {
+        if (isMounted) {
+          setEventsLoading(false);
+        }
+      }
+    };
+
+    loadEvents();
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  const handleMarkAnnouncementRead = async (id: Announcement["id"]) => {
+    try {
+      await markAnnouncementRead(id);
+      setAnnouncements(prev =>
+        prev.map(item => (item.id === id ? { ...item, is_read: true } : item))
+      );
+    } catch {
+      // Ignore read tracking errors to avoid blocking the UI.
+    }
+  };
+
   return (
     <TeacherAppLayout>
       <AppHeader 
@@ -97,7 +176,11 @@ export default function TeacherHomePage() {
             />
             <div>
               <p className="text-xs text-muted-foreground">Welcome back,</p>
-              <p className="text-sm font-semibold text-foreground">{teacherProfile.name}</p>
+              <p className="text-sm font-semibold text-foreground">
+                {profileLoading
+                  ? "Loading..."
+                  : profile?.full_name ?? profile?.email ?? "Teacher"}
+              </p>
             </div>
           </div>
         }
@@ -295,8 +378,57 @@ export default function TeacherHomePage() {
             </div>
           </div>
 
-        <AnnouncementCarousel />
-        <UpcomingEvents />
+        {announcementsLoading && (
+          <div className="px-4 py-4">
+            <Card className="bg-card border-border shadow-sm">
+              <CardContent className="p-6 text-center text-sm text-muted-foreground">
+                Loading announcements...
+              </CardContent>
+            </Card>
+          </div>
+        )}
+
+        {announcementsError && !announcementsLoading && (
+          <div className="px-4 py-4">
+            <Card className="bg-card border-border shadow-sm">
+              <CardContent className="p-6 text-center text-sm text-destructive">
+                {announcementsError}
+              </CardContent>
+            </Card>
+          </div>
+        )}
+
+        {!announcementsLoading && !announcementsError && (
+          <AnnouncementCarousel
+            announcements={announcements}
+            onSeeAll={() => navigate("/teacher/announcements")}
+            onMarkRead={handleMarkAnnouncementRead}
+            enableListDrawer={false}
+          />
+        )}
+        {eventsLoading && (
+          <div className="px-4 py-4">
+            <Card className="bg-card border-border shadow-sm">
+              <CardContent className="p-6 text-center text-sm text-muted-foreground">
+                Loading events...
+              </CardContent>
+            </Card>
+          </div>
+        )}
+
+        {eventsError && !eventsLoading && (
+          <div className="px-4 py-4">
+            <Card className="bg-card border-border shadow-sm">
+              <CardContent className="p-6 text-center text-sm text-destructive">
+                {eventsError}
+              </CardContent>
+            </Card>
+          </div>
+        )}
+
+        {!eventsLoading && !eventsError && (
+          <UpcomingEvents events={events} seeAllPath="/teacher/calendar" />
+        )}
         
         {/* Footer with faded school badge */}
         <div className="flex flex-col items-center justify-center py-8 mt-4">

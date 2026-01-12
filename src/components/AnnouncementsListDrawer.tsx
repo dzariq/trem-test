@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from "react";
-import { announcements } from "@/data/mockData";
+import { listAnnouncements, markAnnouncementRead, type Announcement } from "@/data/announcements";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -20,9 +20,12 @@ export function AnnouncementsListDrawer({ isOpen, onOpenChange }: AnnouncementsL
   const [categoryFilter, setCategoryFilter] = useState<CategoryFilter>("all");
   const [currentView, setCurrentView] = useState<"list" | "detail">("list");
   const [currentAnnouncementIndex, setCurrentAnnouncementIndex] = useState(0);
-  const [readIds, setReadIds] = useState<number[]>([]);
+  const [readIds, setReadIds] = useState<Announcement["id"][]>([]);
   const [slideDirection, setSlideDirection] = useState<"left" | "right" | null>(null);
   const [snap, setSnap] = useState<number | string | null>(0.85);
+  const [announcements, setAnnouncements] = useState<Announcement[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const touchStartX = useRef<number>(0);
   const touchEndX = useRef<number>(0);
@@ -30,6 +33,36 @@ export function AnnouncementsListDrawer({ isOpen, onOpenChange }: AnnouncementsL
   useEffect(() => {
     setReadIds(getReadAnnouncementIds());
   }, []);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    let isMounted = true;
+    const loadAnnouncements = async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        const data = await listAnnouncements({ limit: 20 });
+        if (isMounted) {
+          setAnnouncements(data);
+        }
+      } catch (err) {
+        const message = err instanceof Error ? err.message : "Failed to load announcements.";
+        if (isMounted) {
+          setError(message);
+          setAnnouncements([]);
+        }
+      } finally {
+        if (isMounted) {
+          setLoading(false);
+        }
+      }
+    };
+
+    loadAnnouncements();
+    return () => {
+      isMounted = false;
+    };
+  }, [isOpen]);
 
   // Reset to list view when drawer closes
   useEffect(() => {
@@ -45,7 +78,12 @@ export function AnnouncementsListDrawer({ isOpen, onOpenChange }: AnnouncementsL
     }
   }, [currentView]);
 
-  const isRead = (id: number) => readIds.includes(id);
+  const isRead = (announcement: Announcement) => {
+    if (announcement.is_read !== undefined) {
+      return Boolean(announcement.is_read);
+    }
+    return readIds.includes(announcement.id);
+  };
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
@@ -59,18 +97,28 @@ export function AnnouncementsListDrawer({ isOpen, onOpenChange }: AnnouncementsL
 
   const categories: CategoryFilter[] = ["all", "Event", "Academic", "General"];
 
-  const filteredAnnouncements = categoryFilter === "all"
-    ? announcements
-    : announcements.filter(a => a.category === categoryFilter);
+  const matchesCategory = (category: string, filter: CategoryFilter) => {
+    if (filter === "all") return true;
+    return category.toLowerCase() === filter.toLowerCase();
+  };
+
+  const filteredAnnouncements = announcements.filter(a =>
+    matchesCategory(a.category, categoryFilter)
+  );
 
   const currentAnnouncement = filteredAnnouncements[currentAnnouncementIndex];
 
   const getCategoryColor = (category: string) => {
-    switch (category) {
-      case "Event": return "bg-blue-500 text-white";
-      case "Academic": return "bg-amber-500 text-white";
-      case "General": return "bg-primary text-primary-foreground";
-      default: return "bg-muted text-muted-foreground";
+    const normalized = category.toLowerCase();
+    switch (normalized) {
+      case "event":
+        return "bg-blue-500 text-white";
+      case "academic":
+        return "bg-amber-500 text-white";
+      case "general":
+        return "bg-primary text-primary-foreground";
+      default:
+        return "bg-muted text-muted-foreground";
     }
   };
 
@@ -81,10 +129,22 @@ export function AnnouncementsListDrawer({ isOpen, onOpenChange }: AnnouncementsL
     return { icon: FileText, color: "text-primary", bg: "bg-primary/10" };
   };
 
+  const markRead = async (id: Announcement["id"]) => {
+    markAnnouncementAsRead(id);
+    setReadIds(prev => [...new Set([...prev, id])]);
+    try {
+      await markAnnouncementRead(id);
+      setAnnouncements(prev =>
+        prev.map(item => (item.id === id ? { ...item, is_read: true } : item))
+      );
+    } catch {
+      // Ignore read tracking errors to avoid blocking the UI.
+    }
+  };
+
   const handleAnnouncementClick = (index: number) => {
     setCurrentAnnouncementIndex(index);
-    markAnnouncementAsRead(filteredAnnouncements[index].id);
-    setReadIds(prev => [...new Set([...prev, filteredAnnouncements[index].id])]);
+    void markRead(filteredAnnouncements[index].id);
     setCurrentView("detail");
   };
 
@@ -112,8 +172,7 @@ export function AnnouncementsListDrawer({ isOpen, onOpenChange }: AnnouncementsL
         setTimeout(() => {
           const newIndex = currentAnnouncementIndex + 1;
           setCurrentAnnouncementIndex(newIndex);
-          markAnnouncementAsRead(filteredAnnouncements[newIndex].id);
-          setReadIds(prev => [...new Set([...prev, filteredAnnouncements[newIndex].id])]);
+          void markRead(filteredAnnouncements[newIndex].id);
           setSlideDirection(null);
         }, 150);
       } else if (deltaX < 0 && currentAnnouncementIndex > 0) {
@@ -121,13 +180,12 @@ export function AnnouncementsListDrawer({ isOpen, onOpenChange }: AnnouncementsL
         setTimeout(() => {
           const newIndex = currentAnnouncementIndex - 1;
           setCurrentAnnouncementIndex(newIndex);
-          markAnnouncementAsRead(filteredAnnouncements[newIndex].id);
-          setReadIds(prev => [...new Set([...prev, filteredAnnouncements[newIndex].id])]);
+          void markRead(filteredAnnouncements[newIndex].id);
           setSlideDirection(null);
         }, 150);
       }
     }
-  }, [currentAnnouncementIndex, filteredAnnouncements]);
+  }, [currentAnnouncementIndex, filteredAnnouncements, markRead]);
 
   const goToNext = () => {
     if (currentAnnouncementIndex < filteredAnnouncements.length - 1) {
@@ -135,8 +193,7 @@ export function AnnouncementsListDrawer({ isOpen, onOpenChange }: AnnouncementsL
       setTimeout(() => {
         const newIndex = currentAnnouncementIndex + 1;
         setCurrentAnnouncementIndex(newIndex);
-        markAnnouncementAsRead(filteredAnnouncements[newIndex].id);
-        setReadIds(prev => [...new Set([...prev, filteredAnnouncements[newIndex].id])]);
+        void markRead(filteredAnnouncements[newIndex].id);
         setSlideDirection(null);
       }, 150);
     }
@@ -148,8 +205,7 @@ export function AnnouncementsListDrawer({ isOpen, onOpenChange }: AnnouncementsL
       setTimeout(() => {
         const newIndex = currentAnnouncementIndex - 1;
         setCurrentAnnouncementIndex(newIndex);
-        markAnnouncementAsRead(filteredAnnouncements[newIndex].id);
-        setReadIds(prev => [...new Set([...prev, filteredAnnouncements[newIndex].id])]);
+        void markRead(filteredAnnouncements[newIndex].id);
         setSlideDirection(null);
       }, 150);
     }
@@ -210,17 +266,29 @@ export function AnnouncementsListDrawer({ isOpen, onOpenChange }: AnnouncementsL
 
                 {/* Announcements List */}
                 <div className="space-y-4 pb-8">
-                  {filteredAnnouncements.map((announcement, index) => (
-                    <Card 
-                      key={announcement.id} 
+                  {loading && (
+                    <p className="text-sm text-muted-foreground text-center py-8">
+                      Loading announcements...
+                    </p>
+                  )}
+
+                  {!loading && error && (
+                    <p className="text-sm text-destructive text-center py-8">
+                      {error}
+                    </p>
+                  )}
+
+                  {!loading && !error && filteredAnnouncements.map((announcement, index) => (
+                    <Card
+                      key={announcement.id}
                       className="bg-card border-border shadow-sm overflow-hidden cursor-pointer active:scale-[0.98] transition-transform"
                       onClick={() => handleAnnouncementClick(index)}
                     >
                       {/* Image header or default pattern */}
                       <div className="relative h-32 overflow-hidden">
                         {announcement.image ? (
-                          <img 
-                            src={announcement.image} 
+                          <img
+                            src={announcement.image}
                             alt={announcement.title}
                             className="w-full h-full object-cover"
                           />
@@ -241,7 +309,7 @@ export function AnnouncementsListDrawer({ isOpen, onOpenChange }: AnnouncementsL
                           <Badge className={getCategoryColor(announcement.category)}>
                             {announcement.category}
                           </Badge>
-                          {isRead(announcement.id) && (
+                          {isRead(announcement) && (
                             <Badge variant="outline" className="text-xs gap-1 text-green-600 border-green-600/30 bg-green-500/10 backdrop-blur-sm">
                               <Check className="h-3 w-3" />
                               Read
@@ -262,8 +330,8 @@ export function AnnouncementsListDrawer({ isOpen, onOpenChange }: AnnouncementsL
                             <Calendar className="h-3 w-3" />
                             {formatDate(announcement.date)}
                           </span>
-                          <Button 
-                            variant="outline" 
+                          <Button
+                            variant="outline"
                             size="sm"
                             onClick={(e) => {
                               e.stopPropagation();
@@ -277,7 +345,7 @@ export function AnnouncementsListDrawer({ isOpen, onOpenChange }: AnnouncementsL
                     </Card>
                   ))}
 
-                  {filteredAnnouncements.length === 0 && (
+                  {!loading && !error && filteredAnnouncements.length === 0 && (
                     <div className="text-center py-12">
                       <Megaphone className="h-12 w-12 mx-auto text-muted-foreground/50 mb-3" />
                       <p className="text-muted-foreground">No announcements in this category</p>
@@ -314,7 +382,7 @@ export function AnnouncementsListDrawer({ isOpen, onOpenChange }: AnnouncementsL
                       {attachmentCount}
                     </Badge>
                   )}
-                  {isRead(currentAnnouncement.id) && (
+                  {isRead(currentAnnouncement) && (
                     <Badge 
                       variant="outline" 
                       className="text-xs gap-1 text-green-600 border-green-600/30 bg-green-500/10"
@@ -453,8 +521,7 @@ export function AnnouncementsListDrawer({ isOpen, onOpenChange }: AnnouncementsL
                         key={idx}
                         onClick={() => {
                           setCurrentAnnouncementIndex(idx);
-                          markAnnouncementAsRead(filteredAnnouncements[idx].id);
-                          setReadIds(prev => [...new Set([...prev, filteredAnnouncements[idx].id])]);
+                          void markRead(filteredAnnouncements[idx].id);
                         }}
                         className={cn(
                           "rounded-full transition-all duration-200",

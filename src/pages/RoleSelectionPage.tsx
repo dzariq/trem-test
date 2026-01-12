@@ -17,7 +17,7 @@ export default function RoleSelectionPage() {
       <div className="grid gap-6 w-full max-w-md">
         <Card 
           className="cursor-pointer transition-all duration-200 hover:shadow-lg hover:scale-[1.02] border-2 hover:border-primary"
-          onClick={() => navigate("/parent")}
+          onClick={() => navigate("/login?portal=family")}
         >
           <CardContent className="p-6 flex items-center gap-4">
             <div className="p-4 rounded-full bg-primary/10">
@@ -32,7 +32,7 @@ export default function RoleSelectionPage() {
 
         <Card 
           className="cursor-pointer transition-all duration-200 hover:shadow-lg hover:scale-[1.02] border-2 hover:border-primary"
-          onClick={() => navigate("/teacher")}
+          onClick={() => navigate("/login?portal=teacher")}
         >
           <CardContent className="p-6 flex items-center gap-4">
             <div className="p-4 rounded-full bg-primary/10">

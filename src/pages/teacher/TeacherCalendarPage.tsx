@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { TeacherAppLayout } from "@/components/layout/TeacherAppLayout";
 import { AppHeader } from "@/components/layout/AppHeader";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -10,8 +10,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { MapPin, Clock, User, ChevronDown, CalendarDays, ClipboardList, FileText } from "lucide-react";
 import schoolLogo from "@/assets/school-badge.png";
 
-import { calendarEvents, ccaActivities } from "@/data/mockData";
-import { format, isSameDay, parseISO } from "date-fns";
+import { ccaActivities } from "@/data/mockData";
+import { format } from "date-fns";
 import { TagCategory, CalendarTag, TEACHER_HIDDEN_TAGS } from "@/types/calendarTags";
 import {
   filterEventsByRole,
@@ -29,18 +29,23 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { listCalendarEvents, type UpcomingEvent } from "@/data/calendar";
 
 type CCAActivity = typeof ccaActivities[0];
 
 export default function TeacherCalendarPage() {
-  const [selectedDate, setSelectedDate] = useState<Date>(new Date());
+  const today = new Date();
+  const todayYmd = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
+  const [selectedDay, setSelectedDay] = useState<string>(todayYmd);
+  const [currentMonth, setCurrentMonth] = useState<Date>(new Date());
   const [categoryFilter, setCategoryFilter] = useState<TagCategory | "all">("all");
   const [selectedTag, setSelectedTag] = useState<CalendarTag | null>(null);
   const [ccaCategoryFilter, setCcaCategoryFilter] = useState("all");
   const [selectedCCA, setSelectedCCA] = useState<CCAActivity | null>(null);
+  const [events, setEvents] = useState<UpcomingEvent[]>([]);
 
   // Filter events for teacher role
-  const visibleEvents = filterEventsByRole(calendarEvents, "teacher");
+  const visibleEvents = filterEventsByRole(events, "teacher");
   let filteredEvents = filterEventsByCategory(visibleEvents, categoryFilter);
   
   // Apply tag filter if a specific tag is selected
@@ -48,8 +53,26 @@ export default function TeacherCalendarPage() {
     filteredEvents = filterEventsByTag(filteredEvents, selectedTag);
   }
 
-  const eventsOnSelectedDate = filteredEvents.filter(event => 
-    isSameDay(parseISO(event.date), selectedDate)
+  const toDayString = (date: Date) => {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const day = String(date.getDate()).padStart(2, "0");
+    return `${year}-${month}-${day}`;
+  };
+
+  const toMonthString = (date: Date) => {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    return `${year}-${month}`;
+  };
+
+  const parseDayKey = (dayKey: string) => {
+    const [year, month, day] = dayKey.split("-").map(Number);
+    return new Date(year, month - 1, day);
+  };
+
+  const eventsOnSelectedDate = filteredEvents.filter(event =>
+    selectedDay >= event.startDay && selectedDay <= event.endDay
   );
 
   const getCcaCategoryColor = (category: string) => {
@@ -61,7 +84,50 @@ export default function TeacherCalendarPage() {
     }
   };
 
-  const eventDates = filteredEvents.map(e => parseISO(e.date));
+  const eventDaySet = new Set<string>();
+  const addRangeDays = (startDay: string, endDay: string) => {
+    const cursor = parseDayKey(startDay);
+    const end = parseDayKey(endDay);
+    if (Number.isNaN(cursor.getTime()) || Number.isNaN(end.getTime())) return;
+    while (cursor <= end) {
+      eventDaySet.add(toDayString(cursor));
+      cursor.setDate(cursor.getDate() + 1);
+    }
+  };
+
+  filteredEvents.forEach((event) => {
+    if (event.startDay && event.endDay) {
+      addRangeDays(event.startDay, event.endDay);
+    }
+  });
+
+  const visibleMonth = toMonthString(currentMonth);
+  const hasEventsSet = new Set(
+    Array.from(eventDaySet).filter((day) => day.startsWith(visibleMonth))
+  );
+
+  useEffect(() => {
+    let isMounted = true;
+    const loadEvents = async () => {
+      try {
+        const year = currentMonth.getFullYear();
+        const month = currentMonth.getMonth() + 1;
+        const data = await listCalendarEvents(year, month, { role: "teacher" });
+        if (isMounted) {
+          setEvents(data);
+        }
+      } catch {
+        if (isMounted) {
+          setEvents([]);
+        }
+      }
+    };
+
+    loadEvents();
+    return () => {
+      isMounted = false;
+    };
+  }, [currentMonth]);
 
   // Filter CCA activities
   const filteredCCA = ccaCategoryFilter === "all" 
@@ -184,17 +250,27 @@ export default function TeacherCalendarPage() {
               <CardContent className="p-3">
                 <Calendar
                   mode="single"
-                  selected={selectedDate}
-                  onSelect={(date) => date && setSelectedDate(date)}
+                  onSelect={(date) => date && setSelectedDay(toDayString(date))}
+                  onMonthChange={(date) => {
+                    setCurrentMonth(date);
+                    const month = String(date.getMonth() + 1).padStart(2, "0");
+                    setSelectedDay(`${date.getFullYear()}-${month}-01`);
+                  }}
                   className="rounded-md w-full pointer-events-auto"
                   modifiers={{
-                    hasEvent: eventDates
+                    hasEvent: (date) => hasEventsSet.has(toDayString(date)),
+                    selected: (date) => toDayString(date) === selectedDay,
                   }}
                   modifiersStyles={{
                     hasEvent: { 
                       backgroundColor: "hsl(var(--primary) / 0.1)",
                       fontWeight: "bold"
-                    }
+                    },
+                    selected: {
+                      backgroundColor: "hsl(var(--primary))",
+                      color: "hsl(var(--primary-foreground))",
+                      fontWeight: "bold",
+                    },
                   }}
                 />
               </CardContent>
@@ -204,7 +280,7 @@ export default function TeacherCalendarPage() {
             <Card className="bg-card border-border shadow-sm">
               <CardHeader className="pb-2">
                 <CardTitle className="text-lg font-semibold">
-                  {format(selectedDate, "EEEE, MMMM d, yyyy")}
+                  {format(parseDayKey(selectedDay), "EEEE, MMMM d, yyyy")}
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
@@ -255,7 +331,7 @@ export default function TeacherCalendarPage() {
                 {filteredEvents
                   .slice(0, 5)
                   .map((event) => {
-                    const eventDate = new Date(event.date);
+                    const eventDate = new Date(`${event.startDay}T00:00:00Z`);
                     return (
                       <div 
                         key={event.id}
@@ -267,7 +343,9 @@ export default function TeacherCalendarPage() {
                         </div>
                         <div className="flex-1 min-w-0">
                           <h3 className="font-medium text-foreground truncate">{event.title}</h3>
-                          <p className="text-sm text-muted-foreground mb-1">{event.time}</p>
+                          <p className="text-sm text-muted-foreground mb-1">
+                            {event.allDay ? "All Day" : event.time}
+                          </p>
                           <div className="flex flex-wrap gap-1">
                             {event.tags.slice(0, 2).map((tag) => (
                               <Badge key={tag} className={`text-xs ${getTagColor(tag)}`}>

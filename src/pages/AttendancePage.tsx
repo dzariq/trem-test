@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { AppHeader } from "@/components/layout/AppHeader";
-import { attendanceData, students } from "@/data/mockData";
+import { attendanceData } from "@/data/mockData";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -29,6 +29,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { useStudentSelection } from "@/hooks/useStudentSelection";
 
 const months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
 
@@ -47,6 +48,13 @@ export default function AttendancePage() {
   const lastPinchDistance = useRef<number | null>(null);
   const [activeTooltip, setActiveTooltip] = useState<string | null>(null);
   const [selectedDay, setSelectedDay] = useState<DayRecord | null>(null);
+  const {
+    linkedStudents,
+    loading: studentsLoading,
+    error: studentsError,
+    selectedStudentId,
+    setSelectedStudentId,
+  } = useStudentSelection();
   
   // Swipe navigation state
   const [monthOffset, setMonthOffset] = useState(0); // 0 = most recent months
@@ -301,14 +309,33 @@ export default function AttendancePage() {
           </div>
         }
         rightContent={
-          <Select defaultValue={students[0]?.id}>
+          <Select
+            value={selectedStudentId}
+            onValueChange={setSelectedStudentId}
+            disabled={studentsLoading || linkedStudents.length === 0}
+          >
             <SelectTrigger className="w-32 h-8 text-sm">
               <SelectValue placeholder="Student" />
             </SelectTrigger>
             <SelectContent className="bg-card">
-              {students.map((student) => (
+              {studentsLoading && (
+                <SelectItem value="loading" disabled>
+                  Loading...
+                </SelectItem>
+              )}
+              {!studentsLoading && studentsError && (
+                <SelectItem value="error" disabled>
+                  {studentsError}
+                </SelectItem>
+              )}
+              {!studentsLoading && !studentsError && linkedStudents.length === 0 && (
+                <SelectItem value="empty" disabled>
+                  No linked students yet. Please contact admin.
+                </SelectItem>
+              )}
+              {!studentsLoading && !studentsError && linkedStudents.map((student) => (
                 <SelectItem key={student.id} value={student.id}>
-                  {student.name.split(' ')[0]} {student.name.split(' ')[1]?.[0]}.
+                  {student.name.split(" ")[0]} {student.name.split(" ")[1]?.[0]}.
                 </SelectItem>
               ))}
             </SelectContent>

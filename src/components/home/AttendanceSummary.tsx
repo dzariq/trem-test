@@ -1,5 +1,4 @@
-import { useState } from "react";
-import { attendanceData } from "@/data/mockData";
+import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ChevronRight, ChevronDown } from "lucide-react";
@@ -11,39 +10,58 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-
-const monthOptions = [
-  { label: "January", value: "Jan" },
-  { label: "December", value: "Dec" },
-  { label: "November", value: "Nov" },
-  { label: "October", value: "Oct" },
-  { label: "September", value: "Sep" },
-  { label: "August", value: "Aug" },
-];
+import { listMonthlyAttendanceSummary, type MonthlyAttendanceSummary } from "@/data/attendance";
 
 export function AttendanceSummary() {
   const navigate = useNavigate();
-  const [selectedMonth, setSelectedMonth] = useState(monthOptions[0]);
-  
-  // Find the data for the selected month
-  const monthData = attendanceData.monthly.find(m => m.month === selectedMonth.value);
-  
-  const total = monthData 
-    ? monthData.present + monthData.absent + monthData.late + monthData.excused 
-    : 100;
-  
-  // Colors matching AttendancePage: Present=emerald, Absent=red, Late=amber, Excused=purple
-  const chartData = monthData ? [
+  const [summary, setSummary] = useState<MonthlyAttendanceSummary[]>([]);
+  const [selectedMonth, setSelectedMonth] = useState<MonthlyAttendanceSummary | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    let isMounted = true;
+    const loadSummary = async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        const data = await listMonthlyAttendanceSummary();
+        if (isMounted) {
+          setSummary(data);
+          if (data.length > 0 && !selectedMonth) {
+            setSelectedMonth(data[0]);
+          }
+        }
+      } catch (err) {
+        const message = err instanceof Error ? err.message : "Failed to load attendance summary.";
+        if (isMounted) {
+          setError(message);
+          setSummary([]);
+        }
+      } finally {
+        if (isMounted) {
+          setLoading(false);
+        }
+      }
+    };
+
+    loadSummary();
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  const monthData = selectedMonth;
+  const total = monthData
+    ? monthData.present + monthData.absent + monthData.late + monthData.excused
+    : 0;
+
+  const chartData = monthData && total > 0 ? [
     { name: "Present", value: Math.round((monthData.present / total) * 100), color: "hsl(160, 84%, 39%)" },
     { name: "Absent", value: Math.round((monthData.absent / total) * 100), color: "hsl(var(--destructive))" },
     { name: "Late", value: Math.round((monthData.late / total) * 100), color: "hsl(38, 92%, 50%)" },
     { name: "Excused", value: Math.round((monthData.excused / total) * 100), color: "hsl(271, 91%, 65%)" },
-  ] : [
-    { name: "Present", value: 89, color: "hsl(160, 84%, 39%)" },
-    { name: "Absent", value: 7, color: "hsl(var(--destructive))" },
-    { name: "Late", value: 3, color: "hsl(38, 92%, 50%)" },
-    { name: "Excused", value: 1, color: "hsl(271, 91%, 65%)" },
-  ];
+  ] : [];
 
   return (
     <section className="px-4 py-4">
@@ -53,19 +71,24 @@ export function AttendanceSummary() {
             Attendance Overview
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="sm" className="text-sm font-normal text-muted-foreground h-auto py-1 px-2">
-                  {selectedMonth.label}
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="text-sm font-normal text-muted-foreground h-auto py-1 px-2"
+                  disabled={loading || summary.length === 0}
+                >
+                  {selectedMonth?.month || "No data"}
                   <ChevronDown className="h-3 w-3 ml-1" />
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="bg-card border-border">
-                {monthOptions.map((month) => (
-                  <DropdownMenuItem 
-                    key={month.value}
+                {summary.map((month) => (
+                  <DropdownMenuItem
+                    key={month.month}
                     onClick={() => setSelectedMonth(month)}
-                    className={selectedMonth.value === month.value ? "bg-muted" : ""}
+                    className={selectedMonth?.month === month.month ? "bg-muted" : ""}
                   >
-                    {month.label}
+                    {month.month}
                   </DropdownMenuItem>
                 ))}
               </DropdownMenuContent>
@@ -73,42 +96,59 @@ export function AttendanceSummary() {
           </CardTitle>
         </CardHeader>
         <CardContent className="pb-4">
-          <div className="flex items-center gap-4">
-            <div className="w-32 h-32">
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie
-                    data={chartData}
-                    cx="50%"
-                    cy="50%"
-                    innerRadius={30}
-                    outerRadius={50}
-                    paddingAngle={2}
-                    dataKey="value"
-                  >
-                    {chartData.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={entry.color} />
-                    ))}
-                  </Pie>
-                </PieChart>
-              </ResponsiveContainer>
-            </div>
-            
-            <div className="flex-1 space-y-2">
-              {chartData.map((item) => (
-                <div key={item.name} className="flex items-center justify-between text-sm">
-                  <div className="flex items-center gap-2">
-                    <div 
-                      className="w-3 h-3 rounded-full" 
-                      style={{ backgroundColor: item.color }}
-                    />
-                    <span className="text-muted-foreground">{item.name}</span>
+          {loading && (
+            <p className="text-sm text-muted-foreground text-center py-6">
+              Loading attendance...
+            </p>
+          )}
+          {!loading && error && (
+            <p className="text-sm text-destructive text-center py-6">
+              {error}
+            </p>
+          )}
+          {!loading && !error && chartData.length === 0 && (
+            <p className="text-sm text-muted-foreground text-center py-6">
+              No attendance data available yet.
+            </p>
+          )}
+          {!loading && !error && chartData.length > 0 && (
+            <div className="flex items-center gap-4">
+              <div className="w-32 h-32">
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie
+                      data={chartData}
+                      cx="50%"
+                      cy="50%"
+                      innerRadius={30}
+                      outerRadius={50}
+                      paddingAngle={2}
+                      dataKey="value"
+                    >
+                      {chartData.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={entry.color} />
+                      ))}
+                    </Pie>
+                  </PieChart>
+                </ResponsiveContainer>
+              </div>
+              
+              <div className="flex-1 space-y-2">
+                {chartData.map((item) => (
+                  <div key={item.name} className="flex items-center justify-between text-sm">
+                    <div className="flex items-center gap-2">
+                      <div 
+                        className="w-3 h-3 rounded-full" 
+                        style={{ backgroundColor: item.color }}
+                      />
+                      <span className="text-muted-foreground">{item.name}</span>
+                    </div>
+                    <span className="font-medium text-foreground">{item.value}%</span>
                   </div>
-                  <span className="font-medium text-foreground">{item.value}%</span>
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
-          </div>
+          )}
           
           <Button 
             variant="outline" 
