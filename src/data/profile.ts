@@ -8,6 +8,7 @@ export type UserProfile = {
   staff_id?: string | null;
   role: string;
   assigned_campus_id: string | null;
+  campus_id?: string | null; // Alias for assigned_campus_id for compatibility
   can_access_all_campuses?: boolean | null;
   is_active?: boolean | null;
 };
