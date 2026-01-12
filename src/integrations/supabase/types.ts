@@ -1675,6 +1675,7 @@ export type Database = {
         Returns: number
       }
       can_user_access_all_campuses: { Args: never; Returns: boolean }
+      check_phone_exists: { Args: { phone_number: string }; Returns: Json }
       get_or_create_admission_entry: {
         Args: { target_campus_id?: string; target_month_start: string }
         Returns: string

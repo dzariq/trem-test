@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -6,12 +6,35 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import schoolBadge from "@/assets/school-badge.png";
 import { supabase } from "@/lib/supabase";
+import { useAuth } from "@/contexts/AuthContext";
+import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
+import { Loader2, Phone, ArrowLeft } from "lucide-react";
 
 type PortalType = "teacher" | "family";
+type LoginStep = "phone" | "otp";
+
+// Normalize phone to E.164 format (Malaysia default)
+function normalizePhone(phone: string): string {
+  // Remove all non-digit characters
+  let digits = phone.replace(/\D/g, "");
+  
+  // Handle Malaysian numbers
+  if (digits.startsWith("0")) {
+    // Convert 0XX to +60XX
+    digits = "60" + digits.slice(1);
+  } else if (!digits.startsWith("60") && digits.length >= 9 && digits.length <= 10) {
+    // Assume Malaysian if 9-10 digits without country code
+    digits = "60" + digits;
+  }
+  
+  return "+" + digits;
+}
 
 export default function Login() {
   const navigate = useNavigate();
+  const { user, loading: authLoading } = useAuth();
   const [searchParams] = useSearchParams();
+  
   const portal = useMemo<PortalType | null>(() => {
     const value = searchParams.get("portal");
     if (value === "teacher" || value === "family") return value;
@@ -21,76 +44,183 @@ export default function Login() {
   const portalLabel =
     portal === "teacher" ? "Teacher Portal" : "Parent / Student Portal";
 
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  // Login state
+  const [step, setStep] = useState<LoginStep>("phone");
+  const [phone, setPhone] = useState("");
+  const [normalizedPhone, setNormalizedPhone] = useState("");
+  const [otp, setOtp] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [userRole, setUserRole] = useState<string | null>(null);
 
-  const handleLogin = async () => {
+  // Redirect if already authenticated
+  useEffect(() => {
+    if (authLoading) return;
+    
+    if (user) {
+      // User is already logged in, check their profile and redirect
+      supabase
+        .from("user_profiles")
+        .select("role")
+        .eq("user_id", user.id)
+        .maybeSingle()
+        .then(({ data: profile }) => {
+          if (profile) {
+            if (profile.role === "teacher") {
+              navigate("/teacher", { replace: true });
+            } else {
+              navigate("/portal", { replace: true });
+            }
+          }
+        });
+    }
+  }, [user, authLoading, navigate]);
+
+  // Check if phone exists in our system
+  const handleSendOtp = async () => {
     if (!portal) {
       setError("Please select a portal to continue.");
       return;
     }
+    
+    if (!phone.trim()) {
+      setError("Please enter your phone number.");
+      return;
+    }
+
     setError(null);
     setLoading(true);
 
-    const { data: authData, error: authError } =
-      await supabase.auth.signInWithPassword({ email, password });
+    const normalized = normalizePhone(phone);
+    setNormalizedPhone(normalized);
 
-    if (authError || !authData.user) {
-      setError(authError?.message ?? "Login failed. Check credentials.");
+    try {
+      // Check if phone exists using our secure function
+      const { data, error: checkError } = await supabase.rpc("check_phone_exists", {
+        phone_number: normalized,
+      });
+
+      if (checkError) {
+        console.error("Phone check error:", checkError);
+        setError("Unable to verify phone number. Please try again.");
+        setLoading(false);
+        return;
+      }
+
+      if (!data?.exists) {
+        setError("Phone number not registered. Please contact admin.");
+        setLoading(false);
+        return;
+      }
+
+      // Verify portal matches role
+      const role = data.role;
+      setUserRole(role);
+      
+      const isTeacherPortalOk = portal === "teacher" && role === "teacher";
+      const isFamilyPortalOk = portal === "family" && (role === "parent" || role === "student");
+
+      if (!isTeacherPortalOk && !isFamilyPortalOk) {
+        setError("Wrong portal for this account.");
+        setLoading(false);
+        return;
+      }
+
+      // Send OTP
+      const { error: otpError } = await supabase.auth.signInWithOtp({
+        phone: normalized,
+      });
+
+      if (otpError) {
+        console.error("OTP send error:", otpError);
+        setError(otpError.message || "Failed to send OTP. Please try again.");
+        setLoading(false);
+        return;
+      }
+
+      // Move to OTP step
+      setStep("otp");
+    } catch (err) {
+      console.error("Unexpected error:", err);
+      setError("An unexpected error occurred. Please try again.");
+    } finally {
       setLoading(false);
-      return;
-    }
-
-    const authUser = authData.user;
-
-    const { data: profile, error: profileError } = await supabase
-      .from("user_profiles")
-      .select("*")
-      .eq("user_id", authUser.id)
-      .maybeSingle();
-
-    if (profileError) {
-      await supabase.auth.signOut();
-      setError("Unable to load account profile. Contact admin.");
-      setLoading(false);
-      return;
-    }
-
-    if (!profile) {
-      await supabase.auth.signOut();
-      setError("Account profile not found. Contact admin.");
-      setLoading(false);
-      return;
-    }
-
-    if (!profile.is_active) {
-      await supabase.auth.signOut();
-      setError("Account disabled. Contact admin.");
-      setLoading(false);
-      return;
-    }
-
-    // Portal gating: ensure the account role matches the selected portal.
-    const isTeacherPortalOk = portal === "teacher" && profile.role === "teacher";
-    const isFamilyPortalOk =
-      portal === "family" && (profile.role === "parent" || profile.role === "student");
-
-    if (!isTeacherPortalOk && !isFamilyPortalOk) {
-      await supabase.auth.signOut();
-      setError("Wrong portal for this account.");
-      setLoading(false);
-      return;
-    }
-
-    // Redirect based on role/portal after successful checks.
-    if (portal === "teacher") {
-      navigate("/teacher", { replace: true });
-    } else {
-      navigate("/portal", { replace: true });
     }
   };
+
+  // Verify OTP
+  const handleVerifyOtp = async () => {
+    if (otp.length !== 6) {
+      setError("Please enter the complete 6-digit code.");
+      return;
+    }
+
+    setError(null);
+    setLoading(true);
+
+    try {
+      const { data: authData, error: verifyError } = await supabase.auth.verifyOtp({
+        phone: normalizedPhone,
+        token: otp,
+        type: "sms",
+      });
+
+      if (verifyError || !authData.user) {
+        setError(verifyError?.message || "Invalid OTP. Please try again.");
+        setLoading(false);
+        return;
+      }
+
+      // Fetch profile to verify and get role
+      const { data: profile, error: profileError } = await supabase
+        .from("user_profiles")
+        .select("*")
+        .eq("user_id", authData.user.id)
+        .maybeSingle();
+
+      if (profileError || !profile) {
+        await supabase.auth.signOut();
+        setError("Account profile not found. Contact admin.");
+        setLoading(false);
+        return;
+      }
+
+      if (!profile.is_active) {
+        await supabase.auth.signOut();
+        setError("Account disabled. Contact admin.");
+        setLoading(false);
+        return;
+      }
+
+      // Redirect based on role
+      if (profile.role === "teacher") {
+        navigate("/teacher", { replace: true });
+      } else {
+        navigate("/portal", { replace: true });
+      }
+    } catch (err) {
+      console.error("Verify error:", err);
+      setError("An unexpected error occurred. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Go back to phone step
+  const handleBack = () => {
+    setStep("phone");
+    setOtp("");
+    setError(null);
+  };
+
+  // Show loading while checking auth
+  if (authLoading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background flex flex-col items-center justify-center p-6">
@@ -103,38 +233,103 @@ export default function Login() {
       <div className="grid gap-6 w-full max-w-md">
         <Card className="border-2 border-border">
           <CardContent className="p-6 space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
-              <Input
-                id="email"
-                type="email"
-                autoComplete="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="you@example.com"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
-              <Input
-                id="password"
-                type="password"
-                autoComplete="current-password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="Enter your password"
-              />
-            </div>
-            {error && <p className="text-sm text-destructive">{error}</p>}
-            <Button className="w-full" onClick={handleLogin} disabled={loading}>
-              {loading ? "Signing in..." : "Login"}
-            </Button>
+            {step === "phone" ? (
+              <>
+                <div className="space-y-2">
+                  <Label htmlFor="phone">Phone Number</Label>
+                  <div className="relative">
+                    <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <Input
+                      id="phone"
+                      type="tel"
+                      autoComplete="tel"
+                      value={phone}
+                      onChange={(e) => setPhone(e.target.value)}
+                      placeholder="e.g. 0123456789"
+                      className="pl-10"
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") handleSendOtp();
+                      }}
+                    />
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    Enter your registered phone number
+                  </p>
+                </div>
+                
+                {error && <p className="text-sm text-destructive">{error}</p>}
+                
+                <Button className="w-full" onClick={handleSendOtp} disabled={loading}>
+                  {loading ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Sending OTP...
+                    </>
+                  ) : (
+                    "Send OTP"
+                  )}
+                </Button>
+              </>
+            ) : (
+              <>
+                <div className="space-y-4">
+                  <div className="text-center">
+                    <p className="text-sm text-muted-foreground mb-2">
+                      Enter the 6-digit code sent to
+                    </p>
+                    <p className="font-medium">{normalizedPhone}</p>
+                  </div>
+                  
+                  <div className="flex justify-center">
+                    <InputOTP
+                      value={otp}
+                      onChange={setOtp}
+                      maxLength={6}
+                      onComplete={handleVerifyOtp}
+                    >
+                      <InputOTPGroup>
+                        <InputOTPSlot index={0} />
+                        <InputOTPSlot index={1} />
+                        <InputOTPSlot index={2} />
+                        <InputOTPSlot index={3} />
+                        <InputOTPSlot index={4} />
+                        <InputOTPSlot index={5} />
+                      </InputOTPGroup>
+                    </InputOTP>
+                  </div>
+                </div>
+                
+                {error && <p className="text-sm text-destructive text-center">{error}</p>}
+                
+                <Button className="w-full" onClick={handleVerifyOtp} disabled={loading}>
+                  {loading ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Verifying...
+                    </>
+                  ) : (
+                    "Verify & Login"
+                  )}
+                </Button>
+                
+                <Button
+                  variant="ghost"
+                  className="w-full"
+                  onClick={handleBack}
+                  disabled={loading}
+                >
+                  <ArrowLeft className="mr-2 h-4 w-4" />
+                  Change Phone Number
+                </Button>
+              </>
+            )}
+            
             <Button
               variant="outline"
               className="w-full"
               onClick={() => navigate("/")}
             >
-              Back
+              Back to Portal Selection
             </Button>
           </CardContent>
         </Card>
