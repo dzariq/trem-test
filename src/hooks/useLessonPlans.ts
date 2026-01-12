@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "@/hooks/use-toast";
@@ -9,6 +9,41 @@ import {
   type Week,
   type SubjectCurriculum,
 } from "@/data/lessonPlanData";
+
+// Hook to load subjects from Supabase (same source as Academic module)
+export function useLessonPlanSubjects() {
+  const [subjects, setSubjects] = useState<{ id: number; name: string }[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchSubjects = async () => {
+      setLoading(true);
+      try {
+        const { data, error: fetchError } = await supabase
+          .from("subjects")
+          .select("id, name")
+          .order("name");
+
+        if (fetchError) throw fetchError;
+
+        setSubjects(data || []);
+      } catch (err) {
+        console.error("Error loading subjects:", err);
+        setError("Failed to load subjects");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchSubjects();
+  }, []);
+
+  // Get just the subject names for dropdown display
+  const subjectNames = useMemo(() => subjects.map(s => s.name), [subjects]);
+
+  return { subjects, subjectNames, loading, error };
+}
 
 // Database types matching our schema
 interface DbLessonPlan {
