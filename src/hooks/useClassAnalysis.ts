@@ -8,8 +8,11 @@ import {
   computeSubjectAverages,
   computeStudentScores,
   computeGradeDistribution,
+  computeSingleSubjectDistribution,
   computeSubjectChanges,
   computeSummaryStats,
+  computeTrendData,
+  computeBoxPlotStats,
   ClassAnalysisStudent,
   SubjectInfo,
   AcademicPeriodInfo,
@@ -17,6 +20,7 @@ import {
   SubjectAverage,
   StudentScore,
   SubjectChange,
+  BoxPlotStats,
 } from "@/data/classAnalysis";
 
 interface UseClassAnalysisReturn {
@@ -32,6 +36,7 @@ interface UseClassAnalysisReturn {
   selectedPeriodId: string | null;
   selectedSubjectIds: number[];
   comparePeriodId: string | null; // For Rising/Falling comparison
+  bandsSelectedSubjectId: number | null; // For Bands tab single subject
 
   // Loading states
   loading: boolean;
@@ -44,6 +49,7 @@ interface UseClassAnalysisReturn {
   setSelectedPeriodId: (periodId: string | null) => void;
   setSelectedSubjectIds: (subjectIds: number[]) => void;
   setComparePeriodId: (periodId: string | null) => void;
+  setBandsSelectedSubjectId: (subjectId: number | null) => void;
   toggleSubject: (subjectId: number) => void;
   selectAllSubjects: () => void;
   clearSubjects: () => void;
@@ -66,6 +72,20 @@ interface UseClassAnalysisReturn {
     worstSubject: SubjectAverage | null;
   };
   hasData: boolean;
+  
+  // Bands tab computed data
+  bandsDistribution: { range: string; count: number }[];
+  bandsRankedStudents: { studentId: string; studentName: string; score: number }[];
+  bandsTopPerformers: { studentId: string; studentName: string; score: number }[];
+  bandsMiddlePerformers: { studentId: string; studentName: string; score: number }[];
+  bandsAtRiskStudents: { studentId: string; studentName: string; score: number }[];
+  
+  // Trends tab computed data
+  trendData: { period: string; periodId: string; [key: string]: number | string }[];
+  hasTrendData: boolean;
+  
+  // Box Plot tab computed data
+  boxPlotStats: BoxPlotStats[];
 }
 
 export function useClassAnalysis(): UseClassAnalysisReturn {
@@ -74,6 +94,7 @@ export function useClassAnalysis(): UseClassAnalysisReturn {
   const [selectedPeriodId, setSelectedPeriodId] = useState<string | null>(null);
   const [selectedSubjectIds, setSelectedSubjectIds] = useState<number[]>([]);
   const [comparePeriodId, setComparePeriodId] = useState<string | null>(null);
+  const [bandsSelectedSubjectId, setBandsSelectedSubjectId] = useState<number | null>(null);
 
   // Data state
   const [classes, setClasses] = useState<string[]>([]);
@@ -134,6 +155,7 @@ export function useClassAnalysis(): UseClassAnalysisReturn {
       setSubjects([]);
       setGrades([]);
       setSelectedSubjectIds([]);
+      setBandsSelectedSubjectId(null);
       return;
     }
 
@@ -150,6 +172,7 @@ export function useClassAnalysis(): UseClassAnalysisReturn {
           setSubjects([]);
           setGrades([]);
           setSelectedSubjectIds([]);
+          setBandsSelectedSubjectId(null);
           setLoadingData(false);
           return;
         }
@@ -162,6 +185,11 @@ export function useClassAnalysis(): UseClassAnalysisReturn {
 
         // Auto-select all subjects
         setSelectedSubjectIds(fetchedSubjects.map((s) => s.id));
+        
+        // Auto-select first subject for Bands tab
+        if (fetchedSubjects.length > 0) {
+          setBandsSelectedSubjectId(fetchedSubjects[0].id);
+        }
 
         // Fetch grades (all periods for comparison)
         const fetchedGrades = await fetchGradesForAnalysis(studentIds);
@@ -266,6 +294,42 @@ export function useClassAnalysis(): UseClassAnalysisReturn {
     };
   }, [studentScores, subjectAverages]);
 
+  // ==== BANDS TAB: Single subject distribution ====
+  const bandsData = useMemo(() => {
+    if (!bandsSelectedSubjectId) {
+      return { distribution: [], rankedStudents: [] };
+    }
+    return computeSingleSubjectDistribution(filteredGrades, students, bandsSelectedSubjectId);
+  }, [filteredGrades, students, bandsSelectedSubjectId]);
+
+  const bandsDistribution = bandsData.distribution;
+  const bandsRankedStudents = bandsData.rankedStudents;
+
+  const bandsTopPerformers = useMemo(
+    () => bandsRankedStudents.filter((s) => s.score >= 80),
+    [bandsRankedStudents]
+  );
+  const bandsMiddlePerformers = useMemo(
+    () => bandsRankedStudents.filter((s) => s.score >= 60 && s.score < 80),
+    [bandsRankedStudents]
+  );
+  const bandsAtRiskStudents = useMemo(
+    () => bandsRankedStudents.filter((s) => s.score < 60),
+    [bandsRankedStudents]
+  );
+
+  // ==== TRENDS TAB: Multi-period data ====
+  const trendData = useMemo(() => {
+    return computeTrendData(grades, subjects, academicPeriods, selectedSubjectIds);
+  }, [grades, subjects, academicPeriods, selectedSubjectIds]);
+  
+  const hasTrendData = trendData.length >= 2;
+
+  // ==== BOX PLOT TAB ====
+  const boxPlotStats = useMemo(() => {
+    return computeBoxPlotStats(filteredGrades, subjects, selectedSubjectIds);
+  }, [filteredGrades, subjects, selectedSubjectIds]);
+
   const hasData =
     filteredGrades.length > 0 && students.length > 0 && subjects.length > 0;
 
@@ -282,6 +346,7 @@ export function useClassAnalysis(): UseClassAnalysisReturn {
     selectedPeriodId,
     selectedSubjectIds,
     comparePeriodId,
+    bandsSelectedSubjectId,
 
     // Loading states
     loading: loadingClasses || loadingData,
@@ -294,6 +359,7 @@ export function useClassAnalysis(): UseClassAnalysisReturn {
     setSelectedPeriodId,
     setSelectedSubjectIds,
     setComparePeriodId,
+    setBandsSelectedSubjectId,
     toggleSubject,
     selectAllSubjects,
     clearSubjects,
@@ -309,5 +375,19 @@ export function useClassAnalysis(): UseClassAnalysisReturn {
     fallingSubjects,
     summaryStats,
     hasData,
+    
+    // Bands tab
+    bandsDistribution,
+    bandsRankedStudents,
+    bandsTopPerformers,
+    bandsMiddlePerformers,
+    bandsAtRiskStudents,
+    
+    // Trends tab
+    trendData,
+    hasTrendData,
+    
+    // Box Plot tab
+    boxPlotStats,
   };
 }
