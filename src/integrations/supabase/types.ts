@@ -1925,7 +1925,12 @@ export type Database = {
       get_user_campus_id: { Args: never; Returns: string }
       has_role: { Args: { _role: string; _user_id: string }; Returns: boolean }
       is_admin: { Args: never; Returns: boolean }
+      is_parent: { Args: never; Returns: boolean }
       is_teacher: { Args: never; Returns: boolean }
+      is_ticket_owner: {
+        Args: { ticket_parent_email: string }
+        Returns: boolean
+      }
     }
     Enums: {
       [_ in never]: never
