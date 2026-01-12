@@ -67,17 +67,16 @@ import {
   eachDayOfInterval,
 } from "date-fns";
 import {
-  mockLessonPlans,
   getAvailableSubjects,
   getLessonPlanStatus,
   type LessonPlan,
-  type SubjectCurriculum,
 } from "@/data/lessonPlanData";
 import {
   getAcademicYears,
   getActiveYear,
   setActiveYear,
 } from "@/data/weekConfigData";
+import { useLessonPlans } from "@/hooks/useLessonPlans";
 
 // Holiday periods (blocked weeks)
 const holidayPeriods = [
@@ -122,12 +121,21 @@ const TeacherLessonPlansPage = () => {
   const academicYears = getAcademicYears();
   const [selectedYear, setSelectedYear] = useState<string>(getActiveYear()?.id || academicYears[0]?.id || "");
   
-  const [selectedSubject, setSelectedSubject] = useState<string>(
-    mockLessonPlans[0]?.subject || ""
-  );
+  const subjects = getAvailableSubjects();
+  const [selectedSubject, setSelectedSubject] = useState<string>(subjects[0] || "Mathematics");
   const [selectedClass, setSelectedClass] = useState<string>("5A");
   const availableClasses = ["5A", "5B", "6A", "6B", "7A", "7B"];
-  const [lessonPlansBySubject, setLessonPlansBySubject] = useState(mockLessonPlans);
+  
+  // Use Supabase hook for lesson plans data
+  const academicYearNum = parseInt(selectedYear) || 2026;
+  const { 
+    curriculum, 
+    loading, 
+    updateWeekNumber, 
+    addTopic, 
+    updateTopic 
+  } = useLessonPlans(academicYearNum, selectedSubject, selectedClass);
+  
   const [isAddTopicOpen, setIsAddTopicOpen] = useState(false);
   const [newTopicTitle, setNewTopicTitle] = useState("");
   const [isAddSubtopicOpen, setIsAddSubtopicOpen] = useState(false);
@@ -150,9 +158,7 @@ const TeacherLessonPlansPage = () => {
   // Term start date (for week calculation)
   const termStart = new Date(2026, 0, 5); // January 5, 2026
 
-  const subjects = getAvailableSubjects();
-  const curriculum = lessonPlansBySubject.find((s) => s.subject === selectedSubject);
-  const handleWeekChange = (weekId: string, selectedDate: Date | undefined) => {
+  const handleWeekChange = async (weekId: string, selectedDate: Date | undefined) => {
     if (!selectedDate) return;
 
     const { start, end } = getSchoolWeek(selectedDate);
@@ -169,27 +175,15 @@ const TeacherLessonPlansPage = () => {
 
     const newWeekNumber = getWeekNumber(selectedDate, termStart);
 
-    // Persist the selection in local state so the UI updates
-    setLessonPlansBySubject((prev) =>
-      prev.map((subject) => {
-        if (subject.subject !== selectedSubject) return subject;
-
-        return {
-          ...subject,
-          topics: subject.topics.map((topic) => ({
-            ...topic,
-            weeks: topic.weeks.map((week) =>
-              week.id === weekId ? { ...week, weekNumber: newWeekNumber } : week
-            ),
-          })),
-        };
-      })
-    );
-
-    toast({
-      title: "Week Changed",
-      description: `Week updated to Week ${newWeekNumber} (${format(start, "MMM d")} - ${format(end, "MMM d, yyyy")})`,
-    });
+    // Persist the selection to Supabase
+    const success = await updateWeekNumber(weekId, newWeekNumber);
+    
+    if (success) {
+      toast({
+        title: "Week Changed",
+        description: `Week updated to Week ${newWeekNumber} (${format(start, "MMM d")} - ${format(end, "MMM d, yyyy")})`,
+      });
+    }
   };
 
   // Get week range for display
@@ -228,14 +222,11 @@ const TeacherLessonPlansPage = () => {
     navigate(`/teacher/lesson-plans/${lp.id}`);
   };
 
-  const handleAddTopic = () => {
+  const handleAddTopic = async () => {
     if (!newTopicTitle.trim()) return;
     
-    // In a real app, this would save to the database
-    toast({
-      title: "Topic Created",
-      description: `Topic "${newTopicTitle}" has been added to ${selectedSubject}.`,
-    });
+    // Save to Supabase
+    await addTopic(newTopicTitle.trim());
     
     setNewTopicTitle("");
     setIsAddTopicOpen(false);
@@ -269,27 +260,11 @@ const TeacherLessonPlansPage = () => {
     setIsEditTopicOpen(true);
   };
 
-  const handleSaveTopicEdit = () => {
+  const handleSaveTopicEdit = async () => {
     if (!editTopicTitle.trim()) return;
     
-    setLessonPlansBySubject((prev) =>
-      prev.map((subject) => {
-        if (subject.subject !== selectedSubject) return subject;
-        return {
-          ...subject,
-          topics: subject.topics.map((topic) =>
-            topic.id === editingTopicId
-              ? { ...topic, title: editTopicTitle, subtopics: editSubtopics }
-              : topic
-          ),
-        };
-      })
-    );
-    
-    toast({
-      title: "Topic Updated",
-      description: `Topic "${editTopicTitle}" has been updated.`,
-    });
+    // Save to Supabase
+    await updateTopic(editingTopicId, editTopicTitle.trim(), editSubtopics);
     
     setIsEditTopicOpen(false);
     setEditingTopicId("");
@@ -441,7 +416,26 @@ const TeacherLessonPlansPage = () => {
           {/* Topics and Weeks List */}
           <ScrollArea className="flex-1 min-h-0 overflow-hidden">
             <div className="px-4 py-4 space-y-4 w-full max-w-full min-w-0">
-              {curriculum?.topics.map((topic, topicIndex) => (
+              {loading ? (
+                <div className="flex items-center justify-center py-12">
+                  <div className="flex flex-col items-center gap-3">
+                    <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+                    <p className="text-sm text-muted-foreground">Loading lesson plans...</p>
+                  </div>
+                </div>
+              ) : !curriculum?.topics.length ? (
+                <div className="flex flex-col items-center justify-center py-12 text-center">
+                  <BookOpen className="h-12 w-12 text-muted-foreground mb-4" />
+                  <h3 className="text-lg font-semibold mb-2">No Topics Yet</h3>
+                  <p className="text-sm text-muted-foreground mb-4">
+                    Start by creating your first topic for {selectedSubject}
+                  </p>
+                  <Button onClick={() => setIsAddTopicOpen(true)}>
+                    <Plus className="h-4 w-4 mr-2" />
+                    Add First Topic
+                  </Button>
+                </div>
+              ) : curriculum?.topics.map((topic, topicIndex) => (
               <Card key={topic.id} className="overflow-hidden w-full">
                 <CardHeader className="py-0 px-0 overflow-hidden space-y-0">
                   {/* Topic Title Section - Primary Green */}
@@ -785,16 +779,7 @@ const TeacherLessonPlansPage = () => {
               </Card>
             ))}
 
-            {(!curriculum || curriculum.topics.length === 0) && (
-              <Card className="p-8 text-center">
-                <FileText className="h-12 w-12 mx-auto text-muted-foreground/50 mb-3" />
-                <p className="text-muted-foreground">No lesson plans found for this subject.</p>
-                <Button className="mt-4" onClick={handleCreateNew}>
-                  <Plus className="h-4 w-4 mr-2" />
-                  Create First Lesson Plan
-                </Button>
-              </Card>
-            )}
+            {/* Empty state is now handled in the conditional above */}
           </div>
         </ScrollArea>
       </div>
