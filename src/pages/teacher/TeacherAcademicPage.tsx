@@ -9,7 +9,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Save, TrendingUp, TrendingDown, Minus, ChevronDown, ChevronUp, Users, Target, Award, AlertTriangle, BookOpen, BarChart3, FileText, CheckCircle, XCircle, Lightbulb, Copy, Printer, ArrowRight, ArrowUpRight, ArrowDownRight, Scale, Download, FileSpreadsheet, Check, Calendar, UserCheck, Plus, X, ArrowUp, ArrowDown, Search } from "lucide-react";
+import { Save, TrendingUp, TrendingDown, Minus, ChevronDown, ChevronUp, Users, Target, Award, AlertTriangle, BookOpen, BarChart3, FileText, CheckCircle, XCircle, Lightbulb, Copy, Printer, ArrowRight, ArrowUpRight, ArrowDownRight, Scale, Download, FileSpreadsheet, Check, Calendar, UserCheck, Plus, X, ArrowUp, ArrowDown, Search, Loader2 } from "lucide-react";
+import { useGradeEntry } from "@/hooks/useGradeEntry";
 import { Carousel, CarouselContent, CarouselItem } from "@/components/ui/carousel";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { toast } from "@/hooks/use-toast";
@@ -192,16 +193,20 @@ const getLetterGrade = (total: number): {
 };
 export default function TeacherAcademicPage() {
   const isMobile = useIsMobile();
+  
+  // Grade Entry hook (Supabase integration)
+  const gradeEntry = useGradeEntry();
+  
+  // Analysis tab still uses mock data for selectedClass
   const [selectedClass, setSelectedClass] = useState(teacherProfile.classes[0]);
   const [selectedClasses, setSelectedClasses] = useState<string[]>([teacherProfile.classes[0]]);
   const [selectedStudent, setSelectedStudent] = useState<string | null>(null);
-  const [selectedEntrySubject, setSelectedEntrySubject] = useState<string | null>(null);
   const [expandedStudents, setExpandedStudents] = useState<string[]>([]);
   const [expandedSubjects, setExpandedSubjects] = useState<string[]>([]);
   const [isAtBottom, setIsAtBottom] = useState(false);
   const gradeEntryRef = useRef<HTMLDivElement>(null);
   const [studentGrades, setStudentGrades] = useState<Record<string, Record<string, StudentGrades>>>({});
-  const [classStudyRecommendation, setClassStudyRecommendation] = useState<Record<string, Record<string, string>>>({}); // class -> subject -> recommendation
+  const [classStudyRecommendation, setClassStudyRecommendationLocal] = useState<Record<string, Record<string, string>>>({}); // class -> subject -> recommendation
   const [selectedYears, setSelectedYears] = useState<string[]>([academicYears[0]]);
   const [selectedYear, setSelectedYear] = useState(academicYears[0]); // For single-select dropdowns
   const [selectedPeriod, setSelectedPeriod] = useState<"midYear" | "yearEnd">("midYear");
@@ -224,6 +229,9 @@ export default function TeacherAcademicPage() {
 
   // Grade Entry category state (Grades, Behavior, Awards)
   const [entryCategory, setEntryCategory] = useState<"grades" | "behavior" | "awards">("grades");
+  
+  // For Behavior and Awards tabs (still use local state for subject selection)
+  const [selectedEntrySubject, setSelectedEntrySubject] = useState<string | null>(null);
   
   // Behavior grades state
   const [behaviorGrades, setBehaviorGrades] = useState<Record<string, {
@@ -1211,758 +1219,584 @@ export default function TeacherAcademicPage() {
           </TabsList>
 
           <TabsContent value="entry" className="space-y-4">
-            {/* Class & Subject Selection */}
-            <div className="grid grid-cols-2 gap-2">
-              <Select value={selectedClass} onValueChange={v => {
-                setSelectedClass(v);
-                setSelectedEntrySubject(null);
-                setExpandedStudents([]);
-              }}>
+            {/* Class, Subject & Academic Period Selection - FROM SUPABASE */}
+            <div className="grid grid-cols-3 gap-2">
+              <Select 
+                value={gradeEntry.selectedClass || ""} 
+                onValueChange={v => {
+                  gradeEntry.setSelectedClass(v || null);
+                  gradeEntry.setSelectedSubject(null);
+                  setExpandedStudents([]);
+                }}
+              >
                 <SelectTrigger>
-                  <SelectValue placeholder="Class" />
+                  {gradeEntry.loadingClasses ? (
+                    <div className="flex items-center gap-2">
+                      <Loader2 className="h-3 w-3 animate-spin" />
+                      <span className="text-muted-foreground">Loading...</span>
+                    </div>
+                  ) : (
+                    <SelectValue placeholder="Class" />
+                  )}
                 </SelectTrigger>
                 <SelectContent>
-                  {teacherProfile.classes.map(cls => <SelectItem key={cls} value={cls}>{cls}</SelectItem>)}
+                  {gradeEntry.classes.map(cls => (
+                    <SelectItem key={cls} value={cls}>{cls}</SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
 
-              <Select value={selectedEntrySubject || ""} onValueChange={v => {
-                setSelectedEntrySubject(v);
-                setExpandedStudents([]);
-              }}>
+              <Select 
+                value={gradeEntry.selectedSubject?.id?.toString() || ""} 
+                onValueChange={v => {
+                  const subject = gradeEntry.subjects.find(s => s.id.toString() === v);
+                  gradeEntry.setSelectedSubject(subject || null);
+                  setExpandedStudents([]);
+                }}
+                disabled={!gradeEntry.selectedClass || gradeEntry.loadingSubjects}
+              >
                 <SelectTrigger>
-                  <SelectValue placeholder="Select Subject" />
+                  {gradeEntry.loadingSubjects ? (
+                    <div className="flex items-center gap-2">
+                      <Loader2 className="h-3 w-3 animate-spin" />
+                      <span className="text-muted-foreground">Loading...</span>
+                    </div>
+                  ) : (
+                    <SelectValue placeholder="Subject" />
+                  )}
                 </SelectTrigger>
-                <SelectContent className="bg-white dark:bg-card">
-                  <SelectItem value="Homeroom Behavior" className="font-medium text-purple-600">
-                    Homeroom Behavior
-                  </SelectItem>
-                  <SelectItem value="Awards" className="font-medium text-amber-600">
-                    Awards
-                  </SelectItem>
-                  <div className="h-px bg-border my-1" />
-                  {subjects.map(subject => <SelectItem key={subject} value={subject}>{subject}</SelectItem>)}
+                <SelectContent className="bg-white dark:bg-card max-h-60">
+                  {gradeEntry.subjects.map(subject => (
+                    <SelectItem key={subject.id} value={subject.id.toString()}>
+                      {subject.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+
+              <Select 
+                value={gradeEntry.selectedPeriod?.id || ""} 
+                onValueChange={v => {
+                  const period = gradeEntry.academicPeriods.find(p => p.id === v);
+                  gradeEntry.setSelectedPeriod(period || null);
+                }}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Period" />
+                </SelectTrigger>
+                <SelectContent>
+                  {gradeEntry.academicPeriods.map(period => (
+                    <SelectItem key={period.id} value={period.id}>
+                      {period.name}
+                      {!period.is_open_for_grading && " (Closed)"}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>
 
-            {selectedEntrySubject === "Homeroom Behavior" ? <>
-              {/* Behavior Header */}
-              <Card className="bg-purple-50 dark:bg-purple-950/20 border-purple-200">
+            {/* Error display */}
+            {gradeEntry.error && (
+              <Card className="border-red-200 bg-red-50 dark:bg-red-950/30">
                 <CardContent className="p-3">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="font-semibold text-foreground">Homeroom Behavior</p>
-                      <p className="text-sm text-muted-foreground">Class {selectedClass} • {students.length} students</p>
-                    </div>
-                    <Badge variant="outline" className="bg-purple-100 border-purple-300 text-purple-600">
-                      <UserCheck className="h-3 w-3 mr-1" />
-                      Behavior
-                    </Badge>
-                  </div>
-                </CardContent>
-              </Card>
-
-              {/* Student List for Behavior Entry */}
-              <div className="space-y-2">
-                {students.map(student => {
-                  const isExpanded = expandedStudents.includes(student.id);
-                  const behavior = getStudentBehavior(student.id);
-                  const filledCount = Object.entries(behavior).filter(([key, val]) => 
-                    key !== 'homeroomComment' && key !== 'responsibilityComment' && val !== ""
-                  ).length;
-                  const hasData = filledCount > 0;
-                  
-                  return (
-                    <Collapsible key={student.id} open={isExpanded} onOpenChange={() => toggleStudent(student.id)}>
-                      <Card className={cn("overflow-hidden transition-colors", isExpanded ? "border-purple-400 shadow-md" : "")}>
-                        <CollapsibleTrigger asChild>
-                          <CardHeader className="p-3 cursor-pointer hover:bg-accent/30 transition-colors">
-                            <div className="flex items-center justify-between gap-3">
-                              <div className="flex items-center gap-3 flex-1 min-w-0">
-                                <div className="w-8 h-8 rounded-full bg-purple-100 flex items-center justify-center flex-shrink-0">
-                                  <span className="text-xs font-semibold text-purple-600">
-                                    {student.name.split(' ').map(n => n[0]).join('').slice(0, 2)}
-                                  </span>
-                                </div>
-                                <div className="min-w-0 flex-1">
-                                  <p className="text-sm font-semibold text-foreground truncate">{student.name}</p>
-                                  {hasData && !isExpanded && (
-                                    <p className="text-xs text-purple-600">{filledCount}/7 traits graded</p>
-                                  )}
-                                  {!hasData && !isExpanded && (
-                                    <p className="text-xs text-amber-500">Not graded</p>
-                                  )}
-                                </div>
-                              </div>
-                              <div className="flex items-center gap-2">
-                                {hasData && (
-                                  <Badge variant="outline" className="text-xs px-2 py-0.5 border-purple-300 text-purple-600">
-                                    {filledCount}/7
-                                  </Badge>
-                                )}
-                                {isExpanded ? <ChevronUp className="h-4 w-4 text-muted-foreground" /> : <ChevronDown className="h-4 w-4 text-muted-foreground" />}
-                              </div>
-                            </div>
-                          </CardHeader>
-                        </CollapsibleTrigger>
-                        
-                        <CollapsibleContent>
-                          <CardContent className="p-3 pt-0 space-y-3">
-                            {/* Behavioral Traits Grid */}
-                            <div className="grid grid-cols-2 gap-2">
-                              {behaviorTraits.map(trait => {
-                                const currentGrade = behavior[trait.key as keyof typeof behavior] as string || "";
-                                return (
-                                  <div key={trait.key} className={cn("p-2 rounded-lg", trait.bgColor, trait.borderColor, "border")}>
-                                    <label className={cn("text-[10px] font-semibold uppercase block mb-1.5", trait.textColor)}>
-                                      {trait.label}
-                                    </label>
-                                    <Select 
-                                      value={currentGrade} 
-                                      onValueChange={(v) => updateBehavior(student.id, trait.key, v)}
-                                    >
-                                      <SelectTrigger className={cn("h-9 bg-background/80 text-sm", trait.borderColor)}>
-                                        <SelectValue placeholder="Grade">
-                                          {currentGrade && (
-                                            <Badge className={cn("font-bold text-xs", getGradeColor(currentGrade))}>
-                                              {currentGrade}
-                                            </Badge>
-                                          )}
-                                        </SelectValue>
-                                      </SelectTrigger>
-                                      <SelectContent className="bg-white dark:bg-card">
-                                        {gradeOptions.map(grade => (
-                                          <SelectItem key={grade} value={grade}>
-                                            <Badge className={cn("font-bold", getGradeColor(grade))}>
-                                              {grade}
-                                            </Badge>
-                                          </SelectItem>
-                                        ))}
-                                      </SelectContent>
-                                    </Select>
-                                  </div>
-                                );
-                              })}
-                            </div>
-
-                            {/* Comment Sections */}
-                            <div className="space-y-2">
-                              <div>
-                                <label className="text-xs font-medium text-rose-600 mb-1 block">
-                                  Homeroom Teacher Comment
-                                </label>
-                                <Textarea
-                                  placeholder="Enter homeroom teacher comment..."
-                                  value={behavior.homeroomComment}
-                                  onChange={(e) => updateBehavior(student.id, "homeroomComment", e.target.value)}
-                                  className="min-h-[60px] text-sm resize-none bg-rose-50/50 dark:bg-rose-950/20 border-rose-200"
-                                />
-                              </div>
-
-                              <div>
-                                <label className="text-xs font-medium text-purple-600 mb-1 block">
-                                  Responsibility Comment
-                                </label>
-                                <Textarea
-                                  placeholder="Enter responsibility comment..."
-                                  value={behavior.responsibilityComment}
-                                  onChange={(e) => updateBehavior(student.id, "responsibilityComment", e.target.value)}
-                                  className="min-h-[60px] text-sm resize-none bg-purple-50/50 dark:bg-purple-950/20 border-purple-200"
-                                />
-                              </div>
-                            </div>
-                          </CardContent>
-                        </CollapsibleContent>
-                      </Card>
-                    </Collapsible>
-                  );
-                })}
-              </div>
-
-              {/* Floating Save Button */}
-              <Button 
-                className="fixed z-50 shadow-xl bottom-24 right-4 h-14 w-14 rounded-full p-0 bg-purple-600 hover:bg-purple-700"
-                onClick={() => {
-                  toast({
-                    title: "Behavior Saved",
-                    description: `Homeroom behavior for ${selectedClass} has been saved.`,
-                  });
-                }}
-              >
-                <Save className="h-6 w-6" />
-              </Button>
-            </> : selectedEntrySubject === "Awards" ? <>
-              {/* Awards Header */}
-              <Card 
-                className="border-amber-300 overflow-hidden"
-                style={{ 
-                  background: 'linear-gradient(135deg, #fef3c7 0%, #fcd34d 50%, #f59e0b 100%)',
-                  borderColor: 'rgba(251, 191, 36, 0.5)'
-                }}
-              >
-                <CardContent className="p-3">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="font-semibold text-amber-900">Awards</p>
-                      <p className="text-sm text-amber-800/70">Class {selectedClass} • {students.length} students</p>
-                    </div>
-                    <Badge className="bg-white/80 border-amber-400 text-amber-700">
-                      <Award className="h-3 w-3 mr-1" />
-                      Awards
-                    </Badge>
-                  </div>
-                </CardContent>
-              </Card>
-
-              {/* Student List for Awards Entry */}
-              <div className="space-y-2">
-                {students.map(student => {
-                  const isExpanded = expandedStudents.includes(student.id);
-                  const awards = getStudentAwards(student.id);
-                  const totalEntries = awards.sportsHouse.length + awards.clubs.length + awards.leadership.length + awards.events.length + awards.achievements.length;
-                  const hasData = totalEntries > 0;
-                  
-                  return (
-                    <Collapsible key={student.id} open={isExpanded} onOpenChange={() => toggleStudent(student.id)}>
-                      <Card className={cn("overflow-hidden transition-colors", isExpanded ? "border-amber-400 shadow-md" : "")}>
-                        <CollapsibleTrigger asChild>
-                          <CardHeader className="p-3 cursor-pointer hover:bg-accent/30 transition-colors">
-                            <div className="flex items-center justify-between gap-3">
-                              <div className="flex items-center gap-3 flex-1 min-w-0">
-                                <div className="w-8 h-8 rounded-full bg-amber-100 flex items-center justify-center flex-shrink-0">
-                                  <span className="text-xs font-semibold text-amber-600">
-                                    {student.name.split(' ').map(n => n[0]).join('').slice(0, 2)}
-                                  </span>
-                                </div>
-                                <div className="min-w-0 flex-1">
-                                  <p className="text-sm font-semibold text-foreground truncate">{student.name}</p>
-                                  {hasData && !isExpanded && (
-                                    <p className="text-xs text-amber-600">{totalEntries} award(s) added</p>
-                                  )}
-                                  {!hasData && !isExpanded && (
-                                    <p className="text-xs text-muted-foreground">No awards yet</p>
-                                  )}
-                                </div>
-                              </div>
-                              <div className="flex items-center gap-2">
-                                {hasData && (
-                                  <Badge variant="outline" className="text-xs px-2 py-0.5 border-amber-300 text-amber-600">
-                                    {totalEntries}
-                                  </Badge>
-                                )}
-                                {isExpanded ? <ChevronUp className="h-4 w-4 text-muted-foreground" /> : <ChevronDown className="h-4 w-4 text-muted-foreground" />}
-                              </div>
-                            </div>
-                          </CardHeader>
-                        </CollapsibleTrigger>
-                        
-                        <CollapsibleContent>
-                          <CardContent className="p-3 pt-0 space-y-3">
-                            {/* Sports House */}
-                            <div 
-                              className="p-2.5 rounded-lg border overflow-hidden"
-                              style={{ 
-                                background: 'linear-gradient(135deg, #fef3c7 0%, #fcd34d 50%, #f59e0b 100%)',
-                                borderColor: 'rgba(251, 191, 36, 0.5)'
-                              }}
-                            >
-                              <div className="flex items-center justify-between mb-2">
-                                <label className="text-xs font-semibold text-amber-900 uppercase">Sports House</label>
-                                <Button
-                                  size="sm"
-                                  variant="ghost"
-                                  className="h-6 px-2 text-amber-900 hover:bg-white/30"
-                                  onClick={() => addAwardEntry(student.id, "sportsHouse")}
-                                >
-                                  <Plus className="h-3 w-3 mr-1" />
-                                  Add
-                                </Button>
-                              </div>
-                              {awards.sportsHouse.length === 0 ? (
-                                <p className="text-[10px] text-amber-800/70 text-center py-1">No entries</p>
-                              ) : (
-                                <div className="space-y-2">
-                                  {awards.sportsHouse.map(entry => (
-                                    <div key={entry.id} className="grid grid-cols-[1fr_1fr_auto] gap-1.5 items-end">
-                                      <Select value={entry.organization} onValueChange={(v) => updateAwardEntry(student.id, "sportsHouse", entry.id, "organization", v)}>
-                                        <SelectTrigger className="h-8 text-xs bg-white/80 border-amber-300"><SelectValue /></SelectTrigger>
-                                        <SelectContent className="bg-white dark:bg-card">{sportsHouseOptions.map(opt => <SelectItem key={opt} value={opt}>{opt}</SelectItem>)}</SelectContent>
-                                      </Select>
-                                      <Select value={entry.role} onValueChange={(v) => updateAwardEntry(student.id, "sportsHouse", entry.id, "role", v)}>
-                                        <SelectTrigger className="h-8 text-xs bg-white/80 border-amber-300"><SelectValue /></SelectTrigger>
-                                        <SelectContent className="bg-white dark:bg-card">{roleOptions.map(opt => <SelectItem key={opt} value={opt}>{opt}</SelectItem>)}</SelectContent>
-                                      </Select>
-                                      <Button size="icon" variant="ghost" className="h-8 w-8 text-red-600 hover:bg-white/30" onClick={() => removeAwardEntry(student.id, "sportsHouse", entry.id)}><X className="h-3 w-3" /></Button>
-                                    </div>
-                                  ))}
-                                </div>
-                              )}
-                            </div>
-
-                            {/* Clubs */}
-                            <div 
-                              className="p-2.5 rounded-lg border overflow-hidden"
-                              style={{ 
-                                background: 'linear-gradient(135deg, #fef3c7 0%, #fcd34d 50%, #f59e0b 100%)',
-                                borderColor: 'rgba(251, 191, 36, 0.5)'
-                              }}
-                            >
-                              <div className="flex items-center justify-between mb-2">
-                                <label className="text-xs font-semibold text-amber-900 uppercase">Clubs</label>
-                                <Button
-                                  size="sm"
-                                  variant="ghost"
-                                  className="h-6 px-2 text-amber-900 hover:bg-white/30"
-                                  onClick={() => addAwardEntry(student.id, "clubs")}
-                                >
-                                  <Plus className="h-3 w-3 mr-1" />
-                                  Add
-                                </Button>
-                              </div>
-                              {awards.clubs.length === 0 ? (
-                                <p className="text-[10px] text-amber-800/70 text-center py-1">No entries</p>
-                              ) : (
-                                <div className="space-y-2">
-                                  {awards.clubs.map(entry => (
-                                    <div key={entry.id} className="grid grid-cols-[1fr_1fr_auto] gap-1.5 items-end">
-                                      <Select value={entry.organization} onValueChange={(v) => updateAwardEntry(student.id, "clubs", entry.id, "organization", v)}>
-                                        <SelectTrigger className="h-8 text-xs bg-white/80 border-amber-300"><SelectValue /></SelectTrigger>
-                                        <SelectContent className="bg-white dark:bg-card">{clubOptions.map(opt => <SelectItem key={opt} value={opt}>{opt}</SelectItem>)}</SelectContent>
-                                      </Select>
-                                      <Select value={entry.role} onValueChange={(v) => updateAwardEntry(student.id, "clubs", entry.id, "role", v)}>
-                                        <SelectTrigger className="h-8 text-xs bg-white/80 border-amber-300"><SelectValue /></SelectTrigger>
-                                        <SelectContent className="bg-white dark:bg-card">{roleOptions.map(opt => <SelectItem key={opt} value={opt}>{opt}</SelectItem>)}</SelectContent>
-                                      </Select>
-                                      <Button size="icon" variant="ghost" className="h-8 w-8 text-red-600 hover:bg-white/30" onClick={() => removeAwardEntry(student.id, "clubs", entry.id)}><X className="h-3 w-3" /></Button>
-                                    </div>
-                                  ))}
-                                </div>
-                              )}
-                            </div>
-
-                            {/* Leadership */}
-                            <div 
-                              className="p-2.5 rounded-lg border overflow-hidden"
-                              style={{ 
-                                background: 'linear-gradient(135deg, #fef3c7 0%, #fcd34d 50%, #f59e0b 100%)',
-                                borderColor: 'rgba(251, 191, 36, 0.5)'
-                              }}
-                            >
-                              <div className="flex items-center justify-between mb-2">
-                                <label className="text-xs font-semibold text-amber-900 uppercase">Leadership</label>
-                                <Button
-                                  size="sm"
-                                  variant="ghost"
-                                  className="h-6 px-2 text-amber-900 hover:bg-white/30"
-                                  onClick={() => addAwardEntry(student.id, "leadership")}
-                                >
-                                  <Plus className="h-3 w-3 mr-1" />
-                                  Add
-                                </Button>
-                              </div>
-                              {awards.leadership.length === 0 ? (
-                                <p className="text-[10px] text-amber-800/70 text-center py-1">No entries</p>
-                              ) : (
-                                <div className="space-y-2">
-                                  {awards.leadership.map(entry => (
-                                    <div key={entry.id} className="grid grid-cols-[1fr_1fr_auto] gap-1.5 items-end">
-                                      <Select value={entry.organization} onValueChange={(v) => updateAwardEntry(student.id, "leadership", entry.id, "organization", v)}>
-                                        <SelectTrigger className="h-8 text-xs bg-white/80 border-amber-300"><SelectValue /></SelectTrigger>
-                                        <SelectContent className="bg-white dark:bg-card">{leadershipOptions.map(opt => <SelectItem key={opt} value={opt}>{opt}</SelectItem>)}</SelectContent>
-                                      </Select>
-                                      <Select value={entry.role} onValueChange={(v) => updateAwardEntry(student.id, "leadership", entry.id, "role", v)}>
-                                        <SelectTrigger className="h-8 text-xs bg-white/80 border-amber-300"><SelectValue /></SelectTrigger>
-                                        <SelectContent className="bg-white dark:bg-card">{roleOptions.map(opt => <SelectItem key={opt} value={opt}>{opt}</SelectItem>)}</SelectContent>
-                                      </Select>
-                                      <Button size="icon" variant="ghost" className="h-8 w-8 text-red-600 hover:bg-white/30" onClick={() => removeAwardEntry(student.id, "leadership", entry.id)}><X className="h-3 w-3" /></Button>
-                                    </div>
-                                  ))}
-                                </div>
-                              )}
-                            </div>
-
-                            {/* Achievements */}
-                            <div 
-                              className="p-2.5 rounded-lg border overflow-hidden"
-                              style={{ 
-                                background: 'linear-gradient(135deg, #fef3c7 0%, #fcd34d 50%, #f59e0b 100%)',
-                                borderColor: 'rgba(251, 191, 36, 0.5)'
-                              }}
-                            >
-                              <div className="flex items-center justify-between mb-2">
-                                <label className="text-xs font-semibold text-amber-900 uppercase">Achievements</label>
-                                <Button
-                                  size="sm"
-                                  variant="ghost"
-                                  className="h-6 px-2 text-amber-900 hover:bg-white/30"
-                                  onClick={() => addAchievementEntry(student.id)}
-                                >
-                                  <Plus className="h-3 w-3 mr-1" />
-                                  Add
-                                </Button>
-                              </div>
-                              {awards.achievements.length === 0 ? (
-                                <p className="text-[10px] text-amber-800/70 text-center py-1">No entries</p>
-                              ) : (
-                                <div className="space-y-2">
-                                  {awards.achievements.map(entry => (
-                                    <div key={entry.id} className="grid grid-cols-[1fr_1fr_auto] gap-1.5 items-end">
-                                      <Select value={entry.event} onValueChange={(v) => updateAchievementEntry(student.id, entry.id, "event", v)}>
-                                        <SelectTrigger className="h-8 text-xs bg-white/80 border-amber-300"><SelectValue /></SelectTrigger>
-                                        <SelectContent className="bg-white dark:bg-card">{achievementEventOptions.map(opt => <SelectItem key={opt} value={opt}>{opt}</SelectItem>)}</SelectContent>
-                                      </Select>
-                                      <Select value={entry.award} onValueChange={(v) => updateAchievementEntry(student.id, entry.id, "award", v)}>
-                                        <SelectTrigger className="h-8 text-xs bg-white/80 border-amber-300"><SelectValue /></SelectTrigger>
-                                        <SelectContent className="bg-white dark:bg-card">{achievementAwardOptions.map(opt => <SelectItem key={opt} value={opt}>{opt}</SelectItem>)}</SelectContent>
-                                      </Select>
-                                      <Button size="icon" variant="ghost" className="h-8 w-8 text-red-600 hover:bg-white/30" onClick={() => removeAchievementEntry(student.id, entry.id)}><X className="h-3 w-3" /></Button>
-                                    </div>
-                                  ))}
-                                </div>
-                              )}
-                            </div>
-                          </CardContent>
-                        </CollapsibleContent>
-                      </Card>
-                    </Collapsible>
-                  );
-                })}
-              </div>
-
-              {/* Floating Save Button */}
-              <Button 
-                className="fixed z-50 shadow-xl bottom-24 right-4 h-14 w-14 rounded-full p-0 bg-amber-600 hover:bg-amber-700"
-                onClick={() => {
-                  toast({
-                    title: "Awards Saved",
-                    description: `Awards for ${selectedClass} have been saved.`,
-                  });
-                }}
-              >
-                <Save className="h-6 w-6" />
-              </Button>
-            </> : selectedEntrySubject ? <>
-              {/* Subject Header */}
-              <Card className="bg-primary/5 border-primary/20">
-                <CardContent className="p-3">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="font-semibold text-foreground">{selectedEntrySubject}</p>
-                      <p className="text-sm text-muted-foreground">Class {selectedClass} • {students.length} students</p>
-                    </div>
-                    <Badge variant="outline" className="bg-primary/10 border-primary/30 text-primary">
-                      <BookOpen className="h-3 w-3 mr-1" />
-                      Grades
-                    </Badge>
-                  </div>
-                </CardContent>
-              </Card>
-
-              {/* CSV Export/Import Buttons */}
-              <div className="flex gap-2">
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  className="flex-1 text-xs h-9"
-                  onClick={() => {
-                    // Generate CSV template with student names and empty grade columns
-                    const csvHeader = "Student ID,Student Name,Attitude (10),Homework (10),Quiz (10),Exam (70),Report Card Comments,Study Recommendations";
-                    const csvRows = students.map(s => `${s.id},"${s.name}",,,,,,""`);
-                    const csvContent = [csvHeader, ...csvRows].join("\n");
-                    
-                    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
-                    const url = URL.createObjectURL(blob);
-                    const link = document.createElement("a");
-                    link.href = url;
-                    link.download = `${selectedClass}_${selectedEntrySubject}_template.csv`;
-                    link.click();
-                    URL.revokeObjectURL(url);
-                    
-                    toast({
-                      title: "Template Downloaded",
-                      description: `CSV template for ${selectedEntrySubject} has been downloaded.`,
-                    });
-                  }}
-                >
-                  <Download className="h-3.5 w-3.5 mr-1.5" />
-                  Download Template
-                </Button>
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  className="flex-1 text-xs h-9"
-                  onClick={() => {
-                    // Export current grades to CSV
-                    const csvHeader = "Student ID,Student Name,Attitude (10),Homework (10),Quiz (10),Exam (70),Total,Grade,Report Card Comments,Study Recommendations";
-                    const csvRows = students.map(s => {
-                      const grades = getStudentSubjectGrades(s.id, selectedEntrySubject);
-                      const total = calculateTotal(grades);
-                      const { grade: letterGrade } = getLetterGrade(total);
-                      return `${s.id},"${s.name}",${grades.attitude || ""},${grades.homework || ""},${grades.quiz || ""},${grades.exam || ""},${total},${letterGrade},"${(grades.reportComment || "").replace(/"/g, '""')}","${(grades.studyRecommendation || "").replace(/"/g, '""')}"`;
-                    });
-                    const csvContent = [csvHeader, ...csvRows].join("\n");
-                    
-                    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
-                    const url = URL.createObjectURL(blob);
-                    const link = document.createElement("a");
-                    link.href = url;
-                    link.download = `${selectedClass}_${selectedEntrySubject}_grades.csv`;
-                    link.click();
-                    URL.revokeObjectURL(url);
-                    
-                    toast({
-                      title: "Grades Exported",
-                      description: `${selectedEntrySubject} grades for ${selectedClass} exported to CSV.`,
-                    });
-                  }}
-                >
-                  <FileSpreadsheet className="h-3.5 w-3.5 mr-1.5" />
-                  Export CSV
-                </Button>
-              </div>
-
-              {/* Quick Stats */}
-              <div className="grid grid-cols-4 gap-2">
-                {(() => {
-                  const gradedCount = students.filter(s => {
-                    const grades = getStudentSubjectGrades(s.id, selectedEntrySubject);
-                    return Object.values(grades).some(v => v !== "" && v !== undefined);
-                  }).length;
-                  const pendingCount = students.length - gradedCount;
-                  const avgScore = students.reduce((sum, s) => {
-                    const grades = getStudentSubjectGrades(s.id, selectedEntrySubject);
-                    return sum + calculateTotal(grades);
-                  }, 0) / (gradedCount || 1);
-                  
-                  return (
-                    <>
-                      <div className="p-2 rounded-lg bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800 text-center">
-                        <p className="text-lg font-bold text-emerald-600">{gradedCount}</p>
-                        <p className="text-[10px] text-muted-foreground">Graded</p>
-                      </div>
-                      <div className="p-2 rounded-lg bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 text-center">
-                        <p className="text-lg font-bold text-amber-600">{pendingCount}</p>
-                        <p className="text-[10px] text-muted-foreground">Pending</p>
-                      </div>
-                      <div className="p-2 rounded-lg bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800 text-center">
-                        <p className="text-lg font-bold text-blue-600">{students.length}</p>
-                        <p className="text-[10px] text-muted-foreground">Total</p>
-                      </div>
-                      <div className="p-2 rounded-lg bg-purple-50 dark:bg-purple-950/30 border border-purple-200 dark:border-purple-800 text-center">
-                        <p className="text-lg font-bold text-purple-600">{gradedCount > 0 ? Math.round(avgScore) : '-'}</p>
-                        <p className="text-[10px] text-muted-foreground">Avg</p>
-                      </div>
-                    </>
-                  );
-                })()}
-              </div>
-
-              {/* Class Study Recommendation - Master Field */}
-              <Card className="border-amber-300 bg-amber-50/50 dark:bg-amber-950/20">
-                <CardContent className="p-3">
-                  <div className="flex items-center gap-2 mb-2">
-                    <div className="w-6 h-6 rounded-full bg-amber-100 dark:bg-amber-900/50 flex items-center justify-center flex-shrink-0">
-                      <Users className="h-3.5 w-3.5 text-amber-600" />
-                    </div>
-                    <label className="text-xs font-semibold text-amber-700 dark:text-amber-400 flex-1">
-                      Class Study Recommendation
-                    </label>
-                    <Badge variant="outline" className="text-[10px] border-amber-300 text-amber-600 whitespace-nowrap">
-                      Applies to all
-                    </Badge>
-                  </div>
-                  <Textarea 
-                    placeholder="Enter a study recommendation for all students in this subject..." 
-                    value={classStudyRecommendation[selectedClass]?.[selectedEntrySubject] || ""} 
-                    maxLength={300}
-                    onChange={e => {
-                      const value = e.target.value;
-                      if (value.length > 300) return;
-                      setClassStudyRecommendation(prev => ({
-                        ...prev,
-                        [selectedClass]: {
-                          ...prev[selectedClass],
-                          [selectedEntrySubject]: value
-                        }
-                      }));
-                      // Also update all students' study recommendation
-                      students.forEach(student => {
-                        updateGrade(student.id, selectedEntrySubject, "studyRecommendation", value);
-                      });
-                    }} 
-                    className="min-h-[60px] text-sm resize-none border-amber-200 bg-background" 
-                  />
-                  <p className="text-[10px] text-muted-foreground text-right mt-1">
-                    {(classStudyRecommendation[selectedClass]?.[selectedEntrySubject] || "").length}/300
+                  <p className="text-sm text-red-600 dark:text-red-400">
+                    <AlertTriangle className="h-4 w-4 inline mr-2" />
+                    {gradeEntry.error}
                   </p>
                 </CardContent>
               </Card>
+            )}
 
-              {/* Student List for Grade Entry */}
-              <div className="space-y-2">
-                {students.map(student => {
-                  const isExpanded = expandedStudents.includes(student.id);
-                  const grades = getStudentSubjectGrades(student.id, selectedEntrySubject);
-                  const total = calculateTotal(grades);
-                  const { grade: letterGrade, color: gradeColor } = getLetterGrade(total);
-                  const hasData = Object.values(grades).some(v => v !== "" && v !== undefined);
-                  
-                  return (
-                    <Collapsible key={student.id} open={isExpanded} onOpenChange={() => toggleStudent(student.id)}>
-                      <Card className={cn("overflow-hidden transition-colors", isExpanded ? "border-primary/50 shadow-md" : "")}>
-                        <CollapsibleTrigger asChild>
-                          <CardHeader className="p-3 cursor-pointer hover:bg-accent/30 transition-colors">
-                            <div className="flex items-center justify-between gap-3">
-                              <div className="flex items-center gap-3 flex-1 min-w-0">
-                                <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
-                                  <span className="text-xs font-semibold text-primary">
-                                    {student.name.split(' ').map(n => n[0]).join('').slice(0, 2)}
-                                  </span>
+            {/* Behavior/Awards - still uses local mock (linked via selectedEntrySubject) */}
+            {selectedEntrySubject === "Homeroom Behavior" ? (
+              <>
+                {/* Behavior Header */}
+                <Card className="bg-purple-50 dark:bg-purple-950/20 border-purple-200">
+                  <CardContent className="p-3">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="font-semibold text-foreground">Homeroom Behavior</p>
+                        <p className="text-sm text-muted-foreground">Class {selectedClass} • {students.length} students</p>
+                      </div>
+                      <Badge variant="outline" className="bg-purple-100 border-purple-300 text-purple-600">
+                        <UserCheck className="h-3 w-3 mr-1" />
+                        Behavior
+                      </Badge>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Student List for Behavior Entry */}
+                <div className="space-y-2">
+                  {students.map(student => {
+                    const isExpanded = expandedStudents.includes(student.id);
+                    const behavior = getStudentBehavior(student.id);
+                    const filledCount = Object.entries(behavior).filter(([key, val]) => 
+                      key !== 'homeroomComment' && key !== 'responsibilityComment' && val !== ""
+                    ).length;
+                    const hasData = filledCount > 0;
+                    
+                    return (
+                      <Collapsible key={student.id} open={isExpanded} onOpenChange={() => toggleStudent(student.id)}>
+                        <Card className={cn("overflow-hidden transition-colors", isExpanded ? "border-purple-400 shadow-md" : "")}>
+                          <CollapsibleTrigger asChild>
+                            <CardHeader className="p-3 cursor-pointer hover:bg-accent/30 transition-colors">
+                              <div className="flex items-center justify-between gap-3">
+                                <div className="flex items-center gap-3 flex-1 min-w-0">
+                                  <div className="w-8 h-8 rounded-full bg-purple-100 flex items-center justify-center flex-shrink-0">
+                                    <span className="text-xs font-semibold text-purple-600">
+                                      {student.name.split(' ').map(n => n[0]).join('').slice(0, 2)}
+                                    </span>
+                                  </div>
+                                  <div className="min-w-0 flex-1">
+                                    <p className="text-sm font-semibold text-foreground truncate">{student.name}</p>
+                                    {hasData && !isExpanded && (
+                                      <p className="text-xs text-purple-600">{filledCount}/7 traits graded</p>
+                                    )}
+                                    {!hasData && !isExpanded && (
+                                      <p className="text-xs text-amber-500">Not graded</p>
+                                    )}
+                                  </div>
                                 </div>
-                                <div className="min-w-0 flex-1">
-                                  <p className="text-sm font-semibold text-foreground truncate">{student.name}</p>
-                                  {hasData && !isExpanded && (
-                                    <div className="flex items-center gap-2 mt-0.5">
-                                      <span className="text-xs text-muted-foreground">Total: {total}</span>
-                                      <Badge className={cn("text-[10px] px-1.5 py-0", gradeColor)}>
-                                        {letterGrade}
-                                      </Badge>
+                                <div className="flex items-center gap-2">
+                                  {hasData && (
+                                    <Badge variant="outline" className="text-xs px-2 py-0.5 border-purple-300 text-purple-600">
+                                      {filledCount}/7
+                                    </Badge>
+                                  )}
+                                  {isExpanded ? <ChevronUp className="h-4 w-4 text-muted-foreground" /> : <ChevronDown className="h-4 w-4 text-muted-foreground" />}
+                                </div>
+                              </div>
+                            </CardHeader>
+                          </CollapsibleTrigger>
+                          
+                          <CollapsibleContent>
+                            <CardContent className="p-3 pt-0 space-y-3">
+                              <div className="grid grid-cols-2 gap-2">
+                                {behaviorTraits.map(trait => {
+                                  const currentGrade = behavior[trait.key as keyof typeof behavior] as string || "";
+                                  return (
+                                    <div key={trait.key} className={cn("p-2 rounded-lg", trait.bgColor, trait.borderColor, "border")}>
+                                      <label className={cn("text-[10px] font-semibold uppercase block mb-1.5", trait.textColor)}>
+                                        {trait.label}
+                                      </label>
+                                      <Select 
+                                        value={currentGrade} 
+                                        onValueChange={(v) => updateBehavior(student.id, trait.key, v)}
+                                      >
+                                        <SelectTrigger className={cn("h-9 bg-background/80 text-sm", trait.borderColor)}>
+                                          <SelectValue placeholder="Grade">
+                                            {currentGrade && (
+                                              <Badge className={cn("font-bold text-xs", getGradeColor(currentGrade))}>
+                                                {currentGrade}
+                                              </Badge>
+                                            )}
+                                          </SelectValue>
+                                        </SelectTrigger>
+                                        <SelectContent className="bg-white dark:bg-card">
+                                          {gradeOptions.map(grade => (
+                                            <SelectItem key={grade} value={grade}>
+                                              <Badge className={cn("font-bold", getGradeColor(grade))}>
+                                                {grade}
+                                              </Badge>
+                                            </SelectItem>
+                                          ))}
+                                        </SelectContent>
+                                      </Select>
                                     </div>
-                                  )}
-                                  {!hasData && !isExpanded && (
-                                    <p className="text-xs text-amber-500">Not graded</p>
-                                  )}
-                                </div>
+                                  );
+                                })}
                               </div>
-                              <div className="flex items-center gap-2">
-                                {hasData && (
-                                  <Badge className={cn("text-xs px-2 py-0.5", gradeColor)}>
-                                    {total}
-                                  </Badge>
-                                )}
-                                {isExpanded ? <ChevronUp className="h-4 w-4 text-muted-foreground" /> : <ChevronDown className="h-4 w-4 text-muted-foreground" />}
-                              </div>
-                            </div>
-                          </CardHeader>
-                        </CollapsibleTrigger>
-                        
-                        <CollapsibleContent>
-                          <CardContent className="p-3 pt-0 space-y-3">
-                            {/* Score Inputs - 2x2 Grid for Mobile */}
-                            <div className="grid grid-cols-2 gap-2">
-                              {gradeCategories.map(cat => (
-                                <div key={cat.key} className="space-y-1">
-                                  <label className="text-[10px] font-medium text-muted-foreground uppercase">
-                                    {cat.label} ({cat.max})
+                              <div className="space-y-2">
+                                <div>
+                                  <label className="text-xs font-medium text-rose-600 mb-1 block">
+                                    Homeroom Teacher Comment
                                   </label>
-                                  <Input 
-                                    type="number" 
-                                    inputMode="numeric"
-                                    min="0" 
-                                    max={cat.max} 
-                                    placeholder="0" 
-                                    value={grades[cat.key as keyof StudentGrades] || ""} 
-                                    onChange={e => updateGrade(student.id, selectedEntrySubject, cat.key as keyof StudentGrades, e.target.value)} 
-                                    className="text-center h-11 text-base font-medium" 
+                                  <Textarea
+                                    placeholder="Enter homeroom teacher comment..."
+                                    value={behavior.homeroomComment}
+                                    onChange={(e) => updateBehavior(student.id, "homeroomComment", e.target.value)}
+                                    className="min-h-[60px] text-sm resize-none bg-rose-50/50 dark:bg-rose-950/20 border-rose-200"
                                   />
                                 </div>
-                              ))}
-                            </div>
-
-                            {/* Total & Grade Display */}
-                            <div className="flex items-center justify-between p-3 rounded-lg bg-accent/50">
-                              <div>
-                                <p className="text-xs text-muted-foreground">Total Score</p>
-                                <p className="text-2xl font-bold text-foreground">{total}<span className="text-sm text-muted-foreground">/100</span></p>
+                                <div>
+                                  <label className="text-xs font-medium text-purple-600 mb-1 block">
+                                    Responsibility Comment
+                                  </label>
+                                  <Textarea
+                                    placeholder="Enter responsibility comment..."
+                                    value={behavior.responsibilityComment}
+                                    onChange={(e) => updateBehavior(student.id, "responsibilityComment", e.target.value)}
+                                    className="min-h-[60px] text-sm resize-none bg-purple-50/50 dark:bg-purple-950/20 border-purple-200"
+                                  />
+                                </div>
                               </div>
-                              <Badge className={cn("text-xl px-4 py-2 font-bold", gradeColor)}>
-                                {letterGrade}
-                              </Badge>
-                            </div>
+                            </CardContent>
+                          </CollapsibleContent>
+                        </Card>
+                      </Collapsible>
+                    );
+                  })}
+                </div>
 
-                            {/* Comments Section */}
-                            <div className="space-y-3">
-                              {/* Report Card Comments */}
-                              <div>
-                                <label className="text-xs font-medium text-emerald-600 mb-1 block">
-                                  Report Card Comments
-                                </label>
-                                <Textarea 
-                                  placeholder="Comments visible on report card..." 
-                                  value={grades.reportComment} 
-                                  maxLength={500}
-                                  onChange={e => {
-                                    if (e.target.value.length <= 500) {
-                                      updateGrade(student.id, selectedEntrySubject, "reportComment", e.target.value);
-                                    }
-                                  }} 
-                                  className="min-h-[70px] text-sm resize-none border-emerald-200 bg-emerald-50/50 dark:bg-emerald-950/20" 
-                                />
-                                <p className="text-[10px] text-muted-foreground text-right mt-1">
-                                  {(grades.reportComment || "").length}/500
-                                </p>
-                              </div>
+                <Button 
+                  className="fixed z-50 shadow-xl bottom-24 right-4 h-14 w-14 rounded-full p-0 bg-purple-600 hover:bg-purple-700"
+                  onClick={() => {
+                    toast({
+                      title: "Behavior Saved",
+                      description: `Homeroom behavior for ${selectedClass} has been saved.`,
+                    });
+                  }}
+                >
+                  <Save className="h-6 w-6" />
+                </Button>
+              </>
+            ) : selectedEntrySubject === "Awards" ? (
+              <Card className="border-dashed">
+                <CardContent className="p-6 text-center">
+                  <Award className="h-10 w-10 text-amber-500/50 mx-auto mb-3" />
+                  <p className="text-sm text-muted-foreground">Awards entry uses local mode</p>
+                  <p className="text-xs text-muted-foreground/70 mt-1">Select from dropdowns above for Supabase grades</p>
+                </CardContent>
+              </Card>
+            ) : gradeEntry.selectedClass && gradeEntry.selectedSubject && gradeEntry.selectedPeriod ? (
+              <>
+                {/* Loading state for students/grades */}
+                {(gradeEntry.loadingStudents || gradeEntry.loadingGrades) ? (
+                  <Card>
+                    <CardContent className="p-6 text-center">
+                      <Loader2 className="h-8 w-8 animate-spin text-primary mx-auto mb-3" />
+                      <p className="text-sm text-muted-foreground">Loading students and grades...</p>
+                    </CardContent>
+                  </Card>
+                ) : (
+                  <>
+                    {/* Subject Header */}
+                    <Card className="bg-primary/5 border-primary/20">
+                      <CardContent className="p-3">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <p className="font-semibold text-foreground">{gradeEntry.selectedSubject.name}</p>
+                            <p className="text-sm text-muted-foreground">
+                              Class {gradeEntry.selectedClass} • {gradeEntry.students.length} students • {gradeEntry.selectedPeriod.name}
+                            </p>
+                          </div>
+                          <Badge variant="outline" className="bg-primary/10 border-primary/30 text-primary">
+                            <BookOpen className="h-3 w-3 mr-1" />
+                            Grades
+                          </Badge>
+                        </div>
+                      </CardContent>
+                    </Card>
+
+                    {/* CSV Export/Import Buttons */}
+                    <div className="flex gap-2">
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        className="flex-1 text-xs h-9"
+                        onClick={() => {
+                          const csvContent = gradeEntry.generateTemplate();
+                          const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+                          const url = URL.createObjectURL(blob);
+                          const link = document.createElement("a");
+                          link.href = url;
+                          link.download = `${gradeEntry.selectedClass}_${gradeEntry.selectedSubject?.name}_template.csv`;
+                          link.click();
+                          URL.revokeObjectURL(url);
+                          
+                          toast({
+                            title: "Template Downloaded",
+                            description: `CSV template for ${gradeEntry.selectedSubject?.name} has been downloaded.`,
+                          });
+                        }}
+                      >
+                        <Download className="h-3.5 w-3.5 mr-1.5" />
+                        Download Template
+                      </Button>
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        className="flex-1 text-xs h-9"
+                        onClick={() => {
+                          const csvContent = gradeEntry.exportGrades();
+                          const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+                          const url = URL.createObjectURL(blob);
+                          const link = document.createElement("a");
+                          link.href = url;
+                          link.download = `${gradeEntry.selectedClass}_${gradeEntry.selectedSubject?.name}_grades.csv`;
+                          link.click();
+                          URL.revokeObjectURL(url);
+                          
+                          toast({
+                            title: "Grades Exported",
+                            description: `${gradeEntry.selectedSubject?.name} grades for ${gradeEntry.selectedClass} exported to CSV.`,
+                          });
+                        }}
+                      >
+                        <FileSpreadsheet className="h-3.5 w-3.5 mr-1.5" />
+                        Export CSV
+                      </Button>
+                    </div>
+
+                    {/* Quick Stats */}
+                    <div className="grid grid-cols-4 gap-2">
+                      <div className="p-2 rounded-lg bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800 text-center">
+                        <p className="text-lg font-bold text-emerald-600">{gradeEntry.stats.graded}</p>
+                        <p className="text-[10px] text-muted-foreground">Graded</p>
+                      </div>
+                      <div className="p-2 rounded-lg bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 text-center">
+                        <p className="text-lg font-bold text-amber-600">{gradeEntry.stats.pending}</p>
+                        <p className="text-[10px] text-muted-foreground">Pending</p>
+                      </div>
+                      <div className="p-2 rounded-lg bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800 text-center">
+                        <p className="text-lg font-bold text-blue-600">{gradeEntry.stats.total}</p>
+                        <p className="text-[10px] text-muted-foreground">Total</p>
+                      </div>
+                      <div className="p-2 rounded-lg bg-purple-50 dark:bg-purple-950/30 border border-purple-200 dark:border-purple-800 text-center">
+                        <p className="text-lg font-bold text-purple-600">{gradeEntry.stats.graded > 0 ? gradeEntry.stats.average : '-'}</p>
+                        <p className="text-[10px] text-muted-foreground">Avg</p>
+                      </div>
+                    </div>
+
+                    {/* Class Study Recommendation - Master Field */}
+                    <Card className="border-amber-300 bg-amber-50/50 dark:bg-amber-950/20">
+                      <CardContent className="p-3">
+                        <div className="flex items-center gap-2 mb-2">
+                          <div className="w-6 h-6 rounded-full bg-amber-100 dark:bg-amber-900/50 flex items-center justify-center flex-shrink-0">
+                            <Users className="h-3.5 w-3.5 text-amber-600" />
+                          </div>
+                          <label className="text-xs font-semibold text-amber-700 dark:text-amber-400 flex-1">
+                            Class Study Recommendation
+                          </label>
+                          <Badge variant="outline" className="text-[10px] border-amber-300 text-amber-600 whitespace-nowrap">
+                            Applies to all
+                          </Badge>
+                        </div>
+                        <Textarea 
+                          placeholder="Enter a study recommendation for all students in this subject..." 
+                          value={gradeEntry.classRecommendation} 
+                          maxLength={300}
+                          onChange={e => {
+                            const value = e.target.value;
+                            if (value.length > 300) return;
+                            gradeEntry.setClassRecommendation(value);
+                          }} 
+                          className="min-h-[60px] text-sm resize-none border-amber-200 bg-background" 
+                        />
+                        <div className="flex items-center justify-between mt-1">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="text-xs h-6 px-2 text-amber-600"
+                            onClick={() => {
+                              gradeEntry.applyClassRecommendationToAll();
+                              toast({
+                                title: "Applied to All",
+                                description: "Class recommendation applied to all students.",
+                              });
+                            }}
+                          >
+                            Apply to all students
+                          </Button>
+                          <p className="text-[10px] text-muted-foreground">
+                            {gradeEntry.classRecommendation.length}/300
+                          </p>
+                        </div>
+                      </CardContent>
+                    </Card>
+
+                    {/* Student List for Grade Entry */}
+                    <div className="space-y-2">
+                      {gradeEntry.students.map(student => {
+                        const isExpanded = expandedStudents.includes(student.id);
+                        const input = gradeEntry.gradeInputs[student.id] || { attitude: "", homework: "", quiz: "", exam: "", reportComment: "", studyRecommendation: "", comment: "" };
+                        const attitude = parseInt(input.attitude) || 0;
+                        const homework = parseInt(input.homework) || 0;
+                        const quiz = parseInt(input.quiz) || 0;
+                        const exam = parseInt(input.exam) || 0;
+                        const total = attitude + homework + quiz + exam;
+                        const letterGrade = getLetterGrade(total);
+                        const hasData = input.attitude || input.homework || input.quiz || input.exam;
+                        
+                        return (
+                          <Collapsible key={student.id} open={isExpanded} onOpenChange={() => toggleStudent(student.id)}>
+                            <Card className={cn("overflow-hidden transition-colors", isExpanded ? "border-primary/50 shadow-md" : "")}>
+                              <CollapsibleTrigger asChild>
+                                <CardHeader className="p-3 cursor-pointer hover:bg-accent/30 transition-colors">
+                                  <div className="flex items-center justify-between gap-3">
+                                    <div className="flex items-center gap-3 flex-1 min-w-0">
+                                      <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+                                        <span className="text-xs font-semibold text-primary">
+                                          {student.name.split(' ').map(n => n[0]).join('').slice(0, 2)}
+                                        </span>
+                                      </div>
+                                      <div className="min-w-0 flex-1">
+                                        <p className="text-sm font-semibold text-foreground truncate">{student.name}</p>
+                                        {hasData && !isExpanded && (
+                                          <div className="flex items-center gap-2 mt-0.5">
+                                            <span className="text-xs text-muted-foreground">Total: {total}</span>
+                                            <Badge className={cn("text-[10px] px-1.5 py-0", letterGrade.color)}>
+                                              {letterGrade.grade}
+                                            </Badge>
+                                          </div>
+                                        )}
+                                        {!hasData && !isExpanded && (
+                                          <p className="text-xs text-amber-500">Not graded</p>
+                                        )}
+                                      </div>
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                      {hasData && (
+                                        <Badge className={cn("text-xs px-2 py-0.5", letterGrade.color)}>
+                                          {total}
+                                        </Badge>
+                                      )}
+                                      {isExpanded ? <ChevronUp className="h-4 w-4 text-muted-foreground" /> : <ChevronDown className="h-4 w-4 text-muted-foreground" />}
+                                    </div>
+                                  </div>
+                                </CardHeader>
+                              </CollapsibleTrigger>
                               
-                              {/* Study Recommendations */}
-                              <div>
-                                <label className="text-xs font-medium text-amber-600 mb-1 block">
-                                  Study Recommendations
-                                </label>
-                                <Textarea 
-                                  placeholder="e.g., Focus on Chapter 5, practice more word problems..." 
-                                  value={grades.studyRecommendation} 
-                                  maxLength={300}
-                                  onChange={e => {
-                                    if (e.target.value.length <= 300) {
-                                      updateGrade(student.id, selectedEntrySubject, "studyRecommendation", e.target.value);
-                                    }
-                                  }} 
-                                  className="min-h-[70px] text-sm resize-none border-amber-200 bg-amber-50/50 dark:bg-amber-950/20" 
-                                />
-                                <p className="text-[10px] text-muted-foreground text-right mt-1">
-                                  {(grades.studyRecommendation || "").length}/300
-                                </p>
-                              </div>
-                              
-                              {/* Authentic Comments (Internal) */}
-                              <div>
-                                <label className="text-xs font-medium text-red-600 mb-1 flex items-center gap-1">
-                                  Authentic Comments <span className="text-[10px] text-red-400">(Internal)</span>
-                                </label>
-                                <Textarea 
-                                  placeholder="Internal notes - not visible to parents..." 
-                                  value={grades.comment} 
-                                  onChange={e => updateGrade(student.id, selectedEntrySubject, "comment", e.target.value)} 
-                                  className="min-h-[70px] text-sm resize-none border-red-200 bg-red-50/50 dark:bg-red-950/20" 
-                                />
-                              </div>
-                            </div>
-                          </CardContent>
-                        </CollapsibleContent>
-                      </Card>
-                    </Collapsible>
-                  );
-                })}
-              </div>
+                              <CollapsibleContent>
+                                <CardContent className="p-3 pt-0 space-y-3">
+                                  {/* Score Inputs - 2x2 Grid for Mobile */}
+                                  <div className="grid grid-cols-2 gap-2">
+                                    {gradeCategories.map(cat => (
+                                      <div key={cat.key} className="space-y-1">
+                                        <label className="text-[10px] font-medium text-muted-foreground uppercase">
+                                          {cat.label} ({cat.max})
+                                        </label>
+                                        <Input 
+                                          type="number" 
+                                          inputMode="numeric"
+                                          min="0" 
+                                          max={cat.max} 
+                                          placeholder="0" 
+                                          value={input[cat.key as keyof typeof input] || ""} 
+                                          onChange={e => {
+                                            const val = e.target.value;
+                                            const num = parseInt(val);
+                                            if (val === "" || (num >= 0 && num <= cat.max)) {
+                                              gradeEntry.updateGradeInput(student.id, cat.key as "attitude" | "homework" | "quiz" | "exam", val);
+                                            }
+                                          }} 
+                                          className="text-center h-11 text-base font-medium" 
+                                        />
+                                      </div>
+                                    ))}
+                                  </div>
 
-              {/* Floating Save Button */}
-              <Button 
-                className="fixed z-50 shadow-xl bottom-24 right-4 h-14 w-14 rounded-full p-0"
-                onClick={() => {
-                  toast({
-                    title: "Grades Saved",
-                    description: `${selectedEntrySubject} grades for ${selectedClass} have been saved.`,
-                  });
-                }}
-              >
-                <Save className="h-6 w-6" />
-              </Button>
-            </> : (
+                                  {/* Total & Grade Display */}
+                                  <div className="flex items-center justify-between p-3 rounded-lg bg-accent/50">
+                                    <div>
+                                      <p className="text-xs text-muted-foreground">Total Score</p>
+                                      <p className="text-2xl font-bold text-foreground">{total}<span className="text-sm text-muted-foreground">/100</span></p>
+                                    </div>
+                                    <Badge className={cn("text-xl px-4 py-2 font-bold", letterGrade.color)}>
+                                      {letterGrade.grade}
+                                    </Badge>
+                                  </div>
+
+                                  {/* Comments Section */}
+                                  <div className="space-y-3">
+                                    {/* Report Card Comments */}
+                                    <div>
+                                      <label className="text-xs font-medium text-emerald-600 mb-1 block">
+                                        Report Card Comments
+                                      </label>
+                                      <Textarea 
+                                        placeholder="Comments visible on report card..." 
+                                        value={input.reportComment} 
+                                        maxLength={500}
+                                        onChange={e => {
+                                          if (e.target.value.length <= 500) {
+                                            gradeEntry.updateGradeInput(student.id, "reportComment", e.target.value);
+                                          }
+                                        }} 
+                                        className="min-h-[70px] text-sm resize-none border-emerald-200 bg-emerald-50/50 dark:bg-emerald-950/20" 
+                                      />
+                                      <p className="text-[10px] text-muted-foreground text-right mt-1">
+                                        {(input.reportComment || "").length}/500
+                                      </p>
+                                    </div>
+                                    
+                                    {/* Study Recommendations */}
+                                    <div>
+                                      <label className="text-xs font-medium text-amber-600 mb-1 block">
+                                        Study Recommendations
+                                      </label>
+                                      <Textarea 
+                                        placeholder="e.g., Focus on Chapter 5, practice more word problems..." 
+                                        value={input.studyRecommendation} 
+                                        maxLength={300}
+                                        onChange={e => {
+                                          if (e.target.value.length <= 300) {
+                                            gradeEntry.updateGradeInput(student.id, "studyRecommendation", e.target.value);
+                                          }
+                                        }} 
+                                        className="min-h-[70px] text-sm resize-none border-amber-200 bg-amber-50/50 dark:bg-amber-950/20" 
+                                      />
+                                      <p className="text-[10px] text-muted-foreground text-right mt-1">
+                                        {(input.studyRecommendation || "").length}/300
+                                      </p>
+                                    </div>
+                                    
+                                    {/* Authentic Comments (Internal) */}
+                                    <div>
+                                      <label className="text-xs font-medium text-red-600 mb-1 flex items-center gap-1">
+                                        Authentic Comments <span className="text-[10px] text-red-400">(Internal)</span>
+                                      </label>
+                                      <Textarea 
+                                        placeholder="Internal notes - not visible to parents..." 
+                                        value={input.comment} 
+                                        onChange={e => gradeEntry.updateGradeInput(student.id, "comment", e.target.value)} 
+                                        className="min-h-[70px] text-sm resize-none border-red-200 bg-red-50/50 dark:bg-red-950/20" 
+                                      />
+                                    </div>
+                                  </div>
+                                </CardContent>
+                              </CollapsibleContent>
+                            </Card>
+                          </Collapsible>
+                        );
+                      })}
+                    </div>
+
+                    {/* Floating Save Button */}
+                    <Button 
+                      className="fixed z-50 shadow-xl bottom-24 right-4 h-14 w-14 rounded-full p-0"
+                      disabled={gradeEntry.saving}
+                      onClick={async () => {
+                        const result = await gradeEntry.save();
+                        if (result.success) {
+                          toast({
+                            title: "Grades Saved",
+                            description: `${gradeEntry.selectedSubject?.name} grades for ${gradeEntry.selectedClass} have been saved to database.`,
+                          });
+                        } else {
+                          toast({
+                            title: "Save Failed",
+                            description: result.error || "Failed to save grades. Please try again.",
+                            variant: "destructive"
+                          });
+                        }
+                      }}
+                    >
+                      {gradeEntry.saving ? (
+                        <Loader2 className="h-6 w-6 animate-spin" />
+                      ) : (
+                        <Save className="h-6 w-6" />
+                      )}
+                    </Button>
+                  </>
+                )}
+              </>
+            ) : (
               <Card className="border-dashed">
                 <CardContent className="p-6 text-center">
                   <BookOpen className="h-10 w-10 text-muted-foreground/50 mx-auto mb-3" />
-                  <p className="text-sm text-muted-foreground">Select a subject to start grading</p>
+                  <p className="text-sm text-muted-foreground">Select a class, subject, and period to start grading</p>
                   <p className="text-xs text-muted-foreground/70 mt-1">All students will appear for quick mark entry</p>
                 </CardContent>
               </Card>
