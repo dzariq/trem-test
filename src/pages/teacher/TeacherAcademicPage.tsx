@@ -201,9 +201,17 @@ export default function TeacherAcademicPage() {
   // Class Analysis hook (Supabase integration for Overview tab)
   const classAnalysis = useClassAnalysis();
   
-  // Analysis tab still uses mock data for selectedClass
-  const [selectedClass, setSelectedClass] = useState(teacherProfile.classes[0]);
-  const [selectedClasses, setSelectedClasses] = useState<string[]>([teacherProfile.classes[0]]);
+  // ======================================================================
+  // CLASS ANALYSIS: Use classAnalysis hook for UNIFIED state across all tabs
+  // This ensures Overview, Bands, Trends, Compare, BoxPlot all use SAME class/period selection
+  // ======================================================================
+  
+  // Derived values for convenience (from classAnalysis hook)
+  const selectedClass = classAnalysis.selectedClass;
+  const setSelectedClass = classAnalysis.setSelectedClass;
+  
+  // Legacy state that was previously separate - now consolidated:
+  const [selectedClasses, setSelectedClasses] = useState<string[]>([]);
   const [selectedStudent, setSelectedStudent] = useState<string | null>(null);
   const [expandedStudents, setExpandedStudents] = useState<string[]>([]);
   const [expandedSubjects, setExpandedSubjects] = useState<string[]>([]);
@@ -216,8 +224,23 @@ export default function TeacherAcademicPage() {
   const [selectedPeriod, setSelectedPeriod] = useState<"midYear" | "yearEnd">("midYear");
   const [selectedPeriods, setSelectedPeriods] = useState<string[]>(["midYear"]);
   const [selectedSubjects, setSelectedSubjects] = useState<string[]>([...subjects]);
-  const [bandsSelectedSubject, setBandsSelectedSubject] = useState<string>("Mathematics"); // Single subject for Bands tab
+  // bandsSelectedSubject is now driven by classAnalysis.bandsSelectedSubjectId
   const [bandsCompareMode, setBandsCompareMode] = useState(false);
+  
+  // Get bandsSelectedSubject name from hook's subject ID
+  const bandsSelectedSubject = useMemo(() => {
+    if (!classAnalysis.bandsSelectedSubjectId) return "";
+    const subject = classAnalysis.subjects.find(s => s.id === classAnalysis.bandsSelectedSubjectId);
+    return subject?.name || "";
+  }, [classAnalysis.bandsSelectedSubjectId, classAnalysis.subjects]);
+  
+  const setBandsSelectedSubject = useCallback((subjectName: string) => {
+    const subject = classAnalysis.subjects.find(s => s.name === subjectName);
+    if (subject) {
+      classAnalysis.setBandsSelectedSubjectId(subject.id);
+    }
+  }, [classAnalysis]);
+
   // Dynamic bands selections (Selection A is the main one, B, C, D... are additional)
   interface BandsSelection {
     id: string;
@@ -226,9 +249,24 @@ export default function TeacherAcademicPage() {
     period: "midYear" | "yearEnd";
     subject: string;
   }
-  const [bandsAdditionalSelections, setBandsAdditionalSelections] = useState<BandsSelection[]>([
-    { id: "B", className: teacherProfile.classes[1] || teacherProfile.classes[0], year: academicYears[0], period: "midYear", subject: "Mathematics" }
-  ]);
+  // Initialize with first class from classAnalysis once loaded
+  const [bandsAdditionalSelections, setBandsAdditionalSelections] = useState<BandsSelection[]>([]);
+  
+  // Sync selectedClasses with classAnalysis.classes when available
+  useEffect(() => {
+    if (classAnalysis.classes.length > 0 && selectedClasses.length === 0) {
+      setSelectedClasses([classAnalysis.classes[0]]);
+    }
+  }, [classAnalysis.classes, selectedClasses.length]);
+  
+  // Initialize bandsAdditionalSelections when classes are loaded
+  useEffect(() => {
+    if (classAnalysis.classes.length > 1 && bandsAdditionalSelections.length === 0) {
+      setBandsAdditionalSelections([
+        { id: "B", className: classAnalysis.classes[1], year: academicYears[0], period: "midYear", subject: bandsSelectedSubject || "Mathematics" }
+      ]);
+    }
+  }, [classAnalysis.classes, bandsAdditionalSelections.length, bandsSelectedSubject]);
   const [selectedCategory, setSelectedCategory] = useState<"attitude" | "homework" | "quiz" | "exam">("quiz");
 
   // Grade Entry category state (Grades, Behavior, Awards)
@@ -283,23 +321,33 @@ export default function TeacherAcademicPage() {
   const achievementAwardOptions = ["None", "Gold", "Silver", "Bronze", "Champion", "1st Runner-up", "2nd Runner-up", "Merit Award", "Participation"];
 
   // Comparison tab state - dynamic exam selections
+  // Initialize with classAnalysis.selectedClass instead of mock data
   interface ExamSelection {
     id: string;
     className: string;
     year: string;
     period: "midYear" | "yearEnd";
   }
-  const [examSelections, setExamSelections] = useState<ExamSelection[]>([
-    { id: "A", className: teacherProfile.classes[0], year: "2026", period: "midYear" },
-    { id: "B", className: teacherProfile.classes[0], year: "2025", period: "yearEnd" }
-  ]);
+  const [examSelections, setExamSelections] = useState<ExamSelection[]>([]);
   const [compareSubjects, setCompareSubjects] = useState<string[]>([...subjects]);
+  
+  // Initialize examSelections when classAnalysis.classes loads
+  useEffect(() => {
+    if (classAnalysis.classes.length > 0 && examSelections.length === 0) {
+      const defaultClass = classAnalysis.selectedClass || classAnalysis.classes[0];
+      setExamSelections([
+        { id: "A", className: defaultClass, year: "2026", period: "midYear" },
+        { id: "B", className: defaultClass, year: "2025", period: "yearEnd" }
+      ]);
+    }
+  }, [classAnalysis.classes, classAnalysis.selectedClass, examSelections.length]);
 
   // Backward compatibility getters for exam A and B (used in comparison logic)
-  const examAClass = examSelections[0]?.className || teacherProfile.classes[0];
+  const defaultClassName = classAnalysis.selectedClass || classAnalysis.classes[0] || "";
+  const examAClass = examSelections[0]?.className || defaultClassName;
   const examAYear = examSelections[0]?.year || "2026";
   const examAPeriod = examSelections[0]?.period || "midYear";
-  const examBClass = examSelections[1]?.className || teacherProfile.classes[0];
+  const examBClass = examSelections[1]?.className || defaultClassName;
   const examBYear = examSelections[1]?.year || "2025";
   const examBPeriod = examSelections[1]?.period || "yearEnd";
 
@@ -341,9 +389,9 @@ export default function TeacherAcademicPage() {
   const [boxPlotViewMode, setBoxPlotViewMode] = useState<"student" | "subject">("student");
   const [boxPlotStartYear, setBoxPlotStartYear] = useState<string>("2021");
   const [boxPlotEndYear, setBoxPlotEndYear] = useState<string>("2026");
-  // Mode A: Student filters
-  const [boxPlotGrade, setBoxPlotGrade] = useState<string>("5");
-  const [boxPlotClass, setBoxPlotClass] = useState<string>("5A");
+  // Mode A: Student filters - will be synced with classAnalysis.classes
+  const [boxPlotGrade, setBoxPlotGrade] = useState<string>("");
+  const [boxPlotClass, setBoxPlotClass] = useState<string>("");
   const [boxPlotStudentId, setBoxPlotStudentId] = useState<string>("");
   const [boxPlotStudentSubjects, setBoxPlotStudentSubjects] = useState<string[]>([]); // multiple subjects
   const [boxPlotStudentExamType, setBoxPlotStudentExamType] = useState<string>("all"); // optional - "all" means all
@@ -353,8 +401,8 @@ export default function TeacherAcademicPage() {
   const [boxPlotSubjectSearch, setBoxPlotSubjectSearch] = useState("");
   // Enhanced cohort scope with multi-select
   const [boxPlotCohortType, setBoxPlotCohortType] = useState<"classes" | "yearGroups" | "school">("classes");
-  const [boxPlotSelectedClasses, setBoxPlotSelectedClasses] = useState<string[]>(["5A"]);
-  const [boxPlotSelectedYearGroups, setBoxPlotSelectedYearGroups] = useState<string[]>(["Year 5"]);
+  const [boxPlotSelectedClasses, setBoxPlotSelectedClasses] = useState<string[]>([]);
+  const [boxPlotSelectedYearGroups, setBoxPlotSelectedYearGroups] = useState<string[]>([]);
   const [boxPlotCohortPopoverOpen, setBoxPlotCohortPopoverOpen] = useState(false);
   const [boxPlotSubjectExamType, setBoxPlotSubjectExamType] = useState<string>("all"); // optional
   
@@ -365,14 +413,55 @@ export default function TeacherAcademicPage() {
   const [whiskersAnalysisYear, setWhiskersAnalysisYear] = useState<string>("all");
   const [whiskersExpanded, setWhiskersExpanded] = useState(false);
   
-  // Available classes and year groups for cohort selection
-  const allAvailableClasses = ["5A", "5B", "4A", "4B", "3A", "3B"];
-  const allAvailableYearGroups = ["Year 5", "Year 4", "Year 3"];
-  const classesByYearGroup: Record<string, string[]> = {
-    "Year 5": ["5A", "5B"],
-    "Year 4": ["4A", "4B"],
-    "Year 3": ["3A", "3B"],
-  };
+  // Available classes from real data (classAnalysis hook)
+  const allAvailableClasses = useMemo(() => classAnalysis.classes, [classAnalysis.classes]);
+  
+  // Derive year groups from available classes
+  const allAvailableYearGroups = useMemo(() => {
+    const yearGroups = new Set<string>();
+    classAnalysis.classes.forEach(cls => {
+      // Extract year from class name (e.g., "Y11A" -> "Year 11", "5A" -> "Year 5")
+      const match = cls.match(/^Y?(\d+)/);
+      if (match) {
+        yearGroups.add(`Year ${match[1]}`);
+      }
+    });
+    return Array.from(yearGroups).sort((a, b) => {
+      const aNum = parseInt(a.match(/\d+/)?.[0] || "0");
+      const bNum = parseInt(b.match(/\d+/)?.[0] || "0");
+      return aNum - bNum;
+    });
+  }, [classAnalysis.classes]);
+  
+  // Map classes by year group
+  const classesByYearGroup: Record<string, string[]> = useMemo(() => {
+    const groups: Record<string, string[]> = {};
+    classAnalysis.classes.forEach(cls => {
+      const match = cls.match(/^Y?(\d+)/);
+      if (match) {
+        const yearGroup = `Year ${match[1]}`;
+        if (!groups[yearGroup]) groups[yearGroup] = [];
+        groups[yearGroup].push(cls);
+      }
+    });
+    return groups;
+  }, [classAnalysis.classes]);
+  
+  // Initialize boxplot selections when classes load
+  useEffect(() => {
+    if (classAnalysis.classes.length > 0 && !boxPlotClass) {
+      const firstClass = classAnalysis.selectedClass || classAnalysis.classes[0];
+      setBoxPlotClass(firstClass);
+      setBoxPlotSelectedClasses([firstClass]);
+      
+      // Extract year group from first class
+      const match = firstClass.match(/^Y?(\d+)/);
+      if (match) {
+        setBoxPlotGrade(match[1]);
+        setBoxPlotSelectedYearGroups([`Year ${match[1]}`]);
+      }
+    }
+  }, [classAnalysis.classes, classAnalysis.selectedClass, boxPlotClass]);
   
   // Available years from data
   const availableBoxPlotYears = useMemo(() => getAvailableYears(assessmentRecords), []);
@@ -706,117 +795,69 @@ export default function TeacherAcademicPage() {
   // Top performers (A*, A grades: 80%+)
   const topPerformers = rankedStudents.filter(s => s.score !== null && s.score >= 80);
 
-  // ===== BANDS TAB: Single subject filter calculations =====
-  const bandsFilteredScores = useMemo(() => {
-    const scores: { studentId: string; score: number }[] = [];
-    const subjectsToInclude = bandsSelectedSubject === "all" ? subjects : [bandsSelectedSubject];
-    
-    Object.entries(detailedGradesForClass).forEach(([studentId, studentGrades]) => {
-      let studentTotal = 0;
-      let subjectCount = 0;
-      Object.entries(studentGrades).forEach(([subject, grades]) => {
-        if (subjectsToInclude.includes(subject)) {
-          const total = grades.attitude + grades.homework + grades.quiz + grades.exam;
-          studentTotal += total;
-          subjectCount++;
-        }
-      });
-      if (subjectCount > 0) {
-        scores.push({ studentId, score: Math.round(studentTotal / subjectCount) });
-      }
-    });
-    return scores;
-  }, [detailedGradesForClass, bandsSelectedSubject, subjects]);
+  // ===== BANDS TAB: Use REAL DATA from classAnalysis hook =====
+  // The hook already computes bandsDistribution, bandsRankedStudents, etc. from Supabase
+  const bandsGradeDistribution = classAnalysis.bandsDistribution;
+  const bandsRankedStudents = classAnalysis.bandsRankedStudents.map(s => ({
+    id: s.studentId,
+    name: s.studentName,
+    score: s.score,
+    // Add placeholder fields to match expected structure
+    photo: null,
+    mealPlan: false,
+    outdoorCCA: false,
+    sportsHouse: "red" as const,
+    remarks: "",
+    joinDate: ""
+  }));
+  const bandsTopPerformers = classAnalysis.bandsTopPerformers.map(s => ({
+    id: s.studentId,
+    name: s.studentName,
+    score: s.score,
+    photo: null,
+    mealPlan: false,
+    outdoorCCA: false,
+    sportsHouse: "red" as const,
+    remarks: "",
+    joinDate: ""
+  }));
+  const bandsMiddlePerformers = classAnalysis.bandsMiddlePerformers.map(s => ({
+    id: s.studentId,
+    name: s.studentName,
+    score: s.score,
+    photo: null,
+    mealPlan: false,
+    outdoorCCA: false,
+    sportsHouse: "red" as const,
+    remarks: "",
+    joinDate: ""
+  }));
+  const bandsAtRiskStudents = classAnalysis.bandsAtRiskStudents.map(s => ({
+    id: s.studentId,
+    name: s.studentName,
+    score: s.score,
+    photo: null,
+    mealPlan: false,
+    outdoorCCA: false,
+    sportsHouse: "red" as const,
+    remarks: "",
+    joinDate: ""
+  }));
 
-  const bandsGradeDistribution = useMemo(() => {
-    const scores = bandsFilteredScores.map(s => s.score);
-    return [{
-      range: "A*",
-      count: scores.filter(g => g >= 90).length
-    }, {
-      range: "A",
-      count: scores.filter(g => g >= 80 && g < 90).length
-    }, {
-      range: "B",
-      count: scores.filter(g => g >= 70 && g < 80).length
-    }, {
-      range: "C",
-      count: scores.filter(g => g >= 60 && g < 70).length
-    }, {
-      range: "D",
-      count: scores.filter(g => g >= 50 && g < 60).length
-    }, {
-      range: "E",
-      count: scores.filter(g => g < 50).length
-    }];
-  }, [bandsFilteredScores]);
-
-  const bandsRankedStudents = useMemo(() => {
-    return bandsFilteredScores
-      .map(({ studentId, score }) => {
-        const student = students.find(s => s.id === studentId);
-        return student ? { ...student, score } : null;
-      })
-      .filter((s): s is { id: string; name: string; photo: string | null; mealPlan: boolean; outdoorCCA: boolean; sportsHouse: import("@/data/teacherMockData").SportsHouse; remarks: string; joinDate: string; score: number } => s !== null)
-      .sort((a, b) => b.score - a.score);
-  }, [bandsFilteredScores, students]);
-
-  const bandsTopPerformers = bandsRankedStudents.filter(s => s.score >= 80);
-  const bandsMiddlePerformers = bandsRankedStudents.filter(s => s.score >= 60 && s.score < 80);
-  const bandsAtRiskStudents = bandsRankedStudents.filter(s => s.score < 60);
-
-  // ===== BANDS COMPARISON: Calculate comparison data for all additional selections =====
+  // ===== BANDS COMPARISON: For additional selections, we'd need to fetch separately =====
+  // For now, provide empty data for comparison mode (to be implemented with separate queries)
   const bandsSelectionsData = useMemo(() => {
-    return bandsAdditionalSelections.map((selection, index) => {
-      const gradesForClass = detailedClassGrades[selection.className as keyof typeof detailedClassGrades] || {};
-      const studentsForClass = classRosters[selection.className as keyof typeof classRosters] || [];
-      const subjectsToInclude = selection.subject === "all" ? subjects : [selection.subject];
-      
-      const filteredScores: { studentId: string; score: number }[] = [];
-      Object.entries(gradesForClass).forEach(([studentId, studentGrades]) => {
-        let studentTotal = 0;
-        let subjectCount = 0;
-        Object.entries(studentGrades).forEach(([subject, grades]) => {
-          if (subjectsToInclude.includes(subject)) {
-            const total = grades.attitude + grades.homework + grades.quiz + grades.exam;
-            studentTotal += total;
-            subjectCount++;
-          }
-        });
-        if (subjectCount > 0) {
-          filteredScores.push({ studentId, score: Math.round(studentTotal / subjectCount) });
-        }
-      });
-      
-      const scores = filteredScores.map(s => s.score);
-      const gradeDistribution = [
-        { range: "A*", count: scores.filter(g => g >= 90).length },
-        { range: "A", count: scores.filter(g => g >= 80 && g < 90).length },
-        { range: "B", count: scores.filter(g => g >= 70 && g < 80).length },
-        { range: "C", count: scores.filter(g => g >= 60 && g < 70).length },
-        { range: "D", count: scores.filter(g => g >= 50 && g < 60).length },
-        { range: "E", count: scores.filter(g => g < 50).length },
-      ];
-      
-      const rankedStudents = filteredScores
-        .map(({ studentId, score }) => {
-          const student = studentsForClass.find(s => s.id === studentId);
-          return student ? { ...student, score } : null;
-        })
-        .filter((s): s is NonNullable<typeof s> => s !== null)
-        .sort((a, b) => b.score - a.score);
-      
-      return {
-        ...selection,
-        color: getSelectionColor(index + 1), // +1 because Selection A is index 0
-        gradeDistribution,
-        rankedStudents,
-        topPerformers: rankedStudents.filter(s => s.score >= 80),
-        middlePerformers: rankedStudents.filter(s => s.score >= 60 && s.score < 80),
-        atRiskStudents: rankedStudents.filter(s => s.score < 60),
-      };
-    });
-  }, [bandsAdditionalSelections, subjects]);
+    // Compare mode would need separate fetches per selection - show empty for now
+    return bandsAdditionalSelections.map((selection, index) => ({
+      ...selection,
+      color: getSelectionColor(index + 1),
+      gradeDistribution: [] as { range: string; count: number }[],
+      rankedStudents: [] as { id: string; name: string; score: number }[],
+      topPerformers: [] as { id: string; name: string; score: number }[],
+      middlePerformers: [] as { id: string; name: string; score: number }[],
+      atRiskStudents: [] as { id: string; name: string; score: number }[],
+    }));
+  }, [bandsAdditionalSelections]);
 
   // Keep backward compatibility references for first comparison (Selection B)
   const bandsCompareGradeDistribution = bandsSelectionsData[0]?.gradeDistribution || [];
@@ -825,8 +866,8 @@ export default function TeacherAcademicPage() {
   const bandsCompareMiddlePerformers = bandsSelectionsData[0]?.middlePerformers || [];
   const bandsCompareAtRiskStudents = bandsSelectionsData[0]?.atRiskStudents || [];
   // Backward compatibility getters for old variable names
-  const bandsCompareClass = bandsAdditionalSelections[0]?.className || teacherProfile.classes[0];
-  const bandsCompareSubject = bandsAdditionalSelections[0]?.subject || "Mathematics";
+  const bandsCompareClass = bandsAdditionalSelections[0]?.className || classAnalysis.selectedClass || "";
+  const bandsCompareSubject = bandsAdditionalSelections[0]?.subject || bandsSelectedSubject || "Mathematics";
 
   // Comparison chart data - now supports all selections
   const bandsComparisonChartData = useMemo(() => {
@@ -2294,57 +2335,54 @@ export default function TeacherAcademicPage() {
                         <span className="text-xs font-semibold text-blue-700">Selection A</span>
                       </div>
                     )}
-                    {/* Row 1: Class + Year + Exam Period */}
+                    {/* Row 1: Class + Academic Period (unified with Overview) */}
                     <div className="flex items-center gap-2">
-                      <Select value={selectedClass} onValueChange={setSelectedClass}>
-                        <SelectTrigger className="w-[80px]">
+                      <Select value={selectedClass || ""} onValueChange={setSelectedClass}>
+                        <SelectTrigger className="w-[100px]">
                           <SelectValue placeholder="Class" />
                         </SelectTrigger>
                         <SelectContent className="bg-card">
-                          {teacherProfile.classes.map((cls) => (
+                          {classAnalysis.classes.map((cls) => (
                             <SelectItem key={cls} value={cls}>{cls}</SelectItem>
                           ))}
                         </SelectContent>
                       </Select>
-                      <Select value={selectedYear} onValueChange={setSelectedYear}>
-                        <SelectTrigger className="w-[90px]">
-                          <SelectValue placeholder="Year" />
+                      {/* Academic Period Dropdown (same as Overview) */}
+                      <Select 
+                        value={classAnalysis.selectedPeriodId || ""} 
+                        onValueChange={(v) => classAnalysis.setSelectedPeriodId(v)}
+                      >
+                        <SelectTrigger className="flex-1 h-9">
+                          <SelectValue placeholder="Select Period" />
                         </SelectTrigger>
                         <SelectContent className="bg-card">
-                          {academicYears.map((year) => (
-                            <SelectItem key={year} value={year}>{year}</SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      <Select value={selectedPeriod} onValueChange={(v) => setSelectedPeriod(v as "midYear" | "yearEnd")}>
-                        <SelectTrigger className="flex-1">
-                          <SelectValue placeholder="Period" />
-                        </SelectTrigger>
-                        <SelectContent className="bg-card">
-                          {examPeriods.map((period) => (
-                            <SelectItem key={period.value} value={period.value}>{period.label}</SelectItem>
+                          {classAnalysis.academicPeriods.map((period) => (
+                            <SelectItem key={period.id} value={period.id}>{period.name}</SelectItem>
                           ))}
                         </SelectContent>
                       </Select>
                     </div>
                     
-                    {/* Subject Filter */}
+                    {/* Subject Filter - use real subjects from classAnalysis */}
                     <div className="space-y-2">
                       <span className="text-sm font-medium text-foreground">Subject:</span>
                       <div className="flex flex-wrap gap-1.5 p-2.5 rounded-lg border border-border bg-background">
-                        {subjectGroups.map((group) => (
-                          <SubjectGroupPill
-                            key={group.baseName}
-                            baseName={group.baseName}
-                            shortName={group.shortName}
-                            variants={group.variants || []}
-                            selectedSubjects={[bandsSelectedSubject]}
-                            onToggle={(subjectName) => {
-                              setBandsSelectedSubject(subjectName);
-                            }}
-                            singleSelect={true}
-                          />
-                        ))}
+                        {classAnalysis.subjects.length > 0 ? classAnalysis.subjects.map((subject) => (
+                          <button
+                            key={subject.id}
+                            onClick={() => classAnalysis.setBandsSelectedSubjectId(subject.id)}
+                            className={cn(
+                              "px-2.5 py-1 rounded-full text-xs font-medium transition-all",
+                              classAnalysis.bandsSelectedSubjectId === subject.id
+                                ? "bg-primary text-primary-foreground"
+                                : "bg-muted text-muted-foreground hover:bg-muted/80"
+                            )}
+                          >
+                            {subject.name.length > 15 ? subject.name.substring(0, 15) + "..." : subject.name}
+                          </button>
+                        )) : (
+                          <span className="text-xs text-muted-foreground">Select a class first</span>
+                        )}
                       </div>
                     </div>
                   </div>
@@ -2378,66 +2416,56 @@ export default function TeacherAcademicPage() {
                               prev.map(s => s.id === selection.id ? {...s, className: v} : s)
                             )}
                           >
-                            <SelectTrigger className="w-[80px]">
+                            <SelectTrigger className="w-[100px]">
                               <SelectValue placeholder="Class" />
                             </SelectTrigger>
                             <SelectContent className="bg-card">
-                              {teacherProfile.classes.map((cls) => (
+                              {classAnalysis.classes.map((cls) => (
                                 <SelectItem key={cls} value={cls}>{cls}</SelectItem>
                               ))}
                             </SelectContent>
                           </Select>
+                          {/* Academic Period Dropdown */}
                           <Select 
-                            value={selection.year} 
-                            onValueChange={(v) => setBandsAdditionalSelections(prev => 
-                              prev.map(s => s.id === selection.id ? {...s, year: v} : s)
-                            )}
+                            value={classAnalysis.selectedPeriodId || ""} 
+                            onValueChange={(v) => classAnalysis.setSelectedPeriodId(v)}
                           >
-                            <SelectTrigger className="w-[90px]">
-                              <SelectValue placeholder="Year" />
-                            </SelectTrigger>
-                            <SelectContent className="bg-card">
-                              {academicYears.map((year) => (
-                                <SelectItem key={year} value={year}>{year}</SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                          <Select 
-                            value={selection.period} 
-                            onValueChange={(v) => setBandsAdditionalSelections(prev => 
-                              prev.map(s => s.id === selection.id ? {...s, period: v as "midYear" | "yearEnd"} : s)
-                            )}
-                          >
-                            <SelectTrigger className="flex-1">
+                            <SelectTrigger className="flex-1 h-9">
                               <SelectValue placeholder="Period" />
                             </SelectTrigger>
                             <SelectContent className="bg-card">
-                              {examPeriods.map((period) => (
-                                <SelectItem key={period.value} value={period.value}>{period.label}</SelectItem>
+                              {classAnalysis.academicPeriods.map((period) => (
+                                <SelectItem key={period.id} value={period.id}>{period.name}</SelectItem>
                               ))}
                             </SelectContent>
                           </Select>
                         </div>
                         
-                        {/* Subject Filter */}
+                        {/* Subject Filter - use real subjects */}
                         <div className="space-y-2">
                           <span className="text-sm font-medium text-foreground">Subject:</span>
                           <div className="flex flex-wrap gap-1.5 p-2.5 rounded-lg border border-border bg-background">
-                            {subjectGroups.map((group) => (
-                              <SubjectGroupPill
-                                key={group.baseName}
-                                baseName={group.baseName}
-                                shortName={group.shortName}
-                                variants={group.variants || []}
-                                selectedSubjects={[selection.subject]}
-                                onToggle={(subjectName) => {
-                                  setBandsAdditionalSelections(prev => 
-                                    prev.map(s => s.id === selection.id ? {...s, subject: subjectName} : s)
-                                  );
-                                }}
-                                singleSelect={true}
-                              />
-                            ))}
+                            {classAnalysis.subjects.map((subject) => {
+                              const isSelected = selection.subject === subject.name;
+                              return (
+                                <button
+                                  key={subject.id}
+                                  onClick={() => {
+                                    setBandsAdditionalSelections(prev => 
+                                      prev.map(s => s.id === selection.id ? {...s, subject: subject.name} : s)
+                                    );
+                                  }}
+                                  className={cn(
+                                    "px-2.5 py-1 rounded-full text-xs font-medium transition-all",
+                                    isSelected
+                                      ? "bg-primary text-primary-foreground"
+                                      : "bg-muted text-muted-foreground hover:bg-muted/80"
+                                  )}
+                                >
+                                  {subject.name.length > 15 ? subject.name.substring(0, 15) + "..." : subject.name}
+                                </button>
+                              );
+                            })}
                           </div>
                         </div>
                       </div>
@@ -2453,12 +2481,13 @@ export default function TeacherAcademicPage() {
                       onClick={() => {
                         const existingIds = ["A", ...bandsAdditionalSelections.map(s => s.id)];
                         const newId = getNextSelectionId(existingIds);
+                        const firstSubject = classAnalysis.subjects[0]?.name || "Mathematics";
                         setBandsAdditionalSelections(prev => [...prev, {
                           id: newId,
-                          className: teacherProfile.classes[0],
+                          className: classAnalysis.classes[0] || "",
                           year: academicYears[0],
                           period: "midYear",
-                          subject: "Mathematics"
+                          subject: firstSubject
                         }]);
                       }}
                     >
@@ -3596,13 +3625,13 @@ export default function TeacherAcademicPage() {
                           </span>}
                       </div>
                     </div>
-                    {/* Class Selector */}
-                    <Select value={selectedClass} onValueChange={setSelectedClass}>
-                      <SelectTrigger className="w-20 h-8 text-xs">
-                        <SelectValue />
+                    {/* Class Selector - uses unified state from classAnalysis */}
+                    <Select value={selectedClass || ""} onValueChange={setSelectedClass}>
+                      <SelectTrigger className="w-24 h-8 text-xs">
+                        <SelectValue placeholder="Class" />
                       </SelectTrigger>
                       <SelectContent>
-                        {teacherProfile.classes.map(cls => <SelectItem key={cls} value={cls}>{cls}</SelectItem>)}
+                        {classAnalysis.classes.map(cls => <SelectItem key={cls} value={cls}>{cls}</SelectItem>)}
                       </SelectContent>
                     </Select>
                   </div>
@@ -4123,7 +4152,7 @@ export default function TeacherAcademicPage() {
                               <SelectValue placeholder="Class" />
                             </SelectTrigger>
                             <SelectContent className="bg-card">
-                              {teacherProfile.classes.map(cls => <SelectItem key={cls} value={cls}>{cls}</SelectItem>)}
+                              {classAnalysis.classes.map(cls => <SelectItem key={cls} value={cls}>{cls}</SelectItem>)}
                             </SelectContent>
                           </Select>
                           <Select 
@@ -4168,7 +4197,7 @@ export default function TeacherAcademicPage() {
                         const newId = getNextSelectionId(existingIds);
                         setExamSelections(prev => [...prev, {
                           id: newId,
-                          className: teacherProfile.classes[0],
+                          className: classAnalysis.classes[0] || "",
                           year: academicYears[0],
                           period: "midYear"
                         }]);
