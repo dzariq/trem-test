@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Badge } from "@/components/ui/badge";
 import { NotificationsDrawer } from "@/components/NotificationsDrawer";
+import { useNotifications } from "@/hooks/useNotifications";
 
 interface AppHeaderProps {
   title?: string;
@@ -25,6 +26,7 @@ export function AppHeader({
   const navigate = useNavigate();
   const location = useLocation();
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
+  const { unreadCount } = useNotifications();
   
   const isTeacherPortal = location.pathname.startsWith("/teacher");
   const basePath = isTeacherPortal ? "/teacher" : "/parent";
@@ -53,11 +55,13 @@ export function AppHeader({
                 onClick={() => setIsNotificationsOpen(true)}
               >
                 <Bell className="h-5 w-5" />
-                <Badge 
-                  className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 text-xs bg-destructive text-destructive-foreground"
-                >
-                  3
-                </Badge>
+                {unreadCount > 0 && (
+                  <Badge 
+                    className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 text-xs bg-destructive text-destructive-foreground"
+                  >
+                    {unreadCount > 9 ? "9+" : unreadCount}
+                  </Badge>
+                )}
               </Button>
             )}
             

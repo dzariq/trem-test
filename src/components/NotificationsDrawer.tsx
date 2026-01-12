@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   Drawer,
@@ -10,6 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { SwipeableNotification } from "@/components/SwipeableNotification";
+import { useNotifications } from "@/hooks/useNotifications";
 import { 
   Bell, 
   Calendar, 
@@ -25,8 +26,10 @@ import {
   Camera,
   ClipboardCheck,
   MessageSquare,
-  GraduationCap
+  GraduationCap,
+  Loader2
 } from "lucide-react";
+import { useState } from "react";
 
 type NotificationType = 
   | "announcement" 
@@ -45,216 +48,36 @@ type NotificationType =
   | "ptm"
   | "message";
 
-interface Notification {
-  id: string;
-  type: NotificationType;
-  title: string;
-  message: string;
-  time: string;
-  isRead: boolean;
-  linkTo?: string; // Navigation path when clicked
-  linkParams?: Record<string, string>; // Optional params like announcement ID
-}
-
-const parentNotifications: Notification[] = [
-  {
-    id: "1",
-    type: "announcement",
-    title: "School Holiday Notice",
-    message: "School will be closed on 29th January for Chinese New Year.",
-    time: "2 hours ago",
-    isRead: false,
-    linkTo: "/parent/announcements/1"
-  },
-  {
-    id: "2",
-    type: "event",
-    title: "Sports Day Reminder",
-    message: "Don't forget! Sports Day is on 15th January. Please prepare sports attire.",
-    time: "5 hours ago",
-    isRead: false,
-    linkTo: "/parent/calendar"
-  },
-  {
-    id: "3",
-    type: "report_card",
-    title: "Report Card Available",
-    message: "Mid-Year 2025 report card is now available for download.",
-    time: "1 day ago",
-    isRead: false,
-    linkTo: "/parent/academic"
-  },
-  {
-    id: "4",
-    type: "payment",
-    title: "Fee Payment Reminder",
-    message: "Term 2 school fees are due by 31st January.",
-    time: "2 days ago",
-    isRead: true,
-    linkTo: "/parent/support"
-  },
-  {
-    id: "5",
-    type: "ptm",
-    title: "Parent-Teacher Meeting",
-    message: "PTM scheduled for 20th January. Please book your slot.",
-    time: "3 days ago",
-    isRead: true,
-    linkTo: "/parent/calendar"
-  },
-  {
-    id: "6",
-    type: "award",
-    title: "New Award Earned! 🏆",
-    message: "Emma has received the Science Fair Gold Award. View certificate now!",
-    time: "4 days ago",
-    isRead: false,
-    linkTo: "/parent/academic?tab=cocurriculum"
-  },
-  {
-    id: "7",
-    type: "attendance",
-    title: "Attendance Update",
-    message: "Emma was marked late today at 8:15 AM.",
-    time: "Today",
-    isRead: false,
-    linkTo: "/parent/attendance"
-  },
-  {
-    id: "8",
-    type: "grade",
-    title: "New Grade Posted",
-    message: "Mathematics mid-year exam grade has been updated.",
-    time: "5 days ago",
-    isRead: true,
-    linkTo: "/parent/academic"
-  },
-  {
-    id: "9",
-    type: "meal",
-    title: "Meal Plan Renewal",
-    message: "Your child's meal plan expires on 31st January. Renew now to avoid interruption.",
-    time: "1 week ago",
-    isRead: true,
-    linkTo: "/parent"
-  },
-  {
-    id: "10",
-    type: "announcement",
-    title: "New School Uniform Policy",
-    message: "Updated uniform guidelines effective from February 2026. Read the full announcement.",
-    time: "1 week ago",
-    isRead: true,
-    linkTo: "/parent/announcements/2"
-  },
-  {
-    id: "11",
-    type: "permission",
-    title: "Permission Slip Required",
-    message: "Please sign the field trip permission slip for the Zoo visit on 25th January.",
-    time: "2 weeks ago",
-    isRead: true,
-    linkTo: "/parent/support"
-  },
-  {
-    id: "12",
-    type: "photo",
-    title: "New Photos Available",
-    message: "Class photos from the Art Exhibition are now available to view.",
-    time: "2 weeks ago",
-    isRead: true,
-    linkTo: "/parent"
-  }
-];
-
-const teacherNotifications: Notification[] = [
-  {
-    id: "1",
-    type: "attendance",
-    title: "Attendance Reminder",
-    message: "Please submit attendance for Class 5A before 9:00 AM.",
-    time: "30 mins ago",
-    isRead: false,
-    linkTo: "/teacher/attendance"
-  },
-  {
-    id: "2",
-    type: "grade",
-    title: "Grade Submission Due",
-    message: "Mid-Year exam grades for Class 5A are due by January 10th.",
-    time: "2 hours ago",
-    isRead: false,
-    linkTo: "/teacher/academic"
-  },
-  {
-    id: "3",
-    type: "event",
-    title: "Staff Meeting",
-    message: "Weekly staff meeting scheduled for Friday at 3:00 PM in the conference room.",
-    time: "5 hours ago",
-    isRead: false,
-    linkTo: "/teacher/calendar"
-  },
-  {
-    id: "4",
-    type: "announcement",
-    title: "School Holiday Notice",
-    message: "School will be closed on 29th January for Chinese New Year.",
-    time: "1 day ago",
-    isRead: true,
-    linkTo: "/teacher"
-  },
-  {
-    id: "5",
-    type: "academic",
-    title: "New Curriculum Update",
-    message: "Updated Science curriculum materials are now available for download.",
-    time: "2 days ago",
-    isRead: true,
-    linkTo: "/teacher/academic"
-  },
-  {
-    id: "6",
-    type: "alert",
-    title: "Student Absence Alert",
-    message: "Ahmad bin Ali (5A) has been absent for 3 consecutive days.",
-    time: "2 days ago",
-    isRead: true,
-    linkTo: "/teacher/attendance"
-  },
-  {
-    id: "7",
-    type: "message",
-    title: "Parent Message",
-    message: "Mrs. Johnson has sent you a message regarding Emma's progress.",
-    time: "3 days ago",
-    isRead: false,
-    linkTo: "/teacher"
-  },
-  {
-    id: "8",
-    type: "ptm",
-    title: "PTM Slot Booked",
-    message: "Mr. & Mrs. Ahmad have booked a slot for 20th January at 2:00 PM.",
-    time: "4 days ago",
-    isRead: true,
-    linkTo: "/teacher/calendar"
-  }
-];
-
 interface NotificationsDrawerProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   isTeacher?: boolean;
 }
 
-export function NotificationsDrawer({ open, onOpenChange, isTeacher = false }: NotificationsDrawerProps) {
+export function NotificationsDrawer({ open, onOpenChange }: NotificationsDrawerProps) {
   const navigate = useNavigate();
-  const [notifications, setNotifications] = useState(isTeacher ? teacherNotifications : parentNotifications);
+  const { 
+    notifications, 
+    unreadCount, 
+    isLoading,
+    markAsRead,
+    markAllAsRead,
+    deleteNotification,
+    seedNotifications,
+    isMarkingAllRead
+  } = useNotifications();
+  
   const [filter, setFilter] = useState<"all" | "unread">("all");
 
-  const getTypeIcon = (type: NotificationType) => {
-    switch (type) {
+  // Seed notifications on first load if empty
+  useEffect(() => {
+    if (open && notifications.length === 0 && !isLoading) {
+      seedNotifications();
+    }
+  }, [open, notifications.length, isLoading, seedNotifications]);
+
+  const getTypeIcon = (type: string) => {
+    switch (type as NotificationType) {
       case "announcement": return Megaphone;
       case "event": return Calendar;
       case "academic": return GraduationCap;
@@ -274,8 +97,8 @@ export function NotificationsDrawer({ open, onOpenChange, isTeacher = false }: N
     }
   };
 
-  const getTypeColor = (type: NotificationType) => {
-    switch (type) {
+  const getTypeColor = (type: string) => {
+    switch (type as NotificationType) {
       case "announcement": return "bg-primary text-primary-foreground";
       case "event": return "bg-blue-500 text-white";
       case "academic": return "bg-indigo-500 text-white";
@@ -295,30 +118,22 @@ export function NotificationsDrawer({ open, onOpenChange, isTeacher = false }: N
     }
   };
 
-  const handleNotificationClick = (notification: Notification) => {
-    // Remove notification and navigate
-    setNotifications(prev => prev.filter(n => n.id !== notification.id));
+  const handleNotificationClick = (notification: { id: string; link_to: string | null; is_read: boolean }) => {
+    // Mark as read if not already
+    if (!notification.is_read) {
+      markAsRead(notification.id);
+    }
     
     // Navigate if there's a link
-    if (notification.linkTo) {
-      onOpenChange(false); // Close drawer
-      navigate(notification.linkTo);
+    if (notification.link_to) {
+      onOpenChange(false);
+      navigate(notification.link_to);
     }
-  };
-
-  const deleteNotification = (id: string) => {
-    setNotifications(prev => prev.filter(n => n.id !== id));
-  };
-
-  const markAllAsRead = () => {
-    setNotifications(prev => prev.map(n => ({ ...n, isRead: true })));
   };
 
   const filteredNotifications = filter === "all" 
     ? notifications 
-    : notifications.filter(n => !n.isRead);
-
-  const unreadCount = notifications.filter(n => !n.isRead).length;
+    : notifications.filter(n => !n.is_read);
 
   return (
     <Drawer open={open} onOpenChange={onOpenChange}>
@@ -350,7 +165,16 @@ export function NotificationsDrawer({ open, onOpenChange, isTeacher = false }: N
               </Badge>
             </div>
             {unreadCount > 0 && (
-              <Button variant="ghost" size="sm" onClick={markAllAsRead} className="text-xs">
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                onClick={() => markAllAsRead()} 
+                className="text-xs"
+                disabled={isMarkingAllRead}
+              >
+                {isMarkingAllRead ? (
+                  <Loader2 className="h-3 w-3 mr-1 animate-spin" />
+                ) : null}
                 Mark all read
               </Button>
             )}
@@ -361,36 +185,41 @@ export function NotificationsDrawer({ open, onOpenChange, isTeacher = false }: N
         </div>
 
         <ScrollArea className="flex-1 px-4 pb-6" style={{ maxHeight: "calc(85vh - 160px)" }}>
-          {/* Notifications List */}
-          <div className="space-y-2">
-            {filteredNotifications.map((notification) => {
-              const Icon = getTypeIcon(notification.type);
-              const hasLink = !!notification.linkTo;
-              
-              return (
-                <SwipeableNotification
-                  key={notification.id}
-                  id={notification.id}
-                  icon={<Icon className="h-5 w-5" />}
-                  iconBgClass={getTypeColor(notification.type)}
-                  title={notification.title}
-                  message={notification.message}
-                  time={notification.time}
-                  isRead={notification.isRead}
-                  hasLink={hasLink}
-                  onClick={() => handleNotificationClick(notification)}
-                  onDelete={() => deleteNotification(notification.id)}
-                />
-              );
-            })}
+          {isLoading ? (
+            <div className="flex items-center justify-center py-12">
+              <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+            </div>
+          ) : (
+            <div className="space-y-2">
+              {filteredNotifications.map((notification) => {
+                const Icon = getTypeIcon(notification.type);
+                const hasLink = !!notification.link_to;
+                
+                return (
+                  <SwipeableNotification
+                    key={notification.id}
+                    id={notification.id}
+                    icon={<Icon className="h-5 w-5" />}
+                    iconBgClass={getTypeColor(notification.type)}
+                    title={notification.title}
+                    message={notification.message}
+                    time={notification.time}
+                    isRead={notification.is_read}
+                    hasLink={hasLink}
+                    onClick={() => handleNotificationClick(notification)}
+                    onDelete={() => deleteNotification(notification.id)}
+                  />
+                );
+              })}
 
-            {filteredNotifications.length === 0 && (
-              <div className="text-center py-12">
-                <Bell className="h-12 w-12 mx-auto text-muted-foreground/50 mb-3" />
-                <p className="text-muted-foreground">No notifications</p>
-              </div>
-            )}
-          </div>
+              {filteredNotifications.length === 0 && (
+                <div className="text-center py-12">
+                  <Bell className="h-12 w-12 mx-auto text-muted-foreground/50 mb-3" />
+                  <p className="text-muted-foreground">No notifications</p>
+                </div>
+              )}
+            </div>
+          )}
         </ScrollArea>
       </DrawerContent>
     </Drawer>
