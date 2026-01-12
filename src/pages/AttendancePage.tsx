@@ -4,7 +4,7 @@ import { AppHeader } from "@/components/layout/AppHeader";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { ChevronLeft, ChevronRight, Check, X, Clock, CalendarOff } from "lucide-react";
+import { ChevronLeft, ChevronRight, Check, X, Clock, CalendarOff, Bug } from "lucide-react";
 import schoolLogo from "@/assets/school-badge.png";
 import {
   BarChart,
@@ -29,7 +29,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { useStudentSelection } from "@/hooks/useStudentSelection";
-import { useParentAttendance, seedParentAttendanceDemo } from "@/hooks/useParentAttendance";
+import { useParentAttendance, useRollingAttendance, seedParentAttendanceDemo } from "@/hooks/useParentAttendance";
 
 const months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
 
@@ -37,18 +37,57 @@ type StatusFilter = "all" | "present" | "absent" | "late" | "excused";
 type ZoomLevel = 3 | 6 | 12;
 type DayRecord = { date: string; status: string; reason: string | null; remarks: string | null };
 
+// DEV Debug Panel Component
+function DebugPanel({ 
+  debugInfo, 
+  rollingDebugInfo,
+  zoomLevel,
+  visible 
+}: { 
+  debugInfo: { selectedStudentId: string | null; queryStart: string; queryEnd: string; rowsReturned: number; supabaseError: string | null; lastFetchTime: string };
+  rollingDebugInfo: { selectedStudentId: string | null; queryStart: string; queryEnd: string; rowsReturned: number; supabaseError: string | null; lastFetchTime: string };
+  zoomLevel: ZoomLevel;
+  visible: boolean;
+}) {
+  if (!visible) return null;
+  
+  const activeDebug = zoomLevel === 12 ? debugInfo : rollingDebugInfo;
+  
+  return (
+    <div className="mx-4 mb-4 p-3 bg-yellow-100 dark:bg-yellow-900/30 border border-yellow-400 dark:border-yellow-600 rounded-lg text-xs font-mono">
+      <div className="flex items-center gap-2 mb-2">
+        <Bug className="h-4 w-4 text-yellow-600" />
+        <span className="font-bold text-yellow-800 dark:text-yellow-200">DEV DEBUG PANEL</span>
+      </div>
+      <div className="space-y-1 text-yellow-900 dark:text-yellow-100">
+        <p><strong>Student ID:</strong> {activeDebug.selectedStudentId || "none"}</p>
+        <p><strong>Query Mode:</strong> {zoomLevel === 12 ? "Yearly" : `Rolling ${zoomLevel} months`}</p>
+        <p><strong>Date Range:</strong> {activeDebug.queryStart} → {activeDebug.queryEnd}</p>
+        <p><strong>Rows Returned:</strong> {activeDebug.rowsReturned}</p>
+        {activeDebug.supabaseError && (
+          <p className="text-red-600"><strong>Error:</strong> {activeDebug.supabaseError}</p>
+        )}
+        <p className="text-[10px] text-yellow-700 dark:text-yellow-300">
+          Last fetch: {activeDebug.lastFetchTime ? new Date(activeDebug.lastFetchTime).toLocaleTimeString() : "never"}
+        </p>
+      </div>
+    </div>
+  );
+}
+
 export default function AttendancePage() {
   const [selectedMonth, setSelectedMonth] = useState("January");
   const [currentMonthIndex, setCurrentMonthIndex] = useState(0); // January = 0
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
   const [selectedYear, setSelectedYear] = useState("2026");
-  const [zoomLevel, setZoomLevel] = useState<ZoomLevel>(3);
+  const [zoomLevel, setZoomLevel] = useState<ZoomLevel>(12); // Default to yearly view
   const chartContainerRef = useRef<HTMLDivElement>(null);
   const [isPinching, setIsPinching] = useState(false);
   const lastPinchDistance = useRef<number | null>(null);
   const [activeTooltip, setActiveTooltip] = useState<string | null>(null);
   const [selectedDay, setSelectedDay] = useState<DayRecord | null>(null);
   const [seedingDone, setSeedingDone] = useState(false);
+  const [showDebug, setShowDebug] = useState(import.meta.env.DEV);
 
   const {
     linkedStudents,
@@ -58,15 +97,24 @@ export default function AttendancePage() {
     setSelectedStudentId,
   } = useStudentSelection();
 
-  // Use real DB attendance data
+  // Use yearly attendance data (for 12-month view and monthly breakdown)
   const {
     records,
     loading: attendanceLoading,
     error: attendanceError,
-    chartData: allChartData,
+    chartData: yearlyChartData,
     getMonthlySummary,
     getDailyBreakdown,
+    debugInfo,
+    refetch,
   } = useParentAttendance(selectedStudentId, selectedYear);
+
+  // Use rolling window attendance (for 3/6 month views)
+  const {
+    chartData: rollingChartData,
+    loading: rollingLoading,
+    debugInfo: rollingDebugInfo,
+  } = useRollingAttendance(selectedStudentId, zoomLevel === 12 ? 12 : zoomLevel);
 
   // Seed demo data on page load (dev only)
   useEffect(() => {
@@ -74,14 +122,13 @@ export default function AttendancePage() {
       seedParentAttendanceDemo().then((result) => {
         console.log("[attendance] Seeding result:", result);
         setSeedingDone(true);
-        // Trigger refetch by updating year temporarily
+        // Trigger refetch after seeding
         if (result.inserted > 0) {
-          setSelectedYear("2025");
-          setTimeout(() => setSelectedYear("2026"), 100);
+          refetch();
         }
       });
     }
-  }, [selectedStudentId, seedingDone]);
+  }, [selectedStudentId, seedingDone, refetch]);
   
   // Swipe navigation state
   const [monthOffset, setMonthOffset] = useState(0); // 0 = most recent months
@@ -93,7 +140,7 @@ export default function AttendancePage() {
   const zoomOptions: { value: ZoomLevel; label: string }[] = [
     { value: 3, label: "3 Months" },
     { value: 6, label: "6 Months" },
-    { value: 12, label: "12 Months" },
+    { value: 12, label: "Yearly" },
   ];
 
   const goToPrevMonth = () => {
@@ -248,6 +295,9 @@ export default function AttendancePage() {
     return status.charAt(0).toUpperCase() + status.slice(1);
   };
 
+  // Use rolling data for 3/6 month views, yearly data for 12-month view
+  const allChartData = zoomLevel === 12 ? yearlyChartData : rollingChartData;
+
   const chartDataWithTotal = allChartData.map(item => ({
     ...item,
     total: item.present + item.absent + item.late + item.excused
@@ -256,16 +306,13 @@ export default function AttendancePage() {
   // Get visible chart data based on zoom level and offset
   const chartData = (() => {
     if (zoomLevel === 12) return chartDataWithTotal;
-    const endIndex = chartDataWithTotal.length - monthOffset;
-    const startIndex = Math.max(0, endIndex - zoomLevel);
-    return chartDataWithTotal.slice(startIndex, endIndex);
+    // For rolling windows (3/6), show all data (already filtered by date range)
+    return chartDataWithTotal;
   })();
 
-  // Reset offset when zoom level shows all months
+  // Reset offset when zoom level changes
   useEffect(() => {
-    if (zoomLevel === 12) {
-      setMonthOffset(0);
-    }
+    setMonthOffset(0);
   }, [zoomLevel]);
 
   // Calculate monthly summary from real data
@@ -324,11 +371,19 @@ export default function AttendancePage() {
     { value: "excused", label: "Excused", count: monthlySummary.excused },
   ];
 
-  const isLoading = studentsLoading || attendanceLoading;
+  const isLoading = studentsLoading || attendanceLoading || (zoomLevel !== 12 && rollingLoading);
 
   return (
     <AppLayout>
-      <AppHeader 
+      {/* DEV Debug Panel */}
+      <DebugPanel 
+        debugInfo={debugInfo} 
+        rollingDebugInfo={rollingDebugInfo}
+        zoomLevel={zoomLevel}
+        visible={showDebug} 
+      />
+      
+      <AppHeader
         leftContent={
           <div className="flex items-center gap-2">
             <img src={schoolLogo} alt="School Logo" className="h-16 w-auto -my-3 drop-shadow-md" />
