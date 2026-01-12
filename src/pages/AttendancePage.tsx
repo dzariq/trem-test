@@ -29,7 +29,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { useStudentSelection } from "@/hooks/useStudentSelection";
-import { useParentAttendance, useRollingAttendance, seedParentAttendanceDemo } from "@/hooks/useParentAttendance";
+import { useParentAttendance, useRollingAttendance } from "@/hooks/useParentAttendance";
 
 const months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
 
@@ -37,19 +37,19 @@ type StatusFilter = "all" | "present" | "absent" | "late" | "excused";
 type ZoomLevel = 3 | 6 | 12;
 type DayRecord = { date: string; status: string; reason: string | null; remarks: string | null };
 
-// DEV Debug Panel Component
+// DEV Debug Panel Component - only visible if import.meta.env.DEV && localStorage.dev_debug === '1'
 function DebugPanel({ 
   debugInfo, 
   rollingDebugInfo,
   zoomLevel,
-  visible 
 }: { 
   debugInfo: { selectedStudentId: string | null; queryStart: string; queryEnd: string; rowsReturned: number; supabaseError: string | null; lastFetchTime: string };
   rollingDebugInfo: { selectedStudentId: string | null; queryStart: string; queryEnd: string; rowsReturned: number; supabaseError: string | null; lastFetchTime: string };
   zoomLevel: ZoomLevel;
-  visible: boolean;
 }) {
-  if (!visible) return null;
+  // Only render if DEV mode AND explicit localStorage flag
+  const shouldShow = import.meta.env.DEV && typeof window !== 'undefined' && localStorage.getItem('dev_debug') === '1';
+  if (!shouldShow) return null;
   
   const activeDebug = zoomLevel === 12 ? debugInfo : rollingDebugInfo;
   
@@ -86,8 +86,6 @@ export default function AttendancePage() {
   const lastPinchDistance = useRef<number | null>(null);
   const [activeTooltip, setActiveTooltip] = useState<string | null>(null);
   const [selectedDay, setSelectedDay] = useState<DayRecord | null>(null);
-  const [seedingDone, setSeedingDone] = useState(false);
-  const [showDebug, setShowDebug] = useState(import.meta.env.DEV);
 
   const {
     linkedStudents,
@@ -106,7 +104,6 @@ export default function AttendancePage() {
     getMonthlySummary,
     getDailyBreakdown,
     debugInfo,
-    refetch,
   } = useParentAttendance(selectedStudentId, selectedYear);
 
   // Use rolling window attendance (for 3/6 month views)
@@ -115,20 +112,6 @@ export default function AttendancePage() {
     loading: rollingLoading,
     debugInfo: rollingDebugInfo,
   } = useRollingAttendance(selectedStudentId, zoomLevel === 12 ? 12 : zoomLevel);
-
-  // Seed demo data on page load (dev only)
-  useEffect(() => {
-    if (!seedingDone && selectedStudentId) {
-      seedParentAttendanceDemo().then((result) => {
-        console.log("[attendance] Seeding result:", result);
-        setSeedingDone(true);
-        // Trigger refetch after seeding
-        if (result.inserted > 0) {
-          refetch();
-        }
-      });
-    }
-  }, [selectedStudentId, seedingDone, refetch]);
   
   // Swipe navigation state
   const [monthOffset, setMonthOffset] = useState(0); // 0 = most recent months
@@ -375,12 +358,11 @@ export default function AttendancePage() {
 
   return (
     <AppLayout>
-      {/* DEV Debug Panel */}
+      {/* DEV Debug Panel - only shown in dev mode with explicit flag */}
       <DebugPanel 
         debugInfo={debugInfo} 
         rollingDebugInfo={rollingDebugInfo}
         zoomLevel={zoomLevel}
-        visible={showDebug} 
       />
       
       <AppHeader
