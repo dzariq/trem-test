@@ -1161,6 +1161,9 @@ export default function TeacherAcademicPage() {
 
   // Calculate cohort average from all classes in the same year level
   const cohortAverages = useMemo(() => {
+    // Early return if no class selected
+    if (!selectedClass) return {};
+    
     // Determine the year level from selected class (e.g., "5A" -> "5")
     const yearLevel = selectedClass.charAt(0);
     
