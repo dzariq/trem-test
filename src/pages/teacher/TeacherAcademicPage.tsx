@@ -12,6 +12,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Save, TrendingUp, TrendingDown, Minus, ChevronDown, ChevronUp, Users, Target, Award, AlertTriangle, BookOpen, BarChart3, FileText, CheckCircle, XCircle, Lightbulb, Copy, Printer, ArrowRight, ArrowUpRight, ArrowDownRight, Scale, Download, FileSpreadsheet, Check, Calendar, UserCheck, Plus, X, ArrowUp, ArrowDown, Search, Loader2 } from "lucide-react";
 import { useGradeEntry } from "@/hooks/useGradeEntry";
 import { useClassAnalysis } from "@/hooks/useClassAnalysis";
+import { useAcademicFilters } from "@/hooks/useAcademicFilters";
 import { Carousel, CarouselContent, CarouselItem } from "@/components/ui/carousel";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { toast } from "@/hooks/use-toast";
@@ -200,6 +201,9 @@ export default function TeacherAcademicPage() {
   
   // Class Analysis hook (Supabase integration for Overview tab)
   const classAnalysis = useClassAnalysis();
+  
+  // Shared academic filters hook (provides year levels, classes, students from DB)
+  const academicFilters = useAcademicFilters();
   
   // ======================================================================
   // CLASS ANALYSIS: Use classAnalysis hook for UNIFIED state across all tabs
@@ -413,55 +417,69 @@ export default function TeacherAcademicPage() {
   const [whiskersAnalysisYear, setWhiskersAnalysisYear] = useState<string>("all");
   const [whiskersExpanded, setWhiskersExpanded] = useState(false);
   
-  // Available classes from real data (classAnalysis hook)
-  const allAvailableClasses = useMemo(() => classAnalysis.classes, [classAnalysis.classes]);
+  // Available classes from real data (academicFilters hook)
+  const allAvailableClasses = useMemo(() => academicFilters.classes, [academicFilters.classes]);
   
-  // Derive year groups from available classes
+  // Available year levels from real data (academicFilters hook)
+  const allAvailableYearLevels = useMemo(() => academicFilters.yearLevels, [academicFilters.yearLevels]);
+  
+  // Derive year groups from available year levels (for display as "Year X" format)
   const allAvailableYearGroups = useMemo(() => {
-    const yearGroups = new Set<string>();
-    classAnalysis.classes.forEach(cls => {
-      // Extract year from class name (e.g., "Y11A" -> "Year 11", "5A" -> "Year 5")
-      const match = cls.match(/^Y?(\d+)/);
-      if (match) {
-        yearGroups.add(`Year ${match[1]}`);
-      }
+    return allAvailableYearLevels.map(yl => {
+      // Extract number from year level: "Y11" -> "11"
+      const match = yl.match(/(\d+)/);
+      return match ? `Year ${match[1]}` : yl;
     });
-    return Array.from(yearGroups).sort((a, b) => {
-      const aNum = parseInt(a.match(/\d+/)?.[0] || "0");
-      const bNum = parseInt(b.match(/\d+/)?.[0] || "0");
-      return aNum - bNum;
-    });
-  }, [classAnalysis.classes]);
+  }, [allAvailableYearLevels]);
   
-  // Map classes by year group
+  // Map classes by year group using academicFilters
   const classesByYearGroup: Record<string, string[]> = useMemo(() => {
     const groups: Record<string, string[]> = {};
-    classAnalysis.classes.forEach(cls => {
-      const match = cls.match(/^Y?(\d+)/);
-      if (match) {
-        const yearGroup = `Year ${match[1]}`;
-        if (!groups[yearGroup]) groups[yearGroup] = [];
-        groups[yearGroup].push(cls);
-      }
+    allAvailableYearLevels.forEach(yl => {
+      const match = yl.match(/(\d+)/);
+      const yearGroup = match ? `Year ${match[1]}` : yl;
+      groups[yearGroup] = academicFilters.getClassesForYearLevel(yl);
     });
     return groups;
-  }, [classAnalysis.classes]);
+  }, [allAvailableYearLevels, academicFilters]);
   
-  // Initialize boxplot selections when classes load
+  // Get classes for the selected boxPlotGrade (year level)
+  const boxPlotClassesForGrade = useMemo(() => {
+    if (!boxPlotGrade) return allAvailableClasses;
+    // boxPlotGrade can be "Y11" or "11" - normalize
+    const yearLevel = allAvailableYearLevels.find(yl => {
+      const match = yl.match(/(\d+)/);
+      return match && match[1] === boxPlotGrade.replace(/\D/g, '');
+    });
+    if (yearLevel) {
+      return academicFilters.getClassesForYearLevel(yearLevel);
+    }
+    return allAvailableClasses;
+  }, [boxPlotGrade, allAvailableYearLevels, allAvailableClasses, academicFilters]);
+  
+  // Get students for the selected boxPlotClass
+  const boxPlotStudentsForClass = useMemo(() => {
+    if (!boxPlotClass) return [];
+    return academicFilters.getStudentsForClass(boxPlotClass);
+  }, [boxPlotClass, academicFilters]);
+  
+  // Initialize boxplot selections when academic filters load
   useEffect(() => {
-    if (classAnalysis.classes.length > 0 && !boxPlotClass) {
-      const firstClass = classAnalysis.selectedClass || classAnalysis.classes[0];
+    if (allAvailableClasses.length > 0 && !boxPlotClass) {
+      const firstClass = classAnalysis.selectedClass || allAvailableClasses[0];
       setBoxPlotClass(firstClass);
       setBoxPlotSelectedClasses([firstClass]);
       
-      // Extract year group from first class
+      // Extract year from first class and find matching year level
       const match = firstClass.match(/^Y?(\d+)/);
       if (match) {
-        setBoxPlotGrade(match[1]);
-        setBoxPlotSelectedYearGroups([`Year ${match[1]}`]);
+        const yearNum = match[1];
+        // Set boxPlotGrade to the year number
+        setBoxPlotGrade(yearNum);
+        setBoxPlotSelectedYearGroups([`Year ${yearNum}`]);
       }
     }
-  }, [classAnalysis.classes, classAnalysis.selectedClass, boxPlotClass]);
+  }, [allAvailableClasses, classAnalysis.selectedClass, boxPlotClass]);
   
   // Available years from data
   const availableBoxPlotYears = useMemo(() => getAvailableYears(assessmentRecords), []);
@@ -4898,23 +4916,38 @@ export default function TeacherAcademicPage() {
                       </CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-3">
-                      {/* Grade and Class selectors */}
+                      {/* Grade and Class selectors - using real data from academicFilters */}
                       <div className="grid grid-cols-2 gap-2">
                         <div>
                           <label className="text-xs text-muted-foreground mb-1 block">Grade</label>
                           <Select value={boxPlotGrade} onValueChange={(v) => {
                             setBoxPlotGrade(v);
-                            // Update class based on grade
-                            const newClass = v === "5" ? "5A" : "4A";
-                            setBoxPlotClass(newClass);
+                            // Get the first class for this year level
+                            const matchingYearLevel = allAvailableYearLevels.find(yl => {
+                              const match = yl.match(/(\d+)/);
+                              return match && match[1] === v;
+                            });
+                            if (matchingYearLevel) {
+                              const classesForYear = academicFilters.getClassesForYearLevel(matchingYearLevel);
+                              if (classesForYear.length > 0) {
+                                setBoxPlotClass(classesForYear[0]);
+                              }
+                            }
                             setBoxPlotStudentId("");
                           }}>
                             <SelectTrigger className="h-9 text-xs">
                               <SelectValue placeholder="Grade" />
                             </SelectTrigger>
                             <SelectContent>
-                              <SelectItem value="5">Year 5</SelectItem>
-                              <SelectItem value="4">Year 4</SelectItem>
+                              {allAvailableYearLevels.map(yl => {
+                                const match = yl.match(/(\d+)/);
+                                const yearNum = match ? match[1] : yl;
+                                return (
+                                  <SelectItem key={yl} value={yearNum}>
+                                    {yl.startsWith("Y") ? `Year ${yearNum}` : yl}
+                                  </SelectItem>
+                                );
+                              })}
                             </SelectContent>
                           </Select>
                         </div>
@@ -4928,20 +4961,15 @@ export default function TeacherAcademicPage() {
                               <SelectValue placeholder="Class" />
                             </SelectTrigger>
                             <SelectContent>
-                              {boxPlotGrade === "5" ? (
-                                <>
-                                  <SelectItem value="5A">5A</SelectItem>
-                                  <SelectItem value="5B">5B</SelectItem>
-                                </>
-                              ) : (
-                                <SelectItem value="4A">4A</SelectItem>
-                              )}
+                              {boxPlotClassesForGrade.map(cls => (
+                                <SelectItem key={cls} value={cls}>{cls}</SelectItem>
+                              ))}
                             </SelectContent>
                           </Select>
                         </div>
                       </div>
 
-                      {/* Student selector */}
+                      {/* Student selector - using real data from academicFilters */}
                       <div>
                         <label className="text-xs text-muted-foreground mb-1 block">Student</label>
                         <Select value={boxPlotStudentId} onValueChange={setBoxPlotStudentId}>
@@ -4949,7 +4977,7 @@ export default function TeacherAcademicPage() {
                             <SelectValue placeholder="Select a student..." />
                           </SelectTrigger>
                           <SelectContent>
-                            {(classRosters[boxPlotClass as keyof typeof classRosters] || []).map((student) => (
+                            {boxPlotStudentsForClass.map((student) => (
                               <SelectItem key={student.id} value={student.id}>
                                 {student.name}
                               </SelectItem>
