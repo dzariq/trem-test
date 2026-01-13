@@ -92,80 +92,111 @@ export function useStudentReportCard(studentId: string | null, academicPeriodId:
   // Fetch academic periods that have grades for this student
   useEffect(() => {
     const fetchPeriodsForStudent = async () => {
+      console.log("[useStudentReportCard] fetchPeriodsForStudent called, studentId:", studentId);
+      
       if (!studentId) {
+        console.log("[useStudentReportCard] No studentId, clearing periods");
         setAcademicPeriods([]);
         return;
       }
 
       setPeriodsLoading(true);
       try {
-        // Get distinct academic periods that have grades for this student
+        // Step 1: Get all academic_period_ids from student_grades for this student
         const { data: gradesData, error: gradesError } = await supabase
           .from("student_grades")
           .select("academic_period_id")
           .eq("student_id", studentId);
 
+        console.log("[useStudentReportCard] student_grades query result:", { 
+          gradesData, 
+          gradesError,
+          studentId 
+        });
+
         if (gradesError) {
-          console.error("[useStudentReportCard] Error fetching student grade periods:", gradesError);
+          console.error("[useStudentReportCard] student_grades query FAILED:", gradesError);
           // Fallback: get all active periods
-          const { data: allPeriods } = await supabase
+          const { data: allPeriods, error: fallbackError } = await supabase
             .from("academic_periods")
-            .select("id, name, code, sort_order")
-            .eq("is_active", true)
-            .order("sort_order", { ascending: true });
+            .select("id, name, code, sort_order, created_at")
+            .order("sort_order", { ascending: true })
+            .order("created_at", { ascending: false });
+          
+          console.log("[useStudentReportCard] Fallback periods:", { allPeriods, fallbackError });
           
           setAcademicPeriods(
             (allPeriods || []).map((p) => ({
               id: p.id,
               name: p.name,
-              code: p.code,
+              code: p.code || "",
               sortOrder: p.sort_order ?? 0,
             }))
           );
           return;
         }
 
-        // Get unique period IDs
-        const uniquePeriodIds = [...new Set((gradesData || []).map(g => g.academic_period_id))];
+        // Step 2: Build unique period IDs (filter out nulls)
+        const uniquePeriodIds = [...new Set(
+          (gradesData || [])
+            .map(g => g.academic_period_id)
+            .filter((id): id is string => id !== null && id !== undefined)
+        )];
         
+        console.log("[useStudentReportCard] uniquePeriodIds derived:", uniquePeriodIds);
+
         if (uniquePeriodIds.length === 0) {
-          // No grades yet, show all active periods
-          const { data: allPeriods } = await supabase
+          console.log("[useStudentReportCard] No period IDs found in grades, fetching all periods");
+          // No grades yet, show all periods (not just active)
+          const { data: allPeriods, error: allPeriodsError } = await supabase
             .from("academic_periods")
-            .select("id, name, code, sort_order")
-            .eq("is_active", true)
-            .order("sort_order", { ascending: true });
+            .select("id, name, code, sort_order, created_at")
+            .order("sort_order", { ascending: true })
+            .order("created_at", { ascending: false });
+          
+          console.log("[useStudentReportCard] All periods query:", { allPeriods, allPeriodsError });
           
           setAcademicPeriods(
             (allPeriods || []).map((p) => ({
               id: p.id,
               name: p.name,
-              code: p.code,
+              code: p.code || "",
               sortOrder: p.sort_order ?? 0,
             }))
           );
           return;
         }
 
-        // Fetch period details
+        // Step 3: Fetch period details for those IDs
         const { data: periods, error: periodsError } = await supabase
           .from("academic_periods")
-          .select("id, name, code, sort_order")
+          .select("id, name, code, sort_order, created_at")
           .in("id", uniquePeriodIds)
-          .order("sort_order", { ascending: true });
+          .order("sort_order", { ascending: true })
+          .order("created_at", { ascending: false });
 
-        if (periodsError) throw periodsError;
+        console.log("[useStudentReportCard] academic_periods query result:", { 
+          periods, 
+          periodsError,
+          queriedIds: uniquePeriodIds 
+        });
 
-        setAcademicPeriods(
-          (periods || []).map((p) => ({
-            id: p.id,
-            name: p.name,
-            code: p.code,
-            sortOrder: p.sort_order ?? 0,
-          }))
-        );
+        if (periodsError) {
+          console.error("[useStudentReportCard] academic_periods query FAILED:", periodsError);
+          throw periodsError;
+        }
+
+        const mappedPeriods = (periods || []).map((p) => ({
+          id: p.id,
+          name: p.name,
+          code: p.code || "",
+          sortOrder: p.sort_order ?? 0,
+        }));
+        
+        console.log("[useStudentReportCard] Final mapped periods:", mappedPeriods);
+        setAcademicPeriods(mappedPeriods);
       } catch (err) {
-        console.error("[useStudentReportCard] Error fetching periods:", err);
+        console.error("[useStudentReportCard] Error fetching periods (full error):", err);
         setAcademicPeriods([]);
       } finally {
         setPeriodsLoading(false);
