@@ -39,6 +39,7 @@ export interface BehaviorAssessment {
 
 export interface CocurricularActivity {
   id: string;
+  academicPeriodId: string;
   sportsHouseOrg: string | null;
   sportsHouseRole: string | null;
   clubOrg: string | null;
@@ -54,27 +55,103 @@ export interface CocurricularActivity {
 export interface StudentReportCardData {
   grades: SubjectGrade[];
   behavior: BehaviorAssessment | null;
-  cocurricular: CocurricularActivity | null;
+  cocurricular: CocurricularActivity[];
 }
+
+// Helper: derive letter grade from total marks
+const getGradeFromScore = (score: number): string => {
+  if (score >= 90) return "A*";
+  if (score >= 80) return "A";
+  if (score >= 70) return "B";
+  if (score >= 60) return "C";
+  if (score >= 50) return "D";
+  return "E";
+};
+
+// Helper: derive behavior grade from marks (assuming 0-100 scale)
+const getBehaviorGrade = (marks: number | null): string => {
+  if (marks === null) return "N/A";
+  if (marks >= 90) return "A";
+  if (marks >= 75) return "B";
+  if (marks >= 60) return "C";
+  if (marks >= 50) return "D";
+  return "E";
+};
 
 export function useStudentReportCard(studentId: string | null, academicPeriodId: string | null) {
   const [academicPeriods, setAcademicPeriods] = useState<AcademicPeriod[]>([]);
+  const [periodsLoading, setPeriodsLoading] = useState(false);
   const [data, setData] = useState<StudentReportCardData>({
     grades: [],
     behavior: null,
-    cocurricular: null,
+    cocurricular: [],
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Fetch academic periods
+  // Fetch academic periods that have grades for this student
   useEffect(() => {
-    const fetchPeriods = async () => {
+    const fetchPeriodsForStudent = async () => {
+      if (!studentId) {
+        setAcademicPeriods([]);
+        return;
+      }
+
+      setPeriodsLoading(true);
       try {
+        // Get distinct academic periods that have grades for this student
+        const { data: gradesData, error: gradesError } = await supabase
+          .from("student_grades")
+          .select("academic_period_id")
+          .eq("student_id", studentId);
+
+        if (gradesError) {
+          console.error("[useStudentReportCard] Error fetching student grade periods:", gradesError);
+          // Fallback: get all active periods
+          const { data: allPeriods } = await supabase
+            .from("academic_periods")
+            .select("id, name, code, sort_order")
+            .eq("is_active", true)
+            .order("sort_order", { ascending: true });
+          
+          setAcademicPeriods(
+            (allPeriods || []).map((p) => ({
+              id: p.id,
+              name: p.name,
+              code: p.code,
+              sortOrder: p.sort_order ?? 0,
+            }))
+          );
+          return;
+        }
+
+        // Get unique period IDs
+        const uniquePeriodIds = [...new Set((gradesData || []).map(g => g.academic_period_id))];
+        
+        if (uniquePeriodIds.length === 0) {
+          // No grades yet, show all active periods
+          const { data: allPeriods } = await supabase
+            .from("academic_periods")
+            .select("id, name, code, sort_order")
+            .eq("is_active", true)
+            .order("sort_order", { ascending: true });
+          
+          setAcademicPeriods(
+            (allPeriods || []).map((p) => ({
+              id: p.id,
+              name: p.name,
+              code: p.code,
+              sortOrder: p.sort_order ?? 0,
+            }))
+          );
+          return;
+        }
+
+        // Fetch period details
         const { data: periods, error: periodsError } = await supabase
           .from("academic_periods")
           .select("id, name, code, sort_order")
-          .eq("is_active", true)
+          .in("id", uniquePeriodIds)
           .order("sort_order", { ascending: true });
 
         if (periodsError) throw periodsError;
@@ -89,16 +166,19 @@ export function useStudentReportCard(studentId: string | null, academicPeriodId:
         );
       } catch (err) {
         console.error("[useStudentReportCard] Error fetching periods:", err);
+        setAcademicPeriods([]);
+      } finally {
+        setPeriodsLoading(false);
       }
     };
 
-    fetchPeriods();
-  }, []);
+    fetchPeriodsForStudent();
+  }, [studentId]);
 
   // Fetch report card data for selected student and period
   const fetchReportCardData = useCallback(async () => {
     if (!studentId || !academicPeriodId) {
-      setData({ grades: [], behavior: null, cocurricular: null });
+      setData({ grades: [], behavior: null, cocurricular: [] });
       return;
     }
 
@@ -125,7 +205,10 @@ export function useStudentReportCard(studentId: string | null, academicPeriodId:
         .eq("student_id", studentId)
         .eq("academic_period_id", academicPeriodId);
 
-      if (gradesError) throw gradesError;
+      if (gradesError) {
+        console.error("[useStudentReportCard] student_grades query failed:", gradesError);
+        throw gradesError;
+      }
 
       const grades: SubjectGrade[] = (gradesData || []).map((g: any) => ({
         id: g.id,
@@ -137,7 +220,7 @@ export function useStudentReportCard(studentId: string | null, academicPeriodId:
         examMarks: g.exam_marks || 0,
         attitudeMarks: g.attitude_marks || 0,
         totalMarks: g.total_marks || 0,
-        letterGrade: g.letter_grade,
+        letterGrade: g.letter_grade || (g.total_marks ? getGradeFromScore(g.total_marks) : null),
         subjectComment: g.subject_comment,
         teacherComment: g.teacher_comment,
       }));
@@ -150,7 +233,9 @@ export function useStudentReportCard(studentId: string | null, academicPeriodId:
         .eq("academic_period_id", academicPeriodId)
         .maybeSingle();
 
-      if (behaviorError) throw behaviorError;
+      if (behaviorError) {
+        console.error("[useStudentReportCard] behavioral_assessments query failed:", behaviorError);
+      }
 
       const behavior: BehaviorAssessment | null = behaviorData
         ? {
@@ -168,38 +253,37 @@ export function useStudentReportCard(studentId: string | null, academicPeriodId:
           }
         : null;
 
-      // Fetch cocurricular activities
+      // Fetch ALL cocurricular activities for student (for year filter in Awards tab)
       const { data: cocurricularData, error: cocurricularError } = await supabase
         .from("student_cocurricular_activities")
         .select("*")
-        .eq("student_id", studentId)
-        .eq("academic_period_id", academicPeriodId)
-        .maybeSingle();
+        .eq("student_id", studentId);
 
-      if (cocurricularError) throw cocurricularError;
+      if (cocurricularError) {
+        console.error("[useStudentReportCard] student_cocurricular_activities query failed:", cocurricularError);
+      }
 
-      const cocurricular: CocurricularActivity | null = cocurricularData
-        ? {
-            id: cocurricularData.id,
-            sportsHouseOrg: cocurricularData.sports_house_org,
-            sportsHouseRole: cocurricularData.sports_house_role,
-            clubOrg: cocurricularData.club_org,
-            clubRole: cocurricularData.club_role,
-            leadershipOrg: cocurricularData.leadership_org,
-            leadershipRole: cocurricularData.leadership_role,
-            eventsOrg: cocurricularData.events_org,
-            eventsRole: cocurricularData.events_role,
-            achievementsEvent: cocurricularData.achievements_event,
-            achievementsAward: cocurricularData.achievements_award,
-          }
-        : null;
+      const cocurricular: CocurricularActivity[] = (cocurricularData || []).map((c: any) => ({
+        id: c.id,
+        academicPeriodId: c.academic_period_id,
+        sportsHouseOrg: c.sports_house_org,
+        sportsHouseRole: c.sports_house_role,
+        clubOrg: c.club_org,
+        clubRole: c.club_role,
+        leadershipOrg: c.leadership_org,
+        leadershipRole: c.leadership_role,
+        eventsOrg: c.events_org,
+        eventsRole: c.events_role,
+        achievementsEvent: c.achievements_event,
+        achievementsAward: c.achievements_award,
+      }));
 
       setData({ grades, behavior, cocurricular });
     } catch (err) {
       const message = err instanceof Error ? err.message : "Failed to load report card data";
       console.error("[useStudentReportCard] Error:", err);
       setError(message);
-      setData({ grades: [], behavior: null, cocurricular: null });
+      setData({ grades: [], behavior: null, cocurricular: [] });
     } finally {
       setLoading(false);
     }
@@ -209,58 +293,86 @@ export function useStudentReportCard(studentId: string | null, academicPeriodId:
     fetchReportCardData();
   }, [fetchReportCardData]);
 
-  // Computed: behavior items for UI
+  // Computed: behavior items for UI - derive from grades if no behavioral_assessments
   const behaviorItems = useMemo(() => {
-    if (!data.behavior) return [];
+    // First try behavioral_assessments table
+    if (data.behavior) {
+      const ratingMap: Record<string, { category: string; grade: string }> = {
+        attendanceRating: { category: "Attendance", grade: data.behavior.attendanceRating || "N/A" },
+        punctualityRating: { category: "Punctuality", grade: data.behavior.punctualityRating || "N/A" },
+        cooperationRating: { category: "Cooperation", grade: data.behavior.cooperationRating || "N/A" },
+        selfControlRating: { category: "Self Control", grade: data.behavior.selfControlRating || "N/A" },
+        responsibilityRating: { category: "Responsibility", grade: data.behavior.responsibilityRating || "N/A" },
+        initiativeRating: { category: "Initiative", grade: data.behavior.initiativeRating || "N/A" },
+        leadershipRating: { category: "Leadership", grade: data.behavior.leadershipRating || "N/A" },
+      };
+      return Object.values(ratingMap).filter((item) => item.grade !== "N/A");
+    }
 
-    const ratingMap: Record<string, { category: string; grade: string }> = {
-      attendanceRating: { category: "Attendance", grade: data.behavior.attendanceRating || "N/A" },
-      punctualityRating: { category: "Punctuality", grade: data.behavior.punctualityRating || "N/A" },
-      cooperationRating: { category: "Cooperation", grade: data.behavior.cooperationRating || "N/A" },
-      selfControlRating: { category: "Self Control", grade: data.behavior.selfControlRating || "N/A" },
-      responsibilityRating: { category: "Responsibility", grade: data.behavior.responsibilityRating || "N/A" },
-      initiativeRating: { category: "Initiative", grade: data.behavior.initiativeRating || "N/A" },
-      leadershipRating: { category: "Leadership", grade: data.behavior.leadershipRating || "N/A" },
-    };
+    // Fallback: derive behavior from student_grades columns (attitude_marks, homework_marks)
+    if (data.grades.length > 0) {
+      const avgAttitude = Math.round(
+        data.grades.reduce((sum, g) => sum + g.attitudeMarks, 0) / data.grades.length
+      );
+      const avgHomework = Math.round(
+        data.grades.reduce((sum, g) => sum + g.homeworkMarks, 0) / data.grades.length
+      );
 
-    return Object.values(ratingMap).filter((item) => item.grade !== "N/A");
-  }, [data.behavior]);
+      const items: { category: string; grade: string }[] = [];
+      
+      if (avgAttitude > 0) {
+        items.push({ category: "Initiative / Attitude", grade: getBehaviorGrade(avgAttitude) });
+      }
+      if (avgHomework > 0) {
+        items.push({ category: "Homework Submission", grade: getBehaviorGrade(avgHomework) });
+      }
+
+      return items;
+    }
+
+    return [];
+  }, [data.behavior, data.grades]);
 
   // Computed: awards items for UI (from cocurricular)
   const awards = useMemo(() => {
-    if (!data.cocurricular) return null;
+    if (data.cocurricular.length === 0) return null;
+
+    // Get current period's cocurricular data
+    const currentPeriod = data.cocurricular.find(c => c.academicPeriodId === academicPeriodId);
+    if (!currentPeriod) return null;
 
     return {
       sportsHouse: {
-        organization: data.cocurricular.sportsHouseOrg || "None",
-        role: data.cocurricular.sportsHouseRole || "",
+        organization: currentPeriod.sportsHouseOrg || "None",
+        role: currentPeriod.sportsHouseRole || "",
       },
       club: {
-        organization: data.cocurricular.clubOrg || "None",
-        role: data.cocurricular.clubRole || "",
+        organization: currentPeriod.clubOrg || "None",
+        role: currentPeriod.clubRole || "",
       },
       studentLeadership: {
-        organization: data.cocurricular.leadershipOrg || "None",
-        role: data.cocurricular.leadershipRole || "",
+        organization: currentPeriod.leadershipOrg || "None",
+        role: currentPeriod.leadershipRole || "",
       },
       events: {
-        organization: data.cocurricular.eventsOrg || "None",
-        role: data.cocurricular.eventsRole || "",
+        organization: currentPeriod.eventsOrg || "None",
+        role: currentPeriod.eventsRole || "",
       },
       achievements: {
-        event: data.cocurricular.achievementsEvent || "None",
-        award: data.cocurricular.achievementsAward || "",
+        event: currentPeriod.achievementsEvent || "None",
+        award: currentPeriod.achievementsAward || "",
       },
     };
-  }, [data.cocurricular]);
+  }, [data.cocurricular, academicPeriodId]);
 
   // Computed: Check if we have any data
   const hasData = useMemo(() => {
-    return data.grades.length > 0 || data.behavior !== null || data.cocurricular !== null;
+    return data.grades.length > 0 || data.behavior !== null || data.cocurricular.length > 0;
   }, [data]);
 
   return {
     academicPeriods,
+    periodsLoading,
     grades: data.grades,
     behavior: data.behavior,
     behaviorItems,

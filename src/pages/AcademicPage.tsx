@@ -66,12 +66,25 @@ export default function AcademicPage() {
   // Real student selection from Supabase
   const { linkedStudents, selectedStudentId, setSelectedStudentId, selectedStudent, loading: studentsLoading } = useStudentSelection();
   
-  // Academic period selection
-  const [selectedPeriodId, setSelectedPeriodId] = useState<string>("");
+  // Academic period selection with localStorage persistence
+  const [selectedPeriodId, setSelectedPeriodId] = useState<string>(() => {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('parent_selected_academic_period_id') || "";
+    }
+    return "";
+  });
+
+  // Persist period selection to localStorage
+  useEffect(() => {
+    if (selectedPeriodId) {
+      localStorage.setItem('parent_selected_academic_period_id', selectedPeriodId);
+    }
+  }, [selectedPeriodId]);
 
   // Real report card data from Supabase
   const { 
     academicPeriods,
+    periodsLoading,
     grades: realGrades,
     behavior: realBehavior,
     behaviorItems: realBehaviorItems,
@@ -80,10 +93,20 @@ export default function AcademicPage() {
     hasData: hasRealData,
   } = useStudentReportCard(selectedStudentId || null, selectedPeriodId || null);
 
-  // Auto-select first academic period when loaded
+  // Auto-select academic period: use localStorage if valid, else first available
   useEffect(() => {
-    if (academicPeriods.length > 0 && !selectedPeriodId) {
-      setSelectedPeriodId(academicPeriods[0].id);
+    if (academicPeriods.length > 0) {
+      const storedId = localStorage.getItem('parent_selected_academic_period_id');
+      const isStoredValid = storedId && academicPeriods.some(p => p.id === storedId);
+      
+      if (isStoredValid && !selectedPeriodId) {
+        setSelectedPeriodId(storedId);
+      } else if (!isStoredValid && !selectedPeriodId) {
+        setSelectedPeriodId(academicPeriods[0].id);
+      } else if (selectedPeriodId && !academicPeriods.some(p => p.id === selectedPeriodId)) {
+        // Current selection is no longer valid for this student
+        setSelectedPeriodId(academicPeriods[0].id);
+      }
     }
   }, [academicPeriods, selectedPeriodId]);
 
@@ -1028,99 +1051,145 @@ export default function AcademicPage() {
               </TabsContent>
 
               <TabsContent value="cocurriculum" className="mt-4 space-y-3">
-                {/* Year Selection */}
-                <div className="space-y-2 pb-3 mb-3 border-b border-border">
-                  <div className="flex gap-2">
-                    {(["2025", "2024", "2023"] as const).map(year => (
-                      <button 
-                        key={year} 
-                        onClick={() => toggleYear(year)} 
-                        className={`flex-1 flex items-center justify-center gap-1.5 px-3 py-2 rounded-md border text-sm font-medium transition-colors ${
-                          selectedYears.includes(year) 
-                            ? "bg-primary text-primary-foreground border-primary" 
-                            : "bg-card border-border text-foreground hover:bg-accent"
-                        }`}
-                      >
-                        {selectedYears.includes(year) && <Check className="h-3.5 w-3.5" />}
-                        {year}
-                      </button>
-                    ))}
+                {/* Loading State */}
+                {reportCardLoading && (
+                  <div className="flex items-center justify-center py-12">
+                    <Loader2 className="h-8 w-8 animate-spin text-primary" />
                   </div>
-                  <Badge variant="secondary" className="text-xs">
-                    Viewing: {selectedYears.sort().reverse().join(", ")}
-                  </Badge>
-                </div>
+                )}
 
-                {/* Awards displayed as trophy-style cards with category tags */}
-                {academicData.awards && <>
+                {/* Empty State */}
+                {!reportCardLoading && !realAwards && (
+                  <div className="text-center py-12">
+                    <Trophy className="h-12 w-12 text-muted-foreground/50 mx-auto mb-3" />
+                    <p className="text-sm text-muted-foreground">No awards or activities recorded for this period.</p>
+                    <p className="text-xs text-muted-foreground mt-1">Cocurricular activities will appear here once added.</p>
+                  </div>
+                )}
+
+                {/* Real Awards Data */}
+                {!reportCardLoading && realAwards && (
+                  <>
                     {/* Sports House */}
-                    {academicData.awards.sportsHouse.organization !== "None" && academicData.awards.sportsHouse.organization && <EnvelopeAwardCard category="Sports House" categoryColor={{
-                  bg: 'rgba(239, 68, 68, 0.15)',
-                  text: '#dc2626'
-                }} organization={academicData.awards.sportsHouse.organization} role={academicData.awards.sportsHouse.role} year="2025" onClick={() => {
-                  setSelectedAward({
-                    category: "Sports House",
-                    organization: academicData.awards.sportsHouse.organization,
-                    role: academicData.awards.sportsHouse.role
-                  });
-                  setCertificateOpen(true);
-                }} />}
+                    {realAwards.sportsHouse.organization !== "None" && realAwards.sportsHouse.organization && (
+                      <EnvelopeAwardCard 
+                        category="Sports House" 
+                        categoryColor={{ bg: 'rgba(239, 68, 68, 0.15)', text: '#dc2626' }} 
+                        organization={realAwards.sportsHouse.organization} 
+                        role={realAwards.sportsHouse.role} 
+                        year={academicPeriods.find(p => p.id === selectedPeriodId)?.name || ""}
+                        onClick={() => {
+                          setSelectedAward({
+                            category: "Sports House",
+                            organization: realAwards.sportsHouse.organization,
+                            role: realAwards.sportsHouse.role
+                          });
+                          setCertificateOpen(true);
+                        }} 
+                      />
+                    )}
 
                     {/* Club */}
-                    {academicData.awards.club.organization !== "None" && academicData.awards.club.organization && <EnvelopeAwardCard category="Club" categoryColor={{
-                  bg: 'rgba(59, 130, 246, 0.15)',
-                  text: '#2563eb'
-                }} organization={academicData.awards.club.organization} role={academicData.awards.club.role} year="2024" onClick={() => {
-                  setSelectedAward({
-                    category: "Club",
-                    organization: academicData.awards.club.organization,
-                    role: academicData.awards.club.role
-                  });
-                  setCertificateOpen(true);
-                }} />}
+                    {realAwards.club.organization !== "None" && realAwards.club.organization && (
+                      <EnvelopeAwardCard 
+                        category="Club" 
+                        categoryColor={{ bg: 'rgba(59, 130, 246, 0.15)', text: '#2563eb' }} 
+                        organization={realAwards.club.organization} 
+                        role={realAwards.club.role} 
+                        year={academicPeriods.find(p => p.id === selectedPeriodId)?.name || ""}
+                        onClick={() => {
+                          setSelectedAward({
+                            category: "Club",
+                            organization: realAwards.club.organization,
+                            role: realAwards.club.role
+                          });
+                          setCertificateOpen(true);
+                        }} 
+                      />
+                    )}
 
                     {/* Student Leadership */}
-                    {academicData.awards.studentLeadership.organization !== "None" && academicData.awards.studentLeadership.organization && <EnvelopeAwardCard category="Leadership" categoryColor={{
-                  bg: 'rgba(168, 85, 247, 0.15)',
-                  text: '#9333ea'
-                }} organization={academicData.awards.studentLeadership.organization} role={academicData.awards.studentLeadership.role} year="2024" onClick={() => {
-                  setSelectedAward({
-                    category: "Leadership",
-                    organization: academicData.awards.studentLeadership.organization,
-                    role: academicData.awards.studentLeadership.role
-                  });
-                  setCertificateOpen(true);
-                }} />}
+                    {realAwards.studentLeadership.organization !== "None" && realAwards.studentLeadership.organization && (
+                      <EnvelopeAwardCard 
+                        category="Leadership" 
+                        categoryColor={{ bg: 'rgba(168, 85, 247, 0.15)', text: '#9333ea' }} 
+                        organization={realAwards.studentLeadership.organization} 
+                        role={realAwards.studentLeadership.role} 
+                        year={academicPeriods.find(p => p.id === selectedPeriodId)?.name || ""}
+                        onClick={() => {
+                          setSelectedAward({
+                            category: "Leadership",
+                            organization: realAwards.studentLeadership.organization,
+                            role: realAwards.studentLeadership.role
+                          });
+                          setCertificateOpen(true);
+                        }} 
+                      />
+                    )}
 
                     {/* Events */}
-                    {academicData.awards.events.organization !== "None" && academicData.awards.events.organization && <EnvelopeAwardCard category="Events" categoryColor={{
-                  bg: 'rgba(34, 197, 94, 0.15)',
-                  text: '#16a34a'
-                }} organization={academicData.awards.events.organization} role={academicData.awards.events.role} year="2023" onClick={() => {
-                  setSelectedAward({
-                    category: "Events",
-                    organization: academicData.awards.events.organization,
-                    role: academicData.awards.events.role
-                  });
-                  setCertificateOpen(true);
-                }} />}
+                    {realAwards.events.organization !== "None" && realAwards.events.organization && (
+                      <EnvelopeAwardCard 
+                        category="Events" 
+                        categoryColor={{ bg: 'rgba(34, 197, 94, 0.15)', text: '#16a34a' }} 
+                        organization={realAwards.events.organization} 
+                        role={realAwards.events.role} 
+                        year={academicPeriods.find(p => p.id === selectedPeriodId)?.name || ""}
+                        onClick={() => {
+                          setSelectedAward({
+                            category: "Events",
+                            organization: realAwards.events.organization,
+                            role: realAwards.events.role
+                          });
+                          setCertificateOpen(true);
+                        }} 
+                      />
+                    )}
 
                     {/* Achievements */}
-                    {academicData.awards.achievements.event !== "None" && academicData.awards.achievements.event && <EnvelopeAwardCard category="Achievement" categoryColor={{
-                  bg: 'rgba(236, 72, 153, 0.15)',
-                  text: '#db2777'
-                }} organization={academicData.awards.achievements.event} role={academicData.awards.achievements.award} year="2023" onClick={() => {
-                  setSelectedAward({
-                    category: "Achievement",
-                    organization: academicData.awards.achievements.event,
-                    role: academicData.awards.achievements.award
-                  });
-                  setCertificateOpen(true);
-                }} />}
-                  </>}
+                    {realAwards.achievements.event !== "None" && realAwards.achievements.event && (
+                      <EnvelopeAwardCard 
+                        category="Achievement" 
+                        categoryColor={{ bg: 'rgba(236, 72, 153, 0.15)', text: '#db2777' }} 
+                        organization={realAwards.achievements.event} 
+                        role={realAwards.achievements.award} 
+                        year={academicPeriods.find(p => p.id === selectedPeriodId)?.name || ""}
+                        onClick={() => {
+                          setSelectedAward({
+                            category: "Achievement",
+                            organization: realAwards.achievements.event,
+                            role: realAwards.achievements.award
+                          });
+                          setCertificateOpen(true);
+                        }} 
+                      />
+                    )}
+
+                    {/* Show message if all awards are "None" */}
+                    {realAwards.sportsHouse.organization === "None" && 
+                     realAwards.club.organization === "None" && 
+                     realAwards.studentLeadership.organization === "None" && 
+                     realAwards.events.organization === "None" && 
+                     realAwards.achievements.event === "None" && (
+                      <div className="text-center py-8">
+                        <Trophy className="h-10 w-10 text-muted-foreground/50 mx-auto mb-2" />
+                        <p className="text-sm text-muted-foreground">No specific awards for this period.</p>
+                      </div>
+                    )}
+                  </>
+                )}
 
                 {/* Certificate Dialog */}
-                {selectedAward && <CertificateDialog open={certificateOpen} onOpenChange={setCertificateOpen} category={selectedAward.category} organization={selectedAward.organization} role={selectedAward.role} studentName={students[0]?.name || "Student Name"} />}
+                {selectedAward && (
+                  <CertificateDialog 
+                    open={certificateOpen} 
+                    onOpenChange={setCertificateOpen} 
+                    category={selectedAward.category} 
+                    organization={selectedAward.organization} 
+                    role={selectedAward.role} 
+                    studentName={selectedStudent?.name || "Student Name"} 
+                  />
+                )}
               </TabsContent>
             </Tabs>
           </CardContent>
