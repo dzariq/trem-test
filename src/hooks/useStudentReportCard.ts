@@ -284,14 +284,26 @@ export function useStudentReportCard(studentId: string | null, academicPeriodId:
           }
         : null;
 
-      // Fetch ALL cocurricular activities for student (for year filter in Awards tab)
+      // Fetch cocurricular activities for this student and academic period
+      console.log("[useStudentReportCard] Fetching cocurricular activities:", {
+        selectedStudentId: studentId,
+        selectedAcademicPeriodId: academicPeriodId,
+      });
+
       const { data: cocurricularData, error: cocurricularError } = await supabase
         .from("student_cocurricular_activities")
         .select("*")
-        .eq("student_id", studentId);
+        .eq("student_id", studentId)
+        .eq("academic_period_id", academicPeriodId);
+
+      console.log("[useStudentReportCard] Cocurricular query result:", {
+        cocurricularData,
+        cocurricularError,
+        rowCount: cocurricularData?.length ?? 0,
+      });
 
       if (cocurricularError) {
-        console.error("[useStudentReportCard] student_cocurricular_activities query failed:", cocurricularError);
+        console.error("[useStudentReportCard] student_cocurricular_activities query FAILED:", cocurricularError);
       }
 
       const cocurricular: CocurricularActivity[] = (cocurricularData || []).map((c: any) => ({
@@ -308,6 +320,8 @@ export function useStudentReportCard(studentId: string | null, academicPeriodId:
         achievementsEvent: c.achievements_event,
         achievementsAward: c.achievements_award,
       }));
+
+      console.log("[useStudentReportCard] Mapped cocurricular activities:", cocurricular);
 
       setData({ grades, behavior, cocurricular });
     } catch (err) {
@@ -366,28 +380,37 @@ export function useStudentReportCard(studentId: string | null, academicPeriodId:
 
   // Computed: awards items for UI (from cocurricular)
   const awards = useMemo(() => {
-    if (data.cocurricular.length === 0) return null;
+    console.log("[useStudentReportCard] Computing awards from cocurricular:", {
+      cocurricularLength: data.cocurricular.length,
+      academicPeriodId,
+    });
 
-    // Get current period's cocurricular data
-    const currentPeriod = data.cocurricular.find(c => c.academicPeriodId === academicPeriodId);
-    if (!currentPeriod) return null;
+    if (data.cocurricular.length === 0) {
+      console.log("[useStudentReportCard] No cocurricular data available");
+      return null;
+    }
+
+    // Since we now filter by academic_period_id in the query, take the first row
+    const currentPeriod = data.cocurricular[0];
+    
+    console.log("[useStudentReportCard] Awards data for current period:", currentPeriod);
 
     return {
       sportsHouse: {
         organization: currentPeriod.sportsHouseOrg || "None",
-        role: currentPeriod.sportsHouseRole || "",
+        role: currentPeriod.sportsHouseRole || "Member",
       },
       club: {
         organization: currentPeriod.clubOrg || "None",
-        role: currentPeriod.clubRole || "",
+        role: currentPeriod.clubRole || "Member",
       },
       studentLeadership: {
         organization: currentPeriod.leadershipOrg || "None",
-        role: currentPeriod.leadershipRole || "",
+        role: currentPeriod.leadershipRole || "Member",
       },
       events: {
         organization: currentPeriod.eventsOrg || "None",
-        role: currentPeriod.eventsRole || "",
+        role: currentPeriod.eventsRole || "Member",
       },
       achievements: {
         event: currentPeriod.achievementsEvent || "None",
