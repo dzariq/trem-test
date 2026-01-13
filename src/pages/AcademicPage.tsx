@@ -848,16 +848,20 @@ export default function AcademicPage() {
             </CardTitle>
             {/* Academic Period Selector */}
             <div className="flex gap-2 mt-3">
-              <Select value={selectedPeriodId} onValueChange={setSelectedPeriodId}>
+              <Select value={selectedPeriodId} onValueChange={setSelectedPeriodId} disabled={periodsLoading}>
                 <SelectTrigger className="flex-1 h-9 text-sm">
-                  <SelectValue placeholder="Select Period" />
+                  <SelectValue placeholder={periodsLoading ? "Loading periods..." : "Select Period"} />
                 </SelectTrigger>
                 <SelectContent className="bg-card">
-                  {academicPeriods.map(period => (
-                    <SelectItem key={period.id} value={period.id}>
-                      {period.name}
-                    </SelectItem>
-                  ))}
+                  {academicPeriods.length === 0 && !periodsLoading ? (
+                    <SelectItem value="__empty__" disabled>No periods available</SelectItem>
+                  ) : (
+                    academicPeriods.map(period => (
+                      <SelectItem key={period.id} value={period.id}>
+                        {period.name}{period.code ? ` (${period.code})` : ''}
+                      </SelectItem>
+                    ))
+                  )}
                 </SelectContent>
               </Select>
             </div>
