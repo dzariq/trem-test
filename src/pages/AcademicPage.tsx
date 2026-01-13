@@ -1050,6 +1050,29 @@ export default function AcademicPage() {
                         );
                       })}
                     </div>
+
+                    {/* Homeroom Teacher Comment Section */}
+                    <Card className="bg-rose-50 border-rose-200 rounded-xl">
+                      <CardContent className="p-4">
+                        <div className="flex items-start gap-3">
+                          <div className="p-2 rounded-full bg-rose-100">
+                            <MessageSquare className="h-5 w-5 text-rose-600" />
+                          </div>
+                          <div className="flex-1">
+                            <p className="text-xs font-semibold uppercase text-rose-700 mb-2">Homeroom Teacher Comment</p>
+                            {realBehavior?.homeroomTeacherComment ? (
+                              <p className="text-sm text-rose-900 leading-relaxed">
+                                {realBehavior.homeroomTeacherComment}
+                              </p>
+                            ) : (
+                              <p className="text-sm text-rose-400 italic">
+                                No homeroom teacher comment for this period.
+                              </p>
+                            )}
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
                   </>
                 )}
               </TabsContent>
