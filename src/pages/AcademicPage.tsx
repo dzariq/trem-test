@@ -2754,7 +2754,7 @@ export default function AcademicPage() {
                   <div className="text-center py-8 text-destructive text-sm">{goalsError}</div>
                 ) : realGoals.length === 0 ? (
                   <div className="text-center py-8 text-muted-foreground text-sm">
-                    No subjects with grades found. Set targets to track progress.
+                    No goals set for {goalYear}. Set targets to track progress.
                   </div>
                 ) : (
                   <>
