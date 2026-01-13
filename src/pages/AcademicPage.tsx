@@ -9,7 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Progress } from "@/components/ui/progress";
-import { Download, FileText, Award, Trophy, BookOpen, TrendingUp, TrendingDown, Check, ArrowUp, ArrowDown, Minus, BarChart3, GitCompare, Target, AlertTriangle, Star, Goal, CheckCircle2, Circle, Edit2, ChevronDown, MessageSquare, Calendar, Sparkles, Printer, FileSpreadsheet, ArrowRightLeft } from "lucide-react";
+import { Download, FileText, Award, Trophy, BookOpen, TrendingUp, TrendingDown, Check, ArrowUp, ArrowDown, Minus, BarChart3, GitCompare, Target, AlertTriangle, Star, Goal, CheckCircle2, Circle, Edit2, ChevronDown, MessageSquare, Calendar, Sparkles, Printer, FileSpreadsheet, ArrowRightLeft, Loader2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import schoolLogo from "@/assets/school-badge.png";
@@ -19,6 +19,9 @@ import { EnvelopeAwardCard } from "@/components/EnvelopeAwardCard";
 import { SubjectPerformanceChart } from "@/components/SubjectPerformanceChart";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { LineChart, Line, XAxis, YAxis, ResponsiveContainer, Tooltip, Legend, CartesianGrid, BarChart, Bar, Cell, PieChart, Pie, AreaChart, Area, ReferenceLine, ReferenceDot, RadarChart, Radar, PolarGrid, PolarAngleAxis, PolarRadiusAxis } from "recharts";
+import { useStudentSelection } from "@/hooks/useStudentSelection";
+import { useStudentReportCard } from "@/hooks/useStudentReportCard";
+import { StudentPillSelector } from "@/components/home/StudentPillSelector";
 type YearKey = "2022" | "2023" | "2024" | "2025";
 type ExamType = "midYear" | "yearEnd";
 
@@ -59,6 +62,30 @@ export default function AcademicPage() {
   const [selectedYears, setSelectedYears] = useState<string[]>(["2025", "2024", "2023"]);
   const [subjectFilter, setSubjectFilter] = useState("all");
   const [trendPeriod, setTrendPeriod] = useState<"1year" | "2years" | "3years" | "4years" | "5years">("5years");
+
+  // Real student selection from Supabase
+  const { linkedStudents, selectedStudentId, setSelectedStudentId, selectedStudent, loading: studentsLoading } = useStudentSelection();
+  
+  // Academic period selection
+  const [selectedPeriodId, setSelectedPeriodId] = useState<string>("");
+
+  // Real report card data from Supabase
+  const { 
+    academicPeriods,
+    grades: realGrades,
+    behavior: realBehavior,
+    behaviorItems: realBehaviorItems,
+    awards: realAwards,
+    loading: reportCardLoading,
+    hasData: hasRealData,
+  } = useStudentReportCard(selectedStudentId || null, selectedPeriodId || null);
+
+  // Auto-select first academic period when loaded
+  useEffect(() => {
+    if (academicPeriods.length > 0 && !selectedPeriodId) {
+      setSelectedPeriodId(academicPeriods[0].id);
+    }
+  }, [academicPeriods, selectedPeriodId]);
 
   // Trends tab filters - multi-select subjects (like Overview)
   const [trendsSelectedSubjects, setTrendsSelectedSubjects] = useState<string[]>(academicData.subjects.map(s => s.name));
@@ -775,16 +802,7 @@ export default function AcademicPage() {
       <AppHeader leftContent={<div className="flex items-center gap-2">
             <img src={schoolLogo} alt="School Logo" className="h-16 w-auto -my-3 drop-shadow-md" />
             <h1 className="text-xl font-semibold text-foreground">Academic</h1>
-          </div>} rightContent={<Select defaultValue={students[0]?.id}>
-            <SelectTrigger className="w-32 h-8 text-sm">
-              <SelectValue placeholder="Student" />
-            </SelectTrigger>
-            <SelectContent className="bg-card">
-              {students.map(student => <SelectItem key={student.id} value={student.id}>
-                  {student.name.split(' ')[0]} {student.name.split(' ')[1]?.[0]}.
-                </SelectItem>)}
-            </SelectContent>
-          </Select>} />
+          </div>} rightContent={<StudentPillSelector onStudentChange={setSelectedStudentId} />} />
 
       {/* Main Tab Switcher - Report Card / Grade Analysis */}
       <section className="px-4 pt-4">
@@ -803,27 +821,20 @@ export default function AcademicPage() {
             <CardTitle className="text-lg font-semibold flex items-center gap-2">
               <FileText className="h-5 w-5 text-primary" />
               Report Card
+              {selectedStudent && <Badge variant="secondary" className="ml-auto text-xs">{selectedStudent.name}</Badge>}
             </CardTitle>
-            {/* Year and Exam Period Selectors */}
+            {/* Academic Period Selector */}
             <div className="flex gap-2 mt-3">
-              <Select value={selectedYear} onValueChange={(v) => setSelectedYear(v as YearKey)}>
+              <Select value={selectedPeriodId} onValueChange={setSelectedPeriodId}>
                 <SelectTrigger className="flex-1 h-9 text-sm">
-                  <SelectValue placeholder="Year" />
+                  <SelectValue placeholder="Select Period" />
                 </SelectTrigger>
                 <SelectContent className="bg-card">
-                  <SelectItem value="2025">2025</SelectItem>
-                  <SelectItem value="2024">2024</SelectItem>
-                  <SelectItem value="2023">2023</SelectItem>
-                  <SelectItem value="2022">2022</SelectItem>
-                </SelectContent>
-              </Select>
-              <Select value={examType} onValueChange={(v) => setExamType(v as ExamType)}>
-                <SelectTrigger className="flex-1 h-9 text-sm">
-                  <SelectValue placeholder="Exam" />
-                </SelectTrigger>
-                <SelectContent className="bg-card">
-                  <SelectItem value="midYear">Mid-Year</SelectItem>
-                  <SelectItem value="yearEnd">Year-End</SelectItem>
+                  {academicPeriods.map(period => (
+                    <SelectItem key={period.id} value={period.id}>
+                      {period.name}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>
@@ -838,186 +849,181 @@ export default function AcademicPage() {
               </TabsList>
 
               {/* Download Button */}
-              <Button className="w-full gap-2 mt-3" onClick={generateReport}>
-                <Download className="h-4 w-4" />
+              <Button className="w-full gap-2 mt-3" onClick={generateReport} disabled={!hasRealData || reportCardLoading}>
+                {reportCardLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
                 Download Report Card
               </Button>
 
               {reportGenerated && <div className="p-3 rounded-lg bg-primary/10 border border-primary/20 text-center mt-2">
-                  <p className="text-sm text-foreground">Report Card for {getExamLabel()} downloaded!</p>
+                  <p className="text-sm text-foreground">Report Card downloaded!</p>
                 </div>}
 
               <TabsContent value="grades" className="mt-4">
-                <div className="space-y-3">
-                  {/* Sort subjects by score (highest to lowest), then group into rows of 2 */}
-                  {(() => {
-                  const filteredSubjects = academicData.subjects.filter(s => gradesSelectedSubjects.includes(s.name));
-                  const sortedSubjects = [...filteredSubjects].sort((a, b) => {
-                    const scoreA = getScore(a, selectedYear, examType) ?? 0;
-                    const scoreB = getScore(b, selectedYear, examType) ?? 0;
-                    return scoreB - scoreA;
-                  });
-                  return Array.from({
-                    length: Math.ceil(sortedSubjects.length / 2)
-                  }, (_, rowIndex) => {
-                    const rowSubjects = sortedSubjects.slice(rowIndex * 2, rowIndex * 2 + 2);
-                    const expandedInRow = rowSubjects.find(s => s.name === expandedSubject);
-                    return <div key={rowIndex} className="space-y-3">
-                        {/* Subject Cards Row */}
-                        <div className="grid grid-cols-2 gap-3">
-                          {rowSubjects.map((subject, index) => {
-                          const score = getScore(subject, selectedYear, examType);
-                          const isPending = score === null || score === undefined;
-                          const isExpanded = expandedSubject === subject.name;
-                          const gradeKey = isPending ? 'C' : getGradeFromScore(score!)[0];
-                          const cardStyle = gradeCardBgStyles[gradeKey] || gradeCardBgStyles.C;
-                          return <div key={index} onClick={() => setExpandedSubject(isExpanded ? null : subject.name)} className={`
-                                  flex flex-col p-4 rounded-xl cursor-pointer border
-                                  transition-all duration-200 ease-out min-h-[80px]
-                                  hover:shadow-md
-                                  ${isExpanded ? 'ring-2 ring-primary/40 shadow-md' : ''}
-                                `} style={{
-                            backgroundColor: cardStyle.bg,
-                            borderColor: cardStyle.border
-                          }}>
-                                <h3 className="font-medium text-foreground text-sm leading-tight mb-2">{subject.name}</h3>
-                                <div className="flex items-center justify-between mt-auto">
-                                  <div className="flex items-center gap-2">
-                                    <p className="text-lg font-semibold text-foreground">
-                                      {isPending ? "Pending" : `${score}%`}
-                                    </p>
-                                    {!isPending && <span className="text-xs font-semibold px-2 py-0.5 rounded-full" style={{
-                                  backgroundColor: (gradePillStyles[getGradeFromScore(score!)[0]] || gradePillStyles.C).bg,
-                                  color: (gradePillStyles[getGradeFromScore(score!)[0]] || gradePillStyles.C).text
+                {/* Loading State */}
+                {reportCardLoading && (
+                  <div className="flex items-center justify-center py-12">
+                    <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                  </div>
+                )}
+
+                {/* Empty State */}
+                {!reportCardLoading && realGrades.length === 0 && (
+                  <div className="text-center py-12">
+                    <FileText className="h-12 w-12 text-muted-foreground/50 mx-auto mb-3" />
+                    <p className="text-sm text-muted-foreground">No grades available for this period.</p>
+                    <p className="text-xs text-muted-foreground mt-1">Please select a different academic period.</p>
+                  </div>
+                )}
+
+                {/* Real Grades Display */}
+                {!reportCardLoading && realGrades.length > 0 && (
+                  <div className="space-y-3">
+                    {/* Sort subjects by total marks (highest to lowest), then group into rows of 2 */}
+                    {(() => {
+                      const sortedGrades = [...realGrades].sort((a, b) => b.totalMarks - a.totalMarks);
+                      return Array.from({
+                        length: Math.ceil(sortedGrades.length / 2)
+                      }, (_, rowIndex) => {
+                        const rowGrades = sortedGrades.slice(rowIndex * 2, rowIndex * 2 + 2);
+                        const expandedInRow = rowGrades.find(g => g.subjectName === expandedSubject);
+                        return <div key={rowIndex} className="space-y-3">
+                            {/* Subject Cards Row */}
+                            <div className="grid grid-cols-2 gap-3">
+                              {rowGrades.map((grade, index) => {
+                                const isPending = grade.letterGrade === null;
+                                const isExpanded = expandedSubject === grade.subjectName;
+                                const gradeKey = isPending ? 'C' : (grade.letterGrade?.[0] || 'C');
+                                const cardStyle = gradeCardBgStyles[gradeKey] || gradeCardBgStyles.C;
+                                return <div key={index} onClick={() => setExpandedSubject(isExpanded ? null : grade.subjectName)} className={`
+                                        flex flex-col p-4 rounded-xl cursor-pointer border
+                                        transition-all duration-200 ease-out min-h-[80px]
+                                        hover:shadow-md
+                                        ${isExpanded ? 'ring-2 ring-primary/40 shadow-md' : ''}
+                                      `} style={{
+                                  backgroundColor: cardStyle.bg,
+                                  borderColor: cardStyle.border
                                 }}>
-                                        {getGradeFromScore(score!)}
-                                      </span>}
-                                  </div>
-                                  <ChevronDown className={`h-4 w-4 text-muted-foreground transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}`} />
-                                </div>
-                              </div>;
-                        })}
-                        </div>
-                        
-                        {/* Expanded Comment Box - Full Width */}
-                        {expandedInRow && <div className="animate-fade-in">
-                            <div className={`rounded-xl p-4 relative mt-1 transition-colors ${
-                              expandedSection === "tips" 
-                                ? "bg-amber-50 border border-amber-200" 
-                                : "bg-primary/5 border border-primary/20"
-                            }`}>
-                              {/* Arrow pointer - clean triangle without bottom line */}
-                              <div className="absolute -top-[10px] w-5 h-[10px] overflow-hidden" style={{
-                            left: expandedInRow === rowSubjects[0] ? 'calc(25% - 10px)' : 'calc(75% - 10px)'
-                          }}>
-                                <div className={`w-[14px] h-[14px] rotate-45 border-l border-t ${
-                                  expandedSection === "tips"
-                                    ? "bg-amber-50 border-amber-200"
-                                    : "bg-primary/5 border-primary/20"
-                                }`} style={{
-                              position: 'absolute',
-                              top: '5px',
-                              left: '3px'
-                            }} />
-                              </div>
-                              
-                              {/* Toggle Buttons */}
-                              <div className="flex gap-2 mb-3">
-                                <button
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    setExpandedSection("comment");
-                                  }}
-                                  className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
-                                    expandedSection === "comment" 
-                                      ? "bg-primary text-primary-foreground" 
-                                      : "bg-muted text-muted-foreground hover:bg-muted/80"
-                                  }`}
-                                >
-                                  <MessageSquare className="h-3 w-3" />
-                                  Teacher's Comment
-                                </button>
-                                <button
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    setExpandedSection("tips");
-                                  }}
-                                  className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
-                                    expandedSection === "tips" 
-                                      ? "bg-amber-500 text-white" 
-                                      : "bg-muted text-muted-foreground hover:bg-muted/80"
-                                  }`}
-                                >
-                                  <BookOpen className="h-3 w-3" />
-                                  Learning Tips
-                                </button>
-                              </div>
-                              
-                              {/* Content Section */}
-                              {expandedSection === "comment" ? (
-                                <div className="flex items-start gap-3">
-                                  <div className="flex-shrink-0 w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
-                                    <MessageSquare className="h-4 w-4 text-primary" />
-                                  </div>
-                                  <div className="flex-1 min-w-0">
-                                    <p className="text-xs font-medium text-primary mb-1">Teacher's Comment</p>
-                                    <p className="text-sm text-muted-foreground leading-relaxed">
-                                      {expandedInRow.teacherComment}
-                                    </p>
-                                  </div>
-                                </div>
-                              ) : (
-                                <div className="flex items-start gap-3">
-                                  <div className="flex-shrink-0 w-8 h-8 rounded-full bg-amber-100 flex items-center justify-center">
-                                    <BookOpen className="h-4 w-4 text-amber-600" />
-                                  </div>
-                                  <div className="flex-1 min-w-0 space-y-3">
-                                    {expandedInRow.classStudyRecommendation && (
-                                      <div>
-                                        <p className="text-xs font-medium text-amber-600 mb-1">Class Learning Tips</p>
-                                        <p className="text-sm text-muted-foreground leading-relaxed">
-                                          {expandedInRow.classStudyRecommendation}
-                                        </p>
-                                      </div>
-                                    )}
-                                    {expandedInRow.studyRecommendation && (
-                                      <div className="pt-2 border-t border-amber-200">
-                                        <div className="flex items-center gap-2 mb-1">
-                                          <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-amber-500 text-white">
-                                            Individual Tips
-                                          </span>
+                                      <h3 className="font-medium text-foreground text-sm leading-tight mb-2">{grade.subjectName}</h3>
+                                      <div className="flex items-center justify-between mt-auto">
+                                        <div className="flex items-center gap-2">
+                                          <p className="text-lg font-semibold text-foreground">
+                                            {isPending ? "Pending" : `${grade.totalMarks}%`}
+                                          </p>
+                                          {!isPending && grade.letterGrade && <span className="text-xs font-semibold px-2 py-0.5 rounded-full" style={{
+                                            backgroundColor: (gradePillStyles[grade.letterGrade[0]] || gradePillStyles.C).bg,
+                                            color: (gradePillStyles[grade.letterGrade[0]] || gradePillStyles.C).text
+                                          }}>
+                                              {grade.letterGrade}
+                                            </span>}
                                         </div>
-                                        <p className="text-sm text-muted-foreground leading-relaxed">
-                                          {expandedInRow.studyRecommendation}
-                                        </p>
+                                        <ChevronDown className={`h-4 w-4 text-muted-foreground transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}`} />
                                       </div>
-                                    )}
-                                    {!expandedInRow.classStudyRecommendation && !expandedInRow.studyRecommendation && (
-                                      <p className="text-sm text-muted-foreground italic">
-                                        No learning tips available for this subject.
-                                      </p>
-                                    )}
+                                    </div>;
+                              })}
+                            </div>
+                            
+                            {/* Expanded Comment Box - Full Width */}
+                            {expandedInRow && <div className="animate-fade-in">
+                                <div className="rounded-xl p-4 relative mt-1 transition-colors bg-primary/5 border border-primary/20">
+                                  <div className="flex items-center gap-2 mb-2">
+                                    <MessageSquare className="h-4 w-4 text-primary" />
+                                    <span className="text-sm font-semibold text-foreground">Teacher's Comment</span>
+                                  </div>
+                                  <p className="text-sm text-muted-foreground leading-relaxed">
+                                    {expandedInRow.teacherComment || expandedInRow.subjectComment || "No comment available for this subject."}
+                                  </p>
+                                  
+                                  {/* Score Breakdown */}
+                                  <div className="mt-3 pt-3 border-t border-border">
+                                    <p className="text-xs font-medium text-muted-foreground mb-2">Score Breakdown</p>
+                                    <div className="grid grid-cols-4 gap-2">
+                                      <div className="text-center p-2 bg-muted/50 rounded-md">
+                                        <p className="text-xs text-muted-foreground">Quiz</p>
+                                        <p className="text-sm font-semibold">{expandedInRow.quizMarks}</p>
+                                      </div>
+                                      <div className="text-center p-2 bg-muted/50 rounded-md">
+                                        <p className="text-xs text-muted-foreground">HW</p>
+                                        <p className="text-sm font-semibold">{expandedInRow.homeworkMarks}</p>
+                                      </div>
+                                      <div className="text-center p-2 bg-muted/50 rounded-md">
+                                        <p className="text-xs text-muted-foreground">Exam</p>
+                                        <p className="text-sm font-semibold">{expandedInRow.examMarks}</p>
+                                      </div>
+                                      <div className="text-center p-2 bg-muted/50 rounded-md">
+                                        <p className="text-xs text-muted-foreground">Att</p>
+                                        <p className="text-sm font-semibold">{expandedInRow.attitudeMarks}</p>
+                                      </div>
+                                    </div>
                                   </div>
                                 </div>
-                              )}
-                            </div>
-                          </div>}
-                      </div>;
-                  });
-                })()}
-                </div>
+                              </div>}
+                          </div>;
+                      });
+                    })()}
+                  </div>
               </TabsContent>
 
               <TabsContent value="behavior" className="mt-4 space-y-4">
-                {/* Smart Summary Card */}
-                <Card className="bg-primary/5 border-primary/20">
-                  <CardContent className="p-4">
-                    <div className="flex items-start gap-3">
-                      <div className="p-2 rounded-full bg-primary/10">
-                        <Sparkles className="h-5 w-5 text-primary" />
-                      </div>
-                      <div>
-                        <p className="text-sm font-medium text-primary mb-1">Smart Summary</p>
+                {/* Loading State */}
+                {reportCardLoading && (
+                  <div className="flex items-center justify-center py-12">
+                    <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                  </div>
+                )}
+
+                {/* Empty State */}
+                {!reportCardLoading && realBehaviorItems.length === 0 && (
+                  <div className="text-center py-12">
+                    <Sparkles className="h-12 w-12 text-muted-foreground/50 mx-auto mb-3" />
+                    <p className="text-sm text-muted-foreground">No behavior assessment available for this period.</p>
+                  </div>
+                )}
+
+                {/* Real Behavior Data */}
+                {!reportCardLoading && realBehaviorItems.length > 0 && (
+                  <>
+                    {/* Smart Summary Card */}
+                    <Card className="bg-primary/5 border-primary/20">
+                      <CardContent className="p-4">
+                        <div className="flex items-start gap-3">
+                          <div className="p-2 rounded-full bg-primary/10">
+                            <Sparkles className="h-5 w-5 text-primary" />
+                          </div>
+                          <div>
+                            <p className="text-sm font-medium text-primary mb-1">Smart Summary</p>
+                            <p className="text-sm text-muted-foreground leading-relaxed">
+                              {realBehavior?.homeroomTeacherComment || "The student shows good potential and continues to make progress."}
+                            </p>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+
+                    {/* Behavioral Traits Grid */}
+                    <div className="grid grid-cols-2 gap-3">
+                      {realBehaviorItems.map((item, index) => {
+                        const gradeConfig: Record<string, { bg: string; border: string; text: string; watermark: string }> = {
+                          A: { bg: "bg-emerald-50", border: "border-emerald-200", text: "text-emerald-700", watermark: "text-emerald-200" },
+                          B: { bg: "bg-blue-50", border: "border-blue-200", text: "text-blue-700", watermark: "text-blue-200" },
+                          C: { bg: "bg-amber-50", border: "border-amber-200", text: "text-amber-700", watermark: "text-amber-200" },
+                          D: { bg: "bg-orange-50", border: "border-orange-200", text: "text-orange-700", watermark: "text-orange-200" },
+                          E: { bg: "bg-red-50", border: "border-red-200", text: "text-red-700", watermark: "text-red-200" }
+                        };
+                        const config = gradeConfig[item.grade] || gradeConfig.C;
+                        return (
+                          <Card key={index} className={`${config.bg} ${config.border} overflow-hidden relative`}>
+                            <div className={`absolute -right-1 -bottom-3 text-[4.5rem] font-black leading-none ${config.watermark} select-none pointer-events-none`}>
+                              {item.grade}
+                            </div>
+                            <CardContent className="p-3 relative z-10">
+                              <span className={`text-xs font-semibold uppercase ${config.text}`}>{item.category}</span>
+                            </CardContent>
+                          </Card>
+                        );
+                      })}
+                    </div>
+                  </>
+                )}
                         <p className="text-sm text-muted-foreground leading-relaxed">
                           {(() => {
                           const grades = academicData.behavior.map(b => b.grade);
