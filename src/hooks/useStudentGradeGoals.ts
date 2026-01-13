@@ -22,6 +22,67 @@ export function useStudentGradeGoals(studentId: string | null, goalYear: number)
   const [savingGoalId, setSavingGoalId] = useState<number | null>(null);
   const [error, setError] = useState<string | null>(null);
 
+  const getAssignedSubjects = useCallback(async (studentIdValue: string) => {
+    const supabaseAny = supabase as unknown as {
+      from: (table: string) => any;
+    };
+
+    const { data: selectionsData, error: selectionsError } = await supabaseAny
+      .from("subject_selections")
+      .select("subjects")
+      .eq("student_id", studentIdValue)
+      .order("created_at", { ascending: false })
+      .limit(1);
+
+    if (selectionsError) {
+      console.error("[useStudentGradeGoals] subject_selections lookup failed:", {
+        code: selectionsError.code,
+        message: selectionsError.message,
+        details: selectionsError.details
+      });
+      throw selectionsError;
+    }
+
+    if (import.meta.env.DEV) {
+      console.log("subject_selections rows:", selectionsData?.length, selectionsData?.[0]);
+      console.log(
+        "subjects len:",
+        Array.isArray(selectionsData?.[0]?.subjects) ? selectionsData?.[0]?.subjects.length : null
+      );
+    }
+
+    const subjects = selectionsData?.[0]?.subjects;
+    if (!Array.isArray(subjects) || subjects.length === 0) {
+      return { assignedSubjects: [], hasSubjectsArray: false };
+    }
+
+    const assigned: { subjectId: number; subjectName: string }[] = [];
+    const seen = new Set<number>();
+
+    for (const subject of subjects) {
+      const subjectId = Number((subject as any)?.id);
+      if (!Number.isFinite(subjectId) || !Number.isInteger(subjectId) || seen.has(subjectId)) {
+        continue;
+      }
+      const selected = (subject as any)?.selected;
+      const compulsory = (subject as any)?.compulsory;
+      if (selected !== true && !(selected === undefined && compulsory === true)) {
+        continue;
+      }
+      seen.add(subjectId);
+      assigned.push({
+        subjectId,
+        subjectName: String((subject as any)?.name ?? `Subject ${subjectId}`)
+      });
+    }
+
+    if (import.meta.env.DEV) {
+      console.log("[useStudentGradeGoals] Assigned subjects count:", assigned.length);
+    }
+
+    return { assignedSubjects: assigned, hasSubjectsArray: true };
+  }, []);
+
   // Fetch subjects, grades, and goals for the student
   const fetchGoalsData = useCallback(async () => {
     if (!studentId) {
@@ -36,12 +97,30 @@ export function useStudentGradeGoals(studentId: string | null, goalYear: number)
     try {
       console.log("[useStudentGradeGoals] Fetching data for studentId:", studentId, "goalYear:", goalYear);
 
-      // 1) Fetch existing goals for this student and year FIRST
+      // 1) Fetch assigned subjects for the student
+      const { assignedSubjects, hasSubjectsArray } = await getAssignedSubjects(studentId);
+
+      if (assignedSubjects.length === 0) {
+        if (!hasSubjectsArray) {
+          setError("No subjects assigned to this student yet.");
+        }
+        setGoals([]);
+        setLoading(false);
+        return;
+      }
+
+      const assignedSubjectIds = assignedSubjects.map(s => s.subjectId);
+      const assignedSubjectsMap = new Map<number, string>(
+        assignedSubjects.map(subject => [subject.subjectId, subject.subjectName])
+      );
+
+      // 2) Fetch existing goals for this student and year
       const { data: goalsData, error: goalsError } = await supabase
         .from("student_grade_goals")
         .select("id, student_id, subject_id, goal_year, target_percentage")
         .eq("student_id", studentId)
         .eq("goal_year", goalYear)
+        .in("subject_id", assignedSubjectIds)
         .order("subject_id", { ascending: true });
 
       if (goalsError) {
@@ -54,10 +133,59 @@ export function useStudentGradeGoals(studentId: string | null, goalYear: number)
         throw goalsError;
       }
 
-      console.log("[useStudentGradeGoals] Existing goals from DB:", goalsData);
+      if (import.meta.env.DEV) {
+        console.log("[useStudentGradeGoals] Existing goals count:", goalsData?.length ?? 0);
+      }
 
-      // 2) Get all subject IDs that have goals
-      const subjectIdsWithGoals = new Set((goalsData ?? []).map(g => g.subject_id));
+      // 2b) Seed default goals if none exist for this year
+      if ((goalsData?.length ?? 0) === 0) {
+        const { data: userData } = await supabase.auth.getUser();
+        const userId = userData?.user?.id;
+
+        if (!userId) {
+          throw new Error("User not authenticated");
+        }
+
+        const seedPayload = assignedSubjectIds.map(subjectId => ({
+          student_id: studentId,
+          subject_id: subjectId,
+          goal_year: goalYear,
+          target_percentage: 75,
+          created_by: userId
+        }));
+
+        const { error: seedError } = await supabase
+          .from("student_grade_goals")
+          .upsert(seedPayload, { onConflict: "student_id,subject_id,goal_year" });
+
+        if (seedError) {
+          console.error("[useStudentGradeGoals] Seed goals error:", {
+            code: seedError.code,
+            message: seedError.message,
+            details: seedError.details,
+            hint: seedError.hint
+          });
+          throw seedError;
+        }
+      }
+
+      const { data: refreshedGoals, error: refreshedGoalsError } = await supabase
+        .from("student_grade_goals")
+        .select("id, student_id, subject_id, goal_year, target_percentage")
+        .eq("student_id", studentId)
+        .eq("goal_year", goalYear)
+        .in("subject_id", assignedSubjectIds)
+        .order("subject_id", { ascending: true });
+
+      if (refreshedGoalsError) {
+        console.error("[useStudentGradeGoals] Error refreshing goals:", {
+          message: refreshedGoalsError.message,
+          code: refreshedGoalsError.code,
+          details: refreshedGoalsError.details,
+          hint: refreshedGoalsError.hint
+        });
+        throw refreshedGoalsError;
+      }
 
       // 3) Get subjects that the student has grades for
       const { data: gradesData, error: gradesError } = await supabase
@@ -69,7 +197,8 @@ export function useStudentGradeGoals(studentId: string | null, goalYear: number)
           subjects!inner(id, name),
           academic_periods!inner(id, code, sort_order)
         `)
-        .eq("student_id", studentId);
+        .eq("student_id", studentId)
+        .in("subject_id", assignedSubjectIds);
 
       if (gradesError) {
         console.error("[useStudentGradeGoals] Error fetching grades:", gradesError);
@@ -79,7 +208,7 @@ export function useStudentGradeGoals(studentId: string | null, goalYear: number)
       console.log("[useStudentGradeGoals] Raw grades data:", gradesData);
 
       // 4) Get the latest grade per subject (by sort_order desc)
-      const latestGradesBySubject = new Map<number, { subjectName: string; totalMarks: number | null }>();
+      const latestGradesBySubject = new Map<number, number | null>();
       
       if (gradesData) {
         // Sort by sort_order descending to get latest first
@@ -92,51 +221,26 @@ export function useStudentGradeGoals(studentId: string | null, goalYear: number)
         for (const grade of sortedGrades) {
           const subjectId = grade.subject_id;
           if (!latestGradesBySubject.has(subjectId)) {
-            latestGradesBySubject.set(subjectId, {
-              subjectName: (grade.subjects as any)?.name ?? `Subject ${subjectId}`,
-              totalMarks: grade.total_marks
-            });
-          }
-        }
-      }
-
-      // 5) Fetch subject names for goals that don't have grades
-      const missingSubjectIds = [...subjectIdsWithGoals].filter(id => !latestGradesBySubject.has(id));
-      if (missingSubjectIds.length > 0) {
-        const { data: subjectsData } = await supabase
-          .from("subjects")
-          .select("id, name")
-          .in("id", missingSubjectIds);
-        
-        if (subjectsData) {
-          for (const subj of subjectsData) {
-            if (!latestGradesBySubject.has(subj.id)) {
-              latestGradesBySubject.set(subj.id, {
-                subjectName: subj.name,
-                totalMarks: null
-              });
-            }
+            latestGradesBySubject.set(subjectId, grade.total_marks);
           }
         }
       }
 
       console.log("[useStudentGradeGoals] Latest grades by subject:", Object.fromEntries(latestGradesBySubject));
 
-      // 6) Create a map of subject_id -> target_percentage
+      // 5) Build a map of subject_id -> target_percentage
       const goalsMap = new Map<number, number>();
-      if (goalsData) {
-        for (const goal of goalsData) {
+      if (refreshedGoals) {
+        for (const goal of refreshedGoals) {
           goalsMap.set(goal.subject_id, goal.target_percentage);
         }
       }
 
-      // 7) Build the final goals array - include ALL subjects from both grades AND goals
-      const allSubjectIds = new Set([...latestGradesBySubject.keys(), ...subjectIdsWithGoals]);
+      // 6) Build the final goals array from assigned subjects (grades are optional enrichment)
       const subjectGoals: SubjectGoal[] = [];
 
-      for (const subjectId of allSubjectIds) {
-        const gradeInfo = latestGradesBySubject.get(subjectId);
-        const currentPercentage = gradeInfo?.totalMarks ?? null;
+      for (const subjectId of assignedSubjectIds) {
+        const currentPercentage = latestGradesBySubject.get(subjectId) ?? null;
         const targetPercentage = goalsMap.get(subjectId) ?? null;
         const achieved = currentPercentage !== null && targetPercentage !== null && currentPercentage >= targetPercentage;
         const deltaToGo = targetPercentage !== null && currentPercentage !== null 
@@ -145,7 +249,7 @@ export function useStudentGradeGoals(studentId: string | null, goalYear: number)
 
         subjectGoals.push({
           subjectId,
-          subjectName: gradeInfo?.subjectName ?? `Subject ${subjectId}`,
+          subjectName: assignedSubjectsMap.get(subjectId) ?? `Subject ${subjectId}`,
           currentPercentage,
           targetPercentage,
           achieved,
@@ -154,9 +258,14 @@ export function useStudentGradeGoals(studentId: string | null, goalYear: number)
       }
 
       // Sort by subject name
-      subjectGoals.sort((a, b) => a.subjectName.localeCompare(b.subjectName));
+      subjectGoals.sort((a, b) => {
+        const nameSort = a.subjectName.localeCompare(b.subjectName);
+        return nameSort !== 0 ? nameSort : a.subjectId - b.subjectId;
+      });
 
-      console.log("[useStudentGradeGoals] Final goals array:", subjectGoals);
+      if (import.meta.env.DEV) {
+        console.log("[useStudentGradeGoals] Final goals count:", subjectGoals.length);
+      }
       setGoals(subjectGoals);
     } catch (err) {
       const message = err instanceof Error ? err.message : "Failed to load goals data.";
@@ -166,7 +275,7 @@ export function useStudentGradeGoals(studentId: string | null, goalYear: number)
     } finally {
       setLoading(false);
     }
-  }, [studentId, goalYear]);
+  }, [studentId, goalYear, getAssignedSubjects]);
 
   useEffect(() => {
     fetchGoalsData();
@@ -180,7 +289,17 @@ export function useStudentGradeGoals(studentId: string | null, goalYear: number)
     setError(null);
 
     try {
-      console.log("[useStudentGradeGoals] Upserting goal:", { studentId, subjectId, goalYear, targetPercentage });
+      if (!Number.isFinite(targetPercentage)) {
+        throw new Error("Invalid goal value.");
+      }
+      const clampedTarget = Math.min(100, Math.max(0, Math.round(targetPercentage)));
+      if (import.meta.env.DEV) {
+        console.log("[useStudentGradeGoals] Goal update payload:", {
+          subjectId,
+          year: goalYear,
+          target_percentage: clampedTarget
+        });
+      }
 
       const { data: userData } = await supabase.auth.getUser();
       const userId = userData?.user?.id;
@@ -189,7 +308,6 @@ export function useStudentGradeGoals(studentId: string | null, goalYear: number)
         throw new Error("User not authenticated");
       }
 
-      // Try upsert without created_by first (let DB default handle it)
       const { data: upsertData, error: upsertError } = await supabase
         .from("student_grade_goals")
         .upsert(
@@ -197,12 +315,13 @@ export function useStudentGradeGoals(studentId: string | null, goalYear: number)
             student_id: studentId,
             subject_id: subjectId,
             goal_year: goalYear,
-            target_percentage: targetPercentage,
-            updated_at: new Date().toISOString()
+            target_percentage: clampedTarget,
+            created_by: userId
           },
           { onConflict: "student_id,subject_id,goal_year" }
         )
-        .select();
+        .select()
+        .single();
 
       if (upsertError) {
         console.error("[useStudentGradeGoals] Upsert error details:", {
@@ -211,38 +330,7 @@ export function useStudentGradeGoals(studentId: string | null, goalYear: number)
           details: upsertError.details,
           hint: upsertError.hint
         });
-        
-        // If it fails due to created_by being required, retry with created_by
-        if (upsertError.message?.includes("created_by") || upsertError.code === "23502") {
-          console.log("[useStudentGradeGoals] Retrying with created_by...");
-          const { data: retryData, error: retryError } = await supabase
-            .from("student_grade_goals")
-            .upsert(
-              {
-                student_id: studentId,
-                subject_id: subjectId,
-                goal_year: goalYear,
-                target_percentage: targetPercentage,
-                created_by: userId,
-                updated_at: new Date().toISOString()
-              },
-              { onConflict: "student_id,subject_id,goal_year" }
-            )
-            .select();
-
-          if (retryError) {
-            console.error("[useStudentGradeGoals] Retry upsert error details:", {
-              message: retryError.message,
-              code: retryError.code,
-              details: retryError.details,
-              hint: retryError.hint
-            });
-            throw retryError;
-          }
-          console.log("[useStudentGradeGoals] Goal saved successfully (with created_by):", retryData);
-        } else {
-          throw upsertError;
-        }
+        throw upsertError;
       } else {
         console.log("[useStudentGradeGoals] Goal saved successfully:", upsertData);
       }

@@ -2787,6 +2787,11 @@ export default function AcademicPage() {
                         const currentPct = item.currentPercentage ?? 0;
                         const gap = hasTarget ? item.deltaToGo : 0;
                         const isOnTrack = hasTarget && !item.achieved && item.targetPercentage !== null && item.currentPercentage !== null && ((item.targetPercentage - item.currentPercentage) / item.targetPercentage) <= 0.30;
+                        const parsedTempGoal = tempGoalValue.trim() === "" ? null : Number(tempGoalValue);
+                        const isValidTarget = parsedTempGoal !== null
+                          && Number.isInteger(parsedTempGoal)
+                          && parsedTempGoal >= 0
+                          && parsedTempGoal <= 100;
 
                         return (
                           <div key={item.subjectId} className="p-4 rounded-xl bg-accent/30 border border-border/50 transition-all cursor-pointer active:opacity-70" onClick={() => {
@@ -2794,7 +2799,9 @@ export default function AcademicPage() {
                               setEditingGoalSubjectId(null);
                             } else {
                               setEditingGoalSubjectId(item.subjectId);
-                              setTempGoalValue(displayTarget.toString());
+                              setTempGoalValue(
+                                item.targetPercentage !== null ? item.targetPercentage.toString() : "80"
+                              );
                             }
                           }}>
                             <div className="flex items-center justify-between min-h-[44px]">
@@ -2818,16 +2825,24 @@ export default function AcademicPage() {
                               <div className="mt-4 pt-4 border-t border-border/50 space-y-4 animate-in slide-in-from-top-2 duration-200" onClick={(e) => e.stopPropagation()}>
                                 <div className="flex items-center justify-between">
                                   <span className="text-sm text-muted-foreground">Set Target Goal</span>
-                                  <span className="text-lg font-bold text-primary">{tempGoalValue}%</span>
+                                  <span className="text-lg font-bold text-primary">
+                                    {tempGoalValue.trim() === "" ? "--" : `${tempGoalValue}%`}
+                                  </span>
                                 </div>
-                                <input type="range" min="0" max="100" value={tempGoalValue} onChange={e => setTempGoalValue(e.target.value)} className="w-full h-10 appearance-none bg-transparent cursor-pointer touch-pan-x [&::-webkit-slider-runnable-track]:h-3 [&::-webkit-slider-runnable-track]:rounded-full [&::-webkit-slider-runnable-track]:bg-muted [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-7 [&::-webkit-slider-thumb]:h-7 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-primary [&::-webkit-slider-thumb]:shadow-lg [&::-webkit-slider-thumb]:-mt-2 [&::-webkit-slider-thumb]:border-4 [&::-webkit-slider-thumb]:border-background" />
+                                <input type="range" min="0" max="100" value={tempGoalValue} onChange={e => {
+                                  if (e.target.value.trim() === "") return;
+                                  setTempGoalValue(e.target.value);
+                                }} className="w-full h-10 appearance-none bg-transparent cursor-pointer touch-pan-x [&::-webkit-slider-runnable-track]:h-3 [&::-webkit-slider-runnable-track]:rounded-full [&::-webkit-slider-runnable-track]:bg-muted [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-7 [&::-webkit-slider-thumb]:h-7 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-primary [&::-webkit-slider-thumb]:shadow-lg [&::-webkit-slider-thumb]:-mt-2 [&::-webkit-slider-thumb]:border-4 [&::-webkit-slider-thumb]:border-background" />
                                 <div className="flex gap-2">
                                   <Button variant="outline" className="flex-1 h-12 text-base" onClick={() => setEditingGoalSubjectId(null)}>Cancel</Button>
-                                  <Button className="flex-1 h-12 text-base" onClick={() => {
-                                    const newValue = parseInt(tempGoalValue);
-                                    if (!isNaN(newValue) && newValue >= 0 && newValue <= 100) {
-                                      upsertGoal(item.subjectId, newValue);
-                                    }
+                                  <Button className="flex-1 h-12 text-base" disabled={!isValidTarget} onClick={() => {
+                                    if (!isValidTarget || parsedTempGoal === null) return;
+                                    console.log("Saving goal", {
+                                      subjectId: item.subjectId,
+                                      year: goalYear,
+                                      target_percentage: parsedTempGoal
+                                    });
+                                    upsertGoal(item.subjectId, parsedTempGoal);
                                     setEditingGoalSubjectId(null);
                                   }}>
                                     <Check className="h-5 w-5 mr-2" />Save
