@@ -36,7 +36,30 @@ export function useStudentGradeGoals(studentId: string | null, goalYear: number)
     try {
       console.log("[useStudentGradeGoals] Fetching data for studentId:", studentId, "goalYear:", goalYear);
 
-      // Get subjects that the student has grades for
+      // 1) Fetch existing goals for this student and year FIRST
+      const { data: goalsData, error: goalsError } = await supabase
+        .from("student_grade_goals")
+        .select("id, student_id, subject_id, goal_year, target_percentage")
+        .eq("student_id", studentId)
+        .eq("goal_year", goalYear)
+        .order("subject_id", { ascending: true });
+
+      if (goalsError) {
+        console.error("[useStudentGradeGoals] Error fetching goals:", {
+          message: goalsError.message,
+          code: goalsError.code,
+          details: goalsError.details,
+          hint: goalsError.hint
+        });
+        throw goalsError;
+      }
+
+      console.log("[useStudentGradeGoals] Existing goals from DB:", goalsData);
+
+      // 2) Get all subject IDs that have goals
+      const subjectIdsWithGoals = new Set((goalsData ?? []).map(g => g.subject_id));
+
+      // 3) Get subjects that the student has grades for
       const { data: gradesData, error: gradesError } = await supabase
         .from("student_grades")
         .select(`
@@ -50,12 +73,12 @@ export function useStudentGradeGoals(studentId: string | null, goalYear: number)
 
       if (gradesError) {
         console.error("[useStudentGradeGoals] Error fetching grades:", gradesError);
-        throw gradesError;
+        // Don't throw - we can still show goals without grades
       }
 
       console.log("[useStudentGradeGoals] Raw grades data:", gradesData);
 
-      // Get the latest grade per subject (by sort_order desc)
+      // 4) Get the latest grade per subject (by sort_order desc)
       const latestGradesBySubject = new Map<number, { subjectName: string; totalMarks: number | null }>();
       
       if (gradesData) {
@@ -77,23 +100,29 @@ export function useStudentGradeGoals(studentId: string | null, goalYear: number)
         }
       }
 
-      console.log("[useStudentGradeGoals] Latest grades by subject:", Object.fromEntries(latestGradesBySubject));
-
-      // Get existing goals for this student and year
-      const { data: goalsData, error: goalsError } = await supabase
-        .from("student_grade_goals")
-        .select("subject_id, target_percentage")
-        .eq("student_id", studentId)
-        .eq("goal_year", goalYear);
-
-      if (goalsError) {
-        console.error("[useStudentGradeGoals] Error fetching goals:", goalsError);
-        throw goalsError;
+      // 5) Fetch subject names for goals that don't have grades
+      const missingSubjectIds = [...subjectIdsWithGoals].filter(id => !latestGradesBySubject.has(id));
+      if (missingSubjectIds.length > 0) {
+        const { data: subjectsData } = await supabase
+          .from("subjects")
+          .select("id, name")
+          .in("id", missingSubjectIds);
+        
+        if (subjectsData) {
+          for (const subj of subjectsData) {
+            if (!latestGradesBySubject.has(subj.id)) {
+              latestGradesBySubject.set(subj.id, {
+                subjectName: subj.name,
+                totalMarks: null
+              });
+            }
+          }
+        }
       }
 
-      console.log("[useStudentGradeGoals] Existing goals:", goalsData);
+      console.log("[useStudentGradeGoals] Latest grades by subject:", Object.fromEntries(latestGradesBySubject));
 
-      // Create a map of subject_id -> target_percentage
+      // 6) Create a map of subject_id -> target_percentage
       const goalsMap = new Map<number, number>();
       if (goalsData) {
         for (const goal of goalsData) {
@@ -101,10 +130,13 @@ export function useStudentGradeGoals(studentId: string | null, goalYear: number)
         }
       }
 
-      // Build the final goals array
+      // 7) Build the final goals array - include ALL subjects from both grades AND goals
+      const allSubjectIds = new Set([...latestGradesBySubject.keys(), ...subjectIdsWithGoals]);
       const subjectGoals: SubjectGoal[] = [];
-      for (const [subjectId, gradeInfo] of latestGradesBySubject) {
-        const currentPercentage = gradeInfo.totalMarks;
+
+      for (const subjectId of allSubjectIds) {
+        const gradeInfo = latestGradesBySubject.get(subjectId);
+        const currentPercentage = gradeInfo?.totalMarks ?? null;
         const targetPercentage = goalsMap.get(subjectId) ?? null;
         const achieved = currentPercentage !== null && targetPercentage !== null && currentPercentage >= targetPercentage;
         const deltaToGo = targetPercentage !== null && currentPercentage !== null 
@@ -113,7 +145,7 @@ export function useStudentGradeGoals(studentId: string | null, goalYear: number)
 
         subjectGoals.push({
           subjectId,
-          subjectName: gradeInfo.subjectName,
+          subjectName: gradeInfo?.subjectName ?? `Subject ${subjectId}`,
           currentPercentage,
           targetPercentage,
           achieved,

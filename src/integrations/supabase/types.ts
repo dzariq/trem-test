@@ -1621,6 +1621,7 @@ export type Database = {
           sibling_discount: boolean | null
           student_ic: string | null
           updated_at: string
+          user_id: string | null
           year_level: string
         }
         Insert: {
@@ -1661,6 +1662,7 @@ export type Database = {
           sibling_discount?: boolean | null
           student_ic?: string | null
           updated_at?: string
+          user_id?: string | null
           year_level: string
         }
         Update: {
@@ -1701,6 +1703,7 @@ export type Database = {
           sibling_discount?: boolean | null
           student_ic?: string | null
           updated_at?: string
+          user_id?: string | null
           year_level?: string
         }
         Relationships: [
