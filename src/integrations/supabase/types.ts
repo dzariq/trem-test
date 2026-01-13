@@ -1420,6 +1420,54 @@ export type Database = {
           },
         ]
       }
+      student_grade_goals: {
+        Row: {
+          created_at: string
+          created_by: string
+          goal_year: number
+          id: string
+          student_id: string
+          subject_id: number
+          target_percentage: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string
+          goal_year: number
+          id?: string
+          student_id: string
+          subject_id: number
+          target_percentage: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          goal_year?: number
+          id?: string
+          student_id?: string
+          subject_id?: number
+          target_percentage?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "student_grade_goals_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "student_grade_goals_subject_id_fkey"
+            columns: ["subject_id"]
+            isOneToOne: false
+            referencedRelation: "subjects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       student_grades: {
         Row: {
           academic_period_id: string
