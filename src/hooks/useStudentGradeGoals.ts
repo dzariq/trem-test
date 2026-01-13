@@ -157,7 +157,8 @@ export function useStudentGradeGoals(studentId: string | null, goalYear: number)
         throw new Error("User not authenticated");
       }
 
-      const { error: upsertError } = await supabase
+      // Try upsert without created_by first (let DB default handle it)
+      const { data: upsertData, error: upsertError } = await supabase
         .from("student_grade_goals")
         .upsert(
           {
@@ -165,36 +166,66 @@ export function useStudentGradeGoals(studentId: string | null, goalYear: number)
             subject_id: subjectId,
             goal_year: goalYear,
             target_percentage: targetPercentage,
-            created_by: userId,
             updated_at: new Date().toISOString()
           },
           { onConflict: "student_id,subject_id,goal_year" }
-        );
+        )
+        .select();
 
       if (upsertError) {
-        console.error("[useStudentGradeGoals] Upsert error:", upsertError);
-        throw upsertError;
+        console.error("[useStudentGradeGoals] Upsert error details:", {
+          message: upsertError.message,
+          code: upsertError.code,
+          details: upsertError.details,
+          hint: upsertError.hint
+        });
+        
+        // If it fails due to created_by being required, retry with created_by
+        if (upsertError.message?.includes("created_by") || upsertError.code === "23502") {
+          console.log("[useStudentGradeGoals] Retrying with created_by...");
+          const { data: retryData, error: retryError } = await supabase
+            .from("student_grade_goals")
+            .upsert(
+              {
+                student_id: studentId,
+                subject_id: subjectId,
+                goal_year: goalYear,
+                target_percentage: targetPercentage,
+                created_by: userId,
+                updated_at: new Date().toISOString()
+              },
+              { onConflict: "student_id,subject_id,goal_year" }
+            )
+            .select();
+
+          if (retryError) {
+            console.error("[useStudentGradeGoals] Retry upsert error details:", {
+              message: retryError.message,
+              code: retryError.code,
+              details: retryError.details,
+              hint: retryError.hint
+            });
+            throw retryError;
+          }
+          console.log("[useStudentGradeGoals] Goal saved successfully (with created_by):", retryData);
+        } else {
+          throw upsertError;
+        }
+      } else {
+        console.log("[useStudentGradeGoals] Goal saved successfully:", upsertData);
       }
 
-      console.log("[useStudentGradeGoals] Goal saved successfully");
-
-      // Update local state immediately
-      setGoals(prev => prev.map(g => {
-        if (g.subjectId === subjectId) {
-          const achieved = g.currentPercentage !== null && g.currentPercentage >= targetPercentage;
-          const deltaToGo = g.currentPercentage !== null ? Math.max(0, targetPercentage - g.currentPercentage) : 0;
-          return { ...g, targetPercentage, achieved, deltaToGo };
-        }
-        return g;
-      }));
+      // Refetch goals to ensure UI is in sync
+      await fetchGoalsData();
     } catch (err) {
-      const message = err instanceof Error ? err.message : "Failed to save goal.";
+      const supaError = err as { message?: string; code?: string; details?: string; hint?: string };
+      const message = supaError.message || "Failed to save goal.";
       console.error("[useStudentGradeGoals] Save error:", err);
       setError(message);
     } finally {
       setSavingGoalId(null);
     }
-  }, [studentId, goalYear]);
+  }, [studentId, goalYear, fetchGoalsData]);
 
   // Computed counters
   const counters = useMemo<GoalCounters>(() => {
