@@ -21,6 +21,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { LineChart, Line, XAxis, YAxis, ResponsiveContainer, Tooltip, Legend, CartesianGrid, BarChart, Bar, Cell, PieChart, Pie, AreaChart, Area, ReferenceLine, ReferenceDot, RadarChart, Radar, PolarGrid, PolarAngleAxis, PolarRadiusAxis } from "recharts";
 import { useStudentSelection } from "@/hooks/useStudentSelection";
 import { useStudentReportCard } from "@/hooks/useStudentReportCard";
+import { useStudentGradeGoals } from "@/hooks/useStudentGradeGoals";
 import { StudentPillSelector } from "@/components/home/StudentPillSelector";
 type YearKey = "2022" | "2023" | "2024" | "2025";
 type ExamType = "midYear" | "yearEnd";
@@ -199,18 +200,47 @@ export default function AcademicPage() {
     type: "midYear" as ExamType
   });
 
-  // Goals state - default targets for each subject
-  const [goals, setGoals] = useState<Record<string, number>>(() => {
-    const initialGoals: Record<string, number> = {};
-    academicData.subjects.forEach(s => {
-      // Set default goal 5% higher than current score, max 100
-      const currentScore = getScore(s, "2025", "midYear") ?? 70;
-      initialGoals[s.name] = Math.min(currentScore + 5, 100);
-    });
-    return initialGoals;
+  // Goals state - year selector with localStorage persistence
+  const currentCalendarYear = new Date().getFullYear();
+  const [goalYear, setGoalYear] = useState<number>(() => {
+    if (typeof window !== 'undefined') {
+      const stored = localStorage.getItem('parent_goal_year');
+      return stored ? parseInt(stored, 10) : currentCalendarYear;
+    }
+    return currentCalendarYear;
   });
-  const [editingGoal, setEditingGoal] = useState<string | null>(null);
+
+  // Persist goal year to localStorage
+  useEffect(() => {
+    if (goalYear) {
+      localStorage.setItem('parent_goal_year', goalYear.toString());
+    }
+  }, [goalYear]);
+
+  // Real goals from Supabase
+  const {
+    goals: realGoals,
+    loading: goalsLoading,
+    savingGoalId,
+    error: goalsError,
+    upsertGoal,
+    achievedCount,
+    onTrackCount,
+    needsFocusCount
+  } = useStudentGradeGoals(selectedStudentId || null, goalYear);
+
+  const [editingGoalSubjectId, setEditingGoalSubjectId] = useState<number | null>(null);
   const [tempGoalValue, setTempGoalValue] = useState<string>("");
+
+  // Compatibility: mock goals for other tabs that still use mock data
+  const goals: Record<string, number> = useMemo(() => {
+    const mockGoals: Record<string, number> = {};
+    academicData.subjects.forEach(s => {
+      const currentScore = getScore(s, "2025", "midYear") ?? 70;
+      mockGoals[s.name] = Math.min(currentScore + 5, 100);
+    });
+    return mockGoals;
+  }, []);
   const [compareExamB, setCompareExamB] = useState({
     year: "2024" as YearKey,
     type: "yearEnd" as ExamType
@@ -2703,174 +2733,145 @@ export default function AcademicPage() {
                     <Goal className="h-4 w-4 text-primary" />
                     <h4 className="text-sm font-medium text-foreground">Target Grades</h4>
                   </div>
-                  <Badge variant="secondary" className="text-xs">
-                    Year-End 2025 Goals
-                  </Badge>
+                  <Select value={goalYear.toString()} onValueChange={(v) => setGoalYear(parseInt(v, 10))}>
+                    <SelectTrigger className="w-24 h-8 text-xs">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {[currentCalendarYear - 1, currentCalendarYear, currentCalendarYear + 1].map(y => (
+                        <SelectItem key={y} value={y.toString()}>{y}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
 
-                {/* Goals Progress Summary */}
-                {(() => {
-                const goalsData = academicData.subjects.map(s => {
-                  const current = getScore(s, "2025", "midYear") ?? 0;
-                  const target = goals[s.name] ?? 80;
-                  const progress = Math.min(current / target * 100, 100);
-                  const achieved = current >= target;
-                  const gap = target - current;
-                  return {
-                    name: s.name,
-                    current,
-                    target,
-                    progress,
-                    achieved,
-                    gap
-                  };
-                });
-                const achievedCount = goalsData.filter(g => g.achieved).length;
-                const onTrackCount = goalsData.filter(g => !g.achieved && g.gap <= 30).length;
-                const needsWorkCount = goalsData.filter(g => !g.achieved && g.gap > 30).length;
-                return <>
-                      {/* Summary Cards */}
-                      <div className="grid grid-cols-3 gap-2">
-                        <div className="p-3 rounded-xl text-center" style={{
-                      backgroundColor: 'rgba(34, 197, 94, 0.15)',
-                      border: '1px solid rgba(34, 197, 94, 0.3)'
-                    }}>
-                          <div className="flex items-center justify-center gap-1 mb-1">
-                            <CheckCircle2 className="h-5 w-5" style={{
-                          color: '#22c55e'
-                        }} />
-                          </div>
-                          <p className="text-xl font-bold text-foreground">{achievedCount}</p>
-                          <p className="text-xs text-muted-foreground">Achieved</p>
-                          <p className="text-[9px] mt-0.5" style={{
-                        color: '#16a34a'
-                      }}>Met target</p>
-                        </div>
-                        <div className="p-3 rounded-xl text-center" style={{
-                      backgroundColor: 'rgba(59, 130, 246, 0.15)',
-                      border: '1px solid rgba(59, 130, 246, 0.3)'
-                    }}>
-                          <div className="flex items-center justify-center gap-1 mb-1">
-                            <Target className="h-5 w-5" style={{
-                          color: '#3b82f6'
-                        }} />
-                          </div>
-                          <p className="text-xl font-bold text-foreground">{onTrackCount}</p>
-                          <p className="text-xs text-muted-foreground">On Track</p>
-                          <p className="text-[9px] mt-0.5" style={{
-                        color: '#2563eb'
-                      }}>≤30% to target</p>
-                        </div>
-                        <div className="p-3 rounded-xl text-center" style={{
-                      backgroundColor: 'rgba(249, 115, 22, 0.15)',
-                      border: '1px solid rgba(249, 115, 22, 0.3)'
-                    }}>
-                          <div className="flex items-center justify-center gap-1 mb-1">
-                            <AlertTriangle className="h-5 w-5" style={{
-                          color: '#f97316'
-                        }} />
-                          </div>
-                          <p className="text-xl font-bold text-foreground">{needsWorkCount}</p>
-                          <p className="text-xs text-muted-foreground">Needs Focus</p>
-                          <p className="text-[9px] mt-0.5" style={{
-                        color: '#ea580c'
-                      }}>&gt;30% to target</p>
-                        </div>
+                {/* Loading/Error States */}
+                {goalsLoading ? (
+                  <div className="flex items-center justify-center py-8">
+                    <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+                  </div>
+                ) : goalsError ? (
+                  <div className="text-center py-8 text-destructive text-sm">{goalsError}</div>
+                ) : realGoals.length === 0 ? (
+                  <div className="text-center py-8 text-muted-foreground text-sm">
+                    No subjects with grades found. Set targets to track progress.
+                  </div>
+                ) : (
+                  <>
+                    {/* Summary Cards */}
+                    <div className="grid grid-cols-3 gap-2">
+                      <div className="p-3 rounded-xl text-center" style={{ backgroundColor: 'rgba(34, 197, 94, 0.15)', border: '1px solid rgba(34, 197, 94, 0.3)' }}>
+                        <CheckCircle2 className="h-5 w-5 mx-auto mb-1" style={{ color: '#22c55e' }} />
+                        <p className="text-xl font-bold text-foreground">{achievedCount}</p>
+                        <p className="text-xs text-muted-foreground">Achieved</p>
                       </div>
+                      <div className="p-3 rounded-xl text-center" style={{ backgroundColor: 'rgba(59, 130, 246, 0.15)', border: '1px solid rgba(59, 130, 246, 0.3)' }}>
+                        <Target className="h-5 w-5 mx-auto mb-1" style={{ color: '#3b82f6' }} />
+                        <p className="text-xl font-bold text-foreground">{onTrackCount}</p>
+                        <p className="text-xs text-muted-foreground">On Track</p>
+                      </div>
+                      <div className="p-3 rounded-xl text-center" style={{ backgroundColor: 'rgba(249, 115, 22, 0.15)', border: '1px solid rgba(249, 115, 22, 0.3)' }}>
+                        <AlertTriangle className="h-5 w-5 mx-auto mb-1" style={{ color: '#f97316' }} />
+                        <p className="text-xl font-bold text-foreground">{needsFocusCount}</p>
+                        <p className="text-xs text-muted-foreground">Needs Focus</p>
+                      </div>
+                    </div>
 
-                      {/* Individual Subject Goals */}
-                      <div className="space-y-3">
-                        {goalsData.map(item => <div key={item.name} className="p-4 rounded-xl bg-accent/30 border border-border/50 transition-all cursor-pointer active:opacity-70" onClick={() => {
-                        if (editingGoal === item.name) {
-                          setEditingGoal(null);
-                        } else {
-                          setEditingGoal(item.name);
-                          setTempGoalValue(item.target.toString());
-                        }
-                      }}>
-                            {/* Card Header */}
+                    {/* Subject Goals */}
+                    <div className="space-y-3">
+                      {realGoals.map(item => {
+                        const isEditing = editingGoalSubjectId === item.subjectId;
+                        const isSaving = savingGoalId === item.subjectId;
+                        const hasTarget = item.targetPercentage !== null;
+                        const displayTarget = item.targetPercentage ?? 80;
+                        const currentPct = item.currentPercentage ?? 0;
+                        const gap = hasTarget ? item.deltaToGo : 0;
+                        const isOnTrack = hasTarget && !item.achieved && item.targetPercentage !== null && item.currentPercentage !== null && ((item.targetPercentage - item.currentPercentage) / item.targetPercentage) <= 0.30;
+
+                        return (
+                          <div key={item.subjectId} className="p-4 rounded-xl bg-accent/30 border border-border/50 transition-all cursor-pointer active:opacity-70" onClick={() => {
+                            if (isEditing) {
+                              setEditingGoalSubjectId(null);
+                            } else {
+                              setEditingGoalSubjectId(item.subjectId);
+                              setTempGoalValue(displayTarget.toString());
+                            }
+                          }}>
                             <div className="flex items-center justify-between min-h-[44px]">
                               <div className="flex items-center gap-3">
-                                <CheckCircle2 className="h-7 w-7" strokeWidth={1.5} style={{
-                            color: item.achieved ? '#22c55e' : item.gap <= 30 ? '#3b82f6' : '#f97316'
-                          }} />
-                                <span className="font-medium text-foreground">{item.name}</span>
+                                <CheckCircle2 className="h-7 w-7" strokeWidth={1.5} style={{ color: item.achieved ? '#22c55e' : isOnTrack ? '#3b82f6' : '#f97316' }} />
+                                <span className="font-medium text-foreground">{item.subjectName}</span>
                               </div>
                               <div className="flex items-center gap-2">
-                                <Badge variant={item.achieved ? "default" : "outline"} className="text-sm px-3 py-1">
-                                  {item.target}%
-                                </Badge>
-                                <Edit2 className={`h-4 w-4 transition-transform ${editingGoal === item.name ? 'rotate-45 text-primary' : 'text-muted-foreground'}`} />
+                                {isSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : (
+                                  <>
+                                    <Badge variant={item.achieved ? "default" : "outline"} className="text-sm px-3 py-1">
+                                      {hasTarget ? `${displayTarget}%` : 'Set'}
+                                    </Badge>
+                                    <Edit2 className={`h-4 w-4 transition-transform ${isEditing ? 'rotate-45 text-primary' : 'text-muted-foreground'}`} />
+                                  </>
+                                )}
                               </div>
                             </div>
 
-                            {/* Expanded Slider Section */}
-                            {editingGoal === item.name && <div className="mt-4 pt-4 border-t border-border/50 space-y-4 animate-in slide-in-from-top-2 duration-200" onClick={(e) => e.stopPropagation()}>
+                            {isEditing && (
+                              <div className="mt-4 pt-4 border-t border-border/50 space-y-4 animate-in slide-in-from-top-2 duration-200" onClick={(e) => e.stopPropagation()}>
                                 <div className="flex items-center justify-between">
                                   <span className="text-sm text-muted-foreground">Set Target Goal</span>
                                   <span className="text-lg font-bold text-primary">{tempGoalValue}%</span>
                                 </div>
-                                <input type="range" min="0" max="100" value={tempGoalValue} onChange={e => setTempGoalValue(e.target.value)} className="w-full h-10 appearance-none bg-transparent cursor-pointer touch-pan-x [&::-webkit-slider-runnable-track]:h-3 [&::-webkit-slider-runnable-track]:rounded-full [&::-webkit-slider-runnable-track]:bg-muted [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-7 [&::-webkit-slider-thumb]:h-7 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-primary [&::-webkit-slider-thumb]:shadow-lg [&::-webkit-slider-thumb]:-mt-2 [&::-webkit-slider-thumb]:border-4 [&::-webkit-slider-thumb]:border-background [&::-moz-range-track]:h-3 [&::-moz-range-track]:rounded-full [&::-moz-range-track]:bg-muted [&::-moz-range-thumb]:w-7 [&::-moz-range-thumb]:h-7 [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:bg-primary [&::-moz-range-thumb]:border-4 [&::-moz-range-thumb]:border-background" />
+                                <input type="range" min="0" max="100" value={tempGoalValue} onChange={e => setTempGoalValue(e.target.value)} className="w-full h-10 appearance-none bg-transparent cursor-pointer touch-pan-x [&::-webkit-slider-runnable-track]:h-3 [&::-webkit-slider-runnable-track]:rounded-full [&::-webkit-slider-runnable-track]:bg-muted [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-7 [&::-webkit-slider-thumb]:h-7 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-primary [&::-webkit-slider-thumb]:shadow-lg [&::-webkit-slider-thumb]:-mt-2 [&::-webkit-slider-thumb]:border-4 [&::-webkit-slider-thumb]:border-background" />
                                 <div className="flex gap-2">
-                                  <Button variant="outline" className="flex-1 h-12 text-base" onClick={() => setEditingGoal(null)}>
-                                    Cancel
-                                  </Button>
+                                  <Button variant="outline" className="flex-1 h-12 text-base" onClick={() => setEditingGoalSubjectId(null)}>Cancel</Button>
                                   <Button className="flex-1 h-12 text-base" onClick={() => {
-                            const newValue = parseInt(tempGoalValue);
-                            if (!isNaN(newValue) && newValue >= 0 && newValue <= 100) {
-                              setGoals(prev => ({
-                                ...prev,
-                                [item.name]: newValue
-                              }));
-                            }
-                            setEditingGoal(null);
-                          }}>
-                                    <Check className="h-5 w-5 mr-2" />
-                                    Save
+                                    const newValue = parseInt(tempGoalValue);
+                                    if (!isNaN(newValue) && newValue >= 0 && newValue <= 100) {
+                                      upsertGoal(item.subjectId, newValue);
+                                    }
+                                    setEditingGoalSubjectId(null);
+                                  }}>
+                                    <Check className="h-5 w-5 mr-2" />Save
                                   </Button>
                                 </div>
-                              </div>}
-                            
-                            {/* Progress Bar - Only show when not editing */}
-                            {editingGoal !== item.name && <>
+                              </div>
+                            )}
+
+                            {!isEditing && hasTarget && (
+                              <>
                                 <div className="relative mt-3 mb-2">
                                   <div className="h-3 bg-transparent border border-border rounded-full overflow-hidden">
-                                    <div className="h-full rounded-full transition-all" style={{
-                              width: `${item.current}%`,
-                              backgroundColor: item.achieved ? '#22c55e' : item.gap <= 30 ? '#3b82f6' : '#f87171'
-                            }} />
+                                    <div className="h-full rounded-full transition-all" style={{ width: `${currentPct}%`, backgroundColor: item.achieved ? '#22c55e' : isOnTrack ? '#3b82f6' : '#f87171' }} />
                                   </div>
-                                  {/* Target marker */}
-                                  <div className="absolute top-0 h-3 w-0.5 bg-foreground/70 rounded" style={{
-                            left: `${Math.min(item.target, 100)}%`
-                          }} />
+                                  <div className="absolute top-0 h-3 w-0.5 bg-foreground/70 rounded" style={{ left: `${Math.min(displayTarget, 100)}%` }} />
                                 </div>
-
-                                {/* Score Details */}
                                 <div className="flex items-center justify-between text-sm">
-                                  <span className="text-muted-foreground">
-                                    Current: <span className="font-medium text-foreground">{item.current}%</span>
-                                  </span>
-                                  {item.achieved ? <span className="text-chart-1 font-medium flex items-center gap-1">
-                                      <CheckCircle2 className="h-4 w-4" />
-                                      Goal Achieved!
-                                    </span> : <span className={item.gap <= 30 ? "text-chart-2" : "text-chart-4"}>
-                                      {item.gap}% to go
-                                    </span>}
+                                  <span className="text-muted-foreground">Current: <span className="font-medium text-foreground">{currentPct}%</span></span>
+                                  {item.achieved ? (
+                                    <span className="text-chart-1 font-medium flex items-center gap-1"><CheckCircle2 className="h-4 w-4" />Achieved!</span>
+                                  ) : (
+                                    <span className={isOnTrack ? "text-chart-2" : "text-chart-4"}>{gap}% to go</span>
+                                  )}
                                 </div>
-                              </>}
-                          </div>)}
-                      </div>
+                              </>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
 
-                      {/* Goal Tips */}
-                      <div className="p-3 rounded-lg bg-accent/50 border border-primary/20">
-                        <p className="text-sm text-foreground">
-                          <span className="font-medium">Tip:</span>{" "}
-                          {achievedCount === goalsData.length ? "Amazing! You've achieved all your goals. Consider setting higher targets!" : needsWorkCount > achievedCount ? `Focus on ${goalsData.filter(g => !g.achieved && g.gap > 5).slice(0, 2).map(g => g.name).join(" and ")} to close the gap. Small consistent improvements lead to big results!` : `You're doing great! ${onTrackCount} subjects are almost at target. Keep pushing!`}
-                        </p>
-                      </div>
-                    </>;
-              })()}
+                    {/* Tip */}
+                    <div className="p-3 rounded-lg bg-accent/50 border border-primary/20">
+                      <p className="text-sm text-foreground">
+                        <span className="font-medium">Tip:</span>{" "}
+                        {achievedCount === realGoals.filter(g => g.targetPercentage !== null).length && achievedCount > 0
+                          ? "Amazing! All goals achieved. Consider setting higher targets!"
+                          : needsFocusCount > achievedCount
+                          ? "Focus on subjects with the biggest gaps. Small consistent improvements lead to big results!"
+                          : `You're doing great! ${onTrackCount} subjects are almost at target. Keep pushing!`}
+                      </p>
+                    </div>
+                  </>
+                )}
               </TabsContent>
 
               {/* Floating Generate Report FAB - for Overview, Trends, Compare tabs */}
