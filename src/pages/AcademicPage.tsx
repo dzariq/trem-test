@@ -3,7 +3,7 @@ import { Carousel, CarouselContent, CarouselItem } from "@/components/ui/carouse
 import { useSearchParams } from "react-router-dom";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { AppHeader } from "@/components/layout/AppHeader";
-import { academicData, classAverages, students, attendanceData } from "@/data/mockData";
+import { academicData, students, attendanceData } from "@/data/mockData";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -22,9 +22,39 @@ import { LineChart, Line, XAxis, YAxis, ResponsiveContainer, Tooltip, Legend, Ca
 import { useStudentSelection } from "@/hooks/useStudentSelection";
 import { useStudentReportCard } from "@/hooks/useStudentReportCard";
 import { useStudentGradeGoals } from "@/hooks/useStudentGradeGoals";
+import { useAssignedSubjectsFromSelections } from "@/hooks/useAssignedSubjectsFromSelections";
+import { useStudentGradesByPeriods } from "@/hooks/useStudentGradesByPeriods";
 import { StudentPillSelector } from "@/components/home/StudentPillSelector";
 type YearKey = "2022" | "2023" | "2024" | "2025";
 type ExamType = "midYear" | "yearEnd";
+type AnalysisPeriod = {
+  id: string;
+  name: string;
+  code: string;
+  sortOrder: number;
+  yearLabel: string;
+  periodLabel: string;
+  displayLabel: string;
+};
+
+const PERIOD_ORDER = [
+  "Mid Year Exam",
+  "Trial (Checkpoint)",
+  "Final Year Exam"
+] as const;
+
+const getPeriodOrderIndex = (name: string) => {
+  const index = PERIOD_ORDER.indexOf(name);
+  return index === -1 ? PERIOD_ORDER.length : index;
+};
+
+const safeNumber = (value: number | null | undefined, fallback = 0) => {
+  return Number.isFinite(value) ? value : fallback;
+};
+
+const safeText = (value: number | null | undefined, fallback = "—") => {
+  return Number.isFinite(value) ? String(value) : fallback;
+};
 
 // Helper to get score from data structure
 const getScore = (subject: typeof academicData.subjects[0], year: YearKey, examType: ExamType) => {
@@ -32,14 +62,8 @@ const getScore = (subject: typeof academicData.subjects[0], year: YearKey, examT
   return yearData ? yearData[examType] : null;
 };
 
-// Helper to get category score
-const getCategoryScore = (subject: typeof academicData.subjects[0], year: YearKey, category: "attitude" | "homework" | "quiz" | "exam") => {
-  const yearData = subject.scores[year];
-  return yearData ? yearData[category] : null;
-};
-
 // Import centralized subjects config
-import { getShortSubjectName, getTinySubjectCode, subjectGroups, allSubjects, getSubjectColor } from "@/data/subjectsConfig";
+import { getShortSubjectName, getTinySubjectCode, subjectGroups, getSubjectColor } from "@/data/subjectsConfig";
 import { SubjectGroupPill } from "@/components/SubjectGroupPill";
 
 // Use centralized short name function
@@ -47,7 +71,6 @@ const shortenSubjectName = getShortSubjectName;
 
 // Get subjects that are not part of any variant group (standalone subjects)
 const groupedSubjectNames = subjectGroups.flatMap(g => g.variants?.map(v => v.name) || []);
-const standaloneSubjects = allSubjects.filter(s => !groupedSubjectNames.includes(s));
 export default function AcademicPage() {
   const [searchParams] = useSearchParams();
   const [mainSection, setMainSection] = useState<"report" | "analysis">(() => {
@@ -94,6 +117,104 @@ export default function AcademicPage() {
     hasData: hasRealData,
   } = useStudentReportCard(selectedStudentId || null, selectedPeriodId || null);
 
+  const {
+    subjects: assignedSubjects,
+    assignedSubjectIds,
+    loading: assignedSubjectsLoading,
+    error: assignedSubjectsError,
+  } = useAssignedSubjectsFromSelections(selectedStudentId || null);
+
+  const assignedSubjectNames = useMemo(
+    () => assignedSubjects.map((subject) => subject.name),
+    [assignedSubjects]
+  );
+
+  const analysisSubjectGroups = useMemo(() => {
+    const assignedSet = new Set(assignedSubjectNames);
+    return subjectGroups
+      .map((group) => ({
+        ...group,
+        variants: (group.variants || []).filter((variant) =>
+          assignedSet.has(variant.name)
+        ),
+      }))
+      .filter((group) => group.variants.length > 0);
+  }, [assignedSubjectNames]);
+
+  const analysisStandaloneSubjects = useMemo(() => {
+    return assignedSubjects.filter(
+      (subject) => !groupedSubjectNames.includes(subject.name)
+    );
+  }, [assignedSubjects]);
+
+  const subjectNameToId = useMemo(() => {
+    return new Map(assignedSubjects.map((subject) => [subject.name, subject.id]));
+  }, [assignedSubjects]);
+
+  const initRef = useRef<string | null>(null);
+  const initCompleteRef = useRef<string | null>(null);
+  const [selectedSubjectIds, setSelectedSubjectIds] = useState<number[]>([]);
+  const toggleSubject = useCallback((subjectId: number) => {
+    setSelectedSubjectIds((prev) =>
+      prev.includes(subjectId)
+        ? prev.filter((id) => id !== subjectId)
+        : [...prev, subjectId]
+    );
+  }, []);
+  const selectAllSubjects = useCallback(() => {
+    setSelectedSubjectIds(assignedSubjectIds);
+  }, [assignedSubjectIds]);
+  const clearAllSubjects = useCallback(() => {
+    setSelectedSubjectIds([]);
+  }, []);
+
+  useEffect(() => {
+    if (!selectedStudentId || typeof window === "undefined") {
+      return;
+    }
+    if (initRef.current === selectedStudentId) {
+      return;
+    }
+    if (assignedSubjectIds.length === 0) {
+      setSelectedSubjectIds([]);
+      return;
+    }
+    const storageKey = `grade_analysis_selected_subjects_${selectedStudentId}`;
+    const stored = localStorage.getItem(storageKey);
+    if (stored) {
+      try {
+        const parsed = JSON.parse(stored) as unknown;
+        if (Array.isArray(parsed)) {
+          const filtered = parsed
+            .map((id) => Number(id))
+            .filter((id) => assignedSubjectIds.includes(id));
+          setSelectedSubjectIds(
+            filtered.length > 0 ? filtered : assignedSubjectIds
+          );
+          initRef.current = selectedStudentId;
+          initCompleteRef.current = selectedStudentId;
+          return;
+        }
+      } catch {
+        // Fall through to default selection.
+      }
+    }
+    setSelectedSubjectIds(assignedSubjectIds);
+    initRef.current = selectedStudentId;
+    initCompleteRef.current = selectedStudentId;
+  }, [selectedStudentId, assignedSubjectIds.join(",")]);
+
+  useEffect(() => {
+    if (!selectedStudentId || typeof window === "undefined") {
+      return;
+    }
+    if (initCompleteRef.current !== selectedStudentId) {
+      return;
+    }
+    const storageKey = `grade_analysis_selected_subjects_${selectedStudentId}`;
+    localStorage.setItem(storageKey, JSON.stringify(selectedSubjectIds));
+  }, [selectedStudentId, selectedSubjectIds]);
+
   // Auto-select academic period: use localStorage if valid, else first available
   useEffect(() => {
     if (academicPeriods.length > 0) {
@@ -111,11 +232,15 @@ export default function AcademicPage() {
     }
   }, [academicPeriods, selectedPeriodId]);
 
-  // Trends tab filters - multi-select subjects (like Overview)
-  const [trendsSelectedSubjects, setTrendsSelectedSubjects] = useState<string[]>(academicData.subjects.map(s => s.name));
+  const selectedSubjects = useMemo(() => {
+    return assignedSubjects.filter((subject) =>
+      selectedSubjectIds.includes(subject.id)
+    );
+  }, [assignedSubjects, selectedSubjectIds]);
 
-  // Grades tab filters - exam selector and multi-select subjects
-  const [gradesSelectedSubjects, setGradesSelectedSubjects] = useState<string[]>(academicData.subjects.map(s => s.name));
+  const selectedSubjectNames = useMemo(() => {
+    return selectedSubjects.map((subject) => subject.name);
+  }, [selectedSubjects]);
   const [reportGenerated, setReportGenerated] = useState(false);
   const [reportCardDialogOpen, setReportCardDialogOpen] = useState(false);
   const [expandedSubject, setExpandedSubject] = useState<string | null>(null);
@@ -193,12 +318,175 @@ export default function AcademicPage() {
 
   // Grade Analysis sub-tabs
   const [analysisTab, setAnalysisTab] = useState("overview");
-
-  // Comparison state
+  const [analysisYear, setAnalysisYear] = useState<string>("");
+  const [selectedAcademicPeriodId, setSelectedAcademicPeriodId] = useState<string>("");
   const [compareExamA, setCompareExamA] = useState({
-    year: "2025" as YearKey,
-    type: "midYear" as ExamType
+    year: "",
+    period: ""
   });
+  const [compareExamB, setCompareExamB] = useState({
+    year: "",
+    period: ""
+  });
+
+  const analysisPeriods = useMemo<AnalysisPeriod[]>(() => {
+    return academicPeriods.map((period) => {
+      const raw = `${period.name} ${period.code}`.trim();
+      const yearMatch = raw.match(/\b(20\d{2})\b/);
+      const yearLabel = yearMatch?.[1] ?? "Unknown";
+      const periodLabel = yearMatch?.[1]
+        ? raw.replace(yearMatch[1], "").replace(/[-_/]/g, " ").replace(/\s+/g, " ").trim() ||
+          period.name
+        : period.name;
+      const displayLabel =
+        yearLabel !== "Unknown" && !periodLabel.includes(yearLabel)
+          ? `${periodLabel} ${yearLabel}`.trim()
+          : period.name;
+
+      return {
+        id: period.id,
+        name: period.name,
+        code: period.code,
+        sortOrder: getPeriodOrderIndex(period.name),
+        yearLabel,
+        periodLabel,
+        displayLabel,
+      };
+    });
+  }, [academicPeriods]);
+
+  const analysisYearOptions = useMemo(() => {
+    const years = Array.from(
+      new Set(analysisPeriods.map((period) => period.yearLabel))
+    ).filter((year) => year !== "Unknown");
+    if (years.length === 0) {
+      return ["All"];
+    }
+    return years.sort((a, b) => Number(b) - Number(a));
+  }, [analysisPeriods]);
+
+  const analysisPeriodOptions = useMemo(() => {
+    const filtered = analysisYear === "All" || !analysisYear
+      ? analysisPeriods
+      : analysisPeriods.filter(
+      (period) => period.yearLabel === analysisYear
+    );
+    return [...filtered].sort((a, b) => {
+      if (a.sortOrder !== b.sortOrder) {
+        return a.sortOrder - b.sortOrder;
+      }
+      if (analysisYear === "All" || !analysisYear) {
+        const yearA = Number(a.yearLabel);
+        const yearB = Number(b.yearLabel);
+        if (Number.isFinite(yearA) && Number.isFinite(yearB) && yearA !== yearB) {
+          return yearB - yearA;
+        }
+      }
+      return a.displayLabel.localeCompare(b.displayLabel);
+    });
+  }, [analysisPeriods, analysisYear]);
+
+  const getPeriodsForYear = useCallback(
+    (year: string) => {
+      const periods = year === "All" || !year
+        ? analysisPeriods
+        : analysisPeriods.filter((period) => period.yearLabel === year);
+      return [...periods].sort((a, b) => {
+        if (a.sortOrder !== b.sortOrder) {
+          return a.sortOrder - b.sortOrder;
+        }
+        return a.displayLabel.localeCompare(b.displayLabel);
+      });
+    },
+    [analysisPeriods]
+  );
+
+  const getPeriodIdsForSelection = useCallback(
+    (year: string, periodLabel: string) => {
+      if (!periodLabel) return [];
+      const periods = getPeriodsForYear(year);
+      return periods
+        .filter((period) => period.periodLabel === periodLabel)
+        .map((period) => period.id);
+    },
+    [getPeriodsForYear]
+  );
+
+  useEffect(() => {
+    if (analysisYearOptions.length === 0) {
+      return;
+    }
+    if (!analysisYear || !analysisYearOptions.includes(analysisYear)) {
+      setAnalysisYear(analysisYearOptions[0]);
+    }
+  }, [analysisYearOptions, analysisYear]);
+
+  useEffect(() => {
+    if (analysisPeriodOptions.length === 0) {
+      setSelectedAcademicPeriodId("");
+      return;
+    }
+    const validPeriod = analysisPeriodOptions.some(
+      (period) => period.id === selectedAcademicPeriodId
+    );
+    if (!selectedAcademicPeriodId || !validPeriod) {
+      setSelectedAcademicPeriodId(analysisPeriodOptions[0].id);
+    }
+  }, [analysisPeriodOptions, selectedAcademicPeriodId]);
+
+  useEffect(() => {
+    if (analysisPeriodOptions.length === 0) {
+      setCompareExamA({ year: "", period: "" });
+      setCompareExamB({ year: "", period: "" });
+      return;
+    }
+
+    const sortedPeriods = [...analysisPeriodOptions].sort(
+      (a, b) => a.sortOrder - b.sortOrder
+    );
+    const currentPeriod =
+      sortedPeriods.find((period) => period.id === selectedAcademicPeriodId) ||
+      sortedPeriods[0];
+    const currentIndex = sortedPeriods.findIndex(
+      (period) => period.id === currentPeriod.id
+    );
+    const previousPeriod =
+      currentIndex > 0
+        ? sortedPeriods[currentIndex - 1]
+        : null;
+    const compareYear = analysisYear || analysisYearOptions[0] || "All";
+
+    const compareYearFallback = compareYear || analysisYearOptions[0] || "All";
+    const compareAOptions = getPeriodsForYear(
+      compareExamA.year || compareYearFallback
+    );
+    const compareBOptions = getPeriodsForYear(
+      compareExamB.year || compareYearFallback
+    );
+    const compareAValid = compareAOptions.some(
+      (period) => period.periodLabel === compareExamA.period
+    );
+    const compareBValid = compareBOptions.some(
+      (period) => period.periodLabel === compareExamB.period
+    );
+
+    if (!compareExamA.year || !compareExamA.period || !compareAValid) {
+      setCompareExamA({ year: compareYearFallback, period: currentPeriod.periodLabel });
+    }
+    if (!compareExamB.year || !compareExamB.period || !compareBValid) {
+      setCompareExamB({ year: compareYearFallback, period: previousPeriod?.periodLabel || currentPeriod.periodLabel });
+    }
+  }, [
+    analysisPeriodOptions,
+    analysisYear,
+    analysisYearOptions,
+    compareExamA.year,
+    compareExamA.period,
+    compareExamB.year,
+    compareExamB.period,
+    getPeriodsForYear,
+    selectedAcademicPeriodId,
+  ]);
 
   // Goals state - year selector with localStorage persistence
   const currentCalendarYear = new Date().getFullYear();
@@ -231,21 +519,15 @@ export default function AcademicPage() {
 
   const [editingGoalSubjectId, setEditingGoalSubjectId] = useState<number | null>(null);
   const [tempGoalValue, setTempGoalValue] = useState<string>("");
-
-  // Compatibility: mock goals for other tabs that still use mock data
-  const goals: Record<string, number> = useMemo(() => {
-    const mockGoals: Record<string, number> = {};
-    academicData.subjects.forEach(s => {
-      const currentScore = getScore(s, "2025", "midYear") ?? 70;
-      mockGoals[s.name] = Math.min(currentScore + 5, 100);
+  const goalsBySubjectId = useMemo(() => {
+    const goalMap = new Map<number, number>();
+    realGoals.forEach((goal) => {
+      if (goal.targetPercentage !== null) {
+        goalMap.set(goal.subjectId, goal.targetPercentage);
+      }
     });
-    return mockGoals;
-  }, []);
-  const [compareExamB, setCompareExamB] = useState({
-    year: "2024" as YearKey,
-    type: "yearEnd" as ExamType
-  });
-  const [compareSubjects, setCompareSubjects] = useState<string[]>(academicData.subjects.map(s => s.name));
+    return goalMap;
+  }, [realGoals]);
 
   // Certificate dialog state
   const [certificateOpen, setCertificateOpen] = useState(false);
@@ -371,43 +653,210 @@ export default function AcademicPage() {
     setReportCardDialogOpen(true);
   };
   const getExamLabel = () => {
-    const examLabel = examType === "midYear" ? "Mid-Year" : "Year-End";
-    return `${examLabel} ${selectedYear}`;
+    const period = analysisPeriodOptions.find(
+      (item) => item.id === selectedAcademicPeriodId
+    );
+    if (!period) return "Exam";
+    const yearLabel =
+      analysisYear === "All" || !analysisYear ? period.yearLabel : analysisYear;
+    if (yearLabel && yearLabel !== "Unknown") {
+      return `${period.periodLabel} ${yearLabel}`.trim();
+    }
+    return period.periodLabel;
   };
 
-  // Filtered subjects based on gradesSelectedSubjects
-  const filteredGradesSubjects = useMemo(() => {
-    return academicData.subjects.filter(s => gradesSelectedSubjects.includes(s.name));
-  }, [gradesSelectedSubjects]);
+  const filteredGradesSubjects = selectedSubjects;
+
+  const analysisSelectedSubjectIds = useMemo(() => {
+    return selectedSubjectIds;
+  }, [selectedSubjectIds]);
+
+  const sortedPeriodsForYear = useMemo(() => {
+    return [...analysisPeriodOptions].sort((a, b) => {
+      if (a.sortOrder !== b.sortOrder) {
+        return a.sortOrder - b.sortOrder;
+      }
+      return a.displayLabel.localeCompare(b.displayLabel);
+    });
+  }, [analysisPeriodOptions]);
+
+  const sortedAllPeriods = useMemo(() => {
+    return [...analysisPeriods].sort((a, b) => {
+      const yearA = Number(a.yearLabel);
+      const yearB = Number(b.yearLabel);
+      if (Number.isFinite(yearA) && Number.isFinite(yearB) && yearA !== yearB) {
+        return yearA - yearB;
+      }
+      if (a.sortOrder !== b.sortOrder) {
+        return a.sortOrder - b.sortOrder;
+      }
+      return a.displayLabel.localeCompare(b.displayLabel);
+    });
+  }, [analysisPeriods]);
+
+  const currentPeriodId = useMemo(() => {
+    const match = sortedPeriodsForYear.find(
+      (period) => period.id === selectedAcademicPeriodId
+    );
+    return match?.id ?? null;
+  }, [sortedPeriodsForYear, selectedAcademicPeriodId]);
+
+  const previousPeriodId = useMemo(() => {
+    if (!currentPeriodId) return null;
+    const currentIndex = sortedPeriodsForYear.findIndex(
+      (period) => period.id === currentPeriodId
+    );
+    if (currentIndex <= 0) return null;
+    return sortedPeriodsForYear[currentIndex - 1]?.id ?? null;
+  }, [sortedPeriodsForYear, currentPeriodId]);
+
+  const trendPeriods = useMemo(() => {
+    if (sortedAllPeriods.length === 0) return [];
+    let filtered = sortedAllPeriods;
+    if (trendPeriod === "1year") {
+      filtered = sortedAllPeriods.slice(-2);
+    } else if (trendPeriod === "2years") {
+      filtered = sortedAllPeriods.slice(-4);
+    } else if (trendPeriod === "3years") {
+      filtered = sortedAllPeriods.slice(-6);
+    } else if (trendPeriod === "4years") {
+      filtered = sortedAllPeriods.slice(-8);
+    } else if (trendPeriod === "5years") {
+      filtered = sortedAllPeriods.slice(-7);
+    }
+    return filtered;
+  }, [sortedAllPeriods, trendPeriod]);
+
+  const trendPeriodIds = useMemo(() => {
+    return trendPeriods.map((period) => period.id);
+  }, [trendPeriods]);
+
+  const comparePeriodIdsA = useMemo(() => {
+    return getPeriodIdsForSelection(compareExamA.year, compareExamA.period);
+  }, [compareExamA, getPeriodIdsForSelection]);
+
+  const comparePeriodIdsB = useMemo(() => {
+    return getPeriodIdsForSelection(compareExamB.year, compareExamB.period);
+  }, [compareExamB, getPeriodIdsForSelection]);
+
+  const allAcademicPeriodIds = useMemo(() => {
+    return analysisPeriods.map((period) => period.id);
+  }, [analysisPeriods]);
+
+  const analysisPeriodIdsForQuery = useMemo(() => {
+    const ids = new Set<string>();
+    if (currentPeriodId) ids.add(currentPeriodId);
+    if (previousPeriodId) ids.add(previousPeriodId);
+    trendPeriodIds.forEach((id) => ids.add(id));
+    comparePeriodIdsA.forEach((id) => ids.add(id));
+    comparePeriodIdsB.forEach((id) => ids.add(id));
+    allAcademicPeriodIds.forEach((id) => ids.add(id));
+    return Array.from(ids);
+  }, [
+    currentPeriodId,
+    previousPeriodId,
+    trendPeriodIds,
+    comparePeriodIdsA,
+    comparePeriodIdsB,
+    allAcademicPeriodIds,
+  ]);
+
+  const {
+    grades: analysisGrades,
+    loading: analysisGradesLoading,
+    error: analysisGradesError,
+  } = useStudentGradesByPeriods({
+    studentId: selectedStudentId || null,
+    subjectIds: analysisSelectedSubjectIds,
+    periodIds: analysisPeriodIdsForQuery,
+  });
+
+  const gradesByPeriod = useMemo(() => {
+    const map = new Map<string, Map<number, typeof analysisGrades[number]>>();
+    analysisGrades.forEach((grade) => {
+      if (!map.has(grade.academic_period_id)) {
+        map.set(grade.academic_period_id, new Map());
+      }
+      map.get(grade.academic_period_id)!.set(grade.subject_id, grade);
+    });
+    return map;
+  }, [analysisGrades]);
+
+  const getGradeFor = useCallback(
+    (periodId: string | null, subjectId: number) => {
+      if (!periodId) return null;
+      return gradesByPeriod.get(periodId)?.get(subjectId) ?? null;
+    },
+    [gradesByPeriod]
+  );
+
+  const getScoreFor = useCallback(
+    (periodId: string | null, subjectId: number) => {
+      const grade = getGradeFor(periodId, subjectId);
+      return Number.isFinite(grade?.total_marks) ? grade!.total_marks! : null;
+    },
+    [getGradeFor]
+  );
+
+  const currentScores = useMemo(() => {
+    return filteredGradesSubjects
+      .map((subject) => ({
+        subject,
+        score: getScoreFor(currentPeriodId, subject.id),
+      }))
+      .filter((item) => item.score !== null);
+  }, [filteredGradesSubjects, currentPeriodId, getScoreFor]);
+
+  const currentGradeRows = useMemo(() => {
+    if (!currentPeriodId) return [];
+    return filteredGradesSubjects
+      .map((subject) => getGradeFor(currentPeriodId, subject.id))
+      .filter((grade): grade is typeof analysisGrades[number] => Boolean(grade));
+  }, [filteredGradesSubjects, currentPeriodId, getGradeFor]);
+
+  const previousGradeRows = useMemo(() => {
+    if (!previousPeriodId) return [];
+    return filteredGradesSubjects
+      .map((subject) => getGradeFor(previousPeriodId, subject.id))
+      .filter((grade): grade is typeof analysisGrades[number] => Boolean(grade));
+  }, [filteredGradesSubjects, previousPeriodId, getGradeFor]);
+
+  const hasAssignedSubjects = assignedSubjectIds.length > 0;
+  const analysisLoading = assignedSubjectsLoading || analysisGradesLoading;
+  const analysisError = assignedSubjectsError || analysisGradesError;
+  const hasCurrentGrades = currentGradeRows.length > 0;
+  const hasPreviousGrades = previousGradeRows.length > 0;
+  const overviewEmptyMessage = !hasAssignedSubjects
+    ? "No subjects assigned to this student yet"
+    : selectedSubjectIds.length === 0
+    ? "Select at least one subject to view grades"
+    : !currentPeriodId || !hasCurrentGrades
+    ? "No grade data for this period yet"
+    : null;
 
   // Calculate averages
   const currentAverage = useMemo(() => {
-    const scores = filteredGradesSubjects.map(s => getScore(s, selectedYear, examType)).filter(s => s !== null) as number[];
-    return scores.length > 0 ? Math.round(scores.reduce((a, b) => a + b, 0) / scores.length) : 0;
-  }, [selectedYear, examType, filteredGradesSubjects]);
-
-  // Calculate category averages for selected year
-  const categoryAverages = useMemo(() => {
-    const categories = ["attitude", "homework", "quiz", "exam"] as const;
-    return categories.map(cat => {
-      const scores = filteredGradesSubjects.map(s => getCategoryScore(s, selectedYear, cat)).filter(s => s !== null) as number[];
-      return {
-        category: cat.charAt(0).toUpperCase() + cat.slice(1),
-        score: scores.length > 0 ? Math.round(scores.reduce((a, b) => a + b, 0) / scores.length) : 0,
-        classAverage: classAverages[selectedYear]?.[cat] ?? 0
-      };
-    });
-  }, [selectedYear, filteredGradesSubjects]);
+    if (currentScores.length === 0) return 0;
+    const total = currentScores.reduce((sum, item) => sum + (item.score ?? 0), 0);
+    return Math.round(total / currentScores.length);
+  }, [currentScores]);
+  const currentAverageDisplay =
+    currentScores.length > 0 ? `${safeNumber(currentAverage)}%` : "—";
 
   // Subject performance data for bar chart (sorted best to worst)
   const subjectPerformance = useMemo(() => {
-    return filteredGradesSubjects.map(s => ({
-      name: s.name,
-      score: getScore(s, selectedYear, examType) ?? 0,
-      classAvg: classAverages[selectedYear]?.[examType] ?? 0,
-      goal: goals[s.name] ?? 80
-    })).sort((a, b) => b.score - a.score);
-  }, [selectedYear, examType, goals, filteredGradesSubjects]);
+    return filteredGradesSubjects
+      .map((subject) => {
+        const score = getScoreFor(currentPeriodId, subject.id);
+        const goal = goalsBySubjectId.get(subject.id) ?? 80;
+        return {
+          name: subject.name,
+          score: score ?? 0,
+          goal,
+        };
+      })
+      .sort((a, b) => b.score - a.score);
+  }, [filteredGradesSubjects, currentPeriodId, getScoreFor, goalsBySubjectId]);
 
   // Grade distribution
   const gradeDistribution = useMemo(() => {
@@ -419,252 +868,175 @@ export default function AcademicPage() {
       "D": 0,
       "E": 0
     };
-    filteredGradesSubjects.forEach(s => {
-      const score = getScore(s, selectedYear, examType);
-      if (score !== null) {
-        const grade = getGradeFromScore(score);
-        grades[grade as keyof typeof grades]++;
+    filteredGradesSubjects.forEach((subject) => {
+      const gradeRow = getGradeFor(currentPeriodId, subject.id);
+      const score = getScoreFor(currentPeriodId, subject.id);
+      if (score === null && !gradeRow?.letter_grade) {
+        return;
       }
+      const letter =
+        gradeRow?.letter_grade ||
+        (score !== null ? getGradeFromScore(score) : null);
+      if (!letter) return;
+      grades[letter as keyof typeof grades] += 1;
     });
     return Object.entries(grades).map(([grade, count]) => ({
       grade,
       count
     }));
-  }, [selectedYear, examType, filteredGradesSubjects]);
+  }, [filteredGradesSubjects, currentPeriodId, getGradeFor, getScoreFor]);
 
   // Top 3 and Bottom 3 subjects (bottom only includes scores below 50%)
   const {
     top3,
     needsAttention
   } = useMemo(() => {
-    const sorted = [...filteredGradesSubjects].sort((a, b) => {
-      const scoreA = getScore(a, selectedYear, examType) ?? 0;
-      const scoreB = getScore(b, selectedYear, examType) ?? 0;
-      return scoreB - scoreA;
-    });
-    // Filter subjects below 50% and take lowest 3
-    const below50 = sorted.filter(s => (getScore(s, selectedYear, examType) ?? 0) < 50).reverse().slice(0, 3);
+    const sorted = [...filteredGradesSubjects]
+      .map((subject) => ({
+        subject,
+        score: getScoreFor(currentPeriodId, subject.id) ?? 0,
+      }))
+      .sort((a, b) => b.score - a.score);
+    const below50 = sorted
+      .filter((item) => item.score < 50)
+      .reverse()
+      .slice(0, 3)
+      .map((item) => item.subject);
     return {
-      top3: sorted.slice(0, 3),
+      top3: sorted.slice(0, 3).map((item) => item.subject),
       needsAttention: below50
     };
-  }, [selectedYear, examType, filteredGradesSubjects]);
-
-  // Calculate attendance rate from all months
-  const attendanceStats = useMemo(() => {
-    const totalAttendance = attendanceData.monthly.reduce((acc, month) => ({
-      present: acc.present + month.present,
-      absent: acc.absent + month.absent,
-      late: acc.late + month.late,
-      excused: acc.excused + month.excused
-    }), {
-      present: 0,
-      absent: 0,
-      late: 0,
-      excused: 0
-    });
-    const totalDays = totalAttendance.present + totalAttendance.absent + totalAttendance.late + totalAttendance.excused;
-    const attendanceRate = totalDays > 0 ? Math.round(totalAttendance.present / totalDays * 100) : 0;
-    return {
-      attendanceRate
-    };
-  }, []);
+  }, [filteredGradesSubjects, currentPeriodId, getScoreFor]);
 
   // Calculate subjects passing (score >= 50)
   const passingStats = useMemo(() => {
-    const passingSubjects = filteredGradesSubjects.filter(s => (getScore(s, selectedYear, examType) ?? 0) >= 50);
+    const passingSubjects = currentScores.filter(
+      (item) => (item.score ?? 0) >= 50
+    );
     const passingCount = passingSubjects.length;
     const totalSubjects = filteredGradesSubjects.length;
-    const passingPercentage = totalSubjects > 0 ? Math.round(passingCount / totalSubjects * 100) : 0;
+    const passingPercentage =
+      totalSubjects > 0 ? Math.round((passingCount / totalSubjects) * 100) : 0;
     return {
       passingCount,
       totalSubjects,
       passingPercentage
     };
-  }, [selectedYear, examType, filteredGradesSubjects]);
+  }, [currentScores, filteredGradesSubjects]);
 
   // Find weakest subject
   const weakestSubjectInfo = useMemo(() => {
-    if (filteredGradesSubjects.length === 0) return { name: "N/A", score: 0 };
-    const weakest = filteredGradesSubjects.reduce((worst, s) => {
-      const currentScore = getScore(s, selectedYear, examType) ?? 100;
-      const worstScore = getScore(worst, selectedYear, examType) ?? 100;
-      return currentScore < worstScore ? s : worst;
+    if (currentScores.length === 0) return { name: "N/A", score: 0 };
+    const weakest = currentScores.reduce((worst, current) => {
+      return (current.score ?? 0) < (worst.score ?? 0) ? current : worst;
     });
-    const weakestScore = getScore(weakest, selectedYear, examType) ?? 0;
     return {
-      name: weakest.name,
-      score: weakestScore
+      name: weakest.subject.name,
+      score: weakest.score ?? 0
     };
-  }, [selectedYear, examType, filteredGradesSubjects]);
+  }, [currentScores]);
+  const weakestSubjectScoreDisplay =
+    currentScores.length > 0 ? `${safeNumber(weakestSubjectInfo.score)}%` : "—";
 
   // Best subject info
   const bestSubjectInfo = useMemo(() => {
-    if (filteredGradesSubjects.length === 0) return { name: "N/A", score: 0 };
-    const best = filteredGradesSubjects.reduce((bestSub, s) => {
-      const currentScore = getScore(s, selectedYear, examType) ?? 0;
-      const bestScore = getScore(bestSub, selectedYear, examType) ?? 0;
-      return currentScore > bestScore ? s : bestSub;
+    if (currentScores.length === 0) return { name: "N/A", score: 0 };
+    const best = currentScores.reduce((bestItem, current) => {
+      return (current.score ?? 0) > (bestItem.score ?? 0) ? current : bestItem;
     });
-    const bestScore = getScore(best, selectedYear, examType) ?? 0;
     return {
-      name: best.name,
-      score: bestScore
+      name: best.subject.name,
+      score: best.score ?? 0
     };
-  }, [selectedYear, examType, filteredGradesSubjects]);
+  }, [currentScores]);
+  const bestSubjectScoreDisplay =
+    currentScores.length > 0 ? `${safeNumber(bestSubjectInfo.score)}%` : "—";
 
   // Improvement from previous exam
   const improvementStats = useMemo(() => {
-    let prevYear: YearKey = selectedYear;
-    let prevType: ExamType = examType;
-    if (examType === "midYear") {
-      if (selectedYear === "2025") {
-        prevYear = "2024";
-        prevType = "yearEnd";
-      } else if (selectedYear === "2024") {
-        prevYear = "2023";
-        prevType = "yearEnd";
-      } else if (selectedYear === "2023") {
-        prevYear = "2022";
-        prevType = "yearEnd";
-      } else {
-        return {
-          points: 0,
-          text: "N/A"
-        };
-      }
-    } else {
-      prevType = "midYear";
+    if (!previousPeriodId || !hasPreviousGrades || currentScores.length === 0) {
+      return { points: 0, text: "N/A", hasDelta: false };
     }
-    const currentScores = filteredGradesSubjects.map(s => getScore(s, selectedYear, examType)).filter(s => s !== null) as number[];
-    const prevScores = filteredGradesSubjects.map(s => getScore(s, prevYear, prevType)).filter(s => s !== null) as number[];
-    if (currentScores.length === 0 || prevScores.length === 0) return {
-      points: 0,
-      text: "N/A"
-    };
-    const currentAvg = Math.round(currentScores.reduce((a, b) => a + b, 0) / currentScores.length);
-    const prevAvg = Math.round(prevScores.reduce((a, b) => a + b, 0) / prevScores.length);
-    const points = currentAvg - prevAvg;
+    const deltas = filteredGradesSubjects
+      .map((subject) => {
+        const current = getScoreFor(currentPeriodId, subject.id);
+        const prev = getScoreFor(previousPeriodId, subject.id);
+        if (current === null || prev === null) return null;
+        return current - prev;
+      })
+      .filter((delta): delta is number => delta !== null);
+    if (deltas.length === 0) return { points: 0, text: "N/A", hasDelta: false };
+    const avgDelta = Math.round(
+      deltas.reduce((sum, delta) => sum + delta, 0) / deltas.length
+    );
     return {
-      points,
-      text: points >= 0 ? `+${points}%` : `${points}%`
+      points: avgDelta,
+      text: avgDelta >= 0 ? `+${avgDelta}%` : `${avgDelta}%`,
+      hasDelta: true
     };
-  }, [selectedYear, examType, filteredGradesSubjects]);
+  }, [filteredGradesSubjects, currentPeriodId, previousPeriodId, getScoreFor, hasPreviousGrades, currentScores.length]);
   const risingStars = useMemo(() => {
-    // Determine previous exam period
-    let prevYear: YearKey = selectedYear;
-    let prevType: ExamType = examType;
-    if (examType === "midYear") {
-      // Previous is last year's year-end
-      if (selectedYear === "2025") {
-        prevYear = "2024";
-        prevType = "yearEnd";
-      } else if (selectedYear === "2024") {
-        prevYear = "2023";
-        prevType = "yearEnd";
-      } else {
-        return [];
-      } // No previous for 2023 mid
-    } else {
-      // Previous is same year's mid-year
-      prevType = "midYear";
-    }
-    const improvements = filteredGradesSubjects.map(s => {
-      const current = getScore(s, selectedYear, examType) ?? 0;
-      const prev = getScore(s, prevYear, prevType) ?? 0;
-      return {
-        subject: s,
-        current,
-        prev,
-        improvement: current - prev
-      };
-    }).filter(item => item.improvement > 0 && item.current > 0 && item.prev > 0);
+    if (!previousPeriodId || !hasPreviousGrades) return [];
+    const improvements = filteredGradesSubjects
+      .map((subject) => {
+        const current = getScoreFor(currentPeriodId, subject.id);
+        const prev = getScoreFor(previousPeriodId, subject.id);
+        if (current === null || prev === null) return null;
+        return {
+          subject,
+          current,
+          prev,
+          improvement: current - prev
+        };
+      })
+      .filter(
+        (item): item is { subject: typeof filteredGradesSubjects[number]; current: number; prev: number; improvement: number } =>
+          item !== null && item.improvement > 0
+      );
     return improvements.sort((a, b) => b.improvement - a.improvement).slice(0, 3);
-  }, [selectedYear, examType, filteredGradesSubjects]);
+  }, [filteredGradesSubjects, currentPeriodId, previousPeriodId, getScoreFor, hasPreviousGrades]);
 
   // Falling behind - subjects with biggest decline from previous exam
   const fallingBehind = useMemo(() => {
-    let prevYear: YearKey = selectedYear;
-    let prevType: ExamType = examType;
-    if (examType === "midYear") {
-      if (selectedYear === "2025") {
-        prevYear = "2024";
-        prevType = "yearEnd";
-      } else if (selectedYear === "2024") {
-        prevYear = "2023";
-        prevType = "yearEnd";
-      } else {
-        return [];
-      }
-    } else {
-      prevType = "midYear";
-    }
-    const declines = filteredGradesSubjects.map(s => {
-      const current = getScore(s, selectedYear, examType) ?? 0;
-      const prev = getScore(s, prevYear, prevType) ?? 0;
-      return {
-        subject: s,
-        current,
-        prev,
-        decline: prev - current
-      };
-    }).filter(item => item.decline > 0 && item.current > 0 && item.prev > 0);
+    if (!previousPeriodId || !hasPreviousGrades) return [];
+    const declines = filteredGradesSubjects
+      .map((subject) => {
+        const current = getScoreFor(currentPeriodId, subject.id);
+        const prev = getScoreFor(previousPeriodId, subject.id);
+        if (current === null || prev === null) return null;
+        return {
+          subject,
+          current,
+          prev,
+          decline: prev - current
+        };
+      })
+      .filter(
+        (item): item is { subject: typeof filteredGradesSubjects[number]; current: number; prev: number; decline: number } =>
+          item !== null && (item.current < 50 || item.decline >= 5)
+      );
     return declines.sort((a, b) => b.decline - a.decline).slice(0, 3);
-  }, [selectedYear, examType, filteredGradesSubjects]);
+  }, [filteredGradesSubjects, currentPeriodId, previousPeriodId, getScoreFor, hasPreviousGrades]);
 
-  // Year-over-year trend data with period filtering (3 years of data)
+  // Trend data for selected year/periods
   const trendData = useMemo(() => {
-    const years: YearKey[] = ["2022", "2023", "2024", "2025"];
-    const periods: {
-      year: YearKey;
-      type: ExamType;
-      label: string;
-    }[] = [];
-    years.forEach(year => {
-      periods.push({
-        year,
-        type: "midYear",
-        label: `Mid ${year}`
-      });
-      if (year !== "2025") {
-        // 2025 year-end is null
-        periods.push({
-          year,
-          type: "yearEnd",
-          label: `End ${year}`
-        });
-      }
-    });
-
-    // Filter based on trendPeriod
-    let filteredPeriods = periods;
-    if (trendPeriod === "1year") {
-      filteredPeriods = periods.slice(-2); // Last 2 periods
-    } else if (trendPeriod === "2years") {
-      filteredPeriods = periods.slice(-4); // Last 4 periods
-    } else if (trendPeriod === "3years") {
-      filteredPeriods = periods.slice(-6); // Last 6 periods
-    } else if (trendPeriod === "4years") {
-      filteredPeriods = periods.slice(-8); // Last 8 periods
-    } else if (trendPeriod === "5years") {
-      // Keep the default view compact (requested: 7 periods)
-      filteredPeriods = periods.slice(-7);
-    }
-    return filteredPeriods.map(p => {
+    return trendPeriods.map((period) => {
       const result: Record<string, number | string | null> = {
-        period: p.label
+        period: period.displayLabel
       };
-      // Only include selected subjects
-      const selectedSubjectsData = academicData.subjects.filter(s => trendsSelectedSubjects.includes(s.name));
-      selectedSubjectsData.forEach(s => {
-        result[s.name] = getScore(s, p.year, p.type);
+      selectedSubjects.forEach((subject) => {
+        result[subject.name] = getScoreFor(period.id, subject.id);
       });
-      // Overall average of selected subjects only
-      const scores = selectedSubjectsData.map(s => getScore(s, p.year, p.type)).filter(s => s !== null) as number[];
-      result["Average"] = scores.length > 0 ? Math.round(scores.reduce((a, b) => a + b, 0) / scores.length) : null;
+      const scores = selectedSubjects
+        .map((subject) => getScoreFor(period.id, subject.id))
+        .filter((score): score is number => score !== null);
+      result["Average"] =
+        scores.length > 0
+          ? Math.round(scores.reduce((a, b) => a + b, 0) / scores.length)
+          : null;
       return result;
     });
-  }, [trendPeriod, trendsSelectedSubjects]);
+  }, [trendPeriods, selectedSubjects, getScoreFor]);
 
   // Calculate trend direction for selected subject(s)
   const trendDirection = useMemo(() => {
@@ -672,7 +1044,7 @@ export default function AcademicPage() {
       direction: "stable" as const,
       change: 0
     };
-    const key = trendsSelectedSubjects.length === 1 ? trendsSelectedSubjects[0] : "Average";
+    const key = selectedSubjectNames.length === 1 ? selectedSubjectNames[0] : "Average";
     const firstValue = trendData[0]?.[key] as number | null;
     const lastValue = trendData[trendData.length - 1]?.[key] as number | null;
     if (firstValue === null || lastValue === null) return {
@@ -685,100 +1057,75 @@ export default function AcademicPage() {
       change: Math.abs(change),
       currentValue: lastValue
     };
-  }, [trendData, trendsSelectedSubjects]);
+  }, [trendData, selectedSubjectNames]);
+
+  const trendHeaderValue = useMemo(() => {
+    if (selectedSubjectIds.length === 0) return "—";
+    const value =
+      trendDirection.currentValue ?? (currentScores.length > 0 ? currentAverage : null);
+    return safeText(value, "—");
+  }, [selectedSubjectIds.length, trendDirection.currentValue, currentScores.length, currentAverage]);
 
   // Calculate goal reference line value for trends chart
   const trendGoalValue = useMemo(() => {
-    if (trendsSelectedSubjects.length === 1) {
-      return goals[trendsSelectedSubjects[0]] ?? 80;
+    if (selectedSubjectIds.length === 1) {
+      const subjectId = selectedSubjectIds[0];
+      return goalsBySubjectId.get(subjectId) ?? 80;
     }
-    // Average of selected subjects' goals
-    const selectedGoals = trendsSelectedSubjects.map(s => goals[s] ?? 80);
-    return selectedGoals.length > 0 ? Math.round(selectedGoals.reduce((a, b) => a + b, 0) / selectedGoals.length) : 80;
-  }, [trendsSelectedSubjects, goals]);
-
-  // Category trend data
-  const categoryTrendData = useMemo(() => {
-    const years: YearKey[] = ["2023", "2024", "2025"];
-    const categories = ["attitude", "homework", "quiz", "exam"] as const;
-    return years.map(year => {
-      const result: Record<string, number | string> = {
-        year
-      };
-      categories.forEach(cat => {
-        const scores = academicData.subjects.map(s => getCategoryScore(s, year, cat)).filter(s => s !== null) as number[];
-        result[cat.charAt(0).toUpperCase() + cat.slice(1)] = scores.length > 0 ? Math.round(scores.reduce((a, b) => a + b, 0) / scores.length) : 0;
-      });
-      return result;
-    });
-  }, []);
+    const selectedGoals = selectedSubjectIds.map(
+      (id) => goalsBySubjectId.get(id) ?? 80
+    );
+    return selectedGoals.length > 0
+      ? Math.round(
+          selectedGoals.reduce((a, b) => a + b, 0) / selectedGoals.length
+        )
+      : 80;
+  }, [selectedSubjectIds, goalsBySubjectId]);
 
   // Radar chart data for subject strengths profile - use tiny codes for compact display
   const radarData = useMemo(() => {
-    return academicData.subjects.map(s => ({
-      subject: getTinySubjectCode(s.name),
-      fullName: s.name,
-      score: getScore(s, selectedYear, examType) ?? 0,
+    return assignedSubjects.map((subject) => ({
+      subject: getTinySubjectCode(subject.name),
+      fullName: subject.name,
+      score: getScoreFor(currentPeriodId, subject.id) ?? 0,
       fullMark: 100
     }));
-  }, [selectedYear, examType]);
+  }, [assignedSubjects, currentPeriodId, getScoreFor]);
 
-  // Subject vs Class Average data - now uses per-subject class averages
+  // Subject vs Overall Average data derived from current period scores
   const subjectVsClassData = useMemo(() => {
-    const yearData = classAverages[selectedYear];
-    const subjectAverages = yearData?.bySubject as Record<string, number> | undefined;
-    const fallbackAvg = yearData?.[examType] ?? 75;
-    return academicData.subjects.map(s => {
-      const studentScore = getScore(s, selectedYear, examType) ?? 0;
-      const classAvg = subjectAverages?.[s.name] ?? fallbackAvg;
-      return {
-        name: shortenSubjectName(s.name),
-        fullName: s.name,
-        student: studentScore,
-        classAvg: classAvg,
-        delta: studentScore - classAvg
-      };
-    }).sort((a, b) => b.delta - a.delta);
-  }, [selectedYear, examType]);
+    const overallAvg = currentAverage || 0;
+    return filteredGradesSubjects
+      .map((subject) => {
+        const studentScore = getScoreFor(currentPeriodId, subject.id) ?? 0;
+        return {
+          name: shortenSubjectName(subject.name),
+          fullName: subject.name,
+          student: studentScore,
+          classAvg: overallAvg,
+          delta: studentScore - overallAvg
+        };
+      })
+      .sort((a, b) => b.delta - a.delta);
+  }, [filteredGradesSubjects, currentPeriodId, getScoreFor, currentAverage]);
 
   // Average score for radar color coding
   const radarAverage = useMemo(() => {
     const scores = radarData.map(d => d.score);
-    return scores.reduce((a, b) => a + b, 0) / scores.length;
+    return scores.length > 0 ? scores.reduce((a, b) => a + b, 0) / scores.length : 0;
   }, [radarData]);
 
   // Performance Heatmap data - subjects x exam periods
   const heatmapData = useMemo(() => {
-    const periods = [{
-      year: "2023" as YearKey,
-      type: "midYear" as ExamType,
-      label: "Mid '23"
-    }, {
-      year: "2023" as YearKey,
-      type: "yearEnd" as ExamType,
-      label: "End '23"
-    }, {
-      year: "2024" as YearKey,
-      type: "midYear" as ExamType,
-      label: "Mid '24"
-    }, {
-      year: "2024" as YearKey,
-      type: "yearEnd" as ExamType,
-      label: "End '24"
-    }, {
-      year: "2025" as YearKey,
-      type: "midYear" as ExamType,
-      label: "Mid '25"
-    }];
-    return academicData.subjects.map(s => ({
-      subject: shortenSubjectName(s.name),
-      fullName: s.name,
-      scores: periods.map(p => ({
-        period: p.label,
-        score: getScore(s, p.year, p.type)
+    return assignedSubjects.map((subject) => ({
+      subject: shortenSubjectName(subject.name),
+      fullName: subject.name,
+      scores: sortedPeriodsForYear.map((period) => ({
+        period: period.displayLabel,
+        score: getScoreFor(period.id, subject.id)
       }))
     }));
-  }, []);
+  }, [assignedSubjects, sortedPeriodsForYear, getScoreFor]);
 
   // Helper function to get heatmap cell color based on score
   const getHeatmapColor = (score: number | null): string => {
@@ -793,43 +1140,92 @@ export default function AcademicPage() {
 
   // Comparison data - filtered by selected subjects
   const comparisonData = useMemo(() => {
-    return academicData.subjects.filter(s => compareSubjects.includes(s.name)).map(s => {
-      const scoreA = getScore(s, compareExamA.year, compareExamA.type) ?? 0;
-      const scoreB = getScore(s, compareExamB.year, compareExamB.type) ?? 0;
-      const delta = scoreA - scoreB;
-      return {
-        name: s.name,
-        examA: scoreA,
-        examB: scoreB,
-        delta,
-        improved: delta > 0,
-        goal: goals[s.name] ?? 80
-      };
-    });
-  }, [compareExamA, compareExamB, compareSubjects, goals]);
+    const examAId = comparePeriodIdsA[0] ?? null;
+    const examBId = comparePeriodIdsB[0] ?? null;
+    return selectedSubjects
+      .map((subject) => {
+        const scoreA = getScoreFor(examAId, subject.id) ?? 0;
+        const scoreB = getScoreFor(examBId, subject.id) ?? 0;
+        const delta = scoreA - scoreB;
+        return {
+          name: subject.name,
+          examA: scoreA,
+          examB: scoreB,
+          delta,
+          improved: delta > 0,
+          goal: goalsBySubjectId.get(subject.id) ?? 80
+        };
+      });
+  }, [
+    selectedSubjects,
+    comparePeriodIdsA,
+    comparePeriodIdsB,
+    getScoreFor,
+    goalsBySubjectId
+  ]);
+
+  const compareEmptyMessage = !hasAssignedSubjects
+    ? "No subjects assigned to this student yet"
+    : selectedSubjectIds.length === 0
+    ? "Select at least one subject to compare"
+    : comparePeriodIdsA.length === 0 || comparePeriodIdsB.length === 0
+    ? "Select two exam periods to compare"
+    : comparisonData.length === 0
+    ? "No comparison data for these periods yet"
+    : null;
 
   // Category comparison - filtered by selected subjects
   const categoryComparison = useMemo(() => {
+    const examAId = comparePeriodIdsA[0] ?? null;
+    const examBId = comparePeriodIdsB[0] ?? null;
     const categories = ["attitude", "homework", "quiz", "exam"] as const;
-    const filteredSubjects = academicData.subjects.filter(s => compareSubjects.includes(s.name));
-    return categories.map(cat => {
-      const scoresA = filteredSubjects.map(s => getCategoryScore(s, compareExamA.year, cat)).filter(s => s !== null) as number[];
-      const scoresB = filteredSubjects.map(s => getCategoryScore(s, compareExamB.year, cat)).filter(s => s !== null) as number[];
-      const avgA = scoresA.length > 0 ? Math.round(scoresA.reduce((a, b) => a + b, 0) / scoresA.length) : 0;
-      const avgB = scoresB.length > 0 ? Math.round(scoresB.reduce((a, b) => a + b, 0) / scoresB.length) : 0;
+    const filteredSubjects = selectedSubjects;
+    return categories.map((category) => {
+      const scoresA = filteredSubjects
+        .map((subject) => {
+          const grade = getGradeFor(examAId, subject.id);
+          if (!grade) return null;
+          if (category === "attitude") return grade.attitude_marks ?? null;
+          if (category === "homework") return grade.homework_marks ?? null;
+          if (category === "quiz") return grade.quiz_marks ?? null;
+          return grade.exam_marks ?? null;
+        })
+        .filter((score): score is number => score !== null);
+      const scoresB = filteredSubjects
+        .map((subject) => {
+          const grade = getGradeFor(examBId, subject.id);
+          if (!grade) return null;
+          if (category === "attitude") return grade.attitude_marks ?? null;
+          if (category === "homework") return grade.homework_marks ?? null;
+          if (category === "quiz") return grade.quiz_marks ?? null;
+          return grade.exam_marks ?? null;
+        })
+        .filter((score): score is number => score !== null);
+      const avgA =
+        scoresA.length > 0
+          ? Math.round(scoresA.reduce((a, b) => a + b, 0) / scoresA.length)
+          : 0;
+      const avgB =
+        scoresB.length > 0
+          ? Math.round(scoresB.reduce((a, b) => a + b, 0) / scoresB.length)
+          : 0;
       return {
-        category: cat.charAt(0).toUpperCase() + cat.slice(1),
+        category: category.charAt(0).toUpperCase() + category.slice(1),
         examA: avgA,
         examB: avgB,
         delta: avgA - avgB
       };
     });
-  }, [compareExamA, compareExamB, compareSubjects]);
+  }, [selectedSubjects, comparePeriodIdsA, comparePeriodIdsB, getGradeFor]);
   const getExamLabelForComparison = (exam: {
-    year: YearKey;
-    type: ExamType;
+    year: string;
+    period: string;
   }) => {
-    return `${exam.type === "midYear" ? "Mid-Year" : "Year-End"} ${exam.year}`;
+    if (!exam.period) return "Exam";
+    if (exam.year && exam.year !== "All") {
+      return `${exam.period} ${exam.year}`.trim();
+    }
+    return exam.period;
   };
 
   // Distinct colors for subjects
@@ -1298,24 +1694,23 @@ export default function AcademicPage() {
                   <div className="flex items-center gap-3">
                     <span className="text-sm font-medium text-muted-foreground shrink-0">Exam:</span>
                     <div className="flex gap-2 flex-1">
-                      <Select value={selectedYear} onValueChange={v => setSelectedYear(v as YearKey)}>
+                      <Select value={analysisYear} onValueChange={v => setAnalysisYear(v)}>
                         <SelectTrigger className="w-[100px]">
                           <SelectValue placeholder="Year" />
                         </SelectTrigger>
                         <SelectContent className="bg-card">
-                          <SelectItem value="2025">2025</SelectItem>
-                          <SelectItem value="2024">2024</SelectItem>
-                          <SelectItem value="2023">2023</SelectItem>
-                          <SelectItem value="2022">2022</SelectItem>
+                          {analysisYearOptions.map(year => <SelectItem key={year} value={year}>{year}</SelectItem>)}
                         </SelectContent>
                       </Select>
-                      <Select value={examType} onValueChange={v => setExamType(v as ExamType)}>
+                      <Select value={selectedAcademicPeriodId} onValueChange={v => setSelectedAcademicPeriodId(v)}>
                         <SelectTrigger className="flex-1">
                           <SelectValue placeholder="Period" />
                         </SelectTrigger>
                         <SelectContent className="bg-card">
-                          <SelectItem value="midYear">Mid-Year</SelectItem>
-                          <SelectItem value="yearEnd">Year-End</SelectItem>
+                          {analysisPeriodOptions.map(period => {
+                          const label = analysisYear === "All" ? period.displayLabel : period.periodLabel;
+                          return <SelectItem key={period.id} value={period.id}>{label}</SelectItem>;
+                        })}
                         </SelectContent>
                       </Select>
                     </div>
@@ -1326,31 +1721,49 @@ export default function AcademicPage() {
                     <div className="flex items-center justify-between">
                       <span className="text-sm font-medium text-foreground">Subjects:</span>
                       <div className="flex gap-2">
-                        <button className="text-sm font-medium text-foreground hover:text-primary transition-colors" onClick={() => setGradesSelectedSubjects(academicData.subjects.map(s => s.name))}>
+                        <button className="text-sm font-medium text-foreground hover:text-primary transition-colors" onClick={selectAllSubjects}>
                           Select All
                         </button>
-                        <button className="text-sm font-medium text-foreground hover:text-primary transition-colors" onClick={() => setGradesSelectedSubjects([])}>
+                        <button className="text-sm font-medium text-foreground hover:text-primary transition-colors" onClick={clearAllSubjects}>
                           Clear
                         </button>
                       </div>
                     </div>
                     <div className="flex flex-wrap gap-1.5 p-2.5 rounded-lg border border-border bg-background items-center">
                       {/* Grouped subject pills with dropdowns */}
-                      {subjectGroups.map(group => <SubjectGroupPill key={group.baseName} baseName={group.baseName} shortName={group.shortName} variants={group.variants || []} selectedSubjects={gradesSelectedSubjects} onToggle={subjectName => {
-                      if (gradesSelectedSubjects.includes(subjectName)) {
-                        setGradesSelectedSubjects(prev => prev.filter(s => s !== subjectName));
-                      } else {
-                        setGradesSelectedSubjects(prev => [...prev, subjectName]);
+                      {analysisSubjectGroups.map(group => <SubjectGroupPill key={group.baseName} baseName={group.baseName} shortName={group.shortName} variants={group.variants || []} selectedSubjects={selectedSubjectNames} onToggle={subjectName => {
+                      const subjectId = subjectNameToId.get(subjectName);
+                      if (subjectId !== undefined) {
+                        toggleSubject(subjectId);
                       }
                     }} />)}
+                      {analysisStandaloneSubjects.map(subject => {
+                      const isSelected = selectedSubjectIds.includes(subject.id);
+                      return <button key={subject.id} onClick={() => {
+                      toggleSubject(subject.id);
+                    }} className={`px-2.5 py-1 rounded-full text-xs font-medium transition-all ${isSelected ? "bg-primary text-primary-foreground" : "bg-background text-muted-foreground border border-border hover:bg-accent"}`}>
+                          {getShortSubjectName(subject.name)}
+                        </button>;
+                    })}
                       {/* Subject count badge */}
                       <span className="ml-auto px-2 py-0.5 text-xs font-medium bg-primary/10 text-primary rounded-full">
-                        {gradesSelectedSubjects.length}/{academicData.subjects.length}
+                        {selectedSubjectIds.length}/{assignedSubjectIds.length}
                       </span>
                     </div>
                   </div>
                 </div>
 
+                {analysisLoading && <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground py-6">
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    Loading grade analysis...
+                  </div>}
+                {!analysisLoading && analysisError && <div className="text-sm text-destructive py-4">
+                    {analysisError}
+                  </div>}
+                {!analysisLoading && !analysisError && overviewEmptyMessage && <div className="text-sm text-muted-foreground py-4">
+                    {overviewEmptyMessage}
+                  </div>}
+                {!analysisLoading && !analysisError && !overviewEmptyMessage && <>
                 {/* Rising Stars */}
                 {risingStars.length > 0 && <div className="space-y-2">
                     <h4 className="text-sm font-medium text-foreground flex items-center gap-1.5">
@@ -1524,7 +1937,10 @@ export default function AcademicPage() {
                     name: s.name,
                     fullName: s.fullName,
                     score: s.student,
-                    goal: goals[s.fullName] ?? 80
+                    goal: (() => {
+                      const subjectId = subjectNameToId.get(s.fullName);
+                      return subjectId ? goalsBySubjectId.get(subjectId) ?? 80 : 80;
+                    })()
                   }))}
                   lineColors={lineColors}
                   title="Subject Performance"
@@ -1537,29 +1953,35 @@ export default function AcademicPage() {
                   {[{
                   icon: BookOpen,
                   label: "Average",
-                  value: `${currentAverage}%`,
-                  subtext: currentAverage >= 70 ? "Above Average" : currentAverage >= 50 ? "Average" : "Below Average",
+                  value: currentAverageDisplay,
+                  subtext: currentScores.length > 0 ? currentAverage >= 70 ? "Above Average" : currentAverage >= 50 ? "Average" : "Below Average" : "N/A",
                   iconColor: "#3b82f6",
                   bgColor: "rgba(59, 130, 246, 0.08)"
                 }, {
                   icon: Award,
                   label: "Best Subject",
                   value: shortenSubjectName(bestSubjectInfo.name),
-                  subtext: `${bestSubjectInfo.score}%`,
+                  subtext: bestSubjectScoreDisplay,
                   iconColor: "#f59e0b",
                   bgColor: "rgba(245, 158, 11, 0.08)"
                 }, {
                   icon: TrendingUp,
                   label: "Improvement",
                   value: improvementStats.text,
-                  subtext: improvementStats.points >= 0 ? "Improved" : "Declined",
-                  iconColor: improvementStats.points >= 0 ? "#10b981" : "#ef4444",
-                  bgColor: improvementStats.points >= 0 ? "rgba(16, 185, 129, 0.08)" : "rgba(239, 68, 68, 0.08)"
+                  subtext: improvementStats.hasDelta
+                    ? improvementStats.points >= 0 ? "Improved" : "Declined"
+                    : "N/A",
+                  iconColor: improvementStats.hasDelta
+                    ? improvementStats.points >= 0 ? "#10b981" : "#ef4444"
+                    : "#64748b",
+                  bgColor: improvementStats.hasDelta
+                    ? improvementStats.points >= 0 ? "rgba(16, 185, 129, 0.08)" : "rgba(239, 68, 68, 0.08)"
+                    : "rgba(148, 163, 184, 0.08)"
                 }, {
                   icon: Calendar,
                   label: "Attendance",
-                  value: `${attendanceStats.attendanceRate}%`,
-                  subtext: "This Term",
+                  value: "--",
+                  subtext: "Not available",
                   iconColor: "#8b5cf6",
                   bgColor: "rgba(139, 92, 246, 0.08)"
                 }, {
@@ -1573,7 +1995,7 @@ export default function AcademicPage() {
                   icon: AlertTriangle,
                   label: "Needs Focus",
                   value: shortenSubjectName(weakestSubjectInfo.name),
-                  subtext: `${weakestSubjectInfo.score}%`,
+                  subtext: weakestSubjectScoreDisplay,
                   iconColor: "#ef4444",
                   bgColor: "rgba(239, 68, 68, 0.08)"
                 }].map((stat, index) => {
@@ -1607,7 +2029,7 @@ export default function AcademicPage() {
                         if (!s) {
                           return <div key={index} className="min-h-[60px]" />;
                         }
-                        const score = getScore(s, selectedYear, examType);
+                        const score = getScoreFor(currentPeriodId, s.id) ?? 0;
                         return (
                           <div key={s.name} className="flex items-center gap-2 p-2.5 rounded-lg border min-h-[60px]" style={{
                             backgroundColor: 'rgba(34, 197, 94, 0.1)',
@@ -1640,7 +2062,7 @@ export default function AcademicPage() {
                         if (!s) {
                           return <div key={index} className="min-h-[60px]" />;
                         }
-                        const score = getScore(s, selectedYear, examType);
+                        const score = getScoreFor(currentPeriodId, s.id) ?? 0;
                         return (
                           <div key={s.name} className="flex items-center gap-2 p-2.5 rounded-lg border min-h-[60px]" style={{
                             backgroundColor: 'rgba(254, 202, 202, 0.3)',
@@ -1668,21 +2090,30 @@ export default function AcademicPage() {
                   <FileText className="h-4 w-4" />
                   Generate Report
                 </Button>
+                </>}
 
               </TabsContent>
 
               {/* TRENDS TAB */}
               <TabsContent value="trends" className="space-y-4">
+                {analysisLoading && <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground py-6">
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    Loading trends...
+                  </div>}
+                {!analysisLoading && analysisError && <div className="text-sm text-destructive py-4">
+                    {analysisError}
+                  </div>}
+                {!analysisLoading && !analysisError && <>
                 {/* Current Score Header - Moomoo Style */}
                 <div className="p-4 rounded-xl bg-gradient-to-r from-accent/50 to-accent/30 border border-border/50 space-y-3">
                   <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0 flex-1">
                       <p className="text-xs text-muted-foreground mb-0.5 truncate">
-                        {subjectFilter === "all" ? "Overall Average" : subjectFilter}
+                        {selectedSubjectNames.length === 1 ? selectedSubjectNames[0] : "Overall Average"}
                       </p>
                       <div className="flex items-baseline gap-2 flex-wrap">
                         <span className="text-3xl font-bold text-foreground">
-                          {trendDirection.currentValue ?? currentAverage}%
+                          {trendHeaderValue}{trendHeaderValue === "—" ? "" : "%"}
                         </span>
                         {trendDirection.direction !== "stable" && <span className={`flex items-center text-sm font-bold px-2 py-1 rounded ${trendDirection.direction === "up" ? "bg-green-500 text-white" : "bg-red-500 text-white"}`}>
                             {trendDirection.direction === "up" ? <TrendingUp className="h-4 w-4 mr-1" /> : <TrendingDown className="h-4 w-4 mr-1" />}
@@ -1717,35 +2148,79 @@ export default function AcademicPage() {
                   </div>
                 </div>
 
+                <div className="space-y-3 pb-2">
+                  <div className="flex items-center gap-3">
+                    <span className="text-sm font-medium text-muted-foreground shrink-0">Exam:</span>
+                    <div className="flex gap-2 flex-1">
+                      <Select value={analysisYear} onValueChange={v => setAnalysisYear(v)}>
+                        <SelectTrigger className="w-[100px]">
+                          <SelectValue placeholder="Year" />
+                        </SelectTrigger>
+                        <SelectContent className="bg-card">
+                          {analysisYearOptions.map(year => <SelectItem key={year} value={year}>{year}</SelectItem>)}
+                        </SelectContent>
+                      </Select>
+                      <Select value={selectedAcademicPeriodId} onValueChange={v => setSelectedAcademicPeriodId(v)}>
+                        <SelectTrigger className="flex-1">
+                          <SelectValue placeholder="Period" />
+                        </SelectTrigger>
+                        <SelectContent className="bg-card">
+                          {analysisPeriodOptions.map(period => {
+                          const label = analysisYear === "All" ? period.displayLabel : period.periodLabel;
+                          return <SelectItem key={period.id} value={period.id}>{label}</SelectItem>;
+                        })}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                </div>
+
                 {/* Subject Filter Pills - Standardized with mobile-friendly dropdowns */}
                 <div className="space-y-2">
                   <div className="flex items-center justify-between">
                     <span className="text-sm font-medium text-foreground">Subjects:</span>
                     <div className="flex gap-2">
-                      <button className="text-sm font-medium text-foreground hover:text-primary transition-colors" onClick={() => setTrendsSelectedSubjects(academicData.subjects.map(s => s.name))}>
+                      <button className="text-sm font-medium text-foreground hover:text-primary transition-colors" onClick={selectAllSubjects}>
                         Select All
                       </button>
-                      <button className="text-sm font-medium text-foreground hover:text-primary transition-colors" onClick={() => setTrendsSelectedSubjects([])}>
+                      <button className="text-sm font-medium text-foreground hover:text-primary transition-colors" onClick={clearAllSubjects}>
                         Clear
                       </button>
                     </div>
                   </div>
                   <div className="flex flex-wrap gap-1.5 p-2.5 rounded-lg border border-border bg-background items-center">
                     {/* Grouped subject pills with mobile-friendly drawers */}
-                    {subjectGroups.map(group => <SubjectGroupPill key={group.baseName} baseName={group.baseName} shortName={group.shortName} variants={group.variants || []} selectedSubjects={trendsSelectedSubjects} onToggle={subjectName => {
-                    if (trendsSelectedSubjects.includes(subjectName)) {
-                      setTrendsSelectedSubjects(prev => prev.filter(s => s !== subjectName));
-                    } else {
-                      setTrendsSelectedSubjects(prev => [...prev, subjectName]);
-                    }
-                  }} />)}
-                    {/* Subject count badge */}
-                    <span className="ml-auto px-2 py-0.5 text-xs font-medium bg-primary/10 text-primary rounded-full">
-                      {trendsSelectedSubjects.length}/{academicData.subjects.length}
-                    </span>
+                      {analysisSubjectGroups.map(group => <SubjectGroupPill key={group.baseName} baseName={group.baseName} shortName={group.shortName} variants={group.variants || []} selectedSubjects={selectedSubjectNames} onToggle={subjectName => {
+                      const subjectId = subjectNameToId.get(subjectName);
+                      if (subjectId !== undefined) {
+                        toggleSubject(subjectId);
+                      }
+                    }} />)}
+                      {analysisStandaloneSubjects.map(subject => {
+                      const isSelected = selectedSubjectIds.includes(subject.id);
+                      return <button key={subject.id} onClick={() => {
+                      toggleSubject(subject.id);
+                    }} className={`px-2.5 py-1 rounded-full text-xs font-medium transition-all ${isSelected ? "bg-primary text-primary-foreground" : "bg-background text-muted-foreground border border-border hover:bg-accent"}`}>
+                          {getShortSubjectName(subject.name)}
+                        </button>;
+                    })}
+                      {/* Subject count badge */}
+                      <span className="ml-auto px-2 py-0.5 text-xs font-medium bg-primary/10 text-primary rounded-full">
+                        {selectedSubjectIds.length}/{assignedSubjectIds.length}
+                      </span>
                   </div>
                 </div>
 
+                {!hasAssignedSubjects ? (
+                  <div className="text-sm text-muted-foreground py-4">
+                    No subjects assigned to this student yet
+                  </div>
+                ) : selectedSubjectIds.length === 0 ? (
+                  <div className="text-sm text-muted-foreground py-4">
+                    Select at least one subject to view trends
+                  </div>
+                ) : (
+                <>
                 {/* Moomoo-Style Gradient Area Chart - Scrollable with Pinch-to-Zoom */}
                 <div className="space-y-2">
                   <div className="space-y-1">
@@ -1803,12 +2278,7 @@ export default function AcademicPage() {
                     height: '100%',
                     transition: 'width 0.1s ease-out'
                   }}>
-                      {trendsSelectedSubjects.length === 0 ? (
-                        <div className="h-full w-full flex items-center justify-center">
-                          <p className="text-xs text-muted-foreground">Select at least one subject to view the chart.</p>
-                        </div>
-                      ) : (
-                        <ResponsiveContainer width="100%" height="100%">
+                      <ResponsiveContainer width="100%" height="100%">
                           {chartViewMode === "single" ? (
                             <AreaChart data={trendData} margin={{ top: 10, right: 20, left: 0, bottom: 20 }}>
                               <defs>
@@ -1866,10 +2336,10 @@ export default function AcademicPage() {
                               <ReferenceLine y={80} stroke="#22c55e" strokeDasharray="5 5" strokeOpacity={0.6} label={{ value: "A", fontSize: 9, fill: "#22c55e", position: "insideTopLeft" }} />
                               <ReferenceLine y={trendGoalValue} stroke="hsl(var(--foreground))" strokeDasharray="4 4" strokeWidth={2} label={{ value: "Goal", fontSize: 9, fill: "hsl(var(--foreground))", position: "insideTopLeft" }} />
 
-                              {trendsSelectedSubjects.length === 1 ? (
+                              {selectedSubjectNames.length === 1 ? (
                                 <Area
                                   type="monotone"
-                                  dataKey={trendsSelectedSubjects[0]}
+                                  dataKey={selectedSubjectNames[0]}
                                   stroke={trendDirection.direction === "up" ? "#22c55e" : trendDirection.direction === "down" ? "#ef4444" : "#3b82f6"}
                                   strokeWidth={2.5}
                                   fill={trendDirection.direction === "up" ? "url(#gradientGreen)" : trendDirection.direction === "down" ? "url(#gradientRed)" : "url(#gradientBlue)"}
@@ -1941,7 +2411,7 @@ export default function AcademicPage() {
                               <ReferenceLine y={80} stroke="#22c55e" strokeDasharray="5 5" strokeOpacity={0.6} label={{ value: "A", fontSize: 9, fill: "#22c55e", position: "insideTopLeft" }} />
                               <ReferenceLine y={trendGoalValue} stroke="hsl(var(--foreground))" strokeDasharray="4 4" strokeWidth={2} label={{ value: "Goal", fontSize: 9, fill: "hsl(var(--foreground))", position: "insideTopLeft" }} />
 
-                              {trendsSelectedSubjects.map((subject) => {
+                              {selectedSubjectNames.map((subject) => {
                                 const stroke = getSubjectStroke(subject);
                                 return (
                                   <Line
@@ -1959,13 +2429,12 @@ export default function AcademicPage() {
                             </LineChart>
                           )}
                         </ResponsiveContainer>
-                      )}
                     </div>
                   </div>
                   {/* Color Legend for Multiple Lines Mode */}
-                  {chartViewMode === "multiple" && trendsSelectedSubjects.length > 1 && (
+                  {chartViewMode === "multiple" && selectedSubjectNames.length > 1 && (
                     <div className="flex flex-wrap gap-x-3 gap-y-1.5 mt-2 px-1">
-                      {trendsSelectedSubjects.map((subject) => (
+                      {selectedSubjectNames.map((subject) => (
                         <div key={subject} className="flex items-center gap-1">
                           <div
                             className="w-2.5 h-2.5 rounded-full shrink-0"
@@ -2158,6 +2627,9 @@ export default function AcademicPage() {
                   <FileText className="h-4 w-4" />
                   Generate Report
                 </Button>
+                </>
+                )}
+                </>}
               </TabsContent>
 
               {/* COMPARISON TAB */}
@@ -2177,29 +2649,30 @@ export default function AcademicPage() {
                     }} />
                       Exam A
                     </label>
-                    <Select value={compareExamA.year} onValueChange={v => setCompareExamA(prev => ({
-                    ...prev,
-                    year: v as YearKey
-                  }))}>
+                    <Select value={compareExamA.year} onValueChange={v => {
+                    const periods = getPeriodsForYear(v);
+                    setCompareExamA(prev => ({
+                      ...prev,
+                      year: v,
+                      period: periods[0]?.periodLabel ?? ""
+                    }));
+                  }}>
                       <SelectTrigger className="w-full h-8 text-xs bg-background/80">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent className="bg-card">
-                        <SelectItem value="2025">2025</SelectItem>
-                        <SelectItem value="2024">2024</SelectItem>
-                        <SelectItem value="2023">2023</SelectItem>
+                        {analysisYearOptions.map(year => <SelectItem key={year} value={year}>{year}</SelectItem>)}
                       </SelectContent>
                     </Select>
-                    <Select value={compareExamA.type} onValueChange={v => setCompareExamA(prev => ({
+                    <Select value={compareExamA.period} onValueChange={v => setCompareExamA(prev => ({
                     ...prev,
-                    type: v as ExamType
+                    period: v
                   }))}>
                       <SelectTrigger className="w-full h-8 text-xs bg-background/80">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent className="bg-card">
-                        <SelectItem value="midYear">Mid-Year</SelectItem>
-                        <SelectItem value="yearEnd">Year-End</SelectItem>
+                        {getPeriodsForYear(compareExamA.year).map(period => <SelectItem key={period.id} value={period.periodLabel}>{period.periodLabel}</SelectItem>)}
                       </SelectContent>
                     </Select>
                   </div>
@@ -2222,29 +2695,30 @@ export default function AcademicPage() {
                     }} />
                       Exam B
                     </label>
-                    <Select value={compareExamB.year} onValueChange={v => setCompareExamB(prev => ({
-                    ...prev,
-                    year: v as YearKey
-                  }))}>
+                    <Select value={compareExamB.year} onValueChange={v => {
+                    const periods = getPeriodsForYear(v);
+                    setCompareExamB(prev => ({
+                      ...prev,
+                      year: v,
+                      period: periods[0]?.periodLabel ?? ""
+                    }));
+                  }}>
                       <SelectTrigger className="w-full h-8 text-xs bg-background/80">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent className="bg-card">
-                        <SelectItem value="2025">2025</SelectItem>
-                        <SelectItem value="2024">2024</SelectItem>
-                        <SelectItem value="2023">2023</SelectItem>
+                        {analysisYearOptions.map(year => <SelectItem key={year} value={year}>{year}</SelectItem>)}
                       </SelectContent>
                     </Select>
-                    <Select value={compareExamB.type} onValueChange={v => setCompareExamB(prev => ({
+                    <Select value={compareExamB.period} onValueChange={v => setCompareExamB(prev => ({
                     ...prev,
-                    type: v as ExamType
+                    period: v
                   }))}>
                       <SelectTrigger className="w-full h-8 text-xs bg-background/80">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent className="bg-card">
-                        <SelectItem value="midYear">Mid-Year</SelectItem>
-                        <SelectItem value="yearEnd">Year-End</SelectItem>
+                        {getPeriodsForYear(compareExamB.year).map(period => <SelectItem key={period.id} value={period.periodLabel}>{period.periodLabel}</SelectItem>)}
                       </SelectContent>
                     </Select>
                   </div>
@@ -2255,33 +2729,48 @@ export default function AcademicPage() {
                   <div className="flex items-center justify-between">
                     <span className="text-sm font-medium text-foreground">Subjects</span>
                     <div className="flex gap-2">
-                      <button className="text-sm font-medium text-foreground hover:text-primary transition-colors" onClick={() => setCompareSubjects(academicData.subjects.map(s => s.name))}>
+                      <button className="text-sm font-medium text-foreground hover:text-primary transition-colors" onClick={selectAllSubjects}>
                         Select All
                       </button>
-                      <button className="text-sm font-medium text-foreground hover:text-primary transition-colors" onClick={() => setCompareSubjects([academicData.subjects[0].name])}>
+                      <button className="text-sm font-medium text-foreground hover:text-primary transition-colors" onClick={clearAllSubjects}>
                         Clear
                       </button>
                     </div>
                   </div>
                   <div className="flex flex-wrap gap-1.5 p-2.5 rounded-lg border border-border bg-background items-center">
                     {/* Grouped subject pills with dropdowns */}
-                    {subjectGroups.map(group => <SubjectGroupPill key={group.baseName} baseName={group.baseName} shortName={group.shortName} variants={group.variants || []} selectedSubjects={compareSubjects} onToggle={subjectName => {
-                    if (compareSubjects.includes(subjectName)) {
-                      // Don't allow deselecting all subjects
-                      if (compareSubjects.length > 1) {
-                        setCompareSubjects(prev => prev.filter(s => s !== subjectName));
-                      }
-                    } else {
-                      setCompareSubjects(prev => [...prev, subjectName]);
+                    {analysisSubjectGroups.map(group => <SubjectGroupPill key={group.baseName} baseName={group.baseName} shortName={group.shortName} variants={group.variants || []} selectedSubjects={selectedSubjectNames} onToggle={subjectName => {
+                    const subjectId = subjectNameToId.get(subjectName);
+                    if (subjectId !== undefined) {
+                      toggleSubject(subjectId);
                     }
                   }} />)}
+                    {analysisStandaloneSubjects.map(subject => {
+                    const isSelected = selectedSubjectIds.includes(subject.id);
+                    return <button key={subject.id} onClick={() => {
+                    toggleSubject(subject.id);
+                  }} className={`px-2.5 py-1 rounded-full text-xs font-medium transition-all ${isSelected ? "bg-primary text-primary-foreground" : "bg-background text-muted-foreground border border-border hover:bg-accent"}`}>
+                        {getShortSubjectName(subject.name)}
+                      </button>;
+                  })}
                     {/* Subject count badge */}
                     <span className="ml-auto px-2 py-0.5 text-xs font-medium bg-primary/10 text-primary rounded-full">
-                      {compareSubjects.length}/{academicData.subjects.length}
+                      {selectedSubjectIds.length}/{assignedSubjectIds.length}
                     </span>
                   </div>
                 </div>
 
+                {analysisLoading && <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground py-6">
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    Loading comparison...
+                  </div>}
+                {!analysisLoading && analysisError && <div className="text-sm text-destructive py-4">
+                    {analysisError}
+                  </div>}
+                {!analysisLoading && !analysisError && compareEmptyMessage && <div className="text-sm text-muted-foreground py-4">
+                    {compareEmptyMessage}
+                  </div>}
+                {!analysisLoading && !analysisError && !compareEmptyMessage && <>
                 {/* Comparison Summary Cards */}
                 <div className="flex items-center gap-2">
                   <div className="flex-1 p-4 rounded-xl bg-gradient-to-br from-blue-500/10 to-blue-600/5 border border-blue-500/20">
@@ -2290,7 +2779,9 @@ export default function AcademicPage() {
                       <p className="text-[10px] text-muted-foreground">{getExamLabelForComparison(compareExamA)}</p>
                     </div>
                     <p className="text-2xl font-bold text-foreground">
-                      {Math.round(comparisonData.reduce((sum, d) => sum + d.examA, 0) / comparisonData.length)}%
+                      {comparisonData.length > 0
+                    ? `${safeNumber(Math.round(comparisonData.reduce((sum, d) => sum + d.examA, 0) / comparisonData.length))}%`
+                    : "—"}
                     </p>
                     <p className="text-[10px] text-muted-foreground">Average Score</p>
                   </div>
@@ -2306,7 +2797,9 @@ export default function AcademicPage() {
                       <p className="text-[10px] text-muted-foreground">{getExamLabelForComparison(compareExamB)}</p>
                     </div>
                     <p className="text-2xl font-bold text-foreground">
-                      {Math.round(comparisonData.reduce((sum, d) => sum + d.examB, 0) / comparisonData.length)}%
+                      {comparisonData.length > 0
+                    ? `${safeNumber(Math.round(comparisonData.reduce((sum, d) => sum + d.examB, 0) / comparisonData.length))}%`
+                    : "—"}
                     </p>
                     <p className="text-[10px] text-muted-foreground">Average Score</p>
                   </div>
@@ -2707,7 +3200,9 @@ export default function AcademicPage() {
                     {(() => {
                     const improved = comparisonData.filter(d => d.delta > 0).length;
                     const declined = comparisonData.filter(d => d.delta < 0).length;
-                    const avgDelta = Math.round(comparisonData.reduce((sum, d) => sum + d.delta, 0) / comparisonData.length);
+                    const avgDelta = comparisonData.length > 0
+                      ? Math.round(comparisonData.reduce((sum, d) => sum + d.delta, 0) / comparisonData.length)
+                      : 0;
                     if (avgDelta > 0) {
                       return `Overall improvement of +${avgDelta}% from ${getExamLabelForComparison(compareExamB)} to ${getExamLabelForComparison(compareExamA)}. ${improved} subjects improved, ${declined} declined.`;
                     } else if (avgDelta < 0) {
@@ -2723,6 +3218,7 @@ export default function AcademicPage() {
                   <FileText className="h-4 w-4" />
                   Generate Report
                 </Button>
+                </>}
               </TabsContent>
 
               {/* GOALS TAB */}
@@ -3035,11 +3531,11 @@ export default function AcademicPage() {
                     fontSize: '14px',
                     marginBottom: '4px'
                   }}>📖</div>
-                    <div style={{
+                  <div style={{
                     fontSize: '18px',
                     fontWeight: 700,
                     color: '#22c55e'
-                  }}>{currentAverage}%</div>
+                  }}>{currentAverageDisplay}</div>
                     <div style={{
                     fontSize: '10px',
                     color: '#166534',
@@ -3050,7 +3546,7 @@ export default function AcademicPage() {
                     color: '#166534',
                     marginTop: '2px'
                   }}>
-                      {currentAverage >= 80 ? 'Excellent' : currentAverage >= 60 ? 'Above Average' : 'Needs Improvement'}
+                      {currentScores.length > 0 ? currentAverage >= 80 ? 'Excellent' : currentAverage >= 60 ? 'Above Average' : 'Needs Improvement' : 'N/A'}
                     </div>
                   </div>
                   {/* Best Subject */}
@@ -3074,11 +3570,11 @@ export default function AcademicPage() {
                     color: '#92400e',
                     fontWeight: 600
                   }}>Best Subject</div>
-                    <div style={{
+                  <div style={{
                     fontSize: '8px',
                     color: '#92400e',
                     marginTop: '2px'
-                  }}>{bestSubjectInfo.score}%</div>
+                  }}>{bestSubjectScoreDisplay}</div>
                   </div>
                   {/* Improvement */}
                   <div style={{
@@ -3106,7 +3602,7 @@ export default function AcademicPage() {
                     color: '#115e59',
                     marginTop: '2px'
                   }}>
-                      {improvementStats.points > 0 ? 'Improved' : improvementStats.points < 0 ? 'Declined' : 'Stable'}
+                      {improvementStats.hasDelta ? improvementStats.points > 0 ? 'Improved' : improvementStats.points < 0 ? 'Declined' : 'Stable' : 'N/A'}
                     </div>
                   </div>
                   {/* Attendance */}
@@ -3124,7 +3620,7 @@ export default function AcademicPage() {
                     fontSize: '18px',
                     fontWeight: 700,
                     color: '#3b82f6'
-                  }}>{attendanceStats.attendanceRate}%</div>
+                  }}>--</div>
                     <div style={{
                     fontSize: '10px',
                     color: '#1d4ed8',
@@ -3134,7 +3630,7 @@ export default function AcademicPage() {
                     fontSize: '8px',
                     color: '#1d4ed8',
                     marginTop: '2px'
-                  }}>This Term</div>
+                  }}>Not available</div>
                   </div>
                   {/* Passing */}
                   <div style={{
@@ -3185,11 +3681,11 @@ export default function AcademicPage() {
                     fontWeight: 600,
                     lineHeight: '1.2'
                   }}>Needs<br />Focus</div>
-                    <div style={{
+                  <div style={{
                     fontSize: '8px',
                     color: '#991b1b',
                     marginTop: '2px'
-                  }}>{weakestSubjectInfo.score}%</div>
+                  }}>{weakestSubjectScoreDisplay}</div>
                   </div>
                 </div>
               </div>
@@ -3496,7 +3992,7 @@ export default function AcademicPage() {
                       <span>{i + 1}. {s.name}</span>
                       <span style={{
                     fontWeight: 600
-                  }}>{getScore(s, selectedYear, examType)}%</span>
+                  }}>{getScoreFor(currentPeriodId, s.id) ?? 0}%</span>
                     </div>)}
                 </div>
                 <div style={{
@@ -3521,7 +4017,7 @@ export default function AcademicPage() {
                       <span>{i + 1}. {s.name}</span>
                       <span style={{
                     fontWeight: 600
-                  }}>{getScore(s, selectedYear, examType)}%</span>
+                  }}>{getScoreFor(currentPeriodId, s.id) ?? 0}%</span>
                     </div>) : <p style={{
                   fontSize: '9px',
                   color: '#666'
@@ -3554,8 +4050,8 @@ export default function AcademicPage() {
             <div className="flex gap-2">
               <Button variant="outline" size="sm" className="gap-2" onClick={() => {
               // Generate CSV data for trends
-              const csvRows = [['Period', ...academicData.subjects.map(s => s.name)], ...trendData.map(row => [row.period as string, ...academicData.subjects.map(s => {
-                const value = row[s.name];
+              const csvRows = [['Period', ...selectedSubjectNames], ...trendData.map(row => [row.period as string, ...selectedSubjectNames.map(subjectName => {
+                const value = row[subjectName];
                 return value !== null && value !== undefined ? value.toString() : '';
               })])];
               const csvContent = csvRows.map(row => row.join(',')).join('\n');
@@ -3687,7 +4183,7 @@ export default function AcademicPage() {
                     fontSize: '18px',
                     fontWeight: 700,
                     color: '#3b82f6'
-                  }}>{currentAverage}%</div>
+                  }}>{currentAverageDisplay}</div>
                     <div style={{
                     fontSize: '9px',
                     color: '#666'
@@ -3981,7 +4477,7 @@ export default function AcademicPage() {
                 </div>
               </div>
 
-              {/* Strengths Profile + Subject vs Class Average - Side by Side */}
+              {/* Strengths Profile + Subject vs Overall Average - Side by Side */}
               <div style={{
               display: 'grid',
               gridTemplateColumns: 'repeat(2, 1fr)',
@@ -4054,7 +4550,7 @@ export default function AcademicPage() {
                   </p>
                 </div>
 
-                {/* Subject vs Class Average - Horizontal Bar Chart Style */}
+                {/* Subject vs Overall Average - Horizontal Bar Chart Style */}
                 <div style={{
                 padding: '12px',
                 backgroundColor: '#ffffff',
@@ -4066,7 +4562,7 @@ export default function AcademicPage() {
                   fontWeight: 600,
                   marginBottom: '10px',
                   color: '#374151'
-                }}>Your Score vs Class Average</h3>
+                }}>Your Score vs Overall Average</h3>
                   <div style={{
                   display: 'flex',
                   flexDirection: 'column',
@@ -4164,7 +4660,7 @@ export default function AcademicPage() {
                       backgroundColor: '#374151',
                       borderRadius: '50%'
                     }} />
-                      <span>Class Avg</span>
+                      <span>Overall Avg</span>
                     </div>
                   </div>
                 </div>
