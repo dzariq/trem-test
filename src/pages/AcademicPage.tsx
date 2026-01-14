@@ -37,11 +37,11 @@ type AnalysisPeriod = {
   displayLabel: string;
 };
 
-const PERIOD_ORDER = [
+const PERIOD_ORDER: readonly string[] = [
   "Mid Year Exam",
   "Trial (Checkpoint)",
   "Final Year Exam"
-] as const;
+];
 
 const getPeriodOrderIndex = (name: string) => {
   const index = PERIOD_ORDER.indexOf(name);
