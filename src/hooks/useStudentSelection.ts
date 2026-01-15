@@ -23,15 +23,12 @@ export function useStudentSelection() {
         const data = await listMyLinkedStudents();
         if (isMounted) {
           setLinkedStudents(data);
-          console.log("[students] linkedStudents count:", data.length);
-          console.log("[students] linkedStudents sample:", data[0] ?? null);
         }
       } catch (err) {
         const message = err instanceof Error ? err.message : "Failed to load linked students.";
         if (isMounted) {
           setError(message);
           setLinkedStudents([]);
-          console.error("[students] linkedStudents error:", err);
         }
       } finally {
         if (isMounted) {

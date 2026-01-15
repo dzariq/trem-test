@@ -52,6 +52,11 @@ const safeNumber = (value: number | null | undefined, fallback = 0) => {
   return Number.isFinite(value) ? value : fallback;
 };
 
+const safePercent = (value: number | null | undefined, fallback = 0) => {
+  const safe = safeNumber(value, fallback);
+  return Math.min(100, Math.max(0, safe));
+};
+
 const safeText = (value: number | null | undefined, fallback = "—") => {
   return Number.isFinite(value) ? String(value) : fallback;
 };
@@ -362,7 +367,9 @@ export default function AcademicPage() {
     if (years.length === 0) {
       return ["All"];
     }
-    return years.sort((a, b) => Number(b) - Number(a));
+    return years.sort(
+      (a, b) => safeNumber(Number(b)) - safeNumber(Number(a))
+    );
   }, [analysisPeriods]);
 
   const analysisPeriodOptions = useMemo(() => {
@@ -379,7 +386,7 @@ export default function AcademicPage() {
         const yearA = Number(a.yearLabel);
         const yearB = Number(b.yearLabel);
         if (Number.isFinite(yearA) && Number.isFinite(yearB) && yearA !== yearB) {
-          return yearB - yearA;
+          return safeNumber(yearB) - safeNumber(yearA);
         }
       }
       return a.displayLabel.localeCompare(b.displayLabel);
@@ -685,7 +692,7 @@ export default function AcademicPage() {
       const yearA = Number(a.yearLabel);
       const yearB = Number(b.yearLabel);
       if (Number.isFinite(yearA) && Number.isFinite(yearB) && yearA !== yearB) {
-        return yearA - yearB;
+        return safeNumber(yearA) - safeNumber(yearB);
       }
       if (a.sortOrder !== b.sortOrder) {
         return a.sortOrder - b.sortOrder;
@@ -831,13 +838,16 @@ export default function AcademicPage() {
     : selectedSubjectIds.length === 0
     ? "Select at least one subject to view grades"
     : !currentPeriodId || !hasCurrentGrades
-    ? "No grade data for this period yet"
+    ? "No grades found for selected exam/subjects"
     : null;
 
   // Calculate averages
   const currentAverage = useMemo(() => {
     if (currentScores.length === 0) return 0;
-    const total = currentScores.reduce((sum, item) => sum + (item.score ?? 0), 0);
+    const total = currentScores.reduce(
+      (sum, item) => sum + safeNumber(item.score),
+      0
+    );
     return Math.round(total / currentScores.length);
   }, [currentScores]);
   const currentAverageDisplay =
@@ -851,11 +861,11 @@ export default function AcademicPage() {
         const goal = goalsBySubjectId.get(subject.id) ?? 80;
         return {
           name: subject.name,
-          score: score ?? 0,
-          goal,
+          score: safeNumber(score),
+          goal: safeNumber(goal, 80),
         };
       })
-      .sort((a, b) => b.score - a.score);
+      .sort((a, b) => safeNumber(b.score) - safeNumber(a.score));
   }, [filteredGradesSubjects, currentPeriodId, getScoreFor, goalsBySubjectId]);
 
   // Grade distribution
@@ -882,7 +892,7 @@ export default function AcademicPage() {
     });
     return Object.entries(grades).map(([grade, count]) => ({
       grade,
-      count
+      count: safeNumber(count)
     }));
   }, [filteredGradesSubjects, currentPeriodId, getGradeFor, getScoreFor]);
 
@@ -894,11 +904,11 @@ export default function AcademicPage() {
     const sorted = [...filteredGradesSubjects]
       .map((subject) => ({
         subject,
-        score: getScoreFor(currentPeriodId, subject.id) ?? 0,
+        score: safeNumber(getScoreFor(currentPeriodId, subject.id)),
       }))
-      .sort((a, b) => b.score - a.score);
+      .sort((a, b) => safeNumber(b.score) - safeNumber(a.score));
     const below50 = sorted
-      .filter((item) => item.score < 50)
+      .filter((item) => safeNumber(item.score) < 50)
       .reverse()
       .slice(0, 3)
       .map((item) => item.subject);
@@ -915,12 +925,13 @@ export default function AcademicPage() {
     );
     const passingCount = passingSubjects.length;
     const totalSubjects = filteredGradesSubjects.length;
-    const passingPercentage =
-      totalSubjects > 0 ? Math.round((passingCount / totalSubjects) * 100) : 0;
+    const passingPercentage = safePercent(
+      totalSubjects > 0 ? (passingCount / totalSubjects) * 100 : 0
+    );
     return {
-      passingCount,
-      totalSubjects,
-      passingPercentage
+      passingCount: safeNumber(passingCount),
+      totalSubjects: safeNumber(totalSubjects),
+      passingPercentage: Math.round(passingPercentage)
     };
   }, [currentScores, filteredGradesSubjects]);
 
@@ -928,11 +939,13 @@ export default function AcademicPage() {
   const weakestSubjectInfo = useMemo(() => {
     if (currentScores.length === 0) return { name: "N/A", score: 0 };
     const weakest = currentScores.reduce((worst, current) => {
-      return (current.score ?? 0) < (worst.score ?? 0) ? current : worst;
+      return safeNumber(current.score) < safeNumber(worst.score)
+        ? current
+        : worst;
     });
     return {
       name: weakest.subject.name,
-      score: weakest.score ?? 0
+      score: safeNumber(weakest.score)
     };
   }, [currentScores]);
   const weakestSubjectScoreDisplay =
@@ -942,11 +955,13 @@ export default function AcademicPage() {
   const bestSubjectInfo = useMemo(() => {
     if (currentScores.length === 0) return { name: "N/A", score: 0 };
     const best = currentScores.reduce((bestItem, current) => {
-      return (current.score ?? 0) > (bestItem.score ?? 0) ? current : bestItem;
+      return safeNumber(current.score) > safeNumber(bestItem.score)
+        ? current
+        : bestItem;
     });
     return {
       name: best.subject.name,
-      score: best.score ?? 0
+      score: safeNumber(best.score)
     };
   }, [currentScores]);
   const bestSubjectScoreDisplay =
@@ -962,7 +977,7 @@ export default function AcademicPage() {
         const current = getScoreFor(currentPeriodId, subject.id);
         const prev = getScoreFor(previousPeriodId, subject.id);
         if (current === null || prev === null) return null;
-        return current - prev;
+        return safeNumber(current) - safeNumber(prev);
       })
       .filter((delta): delta is number => delta !== null);
     if (deltas.length === 0) return { points: 0, text: "N/A", hasDelta: false };
@@ -984,9 +999,9 @@ export default function AcademicPage() {
         if (current === null || prev === null) return null;
         return {
           subject,
-          current,
-          prev,
-          improvement: current - prev
+          current: safeNumber(current),
+          prev: safeNumber(prev),
+          improvement: safeNumber(current) - safeNumber(prev)
         };
       })
       .filter(
@@ -1006,9 +1021,9 @@ export default function AcademicPage() {
         if (current === null || prev === null) return null;
         return {
           subject,
-          current,
-          prev,
-          decline: prev - current
+          current: safeNumber(current),
+          prev: safeNumber(prev),
+          decline: safeNumber(prev) - safeNumber(current)
         };
       })
       .filter(
@@ -1021,11 +1036,13 @@ export default function AcademicPage() {
   // Trend data for selected year/periods
   const trendData = useMemo(() => {
     return trendPeriods.map((period) => {
-      const result: Record<string, number | string | null> = {
+      const result: Record<string, number | string> = {
         period: period.displayLabel
       };
       selectedSubjects.forEach((subject) => {
-        result[subject.name] = getScoreFor(period.id, subject.id);
+        result[subject.name] = safeNumber(
+          getScoreFor(period.id, subject.id)
+        );
       });
       const scores = selectedSubjects
         .map((subject) => getScoreFor(period.id, subject.id))
@@ -1033,7 +1050,7 @@ export default function AcademicPage() {
       result["Average"] =
         scores.length > 0
           ? Math.round(scores.reduce((a, b) => a + b, 0) / scores.length)
-          : null;
+          : 0;
       return result;
     });
   }, [trendPeriods, selectedSubjects, getScoreFor]);
@@ -1045,17 +1062,17 @@ export default function AcademicPage() {
       change: 0
     };
     const key = selectedSubjectNames.length === 1 ? selectedSubjectNames[0] : "Average";
-    const firstValue = trendData[0]?.[key] as number | null;
-    const lastValue = trendData[trendData.length - 1]?.[key] as number | null;
-    if (firstValue === null || lastValue === null) return {
+    const firstValue = trendData[0]?.[key] as number | null | undefined;
+    const lastValue = trendData[trendData.length - 1]?.[key] as number | null | undefined;
+    if (!Number.isFinite(firstValue) || !Number.isFinite(lastValue)) return {
       direction: "stable" as const,
       change: 0
     };
-    const change = lastValue - firstValue;
+    const change = safeNumber(lastValue) - safeNumber(firstValue);
     return {
       direction: change > 0 ? "up" as const : change < 0 ? "down" as const : "stable" as const,
-      change: Math.abs(change),
-      currentValue: lastValue
+      change: Math.abs(safeNumber(change)),
+      currentValue: safeNumber(lastValue)
     };
   }, [trendData, selectedSubjectNames]);
 
@@ -1087,32 +1104,36 @@ export default function AcademicPage() {
     return assignedSubjects.map((subject) => ({
       subject: getTinySubjectCode(subject.name),
       fullName: subject.name,
-      score: getScoreFor(currentPeriodId, subject.id) ?? 0,
+      score: safeNumber(getScoreFor(currentPeriodId, subject.id)),
       fullMark: 100
     }));
   }, [assignedSubjects, currentPeriodId, getScoreFor]);
 
   // Subject vs Overall Average data derived from current period scores
   const subjectVsClassData = useMemo(() => {
-    const overallAvg = currentAverage || 0;
+    const overallAvg = safeNumber(currentAverage);
     return filteredGradesSubjects
       .map((subject) => {
-        const studentScore = getScoreFor(currentPeriodId, subject.id) ?? 0;
+        const studentScore = safeNumber(
+          getScoreFor(currentPeriodId, subject.id)
+        );
         return {
           name: shortenSubjectName(subject.name),
           fullName: subject.name,
           student: studentScore,
           classAvg: overallAvg,
-          delta: studentScore - overallAvg
+          delta: safeNumber(studentScore - overallAvg)
         };
       })
-      .sort((a, b) => b.delta - a.delta);
+      .sort((a, b) => safeNumber(b.delta) - safeNumber(a.delta));
   }, [filteredGradesSubjects, currentPeriodId, getScoreFor, currentAverage]);
 
   // Average score for radar color coding
   const radarAverage = useMemo(() => {
-    const scores = radarData.map(d => d.score);
-    return scores.length > 0 ? scores.reduce((a, b) => a + b, 0) / scores.length : 0;
+    const scores = radarData.map((d) => d.score);
+    return scores.length > 0
+      ? safeNumber(scores.reduce((a, b) => a + b, 0)) / scores.length
+      : 0;
   }, [radarData]);
 
   // Performance Heatmap data - subjects x exam periods
@@ -1144,16 +1165,16 @@ export default function AcademicPage() {
     const examBId = comparePeriodIdsB[0] ?? null;
     return selectedSubjects
       .map((subject) => {
-        const scoreA = getScoreFor(examAId, subject.id) ?? 0;
-        const scoreB = getScoreFor(examBId, subject.id) ?? 0;
-        const delta = scoreA - scoreB;
+        const scoreA = safeNumber(getScoreFor(examAId, subject.id));
+        const scoreB = safeNumber(getScoreFor(examBId, subject.id));
+        const delta = safeNumber(scoreA - scoreB);
         return {
           name: subject.name,
           examA: scoreA,
           examB: scoreB,
           delta,
           improved: delta > 0,
-          goal: goalsBySubjectId.get(subject.id) ?? 80
+          goal: safeNumber(goalsBySubjectId.get(subject.id), 80)
         };
       });
   }, [
@@ -1201,19 +1222,21 @@ export default function AcademicPage() {
           return grade.exam_marks ?? null;
         })
         .filter((score): score is number => score !== null);
-      const avgA =
+      const avgA = safeNumber(
         scoresA.length > 0
           ? Math.round(scoresA.reduce((a, b) => a + b, 0) / scoresA.length)
-          : 0;
-      const avgB =
+          : 0
+      );
+      const avgB = safeNumber(
         scoresB.length > 0
           ? Math.round(scoresB.reduce((a, b) => a + b, 0) / scoresB.length)
-          : 0;
+          : 0
+      );
       return {
         category: category.charAt(0).toUpperCase() + category.slice(1),
         examA: avgA,
         examB: avgB,
-        delta: avgA - avgB
+        delta: safeNumber(avgA - avgB)
       };
     });
   }, [selectedSubjects, comparePeriodIdsA, comparePeriodIdsB, getGradeFor]);
@@ -1913,7 +1936,13 @@ export default function AcademicPage() {
                       }
                     };
                     return gradeDistribution.map(g => {
-                      const percentage = totalSubjects > 0 ? Math.round(g.count / totalSubjects * 100) : 0;
+                      const percentage = Math.round(
+                        safePercent(
+                          totalSubjects > 0
+                            ? (safeNumber(g.count) / totalSubjects) * 100
+                            : 0
+                        )
+                      );
                       const colors = gradeCardColors[g.grade] || {
                         bg: 'rgba(156, 163, 175, 0.12)',
                         text: '#6b7280'
@@ -1924,7 +1953,7 @@ export default function AcademicPage() {
                             <span className="text-xs font-semibold" style={{
                           color: colors.text
                         }}>{g.grade}</span>
-                            <span className="text-xl font-bold text-foreground">{g.count}</span>
+                            <span className="text-xl font-bold text-foreground">{safeNumber(g.count)}</span>
                             <span className="text-[10px] text-muted-foreground">{percentage}%</span>
                           </div>;
                     });
@@ -1936,10 +1965,10 @@ export default function AcademicPage() {
                   data={subjectVsClassData.map(s => ({
                     name: s.name,
                     fullName: s.fullName,
-                    score: s.student,
+                    score: safeNumber(s.student),
                     goal: (() => {
                       const subjectId = subjectNameToId.get(s.fullName);
-                      return subjectId ? goalsBySubjectId.get(subjectId) ?? 80 : 80;
+                      return subjectId ? safeNumber(goalsBySubjectId.get(subjectId), 80) : 80;
                     })()
                   }))}
                   lineColors={lineColors}
@@ -2029,7 +2058,7 @@ export default function AcademicPage() {
                         if (!s) {
                           return <div key={index} className="min-h-[60px]" />;
                         }
-                        const score = getScoreFor(currentPeriodId, s.id) ?? 0;
+                        const score = safeNumber(getScoreFor(currentPeriodId, s.id));
                         return (
                           <div key={s.name} className="flex items-center gap-2 p-2.5 rounded-lg border min-h-[60px]" style={{
                             backgroundColor: 'rgba(34, 197, 94, 0.1)',
@@ -2062,7 +2091,7 @@ export default function AcademicPage() {
                         if (!s) {
                           return <div key={index} className="min-h-[60px]" />;
                         }
-                        const score = getScoreFor(currentPeriodId, s.id) ?? 0;
+                        const score = safeNumber(getScoreFor(currentPeriodId, s.id));
                         return (
                           <div key={s.name} className="flex items-center gap-2 p-2.5 rounded-lg border min-h-[60px]" style={{
                             backgroundColor: 'rgba(254, 202, 202, 0.3)',
@@ -3333,11 +3362,6 @@ export default function AcademicPage() {
                                   <Button variant="outline" className="flex-1 h-12 text-base" onClick={() => setEditingGoalSubjectId(null)}>Cancel</Button>
                                   <Button className="flex-1 h-12 text-base" disabled={!isValidTarget} onClick={() => {
                                     if (!isValidTarget || parsedTempGoal === null) return;
-                                    console.log("Saving goal", {
-                                      subjectId: item.subjectId,
-                                      year: goalYear,
-                                      target_percentage: parsedTempGoal
-                                    });
                                     upsertGoal(item.subjectId, parsedTempGoal);
                                     setEditingGoalSubjectId(null);
                                   }}>
@@ -3957,7 +3981,7 @@ export default function AcademicPage() {
                     fontSize: '16px',
                     fontWeight: 700,
                     color: '#1a1a1a'
-                  }}>{g.count}</div>
+                  }}>{safeNumber(g.count)}</div>
                     </div>)}
                 </div>
               </div>
@@ -3992,7 +4016,7 @@ export default function AcademicPage() {
                       <span>{i + 1}. {s.name}</span>
                       <span style={{
                     fontWeight: 600
-                  }}>{getScoreFor(currentPeriodId, s.id) ?? 0}%</span>
+                  }}>{safeNumber(getScoreFor(currentPeriodId, s.id))}%</span>
                     </div>)}
                 </div>
                 <div style={{
@@ -4017,7 +4041,7 @@ export default function AcademicPage() {
                       <span>{i + 1}. {s.name}</span>
                       <span style={{
                     fontWeight: 600
-                  }}>{getScoreFor(currentPeriodId, s.id) ?? 0}%</span>
+                  }}>{safeNumber(getScoreFor(currentPeriodId, s.id))}%</span>
                     </div>) : <p style={{
                   fontSize: '9px',
                   color: '#666'

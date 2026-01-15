@@ -8,6 +8,7 @@ export type LinkedStudent = {
   classLabel?: string | null;
   className?: string | null;
   grade?: string | null;
+  campus?: string | null;
   sportsHouse?: string | null;
   mealPlan?: boolean | null;
   subjects?: string[] | null;
@@ -32,6 +33,7 @@ const mapStudentRow = (row: any): LinkedStudent => {
     name: name || "Student",
     className: row.class_name ?? row.class ?? row.classroom ?? null,
     grade: row.grade ?? row.year_group ?? row.level ?? null,
+    campus: row.campus ?? row.campus_id ?? null,
     sportsHouse: row.sports_house ?? row.house ?? null,
     mealPlan: row.meal_plan ?? row.has_meal_plan ?? null,
     subjects: row.subjects ?? row.subject_list ?? null,
@@ -61,7 +63,6 @@ const listViaStudentGuardians = async (guardianUserId: string) => {
     .order("created_at", { ascending: true });
 
   if (error) {
-    console.error("[students] student_guardians error:", error);
     if (
       isMissingResource(error, "student_guardians") ||
       isMissingResource(error, "guardian_user_id") ||
@@ -71,10 +72,6 @@ const listViaStudentGuardians = async (guardianUserId: string) => {
     }
     throw new Error(error.message);
   }
-
-  console.log("[students] auth.uid():", guardianUserId);
-  console.log("[students] student_guardians rows:", (data ?? []).length);
-  console.log("[students] student_guardians sample:", data?.[0] ?? null);
 
   const studentIds = (data ?? [])
     .map((row: any) => row.student_id)
@@ -90,7 +87,6 @@ const listViaStudentGuardians = async (guardianUserId: string) => {
     .in("id", studentIds as any[]);
 
   if (studentsError) {
-    console.error("[students] students error:", studentsError);
     throw new Error(studentsError.message);
   }
 
@@ -120,6 +116,7 @@ const listViaStudentGuardians = async (guardianUserId: string) => {
         classLabel: classLabel || null,
         className: student.class ?? null,
         grade: student.year_level ?? null,
+        campus: student.campus_id ?? null,
         relationship: link.relationship ?? null,
         isPrimary: link.is_primary ?? null,
       } as LinkedStudent;
