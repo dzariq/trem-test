@@ -10,7 +10,20 @@ lerna-debug.log*
 node_modules
 dist
 dist-ssr
+build
 *.local
+
+# Capacitor / Android build artifacts
+android/
+ios/
+*.apk
+*.aab
+*.keystore
+*.jks
+local.properties
+android/.gradle/
+android/app/build/
+android/build/
 
 # Editor directories and files
 .vscode/*
