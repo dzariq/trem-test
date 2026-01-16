@@ -1,6 +1,6 @@
 import html2canvas from "html2canvas";
 import jsPDF from "jspdf";
-import { Capacitor } from "@capacitor/core";
+import { saveAndShareBlob, type ExportResult } from "@/lib/export/nativeDownload";
 
 type ExportElementToPdfOptions = {
   element: HTMLElement;
@@ -8,20 +8,7 @@ type ExportElementToPdfOptions = {
   pageFormat?: "a4" | "letter";
   marginMm?: number;
   scale?: number;
-  isCapacitor?: boolean;
 };
-
-const blobToBase64 = (blob: Blob): Promise<string> =>
-  new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onerror = () => reject(new Error("Failed to read PDF blob"));
-    reader.onload = () => {
-      const result = typeof reader.result === "string" ? reader.result : "";
-      const base64 = result.split(",")[1] ?? "";
-      resolve(base64);
-    };
-    reader.readAsDataURL(blob);
-  });
 
 export async function exportElementToPdf({
   element,
@@ -29,10 +16,7 @@ export async function exportElementToPdf({
   pageFormat = "a4",
   marginMm = 8,
   scale = 2,
-  isCapacitor,
-}: ExportElementToPdfOptions): Promise<void> {
-  const isNative =
-    typeof isCapacitor === "boolean" ? isCapacitor : Capacitor.isNativePlatform();
+}: ExportElementToPdfOptions): Promise<ExportResult> {
   const safeFilename = filename.toLowerCase().endsWith(".pdf")
     ? filename
     : `${filename}.pdf`;
@@ -40,6 +24,7 @@ export async function exportElementToPdf({
   const canvas = await html2canvas(element, {
     scale,
     useCORS: true,
+    allowTaint: false,
     backgroundColor: "#ffffff",
     windowWidth: element.scrollWidth,
     windowHeight: element.scrollHeight,
@@ -73,39 +58,13 @@ export async function exportElementToPdf({
   }
 
   const pdfBlob = pdf.output("blob");
-
-  if (!isNative) {
-    const url = URL.createObjectURL(pdfBlob);
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = safeFilename;
-    link.click();
-    URL.revokeObjectURL(url);
-    return;
+  const result = await saveAndShareBlob(
+    pdfBlob,
+    safeFilename,
+    "application/pdf"
+  );
+  if (!result.success) {
+    throw new Error("PDF export failed");
   }
-
-  const [{ Directory, Filesystem }, { Share }, { Browser }] = await Promise.all([
-    import("@capacitor/filesystem"),
-    import("@capacitor/share"),
-    import("@capacitor/browser"),
-  ]);
-
-  const base64 = await blobToBase64(pdfBlob);
-  const saved = await Filesystem.writeFile({
-    path: safeFilename,
-    data: base64,
-    directory: Directory.Documents,
-  });
-
-  const canShare = await Share.canShare();
-  if (canShare.value) {
-    await Share.share({
-      title: safeFilename,
-      url: saved.uri,
-      text: "Report PDF",
-    });
-    return;
-  }
-
-  await Browser.open({ url: saved.uri });
+  return result;
 }

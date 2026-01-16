@@ -27,6 +27,7 @@ import { useStudentGradesByPeriods } from "@/hooks/useStudentGradesByPeriods";
 import { StudentPillSelector } from "@/components/home/StudentPillSelector";
 import { generateBehaviorSummary } from "@/lib/summary/behaviorSummary";
 import { exportElementToPdf } from "@/lib/pdf/exportToPdf";
+import { saveAndShareBlob } from "@/lib/export/nativeDownload";
 import { toast } from "sonner";
 import { RuntimeDebug } from "@/components/Debug/RuntimeDebug";
 type YearKey = "2022" | "2023" | "2024" | "2025";
@@ -592,13 +593,16 @@ export default function AcademicPage() {
     if (!overviewReportRef.current || isExportingOverviewPdf) return;
     setIsExportingOverviewPdf(true);
     try {
-      await exportElementToPdf({
+      const result = await exportElementToPdf({
         element: overviewReportRef.current,
         filename: `overview-report-${pdfDateStamp}`,
       });
+      if (result.savedToDevice) {
+        toast.success("Saved to Downloads");
+      }
     } catch (error) {
       console.error("[AcademicPage] Overview PDF export failed", error);
-      toast.error("Failed to generate PDF. Please try again.");
+      toast.error("Export failed. Please try again.");
     } finally {
       setIsExportingOverviewPdf(false);
     }
@@ -608,13 +612,16 @@ export default function AcademicPage() {
     if (!trendsReportRef.current || isExportingTrendsPdf) return;
     setIsExportingTrendsPdf(true);
     try {
-      await exportElementToPdf({
+      const result = await exportElementToPdf({
         element: trendsReportRef.current,
         filename: `trends-report-${pdfDateStamp}`,
       });
+      if (result.savedToDevice) {
+        toast.success("Saved to Downloads");
+      }
     } catch (error) {
       console.error("[AcademicPage] Trends PDF export failed", error);
-      toast.error("Failed to generate PDF. Please try again.");
+      toast.error("Export failed. Please try again.");
     } finally {
       setIsExportingTrendsPdf(false);
     }
@@ -624,13 +631,16 @@ export default function AcademicPage() {
     if (!comparisonReportRef.current || isExportingComparisonPdf) return;
     setIsExportingComparisonPdf(true);
     try {
-      await exportElementToPdf({
+      const result = await exportElementToPdf({
         element: comparisonReportRef.current,
         filename: `comparison-report-${pdfDateStamp}`,
       });
+      if (result.savedToDevice) {
+        toast.success("Saved to Downloads");
+      }
     } catch (error) {
       console.error("[AcademicPage] Comparison PDF export failed", error);
-      toast.error("Failed to generate PDF. Please try again.");
+      toast.error("Export failed. Please try again.");
     } finally {
       setIsExportingComparisonPdf(false);
     }
@@ -1353,7 +1363,7 @@ export default function AcademicPage() {
   const filteredSubjects = subjectFilter === "all" ? academicData.subjects : academicData.subjects.filter(s => s.name === subjectFilter);
   return <AppLayout>
       <AppHeader leftContent={<div className="flex items-center gap-2">
-            <img src={schoolLogo} alt="School Logo" className="h-16 w-auto -my-3 drop-shadow-md" />
+            <img src={schoolLogo} alt="School Logo" crossOrigin="anonymous" className="h-16 w-auto -my-3 drop-shadow-md" />
             <h1 className="text-xl font-semibold text-foreground">Academic</h1>
           </div>} rightContent={<StudentPillSelector onStudentChange={setSelectedStudentId} />} />
 
@@ -3554,17 +3564,24 @@ export default function AcademicPage() {
           <DialogHeader className="flex flex-row items-center justify-between pr-12">
             <DialogTitle>Overview Report</DialogTitle>
             <div className="flex gap-2">
-              <Button variant="outline" size="sm" className="gap-2" onClick={() => {
+              <Button variant="outline" size="sm" className="gap-2" onClick={async () => {
               // Generate CSV data for overview
               const csvRows = [['Subject', 'Score', 'Goal', 'Grade'], ...subjectPerformance.map(sub => [sub.name, sub.score.toString(), sub.goal.toString(), getGradeFromScore(sub.score)])];
               const csvContent = csvRows.map(row => row.join(',')).join('\n');
               const blob = new Blob([csvContent], {
                 type: 'text/csv;charset=utf-8;'
               });
-              const link = document.createElement('a');
-              link.href = URL.createObjectURL(blob);
-              link.download = `overview-report-${new Date().toISOString().split('T')[0]}.csv`;
-              link.click();
+              const filename = `overview-report-${new Date().toISOString().split('T')[0]}.csv`;
+              const result = await saveAndShareBlob(
+                blob,
+                filename,
+                "text/csv;charset=utf-8"
+              );
+              if (!result.success) {
+                toast.error("Export failed. Please try again.");
+              } else if (result.savedToDevice) {
+                toast.success("Saved to Downloads");
+              }
             }}>
                 <FileSpreadsheet className="h-4 w-4" />
                 CSV
@@ -3587,7 +3604,7 @@ export default function AcademicPage() {
               paddingBottom: '10px',
               borderBottom: '2px solid #3b82f6'
             }}>
-                <img src={schoolLogo} alt="School Logo" style={{
+                <img src={schoolLogo} alt="School Logo" crossOrigin="anonymous" style={{
                 width: '40px',
                 height: '40px',
                 objectFit: 'contain'
@@ -4158,7 +4175,7 @@ export default function AcademicPage() {
           <DialogHeader className="flex flex-row items-center justify-between pr-12">
             <DialogTitle>Trends Report</DialogTitle>
             <div className="flex gap-2">
-              <Button variant="outline" size="sm" className="gap-2" onClick={() => {
+              <Button variant="outline" size="sm" className="gap-2" onClick={async () => {
               // Generate CSV data for trends
               const csvRows = [['Period', ...selectedSubjectNames], ...trendData.map(row => [row.period as string, ...selectedSubjectNames.map(subjectName => {
                 const value = row[subjectName];
@@ -4168,10 +4185,17 @@ export default function AcademicPage() {
               const blob = new Blob([csvContent], {
                 type: 'text/csv;charset=utf-8;'
               });
-              const link = document.createElement('a');
-              link.href = URL.createObjectURL(blob);
-              link.download = `trends-report-${new Date().toISOString().split('T')[0]}.csv`;
-              link.click();
+              const filename = `trends-report-${new Date().toISOString().split('T')[0]}.csv`;
+              const result = await saveAndShareBlob(
+                blob,
+                filename,
+                "text/csv;charset=utf-8"
+              );
+              if (!result.success) {
+                toast.error("Export failed. Please try again.");
+              } else if (result.savedToDevice) {
+                toast.success("Saved to Downloads");
+              }
             }}>
                 <FileSpreadsheet className="h-4 w-4" />
                 CSV
@@ -4194,7 +4218,7 @@ export default function AcademicPage() {
               paddingBottom: '10px',
               borderBottom: '2px solid #22c55e'
             }}>
-                <img src={schoolLogo} alt="School Logo" style={{
+                <img src={schoolLogo} alt="School Logo" crossOrigin="anonymous" style={{
                 width: '40px',
                 height: '40px',
                 objectFit: 'contain'
@@ -4880,7 +4904,7 @@ export default function AcademicPage() {
           <DialogHeader className="flex flex-row items-center justify-between pr-12">
             <DialogTitle>Comparison Report</DialogTitle>
             <div className="flex gap-2">
-              <Button variant="outline" size="sm" className="gap-2" onClick={() => {
+              <Button variant="outline" size="sm" className="gap-2" onClick={async () => {
               // Generate CSV data for comparison
               const examALabel = getExamLabelForComparison(compareExamA);
               const examBLabel = getExamLabelForComparison(compareExamB);
@@ -4889,10 +4913,17 @@ export default function AcademicPage() {
               const blob = new Blob([csvContent], {
                 type: 'text/csv;charset=utf-8;'
               });
-              const link = document.createElement('a');
-              link.href = URL.createObjectURL(blob);
-              link.download = `comparison-report-${new Date().toISOString().split('T')[0]}.csv`;
-              link.click();
+              const filename = `comparison-report-${new Date().toISOString().split('T')[0]}.csv`;
+              const result = await saveAndShareBlob(
+                blob,
+                filename,
+                "text/csv;charset=utf-8"
+              );
+              if (!result.success) {
+                toast.error("Export failed. Please try again.");
+              } else if (result.savedToDevice) {
+                toast.success("Saved to Downloads");
+              }
             }}>
                 <FileSpreadsheet className="h-4 w-4" />
                 CSV
@@ -4928,7 +4959,7 @@ export default function AcademicPage() {
                 paddingBottom: '10px',
                 borderBottom: '2px solid #8b5cf6'
               }}>
-                    <img src={schoolLogo} alt="School Logo" style={{
+                    <img src={schoolLogo} alt="School Logo" crossOrigin="anonymous" style={{
                   width: '40px',
                   height: '40px',
                   objectFit: 'contain'

@@ -34,7 +34,7 @@ import { allSubjects, getShortSubjectName, getTinySubjectCode, getSubjectColor, 
 import { SubjectGroupPill } from "@/components/SubjectGroupPill";
 import { SubjectPerformanceChart } from "@/components/SubjectPerformanceChart";
 import { exportElementToPdf } from "@/lib/pdf/exportToPdf";
-import { downloadBlobAsFile } from "@/lib/export/exportFile";
+import { saveAndShareBlob } from "@/lib/export/nativeDownload";
 
 // SVG icons for print compatibility (inline SVGs render properly in print)
 const IconBook = () => (
@@ -424,12 +424,17 @@ export default function TeacherAcademicPage() {
         return;
       }
       try {
-        await exportElementToPdf({ element: reportRef.current, filename });
+        const result = await exportElementToPdf({
+          element: reportRef.current,
+          filename,
+        });
+        if (result.savedToDevice) {
+          toast({ title: "Saved to Downloads" });
+        }
       } catch (error) {
         console.error("[TeacherAcademicPage] PDF export failed", error);
         toast({
-          title: "PDF export failed",
-          description: "Please try again in a moment.",
+          title: "Export failed. Please try again.",
         });
       }
     },
@@ -1391,7 +1396,7 @@ export default function TeacherAcademicPage() {
   return <TeacherAppLayout>
       <AppHeader leftContent={
           <div className="flex items-center gap-2">
-            <img src={schoolLogo} alt="School Logo" className="h-16 w-auto -my-3 drop-shadow-md" />
+            <img src={schoolLogo} alt="School Logo" crossOrigin="anonymous" className="h-16 w-auto -my-3 drop-shadow-md" />
             <h1 className="text-xl font-semibold text-foreground">Academic</h1>
           </div>
         } />
@@ -1707,11 +1712,20 @@ export default function TeacherAcademicPage() {
                         onClick={async () => {
                           const csvContent = gradeEntry.generateTemplate();
                           const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
-                          await downloadBlobAsFile(
+                          const result = await saveAndShareBlob(
                             blob,
                             `${gradeEntry.selectedClass}_${gradeEntry.selectedSubject?.name}_template.csv`,
                             "text/csv;charset=utf-8;"
                           );
+                          if (!result.success) {
+                            toast({
+                              title: "Export failed. Please try again.",
+                            });
+                            return;
+                          }
+                          if (result.savedToDevice) {
+                            toast({ title: "Saved to Downloads" });
+                          }
                           
                           toast({
                             title: "Template Downloaded",
@@ -1729,11 +1743,20 @@ export default function TeacherAcademicPage() {
                         onClick={async () => {
                           const csvContent = gradeEntry.exportGrades();
                           const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
-                          await downloadBlobAsFile(
+                          const result = await saveAndShareBlob(
                             blob,
                             `${gradeEntry.selectedClass}_${gradeEntry.selectedSubject?.name}_grades.csv`,
                             "text/csv;charset=utf-8;"
                           );
+                          if (!result.success) {
+                            toast({
+                              title: "Export failed. Please try again.",
+                            });
+                            return;
+                          }
+                          if (result.savedToDevice) {
+                            toast({ title: "Saved to Downloads" });
+                          }
                           
                           toast({
                             title: "Grades Exported",
@@ -3222,11 +3245,18 @@ export default function TeacherAcademicPage() {
                             ];
                             const csvContent = csvRows.map(row => row.join(',')).join('\n');
                             const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-                            await downloadBlobAsFile(
+                            const result = await saveAndShareBlob(
                               blob,
                               `grade-distribution-${selectedClass}-${bandsSelectedSubject}-${new Date().toISOString().split('T')[0]}.csv`,
                               "text/csv;charset=utf-8;"
                             );
+                            if (!result.success) {
+                              toast({
+                                title: "Export failed. Please try again.",
+                              });
+                            } else if (result.savedToDevice) {
+                              toast({ title: "Saved to Downloads" });
+                            }
                           }}
                         >
                           <FileSpreadsheet className="h-4 w-4" />
@@ -3254,7 +3284,7 @@ export default function TeacherAcademicPage() {
                       <div className="space-y-4 p-2">
                         {/* Report Header - Dual Logo Style */}
                         <div className="report-header" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid #d1d5db', paddingBottom: '10px', marginBottom: '10px', gap: '8px' }}>
-                          <img src={collinzLogo} alt="Collinz School" style={{ height: '40px', objectFit: 'contain' }} />
+                          <img src={collinzLogo} alt="Collinz School" crossOrigin="anonymous" style={{ height: '40px', objectFit: 'contain' }} />
                           <div style={{ textAlign: 'center' }}>
                             <div style={{ fontSize: '10px', fontWeight: 600, color: '#374151', letterSpacing: '0.5px', textTransform: 'uppercase' }}>Grade Distribution Report</div>
                             <div style={{ fontSize: '13px', fontWeight: 700, color: '#374151' }}>
@@ -3265,7 +3295,7 @@ export default function TeacherAcademicPage() {
                               {' • '}{selectedYear} {selectedPeriod === 'midYear' ? 'Mid-Year' : 'Year-End'} Examination
                             </div>
                           </div>
-                          <img src={cambridgeLogo} alt="Cambridge Assessment" style={{ height: '35px', objectFit: 'contain' }} />
+                          <img src={cambridgeLogo} alt="Cambridge Assessment" crossOrigin="anonymous" style={{ height: '35px', objectFit: 'contain' }} />
                         </div>
 
                         {!bandsCompareMode ? (
@@ -6025,11 +6055,18 @@ export default function TeacherAcademicPage() {
                   ];
                   const csvContent = csvRows.map(row => row.join(',')).join('\n');
                   const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-                  await downloadBlobAsFile(
+                  const result = await saveAndShareBlob(
                     blob,
                     `overview-report-${selectedClass}-${new Date().toISOString().split('T')[0]}.csv`,
                     "text/csv;charset=utf-8;"
                   );
+                  if (!result.success) {
+                    toast({
+                      title: "Export failed. Please try again.",
+                    });
+                  } else if (result.savedToDevice) {
+                    toast({ title: "Saved to Downloads" });
+                  }
                 }}
               >
                 <FileSpreadsheet className="h-4 w-4" />
@@ -6056,7 +6093,7 @@ export default function TeacherAcademicPage() {
             <div className="space-y-4 p-2">
               {/* Report Header - Dual Logo Style */}
               <div className="report-header" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid #d1d5db', paddingBottom: '10px', marginBottom: '10px', gap: '8px' }}>
-                <img src={collinzLogo} alt="Collinz School" style={{ height: '40px', objectFit: 'contain' }} />
+                <img src={collinzLogo} alt="Collinz School" crossOrigin="anonymous" style={{ height: '40px', objectFit: 'contain' }} />
                 <div style={{ textAlign: 'center' }}>
                   <div style={{ fontSize: '10px', fontWeight: 600, color: '#374151', letterSpacing: '0.5px', textTransform: 'uppercase' }}>Class Performance Report</div>
                   <div style={{ fontSize: '13px', fontWeight: 700, color: '#374151' }}>Class {selectedClass} - {selectedYear} {selectedPeriod === 'midYear' ? 'Mid-Year' : 'Year-End'}</div>
@@ -6064,7 +6101,7 @@ export default function TeacherAcademicPage() {
                     Generated on {new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}
                   </div>
                 </div>
-                <img src={cambridgeLogo} alt="Cambridge Assessment" style={{ height: '35px', objectFit: 'contain' }} />
+                <img src={cambridgeLogo} alt="Cambridge Assessment" crossOrigin="anonymous" style={{ height: '35px', objectFit: 'contain' }} />
               </div>
 
               {/* Summary Statistics Cards with Watermarks */}
@@ -6369,11 +6406,18 @@ export default function TeacherAcademicPage() {
                   ];
                   const csvContent = csvRows.map(row => row.join(',')).join('\n');
                   const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-                  await downloadBlobAsFile(
+                  const result = await saveAndShareBlob(
                     blob,
                     `trends-report-${selectedClass}-${new Date().toISOString().split('T')[0]}.csv`,
                     "text/csv;charset=utf-8;"
                   );
+                  if (!result.success) {
+                    toast({
+                      title: "Export failed. Please try again.",
+                    });
+                  } else if (result.savedToDevice) {
+                    toast({ title: "Saved to Downloads" });
+                  }
                 }}
               >
                 <FileSpreadsheet className="h-4 w-4" />
@@ -6400,7 +6444,7 @@ export default function TeacherAcademicPage() {
             <div className="space-y-4 p-2">
               {/* Report Header - Dual Logo Style */}
               <div className="report-header" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid #d1d5db', paddingBottom: '10px', marginBottom: '10px', gap: '8px' }}>
-                <img src={collinzLogo} alt="Collinz School" style={{ height: '40px', objectFit: 'contain' }} />
+                <img src={collinzLogo} alt="Collinz School" crossOrigin="anonymous" style={{ height: '40px', objectFit: 'contain' }} />
                 <div style={{ textAlign: 'center' }}>
                   <div style={{ fontSize: '10px', fontWeight: 600, color: '#374151', letterSpacing: '0.5px', textTransform: 'uppercase' }}>Performance Trends Report</div>
                   <div style={{ fontSize: '13px', fontWeight: 700, color: '#374151' }}>Class {selectedClass} - Historical Analysis</div>
@@ -6409,7 +6453,7 @@ export default function TeacherAcademicPage() {
                     {' • '}Period: {trendPeriod === '1year' ? 'Last 1 Year' : trendPeriod === '2years' ? 'Last 2 Years' : trendPeriod === '3years' ? 'Last 3 Years' : trendPeriod === '4years' ? 'Last 4 Years' : trendPeriod === '5years' ? 'Last 5 Years' : 'Last 6 Years'}
                   </div>
                 </div>
-                <img src={cambridgeLogo} alt="Cambridge Assessment" style={{ height: '35px', objectFit: 'contain' }} />
+                <img src={cambridgeLogo} alt="Cambridge Assessment" crossOrigin="anonymous" style={{ height: '35px', objectFit: 'contain' }} />
               </div>
 
               {/* Current Performance Summary */}
@@ -6803,11 +6847,18 @@ export default function TeacherAcademicPage() {
                     ];
                     const csvContent = csvRows.map(row => row.join(',')).join('\n');
                     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-                    await downloadBlobAsFile(
+                    const result = await saveAndShareBlob(
                       blob,
                       `comparison-report-${new Date().toISOString().split('T')[0]}.csv`,
                       "text/csv;charset=utf-8;"
                     );
+                    if (!result.success) {
+                      toast({
+                        title: "Export failed. Please try again.",
+                      });
+                    } else if (result.savedToDevice) {
+                      toast({ title: "Saved to Downloads" });
+                    }
                   } else {
                     toast({
                       title: "No Data",
@@ -6865,7 +6916,7 @@ export default function TeacherAcademicPage() {
                 <div className="space-y-4 p-2">
                   {/* Report Header - Dual Logo Style */}
                   <div className="report-header" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid #d1d5db', paddingBottom: '10px', marginBottom: '10px', gap: '8px' }}>
-                    <img src={collinzLogo} alt="Collinz School" style={{ height: '40px', objectFit: 'contain' }} />
+                    <img src={collinzLogo} alt="Collinz School" crossOrigin="anonymous" style={{ height: '40px', objectFit: 'contain' }} />
                     <div style={{ textAlign: 'center' }}>
                       <div style={{ fontSize: '10px', fontWeight: 600, color: '#374151', letterSpacing: '0.5px', textTransform: 'uppercase' }}>Exam Comparison Report</div>
                       <div style={{ fontSize: '13px', fontWeight: 700, color: '#374151' }}>{examALabel} vs {examBLabel}</div>
@@ -6873,7 +6924,7 @@ export default function TeacherAcademicPage() {
                         Generated on {new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}
                       </div>
                     </div>
-                    <img src={cambridgeLogo} alt="Cambridge Assessment" style={{ height: '35px', objectFit: 'contain' }} />
+                    <img src={cambridgeLogo} alt="Cambridge Assessment" crossOrigin="anonymous" style={{ height: '35px', objectFit: 'contain' }} />
                   </div>
 
                   {/* Summary Comparison */}
@@ -7177,11 +7228,18 @@ export default function TeacherAcademicPage() {
                   ];
                   const csvContent = csvRows.map(row => row.join(',')).join('\n');
                   const blob = new Blob([csvContent], { type: 'text/csv' });
-                  await downloadBlobAsFile(
+                  const result = await saveAndShareBlob(
                     blob,
                     `boxplot-report-${boxPlotViewMode}-${new Date().toISOString().split('T')[0]}.csv`,
                     "text/csv"
                   );
+                  if (!result.success) {
+                    toast({
+                      title: "Export failed. Please try again.",
+                    });
+                  } else if (result.savedToDevice) {
+                    toast({ title: "Saved to Downloads" });
+                  }
                 }}
               >
                 <FileSpreadsheet className="h-4 w-4" />
@@ -7245,7 +7303,7 @@ export default function TeacherAcademicPage() {
                 <div className="space-y-4 p-2">
                   {/* Report Header - Dual Logo Style */}
                   <div className="report-header" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '2px solid #10b981', paddingBottom: '10px', marginBottom: '10px', gap: '8px' }}>
-                    <img src={collinzLogo} alt="Collinz School" style={{ height: '40px', objectFit: 'contain' }} />
+                    <img src={collinzLogo} alt="Collinz School" crossOrigin="anonymous" style={{ height: '40px', objectFit: 'contain' }} />
                     <div style={{ textAlign: 'center' }}>
                       <div style={{ fontSize: '10px', fontWeight: 600, color: '#374151', letterSpacing: '0.5px', textTransform: 'uppercase' }}>Box Plot Analysis Report</div>
                       <div style={{ fontSize: '13px', fontWeight: 700, color: '#374151' }}>{reportTitle}</div>
@@ -7253,7 +7311,7 @@ export default function TeacherAcademicPage() {
                         Period: {boxPlotStartYear} - {boxPlotEndYear} • Generated on {new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}
                       </div>
                     </div>
-                    <img src={cambridgeLogo} alt="Cambridge Assessment" style={{ height: '35px', objectFit: 'contain' }} />
+                    <img src={cambridgeLogo} alt="Cambridge Assessment" crossOrigin="anonymous" style={{ height: '35px', objectFit: 'contain' }} />
                   </div>
 
                   {/* Summary Statistics Cards with Watermarks */}

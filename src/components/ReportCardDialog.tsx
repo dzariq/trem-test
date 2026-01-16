@@ -205,15 +205,19 @@ export function ReportCardDialog({
     if (!reportRef.current || isExportingPdf) return;
     setIsExportingPdf(true);
     try {
-      const dateStamp = new Date().toISOString().split("T")[0];
-      const safeName = studentName.trim().toLowerCase().replace(/\s+/g, "-");
-      await exportElementToPdf({
+      const safeName = studentName.trim().replace(/\s+/g, "_");
+      const safeYear = year ? year.trim().replace(/\s+/g, "_") : "year";
+      const safePeriod = examType.trim().replace(/\s+/g, "_");
+      const result = await exportElementToPdf({
         element: reportRef.current,
-        filename: `report-card-${safeName || "student"}-${dateStamp}`,
+        filename: `ReportCard_${safeName || "student"}_${safeYear}_${safePeriod}`,
       });
+      if (result.savedToDevice) {
+        toast.success("Saved to Downloads");
+      }
     } catch (error) {
       console.error("[ReportCardDialog] PDF export failed", error);
-      toast.error("Failed to generate PDF. Please try again.");
+      toast.error("Export failed. Please try again.");
     } finally {
       setIsExportingPdf(false);
     }
@@ -249,14 +253,14 @@ export function ReportCardDialog({
             
             {/* Header with both logos */}
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid #d1d5db', paddingBottom: '10px', marginBottom: '10px', gap: '8px', flexWrap: 'wrap' }}>
-              <img src={collinzLogo} alt="Collinz School" style={{ height: '40px', objectFit: 'contain' }} />
+              <img src={collinzLogo} alt="Collinz School" crossOrigin="anonymous" style={{ height: '40px', objectFit: 'contain' }} />
               <div style={{ textAlign: 'center' }}>
                 <div style={{ fontSize: '10px', fontWeight: '600', color: '#374151', letterSpacing: '0.5px', textTransform: 'uppercase' }}>Academic Report</div>
                 <div style={{ fontSize: '13px', fontWeight: '700', color: '#374151' }}>
                   {examType}{year ? ` ${year}` : ""}
                 </div>
               </div>
-              <img src={cambridgeLogo} alt="Cambridge Assessment" style={{ height: '35px', objectFit: 'contain' }} />
+              <img src={cambridgeLogo} alt="Cambridge Assessment" crossOrigin="anonymous" style={{ height: '35px', objectFit: 'contain' }} />
             </div>
 
             {/* Student Info Row with Attitude & Behaviour - Side by side */}
