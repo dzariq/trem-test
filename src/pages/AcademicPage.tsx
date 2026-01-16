@@ -25,6 +25,7 @@ import { useStudentGradeGoals } from "@/hooks/useStudentGradeGoals";
 import { useAssignedSubjectsFromSelections } from "@/hooks/useAssignedSubjectsFromSelections";
 import { useStudentGradesByPeriods } from "@/hooks/useStudentGradesByPeriods";
 import { StudentPillSelector } from "@/components/home/StudentPillSelector";
+import { generateBehaviorSummary } from "@/lib/summary/behaviorSummary";
 type YearKey = "2022" | "2023" | "2024" | "2025";
 type ExamType = "midYear" | "yearEnd";
 type AnalysisPeriod = {
@@ -121,6 +122,31 @@ export default function AcademicPage() {
     loading: reportCardLoading,
     hasData: hasRealData,
   } = useStudentReportCard(selectedStudentId || null, selectedPeriodId || null);
+
+  const behaviorSummary = useMemo(() => {
+    const grades = {
+      attendance: realBehavior?.attendanceRating,
+      punctuality: realBehavior?.punctualityRating,
+      cooperation: realBehavior?.cooperationRating,
+      self_control: realBehavior?.selfControlRating,
+      responsibility: realBehavior?.responsibilityRating,
+      initiative: realBehavior?.initiativeRating,
+      leadership: realBehavior?.leadershipRating,
+    };
+    const seed = `${selectedStudentId ?? "unknown"}:${realBehavior?.id ?? selectedPeriodId ?? "unknown"}`;
+    return generateBehaviorSummary({ grades, seed });
+  }, [
+    realBehavior?.attendanceRating,
+    realBehavior?.punctualityRating,
+    realBehavior?.cooperationRating,
+    realBehavior?.selfControlRating,
+    realBehavior?.responsibilityRating,
+    realBehavior?.initiativeRating,
+    realBehavior?.leadershipRating,
+    realBehavior?.id,
+    selectedPeriodId,
+    selectedStudentId,
+  ]);
 
   const {
     subjects: assignedSubjects,
@@ -1459,7 +1485,7 @@ export default function AcademicPage() {
                 {/* Real Behavior Data */}
                 {!reportCardLoading && realBehaviorItems.length > 0 && (
                   <>
-                    {/* Smart Summary Card */}
+                    {/* Automated Behaviour Summary Card */}
                     <Card className="bg-primary/5 border-primary/20">
                       <CardContent className="p-4">
                         <div className="flex items-start gap-3">
@@ -1467,9 +1493,12 @@ export default function AcademicPage() {
                             <Sparkles className="h-5 w-5 text-primary" />
                           </div>
                           <div>
-                            <p className="text-sm font-medium text-primary mb-1">Smart Summary</p>
+                            <p className="text-sm font-medium text-primary mb-1">Automated Behaviour Summary</p>
                             <p className="text-sm text-muted-foreground leading-relaxed">
-                              {realBehavior?.homeroomTeacherComment || "The student shows good potential and continues to make progress."}
+                              {behaviorSummary.text}
+                            </p>
+                            <p className="text-xs text-muted-foreground mt-2">
+                              Automatically generated based on behaviour indicators.
                             </p>
                           </div>
                         </div>
