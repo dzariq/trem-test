@@ -78,6 +78,7 @@ import {
 } from "@/data/weekConfigData";
 import { useLessonPlans, useLessonPlanSubjects } from "@/hooks/useLessonPlans";
 import { useAcademicFilters } from "@/hooks/useAcademicFilters";
+import { normalizeSubtopics } from "@/lib/lessonplan/normalizeSubtopics";
 
 // LocalStorage keys for persisting selections
 const LS_LESSON_PLAN_YEAR = "lessonPlan_selectedYear";
@@ -315,26 +316,39 @@ const TeacherLessonPlansPage = () => {
   const handleOpenEditTopic = (topic: { id: string; title: string; subtopics?: string[] }) => {
     setEditingTopicId(topic.id);
     setEditTopicTitle(topic.title);
-    setEditSubtopics(topic.subtopics || []);
+    setEditSubtopics(normalizeSubtopics(topic.subtopics));
     setNewSubtopicInput("");
     setIsEditTopicOpen(true);
   };
 
   const handleSaveTopicEdit = async () => {
     if (!editTopicTitle.trim()) return;
-    
+    const pending = newSubtopicInput.trim();
+    let nextSubtopics = normalizeSubtopics(editSubtopics);
+    if (pending && !nextSubtopics.some((item) => item.toLowerCase() === pending.toLowerCase())) {
+      nextSubtopics = [...nextSubtopics, pending];
+    }
+
     // Save to Supabase
-    await updateTopic(editingTopicId, editTopicTitle.trim(), editSubtopics);
+    await updateTopic(editingTopicId, editTopicTitle.trim(), nextSubtopics);
     
     setIsEditTopicOpen(false);
     setEditingTopicId("");
     setEditTopicTitle("");
     setEditSubtopics([]);
+    setNewSubtopicInput("");
   };
 
   const handleAddEditSubtopic = () => {
-    if (!newSubtopicInput.trim()) return;
-    setEditSubtopics([...editSubtopics, newSubtopicInput.trim()]);
+    const pending = newSubtopicInput.trim();
+    if (!pending) return;
+    setEditSubtopics((prev) => {
+      const next = normalizeSubtopics(prev);
+      if (next.some((item) => item.toLowerCase() === pending.toLowerCase())) {
+        return next;
+      }
+      return [...next, pending];
+    });
     setNewSubtopicInput("");
   };
 
@@ -540,31 +554,36 @@ const TeacherLessonPlansPage = () => {
                   
                   {/* Subtopics Section - Same dark green as topic */}
                   <div className="py-2 px-4 bg-primary border-b border-primary-foreground/20">
-                    <Collapsible defaultOpen={false}>
-                      <div className="flex items-center">
-                        <CollapsibleTrigger className="flex items-center gap-1 text-xs font-medium text-primary-foreground hover:text-primary-foreground/80 transition-colors [&[data-state=open]>svg]:rotate-180">
-                          <ChevronDown className="h-3.5 w-3.5 transition-transform" />
-                          Subtopics ({topic.subtopics?.length || 0})
-                        </CollapsibleTrigger>
-                      </div>
-                      <CollapsibleContent className="mt-2">
-                        <div className="flex flex-wrap gap-1.5 min-w-0">
-                          {topic.subtopics && topic.subtopics.length > 0 ? (
-                            topic.subtopics.map((subtopic, idx) => (
-                              <Badge
-                                key={idx}
-                                variant="secondary"
-                                className="text-xs font-normal max-w-full min-w-0 overflow-hidden bg-primary-foreground/20 text-primary-foreground"
-                              >
-                                <span className="block truncate">{subtopic}</span>
-                              </Badge>
-                            ))
-                          ) : (
-                            <span className="text-xs text-primary-foreground/70 italic">No subtopics added</span>
-                          )}
-                        </div>
-                      </CollapsibleContent>
-                    </Collapsible>
+                    {(() => {
+                      const subtopics = normalizeSubtopics(topic.subtopics);
+                      return (
+                        <Collapsible defaultOpen={false}>
+                          <div className="flex items-center">
+                            <CollapsibleTrigger className="flex items-center gap-1 text-xs font-medium text-primary-foreground hover:text-primary-foreground/80 transition-colors [&[data-state=open]>svg]:rotate-180">
+                              <ChevronDown className="h-3.5 w-3.5 transition-transform" />
+                              Subtopics ({subtopics.length})
+                            </CollapsibleTrigger>
+                          </div>
+                          <CollapsibleContent className="mt-2">
+                            <div className="flex flex-wrap gap-1.5 min-w-0">
+                              {subtopics.length > 0 ? (
+                                subtopics.map((subtopic, idx) => (
+                                  <Badge
+                                    key={idx}
+                                    variant="secondary"
+                                    className="text-xs font-normal max-w-full min-w-0 overflow-hidden bg-primary-foreground/20 text-primary-foreground"
+                                  >
+                                    <span className="block truncate">{subtopic}</span>
+                                  </Badge>
+                                ))
+                              ) : (
+                                <span className="text-xs text-primary-foreground/70 italic">No subtopics added</span>
+                              )}
+                            </div>
+                          </CollapsibleContent>
+                        </Collapsible>
+                      );
+                    })()}
                   </div>
                 </CardHeader>
                 <CardContent className="p-0 overflow-hidden">
@@ -762,9 +781,11 @@ const TeacherLessonPlansPage = () => {
                                   </PopoverContent>
                                 </Popover>
                                 {(() => {
-                                  const weekSubtopics = [...new Set(
-                                    week.lessonPlans.flatMap(lp => lp.subtopics || []).filter(Boolean)
-                                  )];
+                                  const weekSubtopics = [
+                                    ...new Set(
+                                      week.lessonPlans.flatMap((lp) => normalizeSubtopics(lp.subtopics))
+                                    ),
+                                  ];
                                   return weekSubtopics.length > 0 ? (
                                      <div className="flex flex-wrap gap-1.5 min-w-0">
                                        {weekSubtopics.map((subtopic, idx) => (

@@ -14,6 +14,7 @@ export interface SubjectGrade {
   subject_name: string;
   academic_period_id: string;
   academic_period_name: string;
+  academic_year?: number | null;
   attitude_marks: number;
   homework_marks: number;
   quiz_marks: number;
@@ -33,6 +34,7 @@ export interface AcademicPeriodInfo {
   name: string;
   code: string;
   sort_order: number | null;
+  academic_year?: number | null;
 }
 
 export interface SubjectAverage {
@@ -99,7 +101,7 @@ export async function fetchAcademicPeriodsForAnalysis(): Promise<
 > {
   const { data, error } = await supabase
     .from("academic_periods")
-    .select("id, name, code, sort_order")
+    .select("id, name, code, sort_order, academic_year")
     .eq("is_active", true)
     .order("sort_order");
 
@@ -421,29 +423,38 @@ export function computeSubjectChanges(
 // Compute summary stats
 export function computeSummaryStats(
   studentScores: StudentScore[],
-  passMark: number = 50
+  passMark: number = 50,
+  rosterCount?: number
 ): {
   classAverage: number;
   passCount: number;
   passRate: number;
   studentCount: number;
+  gradedStudentCount: number;
 } {
-  if (studentScores.length === 0) {
-    return { classAverage: 0, passCount: 0, passRate: 0, studentCount: 0 };
+  const gradedStudentCount = studentScores.length;
+  if (gradedStudentCount === 0) {
+    return {
+      classAverage: 0,
+      passCount: 0,
+      passRate: 0,
+      studentCount: rosterCount ?? 0,
+      gradedStudentCount,
+    };
   }
 
   const totalScore = studentScores.reduce((sum, s) => sum + s.averageScore, 0);
-  const classAverage = Math.round(totalScore / studentScores.length);
-  const passCount = studentScores.filter(
-    (s) => s.averageScore >= passMark
-  ).length;
-  const passRate = Math.round((passCount / studentScores.length) * 100);
+  const classAverage = Math.round(totalScore / gradedStudentCount);
+  const passCount = studentScores.filter((s) => s.averageScore >= passMark)
+    .length;
+  const passRate = Math.round((passCount / gradedStudentCount) * 100);
 
   return {
     classAverage,
     passCount,
     passRate,
-    studentCount: studentScores.length,
+    studentCount: rosterCount ?? gradedStudentCount,
+    gradedStudentCount,
   };
 }
 

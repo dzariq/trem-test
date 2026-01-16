@@ -1,10 +1,8 @@
 import { useState, useEffect, useMemo, useCallback } from "react";
 import {
   fetchDistinctClasses,
-  fetchStudentsForClass,
   fetchAcademicPeriodsForAnalysis,
   fetchSubjectsForClass,
-  fetchGradesForAnalysis,
   computeSubjectAverages,
   computeStudentScores,
   computeGradeDistribution,
@@ -22,6 +20,7 @@ import {
   SubjectChange,
   BoxPlotStats,
 } from "@/data/classAnalysis";
+import { useClassAnalysisData } from "@/hooks/useClassAnalysisData";
 
 interface UseClassAnalysisReturn {
   // Data
@@ -29,10 +28,13 @@ interface UseClassAnalysisReturn {
   students: ClassAnalysisStudent[];
   subjects: SubjectInfo[];
   academicPeriods: AcademicPeriodInfo[];
+  academicPeriodsForYear: AcademicPeriodInfo[];
+  availableAcademicYears: number[];
   grades: SubjectGrade[];
 
   // Selection state
   selectedClass: string | null;
+  selectedAcademicYear: number | null;
   selectedPeriodId: string | null;
   selectedSubjectIds: number[];
   comparePeriodId: string | null; // For Rising/Falling comparison
@@ -46,6 +48,7 @@ interface UseClassAnalysisReturn {
 
   // Actions
   setSelectedClass: (className: string | null) => void;
+  setSelectedAcademicYear: (year: number | null) => void;
   setSelectedPeriodId: (periodId: string | null) => void;
   setSelectedSubjectIds: (subjectIds: number[]) => void;
   setComparePeriodId: (periodId: string | null) => void;
@@ -68,10 +71,12 @@ interface UseClassAnalysisReturn {
     passCount: number;
     passRate: number;
     studentCount: number;
+    gradedStudentCount: number;
     bestSubject: SubjectAverage | null;
     worstSubject: SubjectAverage | null;
   };
   hasData: boolean;
+  hasYearGrades: boolean;
   
   // Bands tab computed data
   bandsDistribution: { range: string; count: number }[];
@@ -91,6 +96,7 @@ interface UseClassAnalysisReturn {
 export function useClassAnalysis(): UseClassAnalysisReturn {
   // Selection state
   const [selectedClass, setSelectedClass] = useState<string | null>(null);
+  const [selectedAcademicYear, setSelectedAcademicYear] = useState<number | null>(null);
   const [selectedPeriodId, setSelectedPeriodId] = useState<string | null>(null);
   const [selectedSubjectIds, setSelectedSubjectIds] = useState<number[]>([]);
   const [comparePeriodId, setComparePeriodId] = useState<string | null>(null);
@@ -107,7 +113,7 @@ export function useClassAnalysis(): UseClassAnalysisReturn {
 
   // Loading states
   const [loadingClasses, setLoadingClasses] = useState(false);
-  const [loadingData, setLoadingData] = useState(false);
+  const [loadingSubjects, setLoadingSubjects] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   // Load classes on mount
@@ -148,7 +154,31 @@ export function useClassAnalysis(): UseClassAnalysisReturn {
     loadPeriods();
   }, []);
 
-  // Load students, subjects, and grades when class changes
+  const availableAcademicYears = useMemo(() => {
+    const years = academicPeriods
+      .map((period) => period.academic_year)
+      .filter((year): year is number => Number.isFinite(year));
+    return Array.from(new Set(years)).sort((a, b) => b - a);
+  }, [academicPeriods]);
+
+  const academicPeriodsForYear = useMemo(() => {
+    if (!selectedAcademicYear) return academicPeriods;
+    return academicPeriods.filter(
+      (period) => period.academic_year === selectedAcademicYear
+    );
+  }, [academicPeriods, selectedAcademicYear]);
+
+  const yearPeriodIds = useMemo(() => {
+    return academicPeriodsForYear.map((period) => period.id);
+  }, [academicPeriodsForYear]);
+
+  const { rosterStudents, gradeRows, loading: dataLoading, error: dataError } =
+    useClassAnalysisData({
+      classId: selectedClass,
+      examPeriodIds: yearPeriodIds,
+    });
+
+  // Sync roster students when class changes
   useEffect(() => {
     if (!selectedClass) {
       setStudents([]);
@@ -158,52 +188,119 @@ export function useClassAnalysis(): UseClassAnalysisReturn {
       setBandsSelectedSubjectId(null);
       return;
     }
+    setStudents(rosterStudents);
+  }, [selectedClass, rosterStudents]);
 
-    const loadClassData = async () => {
-      setLoadingData(true);
+  // Load subjects when roster updates
+  useEffect(() => {
+    if (!selectedClass) return;
+    if (rosterStudents.length === 0) {
+      setSubjects([]);
+      setSelectedSubjectIds([]);
+      setBandsSelectedSubjectId(null);
+      return;
+    }
+
+    const loadSubjects = async () => {
+      setLoadingSubjects(true);
       setError(null);
-
       try {
-        // Fetch students
-        const fetchedStudents = await fetchStudentsForClass(selectedClass);
-        setStudents(fetchedStudents);
-
-        if (fetchedStudents.length === 0) {
-          setSubjects([]);
-          setGrades([]);
-          setSelectedSubjectIds([]);
-          setBandsSelectedSubjectId(null);
-          setLoadingData(false);
-          return;
-        }
-
-        const studentIds = fetchedStudents.map((s) => s.id);
-
-        // Fetch subjects that have grades
+        const studentIds = rosterStudents.map((student) => student.id);
         const fetchedSubjects = await fetchSubjectsForClass(studentIds);
         setSubjects(fetchedSubjects);
 
         // Auto-select all subjects
         setSelectedSubjectIds(fetchedSubjects.map((s) => s.id));
-        
+
         // Auto-select first subject for Bands tab
         if (fetchedSubjects.length > 0) {
           setBandsSelectedSubjectId(fetchedSubjects[0].id);
         }
-
-        // Fetch grades (all periods for comparison)
-        const fetchedGrades = await fetchGradesForAnalysis(studentIds);
-        setGrades(fetchedGrades);
       } catch (err) {
-        setError("Failed to load class data");
+        setError("Failed to load class subjects");
         console.error(err);
+        setSubjects([]);
       } finally {
-        setLoadingData(false);
+        setLoadingSubjects(false);
       }
     };
 
-    loadClassData();
-  }, [selectedClass]);
+    loadSubjects();
+  }, [selectedClass, rosterStudents]);
+
+  // Pick academic year defaults based on data availability
+  useEffect(() => {
+    if (selectedAcademicYear) return;
+    const yearsWithGrades = new Set(
+      gradeRows
+        .map((row) => row.academic_year)
+        .filter((year): year is number => Number.isFinite(year))
+    );
+    const latestWithGrades = Math.max(...Array.from(yearsWithGrades), -Infinity);
+    if (Number.isFinite(latestWithGrades)) {
+      setSelectedAcademicYear(latestWithGrades);
+      return;
+    }
+    if (availableAcademicYears.length > 0) {
+      setSelectedAcademicYear(availableAcademicYears[0]);
+      return;
+    }
+    setSelectedAcademicYear(new Date().getFullYear());
+  }, [selectedClass, selectedAcademicYear, gradeRows, availableAcademicYears]);
+
+  useEffect(() => {
+    if (!selectedAcademicYear) return;
+    if (availableAcademicYears.length === 0) return;
+    if (!availableAcademicYears.includes(selectedAcademicYear)) {
+      setSelectedAcademicYear(availableAcademicYears[0]);
+    }
+  }, [selectedAcademicYear, availableAcademicYears]);
+
+  // Ensure selected periods stay within the selected academic year
+  useEffect(() => {
+    if (academicPeriodsForYear.length === 0) {
+      setSelectedPeriodId(null);
+      setComparePeriodId(null);
+      return;
+    }
+    const validPeriodIds = new Set(academicPeriodsForYear.map((p) => p.id));
+    if (!selectedPeriodId || !validPeriodIds.has(selectedPeriodId)) {
+      setSelectedPeriodId(academicPeriodsForYear[0].id);
+    }
+    const compareCandidates = academicPeriodsForYear.filter(
+      (period) => period.id !== selectedPeriodId
+    );
+    if (!comparePeriodId || !validPeriodIds.has(comparePeriodId)) {
+      setComparePeriodId(compareCandidates[0]?.id || academicPeriodsForYear[0].id);
+    }
+  }, [
+    academicPeriodsForYear,
+    selectedPeriodId,
+    comparePeriodId,
+  ]);
+
+  // Map normalized grade rows into class analysis grades
+  useEffect(() => {
+    if (!selectedClass) {
+      setGrades([]);
+      return;
+    }
+    const mappedGrades: SubjectGrade[] = gradeRows.map((row) => ({
+      student_id: row.student_id,
+      subject_id: row.subject_id,
+      academic_period_id: row.exam_period_id,
+      subject_name: "",
+      academic_period_name: "",
+      academic_year: row.academic_year,
+      attitude_marks: 0,
+      homework_marks: 0,
+      quiz_marks: 0,
+      exam_marks: 0,
+      total_marks: row.score_percent,
+      letter_grade: null,
+    }));
+    setGrades(mappedGrades);
+  }, [selectedClass, gradeRows]);
 
   // Actions
   const toggleSubject = useCallback((subjectId: number) => {
@@ -283,7 +380,7 @@ export function useClassAnalysis(): UseClassAnalysisReturn {
 
   // Computed: Summary stats
   const summaryStats = useMemo(() => {
-    const stats = computeSummaryStats(studentScores);
+    const stats = computeSummaryStats(studentScores, 50, students.length);
     return {
       ...stats,
       bestSubject: subjectAverages.length > 0 ? subjectAverages[0] : null,
@@ -292,7 +389,7 @@ export function useClassAnalysis(): UseClassAnalysisReturn {
           ? subjectAverages[subjectAverages.length - 1]
           : null,
     };
-  }, [studentScores, subjectAverages]);
+  }, [studentScores, subjectAverages, students.length]);
 
   // ==== BANDS TAB: Single subject distribution ====
   const bandsData = useMemo(() => {
@@ -330,8 +427,11 @@ export function useClassAnalysis(): UseClassAnalysisReturn {
     return computeBoxPlotStats(filteredGrades, subjects, selectedSubjectIds);
   }, [filteredGrades, subjects, selectedSubjectIds]);
 
+  const hasYearGrades = grades.length > 0;
   const hasData =
     filteredGrades.length > 0 && students.length > 0 && subjects.length > 0;
+  const loadingData = dataLoading || loadingSubjects;
+  const combinedError = error || dataError;
 
   return {
     // Data
@@ -339,10 +439,13 @@ export function useClassAnalysis(): UseClassAnalysisReturn {
     students,
     subjects,
     academicPeriods,
+    academicPeriodsForYear,
+    availableAcademicYears,
     grades,
 
     // Selection state
     selectedClass,
+    selectedAcademicYear,
     selectedPeriodId,
     selectedSubjectIds,
     comparePeriodId,
@@ -352,10 +455,11 @@ export function useClassAnalysis(): UseClassAnalysisReturn {
     loading: loadingClasses || loadingData,
     loadingClasses,
     loadingData,
-    error,
+    error: combinedError,
 
     // Actions
     setSelectedClass,
+    setSelectedAcademicYear,
     setSelectedPeriodId,
     setSelectedSubjectIds,
     setComparePeriodId,
@@ -375,6 +479,7 @@ export function useClassAnalysis(): UseClassAnalysisReturn {
     fallingSubjects,
     summaryStats,
     hasData,
+    hasYearGrades,
     
     // Bands tab
     bandsDistribution,

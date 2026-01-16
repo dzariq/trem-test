@@ -9,6 +9,7 @@ import {
   type Week,
   type SubjectCurriculum,
 } from "@/data/lessonPlanData";
+import { normalizeSubtopics } from "@/lib/lessonplan/normalizeSubtopics";
 
 // Hook to load subjects from Supabase (same source as Academic module)
 export function useLessonPlanSubjects() {
@@ -127,7 +128,7 @@ function convertDbToUiFormat(
           className: lessonPlan.class,
           subject: lessonPlan.subject,
           topic: detail.topic || topic.title,
-          subtopics: detail.subtopics,
+          subtopics: normalizeSubtopics(detail.subtopics),
           date: detail.date || "",
           learningObjectives: detail.learning_objectives,
           vocabulary: detail.vocabulary,
@@ -154,7 +155,7 @@ function convertDbToUiFormat(
       return {
         id: topic.id,
         title: topic.title,
-        subtopics: topic.subtopics,
+        subtopics: normalizeSubtopics(topic.subtopics),
         weeks: uiWeeks,
       };
     });
@@ -491,10 +492,11 @@ export function useLessonPlans(
   // Update topic
   const updateTopic = useCallback(
     async (topicId: string, title: string, subtopics: string[]) => {
+      const normalizedSubtopics = normalizeSubtopics(subtopics);
       try {
         const { error } = await supabase
           .from("lesson_topics")
-          .update({ title, subtopics })
+          .update({ title, subtopics: normalizedSubtopics })
           .eq("id", topicId);
 
         if (error) throw error;
@@ -505,7 +507,7 @@ export function useLessonPlans(
           return {
             ...prev,
             topics: prev.topics.map((topic) =>
-              topic.id === topicId ? { ...topic, title, subtopics } : topic
+              topic.id === topicId ? { ...topic, title, subtopics: normalizedSubtopics } : topic
             ),
           };
         });
@@ -659,7 +661,7 @@ export function useLessonPlanDetail(lessonPlanDetailId: string | undefined) {
             className: detail.lesson_weeks.lesson_topics.lesson_plans.class,
             subject: detail.lesson_weeks.lesson_topics.lesson_plans.subject,
             topic: detail.topic || detail.lesson_weeks.lesson_topics.title,
-            subtopics: detail.subtopics,
+            subtopics: normalizeSubtopics(detail.subtopics),
             date: detail.date || "",
             learningObjectives: detail.learning_objectives,
             vocabulary: detail.vocabulary,
@@ -696,7 +698,9 @@ export function useLessonPlanDetail(lessonPlanDetailId: string | undefined) {
         if (updates.title !== undefined) dbUpdates.title = updates.title;
         if (updates.teacherNames !== undefined) dbUpdates.teacher_names = updates.teacherNames;
         if (updates.date !== undefined) dbUpdates.date = updates.date || null;
-        if (updates.subtopics !== undefined) dbUpdates.subtopics = updates.subtopics;
+        if (updates.subtopics !== undefined) {
+          dbUpdates.subtopics = normalizeSubtopics(updates.subtopics);
+        }
         if (updates.learningObjectives !== undefined) dbUpdates.learning_objectives = updates.learningObjectives;
         if (updates.vocabulary !== undefined) dbUpdates.vocabulary = updates.vocabulary;
         if (updates.previousLearning !== undefined) dbUpdates.previous_learning = updates.previousLearning;

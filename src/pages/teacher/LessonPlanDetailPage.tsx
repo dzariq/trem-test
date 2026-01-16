@@ -67,6 +67,7 @@ import {
   getPreviousLessonPlan,
   type LessonPlan 
 } from "@/data/lessonPlanData";
+import { normalizeSubtopics } from "@/lib/lessonplan/normalizeSubtopics";
 import { allSubjects } from "@/data/subjectsConfig";
 import { teacherProfile } from "@/data/teacherMockData";
 import { getWeekConfigs, formatWeekDateRange, getLessonDate } from "@/data/weekConfigData";
@@ -169,7 +170,9 @@ const LessonPlanDetailPage = () => {
 
   const updateField = <K extends keyof LessonPlan>(field: K, value: LessonPlan[K]) => {
     if (lessonPlan) {
-      setLessonPlan({ ...lessonPlan, [field]: value, updatedAt: new Date().toISOString() });
+      const normalizedValue =
+        field === "subtopics" ? normalizeSubtopics(value as unknown) : value;
+      setLessonPlan({ ...lessonPlan, [field]: normalizedValue, updatedAt: new Date().toISOString() });
     }
   };
 
@@ -392,6 +395,10 @@ const LessonPlanDetailPage = () => {
             {/* Subtopics */}
             <div className="space-y-1.5">
               <Label className="text-xs text-muted-foreground">Subtopics</Label>
+              {(() => {
+                const selectedSubtopics = normalizeSubtopics(lessonPlan.subtopics);
+                const availableSubtopics = getSubtopicsForTopic(lessonPlan.subject, lessonPlan.topic);
+                return (
               <Popover>
                 <PopoverTrigger asChild>
                   <Button
@@ -400,8 +407,8 @@ const LessonPlanDetailPage = () => {
                     className="w-full h-auto min-h-9 justify-between text-left font-normal"
                   >
                     <div className="flex flex-wrap gap-1">
-                      {lessonPlan.subtopics && lessonPlan.subtopics.length > 0 ? (
-                        lessonPlan.subtopics.map((subtopic) => (
+                      {selectedSubtopics.length > 0 ? (
+                        selectedSubtopics.map((subtopic) => (
                           <Badge key={subtopic} variant="secondary" className="text-xs">
                             {subtopic}
                           </Badge>
@@ -437,14 +444,14 @@ const LessonPlanDetailPage = () => {
                       </Button>
                     </div>
                     <div className="space-y-1 max-h-48 overflow-y-auto">
-                      {getSubtopicsForTopic(lessonPlan.subject, lessonPlan.topic).map((subtopic) => {
-                        const isSelected = lessonPlan.subtopics?.includes(subtopic) || false;
+                      {availableSubtopics.map((subtopic) => {
+                        const isSelected = selectedSubtopics.includes(subtopic);
                         return (
                           <div
                             key={subtopic}
                             className="flex items-center gap-2 p-2 rounded-md hover:bg-muted cursor-pointer"
                             onClick={() => {
-                              const currentSubtopics = lessonPlan.subtopics || [];
+                              const currentSubtopics = selectedSubtopics;
                               if (isSelected) {
                                 updateField("subtopics", currentSubtopics.filter(s => s !== subtopic));
                               } else {
@@ -457,13 +464,15 @@ const LessonPlanDetailPage = () => {
                           </div>
                         );
                       })}
-                      {getSubtopicsForTopic(lessonPlan.subject, lessonPlan.topic).length === 0 && (
+                      {availableSubtopics.length === 0 && (
                         <p className="text-xs text-muted-foreground p-2">No subtopics available.</p>
                       )}
                     </div>
                   </div>
                 </PopoverContent>
               </Popover>
+                );
+              })()}
             </div>
 
             {/* Week, Lesson, Date, Class */}

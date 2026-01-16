@@ -21,6 +21,7 @@ export interface AcademicPeriod {
   code: string;
   is_active: boolean;
   is_open_for_grading: boolean;
+  academic_year: number | null;
 }
 
 export interface StudentGradeRecord {
@@ -111,7 +112,7 @@ export async function fetchSubjects(yearLevel?: string): Promise<SubjectInfo[]> 
 export async function fetchAcademicPeriods(): Promise<AcademicPeriod[]> {
   const { data, error } = await supabase
     .from("academic_periods")
-    .select("id, name, code, is_active, is_open_for_grading")
+    .select("id, name, code, is_active, is_open_for_grading, academic_year")
     .eq("is_active", true)
     .order("sort_order");
 

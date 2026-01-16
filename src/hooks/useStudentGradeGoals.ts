@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase } from "@/lib/supabase";
 
 interface SubjectGoal {
   subjectId: number;
@@ -38,7 +38,8 @@ export function useStudentGradeGoals(studentId: string | null, goalYear: number)
       console.error("[useStudentGradeGoals] subject_selections lookup failed:", {
         code: selectionsError.code,
         message: selectionsError.message,
-        details: selectionsError.details
+        details: selectionsError.details,
+        studentId: studentIdValue
       });
       throw selectionsError;
     }
@@ -128,7 +129,10 @@ export function useStudentGradeGoals(studentId: string | null, goalYear: number)
           message: goalsError.message,
           code: goalsError.code,
           details: goalsError.details,
-          hint: goalsError.hint
+          hint: goalsError.hint,
+          studentId,
+          goalYear,
+          subjectIds: assignedSubjectIds
         });
         throw goalsError;
       }
@@ -163,7 +167,10 @@ export function useStudentGradeGoals(studentId: string | null, goalYear: number)
             code: seedError.code,
             message: seedError.message,
             details: seedError.details,
-            hint: seedError.hint
+            hint: seedError.hint,
+            studentId,
+            goalYear,
+            subjectIds: assignedSubjectIds
           });
           throw seedError;
         }
@@ -182,7 +189,10 @@ export function useStudentGradeGoals(studentId: string | null, goalYear: number)
           message: refreshedGoalsError.message,
           code: refreshedGoalsError.code,
           details: refreshedGoalsError.details,
-          hint: refreshedGoalsError.hint
+          hint: refreshedGoalsError.hint,
+          studentId,
+          goalYear,
+          subjectIds: assignedSubjectIds
         });
         throw refreshedGoalsError;
       }
@@ -201,8 +211,16 @@ export function useStudentGradeGoals(studentId: string | null, goalYear: number)
         .in("subject_id", assignedSubjectIds);
 
       if (gradesError) {
-        console.error("[useStudentGradeGoals] Error fetching grades:", gradesError);
-        // Don't throw - we can still show goals without grades
+        console.error("[useStudentGradeGoals] Error fetching grades:", {
+          message: gradesError.message,
+          code: gradesError.code,
+          details: gradesError.details,
+          hint: gradesError.hint,
+          studentId,
+          goalYear,
+          subjectIds: assignedSubjectIds
+        });
+        throw gradesError;
       }
 
       console.log("[useStudentGradeGoals] Raw grades data:", gradesData);
@@ -269,8 +287,11 @@ export function useStudentGradeGoals(studentId: string | null, goalYear: number)
       setGoals(subjectGoals);
     } catch (err) {
       const message = err instanceof Error ? err.message : "Failed to load goals data.";
-      console.error("[useStudentGradeGoals] Error:", err);
-      setError(message);
+      console.error("[useStudentGradeGoals] Error:", err, {
+        studentId,
+        goalYear
+      });
+      setError(`Unable to load goals. (${message})`);
       setGoals([]);
     } finally {
       setLoading(false);

@@ -19,6 +19,22 @@ import { toast } from "@/hooks/use-toast";
 import schoolLogo from "@/assets/school-badge.png";
 import collinzLogo from "@/assets/collinz-school-logo.png";
 import cambridgeLogo from "@/assets/cambridge-logo.jpg";
+import { teacherProfile, classRosters, classGrades } from "@/data/teacherMockData";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, LineChart, Line, Legend, AreaChart, Area, RadarChart, Radar, PolarGrid, PolarAngleAxis, PolarRadiusAxis, ReferenceLine, ReferenceDot } from "recharts";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { cn } from "@/lib/utils";
+import { useIsMobile } from "@/hooks/use-mobile";
+import { BoxPlotStats, calculateStudentBoxPlotData, calculateSubjectBoxPlotData, generateInsights, Insight, getAvailableYears } from "@/utils/boxPlotCalculations";
+import { BoxPlotChart } from "@/components/BoxPlotChart";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Label } from "@/components/ui/label";
+import { allSubjects, getShortSubjectName, getTinySubjectCode, getSubjectColor, subjectGroups } from "@/data/subjectsConfig";
+import { SubjectGroupPill } from "@/components/SubjectGroupPill";
+import { SubjectPerformanceChart } from "@/components/SubjectPerformanceChart";
+import { exportElementToPdf } from "@/lib/pdf/exportToPdf";
+import { downloadBlobAsFile } from "@/lib/export/exportFile";
 
 // SVG icons for print compatibility (inline SVGs render properly in print)
 const IconBook = () => (
@@ -77,18 +93,6 @@ const IconScale = () => (
     <path d="M3 7h2c2 0 5-1 7-2 2 1 5 2 7 2h2" />
   </svg>
 );
-import { teacherProfile, classRosters, classGrades, yearOverYearData, categoryYearOverYear, examComparisonData, ExamData, subjectYearlyData, multiClassTrendData, subjectExamData } from "@/data/teacherMockData";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, LineChart, Line, Legend, AreaChart, Area, RadarChart, Radar, PolarGrid, PolarAngleAxis, PolarRadiusAxis, ReferenceLine, ReferenceDot } from "recharts";
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { cn } from "@/lib/utils";
-import { useIsMobile } from "@/hooks/use-mobile";
-import { assessmentRecords, getAllStudents } from "@/data/boxPlotMockData";
-import { BoxPlotStats, calculateStudentBoxPlotData, calculateSubjectBoxPlotData, generateInsights, Insight, getAvailableYears } from "@/utils/boxPlotCalculations";
-import { BoxPlotChart } from "@/components/BoxPlotChart";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Label } from "@/components/ui/label";
 
 // Grade categories with max scores
 const gradeCategories = [{
@@ -110,9 +114,6 @@ const gradeCategories = [{
 }];
 
 // Import centralized subjects config  
-import { allSubjects, getShortSubjectName, getTinySubjectCode, getSubjectColor, subjectGroups } from "@/data/subjectsConfig";
-import { SubjectGroupPill } from "@/components/SubjectGroupPill";
-import { SubjectPerformanceChart } from "@/components/SubjectPerformanceChart";
 
 // Use centralized subjects list
 const subjects = allSubjects;
@@ -121,15 +122,8 @@ const subjects = allSubjects;
 const groupedSubjectNames = subjectGroups.flatMap(g => g.variants?.map(v => v.name) || []);
 const standaloneSubjects = allSubjects.filter(s => !groupedSubjectNames.includes(s));
 
-// Academic years (past 6 years) and exam periods
+// Academic years (past 6 years)
 const academicYears = ["2026", "2025", "2024", "2023", "2022", "2021"];
-const examPeriods = [{
-  value: "midYear",
-  label: "Mid-Year"
-}, {
-  value: "yearEnd",
-  label: "Year-End"
-}];
 
 // Selection colors for multiple comparisons
 const SELECTION_COLORS = [
@@ -329,31 +323,67 @@ export default function TeacherAcademicPage() {
   interface ExamSelection {
     id: string;
     className: string;
-    year: string;
-    period: "midYear" | "yearEnd";
+    periodId: string;
   }
   const [examSelections, setExamSelections] = useState<ExamSelection[]>([]);
-  const [compareSubjects, setCompareSubjects] = useState<string[]>([...subjects]);
-  
-  // Initialize examSelections when classAnalysis.classes loads
+  const [compareSubjects, setCompareSubjects] = useState<string[]>([]);
+
+  const compareSubjectOptions = useMemo(
+    () => classAnalysis.subjects.map((subject) => subject.name),
+    [classAnalysis.subjects]
+  );
+
   useEffect(() => {
-    if (classAnalysis.classes.length > 0 && examSelections.length === 0) {
-      const defaultClass = classAnalysis.selectedClass || classAnalysis.classes[0];
+    if (compareSubjectOptions.length === 0) return;
+    setCompareSubjects((prev) => {
+      if (prev.length === 0) return compareSubjectOptions;
+      const filtered = prev.filter((name) => compareSubjectOptions.includes(name));
+      return filtered.length > 0 ? filtered : compareSubjectOptions;
+    });
+  }, [compareSubjectOptions]);
+  
+  // Initialize examSelections when classAnalysis periods load
+  useEffect(() => {
+    if (
+      classAnalysis.classes.length > 0 &&
+      classAnalysis.academicPeriodsForYear.length > 0 &&
+      examSelections.length === 0
+    ) {
+      const defaultClass =
+        classAnalysis.selectedClass || classAnalysis.classes[0];
+      const [firstPeriod, secondPeriod] = classAnalysis.academicPeriodsForYear;
       setExamSelections([
-        { id: "A", className: defaultClass, year: "2026", period: "midYear" },
-        { id: "B", className: defaultClass, year: "2025", period: "yearEnd" }
+        { id: "A", className: defaultClass, periodId: firstPeriod.id },
+        {
+          id: "B",
+          className: defaultClass,
+          periodId: secondPeriod?.id || firstPeriod.id,
+        },
       ]);
     }
-  }, [classAnalysis.classes, classAnalysis.selectedClass, examSelections.length]);
+  }, [
+    classAnalysis.classes,
+    classAnalysis.selectedClass,
+    classAnalysis.academicPeriodsForYear,
+    examSelections.length,
+  ]);
+
+  useEffect(() => {
+    if (!classAnalysis.selectedClass) return;
+    setExamSelections((prev) =>
+      prev.map((exam) => ({
+        ...exam,
+        className: classAnalysis.selectedClass as string,
+      }))
+    );
+  }, [classAnalysis.selectedClass]);
 
   // Backward compatibility getters for exam A and B (used in comparison logic)
   const defaultClassName = classAnalysis.selectedClass || classAnalysis.classes[0] || "";
   const examAClass = examSelections[0]?.className || defaultClassName;
-  const examAYear = examSelections[0]?.year || "2026";
-  const examAPeriod = examSelections[0]?.period || "midYear";
+  const examAPeriodId = examSelections[0]?.periodId || "";
   const examBClass = examSelections[1]?.className || defaultClassName;
-  const examBYear = examSelections[1]?.year || "2025";
-  const examBPeriod = examSelections[1]?.period || "yearEnd";
+  const examBPeriodId = examSelections[1]?.periodId || "";
 
   // Trends tab state - like student page
   const [trendPeriod, setTrendPeriod] = useState<"1year" | "2years" | "3years" | "4years" | "5years" | "6years">("6years");
@@ -384,6 +414,27 @@ export default function TeacherAcademicPage() {
   const comparisonReportRef = useRef<HTMLDivElement>(null);
   const [boxPlotReportDialogOpen, setBoxPlotReportDialogOpen] = useState(false);
   const boxPlotReportRef = useRef<HTMLDivElement>(null);
+  const handleReportPdfExport = useCallback(
+    async (reportRef: React.RefObject<HTMLDivElement>, filename: string) => {
+      if (!reportRef.current) {
+        toast({
+          title: "Export unavailable",
+          description: "Report content is not ready yet.",
+        });
+        return;
+      }
+      try {
+        await exportElementToPdf({ element: reportRef.current, filename });
+      } catch (error) {
+        console.error("[TeacherAcademicPage] PDF export failed", error);
+        toast({
+          title: "PDF export failed",
+          description: "Please try again in a moment.",
+        });
+      }
+    },
+    []
+  );
   const [heatmapExpanded, setHeatmapExpanded] = useState(false);
   const [growthCarouselApi, setGrowthCarouselApi] = useState<any>(null);
   const [growthCarouselSlide, setGrowthCarouselSlide] = useState(0);
@@ -481,8 +532,6 @@ export default function TeacherAcademicPage() {
     }
   }, [allAvailableClasses, classAnalysis.selectedClass, boxPlotClass]);
   
-  // Available years from data
-  const availableBoxPlotYears = useMemo(() => getAvailableYears(assessmentRecords), []);
   const handleTouchStart = useCallback((e: React.TouchEvent) => {
     // Only handle pinch-to-zoom with 2 fingers, allow single-finger scrolling to pass through
     if (e.touches.length === 2) {
@@ -737,6 +786,8 @@ export default function TeacherAcademicPage() {
   // Class statistics from real Supabase data (not mock)
   const classAverage = classAnalysis.summaryStats?.classAverage ?? 0;
   const passRate = classAnalysis.summaryStats?.passRate ?? 0;
+  const rosterCount = classAnalysis.students.length;
+  const passCount = classAnalysis.summaryStats?.passCount ?? 0;
   const gradeDistribution = classAnalysis.gradeDistribution;
   
   // Compute highest/lowest from real student scores
@@ -755,19 +806,6 @@ export default function TeacherAcademicPage() {
     const aCount = classAnalysis.studentScores.filter(s => s.averageScore >= 80).length;
     return Math.round((aCount / classAnalysis.studentScores.length) * 100);
   }, [classAnalysis.studentScores]);
-  
-  // Dev logging for debugging Subject Performance
-  useEffect(() => {
-    if (process.env.NODE_ENV === 'development') {
-      console.log('[Subject Performance] Data loaded:', {
-        subjectAveragesCount: classAnalysis.subjectAverages.length,
-        studentScoresCount: classAnalysis.studentScores.length,
-        selectedClass: classAnalysis.selectedClass,
-        selectedPeriod: classAnalysis.selectedPeriodId,
-        hasData: classAnalysis.hasData,
-      });
-    }
-  }, [classAnalysis.subjectAverages, classAnalysis.studentScores, classAnalysis.selectedClass, classAnalysis.selectedPeriodId, classAnalysis.hasData]);
 
   // Ranked students with real data from classAnalysis
   const rankedStudents = useMemo(() => {
@@ -900,6 +938,198 @@ export default function TeacherAcademicPage() {
   const bandsCompareClass = bandsAdditionalSelections[0]?.className || classAnalysis.selectedClass || "";
   const bandsCompareSubject = bandsAdditionalSelections[0]?.subject || bandsSelectedSubject || "Mathematics";
 
+  const academicPeriodById = useMemo(() => {
+    return new Map(classAnalysis.academicPeriods.map((period) => [period.id, period]));
+  }, [classAnalysis.academicPeriods]);
+
+  const getPeriodLabel = useCallback(
+    (periodId: string) => academicPeriodById.get(periodId)?.name || "Exam",
+    [academicPeriodById]
+  );
+
+  const getPeriodYearLabel = useCallback(
+    (periodId: string) => {
+      const period = academicPeriodById.get(periodId);
+      if (!period) return "Unknown";
+      if (Number.isFinite(period.academic_year)) {
+        return String(period.academic_year);
+      }
+      return "Unknown";
+    },
+    [academicPeriodById]
+  );
+
+  const getPeriodExamType = useCallback(
+    (periodId: string) => {
+      const period = academicPeriodById.get(periodId);
+      if (!period) return "Mid-Year";
+      const label = `${period.name} ${period.code}`.toLowerCase();
+      if (label.includes("mid")) return "Mid-Year";
+      if (label.includes("end") || label.includes("final")) return "Year-End";
+      return "Mid-Year";
+    },
+    [academicPeriodById]
+  );
+
+  const subjectNameToId = useMemo(() => {
+    return new Map(classAnalysis.subjects.map((subject) => [subject.name, subject.id]));
+  }, [classAnalysis.subjects]);
+
+  const subjectIdToName = useMemo(() => {
+    return new Map(classAnalysis.subjects.map((subject) => [subject.id, subject.name]));
+  }, [classAnalysis.subjects]);
+
+  const compareSubjectIds = useMemo(() => {
+    return compareSubjects
+      .map((name) => subjectNameToId.get(name))
+      .filter((id): id is number => typeof id === "number");
+  }, [compareSubjects, subjectNameToId]);
+
+  const compareGradesByPeriod = useMemo(() => {
+    const map = new Map<string, number[]>();
+    classAnalysis.grades.forEach((grade) => {
+      if (!compareSubjectIds.includes(grade.subject_id)) return;
+      if (!Number.isFinite(grade.total_marks)) return;
+      const list = map.get(grade.academic_period_id) || [];
+      list.push(grade.total_marks as number);
+      map.set(grade.academic_period_id, list);
+    });
+    return map;
+  }, [classAnalysis.grades, compareSubjectIds]);
+
+  const analysisAssessmentRecords = useMemo(() => {
+    const studentById = new Map(
+      classAnalysis.students.map((student) => [student.id, student])
+    );
+
+    return classAnalysis.grades
+      .map((grade) => {
+        if (!Number.isFinite(grade.total_marks)) return null;
+        const student = studentById.get(grade.student_id);
+        const subjectName = subjectIdToName.get(grade.subject_id);
+        const yearLabel =
+          grade.academic_year !== null && grade.academic_year !== undefined
+            ? String(grade.academic_year)
+            : "Unknown";
+        if (!student || !subjectName || yearLabel === "Unknown") return null;
+        const yearMatch = student.year_level?.match(/(\d+)/);
+        const yearGroup = yearMatch ? `Year ${yearMatch[1]}` : student.year_level || "Year";
+        return {
+          student_id: student.id,
+          student_name: student.name,
+          academic_year: yearLabel,
+          subject: subjectName,
+          exam_type: getPeriodExamType(grade.academic_period_id),
+          score_numeric: grade.total_marks as number,
+          class_id: student.class,
+          year_group: yearGroup,
+        };
+      })
+      .filter((record): record is {
+        student_id: string;
+        student_name: string;
+        academic_year: string;
+        subject: string;
+        exam_type: "Mid-Year" | "Year-End";
+        score_numeric: number;
+        class_id: string;
+        year_group: string;
+      } => record !== null);
+  }, [
+    classAnalysis.grades,
+    classAnalysis.students,
+    subjectIdToName,
+    getPeriodYearLabel,
+    getPeriodExamType,
+  ]);
+
+  const analysisStudentsForBoxPlot = useMemo(() => {
+    return classAnalysis.students.map((student) => {
+      const yearMatch = student.year_level?.match(/(\d+)/);
+      const yearGroup = yearMatch ? `Year ${yearMatch[1]}` : student.year_level || "Year";
+      return {
+        id: student.id,
+        name: student.name,
+        class_id: student.class,
+        year_group: yearGroup,
+      };
+    });
+  }, [classAnalysis.students]);
+
+  // Available years from data
+  const availableBoxPlotYears = useMemo(
+    () => getAvailableYears(analysisAssessmentRecords),
+    [analysisAssessmentRecords]
+  );
+
+  useEffect(() => {
+    if (availableBoxPlotYears.length === 0) return;
+    const sorted = [...availableBoxPlotYears].sort(
+      (a, b) => parseInt(a) - parseInt(b)
+    );
+    const minYear = sorted[0];
+    const maxYear = sorted[sorted.length - 1];
+    setBoxPlotStartYear((prev) =>
+      availableBoxPlotYears.includes(prev) ? prev : minYear
+    );
+    setBoxPlotEndYear((prev) => {
+      const next = availableBoxPlotYears.includes(prev) ? prev : maxYear;
+      if (parseInt(next) < parseInt(minYear)) return minYear;
+      return next;
+    });
+  }, [availableBoxPlotYears]);
+
+  useEffect(() => {
+    if (!boxPlotStartYear || !boxPlotEndYear) return;
+    if (parseInt(boxPlotEndYear) < parseInt(boxPlotStartYear)) {
+      setBoxPlotEndYear(boxPlotStartYear);
+    }
+  }, [boxPlotStartYear, boxPlotEndYear]);
+
+  const buildTwoExamComparison = useCallback(
+    (periodAId: string, periodBId: string) => {
+      return compareSubjects.map((subjectName) => {
+        const subjectId = subjectNameToId.get(subjectName);
+        if (!subjectId) {
+          return { name: subjectName, examA: 0, examB: 0, delta: 0, improved: false };
+        }
+        const scoresA = classAnalysis.grades.filter(
+          (grade) =>
+            grade.academic_period_id === periodAId &&
+            grade.subject_id === subjectId &&
+            Number.isFinite(grade.total_marks)
+        );
+        const scoresB = classAnalysis.grades.filter(
+          (grade) =>
+            grade.academic_period_id === periodBId &&
+            grade.subject_id === subjectId &&
+            Number.isFinite(grade.total_marks)
+        );
+        const avgA =
+          scoresA.length > 0
+            ? Math.round(
+                scoresA.reduce(
+                  (sum, grade) => sum + (grade.total_marks as number),
+                  0
+                ) / scoresA.length
+              )
+            : 0;
+        const avgB =
+          scoresB.length > 0
+            ? Math.round(
+                scoresB.reduce(
+                  (sum, grade) => sum + (grade.total_marks as number),
+                  0
+                ) / scoresB.length
+              )
+            : 0;
+        const delta = avgA - avgB;
+        return { name: subjectName, examA: avgA, examB: avgB, delta, improved: delta > 0 };
+      });
+    },
+    [classAnalysis.grades, compareSubjects, subjectNameToId]
+  );
+
   // Comparison chart data - now supports all selections
   const bandsComparisonChartData = useMemo(() => {
     return bandsGradeDistribution.map((item, index) => {
@@ -939,7 +1169,6 @@ export default function TeacherAcademicPage() {
   // This is the key fix - use real Supabase data instead of mock data
   const subjectAverages = useMemo(() => {
     if (!classAnalysis.hasData) {
-      console.log('[Subject Performance] No data available');
       return [];
     }
     
@@ -950,82 +1179,37 @@ export default function TeacherAcademicPage() {
       average: sa.gradeCount > 0 ? sa.average : 0
     }));
     
-    if (process.env.NODE_ENV === 'development') {
-      console.log('[Subject Performance] Mapped averages:', mapped.length, 'subjects');
-    }
-    
     return mapped;
   }, [classAnalysis.subjectAverages, classAnalysis.hasData]);
   
   const selectedStudentData = students.find(s => s.id === selectedStudent);
 
-  // Year-over-year trend data with period filtering (like student page)
+  // Year-over-year trend data from real grades, sliced by selected range
   const trendData = useMemo(() => {
-    const data = subjectYearlyData[selectedClass as keyof typeof subjectYearlyData] || subjectYearlyData["5A"];
-    const years = data.map(d => String(d.year));
+    const data = classAnalysis.trendData;
+    const rangeMap: Record<typeof trendPeriod, number> = {
+      "1year": 2,
+      "2years": 4,
+      "3years": 6,
+      "4years": 8,
+      "5years": 10,
+      "6years": 12,
+    };
+    const sliceCount = rangeMap[trendPeriod];
+    if (data.length <= sliceCount) return data;
+    return data.slice(-sliceCount);
+  }, [classAnalysis.trendData, trendPeriod]);
 
-    // Create periods array (mid-year and year-end for each year except current)
-    const periods: {
-      year: string;
-      type: "midYear" | "yearEnd";
-      label: string;
-    }[] = [];
-    years.forEach((year, idx) => {
-      periods.push({
-        year,
-        type: "midYear",
-        label: `Mid ${year}`
+  const trendSubjectKeys = useMemo(() => {
+    const keys = new Set<string>();
+    trendData.forEach((entry) => {
+      Object.keys(entry).forEach((key) => {
+        if (key === "period" || key === "periodId" || key === "Average") return;
+        keys.add(key);
       });
-      if (idx < years.length - 1) {
-        periods.push({
-          year,
-          type: "yearEnd",
-          label: `End ${year}`
-        });
-      }
     });
-
-    // Filter based on trendPeriod
-    let filteredPeriods = periods;
-    if (trendPeriod === "1year") {
-      filteredPeriods = periods.slice(-2);
-    } else if (trendPeriod === "2years") {
-      filteredPeriods = periods.slice(-4);
-    } else if (trendPeriod === "3years") {
-      filteredPeriods = periods.slice(-6);
-    } else if (trendPeriod === "4years") {
-      filteredPeriods = periods.slice(-8);
-    } else if (trendPeriod === "5years") {
-      filteredPeriods = periods.slice(-10);
-    } else if (trendPeriod === "6years") {
-      filteredPeriods = periods.slice(-12);
-    }
-    return filteredPeriods.map(p => {
-      const yearData = data.find(d => String(d.year) === p.year);
-      if (!yearData) return {
-        period: p.label,
-        Average: 0
-      };
-      const result: Record<string, number | string | null> = {
-        period: p.label
-      };
-      
-      // Add all subjects from yearData (except 'year')
-      let totalScore = 0;
-      let subjectCount = 0;
-      Object.entries(yearData).forEach(([key, value]) => {
-        if (key !== 'year' && typeof value === 'number') {
-          result[key] = value;
-          totalScore += value;
-          subjectCount++;
-        }
-      });
-
-      // Calculate average
-      result["Average"] = subjectCount > 0 ? Math.round(totalScore / subjectCount) : 0;
-      return result;
-    });
-  }, [selectedClass, trendPeriod]);
+    return Array.from(keys);
+  }, [trendData]);
 
   // Calculate trend direction for selected subject(s) - uses average of all selected subjects
   const trendDirection = useMemo(() => {
@@ -1102,82 +1286,70 @@ export default function TeacherAcademicPage() {
 
   // Radar chart data for subject strengths (filtered by trendsSelectedSubjects) - use tiny codes for compact display
   const radarData = useMemo(() => {
-    const data = subjectYearlyData[selectedClass as keyof typeof subjectYearlyData] || subjectYearlyData["5A"];
-    const latest = data[data.length - 1];
-    
-    // Build radar data from all subjects in the data using tiny codes
-    const subjectList: { name: string; subject: string; score: number; fullMark: number }[] = [];
-    Object.entries(latest).forEach(([key, value]) => {
-      if (key !== 'year' && typeof value === 'number') {
-        subjectList.push({
+    const latest = trendData[trendData.length - 1];
+    if (!latest) return [];
+
+    const subjectList = trendSubjectKeys
+      .map((key) => {
+        const value = latest[key];
+        if (typeof value !== "number") return null;
+        return {
           name: key,
           subject: getTinySubjectCode(key),
           score: value,
-          fullMark: 100
-        });
-      }
-    });
-    return subjectList.filter(s => trendsSelectedSubjects.includes(s.name));
-  }, [selectedClass, trendsSelectedSubjects]);
+          fullMark: 100,
+        };
+      })
+      .filter(
+        (item): item is { name: string; subject: string; score: number; fullMark: number } =>
+          item !== null
+      );
+
+    return subjectList.filter((s) => trendsSelectedSubjects.includes(s.name));
+  }, [trendData, trendSubjectKeys, trendsSelectedSubjects]);
 
   // Radar average for color coding
   const radarAverage = useMemo(() => {
     const scores = radarData.map(d => d.score);
+    if (scores.length === 0) return 0;
     return scores.reduce((a, b) => a + b, 0) / scores.length;
   }, [radarData]);
 
-  // Calculate cohort average from all classes in the same year level
+  // Calculate average per subject across the selected trend range
   const cohortAverages = useMemo(() => {
-    // Early return if no class selected
-    if (!selectedClass) return {};
-    
-    // Determine the year level from selected class (e.g., "5A" -> "5")
-    const yearLevel = selectedClass.charAt(0);
-    
-    // Get all classes in the same year level
-    const cohortClasses = Object.keys(subjectYearlyData).filter(cls => cls.charAt(0) === yearLevel);
-    
-    // Get the latest year data for each class
-    const latestDataPerClass = cohortClasses.map(cls => {
-      const data = subjectYearlyData[cls as keyof typeof subjectYearlyData];
-      return data ? data[data.length - 1] : null;
-    }).filter(Boolean) as Record<string, number | string>[];
-    
-    // Calculate average for each subject across all classes in the cohort
     const subjectTotals: Record<string, { sum: number; count: number }> = {};
-    
-    latestDataPerClass.forEach(classData => {
-      Object.entries(classData).forEach(([key, value]) => {
-        if (key !== 'year' && typeof value === 'number') {
-          if (!subjectTotals[key]) {
-            subjectTotals[key] = { sum: 0, count: 0 };
-          }
-          subjectTotals[key].sum += value;
-          subjectTotals[key].count += 1;
+
+    trendData.forEach((entry) => {
+      Object.entries(entry).forEach(([key, value]) => {
+        if (key === "period" || key === "periodId" || key === "Average") return;
+        if (typeof value !== "number") return;
+        if (!subjectTotals[key]) {
+          subjectTotals[key] = { sum: 0, count: 0 };
         }
+        subjectTotals[key].sum += value;
+        subjectTotals[key].count += 1;
       });
     });
-    
-    // Convert to averages
+
     const averages: Record<string, number> = {};
     Object.entries(subjectTotals).forEach(([subject, { sum, count }]) => {
       averages[subject] = Math.round(sum / count);
     });
     
     return averages;
-  }, [selectedClass]);
+  }, [trendData]);
 
   // Subject vs Cohort Average data
   const subjectVsCohortData = useMemo(() => {
-    const data = subjectYearlyData[selectedClass as keyof typeof subjectYearlyData] || subjectYearlyData["5A"];
-    const latest = data[data.length - 1];
+    const latest = trendData[trendData.length - 1];
+    if (!latest) return [];
     
     // Build from all subjects in latest data
     const allSubjects: { name: string; fullName: string; classScore: number; cohortAvg: number; delta: number }[] = [];
     Object.entries(latest).forEach(([key, value]) => {
-      if (key !== 'year' && typeof value === 'number') {
+      if (key !== "period" && key !== "periodId" && key !== "Average" && typeof value === 'number') {
         const shortName = getShortSubjectName(key);
-        const subjectCohortAvg = cohortAverages[key] || 70; // Use calculated cohort avg
+        const subjectCohortAvg = cohortAverages[key] ?? value;
         allSubjects.push({
           name: shortName.length > 8 ? shortName.substring(0, 8) : shortName,
           fullName: key,
@@ -1188,25 +1360,23 @@ export default function TeacherAcademicPage() {
       }
     });
     return allSubjects.filter(s => selectedSubjects.includes(s.fullName)).sort((a, b) => b.delta - a.delta);
-  }, [selectedClass, selectedSubjects, cohortAverages]);
+  }, [trendData, selectedSubjects, cohortAverages]);
 
   // Performance Heatmap data (filtered by selectedSubjects)
   const heatmapData = useMemo(() => {
-    const data = subjectYearlyData[selectedClass as keyof typeof subjectYearlyData] || subjectYearlyData["5A"];
-    
-    // Get all subject keys from the first entry
-    const firstEntry = data[0];
-    const subjectKeys = Object.keys(firstEntry).filter(k => k !== 'year');
-    
-    return subjectKeys.filter(subject => selectedSubjects.includes(subject)).map(subject => ({
-      subject: getShortSubjectName(subject).substring(0, 6),
-      fullName: subject,
-      scores: data.map(yearData => ({
-        period: String(yearData.year),
-        score: typeof yearData[subject] === 'number' ? yearData[subject] as number : null
-      }))
-    }));
-  }, [selectedClass, selectedSubjects]);
+    if (trendData.length === 0) return [];
+
+    return trendSubjectKeys
+      .filter((subject) => selectedSubjects.includes(subject))
+      .map((subject) => ({
+        subject: getShortSubjectName(subject).substring(0, 6),
+        fullName: subject,
+        scores: trendData.map((entry) => ({
+          period: entry.period,
+          score: typeof entry[subject] === "number" ? (entry[subject] as number) : null,
+        })),
+      }));
+  }, [trendData, trendSubjectKeys, selectedSubjects]);
 
   // Helper function to get heatmap cell color based on score
   const getHeatmapColor = (score: number | null): string => {
@@ -1235,7 +1405,7 @@ export default function TeacherAcademicPage() {
 
           <TabsContent value="entry" className="space-y-4">
             {/* Class, Subject & Academic Period Selection - FROM SUPABASE */}
-            <div className="grid grid-cols-3 gap-2">
+            <div className="grid grid-cols-4 gap-2">
               <Select 
                 value={gradeEntry.selectedClass || ""} 
                 onValueChange={v => {
@@ -1257,6 +1427,29 @@ export default function TeacherAcademicPage() {
                 <SelectContent>
                   {gradeEntry.classes.map(cls => (
                     <SelectItem key={cls} value={cls}>{cls}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+
+              <Select
+                value={
+                  gradeEntry.selectedAcademicYear
+                    ? String(gradeEntry.selectedAcademicYear)
+                    : ""
+                }
+                onValueChange={(v) =>
+                  gradeEntry.setSelectedAcademicYear(v ? Number(v) : null)
+                }
+                disabled={gradeEntry.availableAcademicYears.length === 0}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Year" />
+                </SelectTrigger>
+                <SelectContent>
+                  {gradeEntry.availableAcademicYears.map((year) => (
+                    <SelectItem key={year} value={String(year)}>
+                      {year}
+                    </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
@@ -1292,15 +1485,16 @@ export default function TeacherAcademicPage() {
               <Select 
                 value={gradeEntry.selectedPeriod?.id || ""} 
                 onValueChange={v => {
-                  const period = gradeEntry.academicPeriods.find(p => p.id === v);
+                  const period = gradeEntry.academicPeriodsForYear.find(p => p.id === v);
                   gradeEntry.setSelectedPeriod(period || null);
                 }}
+                disabled={gradeEntry.academicPeriodsForYear.length === 0}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Period" />
                 </SelectTrigger>
                 <SelectContent>
-                  {gradeEntry.academicPeriods.map(period => (
+                  {gradeEntry.academicPeriodsForYear.map(period => (
                     <SelectItem key={period.id} value={period.id}>
                       {period.name}
                       {!period.is_open_for_grading && " (Closed)"}
@@ -1510,15 +1704,14 @@ export default function TeacherAcademicPage() {
                         variant="outline" 
                         size="sm" 
                         className="flex-1 text-xs h-9"
-                        onClick={() => {
+                        onClick={async () => {
                           const csvContent = gradeEntry.generateTemplate();
                           const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
-                          const url = URL.createObjectURL(blob);
-                          const link = document.createElement("a");
-                          link.href = url;
-                          link.download = `${gradeEntry.selectedClass}_${gradeEntry.selectedSubject?.name}_template.csv`;
-                          link.click();
-                          URL.revokeObjectURL(url);
+                          await downloadBlobAsFile(
+                            blob,
+                            `${gradeEntry.selectedClass}_${gradeEntry.selectedSubject?.name}_template.csv`,
+                            "text/csv;charset=utf-8;"
+                          );
                           
                           toast({
                             title: "Template Downloaded",
@@ -1533,15 +1726,14 @@ export default function TeacherAcademicPage() {
                         variant="outline" 
                         size="sm" 
                         className="flex-1 text-xs h-9"
-                        onClick={() => {
+                        onClick={async () => {
                           const csvContent = gradeEntry.exportGrades();
                           const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
-                          const url = URL.createObjectURL(blob);
-                          const link = document.createElement("a");
-                          link.href = url;
-                          link.download = `${gradeEntry.selectedClass}_${gradeEntry.selectedSubject?.name}_grades.csv`;
-                          link.click();
-                          URL.revokeObjectURL(url);
+                          await downloadBlobAsFile(
+                            blob,
+                            `${gradeEntry.selectedClass}_${gradeEntry.selectedSubject?.name}_grades.csv`,
+                            "text/csv;charset=utf-8;"
+                          );
                           
                           toast({
                             title: "Grades Exported",
@@ -1816,11 +2008,35 @@ export default function TeacherAcademicPage() {
                 </CardContent>
               </Card>
             )}
-          </TabsContent>
+        </TabsContent>
 
-          <TabsContent value="analysis" className="space-y-4">
-            {/* Sub-tabs for Class Analysis */}
-            <Tabs defaultValue="overview" className="w-full" onValueChange={(v) => setAnalysisSubTab(v as "overview" | "distribution" | "trends" | "comparison" | "boxplot")}>
+        <TabsContent value="analysis" className="space-y-4">
+          <div className="flex items-center gap-2">
+            <span className="text-sm font-medium text-muted-foreground">Academic Year:</span>
+            <Select
+              value={
+                classAnalysis.selectedAcademicYear
+                  ? String(classAnalysis.selectedAcademicYear)
+                  : ""
+              }
+              onValueChange={(v) =>
+                classAnalysis.setSelectedAcademicYear(v ? Number(v) : null)
+              }
+            >
+              <SelectTrigger className="w-[120px] h-9">
+                <SelectValue placeholder="Year" />
+              </SelectTrigger>
+              <SelectContent className="bg-card">
+                {classAnalysis.availableAcademicYears.map((year) => (
+                  <SelectItem key={year} value={String(year)}>
+                    {year}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          {/* Sub-tabs for Class Analysis */}
+          <Tabs defaultValue="overview" className="w-full" onValueChange={(v) => setAnalysisSubTab(v as "overview" | "distribution" | "trends" | "comparison" | "boxplot")}>
               <TabsList className="grid w-full grid-cols-5 mb-4 bg-muted/50">
                 <TabsTrigger value="overview" className="text-xs">Overview</TabsTrigger>
                 <TabsTrigger value="distribution" className="text-xs">Bands</TabsTrigger>
@@ -1874,17 +2090,43 @@ export default function TeacherAcademicPage() {
                         </SelectContent>
                       </Select>
 
+                      <Select
+                        value={
+                          classAnalysis.selectedAcademicYear
+                            ? String(classAnalysis.selectedAcademicYear)
+                            : ""
+                        }
+                        onValueChange={(v) =>
+                          classAnalysis.setSelectedAcademicYear(
+                            v ? Number(v) : null
+                          )
+                        }
+                      >
+                        <SelectTrigger className="w-[110px] h-9">
+                          <SelectValue placeholder="Year" />
+                        </SelectTrigger>
+                        <SelectContent className="bg-card">
+                          {classAnalysis.availableAcademicYears.map((year) => (
+                            <SelectItem key={year} value={String(year)}>
+                              {year}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+
                       {/* Academic Period Dropdown */}
-                      <Select 
-                        value={classAnalysis.selectedPeriodId || ""} 
+                      <Select
+                        value={classAnalysis.selectedPeriodId || ""}
                         onValueChange={(v) => classAnalysis.setSelectedPeriodId(v)}
                       >
                         <SelectTrigger className="flex-1 h-9">
                           <SelectValue placeholder="Select Period" />
                         </SelectTrigger>
                         <SelectContent className="bg-card">
-                          {classAnalysis.academicPeriods.map((period) => (
-                            <SelectItem key={period.id} value={period.id}>{period.name}</SelectItem>
+                          {classAnalysis.academicPeriodsForYear.map((period) => (
+                            <SelectItem key={period.id} value={period.id}>
+                              {period.name}
+                            </SelectItem>
                           ))}
                         </SelectContent>
                       </Select>
@@ -1898,7 +2140,7 @@ export default function TeacherAcademicPage() {
                           <SelectValue placeholder="Compare To" />
                         </SelectTrigger>
                         <SelectContent className="bg-card">
-                          {classAnalysis.academicPeriods.filter(p => p.id !== classAnalysis.selectedPeriodId).map((period) => (
+                          {classAnalysis.academicPeriodsForYear.filter(p => p.id !== classAnalysis.selectedPeriodId).map((period) => (
                             <SelectItem key={period.id} value={period.id}>{period.name}</SelectItem>
                           ))}
                         </SelectContent>
@@ -1912,16 +2154,21 @@ export default function TeacherAcademicPage() {
                           {classAnalysis.selectedClass}
                         </Badge>
                       )}
-                      {classAnalysis.selectedPeriodId && (
-                        <Badge variant="outline" className="text-[10px] font-normal">
-                          {classAnalysis.academicPeriods.find(p => p.id === classAnalysis.selectedPeriodId)?.name}
-                        </Badge>
-                      )}
-                      {classAnalysis.comparePeriodId && (
-                        <Badge variant="outline" className="text-[10px] font-normal">
-                          vs {classAnalysis.academicPeriods.find(p => p.id === classAnalysis.comparePeriodId)?.name}
-                        </Badge>
-                      )}
+                        {classAnalysis.selectedAcademicYear && (
+                          <Badge variant="outline" className="text-[10px] font-normal">
+                            {classAnalysis.selectedAcademicYear}
+                          </Badge>
+                        )}
+                        {classAnalysis.selectedPeriodId && (
+                          <Badge variant="outline" className="text-[10px] font-normal">
+                            {classAnalysis.academicPeriodsForYear.find(p => p.id === classAnalysis.selectedPeriodId)?.name}
+                          </Badge>
+                        )}
+                        {classAnalysis.comparePeriodId && (
+                          <Badge variant="outline" className="text-[10px] font-normal">
+                            vs {classAnalysis.academicPeriodsForYear.find(p => p.id === classAnalysis.comparePeriodId)?.name}
+                          </Badge>
+                        )}
                     </div>
 
                     {/* Empty State */}
@@ -1936,9 +2183,22 @@ export default function TeacherAcademicPage() {
 
                     {classAnalysis.selectedClass && !classAnalysis.hasData && !classAnalysis.loadingData && (
                       <Card className="border-dashed">
-                        <CardContent className="p-6 text-center">
-                          <BarChart3 className="h-10 w-10 text-muted-foreground/50 mx-auto mb-3" />
-                          <p className="text-sm text-muted-foreground">No grades recorded for this class/period yet.</p>
+                        <CardContent className="p-6 text-center space-y-3">
+                          <BarChart3 className="h-10 w-10 text-muted-foreground/50 mx-auto" />
+                          <p className="text-sm text-muted-foreground">
+                            {classAnalysis.hasYearGrades
+                              ? "No grades recorded for this exam period yet."
+                              : "No grades recorded for the selected academic year yet."}
+                          </p>
+                          {!classAnalysis.hasYearGrades && (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => gradeEntryRef.current?.scrollIntoView({ behavior: "smooth" })}
+                            >
+                              Go to Grade Entry
+                            </Button>
+                          )}
                         </CardContent>
                       </Card>
                     )}
@@ -2093,9 +2353,11 @@ export default function TeacherAcademicPage() {
                 {!classAnalysis.hasData ? (
                   <div className="p-6 text-center border rounded-lg bg-muted/30">
                     <BarChart3 className="h-8 w-8 mx-auto mb-2 text-muted-foreground" />
-                    <p className="text-sm text-muted-foreground">
-                      No grades recorded for this class/period yet
-                    </p>
+                      <p className="text-sm text-muted-foreground">
+                        {classAnalysis.hasYearGrades
+                          ? "No grades recorded for this exam period yet."
+                          : "No grades recorded for the selected academic year yet."}
+                      </p>
                   </div>
                 ) : subjectAverages.length === 0 ? (
                   <div className="p-6 text-center border rounded-lg bg-muted/30">
@@ -2175,7 +2437,7 @@ export default function TeacherAcademicPage() {
                     <Users className="h-5 w-5 mb-1.5" style={{
                     color: '#a855f7'
                   }} />
-                    <span className="text-lg font-bold text-foreground">{students.length}</span>
+                      <span className="text-lg font-bold text-foreground">{rosterCount}</span>
                     <span className="text-[10px] text-muted-foreground leading-tight">Students</span>
                     <span className="text-[9px] text-muted-foreground/70">In Class</span>
                   </div>
@@ -2187,9 +2449,9 @@ export default function TeacherAcademicPage() {
                     <Target className="h-5 w-5 mb-1.5" style={{
                     color: '#14b8a6'
                   }} />
-                    <span className="text-lg font-bold text-foreground">
-                      {Math.round(passRate * students.length / 100)}/{students.length}
-                    </span>
+                      <span className="text-lg font-bold text-foreground">
+                        {passCount}/{rosterCount}
+                      </span>
                     <span className="text-[10px] text-muted-foreground leading-tight">Passing</span>
                     <span className="text-[9px] text-muted-foreground/70">{passRate}%</span>
                   </div>
@@ -2349,12 +2611,12 @@ export default function TeacherAcademicPage() {
                         <SelectTrigger className="flex-1 h-9">
                           <SelectValue placeholder="Select Period" />
                         </SelectTrigger>
-                        <SelectContent className="bg-card">
-                          {classAnalysis.academicPeriods.map((period) => (
-                            <SelectItem key={period.id} value={period.id}>{period.name}</SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
+                          <SelectContent className="bg-card">
+                            {classAnalysis.academicPeriodsForYear.map((period) => (
+                              <SelectItem key={period.id} value={period.id}>{period.name}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
                     </div>
                     
                     {/* Subject Filter - use real subjects from classAnalysis */}
@@ -2427,12 +2689,12 @@ export default function TeacherAcademicPage() {
                             <SelectTrigger className="flex-1 h-9">
                               <SelectValue placeholder="Period" />
                             </SelectTrigger>
-                            <SelectContent className="bg-card">
-                              {classAnalysis.academicPeriods.map((period) => (
-                                <SelectItem key={period.id} value={period.id}>{period.name}</SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
+                              <SelectContent className="bg-card">
+                                {classAnalysis.academicPeriodsForYear.map((period) => (
+                                  <SelectItem key={period.id} value={period.id}>{period.name}</SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
                         </div>
                         
                         {/* Subject Filter - use real subjects */}
@@ -2948,7 +3210,7 @@ export default function TeacherAcademicPage() {
                           variant="outline"
                           size="sm"
                           className="gap-1.5"
-                          onClick={() => {
+                          onClick={async () => {
                             // Generate CSV data for bands
                             const csvRows = [
                               ['Name', 'Score', 'Grade', 'Band'],
@@ -2960,10 +3222,11 @@ export default function TeacherAcademicPage() {
                             ];
                             const csvContent = csvRows.map(row => row.join(',')).join('\n');
                             const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-                            const link = document.createElement('a');
-                            link.href = URL.createObjectURL(blob);
-                            link.download = `grade-distribution-${selectedClass}-${bandsSelectedSubject}-${new Date().toISOString().split('T')[0]}.csv`;
-                            link.click();
+                            await downloadBlobAsFile(
+                              blob,
+                              `grade-distribution-${selectedClass}-${bandsSelectedSubject}-${new Date().toISOString().split('T')[0]}.csv`,
+                              "text/csv;charset=utf-8;"
+                            );
                           }}
                         >
                           <FileSpreadsheet className="h-4 w-4" />
@@ -2974,252 +3237,11 @@ export default function TeacherAcademicPage() {
                           size="sm"
                           className="gap-1.5"
                           onClick={() => {
-                          if (bandsReportRef.current) {
-                            const printWindow = window.open('', '_blank');
-                            if (printWindow) {
-                              printWindow.document.write(`
-                                <html>
-                                  <head>
-                                    <title>Grade Distribution Report</title>
-                                    <style>
-                                      @page { 
-                                        size: A4; 
-                                        margin: 12mm 15mm;
-                                      }
-                                      * { 
-                                        box-sizing: border-box; 
-                                        margin: 0;
-                                        padding: 0;
-                                      }
-                                      body { 
-                                        font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; 
-                                        padding: 0;
-                                        margin: 0;
-                                        font-size: 10px;
-                                        line-height: 1.3;
-                                        color: #1a1a1a;
-                                        -webkit-print-color-adjust: exact !important;
-                                        print-color-adjust: exact !important;
-                                        background: white;
-                                      }
-                                      
-                                      /* Report Header - Compact */
-                                      .report-header { 
-                                        display: flex;
-                                        align-items: center;
-                                        justify-content: center;
-                                        gap: 12px;
-                                        text-align: center; 
-                                        margin-bottom: 12px; 
-                                        border-bottom: 2px solid #1a1a1a; 
-                                        padding-bottom: 10px; 
-                                      }
-                                      .report-header img,
-                                      .report-header .school-logo {
-                                        width: 40px !important;
-                                        height: 40px !important;
-                                        max-width: 40px !important;
-                                        max-height: 40px !important;
-                                        object-fit: contain !important;
-                                        flex-shrink: 0;
-                                      }
-                                      .report-header h1 { 
-                                        margin: 0 0 2px 0; 
-                                        font-size: 16px; 
-                                        font-weight: 700;
-                                        color: #1a1a1a;
-                                      }
-                                      .report-header p { 
-                                        margin: 0; 
-                                        color: #666; 
-                                        font-size: 9px; 
-                                      }
-                                      
-                                      /* Section Styling */
-                                      .section { 
-                                        margin-bottom: 12px; 
-                                        page-break-inside: avoid; 
-                                      }
-                                      .section h3 { 
-                                        font-size: 11px; 
-                                        font-weight: 600;
-                                        margin: 0 0 6px 0; 
-                                        padding-bottom: 3px; 
-                                        border-bottom: 1px solid #ddd; 
-                                        color: #1a1a1a;
-                                      }
-                                      .section h4 { 
-                                        font-size: 10px; 
-                                        font-weight: 600;
-                                        margin: 0 0 4px 0; 
-                                        display: flex;
-                                        align-items: center;
-                                        gap: 4px;
-                                      }
-                                      
-                                      /* Grade Distribution Grid */
-                                      .grade-grid { 
-                                        display: grid !important; 
-                                        grid-template-columns: repeat(6, 1fr) !important; 
-                                        gap: 4px !important; 
-                                        margin-bottom: 10px !important; 
-                                      }
-                                      .grade-card { 
-                                        text-align: center !important; 
-                                        padding: 6px 2px !important; 
-                                        border: 1px solid #ddd !important; 
-                                        border-radius: 4px !important; 
-                                        background: white !important;
-                                      }
-                                      .grade-card .grade { 
-                                        font-size: 11px !important; 
-                                        font-weight: 700 !important; 
-                                      }
-                                      .grade-card .count { 
-                                        font-size: 14px !important; 
-                                        font-weight: 700 !important; 
-                                        color: #1a1a1a !important;
-                                      }
-                                      .grade-card .percent { 
-                                        font-size: 8px !important; 
-                                        color: #666 !important; 
-                                      }
-                                      
-                                      /* Performers Grid */
-                                      .performers-grid { 
-                                        display: grid !important; 
-                                        grid-template-columns: repeat(3, 1fr) !important; 
-                                        gap: 8px !important; 
-                                        margin-bottom: 10px !important;
-                                      }
-                                      .performer-box { 
-                                        padding: 8px !important; 
-                                        border-radius: 6px !important; 
-                                        page-break-inside: avoid !important;
-                                      }
-                                      .performer-box.top { 
-                                        background: #fef3c7 !important; 
-                                        border: 1px solid #fcd34d !important; 
-                                      }
-                                      .performer-box.middle { 
-                                        background: #dbeafe !important; 
-                                        border: 1px solid #93c5fd !important; 
-                                      }
-                                      .performer-box.risk { 
-                                        background: #fee2e2 !important; 
-                                        border: 1px solid #fca5a5 !important; 
-                                      }
-                                      
-                                      /* Student Lists */
-                                      .student-section { 
-                                        page-break-inside: avoid; 
-                                        margin-bottom: 8px; 
-                                      }
-                                      .student-list { 
-                                        margin-top: 4px; 
-                                      }
-                                      .student-row { 
-                                        display: flex !important; 
-                                        justify-content: space-between !important; 
-                                        padding: 2px 6px !important; 
-                                        border-bottom: 1px solid #eee !important; 
-                                        font-size: 9px !important;
-                                      }
-                                      .student-row:nth-child(odd) { 
-                                        background: #f9f9f9 !important; 
-                                      }
-                                      
-                                      /* Comparison Layout */
-                                      .comparison-grid { 
-                                        display: grid !important; 
-                                        grid-template-columns: 1fr 1fr !important; 
-                                        gap: 10px !important; 
-                                      }
-                                      .comparison-box { 
-                                        padding: 8px !important; 
-                                        border: 1px solid #ddd !important; 
-                                        border-radius: 6px !important; 
-                                        page-break-inside: avoid !important;
-                                      }
-                                      .comparison-box.blue { 
-                                        border-color: #3b82f6 !important; 
-                                        background: #eff6ff !important; 
-                                      }
-                                      .comparison-box.amber { 
-                                        border-color: #f59e0b !important; 
-                                        background: #fffbeb !important; 
-                                      }
-                                      
-                                      /* Stats Box */
-                                      .stats-box { 
-                                        padding: 8px !important; 
-                                        background: #f5f5f5 !important; 
-                                        border-radius: 6px !important; 
-                                        page-break-inside: avoid !important;
-                                        margin-top: 10px !important;
-                                      }
-                                      .stats-grid { 
-                                        display: grid !important; 
-                                        grid-template-columns: repeat(4, 1fr) !important; 
-                                        gap: 6px !important; 
-                                        text-align: center !important; 
-                                      }
-                                      
-                                      /* Tables */
-                                      table { 
-                                        width: 100% !important; 
-                                        border-collapse: collapse !important; 
-                                        font-size: 9px !important; 
-                                      }
-                                      th, td { 
-                                        padding: 4px 6px !important; 
-                                        border-bottom: 1px solid #ddd !important; 
-                                      }
-                                      th { 
-                                        background: #f5f5f5 !important; 
-                                        font-weight: 600 !important; 
-                                      }
-                                      
-                                      /* Footer */
-                                      .footer { 
-                                        text-align: center !important; 
-                                        font-size: 8px !important; 
-                                        color: #666 !important; 
-                                        margin-top: 12px !important; 
-                                        padding-top: 8px !important; 
-                                        border-top: 1px solid #ddd !important; 
-                                      }
-                                      
-                                      /* Hide Tailwind/React specific classes that don't print well */
-                                      svg { display: none !important; }
-                                      .lucide { display: none !important; }
-                                      
-                                      /* Utility colors for printing */
-                                      .text-emerald-600 { color: #059669 !important; }
-                                      .text-blue-600 { color: #2563eb !important; }
-                                      .text-red-600 { color: #dc2626 !important; }
-                                      .text-amber-700 { color: #b45309 !important; }
-                                      .text-blue-700 { color: #1d4ed8 !important; }
-                                      
-                                      @media print { 
-                                        body { 
-                                          padding: 0 !important; 
-                                          margin: 0 !important;
-                                        }
-                                        .no-print { display: none !important; }
-                                      }
-                                    </style>
-                                  </head>
-                                  <body>
-                                    ${bandsReportRef.current.innerHTML}
-                                  </body>
-                                </html>
-                              `);
-                              printWindow.document.close();
-                              printWindow.print();
-                            }
-                          }
-                        }}
+                            handleReportPdfExport(
+                              bandsReportRef,
+                              `grade-distribution-${selectedClass}-${bandsSelectedSubject}-${new Date().toISOString().split('T')[0]}`
+                            );
+                          }}
                         >
                           <Printer className="h-4 w-4" />
                           PDF
@@ -4050,7 +4072,7 @@ export default function TeacherAcademicPage() {
                     Performance Heatmap
                   </h4>
                   <p className="text-[10px] text-muted-foreground -mt-1">
-                    Scores across all years
+                    Scores across available periods
                   </p>
                   <div className="overflow-x-auto">
                     <div className="min-w-[320px]">
@@ -4149,32 +4171,21 @@ export default function TeacherAcademicPage() {
                               {classAnalysis.classes.map(cls => <SelectItem key={cls} value={cls}>{cls}</SelectItem>)}
                             </SelectContent>
                           </Select>
-                          <Select 
-                            value={exam.year} 
-                            onValueChange={(v) => setExamSelections(prev => 
-                              prev.map(e => e.id === exam.id ? {...e, year: v} : e)
-                            )}
-                          >
-                            <SelectTrigger className="w-full h-8 text-xs bg-background/80">
-                              <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent className="bg-card">
-                              {academicYears.slice(0, 4).map(year => <SelectItem key={year} value={year}>{year}</SelectItem>)}
-                            </SelectContent>
-                          </Select>
-                          <Select 
-                            value={exam.period} 
-                            onValueChange={(v) => setExamSelections(prev => 
-                              prev.map(e => e.id === exam.id ? {...e, period: v as "midYear" | "yearEnd"} : e)
-                            )}
-                          >
-                            <SelectTrigger className="w-full h-8 text-xs bg-background/80">
-                              <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent className="bg-card">
-                              {examPeriods.map(period => <SelectItem key={period.value} value={period.value}>{period.label}</SelectItem>)}
-                            </SelectContent>
-                          </Select>
+                            <Select 
+                              value={exam.periodId} 
+                              onValueChange={(v) => setExamSelections(prev => 
+                                prev.map(e => e.id === exam.id ? {...e, periodId: v} : e)
+                              )}
+                            >
+                              <SelectTrigger className="w-full h-8 text-xs bg-background/80">
+                                <SelectValue placeholder="Exam Period" />
+                              </SelectTrigger>
+                              <SelectContent className="bg-card">
+                                {classAnalysis.academicPeriodsForYear.map((period) => (
+                                  <SelectItem key={period.id} value={period.id}>{period.name}</SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
                         </div>
                       );
                     })}
@@ -4186,17 +4197,16 @@ export default function TeacherAcademicPage() {
                       variant="outline"
                       size="sm"
                       className="w-full gap-2 border-dashed"
-                      onClick={() => {
-                        const existingIds = examSelections.map(e => e.id);
-                        const newId = getNextSelectionId(existingIds);
-                        setExamSelections(prev => [...prev, {
-                          id: newId,
-                          className: classAnalysis.classes[0] || "",
-                          year: academicYears[0],
-                          period: "midYear"
-                        }]);
-                      }}
-                    >
+                        onClick={() => {
+                          const existingIds = examSelections.map(e => e.id);
+                          const newId = getNextSelectionId(existingIds);
+                          setExamSelections(prev => [...prev, {
+                            id: newId,
+                            className: classAnalysis.classes[0] || "",
+                            periodId: classAnalysis.academicPeriodsForYear[0]?.id || ""
+                          }]);
+                        }}
+                      >
                       <Plus className="h-3 w-3" />
                       Add Exam {getNextSelectionId(examSelections.map(e => e.id))}
                     </Button>
@@ -4207,15 +4217,15 @@ export default function TeacherAcademicPage() {
                 <div className="space-y-2">
                   <div className="flex items-center justify-between">
                     <label className="text-xs font-medium text-muted-foreground">Subjects</label>
-                    <div className="flex gap-2">
-                      <button className="text-xs font-medium text-foreground hover:text-primary transition-colors" onClick={() => setCompareSubjects([...subjects])}>
-                        Select All
-                      </button>
-                      <button className="text-xs font-medium text-foreground hover:text-primary transition-colors" onClick={() => setCompareSubjects([subjects[0]])}>
-                        Clear
-                      </button>
+                      <div className="flex gap-2">
+                        <button className="text-xs font-medium text-foreground hover:text-primary transition-colors" onClick={() => setCompareSubjects([...compareSubjectOptions])}>
+                          Select All
+                        </button>
+                        <button className="text-xs font-medium text-foreground hover:text-primary transition-colors" onClick={() => setCompareSubjects(compareSubjectOptions.length > 0 ? [compareSubjectOptions[0]] : [])}>
+                          Clear
+                        </button>
+                      </div>
                     </div>
-                  </div>
                   <div className="flex flex-wrap gap-1.5 p-2.5 rounded-lg border border-border bg-background items-center">
                     {/* Grouped subject pills with mobile-friendly drawers */}
                     {subjectGroups.map(group => (
@@ -4237,53 +4247,75 @@ export default function TeacherAcademicPage() {
                       />
                     ))}
                     {/* Subject count badge */}
-                    <span className="ml-auto px-2 py-0.5 text-xs font-medium bg-primary/10 text-primary rounded-full">
-                      {compareSubjects.length}/{subjects.length}
-                    </span>
+                      <span className="ml-auto px-2 py-0.5 text-xs font-medium bg-primary/10 text-primary rounded-full">
+                        {compareSubjects.length}/{compareSubjectOptions.length}
+                      </span>
                   </div>
                 </div>
 
                 {/* Comparison Content */}
                 {(() => {
-                const getExamLabelForComparison = (cls: string, year: string, period: string) => {
-                  const periodLabel = period === "midYear" ? "Mid-Year" : "Year-End";
-                  return `${cls} ${periodLabel} ${year}`;
-                };
+                  const getExamLabelForComparison = (cls: string, periodId: string) => {
+                    return `${cls} ${getPeriodLabel(periodId)}`;
+                  };
 
-                // Build data for all exam selections
-                const allExamData = examSelections.map((exam, index) => {
-                  const key = `${exam.year}-${exam.period}`;
-                  const data = subjectExamData[exam.className as keyof typeof subjectExamData]?.[key] || {};
-                  const label = getExamLabelForComparison(exam.className, exam.year, exam.period);
-                  const color = getSelectionColor(index);
-                  return { id: exam.id, data, label, color, className: exam.className, year: exam.year, period: exam.period };
-                });
-
-                // Check if at least first exam has data
-                if (!allExamData[0]?.data || Object.keys(allExamData[0].data).length === 0) {
-                  return <Card className="bg-muted/30">
-                        <CardContent className="p-8 text-center">
-                          <Scale className="h-8 w-8 mx-auto mb-2 text-muted-foreground" />
-                          <p className="text-muted-foreground text-sm">No data available for the selected exam periods</p>
-                        </CardContent>
-                      </Card>;
-                }
-
-                // Build comparison data with all exams
-                const comparisonData = compareSubjects.map(subjectName => {
-                  const dataPoint: Record<string, any> = { name: subjectName };
-                  examSelections.forEach((exam) => {
-                    const key = `${exam.year}-${exam.period}`;
-                    const examData = subjectExamData[exam.className as keyof typeof subjectExamData]?.[key] || {};
-                    dataPoint[`exam${exam.id}`] = examData[subjectName] ?? 0;
+                  const allExamData = examSelections.map((exam, index) => {
+                    const label = getExamLabelForComparison(exam.className, exam.periodId);
+                    const color = getSelectionColor(index);
+                    const gradeCount = compareGradesByPeriod.get(exam.periodId)?.length || 0;
+                    return { id: exam.id, label, color, className: exam.className, periodId: exam.periodId, gradeCount };
                   });
-                  // Calculate delta as first exam minus second exam (for backward compatibility)
-                  if (examSelections.length >= 2) {
-                    dataPoint.delta = (dataPoint[`exam${examSelections[0].id}`] || 0) - (dataPoint[`exam${examSelections[1].id}`] || 0);
-                    dataPoint.improved = dataPoint.delta > 0;
+
+                  if (compareSubjectIds.length === 0) {
+                    return <Card className="bg-muted/30">
+                          <CardContent className="p-8 text-center">
+                            <Scale className="h-8 w-8 mx-auto mb-2 text-muted-foreground" />
+                            <p className="text-muted-foreground text-sm">Select at least one subject to compare</p>
+                          </CardContent>
+                        </Card>;
                   }
-                  return dataPoint;
-                });
+
+                  const emptyExam = allExamData.find((exam) => exam.gradeCount === 0);
+                  if (emptyExam) {
+                    return <Card className="bg-muted/30">
+                          <CardContent className="p-8 text-center">
+                            <Scale className="h-8 w-8 mx-auto mb-2 text-muted-foreground" />
+                            <p className="text-muted-foreground text-sm">No grades found for {emptyExam.label}</p>
+                          </CardContent>
+                        </Card>;
+                  }
+
+                  const comparisonData = compareSubjects.map(subjectName => {
+                    const dataPoint: Record<string, any> = { name: subjectName };
+                    const subjectId = subjectNameToId.get(subjectName);
+                    examSelections.forEach((exam) => {
+                      if (!subjectId) {
+                        dataPoint[`exam${exam.id}`] = 0;
+                        return;
+                      }
+                      const subjectGrades = classAnalysis.grades.filter(
+                        (grade) =>
+                          grade.academic_period_id === exam.periodId &&
+                          grade.subject_id === subjectId &&
+                          Number.isFinite(grade.total_marks)
+                      );
+                      const sum = subjectGrades.reduce(
+                        (acc, grade) => acc + (grade.total_marks as number),
+                        0
+                      );
+                      dataPoint[`exam${exam.id}`] =
+                        subjectGrades.length > 0
+                          ? Math.round(sum / subjectGrades.length)
+                          : 0;
+                    });
+                    if (examSelections.length >= 2) {
+                      dataPoint.delta =
+                        (dataPoint[`exam${examSelections[0].id}`] || 0) -
+                        (dataPoint[`exam${examSelections[1].id}`] || 0);
+                      dataPoint.improved = dataPoint.delta > 0;
+                    }
+                    return dataPoint;
+                  });
 
                 // Calculate averages for all exams
                 const examAverages = examSelections.map(exam => {
@@ -4840,12 +4872,12 @@ export default function TeacherAcademicPage() {
                 <div className="flex items-center gap-2 bg-muted/50 p-2 rounded-lg">
                   <div className="flex-1">
                     <label className="text-xs text-muted-foreground mb-1 block">Start Year</label>
-                    <Select value={boxPlotStartYear} onValueChange={(v) => {
-                      setBoxPlotStartYear(v);
-                      // Ensure end year is not before start year
-                      if (parseInt(v) > parseInt(boxPlotEndYear)) {
-                        setBoxPlotEndYear(v);
-                      }
+                      <Select value={boxPlotStartYear} disabled={availableBoxPlotYears.length === 0} onValueChange={(v) => {
+                        setBoxPlotStartYear(v);
+                        // Ensure end year is not before start year
+                        if (parseInt(v) > parseInt(boxPlotEndYear)) {
+                          setBoxPlotEndYear(v);
+                        }
                     }}>
                       <SelectTrigger className="h-8 text-xs">
                         <SelectValue />
@@ -4860,12 +4892,12 @@ export default function TeacherAcademicPage() {
                   <span className="text-muted-foreground text-xs mt-5">to</span>
                   <div className="flex-1">
                     <label className="text-xs text-muted-foreground mb-1 block">End Year</label>
-                    <Select value={boxPlotEndYear} onValueChange={(v) => {
-                      setBoxPlotEndYear(v);
-                      // Ensure start year is not after end year
-                      if (parseInt(v) < parseInt(boxPlotStartYear)) {
-                        setBoxPlotStartYear(v);
-                      }
+                      <Select value={boxPlotEndYear} disabled={availableBoxPlotYears.length === 0} onValueChange={(v) => {
+                        setBoxPlotEndYear(v);
+                        // Ensure start year is not after end year
+                        if (parseInt(v) < parseInt(boxPlotStartYear)) {
+                          setBoxPlotStartYear(v);
+                        }
                     }}>
                       <SelectTrigger className="h-8 text-xs">
                         <SelectValue />
@@ -5423,17 +5455,18 @@ export default function TeacherAcademicPage() {
                       );
                     }
                     
-                    const student = (classRosters[boxPlotClass as keyof typeof classRosters] || [])
-                      .find(s => s.id === boxPlotStudentId);
-                    chartTitle = student ? `${student.name}'s Score Distribution` : "Student Score Distribution";
-                    
-                    boxPlotData = calculateStudentBoxPlotData(
-                      assessmentRecords,
-                      boxPlotStudentId,
-                      boxPlotStudentSubjects.length > 0 ? boxPlotStudentSubjects : undefined,
-                      boxPlotStudentExamType && boxPlotStudentExamType !== "all" ? boxPlotStudentExamType : undefined,
-                      boxPlotStartYear,
-                      boxPlotEndYear
+                      const student = analysisStudentsForBoxPlot.find(
+                        (item) => item.id === boxPlotStudentId
+                      );
+                      chartTitle = student ? `${student.name}'s Score Distribution` : "Student Score Distribution";
+                      
+                      boxPlotData = calculateStudentBoxPlotData(
+                        analysisAssessmentRecords,
+                        boxPlotStudentId,
+                        boxPlotStudentSubjects.length > 0 ? boxPlotStudentSubjects : undefined,
+                        boxPlotStudentExamType && boxPlotStudentExamType !== "all" ? boxPlotStudentExamType : undefined,
+                        boxPlotStartYear,
+                        boxPlotEndYear
                     );
                   } else {
                     const subjectLabel = boxPlotSubjects.length === 1 
@@ -5462,11 +5495,11 @@ export default function TeacherAcademicPage() {
                     
                     chartTitle = `${subjectLabel} - ${cohortLabel}`;
                     
-                    boxPlotData = calculateSubjectBoxPlotData(
-                      assessmentRecords,
-                      boxPlotSubjects,
-                      boxPlotCohortType,
-                      boxPlotSelectedClasses,
+                      boxPlotData = calculateSubjectBoxPlotData(
+                        analysisAssessmentRecords,
+                        boxPlotSubjects,
+                        boxPlotCohortType,
+                        boxPlotSelectedClasses,
                       boxPlotSelectedYearGroups,
                       boxPlotSubjectExamType && boxPlotSubjectExamType !== "all" ? boxPlotSubjectExamType : undefined,
                       boxPlotStartYear,
@@ -5474,7 +5507,31 @@ export default function TeacherAcademicPage() {
                     );
                   }
                   
-                  const insights = generateInsights(boxPlotData);
+                    const insights = generateInsights(boxPlotData);
+                    const totalSamples = boxPlotData.reduce((sum, stat) => sum + stat.n, 0);
+                    const hasEnoughSamples = boxPlotData.some((stat) => stat.n >= 5);
+
+                    if (totalSamples === 0) {
+                      return (
+                        <Card className="border-dashed border-2 border-muted-foreground/20">
+                          <CardContent className="flex flex-col items-center justify-center py-12 text-center">
+                            <BarChart3 className="h-12 w-12 text-muted-foreground/30 mb-3" />
+                            <p className="text-sm text-muted-foreground">No grades found for selected filters</p>
+                          </CardContent>
+                        </Card>
+                      );
+                    }
+
+                    if (!hasEnoughSamples) {
+                      return (
+                        <Card className="border-dashed border-2 border-muted-foreground/20">
+                          <CardContent className="flex flex-col items-center justify-center py-12 text-center">
+                            <AlertTriangle className="h-12 w-12 text-muted-foreground/30 mb-3" />
+                            <p className="text-sm text-muted-foreground">Not enough data to generate box plot (need 5+ scores).</p>
+                          </CardContent>
+                        </Card>
+                      );
+                    }
                   
                   return (
                     <>
@@ -5955,7 +6012,7 @@ export default function TeacherAcademicPage() {
                 variant="outline"
                 size="sm"
                 className="gap-2"
-                onClick={() => {
+                onClick={async () => {
                   // Generate CSV data for overview
                   const csvRows = [
                     ['Subject', 'Average', 'Highest', 'Lowest'],
@@ -5968,10 +6025,11 @@ export default function TeacherAcademicPage() {
                   ];
                   const csvContent = csvRows.map(row => row.join(',')).join('\n');
                   const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-                  const link = document.createElement('a');
-                  link.href = URL.createObjectURL(blob);
-                  link.download = `overview-report-${selectedClass}-${new Date().toISOString().split('T')[0]}.csv`;
-                  link.click();
+                  await downloadBlobAsFile(
+                    blob,
+                    `overview-report-${selectedClass}-${new Date().toISOString().split('T')[0]}.csv`,
+                    "text/csv;charset=utf-8;"
+                  );
                 }}
               >
                 <FileSpreadsheet className="h-4 w-4" />
@@ -5982,56 +6040,10 @@ export default function TeacherAcademicPage() {
                 size="sm"
                 className="gap-2"
                 onClick={() => {
-                  if (overviewReportRef.current) {
-                    const printWindow = window.open('', '_blank');
-                    if (printWindow) {
-                      printWindow.document.write(`
-                        <!DOCTYPE html>
-                        <html>
-                          <head>
-                            <title>Overview Report - Class ${selectedClass}</title>
-                            <style>
-                              @page { size: A4 portrait; margin: 15mm; }
-                              * { box-sizing: border-box; margin: 0; padding: 0; }
-                              body { 
-                                font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; 
-                                font-size: 10px; 
-                                line-height: 1.4; 
-                                color: #1a1a1a;
-                                padding: 10px;
-                              }
-                              .report-header { 
-                                display: flex !important; 
-                                align-items: center !important; 
-                                gap: 12px !important; 
-                                margin-bottom: 15px !important; 
-                                padding-bottom: 10px !important; 
-                                border-bottom: 2px solid #3b82f6 !important; 
-                              }
-                              .school-logo { width: 40px !important; height: 40px !important; object-fit: contain !important; }
-                              .section { margin-bottom: 12px; page-break-inside: avoid; }
-                              .section-title { font-size: 12px; font-weight: 600; margin-bottom: 8px; padding-bottom: 4px; border-bottom: 1px solid #ddd; }
-                              .stats-grid { display: grid !important; grid-template-columns: repeat(6, 1fr) !important; gap: 6px !important; text-align: center !important; }
-                              .stat-card { padding: 8px 4px; border: 1px solid #ddd; border-radius: 6px; background: #f9f9f9; }
-                              .stat-value { font-size: 14px; font-weight: 700; color: #1a1a1a; }
-                              .stat-label { font-size: 8px; color: #666; }
-                              .subject-grid { display: grid !important; grid-template-columns: repeat(2, 1fr) !important; gap: 8px !important; }
-                              .subject-item { display: flex; justify-content: space-between; padding: 6px 10px; background: #f5f5f5; border-radius: 4px; font-size: 10px; }
-                              .grade-grid { display: grid !important; grid-template-columns: repeat(6, 1fr) !important; gap: 6px !important; }
-                              .grade-card { text-align: center; padding: 8px 4px; border: 1px solid #ddd; border-radius: 6px; background: #fff; }
-                              .footer { text-align: center !important; font-size: 8px !important; color: #666 !important; margin-top: 15px !important; padding-top: 8px !important; border-top: 1px solid #ddd !important; }
-                              @media print { body { padding: 0 !important; margin: 0 !important; } .no-print { display: none !important; } }
-                            </style>
-                          </head>
-                          <body>
-                            ${overviewReportRef.current.innerHTML}
-                          </body>
-                        </html>
-                      `);
-                      printWindow.document.close();
-                      printWindow.print();
-                    }
-                  }
+                  handleReportPdfExport(
+                    overviewReportRef,
+                    `overview-report-${selectedClass}-${new Date().toISOString().split('T')[0]}`
+                  );
                 }}
               >
                 <Printer className="h-4 w-4" />
@@ -6091,9 +6103,9 @@ export default function TeacherAcademicPage() {
                   </div>
                   {/* Students */}
                   <div style={{ position: 'relative', padding: '12px 8px', borderRadius: '10px', backgroundColor: '#eff6ff', textAlign: 'center', overflow: 'hidden', border: '1px solid #d1d5db' }}>
-                    <div style={{ position: 'absolute', right: '4px', bottom: '-15px', fontSize: '50px', fontWeight: 800, color: '#3b82f6', opacity: 0.15 }}>{students.length}</div>
+                    <div style={{ position: 'absolute', right: '4px', bottom: '-15px', fontSize: '50px', fontWeight: 800, color: '#3b82f6', opacity: 0.15 }}>{rosterCount}</div>
                     <div style={{ position: 'relative', zIndex: 1 }}>
-                      <div style={{ fontSize: '18px', fontWeight: 700, color: '#3b82f6' }}>{students.length}</div>
+                      <div style={{ fontSize: '18px', fontWeight: 700, color: '#3b82f6' }}>{rosterCount}</div>
                       <div style={{ fontSize: '10px', color: '#1d4ed8', fontWeight: 600 }}>Students</div>
                       <div style={{ fontSize: '8px', color: '#1d4ed8', marginTop: '2px' }}>In Class</div>
                     </div>
@@ -6343,7 +6355,7 @@ export default function TeacherAcademicPage() {
                 variant="outline"
                 size="sm"
                 className="gap-2"
-                onClick={() => {
+                onClick={async () => {
                   // Generate CSV data for trends
                   const csvRows = [
                     ['Subject', 'Current Average', 'Change', 'Status'],
@@ -6357,10 +6369,11 @@ export default function TeacherAcademicPage() {
                   ];
                   const csvContent = csvRows.map(row => row.join(',')).join('\n');
                   const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-                  const link = document.createElement('a');
-                  link.href = URL.createObjectURL(blob);
-                  link.download = `trends-report-${selectedClass}-${new Date().toISOString().split('T')[0]}.csv`;
-                  link.click();
+                  await downloadBlobAsFile(
+                    blob,
+                    `trends-report-${selectedClass}-${new Date().toISOString().split('T')[0]}.csv`,
+                    "text/csv;charset=utf-8;"
+                  );
                 }}
               >
                 <FileSpreadsheet className="h-4 w-4" />
@@ -6371,53 +6384,10 @@ export default function TeacherAcademicPage() {
                 size="sm"
                 className="gap-2"
                 onClick={() => {
-                  if (trendsReportRef.current) {
-                    const printWindow = window.open('', '_blank');
-                    if (printWindow) {
-                      printWindow.document.write(`
-                        <!DOCTYPE html>
-                        <html>
-                          <head>
-                            <title>Trends Report - Class ${selectedClass}</title>
-                            <style>
-                              @page { size: A4 portrait; margin: 15mm; }
-                              * { box-sizing: border-box; margin: 0; padding: 0; }
-                              body { 
-                                font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; 
-                                font-size: 10px; 
-                                line-height: 1.4; 
-                                color: #1a1a1a;
-                                padding: 10px;
-                              }
-                              .report-header { 
-                                display: flex !important; 
-                                align-items: center !important; 
-                                gap: 12px !important; 
-                                margin-bottom: 15px !important; 
-                                padding-bottom: 10px !important; 
-                                border-bottom: 2px solid #22c55e !important; 
-                              }
-                              .school-logo { width: 40px !important; height: 40px !important; object-fit: contain !important; }
-                              .section { margin-bottom: 12px; page-break-inside: avoid; }
-                              .section-title { font-size: 12px; font-weight: 600; margin-bottom: 8px; padding-bottom: 4px; border-bottom: 1px solid #ddd; }
-                              .trend-grid { display: grid !important; grid-template-columns: repeat(2, 1fr) !important; gap: 10px !important; }
-                              .trend-card { padding: 10px; border: 1px solid #ddd; border-radius: 6px; background: #fff; }
-                              .subject-row { display: flex; justify-content: space-between; padding: 4px 8px; border-bottom: 1px solid #eee; font-size: 10px; }
-                              .heatmap-row { display: flex; gap: 4px; margin-bottom: 4px; }
-                              .heatmap-cell { width: 40px; height: 24px; display: flex; align-items: center; justify-content: center; font-size: 9px; font-weight: 600; color: white; border-radius: 3px; }
-                              .footer { text-align: center !important; font-size: 8px !important; color: #666 !important; margin-top: 15px !important; padding-top: 8px !important; border-top: 1px solid #ddd !important; }
-                              @media print { body { padding: 0 !important; margin: 0 !important; } .no-print { display: none !important; } }
-                            </style>
-                          </head>
-                          <body>
-                            ${trendsReportRef.current.innerHTML}
-                          </body>
-                        </html>
-                      `);
-                      printWindow.document.close();
-                      printWindow.print();
-                    }
-                  }
+                  handleReportPdfExport(
+                    trendsReportRef,
+                    `trends-report-${selectedClass}-${new Date().toISOString().split('T')[0]}`
+                  );
                 }}
               >
                 <Printer className="h-4 w-4" />
@@ -6813,29 +6783,15 @@ export default function TeacherAcademicPage() {
                 variant="outline"
                 size="sm"
                 className="gap-2"
-                onClick={() => {
+                onClick={async () => {
                   // Generate CSV data for comparison - we'll build it dynamically
-                  const examAKey = `${examAYear}-${examAPeriod}`;
-                  const examBKey = `${examBYear}-${examBPeriod}`;
-                  const subjectDataA = subjectExamData[examAClass as keyof typeof subjectExamData]?.[examAKey];
-                  const subjectDataB = subjectExamData[examBClass as keyof typeof subjectExamData]?.[examBKey];
-                  
-                  const getExamLabelForCSV = (cls: string, year: string, period: string) => {
-                    const periodLabel = period === "midYear" ? "Mid-Year" : "Year-End";
-                    return `${cls} ${periodLabel} ${year}`;
-                  };
-                  
-                  const examALabel = getExamLabelForCSV(examAClass, examAYear, examAPeriod);
-                  const examBLabel = getExamLabelForCSV(examBClass, examBYear, examBPeriod);
-                  
-                  if (subjectDataA && subjectDataB) {
-                    const compData = compareSubjects.map(subjectName => {
-                      const scoreA = subjectDataA[subjectName] ?? 0;
-                      const scoreB = subjectDataB[subjectName] ?? 0;
-                      const delta = scoreA - scoreB;
-                      return { name: subjectName, examA: scoreA, examB: scoreB, delta };
-                    });
-                    
+                  const examALabel = `${examAClass} ${getPeriodLabel(examAPeriodId)}`;
+                  const examBLabel = `${examBClass} ${getPeriodLabel(examBPeriodId)}`;
+                  const hasExamA = (compareGradesByPeriod.get(examAPeriodId)?.length || 0) > 0;
+                  const hasExamB = (compareGradesByPeriod.get(examBPeriodId)?.length || 0) > 0;
+
+                  if (hasExamA && hasExamB) {
+                    const compData = buildTwoExamComparison(examAPeriodId, examBPeriodId);
                     const csvRows = [
                       ['Subject', examALabel, examBLabel, 'Change'],
                       ...compData.map(d => [
@@ -6847,10 +6803,17 @@ export default function TeacherAcademicPage() {
                     ];
                     const csvContent = csvRows.map(row => row.join(',')).join('\n');
                     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-                    const link = document.createElement('a');
-                    link.href = URL.createObjectURL(blob);
-                    link.download = `comparison-report-${new Date().toISOString().split('T')[0]}.csv`;
-                    link.click();
+                    await downloadBlobAsFile(
+                      blob,
+                      `comparison-report-${new Date().toISOString().split('T')[0]}.csv`,
+                      "text/csv;charset=utf-8;"
+                    );
+                  } else {
+                    toast({
+                      title: "No Data",
+                      description: "No grades found for one of the selected exam periods.",
+                      variant: "destructive"
+                    });
                   }
                 }}
               >
@@ -6862,55 +6825,10 @@ export default function TeacherAcademicPage() {
                 size="sm"
                 className="gap-2"
                 onClick={() => {
-                  if (comparisonReportRef.current) {
-                    const printWindow = window.open('', '_blank');
-                    if (printWindow) {
-                      printWindow.document.write(`
-                        <!DOCTYPE html>
-                        <html>
-                          <head>
-                            <title>Comparison Report</title>
-                            <style>
-                              @page { size: A4 portrait; margin: 15mm; }
-                              * { box-sizing: border-box; margin: 0; padding: 0; }
-                              body { 
-                                font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; 
-                                font-size: 10px; 
-                                line-height: 1.4; 
-                                color: #1a1a1a;
-                                padding: 10px;
-                              }
-                              .report-header { 
-                                display: flex !important; 
-                                align-items: center !important; 
-                                gap: 12px !important; 
-                                margin-bottom: 15px !important; 
-                                padding-bottom: 10px !important; 
-                                border-bottom: 2px solid #8b5cf6 !important; 
-                              }
-                              .school-logo { width: 40px !important; height: 40px !important; object-fit: contain !important; }
-                              .section { margin-bottom: 12px; page-break-inside: avoid; }
-                              .section-title { font-size: 12px; font-weight: 600; margin-bottom: 8px; padding-bottom: 4px; border-bottom: 1px solid #ddd; }
-                              .comparison-grid { display: grid !important; grid-template-columns: repeat(2, 1fr) !important; gap: 10px !important; }
-                              .comparison-box { padding: 10px; border: 1px solid #ddd; border-radius: 6px; }
-                              .comparison-box.blue { border-color: #3b82f6; background: #eff6ff; }
-                              .comparison-box.red { border-color: #ef4444; background: #fef2f2; }
-                              table { width: 100% !important; border-collapse: collapse !important; font-size: 9px !important; }
-                              th, td { padding: 5px 8px !important; border-bottom: 1px solid #ddd !important; }
-                              th { background: #f5f5f5 !important; font-weight: 600 !important; }
-                              .footer { text-align: center !important; font-size: 8px !important; color: #666 !important; margin-top: 15px !important; padding-top: 8px !important; border-top: 1px solid #ddd !important; }
-                              @media print { body { padding: 0 !important; margin: 0 !important; } .no-print { display: none !important; } }
-                            </style>
-                          </head>
-                          <body>
-                            ${comparisonReportRef.current.innerHTML}
-                          </body>
-                        </html>
-                      `);
-                      printWindow.document.close();
-                      printWindow.print();
-                    }
-                  }
+                  handleReportPdfExport(
+                    comparisonReportRef,
+                    `comparison-report-${new Date().toISOString().split('T')[0]}`
+                  );
                 }}
               >
                 <Printer className="h-4 w-4" />
@@ -6919,35 +6837,22 @@ export default function TeacherAcademicPage() {
             </div>
           </DialogHeader>
           
-          <div className="flex-1 overflow-y-auto" ref={comparisonReportRef}>
-            {(() => {
-              const examAKey = `${examAYear}-${examAPeriod}`;
-              const examBKey = `${examBYear}-${examBPeriod}`;
-              const subjectDataA = subjectExamData[examAClass as keyof typeof subjectExamData]?.[examAKey];
-              const subjectDataB = subjectExamData[examBClass as keyof typeof subjectExamData]?.[examBKey];
+            <div className="flex-1 overflow-y-auto" ref={comparisonReportRef}>
+              {(() => {
+              const examALabel = `${examAClass} ${getPeriodLabel(examAPeriodId)}`;
+              const examBLabel = `${examBClass} ${getPeriodLabel(examBPeriodId)}`;
+              const hasExamA = (compareGradesByPeriod.get(examAPeriodId)?.length || 0) > 0;
+              const hasExamB = (compareGradesByPeriod.get(examBPeriodId)?.length || 0) > 0;
               
-              const getExamLabelForReport = (cls: string, year: string, period: string) => {
-                const periodLabel = period === "midYear" ? "Mid-Year" : "Year-End";
-                return `${cls} ${periodLabel} ${year}`;
-              };
+                if (!hasExamA || !hasExamB) {
+                  return (
+                    <div className="p-8 text-center">
+                      <p className="text-muted-foreground">No data available for the selected exam periods</p>
+                    </div>
+                  );
+                }
               
-              const examALabel = getExamLabelForReport(examAClass, examAYear, examAPeriod);
-              const examBLabel = getExamLabelForReport(examBClass, examBYear, examBPeriod);
-              
-              if (!subjectDataA || !subjectDataB) {
-                return (
-                  <div className="p-8 text-center">
-                    <p className="text-muted-foreground">No data available for the selected exam periods</p>
-                  </div>
-                );
-              }
-              
-              const comparisonData = compareSubjects.map(subjectName => {
-                const scoreA = subjectDataA[subjectName] ?? 0;
-                const scoreB = subjectDataB[subjectName] ?? 0;
-                const delta = scoreA - scoreB;
-                return { name: subjectName, examA: scoreA, examB: scoreB, delta, improved: delta > 0 };
-              });
+              const comparisonData = buildTwoExamComparison(examAPeriodId, examBPeriodId);
               
               const avgA = comparisonData.length > 0 ? Math.round(comparisonData.reduce((sum, d) => sum + d.examA, 0) / comparisonData.length) : 0;
               const avgB = comparisonData.length > 0 ? Math.round(comparisonData.reduce((sum, d) => sum + d.examB, 0) / comparisonData.length) : 0;
@@ -7234,19 +7139,19 @@ export default function TeacherAcademicPage() {
                 variant="outline"
                 size="sm"
                 className="gap-2"
-                onClick={() => {
+                onClick={async () => {
                   // Generate CSV data for box plot
                   const boxPlotData = boxPlotViewMode === "student" && boxPlotStudentId
                     ? calculateStudentBoxPlotData(
-                        assessmentRecords, 
-                        boxPlotStudentId, 
-                        boxPlotStudentSubjects.length > 0 ? boxPlotStudentSubjects : undefined, 
-                        boxPlotStudentExamType && boxPlotStudentExamType !== "all" ? boxPlotStudentExamType : undefined, 
-                        boxPlotStartYear, 
+                        analysisAssessmentRecords,
+                        boxPlotStudentId,
+                        boxPlotStudentSubjects.length > 0 ? boxPlotStudentSubjects : undefined,
+                        boxPlotStudentExamType && boxPlotStudentExamType !== "all" ? boxPlotStudentExamType : undefined,
+                        boxPlotStartYear,
                         boxPlotEndYear
                       )
                     : calculateSubjectBoxPlotData(
-                        assessmentRecords,
+                        analysisAssessmentRecords,
                         boxPlotSubjects,
                         boxPlotCohortType,
                         boxPlotSelectedClasses,
@@ -7272,12 +7177,11 @@ export default function TeacherAcademicPage() {
                   ];
                   const csvContent = csvRows.map(row => row.join(',')).join('\n');
                   const blob = new Blob([csvContent], { type: 'text/csv' });
-                  const url = URL.createObjectURL(blob);
-                  const a = document.createElement('a');
-                  a.href = url;
-                  a.download = `boxplot-report-${boxPlotViewMode}-${new Date().toISOString().split('T')[0]}.csv`;
-                  a.click();
-                  URL.revokeObjectURL(url);
+                  await downloadBlobAsFile(
+                    blob,
+                    `boxplot-report-${boxPlotViewMode}-${new Date().toISOString().split('T')[0]}.csv`,
+                    "text/csv"
+                  );
                 }}
               >
                 <FileSpreadsheet className="h-4 w-4" />
@@ -7288,97 +7192,10 @@ export default function TeacherAcademicPage() {
                 size="sm"
                 className="gap-2"
                 onClick={() => {
-                  if (boxPlotReportRef.current) {
-                    const printWindow = window.open('', '_blank');
-                    if (printWindow) {
-                      printWindow.document.write(`
-                        <!DOCTYPE html>
-                        <html>
-                          <head>
-                            <title>Box Plot Analysis Report</title>
-                            <style>
-                              @page { size: A4 portrait; margin: 15mm; }
-                              * { box-sizing: border-box; margin: 0; padding: 0; }
-                              body { 
-                                font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; 
-                                font-size: 10px; 
-                                line-height: 1.4; 
-                                color: #1a1a1a;
-                                padding: 10px;
-                                -webkit-print-color-adjust: exact !important;
-                                print-color-adjust: exact !important;
-                              }
-                              .report-header { 
-                                display: flex !important; 
-                                align-items: center !important; 
-                                justify-content: space-between !important;
-                                gap: 12px !important; 
-                                margin-bottom: 15px !important; 
-                                padding-bottom: 10px !important; 
-                                border-bottom: 2px solid #10b981 !important; 
-                              }
-                              .school-logo { width: 40px !important; height: 40px !important; object-fit: contain !important; }
-                              .section { margin-bottom: 12px; page-break-inside: avoid; }
-                              .section-header { 
-                                display: flex; 
-                                align-items: center; 
-                                gap: 6px; 
-                                margin-bottom: 8px; 
-                                padding-bottom: 6px; 
-                                border-bottom: 1px solid #065f46; 
-                              }
-                              .section-title { font-size: 11px; font-weight: 700; color: #065f46; margin: 0; }
-                              .stats-grid { display: grid !important; grid-template-columns: repeat(4, 1fr) !important; gap: 8px !important; }
-                              .stat-card { 
-                                position: relative; 
-                                padding: 10px 8px; 
-                                border-radius: 8px; 
-                                text-align: center; 
-                                overflow: hidden; 
-                                border: 1px solid #d1d5db; 
-                              }
-                              .stat-watermark { 
-                                position: absolute; 
-                                right: 4px; 
-                                bottom: -10px; 
-                                font-size: 36px; 
-                                font-weight: 800; 
-                                opacity: 0.15; 
-                              }
-                              table { width: 100% !important; border-collapse: collapse !important; font-size: 9px !important; }
-                              th, td { padding: 6px 8px !important; border-bottom: 1px solid #ddd !important; }
-                              th { background: #065f46 !important; color: white !important; font-weight: 600 !important; }
-                              .insight-card { 
-                                display: flex; 
-                                align-items: flex-start; 
-                                gap: 8px; 
-                                padding: 8px 10px; 
-                                border-radius: 6px; 
-                                margin-bottom: 6px; 
-                              }
-                              .footer { 
-                                text-align: center !important; 
-                                font-size: 8px !important; 
-                                color: #666 !important; 
-                                margin-top: 15px !important; 
-                                padding-top: 8px !important; 
-                                border-top: 1px solid #ddd !important; 
-                              }
-                              @media print { 
-                                body { padding: 0 !important; margin: 0 !important; } 
-                                .no-print { display: none !important; } 
-                              }
-                            </style>
-                          </head>
-                          <body>
-                            ${boxPlotReportRef.current.innerHTML}
-                          </body>
-                        </html>
-                      `);
-                      printWindow.document.close();
-                      printWindow.print();
-                    }
-                  }
+                  handleReportPdfExport(
+                    boxPlotReportRef,
+                    `boxplot-report-${boxPlotViewMode}-${new Date().toISOString().split('T')[0]}`
+                  );
                 }}
               >
                 <Printer className="h-4 w-4" />
@@ -7390,15 +7207,15 @@ export default function TeacherAcademicPage() {
             {(() => {
               const boxPlotData = boxPlotViewMode === "student" && boxPlotStudentId
                 ? calculateStudentBoxPlotData(
-                    assessmentRecords, 
-                    boxPlotStudentId, 
-                    boxPlotStudentSubjects.length > 0 ? boxPlotStudentSubjects : undefined, 
-                    boxPlotStudentExamType && boxPlotStudentExamType !== "all" ? boxPlotStudentExamType : undefined, 
-                    boxPlotStartYear, 
+                    analysisAssessmentRecords,
+                    boxPlotStudentId,
+                    boxPlotStudentSubjects.length > 0 ? boxPlotStudentSubjects : undefined,
+                    boxPlotStudentExamType && boxPlotStudentExamType !== "all" ? boxPlotStudentExamType : undefined,
+                    boxPlotStartYear,
                     boxPlotEndYear
                   )
                 : calculateSubjectBoxPlotData(
-                    assessmentRecords,
+                    analysisAssessmentRecords,
                     boxPlotSubjects,
                     boxPlotCohortType,
                     boxPlotSelectedClasses,
@@ -7409,7 +7226,9 @@ export default function TeacherAcademicPage() {
                   );
               
               const insights = generateInsights(boxPlotData);
-              const selectedStudent = getAllStudents().find(s => s.id === boxPlotStudentId);
+              const selectedStudent = analysisStudentsForBoxPlot.find(
+                (student) => student.id === boxPlotStudentId
+              );
               const reportTitle = boxPlotViewMode === "student" 
                 ? `Student: ${selectedStudent?.name || 'N/A'}`
                 : `Subjects: ${boxPlotSubjects.length === 0 ? 'All' : boxPlotSubjects.slice(0, 3).join(', ')}${boxPlotSubjects.length > 3 ? ` +${boxPlotSubjects.length - 3} more` : ''}`;

@@ -1,10 +1,12 @@
-import { useRef } from "react";
+import { useRef, useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Printer, Star, BookOpen, MessageSquare, Trophy, Award, BookMarked, Target } from "lucide-react";
+import { Printer, Star, BookOpen, MessageSquare, Trophy, Award, BookMarked, Target, Loader2 } from "lucide-react";
 import collinzLogo from "@/assets/collinz-school-logo.png";
 import schoolBadge from "@/assets/school-badge.png";
 import cambridgeLogo from "@/assets/cambridge-logo.jpg";
+import { exportElementToPdf } from "@/lib/pdf/exportToPdf";
+import { toast } from "sonner";
 
 // SVG Icon components for print compatibility
 const IconStar = () => (
@@ -197,56 +199,24 @@ export function ReportCardDialog({
   deputyPrincipalName = "Ms Danita Subramaniam",
 }: ReportCardDialogProps) {
   const reportRef = useRef<HTMLDivElement>(null);
+  const [isExportingPdf, setIsExportingPdf] = useState(false);
 
-  const handlePrint = () => {
-    const printContent = reportRef.current;
-    if (!printContent) return;
-
-    const printWindow = window.open('', '_blank');
-    if (!printWindow) return;
-
-    printWindow.document.write(`
-      <!DOCTYPE html>
-      <html>
-        <head>
-          <title>Report Card - ${studentName}</title>
-          <style>
-            @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
-            
-            * {
-              margin: 0;
-              padding: 0;
-              box-sizing: border-box;
-            }
-            
-            body {
-              font-family: 'Inter', sans-serif;
-              background: #fff;
-              color: #1a1a1a;
-              line-height: 1.5;
-            }
-            
-            @page {
-              size: A4;
-              margin: 12mm;
-            }
-            
-            @media print {
-              body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-              .page-break { page-break-before: always; }
-            }
-          </style>
-        </head>
-        <body>
-          ${printContent.innerHTML}
-        </body>
-      </html>
-    `);
-    
-    printWindow.document.close();
-    printWindow.onload = () => {
-      printWindow.print();
-    };
+  const handleExportPdf = async () => {
+    if (!reportRef.current || isExportingPdf) return;
+    setIsExportingPdf(true);
+    try {
+      const dateStamp = new Date().toISOString().split("T")[0];
+      const safeName = studentName.trim().toLowerCase().replace(/\s+/g, "-");
+      await exportElementToPdf({
+        element: reportRef.current,
+        filename: `report-card-${safeName || "student"}-${dateStamp}`,
+      });
+    } catch (error) {
+      console.error("[ReportCardDialog] PDF export failed", error);
+      toast.error("Failed to generate PDF. Please try again.");
+    } finally {
+      setIsExportingPdf(false);
+    }
   };
 
   // Calculate overall average
@@ -265,10 +235,10 @@ export function ReportCardDialog({
       <DialogContent className="w-full max-w-none p-0 overflow-hidden flex flex-col max-h-[90vh]">
         <DialogHeader className="flex flex-row items-center justify-between px-4 py-3 border-b border-border bg-background sticky top-0 z-10">
           <DialogTitle className="text-sm sm:text-base">Report Card Preview</DialogTitle>
-          <Button onClick={handlePrint} className="gap-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs sm:text-sm px-3 py-2">
-            <Printer className="h-4 w-4" />
-            <span className="hidden sm:inline">Print / Save PDF</span>
-            <span className="sm:hidden">PDF</span>
+          <Button onClick={handleExportPdf} disabled={isExportingPdf} className="gap-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs sm:text-sm px-3 py-2">
+            {isExportingPdf ? <Loader2 className="h-4 w-4 animate-spin" /> : <Printer className="h-4 w-4" />}
+            <span className="hidden sm:inline">{isExportingPdf ? "Generating..." : "Download PDF"}</span>
+            <span className="sm:hidden">{isExportingPdf ? "Generating..." : "PDF"}</span>
           </Button>
         </DialogHeader>
         
@@ -282,7 +252,9 @@ export function ReportCardDialog({
               <img src={collinzLogo} alt="Collinz School" style={{ height: '40px', objectFit: 'contain' }} />
               <div style={{ textAlign: 'center' }}>
                 <div style={{ fontSize: '10px', fontWeight: '600', color: '#374151', letterSpacing: '0.5px', textTransform: 'uppercase' }}>Academic Report</div>
-                <div style={{ fontSize: '13px', fontWeight: '700', color: '#374151' }}>{examType} {year}</div>
+                <div style={{ fontSize: '13px', fontWeight: '700', color: '#374151' }}>
+                  {examType}{year ? ` ${year}` : ""}
+                </div>
               </div>
               <img src={cambridgeLogo} alt="Cambridge Assessment" style={{ height: '35px', objectFit: 'contain' }} />
             </div>
@@ -293,7 +265,9 @@ export function ReportCardDialog({
               <div style={{ padding: '10px' }}>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
                   <div style={{ fontSize: '16px', fontWeight: '700', color: '#065f46' }}>{studentName}</div>
-                  <div style={{ fontSize: '12px', fontWeight: '600', color: '#065f46', background: '#f0fdf4', padding: '3px 10px', borderRadius: '8px', border: '1px solid #d1d5db' }}>Y10I</div>
+                  <div style={{ fontSize: '12px', fontWeight: '600', color: '#065f46', background: '#f0fdf4', padding: '3px 10px', borderRadius: '8px', border: '1px solid #d1d5db' }}>
+                    {studentClass}
+                  </div>
                 </div>
                 
                 {/* Overall Average & Attendance inside the name box */}
@@ -446,9 +420,9 @@ export function ReportCardDialog({
                 <tbody>
                   {displayedSubjects.map((subject, index) => {
                     const midYearGradeColor = gradeColors[subject.grade] || gradeColors["C"];
-                    const yearEndScore = subject.yearEndScore !== undefined ? subject.yearEndScore : (subject.score !== null ? Math.min(100, Math.max(0, subject.score + Math.floor(Math.random() * 15) - 5)) : null);
-                    const getGradeFromScore = (score: number | null): string => {
-                      if (score === null) return 'C';
+                    const yearEndScore = subject.yearEndScore ?? null;
+                    const getGradeFromScore = (score: number | null): string | null => {
+                      if (score === null) return null;
                       if (score >= 90) return 'A*';
                       if (score >= 80) return 'A';
                       if (score >= 70) return 'B';
@@ -457,9 +431,13 @@ export function ReportCardDialog({
                       return 'E';
                     };
                     const derivedYearEndGrade = subject.yearEndGrade || getGradeFromScore(yearEndScore);
-                    const derivedYearEndGradeColor = gradeColors[derivedYearEndGrade] || gradeColors["C"];
+                    const derivedYearEndGradeColor = derivedYearEndGrade
+                      ? gradeColors[derivedYearEndGrade] || gradeColors["C"]
+                      : { bg: "#e5e7eb", text: "#9ca3af" };
                     const midYearBgColor = gradeCardBgColors[subject.grade] || 'white';
-                    const yearEndBgColor = gradeCardBgColors[derivedYearEndGrade] || 'white';
+                    const yearEndBgColor = derivedYearEndGrade
+                      ? gradeCardBgColors[derivedYearEndGrade] || 'white'
+                      : 'white';
                     const rowAltBg = index % 2 === 0 ? 'white' : '#f9fafb';
                     
                     return (
@@ -499,7 +477,7 @@ export function ReportCardDialog({
                             pointerEvents: 'none',
                             lineHeight: 1
                           }}>
-                            {derivedYearEndGrade}
+                            {derivedYearEndGrade || "-"}
                           </span>
                           <div style={{ position: 'relative', zIndex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2px' }}>
                             <span style={{ fontSize: '12px', fontWeight: '800', color: '#1a1a1a' }}>{yearEndScore !== null ? `${yearEndScore}%` : '-'}</span>

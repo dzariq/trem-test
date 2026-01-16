@@ -1,3 +1,5 @@
+import { normalizeSubtopics } from "@/lib/lessonplan/normalizeSubtopics";
+
 // Lesson Plan Module Data Structures and Mock Data
 
 export interface LessonFlowActivity {
@@ -970,7 +972,7 @@ export const getSubtopicsForTopic = (subject: string, topicTitle: string): strin
   const curriculum = mockLessonPlans.find(s => s.subject === subject);
   if (!curriculum) return [];
   const topic = curriculum.topics.find(t => t.title === topicTitle);
-  return topic?.subtopics || [];
+  return normalizeSubtopics(topic?.subtopics);
 };
 
 // Get topic by ID

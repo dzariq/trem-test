@@ -3,7 +3,7 @@ import { Carousel, CarouselContent, CarouselItem } from "@/components/ui/carouse
 import { useSearchParams } from "react-router-dom";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { AppHeader } from "@/components/layout/AppHeader";
-import { academicData, students, attendanceData } from "@/data/mockData";
+import { academicData } from "@/data/mockData";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -26,6 +26,9 @@ import { useAssignedSubjectsFromSelections } from "@/hooks/useAssignedSubjectsFr
 import { useStudentGradesByPeriods } from "@/hooks/useStudentGradesByPeriods";
 import { StudentPillSelector } from "@/components/home/StudentPillSelector";
 import { generateBehaviorSummary } from "@/lib/summary/behaviorSummary";
+import { exportElementToPdf } from "@/lib/pdf/exportToPdf";
+import { toast } from "sonner";
+import { RuntimeDebug } from "@/components/Debug/RuntimeDebug";
 type YearKey = "2022" | "2023" | "2024" | "2025";
 type ExamType = "midYear" | "yearEnd";
 type AnalysisPeriod = {
@@ -92,6 +95,9 @@ export default function AcademicPage() {
   const [selectedYears, setSelectedYears] = useState<string[]>(["2025", "2024", "2023"]);
   const [subjectFilter, setSubjectFilter] = useState("all");
   const [trendPeriod, setTrendPeriod] = useState<"1year" | "2years" | "3years" | "4years" | "5years">("5years");
+  const [isExportingOverviewPdf, setIsExportingOverviewPdf] = useState(false);
+  const [isExportingTrendsPdf, setIsExportingTrendsPdf] = useState(false);
+  const [isExportingComparisonPdf, setIsExportingComparisonPdf] = useState(false);
 
   // Real student selection from Supabase
   const { linkedStudents, selectedStudentId, setSelectedStudentId, selectedStudent, loading: studentsLoading } = useStudentSelection();
@@ -580,6 +586,55 @@ export default function AcademicPage() {
   const [heatmapExpanded, setHeatmapExpanded] = useState(false);
   const [chartViewMode, setChartViewMode] = useState<"single" | "multiple">("single");
   const [isAtBottom, setIsAtBottom] = useState(false);
+  const pdfDateStamp = useMemo(() => new Date().toISOString().split("T")[0], []);
+
+  const handleExportOverviewPdf = useCallback(async () => {
+    if (!overviewReportRef.current || isExportingOverviewPdf) return;
+    setIsExportingOverviewPdf(true);
+    try {
+      await exportElementToPdf({
+        element: overviewReportRef.current,
+        filename: `overview-report-${pdfDateStamp}`,
+      });
+    } catch (error) {
+      console.error("[AcademicPage] Overview PDF export failed", error);
+      toast.error("Failed to generate PDF. Please try again.");
+    } finally {
+      setIsExportingOverviewPdf(false);
+    }
+  }, [isExportingOverviewPdf, pdfDateStamp]);
+
+  const handleExportTrendsPdf = useCallback(async () => {
+    if (!trendsReportRef.current || isExportingTrendsPdf) return;
+    setIsExportingTrendsPdf(true);
+    try {
+      await exportElementToPdf({
+        element: trendsReportRef.current,
+        filename: `trends-report-${pdfDateStamp}`,
+      });
+    } catch (error) {
+      console.error("[AcademicPage] Trends PDF export failed", error);
+      toast.error("Failed to generate PDF. Please try again.");
+    } finally {
+      setIsExportingTrendsPdf(false);
+    }
+  }, [isExportingTrendsPdf, pdfDateStamp]);
+
+  const handleExportComparisonPdf = useCallback(async () => {
+    if (!comparisonReportRef.current || isExportingComparisonPdf) return;
+    setIsExportingComparisonPdf(true);
+    try {
+      await exportElementToPdf({
+        element: comparisonReportRef.current,
+        filename: `comparison-report-${pdfDateStamp}`,
+      });
+    } catch (error) {
+      console.error("[AcademicPage] Comparison PDF export failed", error);
+      toast.error("Failed to generate PDF. Please try again.");
+    } finally {
+      setIsExportingComparisonPdf(false);
+    }
+  }, [isExportingComparisonPdf, pdfDateStamp]);
 
   // Scroll detection for floating FAB
   useEffect(() => {
@@ -1703,21 +1758,53 @@ export default function AcademicPage() {
       </section>}
 
       {/* Report Card Dialog */}
-      <ReportCardDialog open={reportCardDialogOpen} onOpenChange={setReportCardDialogOpen} studentName={students[0]?.name || "Emma Johnson"} studentClass="Year 10 - International" examType={examType === "midYear" ? "Mid-Year Exam" : "Year-End Exam"} year={selectedYear} subjects={academicData.subjects.map(s => ({
-      name: s.name,
-      score: getScore(s, selectedYear, examType),
-      grade: getScore(s, selectedYear, examType) !== null ? getGradeFromScore(getScore(s, selectedYear, examType)!) : "Pending",
-      teacherComment: s.teacherComment || "Good progress this term.",
-      classStudyRecommendation: (s as any).classStudyRecommendation || "",
-      studyRecommendation: (s as any).studyRecommendation || ""
-    }))} behavior={academicData.behavior} homeroomComment={academicData.behaviorComments?.homeroomComment || "The student shows good potential and continues to make progress."} attendance={{
-      present: attendanceData.currentMonth?.present || 85,
-      absent: attendanceData.currentMonth?.absent || 5,
-      late: attendanceData.currentMonth?.late || 3,
-      excused: 2,
-      totalDays: (attendanceData.currentMonth?.present || 85) + (attendanceData.currentMonth?.absent || 5) + 2,
-      percentage: Math.round((attendanceData.currentMonth?.present || 85) / ((attendanceData.currentMonth?.present || 85) + (attendanceData.currentMonth?.absent || 5)) * 100)
-    }} achievements={academicData.coCurriculum?.map(c => `${c.activity}: ${c.achievement}`) || []} />
+      <ReportCardDialog
+        open={reportCardDialogOpen}
+        onOpenChange={setReportCardDialogOpen}
+        studentName={selectedStudent?.name || "Student"}
+        studentClass={
+          selectedStudent?.classLabel ||
+          [selectedStudent?.className, selectedStudent?.grade].filter(Boolean).join(" - ") ||
+          "Class"
+        }
+        examType={academicPeriods.find((p) => p.id === selectedPeriodId)?.name || "Report Period"}
+        year={academicPeriods.find((p) => p.id === selectedPeriodId)?.code || ""}
+        subjects={realGrades.map((grade) => ({
+          name: grade.subjectName,
+          score: grade.totalMarks,
+          grade: grade.letterGrade || getGradeFromScore(grade.totalMarks),
+          teacherComment: grade.teacherComment || grade.subjectComment || "",
+        }))}
+        behavior={realBehaviorItems}
+        homeroomComment={
+          realBehavior?.homeroomTeacherComment || "No homeroom teacher comment for this period."
+        }
+        attendance={{
+          present: 0,
+          absent: 0,
+          late: 0,
+          excused: 0,
+          totalDays: 0,
+          percentage: 0,
+        }}
+        achievements={[
+          realAwards?.sportsHouse?.organization && realAwards.sportsHouse.organization !== "None"
+            ? `Sports House: ${realAwards.sportsHouse.organization} (${realAwards.sportsHouse.role})`
+            : null,
+          realAwards?.club?.organization && realAwards.club.organization !== "None"
+            ? `Club: ${realAwards.club.organization} (${realAwards.club.role})`
+            : null,
+          realAwards?.studentLeadership?.organization && realAwards.studentLeadership.organization !== "None"
+            ? `Leadership: ${realAwards.studentLeadership.organization} (${realAwards.studentLeadership.role})`
+            : null,
+          realAwards?.events?.organization && realAwards.events.organization !== "None"
+            ? `Events: ${realAwards.events.organization} (${realAwards.events.role})`
+            : null,
+          realAwards?.achievements?.event && realAwards.achievements.event !== "None"
+            ? `Achievement: ${realAwards.achievements.event} ${realAwards.achievements.award || ""}`.trim()
+            : null,
+        ].filter((item): item is string => Boolean(item))}
+      />
 
       {/* Grade Analysis Section */}
       {mainSection === "analysis" && <section className="px-4 py-4">
@@ -3436,6 +3523,7 @@ export default function AcademicPage() {
                     </div>
                   </>
                 )}
+                <RuntimeDebug selectedStudentId={selectedStudentId ?? null} selectedYear={goalYear} />
               </TabsContent>
 
               {/* Floating Generate Report FAB - for Overview, Trends, Compare tabs */}
@@ -3481,40 +3569,9 @@ export default function AcademicPage() {
                 <FileSpreadsheet className="h-4 w-4" />
                 CSV
               </Button>
-              <Button variant="outline" size="sm" className="gap-2" onClick={() => {
-              if (overviewReportRef.current) {
-                const printWindow = window.open('', '_blank');
-                if (printWindow) {
-                  printWindow.document.write(`
-                        <!DOCTYPE html>
-                        <html>
-                          <head>
-                            <title>Academic Overview Report</title>
-                            <style>
-                              @page { size: A4 portrait; margin: 15mm; }
-                              * { box-sizing: border-box; margin: 0; padding: 0; }
-                              body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size: 10px; line-height: 1.4; color: #1a1a1a; padding: 10px; }
-                              .report-header { display: flex !important; align-items: center !important; gap: 12px !important; margin-bottom: 15px !important; padding-bottom: 10px !important; border-bottom: 2px solid #3b82f6 !important; }
-                              .school-logo { width: 40px !important; height: 40px !important; object-fit: contain !important; }
-                              .section { margin-bottom: 12px; page-break-inside: avoid; }
-                              .stats-grid { display: grid !important; grid-template-columns: repeat(6, 1fr) !important; gap: 6px !important; text-align: center !important; }
-                              .stat-card { padding: 8px 4px; border: 1px solid #ddd; border-radius: 6px; background: #f9f9f9; }
-                              .subject-grid { display: grid !important; grid-template-columns: repeat(2, 1fr) !important; gap: 6px !important; }
-                              .grade-grid { display: grid !important; grid-template-columns: repeat(6, 1fr) !important; gap: 6px !important; }
-                              .footer { text-align: center !important; font-size: 8px !important; color: #666 !important; margin-top: 15px !important; padding-top: 8px !important; border-top: 1px solid #ddd !important; }
-                              @media print { body { padding: 0 !important; margin: 0 !important; } .no-print { display: none !important; } }
-                            </style>
-                          </head>
-                          <body>${overviewReportRef.current.innerHTML}</body>
-                        </html>
-                      `);
-                  printWindow.document.close();
-                  printWindow.print();
-                }
-              }
-            }}>
-                <Printer className="h-4 w-4" />
-                PDF
+              <Button variant="outline" size="sm" className="gap-2" onClick={handleExportOverviewPdf} disabled={isExportingOverviewPdf}>
+                {isExportingOverviewPdf ? <Loader2 className="h-4 w-4 animate-spin" /> : <Printer className="h-4 w-4" />}
+                {isExportingOverviewPdf ? "Generating..." : "PDF"}
               </Button>
             </div>
           </DialogHeader>
@@ -4119,39 +4176,9 @@ export default function AcademicPage() {
                 <FileSpreadsheet className="h-4 w-4" />
                 CSV
               </Button>
-              <Button variant="outline" size="sm" className="gap-2" onClick={() => {
-              if (trendsReportRef.current) {
-                const printWindow = window.open('', '_blank');
-                if (printWindow) {
-                  printWindow.document.write(`
-                        <!DOCTYPE html>
-                        <html>
-                          <head>
-                            <title>Performance Trends Report</title>
-                            <style>
-                              @page { size: A4 portrait; margin: 15mm; }
-                              * { box-sizing: border-box; margin: 0; padding: 0; }
-                              body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size: 10px; line-height: 1.4; color: #1a1a1a; padding: 10px; }
-                              .report-header { display: flex !important; align-items: center !important; gap: 12px !important; margin-bottom: 15px !important; padding-bottom: 10px !important; border-bottom: 2px solid #22c55e !important; }
-                              .school-logo { width: 40px !important; height: 40px !important; object-fit: contain !important; }
-                              .section { margin-bottom: 12px; page-break-inside: avoid; }
-                              table { width: 100% !important; border-collapse: collapse !important; font-size: 9px !important; }
-                              th, td { padding: 5px 8px !important; border-bottom: 1px solid #ddd !important; }
-                              th { background: #f5f5f5 !important; font-weight: 600 !important; }
-                              .footer { text-align: center !important; font-size: 8px !important; color: #666 !important; margin-top: 15px !important; padding-top: 8px !important; border-top: 1px solid #ddd !important; }
-                              @media print { body { padding: 0 !important; margin: 0 !important; } .no-print { display: none !important; } }
-                            </style>
-                          </head>
-                          <body>${trendsReportRef.current.innerHTML}</body>
-                        </html>
-                      `);
-                  printWindow.document.close();
-                  printWindow.print();
-                }
-              }
-            }}>
-                <Printer className="h-4 w-4" />
-                PDF
+              <Button variant="outline" size="sm" className="gap-2" onClick={handleExportTrendsPdf} disabled={isExportingTrendsPdf}>
+                {isExportingTrendsPdf ? <Loader2 className="h-4 w-4 animate-spin" /> : <Printer className="h-4 w-4" />}
+                {isExportingTrendsPdf ? "Generating..." : "PDF"}
               </Button>
             </div>
           </DialogHeader>
@@ -4870,39 +4897,9 @@ export default function AcademicPage() {
                 <FileSpreadsheet className="h-4 w-4" />
                 CSV
               </Button>
-              <Button variant="outline" size="sm" className="gap-2" onClick={() => {
-              if (comparisonReportRef.current) {
-                const printWindow = window.open('', '_blank');
-                if (printWindow) {
-                  printWindow.document.write(`
-                        <!DOCTYPE html>
-                        <html>
-                          <head>
-                            <title>Exam Comparison Report</title>
-                            <style>
-                              @page { size: A4 portrait; margin: 15mm; }
-                              * { box-sizing: border-box; margin: 0; padding: 0; }
-                              body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; font-size: 10px; line-height: 1.4; color: #1a1a1a; padding: 10px; }
-                              .report-header { display: flex !important; align-items: center !important; gap: 12px !important; margin-bottom: 15px !important; padding-bottom: 10px !important; border-bottom: 2px solid #8b5cf6 !important; }
-                              .school-logo { width: 40px !important; height: 40px !important; object-fit: contain !important; }
-                              .section { margin-bottom: 12px; page-break-inside: avoid; }
-                              table { width: 100% !important; border-collapse: collapse !important; font-size: 9px !important; }
-                              th, td { padding: 5px 8px !important; border-bottom: 1px solid #ddd !important; }
-                              th { background: #f5f5f5 !important; font-weight: 600 !important; }
-                              .footer { text-align: center !important; font-size: 8px !important; color: #666 !important; margin-top: 15px !important; padding-top: 8px !important; border-top: 1px solid #ddd !important; }
-                              @media print { body { padding: 0 !important; margin: 0 !important; } .no-print { display: none !important; } }
-                            </style>
-                          </head>
-                          <body>${comparisonReportRef.current.innerHTML}</body>
-                        </html>
-                      `);
-                  printWindow.document.close();
-                  printWindow.print();
-                }
-              }
-            }}>
-                <Printer className="h-4 w-4" />
-                PDF
+              <Button variant="outline" size="sm" className="gap-2" onClick={handleExportComparisonPdf} disabled={isExportingComparisonPdf}>
+                {isExportingComparisonPdf ? <Loader2 className="h-4 w-4 animate-spin" /> : <Printer className="h-4 w-4" />}
+                {isExportingComparisonPdf ? "Generating..." : "PDF"}
               </Button>
             </div>
           </DialogHeader>

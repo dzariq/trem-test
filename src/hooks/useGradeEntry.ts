@@ -22,6 +22,8 @@ interface UseGradeEntryReturn {
   students: GradeEntryStudent[];
   subjects: SubjectInfo[];
   academicPeriods: AcademicPeriod[];
+  academicPeriodsForYear: AcademicPeriod[];
+  availableAcademicYears: number[];
   existingGrades: Map<string, StudentGradeRecord>;
   gradeInputs: Record<string, GradeInput>;
   classRecommendation: string;
@@ -30,6 +32,7 @@ interface UseGradeEntryReturn {
   selectedClass: string | null;
   selectedSubject: SubjectInfo | null;
   selectedPeriod: AcademicPeriod | null;
+  selectedAcademicYear: number | null;
   
   // Loading/error states
   loadingClasses: boolean;
@@ -43,6 +46,7 @@ interface UseGradeEntryReturn {
   setSelectedClass: (className: string | null) => void;
   setSelectedSubject: (subject: SubjectInfo | null) => void;
   setSelectedPeriod: (period: AcademicPeriod | null) => void;
+  setSelectedAcademicYear: (year: number | null) => void;
   updateGradeInput: (studentId: string, field: keyof GradeInput, value: string) => void;
   setClassRecommendation: (recommendation: string) => void;
   applyClassRecommendationToAll: () => void;
@@ -76,6 +80,7 @@ export function useGradeEntry(): UseGradeEntryReturn {
   const [selectedClass, setSelectedClass] = useState<string | null>(null);
   const [selectedSubject, setSelectedSubject] = useState<SubjectInfo | null>(null);
   const [selectedPeriod, setSelectedPeriod] = useState<AcademicPeriod | null>(null);
+  const [selectedAcademicYear, setSelectedAcademicYear] = useState<number | null>(null);
   
   // Data state
   const [classes, setClasses] = useState<string[]>([]);
@@ -129,6 +134,47 @@ export function useGradeEntry(): UseGradeEntryReturn {
     };
     loadPeriods();
   }, []);
+
+  const availableAcademicYears = useMemo(() => {
+    const years = academicPeriods
+      .map((period) => period.academic_year)
+      .filter((year): year is number => Number.isInteger(year));
+    return Array.from(new Set(years)).sort((a, b) => b - a);
+  }, [academicPeriods]);
+
+  const academicPeriodsForYear = useMemo(() => {
+    if (!selectedAcademicYear) return academicPeriods;
+    return academicPeriods.filter(
+      (period) => period.academic_year === selectedAcademicYear
+    );
+  }, [academicPeriods, selectedAcademicYear]);
+
+  useEffect(() => {
+    if (selectedAcademicYear) return;
+    const openPeriod = academicPeriods.find((p) => p.is_open_for_grading);
+    if (openPeriod?.academic_year) {
+      setSelectedAcademicYear(openPeriod.academic_year);
+      return;
+    }
+    if (availableAcademicYears.length > 0) {
+      setSelectedAcademicYear(availableAcademicYears[0]);
+    }
+  }, [selectedAcademicYear, academicPeriods, availableAcademicYears]);
+
+  useEffect(() => {
+    if (academicPeriodsForYear.length === 0) {
+      setSelectedPeriod(null);
+      return;
+    }
+    if (!selectedPeriod) {
+      setSelectedPeriod(academicPeriodsForYear[0]);
+      return;
+    }
+    const valid = academicPeriodsForYear.some((p) => p.id === selectedPeriod.id);
+    if (!valid) {
+      setSelectedPeriod(academicPeriodsForYear[0]);
+    }
+  }, [academicPeriodsForYear, selectedPeriod]);
 
   // Load students and subjects when class changes
   useEffect(() => {
@@ -393,6 +439,8 @@ export function useGradeEntry(): UseGradeEntryReturn {
     students,
     subjects,
     academicPeriods,
+    academicPeriodsForYear,
+    availableAcademicYears,
     existingGrades,
     gradeInputs,
     classRecommendation,
@@ -401,6 +449,7 @@ export function useGradeEntry(): UseGradeEntryReturn {
     selectedClass,
     selectedSubject,
     selectedPeriod,
+    selectedAcademicYear,
     
     // Loading/error states
     loadingClasses,
@@ -414,6 +463,7 @@ export function useGradeEntry(): UseGradeEntryReturn {
     setSelectedClass,
     setSelectedSubject,
     setSelectedPeriod,
+    setSelectedAcademicYear,
     updateGradeInput,
     setClassRecommendation,
     applyClassRecommendationToAll,
