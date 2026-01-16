@@ -1493,7 +1493,7 @@ export default function AcademicPage() {
                             <Sparkles className="h-5 w-5 text-primary" />
                           </div>
                           <div>
-                            <p className="text-sm font-medium text-primary mb-1">Automated Behaviour Summary</p>
+                            <p className="text-sm font-medium text-primary mb-1">Smart Summary</p>
                             <p className="text-sm text-muted-foreground leading-relaxed">
                               {behaviorSummary.text}
                             </p>
