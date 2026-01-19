@@ -137,14 +137,6 @@ export function ResultsSummary() {
       .slice(0, 3);
   }, []);
 
-  // Needs attention - only subjects below 50%
-  const needsAttention = useMemo(() => {
-    return [...academicData.subjects]
-      .filter(s => (getScore(s, "2025", "midYear") ?? 0) < 50)
-      .sort((a, b) => (getScore(a, "2025", "midYear") ?? 0) - (getScore(b, "2025", "midYear") ?? 0))
-      .slice(0, 3);
-  }, []);
-
   // Rising stars - subjects with biggest improvement from previous exam (2024 year-end to 2025 mid-year)
   const risingStars = useMemo(() => {
     const improvements = academicData.subjects.map(s => {
@@ -340,90 +332,45 @@ export function ResultsSummary() {
             })}
           </div>
 
-          {/* Top 3 Performers & Needs Attention - Matching Academic Page */}
-          <div className="grid grid-cols-2 gap-3">
-            {/* Top 3 */}
+          {/* Top 3 Performers - Matching Academic Page */}
+          <div className="space-y-2">
+            <h4 className="text-sm font-medium text-foreground flex items-center gap-1.5">
+              <Trophy className="h-4 w-4" style={{ color: '#22c55e' }} /> Top Performers
+            </h4>
             <div className="space-y-2">
-              <h4 className="text-sm font-medium text-foreground flex items-center gap-1.5">
-                <Trophy className="h-4 w-4" style={{ color: '#22c55e' }} /> Top Performers
-              </h4>
-              <div className="space-y-2">
-                {[0, 1, 2].map((index) => {
-                  const s = top3[index];
-                  if (!s) {
-                    return <div key={index} className="min-h-[60px]" />;
-                  }
-                  const score = getScore(s, "2025", "midYear");
-                  return (
-                    <div 
-                      key={s.name} 
-                      className="flex items-center gap-2 p-2.5 rounded-lg border min-h-[60px]"
-                      style={{
-                        backgroundColor: 'rgba(34, 197, 94, 0.1)',
-                        borderColor: 'rgba(34, 197, 94, 0.2)'
-                      }}
+              {[0, 1, 2].map((index) => {
+                const s = top3[index];
+                if (!s) {
+                  return <div key={index} className="min-h-[60px]" />;
+                }
+                const score = getScore(s, "2025", "midYear");
+                return (
+                  <div 
+                    key={s.name} 
+                    className="flex items-center gap-2 p-2.5 rounded-lg border min-h-[60px]"
+                    style={{
+                      backgroundColor: 'rgba(34, 197, 94, 0.1)',
+                      borderColor: 'rgba(34, 197, 94, 0.2)'
+                    }}
+                  >
+                    <span 
+                      className="w-6 h-6 shrink-0 rounded-full flex items-center justify-center text-xs font-bold"
+                      style={{ backgroundColor: 'rgba(34, 197, 94, 0.2)', color: '#16a34a' }}
                     >
-                      <span 
-                        className="w-6 h-6 shrink-0 rounded-full flex items-center justify-center text-xs font-bold"
-                        style={{ backgroundColor: 'rgba(34, 197, 94, 0.2)', color: '#16a34a' }}
+                      {index + 1}
+                    </span>
+                    <div className="flex flex-col min-w-0 flex-1">
+                      <span className="text-sm font-medium text-foreground leading-tight">{shortenSubjectName(s.name)}</span>
+                      <Badge 
+                        className="text-xs font-semibold w-fit mt-1 text-white"
+                        style={{ backgroundColor: '#22c55e' }}
                       >
-                        {index + 1}
-                      </span>
-                      <div className="flex flex-col min-w-0 flex-1">
-                        <span className="text-sm font-medium text-foreground leading-tight">{shortenSubjectName(s.name)}</span>
-                        <Badge 
-                          className="text-xs font-semibold w-fit mt-1 text-white"
-                          style={{ backgroundColor: '#22c55e' }}
-                        >
-                          {score}%
-                        </Badge>
-                      </div>
+                        {score}%
+                      </Badge>
                     </div>
-                  );
-                })}
-              </div>
-            </div>
-
-            {/* Needs Attention */}
-            <div className="space-y-2">
-              <h4 className="text-sm font-medium text-foreground flex items-center gap-1.5">
-                <AlertTriangle className="h-4 w-4" style={{ color: '#ef4444' }} /> Needs Attention
-              </h4>
-              <div className="space-y-2">
-                {[0, 1, 2].map((index) => {
-                  const s = needsAttention[index];
-                  if (!s) {
-                    return <div key={index} className="min-h-[60px]" />;
-                  }
-                  const score = getScore(s, "2025", "midYear");
-                  return (
-                    <div 
-                      key={s.name} 
-                      className="flex items-center gap-2 p-2.5 rounded-lg border min-h-[60px]"
-                      style={{
-                        backgroundColor: 'rgba(254, 202, 202, 0.3)',
-                        borderColor: 'rgba(248, 113, 113, 0.3)'
-                      }}
-                    >
-                      <span 
-                        className="w-6 h-6 shrink-0 rounded-full flex items-center justify-center text-xs font-bold"
-                        style={{ backgroundColor: 'rgba(254, 202, 202, 0.5)', color: '#dc2626' }}
-                      >
-                        {index + 1}
-                      </span>
-                      <div className="flex flex-col min-w-0 flex-1">
-                        <span className="text-sm font-medium text-foreground leading-tight">{shortenSubjectName(s.name)}</span>
-                        <Badge 
-                          className="text-xs font-semibold w-fit mt-1 text-white"
-                          style={{ backgroundColor: '#f87171' }}
-                        >
-                          {score}%
-                        </Badge>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
+                  </div>
+                );
+              })}
             </div>
           </div>
           

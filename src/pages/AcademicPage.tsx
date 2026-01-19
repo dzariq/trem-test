@@ -29,7 +29,6 @@ import { generateBehaviorSummary } from "@/lib/summary/behaviorSummary";
 import { exportElementToPdf } from "@/lib/pdf/exportToPdf";
 import { saveAndShareBlob } from "@/lib/export/nativeDownload";
 import { toast } from "sonner";
-import { RuntimeDebug } from "@/components/Debug/RuntimeDebug";
 type YearKey = "2022" | "2023" | "2024" | "2025";
 type ExamType = "midYear" | "yearEnd";
 type AnalysisPeriod = {
@@ -961,52 +960,52 @@ export default function AcademicPage() {
 
   // Grade distribution
   const gradeDistribution = useMemo(() => {
-    const grades = {
-      "A*": 0,
-      "A": 0,
-      "B": 0,
-      "C": 0,
-      "D": 0,
-      "E": 0
-    };
-    filteredGradesSubjects.forEach((subject) => {
-      const gradeRow = getGradeFor(currentPeriodId, subject.id);
-      const score = getScoreFor(currentPeriodId, subject.id);
-      if (score === null && !gradeRow?.letter_grade) {
-        return;
+    const defaultBuckets = Object.keys(gradePillStyles);
+    const gradeOrder: string[] = [];
+    const gradeCounts = new Map<string, number>();
+
+    const ensureBucket = (label: string) => {
+      if (!gradeCounts.has(label)) {
+        gradeCounts.set(label, 0);
+        gradeOrder.push(label);
       }
+    };
+
+    defaultBuckets.forEach(ensureBucket);
+
+    currentGradeRows.forEach((gradeRow) => {
       const letter =
-        gradeRow?.letter_grade ||
-        (score !== null ? getGradeFromScore(score) : null);
+        gradeRow.letter_grade ||
+        (Number.isFinite(gradeRow.total_marks)
+          ? getGradeFromScore(gradeRow.total_marks!)
+          : null);
       if (!letter) return;
-      grades[letter as keyof typeof grades] += 1;
+      ensureBucket(letter);
+      gradeCounts.set(letter, safeNumber(gradeCounts.get(letter)) + 1);
     });
-    return Object.entries(grades).map(([grade, count]) => ({
+
+    return gradeOrder.map((grade) => ({
       grade,
-      count: safeNumber(count)
+      count: safeNumber(gradeCounts.get(grade)),
     }));
-  }, [filteredGradesSubjects, currentPeriodId, getGradeFor, getScoreFor]);
+  }, [currentGradeRows, getGradeFromScore, gradePillStyles]);
+
+  const gradeDistributionTotal = useMemo(() => {
+    return gradeDistribution.reduce(
+      (sum, item) => sum + safeNumber(item.count),
+      0
+    );
+  }, [gradeDistribution]);
 
   // Top 3 and Bottom 3 subjects (bottom only includes scores below 50%)
-  const {
-    top3,
-    needsAttention
-  } = useMemo(() => {
+  const top3 = useMemo(() => {
     const sorted = [...filteredGradesSubjects]
       .map((subject) => ({
         subject,
         score: safeNumber(getScoreFor(currentPeriodId, subject.id)),
       }))
       .sort((a, b) => safeNumber(b.score) - safeNumber(a.score));
-    const below50 = sorted
-      .filter((item) => safeNumber(item.score) < 50)
-      .reverse()
-      .slice(0, 3)
-      .map((item) => item.subject);
-    return {
-      top3: sorted.slice(0, 3).map((item) => item.subject),
-      needsAttention: below50
-    };
+    return sorted.slice(0, 3).map((item) => item.subject);
   }, [filteredGradesSubjects, currentPeriodId, getScoreFor]);
 
   // Calculate subjects passing (score >= 50)
@@ -1973,65 +1972,11 @@ export default function AcademicPage() {
                     </div>
                   </div>}
 
-                {/* At-Risk Subjects */}
-                {fallingBehind.length > 0 && <div className="space-y-2">
-                    <h4 className="text-sm font-medium text-foreground flex items-center gap-1.5">
-                      <TrendingDown className="h-4 w-4" style={{
-                    color: '#dc2626'
-                  }} /> At-Risk Subjects
-                    </h4>
-                    <p className="text-[10px] text-muted-foreground -mt-1">Subjects that need extra attention</p>
-                    <div className="grid grid-cols-3 gap-2">
-                      {fallingBehind.slice(0, 3).map(item => <div key={item.subject.name} className="relative flex flex-col items-center p-2.5 rounded-lg border overflow-hidden min-h-[110px]" style={{
-                    background: 'linear-gradient(135deg, #fee2e2 0%, #fecaca 50%, #f87171 100%)',
-                    borderColor: 'rgba(248, 113, 113, 0.5)'
-                  }}>
-                          {/* Inner shine effect */}
-                          <div className="absolute inset-0 pointer-events-none" style={{
-                      background: 'radial-gradient(ellipse at 30% 20%, rgba(255, 255, 255, 0.2) 0%, transparent 40%)'
-                    }} />
-                          {/* Warning pattern background */}
-                          <div className="absolute inset-0 pointer-events-none">
-                            <AlertTriangle className="absolute top-1 -left-1 w-7 h-7 opacity-20" style={{
-                        color: '#dc2626'
-                      }} />
-                            <AlertTriangle className="absolute bottom-1 -right-1 w-6 h-6 opacity-15" style={{
-                        color: '#ef4444'
-                      }} />
-                          </div>
-                          <span className="text-xs font-medium text-foreground text-center relative z-10">{shortenSubjectName(item.subject.name)}</span>
-                          <div className="flex items-center gap-1 mt-1 relative z-10">
-                            <ArrowDown className="h-3 w-3" style={{
-                        color: '#dc2626'
-                      }} />
-                            <span className="text-sm font-bold" style={{
-                        color: '#dc2626'
-                      }}>-{item.decline}%</span>
-                          </div>
-                          <div className="flex items-center gap-1 mt-1 relative z-10">
-                            <span className="text-[10px] font-medium px-2 py-0.5 rounded-full" style={{
-                        backgroundColor: '#fef2f2',
-                        color: '#991b1b'
-                      }}>
-                              {item.prev}%
-                            </span>
-                            <span className="text-[10px] text-muted-foreground">→</span>
-                            <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full" style={{
-                        backgroundColor: '#ef4444',
-                        color: '#ffffff'
-                      }}>
-                              {item.current}%
-                            </span>
-                          </div>
-                        </div>)}
-                    </div>
-                  </div>}
-
                 <div className="space-y-2">
                   <h4 className="text-sm font-medium text-foreground">Grade Distribution</h4>
                   <div className="grid grid-cols-6 gap-2">
                     {(() => {
-                    const totalSubjects = filteredGradesSubjects.length;
+                    const totalSubjects = gradeDistributionTotal;
                     const gradeCardColors: Record<string, {
                       bg: string;
                       text: string;
@@ -2172,7 +2117,7 @@ export default function AcademicPage() {
                 </div>
 
                 {/* Top 3 Performers & Bottom 3 to Focus */}
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 gap-3">
                   {/* Top 3 */}
                   <div className="space-y-2">
                     <h4 className="text-sm font-medium text-foreground flex items-center gap-1.5">
@@ -2199,39 +2144,6 @@ export default function AcademicPage() {
                             <div className="flex flex-col min-w-0 flex-1">
                               <span className="text-sm font-medium text-foreground leading-tight">{shortenSubjectName(s.name)}</span>
                               <Badge className="text-xs font-semibold w-fit mt-1 text-white" style={{ backgroundColor: '#22c55e' }}>{score}%</Badge>
-                            </div>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </div>
-
-                  {/* Needs Attention - only subjects below 50% */}
-                  <div className="space-y-2">
-                    <h4 className="text-sm font-medium text-foreground flex items-center gap-1.5">
-                      <AlertTriangle className="h-4 w-4" style={{ color: '#ef4444' }} /> Needs Attention
-                    </h4>
-                    <div className="space-y-2">
-                      {[0, 1, 2].map((index) => {
-                        const s = needsAttention[index];
-                        if (!s) {
-                          return <div key={index} className="min-h-[60px]" />;
-                        }
-                        const score = safeNumber(getScoreFor(currentPeriodId, s.id));
-                        return (
-                          <div key={s.name} className="flex items-center gap-2 p-2.5 rounded-lg border min-h-[60px]" style={{
-                            backgroundColor: 'rgba(254, 202, 202, 0.3)',
-                            borderColor: 'rgba(248, 113, 113, 0.3)'
-                          }}>
-                            <span className="w-6 h-6 shrink-0 rounded-full flex items-center justify-center text-xs font-bold" style={{
-                              backgroundColor: 'rgba(254, 202, 202, 0.5)',
-                              color: '#dc2626'
-                            }}>
-                              {index + 1}
-                            </span>
-                            <div className="flex flex-col min-w-0 flex-1">
-                              <span className="text-sm font-medium text-foreground leading-tight">{shortenSubjectName(s.name)}</span>
-                              <Badge className="text-xs font-semibold w-fit mt-1 text-white" style={{ backgroundColor: '#f87171' }}>{score}%</Badge>
                             </div>
                           </div>
                         );
@@ -2792,7 +2704,7 @@ export default function AcademicPage() {
                 {/* Exam Selectors */}
                 <div className="flex items-center gap-2">
                   {/* Exam A - Light Blue Box */}
-                  <div className="flex-1 space-y-2 p-3 rounded-xl border" style={{
+                  <div className="flex-1 space-y-2 p-2 sm:p-3 rounded-xl border min-w-0" style={{
                   backgroundColor: 'rgba(59, 130, 246, 0.08)',
                   borderColor: 'rgba(59, 130, 246, 0.25)'
                 }}>
@@ -2812,8 +2724,8 @@ export default function AcademicPage() {
                       period: periods[0]?.periodLabel ?? ""
                     }));
                   }}>
-                      <SelectTrigger className="w-full h-8 text-xs bg-background/80">
-                        <SelectValue />
+                      <SelectTrigger className="w-full h-8 text-sm px-2 sm:px-3 bg-background/80 min-w-0">
+                        <SelectValue className="truncate max-w-full" />
                       </SelectTrigger>
                       <SelectContent className="bg-card">
                         {analysisYearOptions.map(year => <SelectItem key={year} value={year}>{year}</SelectItem>)}
@@ -2823,8 +2735,8 @@ export default function AcademicPage() {
                     ...prev,
                     period: v
                   }))}>
-                      <SelectTrigger className="w-full h-8 text-xs bg-background/80">
-                        <SelectValue />
+                      <SelectTrigger className="w-full h-8 text-sm px-2 sm:px-3 bg-background/80 min-w-0">
+                        <SelectValue className="truncate max-w-full" />
                       </SelectTrigger>
                       <SelectContent className="bg-card">
                         {getPeriodsForYear(compareExamA.year).map(period => <SelectItem key={period.id} value={period.periodLabel}>{period.periodLabel}</SelectItem>)}
@@ -2838,7 +2750,7 @@ export default function AcademicPage() {
                   </div>
                   
                   {/* Exam B - Light Amber Box */}
-                  <div className="flex-1 space-y-2 p-3 rounded-xl border" style={{
+                  <div className="flex-1 space-y-2 p-2 sm:p-3 rounded-xl border min-w-0" style={{
                   backgroundColor: 'rgba(245, 158, 11, 0.08)',
                   borderColor: 'rgba(245, 158, 11, 0.25)'
                 }}>
@@ -2858,8 +2770,8 @@ export default function AcademicPage() {
                       period: periods[0]?.periodLabel ?? ""
                     }));
                   }}>
-                      <SelectTrigger className="w-full h-8 text-xs bg-background/80">
-                        <SelectValue />
+                      <SelectTrigger className="w-full h-8 text-sm px-2 sm:px-3 bg-background/80 min-w-0">
+                        <SelectValue className="truncate max-w-full" />
                       </SelectTrigger>
                       <SelectContent className="bg-card">
                         {analysisYearOptions.map(year => <SelectItem key={year} value={year}>{year}</SelectItem>)}
@@ -2869,8 +2781,8 @@ export default function AcademicPage() {
                     ...prev,
                     period: v
                   }))}>
-                      <SelectTrigger className="w-full h-8 text-xs bg-background/80">
-                        <SelectValue />
+                      <SelectTrigger className="w-full h-8 text-sm px-2 sm:px-3 bg-background/80 min-w-0">
+                        <SelectValue className="truncate max-w-full" />
                       </SelectTrigger>
                       <SelectContent className="bg-card">
                         {getPeriodsForYear(compareExamB.year).map(period => <SelectItem key={period.id} value={period.periodLabel}>{period.periodLabel}</SelectItem>)}
@@ -2927,7 +2839,7 @@ export default function AcademicPage() {
                   </div>}
                 {!analysisLoading && !analysisError && !compareEmptyMessage && <>
                 {/* Comparison Summary Cards */}
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 min-w-0">
                   <div className="flex-1 p-4 rounded-xl bg-gradient-to-br from-blue-500/10 to-blue-600/5 border border-blue-500/20">
                     <div className="mb-2">
                       <span className="text-xs font-semibold text-foreground">Exam A</span>
@@ -3533,7 +3445,6 @@ export default function AcademicPage() {
                     </div>
                   </>
                 )}
-                <RuntimeDebug selectedStudentId={selectedStudentId ?? null} selectedYear={goalYear} />
               </TabsContent>
 
               {/* Floating Generate Report FAB - for Overview, Trends, Compare tabs */}
@@ -3817,21 +3728,15 @@ export default function AcademicPage() {
                 </div>
               </div>
 
-              {/* Rising Stars & At-Risk Subjects - Side by Side */}
-              {(risingStars.length > 0 || fallingBehind.length > 0) && <div style={{
-              display: 'grid',
-              gridTemplateColumns: risingStars.length > 0 && fallingBehind.length > 0 ? 'repeat(2, 1fr)' : '1fr',
-              gap: '12px',
+              {/* Rising Stars */}
+              {risingStars.length > 0 && <div style={{
+              padding: '10px',
+              borderRadius: '8px',
+              background: 'linear-gradient(135deg, #fef9c3 0%, #fef3c7 100%)',
+              border: '1px solid #fde047',
               marginBottom: '12px',
               pageBreakInside: 'avoid'
             }}>
-                  {/* Rising Stars */}
-                  {risingStars.length > 0 && <div style={{
-                padding: '10px',
-                borderRadius: '8px',
-                background: 'linear-gradient(135deg, #fef9c3 0%, #fef3c7 100%)',
-                border: '1px solid #fde047'
-              }}>
                       <h4 style={{
                   fontSize: '11px',
                   fontWeight: 600,
@@ -3885,68 +3790,6 @@ export default function AcademicPage() {
                           </div>)}
                       </div>
                     </div>}
-                  
-                  {/* At-Risk Subjects */}
-                  {fallingBehind.length > 0 && <div style={{
-                padding: '10px',
-                borderRadius: '8px',
-                background: 'linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%)',
-                border: '1px solid #fca5a5'
-              }}>
-                      <h4 style={{
-                  fontSize: '11px',
-                  fontWeight: 600,
-                  color: '#dc2626',
-                  marginBottom: '8px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '4px'
-                }}>
-                        ⚠️ At-Risk Subjects
-                      </h4>
-                      <p style={{
-                  fontSize: '8px',
-                  color: '#b91c1c',
-                  marginBottom: '8px'
-                }}>Needs extra attention</p>
-                      <div style={{
-                  display: 'flex',
-                  flexDirection: 'column',
-                  gap: '6px'
-                }}>
-                        {fallingBehind.slice(0, 3).map(item => <div key={item.subject.name} style={{
-                    padding: '8px 10px',
-                    borderRadius: '6px',
-                    background: 'linear-gradient(135deg, #fecaca 0%, #fca5a5 100%)',
-                    border: '1px solid rgba(252, 165, 165, 0.6)',
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'center'
-                  }}>
-                            <div style={{
-                      fontSize: '9px',
-                      fontWeight: 600,
-                      color: '#991b1b'
-                    }}>{shortenSubjectName(item.subject.name)}</div>
-                            <div style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '6px'
-                    }}>
-                              <div style={{
-                        fontSize: '11px',
-                        fontWeight: 700,
-                        color: '#dc2626'
-                      }}>-{item.decline}%</div>
-                              <div style={{
-                        fontSize: '7px',
-                        color: '#b91c1c'
-                      }}>{item.prev}%→{item.current}%</div>
-                            </div>
-                          </div>)}
-                      </div>
-                    </div>}
-                </div>}
 
               {/* Subject Performance */}
               <div style={{
@@ -4089,11 +3932,8 @@ export default function AcademicPage() {
                 </div>
               </div>
 
-              {/* Top & Needs Attention */}
+              {/* Top Subjects */}
               <div style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(2, 1fr)',
-              gap: '12px',
               marginBottom: '12px',
               pageBreakInside: 'avoid'
             }}>
@@ -4121,34 +3961,6 @@ export default function AcademicPage() {
                     fontWeight: 600
                   }}>{safeNumber(getScoreFor(currentPeriodId, s.id))}%</span>
                     </div>)}
-                </div>
-                <div style={{
-                padding: '10px',
-                borderRadius: '6px',
-                backgroundColor: '#fee2e2',
-                border: '1px solid #fca5a5'
-              }}>
-                  <h4 style={{
-                  fontSize: '11px',
-                  fontWeight: 600,
-                  color: '#dc2626',
-                  marginBottom: '6px'
-                }}>Needs Attention</h4>
-                  {needsAttention.length > 0 ? needsAttention.map((s, i) => <div key={s.name} style={{
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  padding: '3px 6px',
-                  fontSize: '9px',
-                  borderBottom: '1px solid #fca5a540'
-                }}>
-                      <span>{i + 1}. {s.name}</span>
-                      <span style={{
-                    fontWeight: 600
-                  }}>{safeNumber(getScoreFor(currentPeriodId, s.id))}%</span>
-                    </div>) : <p style={{
-                  fontSize: '9px',
-                  color: '#666'
-                }}>All subjects passing!</p>}
                 </div>
               </div>
 

@@ -11,7 +11,6 @@ import {
   Tooltip,
   CartesianGrid,
   Cell,
-  ReferenceDot,
   Customized,
 } from "recharts";
 
@@ -424,17 +423,46 @@ export function SubjectPerformanceChart({
                   <Cell key={index} fill={lineColors[(scrollOffset + index) % lineColors.length]} />
                 ))}
               </Bar>
-              {showGoalBadge && visibleData.map((entry) => (
-                <ReferenceDot
-                  key={`goal-${entry.displayName}`}
-                  x={entry.goal}
-                  y={entry.displayName}
-                  r={4}
-                  fill="hsl(var(--foreground))"
-                  stroke="hsl(var(--background))"
-                  strokeWidth={1}
+              {showGoalBadge && (
+                <Customized
+                  component={(props: any) => {
+                    const { xAxisMap, yAxisMap } = props;
+                    if (!xAxisMap || !yAxisMap) return null;
+
+                    const xAxis = Object.values(xAxisMap)[0] as any;
+                    const yAxis = Object.values(yAxisMap)[0] as any;
+
+                    if (!xAxis?.scale || !yAxis?.scale) return null;
+
+                    const bandwidth = yAxis.scale.bandwidth
+                      ? yAxis.scale.bandwidth() / 2
+                      : 0;
+
+                    return (
+                      <g className="goal-dots">
+                        {visibleData.map((entry, index) => {
+                          const cx = xAxis.scale(entry.goal);
+                          const cy = yAxis.scale(entry.displayName);
+
+                          if (cx === undefined || cy === undefined) return null;
+
+                          return (
+                            <circle
+                              key={`goal-dot-${index}`}
+                              cx={cx}
+                              cy={cy + bandwidth}
+                              r={4}
+                              fill="hsl(var(--foreground))"
+                              stroke="hsl(var(--background))"
+                              strokeWidth={1}
+                            />
+                          );
+                        })}
+                      </g>
+                    );
+                  }}
                 />
-              ))}
+              )}
               {showCohortDot && (
                 <Customized
                   component={(props: any) => {
