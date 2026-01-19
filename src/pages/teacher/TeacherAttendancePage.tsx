@@ -1,4 +1,4 @@
-import { useState, useMemo, useRef } from "react";
+import { useState, useMemo, useRef, useEffect } from "react";
 import { TeacherAppLayout } from "@/components/layout/TeacherAppLayout";
 import { AppHeader } from "@/components/layout/AppHeader";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -20,6 +20,7 @@ import { teacherProfile, classRosters, DailyAttendanceDetail } from "@/data/teac
 import { useTeacherAttendance } from "@/hooks/useTeacherAttendance";
 import { useAttendanceStatistics, type DailyBreakdown } from "@/hooks/useAttendanceStatistics";
 import { type AttendanceStatus } from "@/data/teacherAttendance";
+import { useTeacherScope } from "@/hooks/useTeacherScope";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
@@ -54,6 +55,7 @@ const chartConfig = {
 };
 
 export default function TeacherAttendancePage() {
+  const teacherScope = useTeacherScope();
   const [activeTab, setActiveTab] = useState<TabType>("take");
   
   // Use the new Supabase-connected hook for Take Attendance tab
@@ -123,6 +125,17 @@ export default function TeacherAttendancePage() {
   // For statistics tab - use classes from the Take Attendance tab
   const statsClasses = classes;
   const mockStudents = classRosters[statsSelectedClass as keyof typeof classRosters] || [];
+
+  const hasTeacherClasses =
+    !teacherScope.isTeacher ||
+    (teacherScope.allowedClassYears.length > 0 && !teacherScope.loading);
+
+  useEffect(() => {
+    if (!selectedClass) return;
+    if (statsSelectedClass !== selectedClass) {
+      setStatsSelectedClass(selectedClass);
+    }
+  }, [selectedClass, statsSelectedClass]);
 
   const handleStatusChange = (studentId: string, status: AttendanceStatus) => {
     setStudentStatus(studentId, status);
@@ -330,6 +343,13 @@ export default function TeacherAttendancePage() {
       {/* Tab Content */}
       {activeTab === "take" ? (
         <div className="px-4 space-y-4 mt-4">
+          {teacherScope.isTeacher && !teacherScope.loading && teacherScope.allowedClassYears.length === 0 && (
+            <Card className="border-amber-200 bg-amber-50/80">
+              <CardContent className="p-4 text-sm text-amber-800">
+                You do not have any assigned classes yet. Please contact the school administrator.
+              </CardContent>
+            </Card>
+          )}
           {/* Error Message */}
           {error && (
             <div className="p-3 bg-destructive/10 border border-destructive/30 rounded-lg text-destructive text-sm">
@@ -342,7 +362,7 @@ export default function TeacherAttendancePage() {
             <Select 
               value={selectedClass} 
               onValueChange={setSelectedClass}
-              disabled={loadingClasses}
+              disabled={loadingClasses || !hasTeacherClasses}
             >
               <SelectTrigger className="flex-1">
                 <SelectValue placeholder={loadingClasses ? "Loading..." : "Select Class"} />
@@ -472,7 +492,7 @@ export default function TeacherAttendancePage() {
             className="w-full" 
             size="lg"
             onClick={handleSubmit}
-            disabled={saving || students.length === 0}
+            disabled={saving || students.length === 0 || !hasTeacherClasses}
           >
             {saving ? (
               <>
@@ -489,6 +509,13 @@ export default function TeacherAttendancePage() {
         </div>
       ) : (
         <div className="px-4 space-y-4 mt-4 pb-4">
+          {teacherScope.isTeacher && !teacherScope.loading && teacherScope.allowedClassYears.length === 0 && (
+            <Card className="border-amber-200 bg-amber-50/80">
+              <CardContent className="p-4 text-sm text-amber-800">
+                You do not have any assigned classes yet. Please contact the school administrator.
+              </CardContent>
+            </Card>
+          )}
           {/* Error Message */}
           {statsError && (
             <div className="p-3 bg-destructive/10 border border-destructive/30 rounded-lg text-destructive text-sm">
@@ -499,8 +526,11 @@ export default function TeacherAttendancePage() {
           {/* Class Selector for Statistics */}
           <Select 
             value={statsSelectedClass} 
-            onValueChange={setStatsSelectedClass}
-            disabled={loadingClasses}
+            onValueChange={(value) => {
+              setStatsSelectedClass(value);
+              setSelectedClass(value);
+            }}
+            disabled={loadingClasses || !hasTeacherClasses}
           >
             <SelectTrigger>
               <SelectValue placeholder={loadingClasses ? "Loading..." : "Select Class"} />

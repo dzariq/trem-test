@@ -494,7 +494,7 @@ export default function TeacherCalendarPage() {
                         <User className="h-4 w-4 text-primary" />
                       </div>
                       <div>
-                        <p className="text-xs text-muted-foreground">Coach</p>
+                        <p className="text-xs text-muted-foreground">PIC (Person in Charge)</p>
                         <p className="text-sm font-medium">{selectedCCA.coach}</p>
                       </div>
                     </div>

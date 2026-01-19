@@ -6,8 +6,14 @@ export interface LessonFlowActivity {
   id: string;
   duration: number; // in minutes
   description: string;
-  steps: string[];
+  steps: Array<LessonFlowStep | string>;
   isTeacherLed: boolean;
+}
+
+export interface LessonFlowStep {
+  title: string;
+  duration: number;
+  description: string;
 }
 
 export interface LessonFlow {
@@ -33,6 +39,11 @@ export interface LessonPlanReflection {
   strategiesNextLesson: string;
   // Signature
   signatureDate: string;
+
+  // Optional short-form reflections
+  notes?: string;
+  text?: string;
+  updated_at?: string;
 }
 
 export interface LessonPlanApproval {
@@ -115,6 +126,22 @@ export interface SubjectCurriculum {
   subject: string;
   topics: Topic[];
 }
+
+const createLessonFlowActivity = (idSuffix: string): LessonFlowActivity => ({
+  id: `section-${idSuffix}-${Date.now()}`,
+  duration: 0,
+  description: "",
+  steps: [],
+  isTeacherLed: true,
+});
+
+export const createDefaultLessonFlow = (): LessonFlow => ({
+  beginning: createLessonFlowActivity("beginning"),
+  middle: createLessonFlowActivity("middle"),
+  end: createLessonFlowActivity("end"),
+});
+
+export const DEFAULT_LESSON_FLOW: LessonFlow = createDefaultLessonFlow();
 
 // Check if reflection section is complete
 export const isReflectionComplete = (reflection: LessonPlanReflection): boolean => {
@@ -867,27 +894,7 @@ export const createEmptyLessonPlan = (
   vocabulary: [],
   previousLearning: "",
   lessonFlow: {
-    beginning: {
-      id: `b-${Date.now()}`,
-      duration: 10,
-      description: "",
-      steps: [],
-      isTeacherLed: true
-    },
-    middle: {
-      id: `m-${Date.now()}`,
-      duration: 25,
-      description: "",
-      steps: [],
-      isTeacherLed: false
-    },
-    end: {
-      id: `e-${Date.now()}`,
-      duration: 10,
-      description: "",
-      steps: [],
-      isTeacherLed: true
-    }
+    ...createDefaultLessonFlow(),
   },
   resources: "",
   attachments: [],

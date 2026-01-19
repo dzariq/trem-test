@@ -58,6 +58,18 @@ export interface SubjectChange {
   change: number;
 }
 
+const logSupabaseError = (
+  context: string,
+  error: { code?: string; message?: string; details?: string; hint?: string }
+) => {
+  console.error(`[${context}]`, {
+    code: error.code,
+    message: error.message,
+    details: error.details,
+    hint: error.hint,
+  });
+};
+
 // Fetch distinct classes from students table
 export async function fetchDistinctClasses(): Promise<string[]> {
   const { data, error } = await supabase
@@ -68,7 +80,7 @@ export async function fetchDistinctClasses(): Promise<string[]> {
     .order("class");
 
   if (error) {
-    console.error("Error fetching classes:", error);
+    logSupabaseError("classAnalysis/fetchDistinctClasses", error);
     throw error;
   }
 
@@ -88,7 +100,7 @@ export async function fetchStudentsForClass(
     .order("name");
 
   if (error) {
-    console.error("Error fetching students:", error);
+    logSupabaseError("classAnalysis/fetchStudentsForClass", error);
     throw error;
   }
 
@@ -106,7 +118,7 @@ export async function fetchAcademicPeriodsForAnalysis(): Promise<
     .order("sort_order");
 
   if (error) {
-    console.error("Error fetching academic periods:", error);
+    logSupabaseError("classAnalysis/fetchAcademicPeriodsForAnalysis", error);
     throw error;
   }
 
@@ -126,7 +138,7 @@ export async function fetchSubjectsForClass(
     .in("student_id", studentIds);
 
   if (gradeError) {
-    console.error("Error fetching grade subjects:", gradeError);
+    logSupabaseError("classAnalysis/fetchSubjectsForClass/grades", gradeError);
     throw gradeError;
   }
 
@@ -144,7 +156,7 @@ export async function fetchSubjectsForClass(
     .order("name");
 
   if (subjectsError) {
-    console.error("Error fetching subjects:", subjectsError);
+    logSupabaseError("classAnalysis/fetchSubjectsForClass/subjects", subjectsError);
     throw subjectsError;
   }
 
@@ -182,7 +194,7 @@ export async function fetchGradesForAnalysis(
   const { data, error } = await query;
 
   if (error) {
-    console.error("Error fetching grades:", error);
+    logSupabaseError("classAnalysis/fetchGradesForAnalysis", error);
     throw error;
   }
 

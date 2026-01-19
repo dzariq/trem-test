@@ -9,7 +9,6 @@ import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Calendar } from "@/components/ui/calendar";
 import {
   Select,
   SelectContent,
@@ -26,51 +25,16 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from "@/components/ui/accordion";
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from "@/components/ui/collapsible";
-import {
   Plus,
   ChevronRight,
   ChevronDown,
   BookOpen,
-  CheckCircle2,
-  Clock,
-  AlertCircle,
-  FileText,
-  CalendarIcon,
-  Settings,
-  Trash2,
   Pencil,
   Loader2,
+  Trash2,
 } from "lucide-react";
-import { cn } from "@/lib/utils";
 import { toast } from "@/hooks/use-toast";
-import {
-  startOfWeek,
-  addWeeks,
-  format,
-  isWithinInterval,
-  addDays,
-  isSameWeek,
-  eachDayOfInterval,
-} from "date-fns";
-import {
-  getLessonPlanStatus,
-  type LessonPlan,
-} from "@/data/lessonPlanData";
+import { createDefaultLessonFlow, type LessonPlan, type Week } from "@/data/lessonPlanData";
 import {
   getAcademicYears,
   getActiveYear,
@@ -78,47 +42,33 @@ import {
 } from "@/data/weekConfigData";
 import { useLessonPlans, useLessonPlanSubjects } from "@/hooks/useLessonPlans";
 import { useAcademicFilters } from "@/hooks/useAcademicFilters";
-import { normalizeSubtopics } from "@/lib/lessonplan/normalizeSubtopics";
+import { getLessonStatus } from "@/lib/lessonplan/getLessonStatus";
+import { supabase } from "@/lib/supabase";
 
 // LocalStorage keys for persisting selections
 const LS_LESSON_PLAN_YEAR = "lessonPlan_selectedYear";
 const LS_LESSON_PLAN_SUBJECT = "lessonPlan_selectedSubject";
 const LS_LESSON_PLAN_CLASS = "lessonPlan_selectedClass";
 
-// Holiday periods (blocked weeks)
-const holidayPeriods = [
-  { start: new Date(2026, 2, 14), end: new Date(2026, 2, 22) }, // March school holiday
-  { start: new Date(2026, 5, 27), end: new Date(2026, 6, 26) }, // June-July holiday
-  { start: new Date(2026, 8, 5), end: new Date(2026, 8, 13) }, // September holiday
-  { start: new Date(2026, 10, 14), end: new Date(2026, 11, 31) }, // Nov-Dec holiday
-];
-
-// Get week number from date
-const getWeekNumber = (date: Date, termStart: Date): number => {
-  const diffTime = date.getTime() - termStart.getTime();
-  const diffWeeks = Math.floor(diffTime / (7 * 24 * 60 * 60 * 1000));
-  return diffWeeks + 1;
+const logSupabaseError = (
+  context: string,
+  error: { code?: string; message?: string; details?: string; hint?: string }
+) => {
+  console.error(`[${context}]`, {
+    code: error.code,
+    message: error.message,
+    details: error.details,
+    hint: error.hint,
+  });
 };
 
-// Check if a date is in a holiday period
-const isHoliday = (date: Date): boolean => {
-  return holidayPeriods.some((period) =>
-    isWithinInterval(date, { start: period.start, end: period.end })
-  );
-};
+const formatStatusLabel = (status: "draft" | "incomplete" | "complete") =>
+  status.charAt(0).toUpperCase() + status.slice(1);
 
-// Get Monday to Friday of the week containing the date
-const getSchoolWeek = (date: Date): { start: Date; end: Date } => {
-  const weekStart = startOfWeek(date, { weekStartsOn: 1 }); // Monday
-  const weekEnd = addDays(weekStart, 4); // Friday
-  return { start: weekStart, end: weekEnd };
-};
-
-// Check if any day in the school week is a holiday
-const isWeekHoliday = (date: Date): boolean => {
-  const { start, end } = getSchoolWeek(date);
-  const weekDays = eachDayOfInterval({ start, end });
-  return weekDays.some((day) => isHoliday(day));
+type WeekSubtopic = {
+  id: string;
+  name: string;
+  sort_order: number;
 };
 
 const TeacherLessonPlansPage = () => {
@@ -189,95 +139,28 @@ const TeacherLessonPlansPage = () => {
   const { 
     curriculum, 
     loading, 
-    updateWeekNumber, 
     addTopic, 
-    updateTopic 
+    updateTopic,
+    addWeek,
+    refetch,
   } = useLessonPlans(academicYearNum, selectedSubject, selectedClass);
-  
-  // Combined loading state for dropdowns
-  const dropdownsLoading = subjectsLoading || loadingClasses;
   
   const [isAddTopicOpen, setIsAddTopicOpen] = useState(false);
   const [newTopicTitle, setNewTopicTitle] = useState("");
-  const [isAddSubtopicOpen, setIsAddSubtopicOpen] = useState(false);
-  const [currentTopicId, setCurrentTopicId] = useState<string>("");
-  const [newSubtopicTitle, setNewSubtopicTitle] = useState("");
-  const [weekCalendarOpen, setWeekCalendarOpen] = useState<string | null>(null);
-  const [dateRange, setDateRange] = useState<{ from: Date | undefined; to: Date | undefined }>({
-    from: undefined,
-    to: undefined,
-  });
-  const [editingDateField, setEditingDateField] = useState<"start" | "end" | null>(null);
   
   // Edit topic dialog state
   const [isEditTopicOpen, setIsEditTopicOpen] = useState(false);
   const [editingTopicId, setEditingTopicId] = useState<string>("");
   const [editTopicTitle, setEditTopicTitle] = useState("");
-  const [editSubtopics, setEditSubtopics] = useState<string[]>([]);
-  const [newSubtopicInput, setNewSubtopicInput] = useState("");
-
-  // Term start date (for week calculation)
-  const termStart = new Date(2026, 0, 5); // January 5, 2026
-
-  const handleWeekChange = async (weekId: string, selectedDate: Date | undefined) => {
-    if (!selectedDate) return;
-
-    const { start, end } = getSchoolWeek(selectedDate);
-
-    // Check if any day in the week is a holiday
-    if (isWeekHoliday(selectedDate)) {
-      toast({
-        title: "Holiday Period",
-        description: "This week includes a holiday period and cannot be selected.",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    const newWeekNumber = getWeekNumber(selectedDate, termStart);
-
-    // Persist the selection to Supabase
-    const success = await updateWeekNumber(weekId, newWeekNumber);
-    
-    if (success) {
-      toast({
-        title: "Week Changed",
-        description: `Week updated to Week ${newWeekNumber} (${format(start, "MMM d")} - ${format(end, "MMM d, yyyy")})`,
-      });
-    }
-  };
-
-  // Get week range for display
-  const getWeekRange = (weekNumber: number): { start: Date; end: Date } => {
-    const weekStart = addWeeks(termStart, weekNumber - 1);
-    return getSchoolWeek(weekStart);
-  };
-
-  const getStatusIcon = (status: "complete" | "incomplete" | "draft" | "empty") => {
-    switch (status) {
-      case "complete":
-        return <CheckCircle2 className="h-3 w-3 text-emerald-500" />;
-      case "incomplete":
-        return <AlertCircle className="h-3 w-3 text-amber-500" />;
-      case "draft":
-        return <Clock className="h-3 w-3 text-muted-foreground" />;
-      default:
-        return null;
-    }
-  };
-
-  const getStatusBadgeVariant = (status: "complete" | "incomplete" | "draft" | "empty") => {
-    switch (status) {
-      case "complete":
-        return "default";
-      case "incomplete":
-        return "secondary";
-      case "draft":
-        return "outline";
-      default:
-        return "outline";
-    }
-  };
+  const [expandedTopicId, setExpandedTopicId] = useState<string | null>(null);
+  const [expandedWeekByTopic, setExpandedWeekByTopic] = useState<Record<string, string>>({});
+  const [creatingLessonWeekId, setCreatingLessonWeekId] = useState<string | null>(null);
+  const [weekSubtopicsByWeekId, setWeekSubtopicsByWeekId] = useState<
+    Record<string, WeekSubtopic[]>
+  >({});
+  const [newWeekSubtopicByWeekId, setNewWeekSubtopicByWeekId] = useState<
+    Record<string, string>
+  >({});
 
   const handleLessonPlanClick = (lp: LessonPlan) => {
     navigate(`/teacher/lesson-plans/${lp.id}`);
@@ -287,130 +170,271 @@ const TeacherLessonPlansPage = () => {
     if (!newTopicTitle.trim()) return;
     
     // Save to Supabase
-    await addTopic(newTopicTitle.trim());
+    const result = await addTopic(newTopicTitle.trim());
     
     setNewTopicTitle("");
     setIsAddTopicOpen(false);
-  };
 
-  const handleOpenAddSubtopic = (topicId: string) => {
-    setCurrentTopicId(topicId);
-    setIsAddSubtopicOpen(true);
-  };
-
-  const handleAddSubtopic = () => {
-    if (!newSubtopicTitle.trim()) return;
-    
-    const topic = curriculum?.topics.find(t => t.id === currentTopicId);
-    // In a real app, this would save to the database
-    toast({
-      title: "Subtopic Added",
-      description: `"${newSubtopicTitle}" has been added to ${topic?.title || "topic"}.`,
-    });
-    
-    setNewSubtopicTitle("");
-    setIsAddSubtopicOpen(false);
-    setCurrentTopicId("");
+    if (result) {
+      setExpandedTopicId(result.topicId);
+      setExpandedWeekByTopic((prev) => ({ ...prev, [result.topicId]: result.weekId }));
+    }
   };
 
   const handleOpenEditTopic = (topic: { id: string; title: string; subtopics?: string[] }) => {
     setEditingTopicId(topic.id);
     setEditTopicTitle(topic.title);
-    setEditSubtopics(normalizeSubtopics(topic.subtopics));
-    setNewSubtopicInput("");
     setIsEditTopicOpen(true);
   };
 
   const handleSaveTopicEdit = async () => {
     if (!editTopicTitle.trim()) return;
-    const pending = newSubtopicInput.trim();
-    let nextSubtopics = normalizeSubtopics(editSubtopics);
-    if (pending && !nextSubtopics.some((item) => item.toLowerCase() === pending.toLowerCase())) {
-      nextSubtopics = [...nextSubtopics, pending];
-    }
-
-    // Save to Supabase
-    await updateTopic(editingTopicId, editTopicTitle.trim(), nextSubtopics);
+    await updateTopic(editingTopicId, editTopicTitle.trim(), []);
     
     setIsEditTopicOpen(false);
     setEditingTopicId("");
     setEditTopicTitle("");
-    setEditSubtopics([]);
-    setNewSubtopicInput("");
   };
 
-  const handleAddEditSubtopic = () => {
-    const pending = newSubtopicInput.trim();
-    if (!pending) return;
-    setEditSubtopics((prev) => {
-      const next = normalizeSubtopics(prev);
-      if (next.some((item) => item.toLowerCase() === pending.toLowerCase())) {
-        return next;
-      }
-      return [...next, pending];
+  useEffect(() => {
+    if (!curriculum) return;
+    setExpandedWeekByTopic((prev) => {
+      const next = { ...prev };
+      curriculum.topics.forEach((topic) => {
+        if (!next[topic.id] && topic.weeks[0]) {
+          next[topic.id] = topic.weeks[0].id;
+        }
+      });
+      return next;
     });
-    setNewSubtopicInput("");
-  };
+  }, [curriculum]);
 
-  const handleRemoveEditSubtopic = (index: number) => {
-    setEditSubtopics(editSubtopics.filter((_, i) => i !== index));
-  };
-
-  const handleRenameEditSubtopic = (index: number, newName: string) => {
-    const updated = [...editSubtopics];
-    updated[index] = newName;
-    setEditSubtopics(updated);
-  };
-
-  const handleCreateNew = () => {
-    navigate("/teacher/lesson-plans/new");
-  };
-
-  const renderLessonPlanItem = (lp: LessonPlan | undefined, lessonNumber: number, weekId: string) => {
-    if (!lp) {
-      return (
-        <button
-          onClick={() => navigate(`/teacher/lesson-plans/new?week=${weekId}&lesson=${lessonNumber}`)}
-          className="flex items-center gap-3 p-3 rounded-lg border border-dashed border-border hover:bg-muted/50 transition-colors w-full"
-        >
-          <div className="h-8 w-8 rounded-full bg-muted flex items-center justify-center flex-shrink-0">
-            <Plus className="h-4 w-4 text-muted-foreground" />
-          </div>
-          <div className="text-left">
-            <p className="text-sm font-medium text-muted-foreground">Lesson {lessonNumber}</p>
-            <p className="text-xs text-muted-foreground">Tap to create</p>
-          </div>
-        </button>
-      );
+  useEffect(() => {
+    if (!curriculum) return;
+    const weekIds = curriculum.topics.flatMap((topic) => topic.weeks.map((week) => week.id));
+    if (weekIds.length === 0) {
+      setWeekSubtopicsByWeekId({});
+      return;
     }
 
-    const status = getLessonPlanStatus(lp);
-    
-    return (
-      <button
-        onClick={() => handleLessonPlanClick(lp)}
-        className={cn(
-          "flex items-center gap-2 p-3 rounded-lg border transition-colors w-full text-left overflow-hidden",
-          status === "complete" && "border-emerald-200 bg-emerald-50/50 hover:bg-emerald-50",
-          status === "incomplete" && "border-amber-200 bg-amber-50/50 hover:bg-amber-50",
-          status === "draft" && "border-border bg-muted/30 hover:bg-muted/50"
-        )}
-      >
-        <div className={cn(
-          "h-8 w-8 min-w-[2rem] rounded-full flex items-center justify-center flex-shrink-0 text-xs font-bold",
-          status === "complete" && "bg-emerald-500 text-white",
-          status === "incomplete" && "bg-amber-500 text-white",
-          status === "draft" && "bg-muted text-muted-foreground"
-        )}>
-          {lessonNumber}
-        </div>
-        <div className="flex-1 min-w-0 overflow-hidden">
-          <p className="text-sm font-medium truncate">{lp.title}</p>
-          <p className="text-xs text-muted-foreground truncate">{lp.subtopics?.join(", ") || "No subtopic"}</p>
-        </div>
-        <ChevronRight className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-      </button>
+    const fetchWeekSubtopics = async () => {
+      const { data, error } = await supabase
+        .from("lesson_week_subtopics")
+        .select("id, week_id, name, sort_order")
+        .in("week_id", weekIds)
+        .order("sort_order", { ascending: true });
+
+      if (error) {
+        logSupabaseError("lessonWeekSubtopics/select", error);
+        return;
+      }
+
+      const next: Record<string, WeekSubtopic[]> = {};
+      data?.forEach((row) => {
+        if (!next[row.week_id]) {
+          next[row.week_id] = [];
+        }
+        next[row.week_id].push({
+          id: row.id,
+          name: row.name,
+          sort_order: row.sort_order ?? 0,
+        });
+      });
+      setWeekSubtopicsByWeekId(next);
+    };
+
+    fetchWeekSubtopics();
+  }, [curriculum]);
+
+  const handleCreateLessonDetail = async (week: Week) => {
+    setCreatingLessonWeekId(week.id);
+    try {
+      const { data: existing, error: fetchError } = await supabase
+        .from("lesson_plan_details")
+        .select("lesson_number")
+        .eq("week_id", week.id);
+
+      if (fetchError) {
+        logSupabaseError("lessonPlanDetails/select", fetchError);
+        throw fetchError;
+      }
+
+      const maxNum = Math.max(
+        0,
+        ...(existing?.map((item) => item.lesson_number ?? 0) ?? [0])
+      );
+      const nextLessonNumber = maxNum + 1;
+
+      const { error } = await supabase
+        .from("lesson_plan_details")
+        .insert({
+          week_id: week.id,
+          lesson_number: nextLessonNumber,
+          title: `Lesson ${nextLessonNumber}`,
+          date: null,
+          lesson_flow: createDefaultLessonFlow(),
+          approval: null,
+        });
+
+      if (error) {
+        logSupabaseError("lessonPlanDetails/insert", error);
+        throw error;
+      }
+
+      await refetch();
+    } catch (err) {
+      toast({
+        title: "Unable to create lesson",
+        description: "Please try again in a moment.",
+        variant: "destructive",
+      });
+    } finally {
+      setCreatingLessonWeekId(null);
+    }
+  };
+
+  const handleAddWeek = async (topicId: string) => {
+    const topic = curriculum?.topics.find((t) => t.id === topicId);
+    if (!topic) return;
+    const weekNumbers = topic.weeks.map((w) => w.weekNumber);
+    const nextWeekNumber = weekNumbers.length > 0 ? Math.max(...weekNumbers) + 1 : 1;
+    const weekId = await addWeek(topicId, nextWeekNumber, `Week ${nextWeekNumber}`);
+    if (weekId) {
+      setExpandedWeekByTopic((prev) => ({ ...prev, [topicId]: weekId }));
+    }
+  };
+
+  const handleDeleteWeek = async (topicId: string, weekId: string) => {
+    const topic = curriculum?.topics.find((t) => t.id === topicId);
+    if (!topic) return;
+    if (topic.weeks.length <= 1) {
+      toast({
+        title: "Cannot delete the last week",
+        description: "Add another week before deleting this one.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const week = topic.weeks.find((w) => w.id === weekId);
+    const confirmDelete = window.confirm(
+      `Delete Week ${week?.weekNumber ?? ""}? This will delete all lessons under this week.`
     );
+    if (!confirmDelete) return;
+
+    try {
+      const { error: detailsError } = await supabase
+        .from("lesson_plan_details")
+        .delete()
+        .eq("week_id", weekId);
+      if (detailsError) {
+        logSupabaseError("lessonPlanDetails/delete", detailsError);
+        throw detailsError;
+      }
+
+      const { error: weekError } = await supabase
+        .from("lesson_weeks")
+        .delete()
+        .eq("id", weekId);
+      if (weekError) {
+        logSupabaseError("lessonWeeks/delete", weekError);
+        throw weekError;
+      }
+
+      const orderedWeeks = [...topic.weeks].sort((a, b) => a.weekNumber - b.weekNumber);
+      const currentIndex = orderedWeeks.findIndex((w) => w.id === weekId);
+      const fallback =
+        orderedWeeks[currentIndex - 1] || orderedWeeks[currentIndex + 1] || orderedWeeks[0];
+      if (fallback) {
+        setExpandedWeekByTopic((prev) => ({ ...prev, [topicId]: fallback.id }));
+      }
+
+      await refetch();
+    } catch (err) {
+      toast({
+        title: "Unable to delete week",
+        description: "Please try again in a moment.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleDeleteLesson = async (lessonId: string, lessonNumber: number) => {
+    const confirmDelete = window.confirm(
+      `Delete Lesson ${lessonNumber}? This cannot be undone.`
+    );
+    if (!confirmDelete) return;
+
+    try {
+      const { error } = await supabase
+        .from("lesson_plan_details")
+        .delete()
+        .eq("id", lessonId);
+      if (error) {
+        logSupabaseError("lessonPlanDetails/delete", error);
+        throw error;
+      }
+      await refetch();
+    } catch (err) {
+      toast({
+        title: "Unable to delete lesson",
+        description: "Please try again in a moment.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleAddWeekSubtopic = async (weekId: string) => {
+    const pending = (newWeekSubtopicByWeekId[weekId] || "").trim();
+    if (!pending) return;
+    const current = weekSubtopicsByWeekId[weekId] || [];
+    const maxSort = Math.max(0, ...current.map((item) => item.sort_order ?? 0));
+    const { data, error } = await supabase
+      .from("lesson_week_subtopics")
+      .insert({
+        week_id: weekId,
+        name: pending,
+        sort_order: maxSort + 1,
+      })
+      .select("id, name, sort_order")
+      .single();
+
+    if (error) {
+      logSupabaseError("lessonWeekSubtopics/insert", error);
+      toast({
+        title: "Unable to add subtopic",
+        description: "Please try again in a moment.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setWeekSubtopicsByWeekId((prev) => ({
+      ...prev,
+      [weekId]: [...(prev[weekId] || []), data],
+    }));
+    setNewWeekSubtopicByWeekId((prev) => ({ ...prev, [weekId]: "" }));
+  };
+
+  const handleDeleteWeekSubtopic = async (weekId: string, subtopicId: string) => {
+    const { error } = await supabase
+      .from("lesson_week_subtopics")
+      .delete()
+      .eq("id", subtopicId);
+    if (error) {
+      logSupabaseError("lessonWeekSubtopics/delete", error);
+      toast({
+        title: "Unable to delete subtopic",
+        description: "Please try again in a moment.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setWeekSubtopicsByWeekId((prev) => ({
+      ...prev,
+      [weekId]: (prev[weekId] || []).filter((item) => item.id !== subtopicId),
+    }));
   };
 
   return (
@@ -457,7 +481,7 @@ const TeacherLessonPlansPage = () => {
                         <Loader2 className="h-3 w-3 animate-spin" />
                         <span className="text-xs">Loading...</span>
                       </div>
-                    ) : (
+              ) : (
                       <SelectValue placeholder="Subject" />
                     )}
                   </SelectTrigger>
@@ -481,7 +505,7 @@ const TeacherLessonPlansPage = () => {
                       <div className="flex items-center gap-1">
                         <Loader2 className="h-3 w-3 animate-spin" />
                       </div>
-                    ) : (
+              ) : (
                       <SelectValue placeholder="Class" />
                     )}
                   </SelectTrigger>
@@ -527,357 +551,312 @@ const TeacherLessonPlansPage = () => {
                     Add First Topic
                   </Button>
                 </div>
-              ) : curriculum?.topics.map((topic, topicIndex) => (
-              <Card key={topic.id} className="overflow-hidden w-full">
-                <CardHeader className="py-0 px-0 overflow-hidden space-y-0">
-                  {/* Topic Title Section - Primary Green */}
-                  <div className="py-3 px-4 bg-primary">
-                    <div className="flex items-center justify-between gap-2 min-w-0">
-                      <div className="flex items-center gap-2 min-w-0">
-                        <div className="h-6 w-6 rounded-full bg-white/20 flex items-center justify-center flex-shrink-0">
-                          <BookOpen className="h-3.5 w-3.5 text-primary-foreground" />
-                        </div>
-                        <CardTitle className="text-sm font-semibold text-primary-foreground truncate">
-                          Topic {topicIndex + 1}: {topic.title}
-                        </CardTitle>
-                      </div>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="h-7 w-7 p-0 text-primary-foreground hover:text-primary-foreground/80 hover:bg-primary-foreground/10"
-                        onClick={() => handleOpenEditTopic(topic)}
-                      >
-                        <Settings className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </div>
-                  
-                  {/* Subtopics Section - Same dark green as topic */}
-                  <div className="py-2 px-4 bg-primary border-b border-primary-foreground/20">
-                    {(() => {
-                      const subtopics = normalizeSubtopics(topic.subtopics);
-                      return (
-                        <Collapsible defaultOpen={false}>
-                          <div className="flex items-center">
-                            <CollapsibleTrigger className="flex items-center gap-1 text-xs font-medium text-primary-foreground hover:text-primary-foreground/80 transition-colors [&[data-state=open]>svg]:rotate-180">
-                              <ChevronDown className="h-3.5 w-3.5 transition-transform" />
-                              Subtopics ({subtopics.length})
-                            </CollapsibleTrigger>
-                          </div>
-                          <CollapsibleContent className="mt-2">
-                            <div className="flex flex-wrap gap-1.5 min-w-0">
-                              {subtopics.length > 0 ? (
-                                subtopics.map((subtopic, idx) => (
-                                  <Badge
-                                    key={idx}
-                                    variant="secondary"
-                                    className="text-xs font-normal max-w-full min-w-0 overflow-hidden bg-primary-foreground/20 text-primary-foreground"
-                                  >
-                                    <span className="block truncate">{subtopic}</span>
-                                  </Badge>
-                                ))
-                              ) : (
-                                <span className="text-xs text-primary-foreground/70 italic">No subtopics added</span>
-                              )}
+              ) : (
+                curriculum?.topics.map((topic, topicIndex) => {
+                  const isExpanded = expandedTopicId === topic.id;
+
+                  return (
+                    <Card key={topic.id} className="overflow-hidden w-full">
+                      <CardHeader className="px-4 py-3">
+                        <div className="flex items-start justify-between gap-3">
+                          <div
+                            role="button"
+                            tabIndex={0}
+                            onClick={() =>
+                              setExpandedTopicId(isExpanded ? null : topic.id)
+                            }
+                            onKeyDown={(event) => {
+                              if (event.key === "Enter" || event.key === " ") {
+                                event.preventDefault();
+                                setExpandedTopicId(isExpanded ? null : topic.id);
+                              }
+                            }}
+                            className="flex-1 text-left"
+                          >
+                            <div className="flex items-center gap-3 min-w-0">
+                              <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+                                <BookOpen className="h-4 w-4 text-primary" />
+                              </div>
+                              <div className="min-w-0">
+                                <CardTitle className="text-sm font-semibold truncate">
+                                  Topic {topicIndex + 1}: {topic.title}
+                                </CardTitle>
+                              </div>
                             </div>
-                          </CollapsibleContent>
-                        </Collapsible>
-                      );
-                    })()}
-                  </div>
-                </CardHeader>
-                <CardContent className="p-0 overflow-hidden">
-                  <Accordion type="multiple" className="w-full overflow-hidden">
-                    {topic.weeks.map((week) => {
-                      const lpCount = week.lessonPlans.length;
-                      const completedCount = week.lessonPlans.filter(
-                        lp => getLessonPlanStatus(lp) === "complete"
-                      ).length;
-                      
-                      return (
-                        <AccordionItem 
-                          key={week.id} 
-                          value={week.id}
-                          className="border-b last:border-b-0 overflow-hidden"
-                        >
-                          <AccordionTrigger className="relative px-4 py-3 pr-10 hover:no-underline hover:bg-muted/20 [&>svg]:absolute [&>svg]:right-3 [&>svg]:top-1/2 [&>svg]:-translate-y-1/2 [&>svg]:shrink-0">
-                            <div className="flex flex-col gap-2 w-full min-w-0 sm:flex-row sm:items-center sm:justify-between">
-                              <div className="flex items-center gap-2 min-w-0 flex-1">
-                                <Popover 
-                                  open={weekCalendarOpen === week.id} 
-                                  onOpenChange={(open) => {
-                                    setWeekCalendarOpen(open ? week.id : null);
-                                    if (open) {
-                                      const weekRange = getWeekRange(week.weekNumber);
-                                      setDateRange({ from: weekRange.start, to: weekRange.end });
-                                      setEditingDateField(null); // Start with no calendar shown
-                                    } else {
-                                      setDateRange({ from: undefined, to: undefined });
-                                      setEditingDateField(null);
+                          </div>
+                          <div className="flex items-center gap-1">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="h-8 w-8 p-0"
+                              onClick={() => handleOpenEditTopic(topic)}
+                            >
+                              <Pencil className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="h-8 w-8 p-0"
+                              onClick={() =>
+                                setExpandedTopicId(isExpanded ? null : topic.id)
+                              }
+                            >
+                              {isExpanded ? (
+                                <ChevronDown className="h-4 w-4" />
+                              ) : (
+                                <ChevronRight className="h-4 w-4" />
+                              )}
+                            </Button>
+                          </div>
+                        </div>
+                      </CardHeader>
+                      {isExpanded && (
+                        <CardContent className="px-4 pb-4 pt-0 space-y-3">
+                          <div className="flex items-center gap-2">
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="h-9 px-3"
+                              onClick={() => handleAddWeek(topic.id)}
+                            >
+                              <Plus className="h-3 w-3 mr-1" />
+                              Week
+                            </Button>
+                          </div>
+
+                          {topic.weeks.map((week) => {
+                            const isWeekExpanded = expandedWeekByTopic[topic.id] === week.id;
+                            const weekLessons = [...week.lessonPlans].sort(
+                              (a, b) => a.lessonNumber - b.lessonNumber
+                            );
+                            const completedCount = weekLessons.filter((lesson) => {
+                              const status = getLessonStatus({
+                                approval: lesson.approval as Record<string, unknown> | null,
+                                reflection: lesson.reflection as Record<string, unknown> | null,
+                                learningObjectives: lesson.learningObjectives,
+                                resources: lesson.resources,
+                                homework: lesson.homework,
+                                lessonFlow: lesson.lessonFlow,
+                              });
+                              return status === "complete";
+                            }).length;
+                            const totalCount = weekLessons.length;
+                            const weekSubtopics = weekSubtopicsByWeekId[week.id] || [];
+
+                            return (
+                              <div key={week.id} className="border border-border rounded-lg">
+                                <div
+                                  role="button"
+                                  tabIndex={0}
+                                  className="w-full flex items-center justify-between px-3 py-3 text-left"
+                                  onClick={() =>
+                                    setExpandedWeekByTopic((prev) => ({
+                                      ...prev,
+                                      [topic.id]: isWeekExpanded ? "" : week.id,
+                                    }))
+                                  }
+                                  onKeyDown={(event) => {
+                                    if (event.key === "Enter" || event.key === " ") {
+                                      event.preventDefault();
+                                      setExpandedWeekByTopic((prev) => ({
+                                        ...prev,
+                                        [topic.id]: isWeekExpanded ? "" : week.id,
+                                      }));
                                     }
                                   }}
                                 >
-                                  <PopoverTrigger asChild onClick={(e) => e.stopPropagation()}>
-                                    <button className="flex items-center gap-1 px-2 py-1 rounded-md border border-border bg-background hover:bg-muted text-xs font-normal flex-shrink-0 transition-colors">
-                                      <CalendarIcon className="h-3 w-3" />
+                                  <div className="min-w-0">
+                                    <p className="text-sm font-semibold">
                                       Week {week.weekNumber}
-                                    </button>
-                                  </PopoverTrigger>
-                                  <PopoverContent className="w-auto p-0 z-50" align="start" onClick={(e) => e.stopPropagation()}>
-                                    <div className="p-3 border-b border-border space-y-3">
-                                      <div className="flex items-center justify-between">
-                                        <p className="text-sm font-medium">Week Date Range</p>
-                                        <Button
-                                          variant="ghost"
-                                          size="sm"
-                                          className="h-7 px-2 text-xs"
-                                          onClick={(e) => {
-                                            e.stopPropagation();
-                                            if (dateRange.from && dateRange.to) {
-                                              setDateRange({ from: dateRange.to, to: dateRange.from });
-                                            }
-                                          }}
-                                          disabled={!dateRange.from || !dateRange.to}
-                                        >
-                                          <svg className="h-3.5 w-3.5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
-                                          </svg>
-                                          Swap
-                                        </Button>
-                                      </div>
-                                      
-                                      {/* Date Range Buttons - Click to show calendar */}
-                                      <div className="flex items-stretch gap-2">
-                                        <button
-                                          onClick={(e) => {
-                                            e.stopPropagation();
-                                            setEditingDateField(editingDateField === "start" ? null : "start");
-                                          }}
-                                          className={cn(
-                                            "flex-1 text-center p-3 rounded-lg border-2 transition-all min-h-[72px] flex flex-col justify-center",
-                                            editingDateField === "start" 
-                                              ? "border-primary bg-primary/5 ring-2 ring-primary/20" 
-                                              : "border-border hover:border-muted-foreground/50 hover:bg-muted/50"
-                                          )}
-                                        >
-                                          <p className="text-[10px] text-muted-foreground uppercase font-medium mb-1">Start Date</p>
-                                          <p className={cn(
-                                            "text-sm font-semibold whitespace-nowrap",
-                                            editingDateField === "start" && "text-primary"
-                                          )}>
-                                            {dateRange.from ? format(dateRange.from, "MMM d, yyyy") : "Select"}
-                                          </p>
-                                        </button>
-                                        
-                                        <div className="text-muted-foreground text-sm flex items-center">→</div>
-                                        
-                                        <button
-                                          onClick={(e) => {
-                                            e.stopPropagation();
-                                            setEditingDateField(editingDateField === "end" ? null : "end");
-                                          }}
-                                          className={cn(
-                                            "flex-1 text-center p-3 rounded-lg border-2 transition-all min-h-[72px] flex flex-col justify-center",
-                                            editingDateField === "end" 
-                                              ? "border-primary bg-primary/5 ring-2 ring-primary/20" 
-                                              : "border-border hover:border-muted-foreground/50 hover:bg-muted/50"
-                                          )}
-                                        >
-                                          <p className="text-[10px] text-muted-foreground uppercase font-medium mb-1">End Date</p>
-                                          <p className={cn(
-                                            "text-sm font-semibold whitespace-nowrap",
-                                            editingDateField === "end" && "text-primary"
-                                          )}>
-                                            {dateRange.to ? format(dateRange.to, "MMM d, yyyy") : "Select"}
-                                          </p>
-                                        </button>
-                                      </div>
-                                      
-                                      {!editingDateField && (
-                                        <p className="text-xs text-muted-foreground text-center">
-                                          Tap Start or End to edit
-                                        </p>
-                                      )}
-                                    </div>
-                                    
-                                    {/* Calendar - Only shows when a date field is selected */}
-                                    {editingDateField && (
-                                      <div className="border-b border-border">
-                                        <div className="px-3 pt-2 pb-1">
-                                          <p className="text-xs font-medium text-primary">
-                                            Selecting {editingDateField === "start" ? "Start" : "End"} Date
-                                          </p>
-                                        </div>
-                                        <Calendar
-                                          mode="single"
-                                          defaultMonth={editingDateField === "start" 
-                                            ? (dateRange.from || addWeeks(termStart, week.weekNumber - 1))
-                                            : (dateRange.to || addWeeks(termStart, week.weekNumber - 1))
-                                          }
-                                          selected={editingDateField === "start" ? dateRange.from : dateRange.to}
-                                          onSelect={(date) => {
-                                            if (date) {
-                                              if (editingDateField === "start") {
-                                                setDateRange(prev => ({ ...prev, from: date }));
-                                              } else {
-                                                setDateRange(prev => ({ ...prev, to: date }));
-                                              }
-                                              setEditingDateField(null); // Close calendar after selection
-                                            }
-                                          }}
-                                          disabled={(date) => {
-                                            const day = date.getDay();
-                                            return day === 0 || day === 6 || isHoliday(date);
-                                          }}
-                                          className={cn("p-3 pointer-events-auto")}
-                                          modifiers={{
-                                            holiday: (date) => isHoliday(date),
-                                            rangeStart: dateRange.from ? [dateRange.from] : [],
-                                            rangeEnd: dateRange.to ? [dateRange.to] : [],
-                                          }}
-                                          modifiersStyles={{
-                                            holiday: {
-                                              backgroundColor: "hsl(var(--destructive) / 0.1)",
-                                              color: "hsl(var(--muted-foreground))",
-                                              textDecoration: "line-through",
-                                            },
-                                          }}
-                                        />
-                                      </div>
+                                    </p>
+                                    {week.title && (
+                                      <p className="text-xs text-muted-foreground truncate">
+                                        {week.title}
+                                      </p>
                                     )}
-                                    
-                                    {/* Apply Button */}
-                                    <div className="p-3 flex gap-2">
-                                      <Button
-                                        variant="outline"
-                                        size="sm"
-                                        className="flex-1"
-                                        onClick={(e) => {
-                                          e.stopPropagation();
-                                          setWeekCalendarOpen(null);
-                                          setEditingDateField(null);
-                                        }}
-                                      >
-                                        Cancel
-                                      </Button>
-                                      <Button
-                                        className="flex-1"
-                                        size="sm"
-                                        disabled={!dateRange.from || !dateRange.to}
-                                        onClick={(e) => {
-                                          e.stopPropagation();
-                                          if (dateRange.from && dateRange.to) {
-                                            const start = dateRange.from < dateRange.to ? dateRange.from : dateRange.to;
-                                            handleWeekChange(week.id, start);
-                                            setWeekCalendarOpen(null);
-                                            setDateRange({ from: undefined, to: undefined });
-                                            setEditingDateField(null);
-                                          }
-                                        }}
-                                      >
-                                        Apply
-                                      </Button>
-                                    </div>
-                                  </PopoverContent>
-                                </Popover>
-                                {(() => {
-                                  const weekSubtopics = [
-                                    ...new Set(
-                                      week.lessonPlans.flatMap((lp) => normalizeSubtopics(lp.subtopics))
-                                    ),
-                                  ];
-                                  return weekSubtopics.length > 0 ? (
-                                     <div className="flex flex-wrap gap-1.5 min-w-0">
-                                       {weekSubtopics.map((subtopic, idx) => (
-                                         <Badge
-                                           key={idx}
-                                           variant="outline"
-                                           className="text-xs font-normal px-2 py-0.5 max-w-full"
-                                         >
-                                           <span className="block truncate max-w-[14rem]">{subtopic}</span>
-                                         </Badge>
-                                       ))}
-                                     </div>
-                                  ) : (
-                                    <span className="text-xs text-muted-foreground italic">
-                                      No subtopics
-                                    </span>
-                                  );
-                                })()}
-                              </div>
-                              {(() => {
-                                const total = lpCount > 0 ? lpCount : 5;
-                                const isAllComplete = completedCount === total && total > 0;
-                                const isNoneComplete = completedCount === 0;
-                                
-                                return (
-                                  <Badge 
-                                    variant="secondary" 
-                                    className={cn(
-                                      "text-xs shrink-0",
-                                      isAllComplete && "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/50 dark:text-emerald-300",
-                                      isNoneComplete && "bg-red-100 text-red-700 dark:bg-red-900/50 dark:text-red-300",
-                                      !isAllComplete && !isNoneComplete && "bg-amber-100 text-amber-700 dark:bg-amber-900/50 dark:text-amber-300"
+                                  </div>
+                                  <div className="flex items-center gap-2">
+                                    <Badge variant="secondary" className="text-xs">
+                                      {completedCount}/{totalCount}
+                                    </Badge>
+                                    <Button
+                                      type="button"
+                                      variant="ghost"
+                                      size="sm"
+                                      className="h-8 w-8 p-0"
+                                      onClick={(event) => {
+                                        event.stopPropagation();
+                                        handleDeleteWeek(topic.id, week.id);
+                                      }}
+                                      aria-label={`Delete Week ${week.weekNumber}`}
+                                    >
+                                      <Trash2 className="h-4 w-4 text-destructive" />
+                                    </Button>
+                                    {isWeekExpanded ? (
+                                      <ChevronDown className="h-4 w-4 text-muted-foreground" />
+                                    ) : (
+                                      <ChevronRight className="h-4 w-4 text-muted-foreground" />
                                     )}
-                                  >
-                                    {completedCount}/{total}
-                                  </Badge>
-                                );
-                              })()}
-                            </div>
-                          </AccordionTrigger>
-                            <AccordionContent className="px-4 pb-3">
-                              {/* Week Date Range Header */}
-                              {(() => {
-                                const weekRange = getWeekRange(week.weekNumber);
-                                return (
-                                  <div className="flex items-center gap-2 pt-2 pb-3 border-b border-border/50 mb-3">
-                                    <CalendarIcon className="h-4 w-4 text-muted-foreground" />
-                                    <span className="text-sm font-medium text-muted-foreground">
-                                      {format(weekRange.start, "EEE, MMM d")} – {format(weekRange.end, "EEE, MMM d, yyyy")}
-                                    </span>
-                                  </div>
-                                );
-                              })()}
-                              <div className="space-y-2">
-                                {[1, 2, 3, 4, 5].map((lessonNum) => {
-                                const lp = week.lessonPlans.find(p => p.lessonNumber === lessonNum);
-                                return (
-                                  <div key={lessonNum}>
-                                    {renderLessonPlanItem(lp, lessonNum, week.id)}
-                                  </div>
-                                );
-                              })}
-                            </div>
-                            
-                            {/* Week Summary */}
-                            {week.lessonPlans.length > 0 && (
-                              <div className="mt-3 pt-3 border-t border-border">
-                                <div className="flex items-center gap-4 text-xs text-muted-foreground">
-                                  <div className="flex items-center gap-1">
-                                    <CheckCircle2 className="h-3 w-3 text-emerald-500" />
-                                    <span>{week.lessonPlans.filter(lp => getLessonPlanStatus(lp) === "complete").length} Complete</span>
-                                  </div>
-                                  <div className="flex items-center gap-1">
-                                    <AlertCircle className="h-3 w-3 text-amber-500" />
-                                    <span>{week.lessonPlans.filter(lp => getLessonPlanStatus(lp) === "incomplete").length} Incomplete</span>
-                                  </div>
-                                  <div className="flex items-center gap-1">
-                                    <Clock className="h-3 w-3 text-muted-foreground" />
-                                    <span>{week.lessonPlans.filter(lp => getLessonPlanStatus(lp) === "draft").length} Draft</span>
                                   </div>
                                 </div>
-                              </div>
-                            )}
-                          </AccordionContent>
-                        </AccordionItem>
-                      );
-                    })}
-                  </Accordion>
-                </CardContent>
-              </Card>
-            ))}
 
+                                {isWeekExpanded && (
+                                  <div className="px-3 pb-3 space-y-3">
+                                    <div className="flex flex-wrap gap-2 items-center">
+                                      {weekSubtopics.map((subtopic) => (
+                                        <Badge
+                                          key={subtopic.id}
+                                          variant="secondary"
+                                          className="flex items-center gap-1 pr-1"
+                                        >
+                                          <span className="text-xs">{subtopic.name}</span>
+                                          <button
+                                            type="button"
+                                            onClick={() =>
+                                              handleDeleteWeekSubtopic(week.id, subtopic.id)
+                                            }
+                                            className="h-4 w-4 rounded-full hover:bg-muted flex items-center justify-center"
+                                            aria-label="Remove subtopic"
+                                          >
+                                            <Trash2 className="h-3 w-3" />
+                                          </button>
+                                        </Badge>
+                                      ))}
+                                      <div className="flex items-center gap-2 w-full sm:w-auto">
+                                        <Input
+                                          value={newWeekSubtopicByWeekId[week.id] || ""}
+                                          onChange={(event) =>
+                                            setNewWeekSubtopicByWeekId((prev) => ({
+                                              ...prev,
+                                              [week.id]: event.target.value,
+                                            }))
+                                          }
+                                          placeholder="Add subtopic"
+                                          className="h-9"
+                                        />
+                                        <Button
+                                          type="button"
+                                          variant="outline"
+                                          size="sm"
+                                          onClick={() => handleAddWeekSubtopic(week.id)}
+                                          disabled={
+                                            !(newWeekSubtopicByWeekId[week.id] || "").trim()
+                                          }
+                                          className="h-9 w-9 p-0"
+                                          aria-label="Add subtopic"
+                                        >
+                                          <Plus className="h-4 w-4" />
+                                        </Button>
+                                      </div>
+                                    </div>
+
+                                    <div className="space-y-2">
+                                      {weekLessons.length === 0 ? (
+                                        <button
+                                          type="button"
+                                          className="w-full flex items-center justify-between rounded-lg border border-dashed px-3 py-3 text-sm text-muted-foreground hover:border-primary hover:text-primary transition-colors"
+                                          onClick={() => handleCreateLessonDetail(week)}
+                                          disabled={creatingLessonWeekId === week.id}
+                                        >
+                                          <span className="flex items-center gap-2">
+                                            <Plus className="h-4 w-4" />
+                                            {creatingLessonWeekId === week.id
+                                              ? "Creating..."
+                                              : "Tap to create"}
+                                          </span>
+                                          <ChevronRight className="h-4 w-4" />
+                                        </button>
+                                      ) : (
+                                        weekLessons.map((lesson) => {
+                                          const status = getLessonStatus({
+                                            approval: lesson.approval as Record<string, unknown> | null,
+                                            reflection: lesson.reflection as Record<string, unknown> | null,
+                                            learningObjectives: lesson.learningObjectives,
+                                            resources: lesson.resources,
+                                            homework: lesson.homework,
+                                            lessonFlow: lesson.lessonFlow,
+                                          });
+                                          return (
+                                            <div
+                                              key={lesson.id}
+                                              role="button"
+                                              tabIndex={0}
+                                              className="w-full flex items-center justify-between rounded-lg border px-3 py-2 text-left hover:bg-muted/40 transition-colors"
+                                              onClick={() => handleLessonPlanClick(lesson)}
+                                              onKeyDown={(event) => {
+                                                if (event.key === "Enter" || event.key === " ") {
+                                                  event.preventDefault();
+                                                  handleLessonPlanClick(lesson);
+                                                }
+                                              }}
+                                            >
+                                              <div className="flex items-center gap-3 min-w-0">
+                                                <Badge
+                                                  variant="outline"
+                                                  className="text-xs w-9 justify-center"
+                                                >
+                                                  L{lesson.lessonNumber}
+                                                </Badge>
+                                                <div className="min-w-0">
+                                                  <p className="text-sm font-medium truncate">
+                                                    {lesson.title || "Untitled lesson"}
+                                                  </p>
+                                                  <Badge
+                                                    variant="secondary"
+                                                    className="text-[10px] mt-1"
+                                                  >
+                                                    {formatStatusLabel(status)}
+                                                  </Badge>
+                                                </div>
+                                              </div>
+                                              <div className="flex items-center gap-2">
+                                                <Button
+                                                  type="button"
+                                                  variant="ghost"
+                                                  size="sm"
+                                                  className="h-8 w-8 p-0"
+                                                  onClick={(event) => {
+                                                    event.stopPropagation();
+                                                    handleDeleteLesson(
+                                                      lesson.id,
+                                                      lesson.lessonNumber
+                                                    );
+                                                  }}
+                                                  aria-label={`Delete Lesson ${lesson.lessonNumber}`}
+                                                >
+                                                  <Trash2 className="h-4 w-4 text-destructive" />
+                                                </Button>
+                                                <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                                              </div>
+                                            </div>
+                                          );
+                                        })
+                                      )}
+                                    </div>
+                                    {weekLessons.length > 0 && (
+                                      <Button
+                                        variant="outline"
+                                        className="w-full h-9"
+                                        onClick={() => handleCreateLessonDetail(week)}
+                                        disabled={creatingLessonWeekId === week.id}
+                                      >
+                                        <Plus className="h-4 w-4 mr-2" />
+                                        {creatingLessonWeekId === week.id
+                                          ? "Creating..."
+                                          : "Add Lesson"}
+                                      </Button>
+                                    )}
+                                  </div>
+                                )}
+                              </div>
+                            );
+                          })}
+                        </CardContent>
+                      )}
+                    </Card>
+                  );
+                })
+              )}
             {/* Empty state is now handled in the conditional above */}
           </div>
         </ScrollArea>
@@ -917,44 +896,13 @@ const TeacherLessonPlansPage = () => {
         </DialogContent>
       </Dialog>
 
-      {/* Add Subtopic Dialog */}
-      <Dialog open={isAddSubtopicOpen} onOpenChange={setIsAddSubtopicOpen}>
-        <DialogContent className="sm:max-w-[425px]">
-          <DialogHeader>
-            <DialogTitle>Add Subtopic</DialogTitle>
-            <DialogDescription>
-              Add a new subtopic to "{curriculum?.topics.find(t => t.id === currentTopicId)?.title}".
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4 py-4">
-            <div className="space-y-2">
-              <Label htmlFor="subtopic-title">Subtopic Title</Label>
-              <Input
-                id="subtopic-title"
-                placeholder="e.g., Solving Quadratic Equations"
-                value={newSubtopicTitle}
-                onChange={(e) => setNewSubtopicTitle(e.target.value)}
-              />
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIsAddSubtopicOpen(false)}>
-              Cancel
-            </Button>
-            <Button onClick={handleAddSubtopic} disabled={!newSubtopicTitle.trim()}>
-              Add Subtopic
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
       {/* Edit Topic Dialog */}
       <Dialog open={isEditTopicOpen} onOpenChange={setIsEditTopicOpen}>
         <DialogContent className="sm:max-w-[500px]">
           <DialogHeader>
             <DialogTitle>Edit Topic</DialogTitle>
             <DialogDescription>
-              Edit the topic name and manage subtopics.
+              Edit the topic name.
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
@@ -965,54 +913,6 @@ const TeacherLessonPlansPage = () => {
                 value={editTopicTitle}
                 onChange={(e) => setEditTopicTitle(e.target.value)}
               />
-            </div>
-            
-            <div className="space-y-2">
-              <Label>Subtopics</Label>
-              <div className="space-y-2 max-h-48 overflow-y-auto">
-                {editSubtopics.map((subtopic, idx) => (
-                  <div key={idx} className="flex items-center gap-2">
-                    <Input
-                      value={subtopic}
-                      onChange={(e) => handleRenameEditSubtopic(idx, e.target.value)}
-                      className="flex-1"
-                    />
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="h-9 w-9 p-0 text-muted-foreground hover:text-destructive"
-                      onClick={() => handleRemoveEditSubtopic(idx)}
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </div>
-                ))}
-                {editSubtopics.length === 0 && (
-                  <p className="text-sm text-muted-foreground italic py-2">No subtopics added yet.</p>
-                )}
-              </div>
-              
-              <div className="flex items-center gap-2 pt-2">
-                <Input
-                  placeholder="New subtopic name..."
-                  value={newSubtopicInput}
-                  onChange={(e) => setNewSubtopicInput(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter") {
-                      e.preventDefault();
-                      handleAddEditSubtopic();
-                    }
-                  }}
-                />
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={handleAddEditSubtopic}
-                  disabled={!newSubtopicInput.trim()}
-                >
-                  <Plus className="h-4 w-4" />
-                </Button>
-              </div>
             </div>
           </div>
           <DialogFooter>
@@ -1030,3 +930,6 @@ const TeacherLessonPlansPage = () => {
 };
 
 export default TeacherLessonPlansPage;
+
+
+

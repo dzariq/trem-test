@@ -13,6 +13,7 @@ import { Save, TrendingUp, TrendingDown, Minus, ChevronDown, ChevronUp, Users, T
 import { useGradeEntry } from "@/hooks/useGradeEntry";
 import { useClassAnalysis } from "@/hooks/useClassAnalysis";
 import { useAcademicFilters } from "@/hooks/useAcademicFilters";
+import { useTeacherScope } from "@/hooks/useTeacherScope";
 import { Carousel, CarouselContent, CarouselItem } from "@/components/ui/carousel";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { toast } from "@/hooks/use-toast";
@@ -189,6 +190,7 @@ const getLetterGrade = (total: number): {
 };
 export default function TeacherAcademicPage() {
   const isMobile = useIsMobile();
+  const teacherScope = useTeacherScope();
   
   // Grade Entry hook (Supabase integration)
   const gradeEntry = useGradeEntry();
@@ -197,7 +199,14 @@ export default function TeacherAcademicPage() {
   const classAnalysis = useClassAnalysis();
   
   // Shared academic filters hook (provides year levels, classes, students from DB)
-  const academicFilters = useAcademicFilters();
+  const allowedClasses = useMemo(
+    () =>
+      teacherScope.isTeacher
+        ? teacherScope.allowedClassYears.map((cls) => cls.class_name)
+        : undefined,
+    [teacherScope.allowedClassYears, teacherScope.isTeacher]
+  );
+  const academicFilters = useAcademicFilters({ allowedClasses });
   
   // ======================================================================
   // CLASS ANALYSIS: Use classAnalysis hook for UNIFIED state across all tabs

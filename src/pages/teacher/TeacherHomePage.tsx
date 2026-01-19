@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { TeacherAppLayout } from "@/components/layout/TeacherAppLayout";
 import { AppHeader } from "@/components/layout/AppHeader";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -10,10 +10,10 @@ import { TeacherQuickLinks } from "@/components/home/TeacherQuickLinks";
 import TeacherWelcomeQuote from "@/components/home/TeacherWelcomeQuote";
 import { PDFViewerDialog } from "@/components/PDFViewerDialog";
 import { GeometricBackgroundPattern } from "@/components/home/GeometricBackgroundPattern";
-import { BookOpen, Users, Clock, FileText, Calendar, AlertTriangle, ClipboardList, Check, ChevronDown, ChevronUp } from "lucide-react";
+import { BookOpen, Users, Clock, FileText, Calendar, AlertTriangle, ClipboardList, ChevronDown, ChevronUp } from "lucide-react";
 import schoolBadge from "@/assets/school-badge.png";
 import heroBanner from "@/assets/teacher-hero-banner.png";
-import { teacherProfile, teacherQuickStats, teacherDeadlines, Deadline } from "@/data/teacherMockData";
+import { teacherProfile } from "@/data/teacherMockData";
 import {
   Select,
   SelectContent,
@@ -21,31 +21,39 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { differenceInDays, format, parseISO } from "date-fns";
+import { differenceInDays, format } from "date-fns";
 import { cn } from "@/lib/utils";
 import { listAnnouncements, markAnnouncementRead, type Announcement } from "@/data/announcements";
 import { useNavigate } from "react-router-dom";
 import { listUpcomingEvents, type UpcomingEvent } from "@/data/calendar";
 import { useMyProfile } from "@/hooks/useMyProfile";
+import { useTeacherScope } from "@/hooks/useTeacherScope";
+import { supabase } from "@/lib/supabase";
+import { toast } from "@/hooks/use-toast";
+import {
+  buildGradeInputsFromExistingGrades,
+  computeGradeEntryStats,
+  fetchAcademicPeriods,
+  fetchExistingGrades,
+  fetchStudentsByClass,
+} from "@/data/gradeEntry";
+import { useUpcomingDeadlines } from "@/hooks/useUpcomingDeadlines";
 
-const getDeadlineIcon = (type: Deadline["type"]) => {
-  switch (type) {
-    case "grade": return BookOpen;
-    case "report": return FileText;
-    case "meeting": return Users;
-    case "submission": return ClipboardList;
-    case "event": return Calendar;
-  }
+type PendingGradeSummary = {
+  class: string;
+  subject: string;
+  count: number;
 };
 
-const getDeadlineColor = (daysLeft: number, isCompleted: boolean) => {
-  if (isCompleted) return "bg-emerald-50 border-emerald-200 text-emerald-700 dark:bg-emerald-950/30 dark:border-emerald-800 dark:text-emerald-400";
+const getDeadlineIcon = (source: "examinations" | "calendar_events") =>
+  source === "examinations" ? FileText : Calendar;
+
+const getDeadlineColor = (daysLeft: number) => {
   if (daysLeft < 8) return "bg-destructive/10 border-destructive/30 text-destructive";
   return "bg-amber-50 border-amber-200 text-amber-700 dark:bg-amber-950/30 dark:border-amber-800 dark:text-amber-400";
 };
 
-const getDaysLeftBadge = (daysLeft: number, isCompleted: boolean) => {
-  if (isCompleted) return { text: "Done", variant: "outline" as const };
+const getDaysLeftBadge = (daysLeft: number) => {
   if (daysLeft <= 0) return { text: "Overdue", variant: "outline" as const };
   if (daysLeft === 1) return { text: "Tomorrow", variant: "outline" as const };
   return { text: `${daysLeft}d left`, variant: "outline" as const };
@@ -54,9 +62,8 @@ const getDaysLeftBadge = (daysLeft: number, isCompleted: boolean) => {
 export default function TeacherHomePage() {
   const navigate = useNavigate();
   const { profile, loading: profileLoading } = useMyProfile();
+  const teacherScope = useTeacherScope();
   const [selectedClass, setSelectedClass] = useState(teacherProfile.classes[0]);
-  const [completedDeadlines, setCompletedDeadlines] = useState<string[]>([]);
-  const [expandedDeadline, setExpandedDeadline] = useState<string | null>(null);
   const [showPendingGrades, setShowPendingGrades] = useState(false);
   const [timetablePdfOpen, setTimetablePdfOpen] = useState(false);
   const [announcements, setAnnouncements] = useState<Announcement[]>([]);
@@ -65,34 +72,198 @@ export default function TeacherHomePage() {
   const [events, setEvents] = useState<UpcomingEvent[]>([]);
   const [eventsLoading, setEventsLoading] = useState(true);
   const [eventsError, setEventsError] = useState<string | null>(null);
+  const [attendanceSummary, setAttendanceSummary] = useState({ present: 0, total: 0 });
+  const [attendanceLoading, setAttendanceLoading] = useState(false);
+  const [pendingGrades, setPendingGrades] = useState<PendingGradeSummary[]>([]);
+  const [pendingGradesLoading, setPendingGradesLoading] = useState(false);
+  const { items: deadlines, loading: deadlinesLoading } = useUpcomingDeadlines(5);
 
-  const totalPendingGrades = teacherQuickStats.pendingGrades.reduce((sum, item) => sum + item.count, 0);
+  const selectedClassName = teacherScope.isTeacher
+    ? teacherScope.selectedClassYear?.class_name ?? ""
+    : selectedClass;
 
-  // Filter deadlines within 30 days
-  const today = new Date();
-  const upcomingDeadlines = teacherDeadlines
-    .map(deadline => ({
+  const totalPendingGrades = useMemo(
+    () => pendingGrades.reduce((sum, item) => sum + item.count, 0),
+    [pendingGrades]
+  );
+
+  const logSupabaseError = (
+    context: string,
+    error: { code?: string; message?: string; details?: string; hint?: string }
+  ) => {
+    console.error(`[${context}]`, {
+      code: error.code,
+      message: error.message,
+      details: error.details,
+      hint: error.hint,
+    });
+  };
+
+  useEffect(() => {
+    if (!teacherScope.isTeacher) return;
+    if (!selectedClassName) {
+      setAttendanceSummary({ present: 0, total: 0 });
+      return;
+    }
+
+    let isMounted = true;
+    const loadAttendanceSummary = async () => {
+      setAttendanceLoading(true);
+      try {
+        const { data: students, error: studentsError } = await supabase
+          .from("students")
+          .select("id")
+          .eq("class", selectedClassName)
+          .eq("archived", false);
+
+        if (studentsError) {
+          logSupabaseError("teacherHome/students", studentsError);
+          throw new Error(studentsError.message);
+        }
+
+        const total = students?.length ?? 0;
+        const today = format(new Date(), "yyyy-MM-dd");
+
+        const { data: attendanceRows, error: attendanceError } = await supabase
+          .from("attendance")
+          .select("id")
+          .eq("class", selectedClassName)
+          .eq("date", today)
+          .eq("status", "present");
+
+        if (attendanceError) {
+          logSupabaseError("teacherHome/attendance", attendanceError);
+          throw new Error(attendanceError.message);
+        }
+
+        if (isMounted) {
+          setAttendanceSummary({
+            present: attendanceRows?.length ?? 0,
+            total,
+          });
+        }
+      } catch (err) {
+        if (isMounted) {
+          setAttendanceSummary({ present: 0, total: 0 });
+          toast({
+            title: "Attendance unavailable",
+            description: "Unable to load today's attendance.",
+            variant: "destructive",
+          });
+        }
+      } finally {
+        if (isMounted) {
+          setAttendanceLoading(false);
+        }
+      }
+    };
+
+    loadAttendanceSummary();
+    return () => {
+      isMounted = false;
+    };
+  }, [selectedClassName, teacherScope.isTeacher]);
+
+  useEffect(() => {
+    if (!teacherScope.isTeacher) return;
+    if (teacherScope.loading) return;
+    if (!selectedClassName) {
+      setPendingGrades([]);
+      return;
+    }
+
+    let isMounted = true;
+    const loadPendingGrades = async () => {
+      setPendingGradesLoading(true);
+      try {
+        const classYearId =
+          teacherScope.allowedClassYears.find(
+            (cls) => cls.class_name === selectedClassName
+          )?.id ?? teacherScope.selectedClassYearId;
+        if (!classYearId) {
+          if (isMounted) setPendingGrades([]);
+          return;
+        }
+
+        const allowedSubjects = await teacherScope.getAllowedSubjects(classYearId);
+        if (allowedSubjects.length === 0) {
+          if (isMounted) setPendingGrades([]);
+          return;
+        }
+
+        const students = await fetchStudentsByClass(selectedClassName);
+        const studentIds = students.map((student) => student.id);
+        if (studentIds.length === 0) {
+          if (isMounted) setPendingGrades([]);
+          return;
+        }
+
+        const periods = await fetchAcademicPeriods();
+        const openPeriod =
+          periods.find((period) => period.is_open_for_grading) || periods[0];
+        if (!openPeriod) {
+          if (isMounted) setPendingGrades([]);
+          return;
+        }
+
+        const summaries = await Promise.all(
+          allowedSubjects.map(async (subject) => {
+            const grades = await fetchExistingGrades(
+              studentIds,
+              subject.id,
+              openPeriod.id
+            );
+            const stats = computeGradeEntryStats(
+              students,
+              buildGradeInputsFromExistingGrades(students, grades)
+            );
+            return {
+              class: selectedClassName,
+              subject: subject.name,
+              count: stats.pending,
+            } satisfies PendingGradeSummary;
+          })
+        );
+
+        if (isMounted) {
+          setPendingGrades(summaries);
+        }
+      } catch (err) {
+        if (isMounted) {
+          setPendingGrades([]);
+          toast({
+            title: "Pending grades unavailable",
+            description: "Unable to load pending grades.",
+            variant: "destructive",
+          });
+        }
+      } finally {
+        if (isMounted) {
+          setPendingGradesLoading(false);
+        }
+      }
+    };
+
+    loadPendingGrades();
+    return () => {
+      isMounted = false;
+    };
+  }, [
+    selectedClassName,
+    teacherScope.allowedClassYears,
+    teacherScope.getAllowedSubjects,
+    teacherScope.loading,
+    teacherScope.isTeacher,
+    teacherScope.selectedClassYearId,
+  ]);
+
+  const upcomingDeadlines = deadlines
+    .map((deadline) => ({
       ...deadline,
-      daysLeft: differenceInDays(parseISO(deadline.dueDate), today),
-      isCompleted: completedDeadlines.includes(deadline.id)
+      dueDate: deadline.dueAt,
+      daysLeft: differenceInDays(new Date(deadline.dueAt), new Date()),
     }))
-    .filter(deadline => deadline.daysLeft <= 30 && deadline.daysLeft >= -7)
-    .sort((a, b) => {
-      // Completed items go to the end
-      if (a.isCompleted !== b.isCompleted) return a.isCompleted ? 1 : -1;
-      return a.daysLeft - b.daysLeft;
-    })
-    .slice(0, 3); // Only show 3
-
-  const toggleComplete = (id: string) => {
-    setCompletedDeadlines(prev => 
-      prev.includes(id) ? prev.filter(d => d !== id) : [...prev, id]
-    );
-  };
-
-  const toggleExpand = (id: string) => {
-    setExpandedDeadline(prev => prev === id ? null : id);
-  };
+    .sort((a, b) => a.daysLeft - b.daysLeft);
 
   useEffect(() => {
     let isMounted = true;
@@ -207,14 +378,40 @@ export default function TeacherHomePage() {
           <div className="px-4 mt-4">
             <div className="bg-background/20 backdrop-blur-md rounded-2xl p-4 shadow-lg border border-white/20 space-y-4">
               {/* Class Selector */}
-              <Select value={selectedClass} onValueChange={setSelectedClass}>
+              <Select
+                value={
+                  teacherScope.isTeacher
+                    ? teacherScope.selectedClassYearId?.toString() ?? ""
+                    : selectedClass
+                }
+                onValueChange={(value) => {
+                  if (teacherScope.isTeacher) {
+                    if (!value) return;
+                    const nextId = Number(value);
+                    if (Number.isFinite(nextId)) {
+                      teacherScope.setSelectedClassYearId(nextId);
+                    }
+                    return;
+                  }
+                  setSelectedClass(value);
+                }}
+                disabled={teacherScope.isTeacher && teacherScope.allowedClassYears.length === 0}
+              >
                 <SelectTrigger className="w-full bg-white/30 backdrop-blur-sm border border-gray-400">
                   <SelectValue placeholder="Select Class" />
                 </SelectTrigger>
                 <SelectContent>
-                  {teacherProfile.classes.map((cls) => (
-                    <SelectItem key={cls} value={cls}>Class {cls}</SelectItem>
-                  ))}
+                  {teacherScope.isTeacher
+                    ? teacherScope.allowedClassYears.map((cls) => (
+                        <SelectItem key={cls.id} value={cls.id.toString()}>
+                          Class {cls.class_name}
+                        </SelectItem>
+                      ))
+                    : teacherProfile.classes.map((cls) => (
+                        <SelectItem key={cls} value={cls}>
+                          Class {cls}
+                        </SelectItem>
+                      ))}
                 </SelectContent>
               </Select>
 
@@ -224,7 +421,7 @@ export default function TeacherHomePage() {
                   <CardContent className="p-3 text-center">
                     <Users className="h-5 w-5 mx-auto mb-1 text-emerald-600" />
                     <p className="text-lg font-bold text-emerald-700 dark:text-emerald-400">
-                      {teacherQuickStats.todayAttendance.present}/{teacherQuickStats.todayAttendance.total}
+                      {attendanceLoading ? "--/--" : `${attendanceSummary.present}/${attendanceSummary.total}`}
                     </p>
                     <p className="text-xs text-emerald-600 dark:text-emerald-500">Present Today</p>
                   </CardContent>
@@ -236,7 +433,7 @@ export default function TeacherHomePage() {
                   <CardContent className="p-3 text-center">
                     <BookOpen className="h-5 w-5 mx-auto mb-1 text-amber-600" />
                     <p className="text-lg font-bold text-amber-700 dark:text-amber-400">
-                      {totalPendingGrades}
+                      {pendingGradesLoading ? "--" : totalPendingGrades}
                     </p>
                     <p className="text-xs text-amber-600 dark:text-amber-500">Pending Grades</p>
                     <p className="text-[10px] text-amber-500 dark:text-amber-400 mt-1 flex items-center justify-center gap-0.5">
@@ -260,22 +457,32 @@ export default function TeacherHomePage() {
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-2">
-                    {teacherQuickStats.pendingGrades.map((item, index) => (
-                      <div 
-                        key={index}
-                        className="flex items-center justify-between p-2 rounded-lg bg-white/30 backdrop-blur-sm border border-amber-500/20"
-                      >
-                        <div className="flex items-center gap-2">
-                          <Badge variant="outline" className="text-xs">
-                            {item.class}
+                    {pendingGradesLoading ? (
+                      <p className="text-xs text-muted-foreground text-center">
+                        Loading pending grades...
+                      </p>
+                    ) : pendingGrades.length === 0 ? (
+                      <p className="text-xs text-muted-foreground text-center">
+                        No pending grades for this class.
+                      </p>
+                    ) : (
+                      pendingGrades.map((item, index) => (
+                        <div 
+                          key={index}
+                          className="flex items-center justify-between p-2 rounded-lg bg-white/30 backdrop-blur-sm border border-amber-500/20"
+                        >
+                          <div className="flex items-center gap-2">
+                            <Badge variant="outline" className="text-xs">
+                              {item.class}
+                            </Badge>
+                            <span className="text-sm text-foreground">{item.subject}</span>
+                          </div>
+                          <Badge className="bg-amber-500 text-white">
+                            {item.count} students
                           </Badge>
-                          <span className="text-sm text-foreground">{item.subject}</span>
                         </div>
-                        <Badge className="bg-amber-500 text-white">
-                          {item.count} students
-                        </Badge>
-                      </div>
-                    ))}
+                      ))
+                    )}
                   </CardContent>
                 </Card>
               )}
@@ -287,92 +494,56 @@ export default function TeacherHomePage() {
                   Upcoming Deadlines
                 </h3>
                 <div className="space-y-2">
-                  {upcomingDeadlines.length === 0 ? (
+                  {deadlinesLoading ? (
+                    <p className="text-sm text-muted-foreground text-center py-4">
+                      Loading deadlines...
+                    </p>
+                  ) : upcomingDeadlines.length === 0 ? (
                     <p className="text-sm text-muted-foreground text-center py-4">
                       No upcoming deadlines
                     </p>
                   ) : (
                     upcomingDeadlines.map((deadline) => {
-                      const Icon = getDeadlineIcon(deadline.type);
-                      const badgeInfo = getDaysLeftBadge(deadline.daysLeft, deadline.isCompleted);
-                      const isExpanded = expandedDeadline === deadline.id;
-                      
+                      const Icon = getDeadlineIcon(deadline.source);
+                      const badgeInfo = getDaysLeftBadge(deadline.daysLeft);
+
                       return (
                         <div 
                           key={deadline.id}
                           className={cn(
                             "rounded-lg border transition-all backdrop-blur-sm",
-                            getDeadlineColor(deadline.daysLeft, deadline.isCompleted),
-                            deadline.isCompleted && "opacity-60"
+                            getDeadlineColor(deadline.daysLeft)
                           )}
-                  >
-                    {/* Collapsed View - Always Visible */}
-                    <div 
-                      className="flex items-center gap-3 p-3 cursor-pointer"
-                      onClick={() => toggleExpand(deadline.id)}
-                    >
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        className={cn(
-                          "h-6 w-6 rounded-full flex-shrink-0",
-                          deadline.isCompleted 
-                            ? "bg-emerald-500 text-white hover:bg-emerald-600" 
-                            : "border-2 hover:bg-accent"
-                        )}
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          toggleComplete(deadline.id);
-                        }}
-                      >
-                        {deadline.isCompleted && <Check className="h-3 w-3" />}
-                      </Button>
-                      
-                      <div className="flex-1 min-w-0">
-                        <p className={cn(
-                          "text-sm font-medium truncate",
-                          deadline.isCompleted && "line-through"
-                        )}>
-                          {deadline.title}
-                        </p>
-                        <p className="text-xs opacity-70">
-                          {format(parseISO(deadline.dueDate), "d MMM yyyy")}
-                        </p>
-                      </div>
+                        >
+                          <div className="flex items-center gap-3 p-3">
+                            <div className="h-6 w-6 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+                              <Icon className="h-3.5 w-3.5 text-primary" />
+                            </div>
+                            
+                            <div className="flex-1 min-w-0">
+                              <p className="text-sm font-medium truncate">
+                                {deadline.title}
+                              </p>
+                              <p className="text-xs opacity-70">
+                                {format(new Date(deadline.dueDate), "d MMM yyyy")}
+                              </p>
+                              {deadline.subtitle && (
+                                <p className="text-[11px] opacity-70 truncate">
+                                  {deadline.subtitle}
+                                </p>
+                              )}
+                            </div>
 
-                      <div className="flex items-center gap-2 flex-shrink-0">
-                        <Badge variant={badgeInfo.variant} className="text-xs">
-                          {badgeInfo.text}
-                        </Badge>
-                        {isExpanded ? (
-                          <ChevronUp className="h-4 w-4 opacity-50" />
-                        ) : (
-                          <ChevronDown className="h-4 w-4 opacity-50" />
-                        )}
-                      </div>
-                    </div>
-
-                    {/* Expanded Details */}
-                    {isExpanded && (
-                      <div className="px-3 pb-3 pt-0 border-t border-current/10">
-                        <div className="pt-2 space-y-2">
-                          <p className="text-xs opacity-80">{deadline.description}</p>
-                          <div className="flex items-center gap-2">
-                            <Icon className="h-3 w-3 opacity-60" />
-                            <span className="text-xs opacity-60 capitalize">{deadline.type}</span>
-                            {deadline.class && (
-                              <Badge variant="outline" className="text-[10px] px-1.5 py-0">
-                                Class {deadline.class}
+                            <div className="flex items-center gap-2 flex-shrink-0">
+                              <Badge variant={badgeInfo.variant} className="text-xs">
+                                {badgeInfo.text}
                               </Badge>
-                            )}
+                            </div>
                           </div>
                         </div>
-                      </div>
-                    )}
-                  </div>
-                );
-              })
-              )}
+                      );
+                    })
+                  )}
                 </div>
               </div>
             </div>

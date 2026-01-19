@@ -1,4 +1,6 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
+import { toast } from "@/hooks/use-toast";
+import { useTeacherScope } from "@/hooks/useTeacherScope";
 import {
   fetchAvailableClasses,
   fetchStudentsByClass,
@@ -14,6 +16,9 @@ import {
   StudentGradeRecord,
   GradeInput,
   calculateLetterGrade,
+  buildGradeInputsFromExistingGrades,
+  computeGradeEntryStats,
+  emptyGradeInput,
 } from "@/data/gradeEntry";
 
 interface UseGradeEntryReturn {
@@ -65,19 +70,16 @@ interface UseGradeEntryReturn {
   exportGrades: () => string;
 }
 
-const emptyGradeInput: GradeInput = {
-  attitude: "",
-  homework: "",
-  quiz: "",
-  exam: "",
-  reportComment: "",
-  studyRecommendation: "",
-  comment: "",
-};
-
 export function useGradeEntry(): UseGradeEntryReturn {
+  const teacherScope = useTeacherScope();
+  const isTeacher = teacherScope.isTeacher;
+  const allowedClassNames = useMemo(
+    () => teacherScope.allowedClassYears.map((cls) => cls.class_name),
+    [teacherScope.allowedClassYears]
+  );
+
   // Selection state
-  const [selectedClass, setSelectedClass] = useState<string | null>(null);
+  const [selectedClassState, setSelectedClassState] = useState<string | null>(null);
   const [selectedSubject, setSelectedSubject] = useState<SubjectInfo | null>(null);
   const [selectedPeriod, setSelectedPeriod] = useState<AcademicPeriod | null>(null);
   const [selectedAcademicYear, setSelectedAcademicYear] = useState<number | null>(null);
@@ -99,8 +101,43 @@ export function useGradeEntry(): UseGradeEntryReturn {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const selectedClass = isTeacher
+    ? teacherScope.selectedClassYear?.class_name ?? null
+    : selectedClassState;
+
+  const setSelectedClass = useCallback(
+    (className: string | null) => {
+      if (!className) {
+        setSelectedClassState(null);
+        return;
+      }
+      if (isTeacher) {
+        const classYear = teacherScope.allowedClassYears.find(
+          (cls) => cls.class_name === className
+        );
+        if (classYear) {
+          teacherScope.setSelectedClassYearId(classYear.id);
+          return;
+        }
+        toast({
+          title: "Class not available",
+          description: "Please select an assigned class.",
+          variant: "destructive",
+        });
+        return;
+      }
+      setSelectedClassState(className);
+    },
+    [isTeacher, teacherScope.allowedClassYears, teacherScope.setSelectedClassYearId]
+  );
+
   // Load classes on mount
   useEffect(() => {
+    if (isTeacher) {
+      setClasses(allowedClassNames);
+      setLoadingClasses(teacherScope.loading);
+      return;
+    }
     const loadClasses = async () => {
       setLoadingClasses(true);
       setError(null);
@@ -110,12 +147,17 @@ export function useGradeEntry(): UseGradeEntryReturn {
       } catch (err) {
         setError("Failed to load classes");
         console.error(err);
+        toast({
+          title: "Classes unavailable",
+          description: "Unable to load classes right now.",
+          variant: "destructive",
+        });
       } finally {
         setLoadingClasses(false);
       }
     };
     loadClasses();
-  }, []);
+  }, [allowedClassNames, isTeacher, teacherScope.loading]);
 
   // Load academic periods on mount
   useEffect(() => {
@@ -193,14 +235,37 @@ export function useGradeEntry(): UseGradeEntryReturn {
       try {
         const fetchedStudents = await fetchStudentsByClass(selectedClass);
         setStudents(fetchedStudents);
-        
-        // Get year level from first student
-        const yearLevel = fetchedStudents[0]?.year_level;
-        const fetchedSubjects = await fetchSubjects(yearLevel);
-        setSubjects(fetchedSubjects);
+
+        if (isTeacher) {
+          const classYearId =
+            teacherScope.allowedClassYears.find((cls) => cls.class_name === selectedClass)?.id ??
+            teacherScope.selectedClassYearId;
+          if (!classYearId) {
+            setSubjects([]);
+            setSelectedSubject(null);
+            toast({
+              title: "Class not available",
+              description: "Please select an assigned class.",
+              variant: "destructive",
+            });
+            return;
+          }
+          const allowedSubjects = await teacherScope.getAllowedSubjects(classYearId);
+          setSubjects(allowedSubjects);
+        } else {
+          // Get year level from first student
+          const yearLevel = fetchedStudents[0]?.year_level;
+          const fetchedSubjects = await fetchSubjects(yearLevel);
+          setSubjects(fetchedSubjects);
+        }
       } catch (err) {
         setError("Failed to load students or subjects");
         console.error(err);
+        toast({
+          title: "Class data unavailable",
+          description: "Unable to load students or subjects.",
+          variant: "destructive",
+        });
       } finally {
         setLoadingStudents(false);
         setLoadingSubjects(false);
@@ -208,10 +273,59 @@ export function useGradeEntry(): UseGradeEntryReturn {
     };
 
     loadStudentsAndSubjects();
-  }, [selectedClass]);
+  }, [isTeacher, selectedClass, teacherScope.allowedClassYears, teacherScope.getAllowedSubjects, teacherScope.selectedClassYearId]);
+
+  const allowedSubjectIds = useMemo(() => {
+    if (!isTeacher) return null;
+    const classYearId = teacherScope.allowedClassYears.find(
+      (cls) => cls.class_name === selectedClass
+    )?.id;
+    if (!classYearId) return [];
+    return (teacherScope.subjectsByClassYearId[classYearId] || []).map((s) => s.id);
+  }, [isTeacher, selectedClass, teacherScope.allowedClassYears, teacherScope.subjectsByClassYearId]);
+
+  useEffect(() => {
+    if (!isTeacher) return;
+    if (!selectedSubject) return;
+    if (!allowedSubjectIds || allowedSubjectIds.length === 0) return;
+
+    if (!allowedSubjectIds.includes(selectedSubject.id)) {
+      const classYearId = teacherScope.allowedClassYears.find(
+        (cls) => cls.class_name === selectedClass
+      )?.id;
+      const nextSubject = classYearId
+        ? teacherScope.subjectsByClassYearId[classYearId]?.[0] ?? null
+        : null;
+      setSelectedSubject(nextSubject);
+      toast({
+        title: "Subject updated",
+        description: "Your selected subject is no longer available.",
+      });
+    }
+  }, [
+    allowedSubjectIds,
+    isTeacher,
+    selectedClass,
+    selectedSubject,
+    teacherScope.allowedClassYears,
+    teacherScope.subjectsByClassYearId,
+  ]);
+
+  useEffect(() => {
+    if (selectedSubject || subjects.length === 0) return;
+    setSelectedSubject(subjects[0]);
+  }, [selectedSubject, subjects]);
 
   // Load existing grades when class, subject, or period changes
   useEffect(() => {
+    if (isTeacher) {
+      if (!selectedClass || !allowedClassNames.includes(selectedClass)) {
+        return;
+      }
+      if (selectedSubject && allowedSubjectIds && !allowedSubjectIds.includes(selectedSubject.id)) {
+        return;
+      }
+    }
     if (!selectedClass || !selectedSubject || !selectedPeriod || students.length === 0) {
       setExistingGrades(new Map());
       setGradeInputs({});
@@ -233,24 +347,7 @@ export function useGradeEntry(): UseGradeEntryReturn {
         setExistingGrades(grades);
 
         // Initialize grade inputs from existing grades
-        const inputs: Record<string, GradeInput> = {};
-        students.forEach(student => {
-          const existing = grades.get(student.id);
-          if (existing) {
-            inputs[student.id] = {
-              attitude: existing.attitude_marks?.toString() || "",
-              homework: existing.homework_marks?.toString() || "",
-              quiz: existing.quiz_marks?.toString() || "",
-              exam: existing.exam_marks?.toString() || "",
-              reportComment: existing.subject_comment || "",
-              studyRecommendation: "",
-              comment: existing.teacher_comment || "",
-            };
-          } else {
-            inputs[student.id] = { ...emptyGradeInput };
-          }
-        });
-        setGradeInputs(inputs);
+        setGradeInputs(buildGradeInputsFromExistingGrades(students, grades));
 
         // Load class recommendation
         const yearLevel = students[0]?.year_level || "";
@@ -264,13 +361,26 @@ export function useGradeEntry(): UseGradeEntryReturn {
       } catch (err) {
         setError("Failed to load existing grades");
         console.error(err);
+        toast({
+          title: "Grades unavailable",
+          description: "Unable to load existing grades.",
+          variant: "destructive",
+        });
       } finally {
         setLoadingGrades(false);
       }
     };
 
     loadGrades();
-  }, [selectedClass, selectedSubject, selectedPeriod, students]);
+  }, [
+    allowedClassNames,
+    allowedSubjectIds,
+    isTeacher,
+    selectedClass,
+    selectedSubject,
+    selectedPeriod,
+    students,
+  ]);
 
   // Update grade input
   const updateGradeInput = useCallback((studentId: string, field: keyof GradeInput, value: string) => {
@@ -306,6 +416,24 @@ export function useGradeEntry(): UseGradeEntryReturn {
   const save = useCallback(async (): Promise<{ success: boolean; error?: string }> => {
     if (!selectedSubject || !selectedPeriod || !selectedClass) {
       return { success: false, error: "Please select class, subject, and period" };
+    }
+    if (isTeacher) {
+      if (!allowedClassNames.includes(selectedClass)) {
+        toast({
+          title: "Class not available",
+          description: "Please select an assigned class.",
+          variant: "destructive",
+        });
+        return { success: false, error: "Selected class is not available." };
+      }
+      if (allowedSubjectIds && !allowedSubjectIds.includes(selectedSubject.id)) {
+        toast({
+          title: "Subject not available",
+          description: "Please select an assigned subject.",
+          variant: "destructive",
+        });
+        return { success: false, error: "Selected subject is not available." };
+      }
     }
 
     setSaving(true);
@@ -354,36 +482,24 @@ export function useGradeEntry(): UseGradeEntryReturn {
     } finally {
       setSaving(false);
     }
-  }, [selectedSubject, selectedPeriod, selectedClass, students, existingGrades, gradeInputs, classRecommendation]);
+  }, [
+    allowedClassNames,
+    allowedSubjectIds,
+    isTeacher,
+    selectedSubject,
+    selectedPeriod,
+    selectedClass,
+    students,
+    existingGrades,
+    gradeInputs,
+    classRecommendation,
+  ]);
 
   // Compute stats
-  const stats = useMemo(() => {
-    const total = students.length;
-    let graded = 0;
-    let totalScore = 0;
-
-    students.forEach(student => {
-      const input = gradeInputs[student.id];
-      if (input) {
-        const hasData = input.attitude || input.homework || input.quiz || input.exam;
-        if (hasData) {
-          graded++;
-          const score = (parseInt(input.attitude) || 0) + 
-                       (parseInt(input.homework) || 0) + 
-                       (parseInt(input.quiz) || 0) + 
-                       (parseInt(input.exam) || 0);
-          totalScore += score;
-        }
-      }
-    });
-
-    return {
-      graded,
-      pending: total - graded,
-      total,
-      average: graded > 0 ? Math.round(totalScore / graded) : 0
-    };
-  }, [students, gradeInputs]);
+  const stats = useMemo(
+    () => computeGradeEntryStats(students, gradeInputs),
+    [students, gradeInputs]
+  );
 
   // Generate CSV template
   const generateTemplate = useCallback(() => {

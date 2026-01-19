@@ -6,7 +6,8 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Plus, Trash2, GripVertical } from "lucide-react";
-import type { LessonFlow, LessonFlowActivity } from "@/data/lessonPlanData";
+import type { LessonFlow, LessonFlowActivity, LessonFlowStep } from "@/data/lessonPlanData";
+import { normalizeLessonFlow } from "@/lib/lessonplan/normalizeLessonFlow";
 
 interface LessonFlowEditorProps {
   lessonFlow: LessonFlow;
@@ -16,38 +17,58 @@ interface LessonFlowEditorProps {
 
 export function LessonFlowEditor({ lessonFlow, onChange, isEditMode = true }: LessonFlowEditorProps) {
   const [activeTab, setActiveTab] = useState<"beginning" | "middle" | "end">("beginning");
+  const safeFlow = normalizeLessonFlow(lessonFlow);
+
+  const getDuration = (activity: LessonFlowActivity) =>
+    Number(activity?.duration ?? (activity as { durationMinutes?: number }).durationMinutes ?? 0);
 
   const updateSection = (
     section: "beginning" | "middle" | "end",
     updates: Partial<LessonFlowActivity>
   ) => {
     onChange({
-      ...lessonFlow,
+      ...safeFlow,
       [section]: {
-        ...lessonFlow[section],
+        ...safeFlow[section],
         ...updates
       }
     });
   };
 
   const addStep = (section: "beginning" | "middle" | "end") => {
-    const currentSteps = lessonFlow[section].steps;
-    updateSection(section, { steps: [...currentSteps, ""] });
+    const currentSteps = safeFlow[section].steps;
+    const nextStep: LessonFlowStep = {
+      title: "",
+      duration: 0,
+      description: "",
+    };
+    updateSection(section, { steps: [...currentSteps, nextStep] });
   };
 
-  const updateStep = (section: "beginning" | "middle" | "end", index: number, value: string) => {
-    const newSteps = [...lessonFlow[section].steps];
-    newSteps[index] = value;
+  const updateStep = (
+    section: "beginning" | "middle" | "end",
+    index: number,
+    updates: Partial<LessonFlowStep>
+  ) => {
+    const newSteps = [...safeFlow[section].steps];
+    const current = newSteps[index] as LessonFlowStep;
+    newSteps[index] = {
+      title: current?.title ?? "",
+      duration: current?.duration ?? 0,
+      description: current?.description ?? "",
+      ...updates,
+    };
     updateSection(section, { steps: newSteps });
   };
 
   const removeStep = (section: "beginning" | "middle" | "end", index: number) => {
-    const newSteps = lessonFlow[section].steps.filter((_, i) => i !== index);
+    const newSteps = safeFlow[section].steps.filter((_, i) => i !== index);
     updateSection(section, { steps: newSteps });
   };
 
   const renderSectionEditor = (section: "beginning" | "middle" | "end", title: string, colorClass: string) => {
-    const activity = lessonFlow[section];
+    const activity = safeFlow[section];
+    const duration = getDuration(activity);
     
     return (
       <div className="space-y-4">
@@ -58,14 +79,14 @@ export function LessonFlowEditor({ lessonFlow, onChange, isEditMode = true }: Le
             {isEditMode ? (
               <Input
                 type="number"
-                value={activity.duration}
-                onChange={(e) => updateSection(section, { duration: parseInt(e.target.value) || 0 })}
+                value={duration}
+                onChange={(e) => updateSection(section, { duration: parseInt(e.target.value, 10) || 0 })}
                 className="w-20 h-9"
                 min={1}
                 max={120}
               />
             ) : (
-              <span className="text-sm font-medium">{activity.duration}</span>
+              <span className="text-sm font-medium">{duration}</span>
             )}
             <span className="text-sm text-muted-foreground">minutes</span>
           </div>
@@ -107,35 +128,73 @@ export function LessonFlowEditor({ lessonFlow, onChange, isEditMode = true }: Le
           </div>
           
           <div className="space-y-2">
-            {activity.steps.map((step, index) => (
-              <div key={index} className="flex items-start gap-2">
-                <div className="flex items-center gap-1 pt-2">
-                  {isEditMode && <GripVertical className="h-4 w-4 text-muted-foreground/50" />}
-                  <span className="text-xs text-muted-foreground w-5">{index + 1}.</span>
-                </div>
-                {isEditMode ? (
-                  <>
-                    <Input
-                      value={step}
-                      onChange={(e) => updateStep(section, index, e.target.value)}
-                      placeholder={`Step ${index + 1}...`}
-                      className="flex-1 h-9"
+            {activity.steps.map((step, index) => {
+              const stepValue = step as LessonFlowStep;
+              const durationValue = Number(stepValue?.duration ?? 0);
+              return (
+                <div key={index} className="rounded-md border border-border p-3 space-y-2">
+                  <div className="flex items-start gap-2">
+                    <div className="flex items-center gap-1 pt-2">
+                      {isEditMode && (
+                        <GripVertical className="h-4 w-4 text-muted-foreground/50" />
+                      )}
+                      <span className="text-xs text-muted-foreground w-5">{index + 1}.</span>
+                    </div>
+                    {isEditMode ? (
+                      <>
+                        <Input
+                          value={stepValue?.title ?? ""}
+                          onChange={(e) => updateStep(section, index, { title: e.target.value })}
+                          placeholder={`Step ${index + 1} title...`}
+                          className="flex-1 h-9"
+                        />
+                        <Input
+                          type="number"
+                          value={durationValue}
+                          onChange={(e) =>
+                            updateStep(section, index, {
+                              duration: parseInt(e.target.value, 10) || 0,
+                            })
+                          }
+                          className="w-20 h-9"
+                          min={0}
+                        />
+                        <span className="text-xs text-muted-foreground pt-2">min</span>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => removeStep(section, index)}
+                          className="h-9 w-9 p-0 text-muted-foreground hover:text-destructive"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </>
+                    ) : (
+                      <span className="text-sm py-2">
+                        {stepValue?.title || (
+                          <span className="italic text-muted-foreground">Empty step</span>
+                        )}
+                      </span>
+                    )}
+                  </div>
+                  {isEditMode ? (
+                    <Textarea
+                      value={stepValue?.description ?? ""}
+                      onChange={(e) =>
+                        updateStep(section, index, { description: e.target.value })
+                      }
+                      placeholder="Step description..."
+                      className="min-h-[80px]"
                     />
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => removeStep(section, index)}
-                      className="h-9 w-9 p-0 text-muted-foreground hover:text-destructive"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </>
-                ) : (
-                  <span className="text-sm py-2">{step || <span className="italic text-muted-foreground">Empty step</span>}</span>
-                )}
-              </div>
-            ))}
+                  ) : (
+                    <p className="text-xs text-muted-foreground whitespace-pre-wrap">
+                      {stepValue?.description || "No description"}
+                    </p>
+                  )}
+                </div>
+              );
+            })}
             
             {activity.steps.length === 0 && (
               <p className="text-xs text-muted-foreground italic py-2">
@@ -158,15 +217,15 @@ export function LessonFlowEditor({ lessonFlow, onChange, isEditMode = true }: Le
           <TabsList className="grid w-full grid-cols-3 mb-4 h-auto">
             <TabsTrigger value="beginning" className="text-xs flex-col py-2 px-1 gap-0.5">
               <span>Beginning</span>
-              <span className="text-muted-foreground text-[10px]">({lessonFlow.beginning.duration}m)</span>
+              <span className="text-muted-foreground text-[10px]">({getDuration(safeFlow.beginning)}m)</span>
             </TabsTrigger>
             <TabsTrigger value="middle" className="text-xs flex-col py-2 px-1 gap-0.5">
               <span>Middle</span>
-              <span className="text-muted-foreground text-[10px]">({lessonFlow.middle.duration}m)</span>
+              <span className="text-muted-foreground text-[10px]">({getDuration(safeFlow.middle)}m)</span>
             </TabsTrigger>
             <TabsTrigger value="end" className="text-xs flex-col py-2 px-1 gap-0.5">
               <span>End</span>
-              <span className="text-muted-foreground text-[10px]">({lessonFlow.end.duration}m)</span>
+              <span className="text-muted-foreground text-[10px]">({getDuration(safeFlow.end)}m)</span>
             </TabsTrigger>
           </TabsList>
           
@@ -185,7 +244,10 @@ export function LessonFlowEditor({ lessonFlow, onChange, isEditMode = true }: Le
         <div className="mt-4 pt-3 border-t border-border flex items-center justify-between text-sm">
           <span className="text-muted-foreground">Total Duration:</span>
           <span className="font-medium">
-            {lessonFlow.beginning.duration + lessonFlow.middle.duration + lessonFlow.end.duration} minutes
+            {getDuration(safeFlow.beginning) +
+              getDuration(safeFlow.middle) +
+              getDuration(safeFlow.end)}{" "}
+            minutes
           </span>
         </div>
       </CardContent>

@@ -3,6 +3,8 @@ import { X } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
+import { Plus } from "lucide-react";
 
 interface TagInputProps {
   tags: string[];
@@ -15,13 +17,19 @@ interface TagInputProps {
 export function TagInput({ tags, onChange, placeholder = "Add tag...", className, isEditMode = true }: TagInputProps) {
   const [inputValue, setInputValue] = useState("");
 
+  const addTag = () => {
+    const next = inputValue.trim();
+    if (!next) return;
+    if (!tags.includes(next)) {
+      onChange([...tags, next]);
+    }
+    setInputValue("");
+  };
+
   const handleKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "Enter" && inputValue.trim()) {
       e.preventDefault();
-      if (!tags.includes(inputValue.trim())) {
-        onChange([...tags, inputValue.trim()]);
-      }
-      setInputValue("");
+      addTag();
     } else if (e.key === "Backspace" && !inputValue && tags.length > 0) {
       onChange(tags.slice(0, -1));
     }
@@ -58,15 +66,27 @@ export function TagInput({ tags, onChange, placeholder = "Add tag...", className
       </div>
       {isEditMode && (
         <>
-          <Input
-            type="text"
-            value={inputValue}
-            onChange={(e) => setInputValue(e.target.value)}
-            onKeyDown={handleKeyDown}
-            placeholder={placeholder}
-            className="h-9"
-          />
-          <p className="text-xs text-muted-foreground">Press Enter to add a tag</p>
+          <div className="flex items-center gap-2">
+            <Input
+              type="text"
+              value={inputValue}
+              onChange={(e) => setInputValue(e.target.value)}
+              onKeyDown={handleKeyDown}
+              placeholder={placeholder}
+              className="h-9"
+            />
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={addTag}
+              disabled={!inputValue.trim()}
+              className="h-9 w-9 p-0"
+              aria-label="Add subtopic"
+            >
+              <Plus className="h-4 w-4" />
+            </Button>
+          </div>
         </>
       )}
     </div>

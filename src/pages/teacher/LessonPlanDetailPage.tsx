@@ -1,51 +1,29 @@
 import { useState, useEffect, useRef, useCallback } from "react";
-import { useNavigate, useParams, useSearchParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { TeacherAppLayout } from "@/components/layout/TeacherAppLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
-import { Checkbox } from "@/components/ui/checkbox";
 import { Calendar as CalendarComponent } from "@/components/ui/calendar";
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { 
   ArrowLeft, 
   Save, 
   FileDown, 
-  Printer,
-  BookOpen,
-  Calendar,
   CalendarIcon,
-  User,
-  GraduationCap,
-  Users,
   FileText,
-  ClipboardList,
-  Check,
-  ChevronsUpDown,
-  Settings,
   Pencil,
   Eye,
   Maximize2,
   Minimize2,
   ChevronUp,
-  Target,
-  Clock,
   Package,
   Home as HomeIcon,
   MessageSquare
@@ -53,32 +31,20 @@ import {
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { format, parseISO } from "date-fns";
-import { TagInput } from "@/components/lessonplan/TagInput";
 import { LessonFlowEditor } from "@/components/lessonplan/LessonFlowEditor";
 import { ObjectivesEditor } from "@/components/lessonplan/ObjectivesEditor";
-import { ApprovalSection } from "@/components/lessonplan/ApprovalSection";
-import { ReflectionSection } from "@/components/lessonplan/ReflectionSection";
 import { CollapsibleSection } from "@/components/lessonplan/CollapsibleSection";
 import { SectionNavigation } from "@/components/lessonplan/SectionNavigation";
-import { 
-  getLessonPlanById, 
-  createEmptyLessonPlan,
-  getSubtopicsForTopic,
-  getPreviousLessonPlan,
-  type LessonPlan 
-} from "@/data/lessonPlanData";
-import { normalizeSubtopics } from "@/lib/lessonplan/normalizeSubtopics";
-import { allSubjects } from "@/data/subjectsConfig";
-import { teacherProfile } from "@/data/teacherMockData";
-import { getWeekConfigs, formatWeekDateRange, getLessonDate } from "@/data/weekConfigData";
+import { type LessonPlan } from "@/data/lessonPlanData";
+import { normalizeLessonFlow } from "@/lib/lessonplan/normalizeLessonFlow";
+import { supabase } from "@/lib/supabase";
+import { useLessonPlanDetail } from "@/hooks/useLessonPlans";
 import html2canvas from "html2canvas";
 import jsPDF from "jspdf";
 
 const sections = [
   { id: "basic-info", title: "Basic Information", shortTitle: "Basic" },
   { id: "objectives", title: "Learning Objectives", shortTitle: "Objectives" },
-  { id: "vocabulary", title: "Vocabulary", shortTitle: "Vocab" },
-  { id: "previous", title: "Previous Learning", shortTitle: "Previous" },
   { id: "lesson-flow", title: "Lesson Flow", shortTitle: "Flow" },
   { id: "resources", title: "Resources", shortTitle: "Resources" },
   { id: "homework", title: "Homework", shortTitle: "HW" },
@@ -88,22 +54,24 @@ const sections = [
 const LessonPlanDetailPage = () => {
   const navigate = useNavigate();
   const { id } = useParams();
-  const [searchParams] = useSearchParams();
   const printRef = useRef<HTMLDivElement>(null);
   const editButtonRef = useRef<HTMLButtonElement>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   
   const isNew = id === "new";
-  const weekParam = searchParams.get("week");
-  const lessonParam = searchParams.get("lesson");
 
-  const [lessonPlan, setLessonPlan] = useState<LessonPlan | null>(null);
+  const { lessonPlan, loading, error, updateLessonPlan } = useLessonPlanDetail(
+    isNew ? undefined : id
+  );
+  const [draftPlan, setDraftPlan] = useState<LessonPlan | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
-  const [isEditMode, setIsEditMode] = useState(false);
+  const [isEditMode, setIsEditMode] = useState(true);
   const [isFocusMode, setIsFocusMode] = useState(false);
   const [activeSection, setActiveSection] = useState<string>("basic-info");
   const [showScrollTop, setShowScrollTop] = useState(false);
+  const saveTimers = useRef<Record<string, ReturnType<typeof setTimeout> | null>>({});
+  const [weekSubtopics, setWeekSubtopics] = useState<Array<{ id: string; name: string }>>([]);
 
   const shakeEditButton = () => {
     if (editButtonRef.current && !isEditMode) {
@@ -146,47 +114,118 @@ const LessonPlanDetailPage = () => {
 
   useEffect(() => {
     if (isNew) {
-      const newLP = createEmptyLessonPlan(
-        [teacherProfile.name],
-        teacherProfile.classes[0] || "",
-        "Mathematics",
-        "",
-        parseInt(weekParam || "1"),
-        parseInt(lessonParam || "1")
-      );
-      setLessonPlan(newLP);
-      setIsEditMode(true);
-    } else if (id) {
-      const existingLP = getLessonPlanById(id);
-      if (existingLP) {
-        setLessonPlan(existingLP);
-        setIsEditMode(false);
-      } else {
-        toast.error("Lesson plan not found");
-        navigate("/teacher/lesson-plans");
-      }
+      toast.error("Create a lesson from the week list.");
+      navigate("/teacher/lesson-plans");
     }
-  }, [id, isNew, weekParam, lessonParam, navigate]);
+  }, [isNew, navigate]);
+
+  useEffect(() => {
+    if (lessonPlan) {
+      setDraftPlan(lessonPlan);
+    }
+  }, [lessonPlan]);
+
+  useEffect(() => {
+    if (!id || isNew) return;
+    const fetchWeekSubtopics = async () => {
+      const { data: detail, error } = await supabase
+        .from("lesson_plan_details")
+        .select("week_id")
+        .eq("id", id)
+        .single();
+      if (error) {
+        return;
+      }
+      const weekId = detail?.week_id;
+      if (!weekId) return;
+      const { data, error: subtopicError } = await supabase
+        .from("lesson_week_subtopics")
+        .select("id, name")
+        .eq("week_id", weekId)
+        .order("sort_order", { ascending: true });
+      if (subtopicError) {
+        return;
+      }
+      setWeekSubtopics(data || []);
+    };
+
+    fetchWeekSubtopics();
+  }, [id, isNew]);
+
+  useEffect(() => {
+    if (error) {
+      toast.error("Failed to load lesson plan");
+    }
+  }, [error]);
 
   const updateField = <K extends keyof LessonPlan>(field: K, value: LessonPlan[K]) => {
-    if (lessonPlan) {
-      const normalizedValue =
-        field === "subtopics" ? normalizeSubtopics(value as unknown) : value;
-      setLessonPlan({ ...lessonPlan, [field]: normalizedValue, updatedAt: new Date().toISOString() });
+    if (!draftPlan) return;
+    const normalizedValue =
+      field === "lessonFlow" ? normalizeLessonFlow(value as unknown) : value;
+    setDraftPlan({ ...draftPlan, [field]: normalizedValue, updatedAt: new Date().toISOString() });
+  };
+
+  const scheduleSave = (key: string, updates: Partial<LessonPlan>) => {
+    if (saveTimers.current[key]) {
+      clearTimeout(saveTimers.current[key] as ReturnType<typeof setTimeout>);
     }
+    saveTimers.current[key] = setTimeout(() => {
+      updateLessonPlan(updates);
+      saveTimers.current[key] = null;
+    }, 400);
   };
 
   const handleSave = async () => {
-    if (!lessonPlan) return;
-    
+    if (!draftPlan) return;
+
     setIsSaving(true);
-    await new Promise(resolve => setTimeout(resolve, 500));
-    toast.success("Lesson plan saved successfully");
+    const success = await updateLessonPlan({
+      title: draftPlan.title,
+      date: draftPlan.date,
+      subtopics: draftPlan.subtopics,
+      learningObjectives: draftPlan.learningObjectives,
+      lessonFlow: draftPlan.lessonFlow,
+      resources: draftPlan.resources,
+      attachments: draftPlan.attachments,
+      homework: draftPlan.homework,
+      reflection: draftPlan.reflection,
+      attendance: draftPlan.attendance,
+      approval: draftPlan.approval,
+    });
+
+    if (success) {
+      toast.success("Lesson plan saved successfully");
+      setIsEditMode(false);
+    }
     setIsSaving(false);
   };
 
+  const handleSaveReflection = async () => {
+    if (!draftPlan) return;
+    const now = new Date().toISOString();
+    const notes =
+      (draftPlan.reflection as Record<string, unknown> | null)?.notes?.toString() ?? "";
+    const completion = notes.trim() ? "complete" : "incomplete";
+    const nextApproval = {
+      ...(draftPlan.approval as Record<string, unknown> | null),
+      completion,
+      completed_at: completion === "complete" ? now : null,
+    };
+
+    updateField("approval", nextApproval as LessonPlan["approval"]);
+
+    const success = await updateLessonPlan({
+      reflection: draftPlan.reflection,
+      approval: nextApproval as LessonPlan["approval"],
+    });
+
+    if (success) {
+      toast.success("Reflection saved");
+    }
+  };
+
   const handleExportPDF = async () => {
-    if (!printRef.current || !lessonPlan) return;
+    if (!printRef.current || !draftPlan) return;
     
     setIsExporting(true);
     try {
@@ -202,7 +241,7 @@ const LessonPlanDetailPage = () => {
       const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
       
       pdf.addImage(imgData, "PNG", 0, 0, pdfWidth, pdfHeight);
-      pdf.save(`lesson-plan-${lessonPlan.title || "untitled"}.pdf`);
+      pdf.save(`lesson-plan-${draftPlan.title || "untitled"}.pdf`);
       
       toast.success("PDF exported successfully");
     } catch (error) {
@@ -211,11 +250,20 @@ const LessonPlanDetailPage = () => {
     setIsExporting(false);
   };
 
-  if (!lessonPlan) {
+  if (loading) {
     return (
       <TeacherAppLayout>
         <div className="flex items-center justify-center h-64">
           <p className="text-muted-foreground">Loading...</p>
+        </div>
+      </TeacherAppLayout>
+    );
+  }
+  if (!draftPlan) {
+    return (
+      <TeacherAppLayout>
+        <div className="flex items-center justify-center h-64">
+          <p className="text-muted-foreground">Unable to load lesson plan.</p>
         </div>
       </TeacherAppLayout>
     );
@@ -242,10 +290,10 @@ const LessonPlanDetailPage = () => {
             )}
             <div>
               <h1 className="text-sm font-semibold line-clamp-1">
-                {isNew ? "New Lesson Plan" : lessonPlan.title || "Untitled"}
+                {draftPlan.title || "Untitled"}
               </h1>
               <p className="text-xs text-muted-foreground">
-                Week {lessonPlan.weekNumber} • LP {lessonPlan.lessonNumber}
+                Week {draftPlan.weekNumber} • LP {draftPlan.lessonNumber}
               </p>
             </div>
           </div>
@@ -338,16 +386,6 @@ const LessonPlanDetailPage = () => {
           title="Basic Information"
           icon={FileText}
           sectionNumber={1}
-          headerAction={
-            <Button
-              variant="ghost"
-              size="sm"
-              className="h-7 w-7 p-0"
-              onClick={() => navigate("/teacher/week-config")}
-            >
-              <Settings className="h-4 w-4 text-muted-foreground" />
-            </Button>
-          }
         >
           <div className="space-y-4">
             {/* Lesson Title */}
@@ -355,17 +393,17 @@ const LessonPlanDetailPage = () => {
               <Label className="text-xs text-muted-foreground">Lesson Title</Label>
               {isEditMode ? (
                 <Input
-                  value={lessonPlan.title}
+                  value={draftPlan.title}
                   onChange={(e) => updateField("title", e.target.value)}
                   placeholder="Enter lesson title..."
                   className="h-10"
                 />
               ) : (
-                <div 
+                <div
                   className="h-10 px-3 flex items-center rounded-md border border-input bg-background text-sm cursor-pointer"
                   onClick={shakeEditButton}
                 >
-                  {lessonPlan.title || <span className="italic text-muted-foreground">No title</span>}
+                  {draftPlan.title || <span className="italic text-muted-foreground">No title</span>}
                 </div>
               )}
             </div>
@@ -374,236 +412,68 @@ const LessonPlanDetailPage = () => {
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1.5">
                 <Label className="text-xs text-muted-foreground">Subject</Label>
-                <div 
+                <div
                   className="h-9 px-3 flex items-center rounded-md border border-input bg-background text-sm cursor-pointer"
                   onClick={shakeEditButton}
                 >
-                  {lessonPlan.subject || <span className="italic text-muted-foreground">No subject</span>}
+                  {draftPlan.subject || <span className="italic text-muted-foreground">No subject</span>}
                 </div>
               </div>
               <div className="space-y-1.5">
                 <Label className="text-xs text-muted-foreground">Topic</Label>
-                <div 
+                <div
                   className="h-9 px-3 flex items-center rounded-md border border-input bg-background text-sm truncate cursor-pointer"
                   onClick={shakeEditButton}
                 >
-                  {lessonPlan.topic || <span className="italic text-muted-foreground">No topic</span>}
+                  {draftPlan.topic || <span className="italic text-muted-foreground">No topic</span>}
                 </div>
               </div>
             </div>
 
-            {/* Subtopics */}
+            {/* Week Subtopics */}
             <div className="space-y-1.5">
-              <Label className="text-xs text-muted-foreground">Subtopics</Label>
-              {(() => {
-                const selectedSubtopics = normalizeSubtopics(lessonPlan.subtopics);
-                const availableSubtopics = getSubtopicsForTopic(lessonPlan.subject, lessonPlan.topic);
-                return (
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button
-                    variant="outline"
-                    role="combobox"
-                    className="w-full h-auto min-h-9 justify-between text-left font-normal"
-                  >
-                    <div className="flex flex-wrap gap-1">
-                      {selectedSubtopics.length > 0 ? (
-                        selectedSubtopics.map((subtopic) => (
-                          <Badge key={subtopic} variant="secondary" className="text-xs">
-                            {subtopic}
-                          </Badge>
-                        ))
-                      ) : (
-                        <span className="text-muted-foreground">Select subtopics...</span>
-                      )}
-                    </div>
-                    <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-full p-0" align="start">
-                  <div className="p-2 space-y-2">
-                    <div className="flex gap-2 pb-2 border-b border-border">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="h-7 text-xs"
-                        onClick={() => {
-                          const allSubtopics = getSubtopicsForTopic(lessonPlan.subject, lessonPlan.topic);
-                          updateField("subtopics", allSubtopics);
-                        }}
-                      >
-                        Select All
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="h-7 text-xs"
-                        onClick={() => updateField("subtopics", [])}
-                      >
-                        Clear All
-                      </Button>
-                    </div>
-                    <div className="space-y-1 max-h-48 overflow-y-auto">
-                      {availableSubtopics.map((subtopic) => {
-                        const isSelected = selectedSubtopics.includes(subtopic);
-                        return (
-                          <div
-                            key={subtopic}
-                            className="flex items-center gap-2 p-2 rounded-md hover:bg-muted cursor-pointer"
-                            onClick={() => {
-                              const currentSubtopics = selectedSubtopics;
-                              if (isSelected) {
-                                updateField("subtopics", currentSubtopics.filter(s => s !== subtopic));
-                              } else {
-                                updateField("subtopics", [...currentSubtopics, subtopic]);
-                              }
-                            }}
-                          >
-                            <Checkbox checked={isSelected} />
-                            <span className="text-sm">{subtopic}</span>
-                          </div>
-                        );
-                      })}
-                      {availableSubtopics.length === 0 && (
-                        <p className="text-xs text-muted-foreground p-2">No subtopics available.</p>
-                      )}
-                    </div>
-                  </div>
-                </PopoverContent>
-              </Popover>
-                );
-              })()}
+              <Label className="text-xs text-muted-foreground">Week Subtopics</Label>
+              <div className="flex flex-wrap gap-1.5 min-h-[32px] items-center">
+                {weekSubtopics.length > 0 ? (
+                  weekSubtopics.map((subtopic) => (
+                    <Badge key={subtopic.id} variant="secondary" className="text-xs">
+                      {subtopic.name}
+                    </Badge>
+                  ))
+                ) : (
+                  <span className="text-sm text-muted-foreground italic">No subtopics</span>
+                )}
+              </div>
             </div>
 
-            {/* Week, Lesson, Date, Class */}
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            {/* Week, Lesson, Class */}
+            <div className="grid grid-cols-3 gap-3">
               <div className="space-y-1.5">
-                <div className="flex items-center justify-between">
-                  <Label className="text-xs text-muted-foreground">Week</Label>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="h-5 w-5 p-0"
-                    onClick={() => navigate(`/teacher/week-config?week=${lessonPlan.weekNumber}`)}
-                    title="Open Week Config"
-                  >
-                    <Maximize2 className="h-3 w-3 text-muted-foreground hover:text-primary" />
-                  </Button>
+                <Label className="text-xs text-muted-foreground">Week</Label>
+                <div
+                  className="h-9 px-3 flex items-center rounded-md border border-input bg-background text-sm cursor-pointer"
+                  onClick={shakeEditButton}
+                >
+                  W{draftPlan.weekNumber}
                 </div>
-                {isEditMode ? (
-                  <Select 
-                    value={lessonPlan.weekNumber.toString()} 
-                    onValueChange={(v) => {
-                      const weekNum = parseInt(v);
-                      updateField("weekNumber", weekNum);
-                      const newDate = getLessonDate(weekNum, lessonPlan.lessonNumber);
-                      if (newDate) updateField("date", newDate);
-                    }}
-                  >
-                    <SelectTrigger className="h-9">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <ScrollArea className="h-60">
-                        {getWeekConfigs().map((week) => (
-                          <SelectItem key={week.weekNumber} value={week.weekNumber.toString()}>
-                            W{week.weekNumber}
-                          </SelectItem>
-                        ))}
-                      </ScrollArea>
-                    </SelectContent>
-                  </Select>
-                ) : (
-                  <div 
-                    className="h-9 px-3 flex items-center rounded-md border border-input bg-background text-sm cursor-pointer"
-                    onClick={() => navigate(`/teacher/week-config?week=${lessonPlan.weekNumber}`)}
-                  >
-                    W{lessonPlan.weekNumber}
-                  </div>
-                )}
               </div>
               <div className="space-y-1.5">
                 <Label className="text-xs text-muted-foreground">Lesson</Label>
-                {isEditMode ? (
-                  <Select 
-                    value={lessonPlan.lessonNumber.toString()} 
-                    onValueChange={(v) => {
-                      const lessonNum = parseInt(v);
-                      updateField("lessonNumber", lessonNum);
-                      const newDate = getLessonDate(lessonPlan.weekNumber, lessonNum);
-                      if (newDate) updateField("date", newDate);
-                    }}
-                  >
-                    <SelectTrigger className="h-9">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {[1, 2, 3, 4, 5].map((num) => (
-                        <SelectItem key={num} value={num.toString()}>
-                          L{num}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                ) : (
-                  <div 
-                    className="h-9 px-3 flex items-center rounded-md border border-input bg-background text-sm cursor-pointer"
-                    onClick={shakeEditButton}
-                  >
-                    L{lessonPlan.lessonNumber}
-                  </div>
-                )}
+                <div
+                  className="h-9 px-3 flex items-center rounded-md border border-input bg-background text-sm cursor-pointer"
+                  onClick={shakeEditButton}
+                >
+                  L{draftPlan.lessonNumber}
+                </div>
               </div>
               <div className="space-y-1.5">
                 <Label className="text-xs text-muted-foreground">Class</Label>
-                {isEditMode ? (
-                  <Select 
-                    value={lessonPlan.className} 
-                    onValueChange={(v) => updateField("className", v)}
-                  >
-                    <SelectTrigger className="h-9">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {teacherProfile.classes.map((cls) => (
-                        <SelectItem key={cls} value={cls}>{cls}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                ) : (
-                  <div 
-                    className="h-9 px-3 flex items-center rounded-md border border-input bg-background text-sm cursor-pointer"
-                    onClick={shakeEditButton}
-                  >
-                    {lessonPlan.className}
-                  </div>
-                )}
-              </div>
-            </div>
-
-            {/* Teacher(s) */}
-            <div className="space-y-1.5">
-              <Label className="text-xs text-muted-foreground">Teacher(s)</Label>
-              <div 
-                className="flex flex-wrap gap-1.5 min-h-9 items-center px-3 py-2 rounded-md border border-input bg-background cursor-pointer"
-                onClick={shakeEditButton}
-              >
-                {lessonPlan.teacherNames.map((name, idx) => {
-                  const isCurrentTeacher = name === teacherProfile.name;
-                  return (
-                    <Badge 
-                      key={idx} 
-                      variant={isCurrentTeacher ? "default" : "secondary"} 
-                      className={cn(
-                        "text-xs",
-                        isCurrentTeacher && "ring-2 ring-primary/30"
-                      )}
-                    >
-                      {name}
-                      {isCurrentTeacher && <span className="ml-1 text-[10px] opacity-75">(You)</span>}
-                    </Badge>
-                  );
-                })}
+                <div
+                  className="h-9 px-3 flex items-center rounded-md border border-input bg-background text-sm cursor-pointer"
+                  onClick={shakeEditButton}
+                >
+                  {draftPlan.className || <span className="italic text-muted-foreground">No class</span>}
+                </div>
               </div>
             </div>
           </div>
@@ -612,89 +482,39 @@ const LessonPlanDetailPage = () => {
         {/* Section 2: Learning Objectives */}
         <div id="objectives">
           <ObjectivesEditor
-            objectives={lessonPlan.learningObjectives}
-            onChange={(objectives) => updateField("learningObjectives", objectives)}
+            objectives={draftPlan.learningObjectives}
+            onChange={(objectives) => {
+              updateField("learningObjectives", objectives);
+              scheduleSave("learning_objectives", { learningObjectives: objectives });
+            }}
             isEditMode={isEditMode}
           />
         </div>
 
-        {/* Section 3: Vocabulary / Terminology */}
-        <CollapsibleSection
-          id="vocabulary"
-          title="Formula / Vocabulary / Terminology"
-          icon={BookOpen}
-          sectionNumber={3}
-          badge={
-            lessonPlan.vocabulary.length > 0 && (
-              <Badge variant="secondary" className="text-[10px] h-5">
-                {lessonPlan.vocabulary.length}
-              </Badge>
-            )
-          }
-        >
-          <TagInput
-            tags={lessonPlan.vocabulary}
-            onChange={(tags) => updateField("vocabulary", tags)}
-            placeholder="Add vocabulary term..."
-            isEditMode={isEditMode}
-          />
-        </CollapsibleSection>
-
-        {/* Section 4: Previous Learning */}
-        <CollapsibleSection
-          id="previous"
-          title="Previous Learning"
-          icon={ClipboardList}
-          sectionNumber={4}
-          defaultOpen={false}
-        >
-          {(() => {
-            const prevLesson = getPreviousLessonPlan(lessonPlan);
-            if (prevLesson && prevLesson.learningObjectives.length > 0) {
-              return (
-                <div className="bg-emerald-50 dark:bg-emerald-950/30 rounded-lg p-3 border border-emerald-200 dark:border-emerald-800">
-                  <p className="text-xs font-medium text-muted-foreground mb-2">
-                    From Week {prevLesson.weekNumber}, Lesson {prevLesson.lessonNumber}:
-                  </p>
-                  <ul className="text-sm space-y-1">
-                    {prevLesson.learningObjectives.map((obj, idx) => (
-                      <li key={idx} className="flex items-start gap-2">
-                        <span className="text-primary">•</span>
-                        <span>{obj}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              );
-            }
-            return (
-              <p className="text-sm text-muted-foreground italic">
-                No previous lesson found for this subject.
-              </p>
-            );
-          })()}
-        </CollapsibleSection>
-
-        {/* Section 5: Lesson Flow */}
+        {/* Section 3: Lesson Flow */}
         <div id="lesson-flow">
           <LessonFlowEditor
-            lessonFlow={lessonPlan.lessonFlow}
-            onChange={(flow) => updateField("lessonFlow", flow)}
+            lessonFlow={draftPlan.lessonFlow}
+            onChange={(flow) => {
+              updateField("lessonFlow", flow);
+              scheduleSave("lesson_flow", { lessonFlow: flow });
+            }}
             isEditMode={isEditMode}
           />
         </div>
 
-        {/* Section 6: Resources */}
+        {/* Section 4: Resources */}
         <CollapsibleSection
           id="resources"
           title="Resources"
           icon={Package}
-          sectionNumber={6}
+          sectionNumber={4}
         >
           {isEditMode ? (
             <Textarea
-              value={lessonPlan.resources}
+              value={draftPlan.resources}
               onChange={(e) => updateField("resources", e.target.value)}
+              onBlur={() => scheduleSave("resources", { resources: draftPlan.resources })}
               placeholder="List resources needed: worksheets, textbook pages, materials, etc."
               className="min-h-[80px]"
             />
@@ -703,7 +523,7 @@ const LessonPlanDetailPage = () => {
               className="min-h-[60px] p-3 rounded-md border border-input bg-background text-sm whitespace-pre-wrap cursor-pointer"
               onClick={shakeEditButton}
             >
-              {lessonPlan.resources || <span className="italic text-muted-foreground">No resources listed</span>}
+              {draftPlan.resources || <span className="italic text-muted-foreground">No resources listed</span>}
             </div>
           )}
           {isEditMode && (
@@ -713,12 +533,12 @@ const LessonPlanDetailPage = () => {
           )}
         </CollapsibleSection>
 
-        {/* Section 7: Homework */}
+        {/* Section 5: Homework */}
         <CollapsibleSection
           id="homework"
           title="Homework"
           icon={HomeIcon}
-          sectionNumber={7}
+          sectionNumber={5}
           headerAction={
             isEditMode && (
               <Button
@@ -734,8 +554,9 @@ const LessonPlanDetailPage = () => {
         >
           {isEditMode ? (
             <Textarea
-              value={lessonPlan.homework}
+              value={draftPlan.homework}
               onChange={(e) => updateField("homework", e.target.value)}
+              onBlur={() => scheduleSave("homework", { homework: draftPlan.homework })}
               placeholder="Describe homework assignment..."
               className="min-h-[60px]"
             />
@@ -744,25 +565,41 @@ const LessonPlanDetailPage = () => {
               className="min-h-[40px] p-3 rounded-md border border-input bg-background text-sm whitespace-pre-wrap cursor-pointer"
               onClick={shakeEditButton}
             >
-              {lessonPlan.homework || <span className="italic text-muted-foreground">No homework assigned</span>}
+              {draftPlan.homework || <span className="italic text-muted-foreground">No homework assigned</span>}
             </div>
           )}
         </CollapsibleSection>
 
-        {/* Section 8: Reflection */}
+        {/* Section 6: Reflection */}
         <div id="reflection">
-          <ReflectionSection
-            reflection={lessonPlan.reflection}
-            onChange={(reflection) => updateField("reflection", reflection)}
-            onSave={() => {
-              updateField("updatedAt", new Date().toISOString());
-              handleSave();
-            }}
-            lastEditedDate={lessonPlan.updatedAt}
-          />
+          <Card>
+            <CardHeader className="py-3 px-4">
+              <CardTitle className="text-sm font-semibold">Reflection</CardTitle>
+            </CardHeader>
+            <CardContent className="px-4 pb-4 space-y-3">
+              <Textarea
+                value={
+                  ((draftPlan.reflection as Record<string, unknown> | null)?.notes as string) ||
+                  ""
+                }
+                onChange={(e) =>
+                  updateField("reflection", {
+                    ...(draftPlan.reflection as Record<string, unknown> | null),
+                    notes: e.target.value,
+                    updated_at: new Date().toISOString(),
+                  } as LessonPlan["reflection"])
+                }
+                placeholder="Add reflection notes..."
+                className="min-h-[120px]"
+              />
+              <Button onClick={handleSaveReflection} className="w-full h-9">
+                Save Reflection
+              </Button>
+            </CardContent>
+          </Card>
         </div>
 
-        {/* Section 9: Lesson Date */}
+        {/* Section 7: Lesson Date */}
         <Card className="bg-muted/30">
           <CardHeader className="py-3 px-4">
             <div className="flex items-center gap-2">
@@ -780,12 +617,12 @@ const LessonPlanDetailPage = () => {
                   variant="outline"
                   className={cn(
                     "w-full justify-start text-left font-normal h-11",
-                    !lessonPlan.date && "text-muted-foreground"
+                    !draftPlan.date && "text-muted-foreground"
                   )}
                 >
                   <CalendarIcon className="mr-2 h-4 w-4" />
-                  {lessonPlan.date ? (
-                    format(parseISO(lessonPlan.date), "EEEE, d MMMM yyyy")
+                  {draftPlan.date ? (
+                    format(parseISO(draftPlan.date), "EEEE, d MMMM yyyy")
                   ) : (
                     <span>Select lesson date...</span>
                   )}
@@ -794,7 +631,7 @@ const LessonPlanDetailPage = () => {
               <PopoverContent className="w-auto p-0" align="start">
                 <CalendarComponent
                   mode="single"
-                  selected={lessonPlan.date ? parseISO(lessonPlan.date) : undefined}
+                  selected={draftPlan.date ? parseISO(draftPlan.date) : undefined}
                   onSelect={(date) => {
                     if (date) {
                       updateField("date", format(date, "yyyy-MM-dd"));
@@ -874,3 +711,9 @@ const LessonPlanDetailPage = () => {
 };
 
 export default LessonPlanDetailPage;
+
+
+
+
+
+

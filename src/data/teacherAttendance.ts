@@ -18,6 +18,18 @@ export type StudentForAttendance = {
   class: string;
 };
 
+const logSupabaseError = (
+  context: string,
+  error: { code?: string; message?: string; details?: string; hint?: string }
+) => {
+  console.error(`[${context}]`, {
+    code: error.code,
+    message: error.message,
+    details: error.details,
+    hint: error.hint,
+  });
+};
+
 /**
  * Fetch students for a given class
  */
@@ -30,7 +42,7 @@ export async function fetchStudentsByClass(className: string): Promise<StudentFo
     .order("name", { ascending: true });
 
   if (error) {
-    console.error("[teacherAttendance] fetchStudentsByClass error:", error);
+    logSupabaseError("teacherAttendance/fetchStudentsByClass", error);
     throw new Error(error.message);
   }
 
@@ -55,7 +67,7 @@ export async function fetchAttendanceForClassDate(
     .eq("date", date);
 
   if (error) {
-    console.error("[teacherAttendance] fetchAttendanceForClassDate error:", error);
+    logSupabaseError("teacherAttendance/fetchAttendanceForClassDate", error);
     throw new Error(error.message);
   }
 
@@ -123,7 +135,7 @@ export async function saveAttendance(
       .eq("id", update.id);
 
     if (error) {
-      console.error("[teacherAttendance] update error:", error);
+      logSupabaseError("teacherAttendance/update", error);
       throw new Error(`Failed to update attendance: ${error.message}`);
     }
   }
@@ -133,7 +145,7 @@ export async function saveAttendance(
     const { error } = await supabase.from("attendance").insert(toInsert);
 
     if (error) {
-      console.error("[teacherAttendance] insert error:", error);
+      logSupabaseError("teacherAttendance/insert", error);
       throw new Error(`Failed to insert attendance: ${error.message}`);
     }
   }
@@ -150,7 +162,7 @@ export async function fetchAvailableClasses(): Promise<string[]> {
     .eq("archived", false);
 
   if (error) {
-    console.error("[teacherAttendance] fetchAvailableClasses error:", error);
+    logSupabaseError("teacherAttendance/fetchAvailableClasses", error);
     throw new Error(error.message);
   }
 

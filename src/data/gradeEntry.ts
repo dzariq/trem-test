@@ -49,6 +49,91 @@ export interface GradeInput {
   comment: string;
 }
 
+export interface GradeEntryStats {
+  graded: number;
+  pending: number;
+  total: number;
+  average: number;
+}
+
+export const emptyGradeInput: GradeInput = {
+  attitude: "",
+  homework: "",
+  quiz: "",
+  exam: "",
+  reportComment: "",
+  studyRecommendation: "",
+  comment: "",
+};
+
+const logSupabaseError = (
+  context: string,
+  error: { code?: string; message?: string; details?: string; hint?: string }
+) => {
+  console.error(`[${context}]`, {
+    code: error.code,
+    message: error.message,
+    details: error.details,
+    hint: error.hint,
+  });
+};
+
+export function buildGradeInputsFromExistingGrades(
+  students: GradeEntryStudent[],
+  existingGrades: Map<string, StudentGradeRecord>
+): Record<string, GradeInput> {
+  const inputs: Record<string, GradeInput> = {};
+  students.forEach((student) => {
+    const existing = existingGrades.get(student.id);
+    if (existing) {
+      inputs[student.id] = {
+        attitude: existing.attitude_marks?.toString() || "",
+        homework: existing.homework_marks?.toString() || "",
+        quiz: existing.quiz_marks?.toString() || "",
+        exam: existing.exam_marks?.toString() || "",
+        reportComment: existing.subject_comment || "",
+        studyRecommendation: "",
+        comment: existing.teacher_comment || "",
+      };
+    } else {
+      inputs[student.id] = { ...emptyGradeInput };
+    }
+  });
+  return inputs;
+}
+
+export function computeGradeEntryStats(
+  students: GradeEntryStudent[],
+  gradeInputs: Record<string, GradeInput>
+): GradeEntryStats {
+  const total = students.length;
+  let graded = 0;
+  let totalScore = 0;
+
+  students.forEach((student) => {
+    const input = gradeInputs[student.id];
+    if (input) {
+      const hasData = input.attitude || input.homework || input.quiz || input.exam;
+      if (hasData) {
+        graded++;
+        const score =
+          (parseInt(input.attitude) || 0) +
+          (parseInt(input.homework) || 0) +
+          (parseInt(input.quiz) || 0) +
+          (parseInt(input.exam) || 0);
+        totalScore += score;
+      }
+    }
+  });
+
+  return {
+    graded,
+    pending: total - graded,
+    total,
+    average: graded > 0 ? Math.round(totalScore / graded) : 0,
+  };
+}
+
 // Fetch available classes (distinct from students table)
 export async function fetchAvailableClasses(): Promise<string[]> {
   const { data, error } = await supabase
@@ -59,7 +144,7 @@ export async function fetchAvailableClasses(): Promise<string[]> {
     .order("class");
 
   if (error) {
-    console.error("Error fetching classes:", error);
+    logSupabaseError("gradeEntry/fetchAvailableClasses", error);
     throw error;
   }
 
@@ -78,7 +163,7 @@ export async function fetchStudentsByClass(className: string): Promise<GradeEntr
     .order("name");
 
   if (error) {
-    console.error("Error fetching students:", error);
+    logSupabaseError("gradeEntry/fetchStudentsByClass", error);
     throw error;
   }
 
@@ -93,7 +178,7 @@ export async function fetchSubjects(yearLevel?: string): Promise<SubjectInfo[]> 
     .order("name");
 
   if (error) {
-    console.error("Error fetching subjects:", error);
+    logSupabaseError("gradeEntry/fetchSubjects", error);
     throw error;
   }
 
@@ -117,7 +202,7 @@ export async function fetchAcademicPeriods(): Promise<AcademicPeriod[]> {
     .order("sort_order");
 
   if (error) {
-    console.error("Error fetching academic periods:", error);
+    logSupabaseError("gradeEntry/fetchAcademicPeriods", error);
     throw error;
   }
 
@@ -142,7 +227,7 @@ export async function fetchExistingGrades(
     .eq("academic_period_id", academicPeriodId);
 
   if (error) {
-    console.error("Error fetching existing grades:", error);
+    logSupabaseError("gradeEntry/fetchExistingGrades", error);
     throw error;
   }
 
@@ -240,7 +325,7 @@ export async function saveGrades(
         .eq("id", id);
 
       if (error) {
-        console.error("Error updating grade:", error);
+        logSupabaseError("gradeEntry/saveGrades/update", error);
         return { success: false, error: error.message };
       }
     }
@@ -252,14 +337,14 @@ export async function saveGrades(
         .insert(toInsert);
 
       if (error) {
-        console.error("Error inserting grades:", error);
+        logSupabaseError("gradeEntry/saveGrades/insert", error);
         return { success: false, error: error.message };
       }
     }
 
     return { success: true };
   } catch (err) {
-    console.error("Error saving grades:", err);
+    console.error("[gradeEntry/saveGrades]", err);
     return { success: false, error: String(err) };
   }
 }
@@ -281,7 +366,7 @@ export async function fetchClassRecommendation(
     .maybeSingle();
 
   if (error) {
-    console.error("Error fetching class recommendation:", error);
+    logSupabaseError("gradeEntry/fetchClassRecommendation", error);
     return null;
   }
 
@@ -309,7 +394,7 @@ export async function saveClassRecommendation(
     .maybeSingle();
 
   if (fetchError) {
-    console.error("Error fetching existing config:", fetchError);
+    logSupabaseError("gradeEntry/saveClassRecommendation/fetch", fetchError);
     return { success: false, error: fetchError.message };
   }
 
@@ -326,7 +411,7 @@ export async function saveClassRecommendation(
       .eq("id", existing.id);
 
     if (error) {
-      console.error("Error updating class recommendation:", error);
+      logSupabaseError("gradeEntry/saveClassRecommendation/update", error);
       return { success: false, error: error.message };
     }
   } else {
@@ -342,7 +427,7 @@ export async function saveClassRecommendation(
       });
 
     if (error) {
-      console.error("Error inserting class recommendation:", error);
+      logSupabaseError("gradeEntry/saveClassRecommendation/insert", error);
       return { success: false, error: error.message };
     }
   }

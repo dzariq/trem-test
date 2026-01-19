@@ -21,6 +21,8 @@ import {
   BoxPlotStats,
 } from "@/data/classAnalysis";
 import { useClassAnalysisData } from "@/hooks/useClassAnalysisData";
+import { useTeacherScope } from "@/hooks/useTeacherScope";
+import { toast } from "@/hooks/use-toast";
 
 interface UseClassAnalysisReturn {
   // Data
@@ -94,8 +96,15 @@ interface UseClassAnalysisReturn {
 }
 
 export function useClassAnalysis(): UseClassAnalysisReturn {
+  const teacherScope = useTeacherScope();
+  const isTeacher = teacherScope.isTeacher;
+  const allowedClassNames = useMemo(
+    () => teacherScope.allowedClassYears.map((cls) => cls.class_name),
+    [teacherScope.allowedClassYears]
+  );
+
   // Selection state
-  const [selectedClass, setSelectedClass] = useState<string | null>(null);
+  const [selectedClassState, setSelectedClassState] = useState<string | null>(null);
   const [selectedAcademicYear, setSelectedAcademicYear] = useState<number | null>(null);
   const [selectedPeriodId, setSelectedPeriodId] = useState<string | null>(null);
   const [selectedSubjectIds, setSelectedSubjectIds] = useState<number[]>([]);
@@ -116,8 +125,43 @@ export function useClassAnalysis(): UseClassAnalysisReturn {
   const [loadingSubjects, setLoadingSubjects] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const selectedClass = isTeacher
+    ? teacherScope.selectedClassYear?.class_name ?? null
+    : selectedClassState;
+
+  const setSelectedClass = useCallback(
+    (className: string | null) => {
+      if (!className) {
+        setSelectedClassState(null);
+        return;
+      }
+      if (isTeacher) {
+        const classYear = teacherScope.allowedClassYears.find(
+          (cls) => cls.class_name === className
+        );
+        if (classYear) {
+          teacherScope.setSelectedClassYearId(classYear.id);
+          return;
+        }
+        toast({
+          title: "Class not available",
+          description: "Please select an assigned class.",
+          variant: "destructive",
+        });
+        return;
+      }
+      setSelectedClassState(className);
+    },
+    [isTeacher, teacherScope.allowedClassYears, teacherScope.setSelectedClassYearId]
+  );
+
   // Load classes on mount
   useEffect(() => {
+    if (isTeacher) {
+      setClasses(allowedClassNames);
+      setLoadingClasses(teacherScope.loading);
+      return;
+    }
     const loadClasses = async () => {
       setLoadingClasses(true);
       setError(null);
@@ -127,12 +171,32 @@ export function useClassAnalysis(): UseClassAnalysisReturn {
       } catch (err) {
         setError("Failed to load classes");
         console.error(err);
+        toast({
+          title: "Classes unavailable",
+          description: "Unable to load classes right now.",
+          variant: "destructive",
+        });
       } finally {
         setLoadingClasses(false);
       }
     };
     loadClasses();
-  }, []);
+  }, [allowedClassNames, isTeacher, teacherScope.loading]);
+
+  useEffect(() => {
+    if (!isTeacher) return;
+    if (teacherScope.loading) return;
+    if (!selectedClass) return;
+    if (allowedClassNames.includes(selectedClass)) return;
+    const fallback = allowedClassNames[0] ?? null;
+    if (fallback) {
+      setSelectedClass(fallback);
+      toast({
+        title: "Class updated",
+        description: "Your selected class is no longer available.",
+      });
+    }
+  }, [allowedClassNames, isTeacher, selectedClass, setSelectedClass, teacherScope.loading]);
 
   // Load academic periods on mount
   useEffect(() => {
@@ -207,26 +271,62 @@ export function useClassAnalysis(): UseClassAnalysisReturn {
       try {
         const studentIds = rosterStudents.map((student) => student.id);
         const fetchedSubjects = await fetchSubjectsForClass(studentIds);
-        setSubjects(fetchedSubjects);
+        if (isTeacher) {
+          const classYearId =
+            teacherScope.allowedClassYears.find((cls) => cls.class_name === selectedClass)?.id ??
+            teacherScope.selectedClassYearId;
+          if (!classYearId) {
+            setSubjects([]);
+            setSelectedSubjectIds([]);
+            setBandsSelectedSubjectId(null);
+            return;
+          }
+          const allowedSubjects = await teacherScope.getAllowedSubjects(classYearId);
+          const allowedIds = new Set(allowedSubjects.map((s) => s.id));
+          const filtered = fetchedSubjects.filter((subject) => allowedIds.has(subject.id));
+          setSubjects(filtered);
 
-        // Auto-select all subjects
-        setSelectedSubjectIds(fetchedSubjects.map((s) => s.id));
+          // Auto-select all subjects
+          setSelectedSubjectIds(filtered.map((s) => s.id));
 
-        // Auto-select first subject for Bands tab
-        if (fetchedSubjects.length > 0) {
-          setBandsSelectedSubjectId(fetchedSubjects[0].id);
+          // Auto-select first subject for Bands tab
+          if (filtered.length > 0) {
+            setBandsSelectedSubjectId(filtered[0].id);
+          }
+        } else {
+          setSubjects(fetchedSubjects);
+
+          // Auto-select all subjects
+          setSelectedSubjectIds(fetchedSubjects.map((s) => s.id));
+
+          // Auto-select first subject for Bands tab
+          if (fetchedSubjects.length > 0) {
+            setBandsSelectedSubjectId(fetchedSubjects[0].id);
+          }
         }
       } catch (err) {
         setError("Failed to load class subjects");
         console.error(err);
         setSubjects([]);
+        toast({
+          title: "Subjects unavailable",
+          description: "Unable to load class subjects.",
+          variant: "destructive",
+        });
       } finally {
         setLoadingSubjects(false);
       }
     };
 
     loadSubjects();
-  }, [selectedClass, rosterStudents]);
+  }, [
+    isTeacher,
+    rosterStudents,
+    selectedClass,
+    teacherScope.allowedClassYears,
+    teacherScope.getAllowedSubjects,
+    teacherScope.selectedClassYearId,
+  ]);
 
   // Pick academic year defaults based on data availability
   useEffect(() => {

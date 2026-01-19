@@ -3,13 +3,13 @@ import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "@/hooks/use-toast";
 import {
-  mockLessonPlans,
   type LessonPlan,
   type Topic,
   type Week,
   type SubjectCurriculum,
 } from "@/data/lessonPlanData";
 import { normalizeSubtopics } from "@/lib/lessonplan/normalizeSubtopics";
+import { normalizeLessonFlow } from "@/lib/lessonplan/normalizeLessonFlow";
 
 // Hook to load subjects from Supabase (same source as Academic module)
 export function useLessonPlanSubjects() {
@@ -82,20 +82,16 @@ interface DbLessonPlanDetail {
   week_id: string;
   lesson_number: number;
   title: string;
-  teacher_names: string[];
   date: string | null;
-  topic: string;
   subtopics: string[];
   learning_objectives: string[];
-  vocabulary: string[];
-  previous_learning: string;
-  lesson_flow: Record<string, unknown>;
+  lesson_flow: Record<string, unknown> | null;
   resources: string;
   attachments: string[];
   homework: string;
-  reflection: Record<string, unknown>;
+  reflection: Record<string, unknown> | null;
   attendance: Record<string, unknown> | null;
-  approval: Record<string, unknown>;
+  approval: Record<string, unknown> | null;
   created_at: string;
   updated_at: string;
 }
@@ -124,22 +120,22 @@ function convertDbToUiFormat(
           title: detail.title,
           weekNumber: week.week_number,
           lessonNumber: detail.lesson_number,
-          teacherNames: detail.teacher_names,
+          teacherNames: [],
           className: lessonPlan.class,
           subject: lessonPlan.subject,
-          topic: detail.topic || topic.title,
+          topic: topic.title,
           subtopics: normalizeSubtopics(detail.subtopics),
           date: detail.date || "",
-          learningObjectives: detail.learning_objectives,
-          vocabulary: detail.vocabulary,
-          previousLearning: detail.previous_learning,
-          lessonFlow: detail.lesson_flow as unknown as LessonPlan["lessonFlow"],
-          resources: detail.resources,
-          attachments: detail.attachments,
-          homework: detail.homework,
-          reflection: detail.reflection as unknown as LessonPlan["reflection"],
+          learningObjectives: detail.learning_objectives || [],
+          vocabulary: [],
+          previousLearning: "",
+          lessonFlow: normalizeLessonFlow(detail.lesson_flow),
+          resources: detail.resources || "",
+          attachments: detail.attachments || [],
+          homework: detail.homework || "",
+          reflection: (detail.reflection || {}) as unknown as LessonPlan["reflection"],
           attendance: detail.attendance as unknown as LessonPlan["attendance"],
-          approval: detail.approval as unknown as LessonPlan["approval"],
+          approval: (detail.approval || {}) as unknown as LessonPlan["approval"],
           createdAt: detail.created_at,
           updatedAt: detail.updated_at,
         }));
@@ -164,105 +160,6 @@ function convertDbToUiFormat(
     subject: lessonPlan.subject,
     topics: uiTopics,
   };
-}
-
-// Seed database with mock data
-async function seedLessonPlanData(
-  teacherId: string,
-  academicYear: number,
-  subject: string,
-  className: string
-): Promise<string | null> {
-  try {
-    // Find mock data for this subject
-    const mockData = mockLessonPlans.find((m) => m.subject === subject);
-    if (!mockData) {
-      console.warn(`No mock data found for subject: ${subject}`);
-      return null;
-    }
-
-    // 1. Create the master lesson_plan record
-    const { data: lessonPlan, error: lpError } = await supabase
-      .from("lesson_plans")
-      .insert({
-        teacher_id: teacherId,
-        academic_year: academicYear,
-        subject: subject,
-        class: className,
-      })
-      .select()
-      .single();
-
-    if (lpError) throw lpError;
-
-    // 2. Create topics
-    for (let topicIndex = 0; topicIndex < mockData.topics.length; topicIndex++) {
-      const mockTopic = mockData.topics[topicIndex];
-
-      const { data: topic, error: topicError } = await supabase
-        .from("lesson_topics")
-        .insert({
-          lesson_plan_id: lessonPlan.id,
-          title: mockTopic.title,
-          subtopics: mockTopic.subtopics,
-          topic_order: topicIndex,
-        })
-        .select()
-        .single();
-
-      if (topicError) throw topicError;
-
-      // 3. Create weeks for this topic
-      for (let weekIndex = 0; weekIndex < mockTopic.weeks.length; weekIndex++) {
-        const mockWeek = mockTopic.weeks[weekIndex];
-
-        const { data: week, error: weekError } = await supabase
-          .from("lesson_weeks")
-          .insert({
-            topic_id: topic.id,
-            week_number: mockWeek.weekNumber,
-            title: mockWeek.title,
-            week_order: weekIndex,
-          })
-          .select()
-          .single();
-
-        if (weekError) throw weekError;
-
-        // 4. Create lesson plan details for this week
-        for (const mockLp of mockWeek.lessonPlans) {
-          const { error: detailError } = await supabase
-            .from("lesson_plan_details")
-            .insert({
-              week_id: week.id,
-              lesson_number: mockLp.lessonNumber,
-              title: mockLp.title,
-              teacher_names: mockLp.teacherNames,
-              date: mockLp.date || null,
-              topic: mockLp.topic,
-              subtopics: mockLp.subtopics,
-              learning_objectives: mockLp.learningObjectives,
-              vocabulary: mockLp.vocabulary,
-              previous_learning: mockLp.previousLearning,
-              lesson_flow: mockLp.lessonFlow,
-              resources: mockLp.resources,
-              attachments: mockLp.attachments,
-              homework: mockLp.homework,
-              reflection: mockLp.reflection,
-              attendance: mockLp.attendance,
-              approval: mockLp.approval,
-            });
-
-          if (detailError) throw detailError;
-        }
-      }
-    }
-
-    return lessonPlan.id;
-  } catch (error) {
-    console.error("Error seeding lesson plan data:", error);
-    throw error;
-  }
 }
 
 export function useLessonPlans(
@@ -294,37 +191,13 @@ export function useLessonPlans(
         .eq("academic_year", academicYear)
         .eq("subject", subject)
         .eq("class", className)
+        .order("updated_at", { ascending: false })
+        .limit(1)
         .maybeSingle();
 
       if (fetchError) throw fetchError;
 
       let planId = existingPlan?.id;
-
-      // If no plan exists, seed with mock data
-      if (!existingPlan) {
-        planId = await seedLessonPlanData(user.id, academicYear, subject, className);
-        if (!planId) {
-          // No mock data for this subject, create empty plan
-          const { data: newPlan, error: createError } = await supabase
-            .from("lesson_plans")
-            .insert({
-              teacher_id: user.id,
-              academic_year: academicYear,
-              subject: subject,
-              class: className,
-            })
-            .select()
-            .single();
-
-          if (createError) throw createError;
-          planId = newPlan.id;
-        }
-
-        toast({
-          title: "Lesson Plan Created",
-          description: `Initial lesson plan for ${subject} - ${className} has been created.`,
-        });
-      }
 
       setLessonPlanId(planId || null);
 
@@ -357,15 +230,15 @@ export function useLessonPlans(
       if (weeksRes.error) throw weeksRes.error;
       if (detailsRes.error) throw detailsRes.error;
 
-      const lessonPlan: DbLessonPlan = {
-        id: planId,
-        teacher_id: user.id,
-        academic_year: academicYear,
-        subject: subject,
-        class: className,
-        created_at: existingPlan?.created_at || new Date().toISOString(),
-        updated_at: existingPlan?.updated_at || new Date().toISOString(),
-      };
+        const lessonPlan: DbLessonPlan = {
+          id: planId,
+          teacher_id: user.id,
+          academic_year: academicYear,
+          subject: subject,
+          class: className,
+          created_at: existingPlan?.created_at || new Date().toISOString(),
+          updated_at: existingPlan?.updated_at || new Date().toISOString(),
+        };
 
       const curriculumData = convertDbToUiFormat(
         lessonPlan,
@@ -379,11 +252,6 @@ export function useLessonPlans(
       console.error("Error fetching lesson plans:", err);
       setError(err instanceof Error ? err.message : "Failed to load lesson plans");
       
-      // Fallback to mock data if DB fails
-      const mockData = mockLessonPlans.find((m) => m.subject === subject);
-      if (mockData) {
-        setCurriculum(mockData);
-      }
     } finally {
       setLoading(false);
     }
@@ -435,7 +303,23 @@ export function useLessonPlans(
   // Add new topic
   const addTopic = useCallback(
     async (title: string, subtopics: string[] = []) => {
-      if (!lessonPlanId) return null;
+      let planId = lessonPlanId;
+      if (!planId) {
+        const { data: newPlan, error: createError } = await supabase
+          .from("lesson_plans")
+          .insert({
+            teacher_id: user?.id,
+            academic_year: academicYear,
+            subject: subject,
+            class: className,
+          })
+          .select()
+          .single();
+
+        if (createError) throw createError;
+        planId = newPlan.id;
+        setLessonPlanId(planId);
+      }
 
       try {
         const topicOrder = curriculum?.topics.length || 0;
@@ -443,7 +327,7 @@ export function useLessonPlans(
         const { data: topic, error } = await supabase
           .from("lesson_topics")
           .insert({
-            lesson_plan_id: lessonPlanId,
+            lesson_plan_id: planId,
             title,
             subtopics,
             topic_order: topicOrder,
@@ -452,6 +336,19 @@ export function useLessonPlans(
           .single();
 
         if (error) throw error;
+
+        const { data: week, error: weekError } = await supabase
+          .from("lesson_weeks")
+          .insert({
+            topic_id: topic.id,
+            week_number: 1,
+            week_order: 1,
+            title: "Week 1",
+          })
+          .select()
+          .single();
+
+        if (weekError) throw weekError;
 
         // Update local state
         setCurriculum((prev) => {
@@ -464,7 +361,14 @@ export function useLessonPlans(
                 id: topic.id,
                 title: topic.title,
                 subtopics: topic.subtopics,
-                weeks: [],
+                weeks: [
+                  {
+                    id: week.id,
+                    weekNumber: week.week_number,
+                    title: week.title,
+                    lessonPlans: [],
+                  },
+                ],
               },
             ],
           };
@@ -475,7 +379,7 @@ export function useLessonPlans(
           description: `Topic "${title}" has been added.`,
         });
 
-        return topic.id;
+        return { topicId: topic.id, weekId: week.id };
       } catch (err) {
         console.error("Error adding topic:", err);
         toast({
@@ -486,7 +390,7 @@ export function useLessonPlans(
         return null;
       }
     },
-    [lessonPlanId, curriculum?.topics.length]
+    [lessonPlanId, curriculum?.topics.length, user?.id, academicYear, subject, className]
   );
 
   // Update topic
@@ -620,7 +524,22 @@ export function useLessonPlanDetail(lessonPlanDetailId: string | undefined) {
         const { data, error: fetchError } = await supabase
           .from("lesson_plan_details")
           .select(`
-            *,
+            id,
+            week_id,
+            lesson_number,
+            title,
+            date,
+            subtopics,
+            learning_objectives,
+            lesson_flow,
+            resources,
+            attachments,
+            homework,
+            reflection,
+            attendance,
+            approval,
+            created_at,
+            updated_at,
             lesson_weeks!inner (
               id,
               week_number,
@@ -657,22 +576,22 @@ export function useLessonPlanDetail(lessonPlanDetailId: string | undefined) {
             title: detail.title,
             weekNumber: detail.lesson_weeks.week_number,
             lessonNumber: detail.lesson_number,
-            teacherNames: detail.teacher_names,
+            teacherNames: [],
             className: detail.lesson_weeks.lesson_topics.lesson_plans.class,
             subject: detail.lesson_weeks.lesson_topics.lesson_plans.subject,
-            topic: detail.topic || detail.lesson_weeks.lesson_topics.title,
+            topic: detail.lesson_weeks.lesson_topics.title,
             subtopics: normalizeSubtopics(detail.subtopics),
             date: detail.date || "",
-            learningObjectives: detail.learning_objectives,
-            vocabulary: detail.vocabulary,
-            previousLearning: detail.previous_learning,
-            lessonFlow: detail.lesson_flow as unknown as LessonPlan["lessonFlow"],
-            resources: detail.resources,
-            attachments: detail.attachments,
-            homework: detail.homework,
-            reflection: detail.reflection as unknown as LessonPlan["reflection"],
+            learningObjectives: detail.learning_objectives || [],
+            vocabulary: [],
+            previousLearning: "",
+            lessonFlow: normalizeLessonFlow(detail.lesson_flow),
+            resources: detail.resources || "",
+            attachments: detail.attachments || [],
+            homework: detail.homework || "",
+            reflection: (detail.reflection || {}) as unknown as LessonPlan["reflection"],
             attendance: detail.attendance as unknown as LessonPlan["attendance"],
-            approval: detail.approval as unknown as LessonPlan["approval"],
+            approval: (detail.approval || {}) as unknown as LessonPlan["approval"],
             createdAt: detail.created_at,
             updatedAt: detail.updated_at,
           });
@@ -696,14 +615,11 @@ export function useLessonPlanDetail(lessonPlanDetailId: string | undefined) {
         const dbUpdates: Partial<DbLessonPlanDetail> = {};
 
         if (updates.title !== undefined) dbUpdates.title = updates.title;
-        if (updates.teacherNames !== undefined) dbUpdates.teacher_names = updates.teacherNames;
         if (updates.date !== undefined) dbUpdates.date = updates.date || null;
         if (updates.subtopics !== undefined) {
           dbUpdates.subtopics = normalizeSubtopics(updates.subtopics);
         }
         if (updates.learningObjectives !== undefined) dbUpdates.learning_objectives = updates.learningObjectives;
-        if (updates.vocabulary !== undefined) dbUpdates.vocabulary = updates.vocabulary;
-        if (updates.previousLearning !== undefined) dbUpdates.previous_learning = updates.previousLearning;
         if (updates.lessonFlow !== undefined) dbUpdates.lesson_flow = updates.lessonFlow as unknown as Record<string, unknown>;
         if (updates.resources !== undefined) dbUpdates.resources = updates.resources;
         if (updates.attachments !== undefined) dbUpdates.attachments = updates.attachments;
@@ -711,7 +627,6 @@ export function useLessonPlanDetail(lessonPlanDetailId: string | undefined) {
         if (updates.reflection !== undefined) dbUpdates.reflection = updates.reflection as unknown as Record<string, unknown>;
         if (updates.attendance !== undefined) dbUpdates.attendance = updates.attendance as unknown as Record<string, unknown> | null;
         if (updates.approval !== undefined) dbUpdates.approval = updates.approval as unknown as Record<string, unknown>;
-        if (updates.topic !== undefined) dbUpdates.topic = updates.topic;
 
         const { error } = await supabase
           .from("lesson_plan_details")

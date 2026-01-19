@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo, useCallback } from "react";
 import { supabase } from "@/lib/supabase";
+import { toast } from "@/hooks/use-toast";
 
 export interface Student {
   id: string;
@@ -31,6 +32,10 @@ interface UseAcademicFiltersReturn {
   // Computed
   getClassesForYearLevel: (yearLevel: string) => string[];
   getStudentsForClass: (className: string) => Student[];
+}
+
+interface UseAcademicFiltersOptions {
+  allowedClasses?: string[];
 }
 
 // Sort year levels numerically (Y1, Y2, ... Y10, Y11)
@@ -70,7 +75,8 @@ const filterValidValues = (values: (string | null | undefined)[]): string[] => {
     .filter(v => v !== "");
 };
 
-export function useAcademicFilters(): UseAcademicFiltersReturn {
+export function useAcademicFilters(options: UseAcademicFiltersOptions = {}): UseAcademicFiltersReturn {
+  const { allowedClasses } = options;
   // Data state
   const [allStudents, setAllStudents] = useState<Student[]>([]);
   const [yearLevels, setYearLevels] = useState<string[]>([]);
@@ -103,8 +109,12 @@ export function useAcademicFilters(): UseAcademicFiltersReturn {
         if (fetchError) throw fetchError;
         
         if (data) {
+          const scopedData = Array.isArray(allowedClasses)
+            ? data.filter((s) => s.class && allowedClasses.includes(s.class))
+            : data;
+
           // Store all students
-          const validStudents: Student[] = data
+          const validStudents: Student[] = scopedData
             .filter(s => s.id && s.name && s.class)
             .map(s => ({
               id: s.id,
@@ -116,14 +126,14 @@ export function useAcademicFilters(): UseAcademicFiltersReturn {
           
           // Extract unique year levels (filter out empty/null)
           const uniqueYearLevels = [...new Set(
-            filterValidValues(data.map(s => s.year_level))
+            filterValidValues(scopedData.map(s => s.year_level))
           )];
           const sortedYearLevels = sortYearLevels(uniqueYearLevels);
           setYearLevels(sortedYearLevels);
           
           // Extract unique classes (filter out empty/null)
           const uniqueClasses = [...new Set(
-            filterValidValues(data.map(s => s.class))
+            filterValidValues(scopedData.map(s => s.class))
           )];
           const sortedClasses = sortClasses(uniqueClasses);
           setClasses(sortedClasses);
@@ -139,6 +149,11 @@ export function useAcademicFilters(): UseAcademicFiltersReturn {
       } catch (err) {
         console.error("Failed to load academic filters:", err);
         setError("Failed to load academic data");
+        toast({
+          title: "Academic data unavailable",
+          description: "Unable to load classes and year levels.",
+          variant: "destructive",
+        });
       } finally {
         setLoadingYearLevels(false);
         setLoadingClasses(false);
@@ -146,7 +161,7 @@ export function useAcademicFilters(): UseAcademicFiltersReturn {
     };
     
     loadData();
-  }, []);
+  }, [allowedClasses?.join(",")]);
   
   // Get classes filtered by year level
   const getClassesForYearLevel = useCallback((yearLevel: string): string[] => {
@@ -178,6 +193,15 @@ export function useAcademicFilters(): UseAcademicFiltersReturn {
     if (!selectedClass) return [];
     return getStudentsForClass(selectedClass);
   }, [selectedClass, getStudentsForClass]);
+
+  useEffect(() => {
+    if (selectedClass && !classes.includes(selectedClass)) {
+      setSelectedClass(classes[0] ?? null);
+    }
+    if (!selectedClass && classes.length > 0) {
+      setSelectedClass(classes[0]);
+    }
+  }, [classes, selectedClass]);
   
   // When year level changes, reset class if not valid for new year level
   useEffect(() => {

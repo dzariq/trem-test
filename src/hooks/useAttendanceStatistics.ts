@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo } from "react";
 import { supabase } from "@/lib/supabase";
 import { format, startOfMonth, endOfMonth, startOfWeek, endOfWeek, parseISO } from "date-fns";
+import { toast } from "@/hooks/use-toast";
 
 export type AttendanceStatus = "present" | "absent" | "late" | "excused";
 
@@ -50,6 +51,18 @@ interface UseAttendanceStatisticsProps {
   concernsCustomEndDate: Date;
 }
 
+const logSupabaseError = (
+  context: string,
+  error: { code?: string; message?: string; details?: string; hint?: string }
+) => {
+  console.error(`[${context}]`, {
+    code: error.code,
+    message: error.message,
+    details: error.details,
+    hint: error.hint,
+  });
+};
+
 export function useAttendanceStatistics({
   selectedClass,
   selectedYear,
@@ -61,6 +74,7 @@ export function useAttendanceStatistics({
   const [yearlyData, setYearlyData] = useState<AttendanceRecord[]>([]);
   const [monthlyData, setMonthlyData] = useState<AttendanceRecord[]>([]);
   const [concernsData, setConcernsData] = useState<AttendanceRecord[]>([]);
+  const [concernsStudentNames, setConcernsStudentNames] = useState<Record<string, string>>({});
   const [loadingYearly, setLoadingYearly] = useState(false);
   const [loadingMonthly, setLoadingMonthly] = useState(false);
   const [loadingConcerns, setLoadingConcerns] = useState(false);
@@ -90,8 +104,13 @@ export function useAttendanceStatistics({
           .order("date", { ascending: true });
 
         if (queryError) {
-          console.error("[useAttendanceStatistics] yearly query error:", queryError);
+          logSupabaseError("useAttendanceStatistics/yearly", queryError);
           setError(queryError.message);
+          toast({
+            title: "Attendance data unavailable",
+            description: "Unable to load yearly attendance data.",
+            variant: "destructive",
+          });
           return;
         }
 
@@ -105,8 +124,13 @@ export function useAttendanceStatistics({
           student_name: row.student_name,
         })));
       } catch (err) {
-        console.error("[useAttendanceStatistics] yearly fetch error:", err);
+        console.error("[useAttendanceStatistics/yearly]", err);
         setError("Failed to fetch yearly data");
+        toast({
+          title: "Attendance data unavailable",
+          description: "Unable to load yearly attendance data.",
+          variant: "destructive",
+        });
       } finally {
         setLoadingYearly(false);
       }
@@ -140,12 +164,17 @@ export function useAttendanceStatistics({
           .order("date", { ascending: false });
 
         if (queryError) {
-          console.error("[useAttendanceStatistics] monthly query error:", queryError);
+          logSupabaseError("useAttendanceStatistics/monthly", queryError);
           setError(queryError.message);
+          toast({
+            title: "Attendance data unavailable",
+            description: "Unable to load monthly attendance data.",
+            variant: "destructive",
+          });
           return;
         }
 
-        setMonthlyData((data ?? []).map(row => ({
+        const rows = (data ?? []).map(row => ({
           id: row.id,
           student_id: row.student_id,
           class: row.class,
@@ -153,9 +182,44 @@ export function useAttendanceStatistics({
           status: row.status as AttendanceStatus,
           remarks: row.remarks,
           student_name: row.student_name,
-        })));
+        }));
+
+        const studentIds = Array.from(
+          new Set(rows.map((row) => row.student_id).filter(Boolean))
+        );
+
+        let nameMap: Record<string, string> = {};
+        if (studentIds.length > 0) {
+          const { data: students, error: studentError } = await supabase
+            .from("students")
+            .select("id, name")
+            .in("id", studentIds);
+
+          if (studentError) {
+            logSupabaseError("useAttendanceStatistics/monthly-students", studentError);
+          } else {
+            nameMap = (students ?? []).reduce<Record<string, string>>((acc, student) => {
+              if (student?.id && student?.name) {
+                acc[student.id] = student.name;
+              }
+              return acc;
+            }, {});
+          }
+        }
+
+        const hydrated = rows.map((row) => ({
+          ...row,
+          student_name: nameMap[row.student_id] || row.student_name || null,
+        }));
+
+        setMonthlyData(hydrated);
       } catch (err) {
-        console.error("[useAttendanceStatistics] monthly fetch error:", err);
+        console.error("[useAttendanceStatistics/monthly]", err);
+        toast({
+          title: "Attendance data unavailable",
+          description: "Unable to load monthly attendance data.",
+          variant: "destructive",
+        });
       } finally {
         setLoadingMonthly(false);
       }
@@ -168,6 +232,7 @@ export function useAttendanceStatistics({
   useEffect(() => {
     if (!selectedClass) {
       setConcernsData([]);
+      setConcernsStudentNames({});
       return;
     }
 
@@ -200,11 +265,16 @@ export function useAttendanceStatistics({
           .lte("date", endDateStr);
 
         if (queryError) {
-          console.error("[useAttendanceStatistics] concerns query error:", queryError);
+          logSupabaseError("useAttendanceStatistics/concerns", queryError);
+          toast({
+            title: "Attendance data unavailable",
+            description: "Unable to load attendance concerns.",
+            variant: "destructive",
+          });
           return;
         }
 
-        setConcernsData((data ?? []).map(row => ({
+        const rows = (data ?? []).map(row => ({
           id: row.id,
           student_id: row.student_id,
           class: row.class,
@@ -212,9 +282,41 @@ export function useAttendanceStatistics({
           status: row.status as AttendanceStatus,
           remarks: row.remarks,
           student_name: row.student_name,
-        })));
+        }));
+
+        const studentIds = Array.from(
+          new Set(rows.map((row) => row.student_id).filter(Boolean))
+        );
+
+        let nameMap: Record<string, string> = {};
+        if (studentIds.length > 0) {
+          const { data: students, error: studentError } = await supabase
+            .from("students")
+            .select("id, name")
+            .in("id", studentIds);
+
+          if (studentError) {
+            logSupabaseError("useAttendanceStatistics/concerns-students", studentError);
+          } else {
+            nameMap = (students ?? []).reduce<Record<string, string>>((acc, student) => {
+              if (student?.id && student?.name) {
+                acc[student.id] = student.name;
+              }
+              return acc;
+            }, {});
+          }
+        }
+
+        setConcernsData(rows);
+        setConcernsStudentNames(nameMap);
       } catch (err) {
-        console.error("[useAttendanceStatistics] concerns fetch error:", err);
+        console.error("[useAttendanceStatistics/concerns]", err);
+        setConcernsStudentNames({});
+        toast({
+          title: "Attendance data unavailable",
+          description: "Unable to load attendance concerns.",
+          variant: "destructive",
+        });
       } finally {
         setLoadingConcerns(false);
       }
@@ -280,7 +382,7 @@ export function useAttendanceStatistics({
       }
       day.students.push({
         id: record.student_id,
-        name: record.student_name || "Unknown",
+        name: record.student_name || "Student",
         status: record.status,
       });
     });
@@ -312,9 +414,13 @@ export function useAttendanceStatistics({
     const studentStats: Record<string, { name: string; absent: number; late: number; records: number }> = {};
 
     concernsData.forEach(record => {
+      const resolvedName =
+        concernsStudentNames[record.student_id] ||
+        record.student_name ||
+        "Student";
       if (!studentStats[record.student_id]) {
         studentStats[record.student_id] = {
-          name: record.student_name || "Unknown",
+          name: resolvedName,
           absent: 0,
           late: 0,
           records: 0,
@@ -342,7 +448,13 @@ export function useAttendanceStatistics({
       topAbsent: [...students].sort((a, b) => b.absent - a.absent).slice(0, 5).filter(s => s.absent > 0),
       topLate: [...students].sort((a, b) => b.late - a.late).slice(0, 5).filter(s => s.late > 0),
     };
-  }, [concernsData, concernsTimeRange, concernsCustomStartDate, concernsCustomEndDate]);
+  }, [
+    concernsData,
+    concernsStudentNames,
+    concernsTimeRange,
+    concernsCustomStartDate,
+    concernsCustomEndDate,
+  ]);
 
   return {
     // Data

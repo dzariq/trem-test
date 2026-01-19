@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/lib/supabase";
+import { toast } from "@/hooks/use-toast";
 
 export interface ClassAnalysisRosterStudent {
   id: string;
@@ -30,6 +31,18 @@ interface UseClassAnalysisDataResult {
   loading: boolean;
   error: string | null;
 }
+
+const logSupabaseError = (
+  context: string,
+  error: { code?: string; message?: string; details?: string; hint?: string }
+) => {
+  console.error(`[${context}]`, {
+    code: error.code,
+    message: error.message,
+    details: error.details,
+    hint: error.hint,
+  });
+};
 
 const resolveScorePercent = (row: {
   total_marks: number | null;
@@ -96,7 +109,7 @@ export function useClassAnalysisData(
           .order("name");
 
         if (rosterError) {
-          console.error("[useClassAnalysisData] roster error:", rosterError);
+          logSupabaseError("useClassAnalysisData/roster", rosterError);
           throw rosterError;
         }
 
@@ -109,6 +122,11 @@ export function useClassAnalysisData(
             err instanceof Error ? err.message : "Failed to load class roster.";
           setError(message);
           setRosterStudents([]);
+          toast({
+            title: "Roster unavailable",
+            description: "Unable to load class roster data.",
+            variant: "destructive",
+          });
         }
       } finally {
         if (isMounted) {
@@ -141,10 +159,7 @@ export function useClassAnalysisData(
             .eq("is_active", true);
 
           if (periodError) {
-            console.error(
-              "[useClassAnalysisData] academic_periods error:",
-              periodError
-            );
+            logSupabaseError("useClassAnalysisData/academic_periods", periodError);
             throw periodError;
           }
 
@@ -182,12 +197,7 @@ export function useClassAnalysisData(
         const { data, error: gradesError } = await query;
 
         if (gradesError) {
-          console.error("[useClassAnalysisData] student_grades error:", {
-            code: gradesError.code,
-            message: gradesError.message,
-            details: gradesError.details,
-            hint: gradesError.hint,
-          });
+          logSupabaseError("useClassAnalysisData/student_grades", gradesError);
           throw gradesError;
         }
 
@@ -219,6 +229,11 @@ export function useClassAnalysisData(
             err instanceof Error ? err.message : "Failed to load class grades.";
           setError(message);
           setGradeRows([]);
+          toast({
+            title: "Grades unavailable",
+            description: "Unable to load class grades data.",
+            variant: "destructive",
+          });
         }
       } finally {
         if (isMounted) {

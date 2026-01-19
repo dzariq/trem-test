@@ -1,5 +1,6 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { format } from "date-fns";
+import { toast } from "@/hooks/use-toast";
 import {
   fetchStudentsByClass,
   fetchAttendanceForClassDate,
@@ -9,6 +10,7 @@ import {
   type StudentForAttendance,
   type AttendanceRecord,
 } from "@/data/teacherAttendance";
+import { useTeacherScope } from "@/hooks/useTeacherScope";
 
 export type StudentAttendanceState = {
   student_id: string;
@@ -18,8 +20,15 @@ export type StudentAttendanceState = {
 };
 
 export function useTeacherAttendance() {
+  const teacherScope = useTeacherScope();
+  const isTeacher = teacherScope.isTeacher;
+  const allowedClassNames = useMemo(
+    () => teacherScope.allowedClassYears.map((cls) => cls.class_name),
+    [teacherScope.allowedClassYears]
+  );
+
   const [classes, setClasses] = useState<string[]>([]);
-  const [selectedClass, setSelectedClass] = useState<string>("");
+  const [selectedClassState, setSelectedClassState] = useState<string>("");
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
   const [students, setStudents] = useState<StudentForAttendance[]>([]);
   const [attendanceState, setAttendanceState] = useState<Record<string, StudentAttendanceState>>({});
@@ -30,11 +39,42 @@ export function useTeacherAttendance() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const selectedClass = isTeacher
+    ? teacherScope.selectedClassYear?.class_name ?? ""
+    : selectedClassState;
+
+  const setSelectedClass = useCallback(
+    (className: string) => {
+      if (isTeacher) {
+        const classYear = teacherScope.allowedClassYears.find(
+          (cls) => cls.class_name === className
+        );
+        if (classYear) {
+          teacherScope.setSelectedClassYearId(classYear.id);
+        } else {
+          toast({
+            title: "Class not available",
+            description: "Please select an assigned class.",
+            variant: "destructive",
+          });
+        }
+        return;
+      }
+      setSelectedClassState(className);
+    },
+    [isTeacher, teacherScope.allowedClassYears, teacherScope.setSelectedClassYearId]
+  );
+
   // Format date for Supabase (YYYY-MM-DD)
   const dateString = format(selectedDate, "yyyy-MM-dd");
 
   // Load available classes on mount
   useEffect(() => {
+    if (isTeacher) {
+      setClasses(allowedClassNames);
+      setLoadingClasses(teacherScope.loading);
+      return;
+    }
     let mounted = true;
     const loadClasses = async () => {
       try {
@@ -50,6 +90,11 @@ export function useTeacherAttendance() {
       } catch (err) {
         if (mounted) {
           setError(err instanceof Error ? err.message : "Failed to load classes");
+          toast({
+            title: "Classes unavailable",
+            description: "Unable to load classes right now.",
+            variant: "destructive",
+          });
         }
       } finally {
         if (mounted) {
@@ -59,7 +104,7 @@ export function useTeacherAttendance() {
     };
     loadClasses();
     return () => { mounted = false; };
-  }, []);
+  }, [allowedClassNames, isTeacher, teacherScope.loading]);
 
   // Load students when class changes
   useEffect(() => {
@@ -92,6 +137,11 @@ export function useTeacherAttendance() {
       } catch (err) {
         if (mounted) {
           setError(err instanceof Error ? err.message : "Failed to load students");
+          toast({
+            title: "Students unavailable",
+            description: "Unable to load students for this class.",
+            variant: "destructive",
+          });
         }
       } finally {
         if (mounted) {
@@ -136,6 +186,11 @@ export function useTeacherAttendance() {
       } catch (err) {
         if (mounted) {
           setError(err instanceof Error ? err.message : "Failed to load attendance");
+          toast({
+            title: "Attendance unavailable",
+            description: "Unable to load attendance records.",
+            variant: "destructive",
+          });
         }
       } finally {
         if (mounted) {
