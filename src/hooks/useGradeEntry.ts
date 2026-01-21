@@ -251,7 +251,8 @@ export function useGradeEntry(): UseGradeEntryReturn {
             return;
           }
           const allowedSubjects = await teacherScope.getAllowedSubjects(classYearId);
-          setSubjects(allowedSubjects);
+          // Map to SubjectInfo with code field
+          setSubjects(allowedSubjects.map(s => ({ ...s, code: null })));
         } else {
           // Get year level from first student
           const yearLevel = fetchedStudents[0]?.year_level;
@@ -293,9 +294,10 @@ export function useGradeEntry(): UseGradeEntryReturn {
       const classYearId = teacherScope.allowedClassYears.find(
         (cls) => cls.class_name === selectedClass
       )?.id;
-      const nextSubject = classYearId
-        ? teacherScope.subjectsByClassYearId[classYearId]?.[0] ?? null
+      const nextSubjectData = classYearId
+        ? teacherScope.subjectsByClassYearId[classYearId]?.[0]
         : null;
+      const nextSubject = nextSubjectData ? { ...nextSubjectData, code: null } : null;
       setSelectedSubject(nextSubject);
       toast({
         title: "Subject updated",

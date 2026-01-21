@@ -631,8 +631,8 @@ const TeacherLessonPlansPage = () => {
                             );
                             const completedCount = weekLessons.filter((lesson) => {
                               const status = getLessonStatus({
-                                approval: lesson.approval as Record<string, unknown> | null,
-                                reflection: lesson.reflection as Record<string, unknown> | null,
+                                approval: lesson.approval as unknown as Record<string, unknown> | null,
+                                reflection: lesson.reflection as unknown as Record<string, unknown> | null,
                                 learningObjectives: lesson.learningObjectives,
                                 resources: lesson.resources,
                                 homework: lesson.homework,
@@ -769,8 +769,8 @@ const TeacherLessonPlansPage = () => {
                                       ) : (
                                         weekLessons.map((lesson) => {
                                           const status = getLessonStatus({
-                                            approval: lesson.approval as Record<string, unknown> | null,
-                                            reflection: lesson.reflection as Record<string, unknown> | null,
+                                            approval: lesson.approval as unknown as Record<string, unknown> | null,
+                                            reflection: lesson.reflection as unknown as Record<string, unknown> | null,
                                             learningObjectives: lesson.learningObjectives,
                                             resources: lesson.resources,
                                             homework: lesson.homework,

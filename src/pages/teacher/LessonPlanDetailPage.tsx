@@ -203,20 +203,21 @@ const LessonPlanDetailPage = () => {
   const handleSaveReflection = async () => {
     if (!draftPlan) return;
     const now = new Date().toISOString();
-    const notes =
-      (draftPlan.reflection as Record<string, unknown> | null)?.notes?.toString() ?? "";
+    const reflectionData = draftPlan.reflection as unknown as Record<string, unknown> | null;
+    const notes = reflectionData?.notes?.toString() ?? "";
     const completion = notes.trim() ? "complete" : "incomplete";
+    const approvalData = draftPlan.approval as unknown as Record<string, unknown> | null;
     const nextApproval = {
-      ...(draftPlan.approval as Record<string, unknown> | null),
+      ...(approvalData || {}),
       completion,
       completed_at: completion === "complete" ? now : null,
     };
 
-    updateField("approval", nextApproval as LessonPlan["approval"]);
+    updateField("approval", nextApproval as unknown as LessonPlan["approval"]);
 
     const success = await updateLessonPlan({
       reflection: draftPlan.reflection,
-      approval: nextApproval as LessonPlan["approval"],
+      approval: nextApproval as unknown as LessonPlan["approval"],
     });
 
     if (success) {
@@ -579,16 +580,17 @@ const LessonPlanDetailPage = () => {
             <CardContent className="px-4 pb-4 space-y-3">
               <Textarea
                 value={
-                  ((draftPlan.reflection as Record<string, unknown> | null)?.notes as string) ||
+                  ((draftPlan.reflection as unknown as Record<string, unknown> | null)?.notes as string) ||
                   ""
                 }
-                onChange={(e) =>
+                onChange={(e) => {
+                  const currentReflection = draftPlan.reflection as unknown as Record<string, unknown> | null;
                   updateField("reflection", {
-                    ...(draftPlan.reflection as Record<string, unknown> | null),
+                    ...(currentReflection || {}),
                     notes: e.target.value,
                     updated_at: new Date().toISOString(),
-                  } as LessonPlan["reflection"])
-                }
+                  } as unknown as LessonPlan["reflection"]);
+                }}
                 placeholder="Add reflection notes..."
                 className="min-h-[120px]"
               />

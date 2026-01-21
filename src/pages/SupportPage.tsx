@@ -232,7 +232,7 @@ export default function SupportPage() {
     }
 
     const ticketId = insertData.id;
-    let uploadedAttachments: ParentTicket["attachments"] = [];
+    let uploadedAttachments: Array<{ path: string; name: string; type: string; size: number }> = [];
 
     if (attachments.length > 0) {
       for (const file of attachments) {
