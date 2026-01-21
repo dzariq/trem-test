@@ -2005,8 +2005,18 @@ export default function TeacherAcademicPage() {
                     {/* Floating Save Button */}
                     <Button 
                       className="fixed z-50 shadow-xl bottom-24 right-4 h-14 w-14 rounded-full p-0"
-                      disabled={gradeEntry.saving}
+                      disabled={gradeEntry.saving || !gradeEntry.selectedPeriod?.is_open_for_grading}
                       onClick={async () => {
+                        // Check if the period is closed and show a specific message
+                        if (!gradeEntry.selectedPeriod?.is_open_for_grading) {
+                          toast({
+                            title: "Grading Closed",
+                            description: `Grading is closed for ${gradeEntry.selectedPeriod?.name || 'this period'}. Contact admin to open grading.`,
+                            variant: "destructive"
+                          });
+                          return;
+                        }
+                        
                         const result = await gradeEntry.save();
                         if (result.success) {
                           toast({
@@ -2014,9 +2024,14 @@ export default function TeacherAcademicPage() {
                             description: `${gradeEntry.selectedSubject?.name} grades for ${gradeEntry.selectedClass} have been saved to database.`,
                           });
                         } else {
+                          // Check if it's an RLS/closed period error
+                          const isClosedPeriodError = result.error?.includes('row-level security') || 
+                                                       result.error?.includes('academic_periods');
                           toast({
-                            title: "Save Failed",
-                            description: result.error || "Failed to save grades. Please try again.",
+                            title: isClosedPeriodError ? "Grading Closed" : "Save Failed",
+                            description: isClosedPeriodError 
+                              ? `Grading is closed for ${gradeEntry.selectedPeriod?.name || 'this period'}. Contact admin to open grading.`
+                              : (result.error || "Failed to save grades. Please try again."),
                             variant: "destructive"
                           });
                         }
