@@ -561,25 +561,28 @@ export function useLessonPlanDetail(lessonPlanDetailId: string | undefined) {
         if (fetchError) throw fetchError;
 
         if (data) {
-          const detail = data as DbLessonPlanDetail & {
-            lesson_weeks: {
-              week_number: number;
-              lesson_topics: {
-                title: string;
-                lesson_plans: { subject: string; class: string };
-              };
-            };
-          };
+          const rawData = data as unknown as Record<string, unknown>;
+          const lessonWeeksArray = rawData.lesson_weeks as Array<Record<string, unknown>> | undefined;
+          const firstWeek = lessonWeeksArray?.[0];
+          const lessonTopicsArray = firstWeek?.lesson_topics as Array<Record<string, unknown>> | undefined;
+          const firstTopic = lessonTopicsArray?.[0];
+          const lessonPlansData = firstTopic?.lesson_plans as Record<string, unknown> | undefined;
 
+          const weekNumber = typeof firstWeek?.week_number === 'number' ? firstWeek.week_number : 1;
+          const topicTitle = typeof firstTopic?.title === 'string' ? firstTopic.title : '';
+          const planSubject = typeof lessonPlansData?.subject === 'string' ? lessonPlansData.subject : '';
+          const planClass = typeof lessonPlansData?.class === 'string' ? lessonPlansData.class : '';
+
+          const detail = rawData as unknown as DbLessonPlanDetail;
           setLessonPlan({
             id: detail.id,
             title: detail.title,
-            weekNumber: detail.lesson_weeks.week_number,
+            weekNumber: weekNumber,
             lessonNumber: detail.lesson_number,
             teacherNames: [],
-            className: detail.lesson_weeks.lesson_topics.lesson_plans.class,
-            subject: detail.lesson_weeks.lesson_topics.lesson_plans.subject,
-            topic: detail.lesson_weeks.lesson_topics.title,
+            className: planClass,
+            subject: planSubject,
+            topic: topicTitle,
             subtopics: normalizeSubtopics(detail.subtopics),
             date: detail.date || "",
             learningObjectives: detail.learning_objectives || [],

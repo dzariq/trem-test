@@ -16,6 +16,7 @@ export type Database = {
     Tables: {
       academic_periods: {
         Row: {
+          academic_year: number | null
           code: string
           created_at: string
           end_date: string | null
@@ -25,9 +26,11 @@ export type Database = {
           name: string
           sort_order: number | null
           start_date: string | null
+          status: string
           updated_at: string
         }
         Insert: {
+          academic_year?: number | null
           code: string
           created_at?: string
           end_date?: string | null
@@ -37,9 +40,11 @@ export type Database = {
           name: string
           sort_order?: number | null
           start_date?: string | null
+          status?: string
           updated_at?: string
         }
         Update: {
+          academic_year?: number | null
           code?: string
           created_at?: string
           end_date?: string | null
@@ -49,6 +54,7 @@ export type Database = {
           name?: string
           sort_order?: number | null
           start_date?: string | null
+          status?: string
           updated_at?: string
         }
         Relationships: []
@@ -450,6 +456,8 @@ export type Database = {
           title: string
           updated_at: string
           visibility: string
+          visible_departments: string[]
+          visible_user_ids: string[]
         }
         Insert: {
           campus_id?: string | null
@@ -472,6 +480,8 @@ export type Database = {
           title: string
           updated_at?: string
           visibility?: string
+          visible_departments?: string[]
+          visible_user_ids?: string[]
         }
         Update: {
           campus_id?: string | null
@@ -494,6 +504,8 @@ export type Database = {
           title?: string
           updated_at?: string
           visibility?: string
+          visible_departments?: string[]
+          visible_user_ids?: string[]
         }
         Relationships: []
       }
@@ -535,6 +547,7 @@ export type Database = {
       }
       cca_activities: {
         Row: {
+          allow_free_text: boolean
           category: string
           classes_involved: string[] | null
           coordinator_email: string | null
@@ -543,6 +556,7 @@ export type Database = {
           id: string
           internal_notes: string | null
           is_active: boolean
+          is_club: boolean
           location: string | null
           location_id: string | null
           max_participants: number | null
@@ -550,10 +564,12 @@ export type Database = {
           meeting_time: string | null
           name: string
           public_description: string | null
+          type_id: string | null
           updated_at: string
           year_levels: string[] | null
         }
         Insert: {
+          allow_free_text?: boolean
           category?: string
           classes_involved?: string[] | null
           coordinator_email?: string | null
@@ -562,6 +578,7 @@ export type Database = {
           id?: string
           internal_notes?: string | null
           is_active?: boolean
+          is_club?: boolean
           location?: string | null
           location_id?: string | null
           max_participants?: number | null
@@ -569,10 +586,12 @@ export type Database = {
           meeting_time?: string | null
           name: string
           public_description?: string | null
+          type_id?: string | null
           updated_at?: string
           year_levels?: string[] | null
         }
         Update: {
+          allow_free_text?: boolean
           category?: string
           classes_involved?: string[] | null
           coordinator_email?: string | null
@@ -581,6 +600,7 @@ export type Database = {
           id?: string
           internal_notes?: string | null
           is_active?: boolean
+          is_club?: boolean
           location?: string | null
           location_id?: string | null
           max_participants?: number | null
@@ -588,6 +608,7 @@ export type Database = {
           meeting_time?: string | null
           name?: string
           public_description?: string | null
+          type_id?: string | null
           updated_at?: string
           year_levels?: string[] | null
         }
@@ -599,19 +620,56 @@ export type Database = {
             referencedRelation: "school_locations"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "cca_activities_type_id_fkey"
+            columns: ["type_id"]
+            isOneToOne: false
+            referencedRelation: "cca_activity_types"
+            referencedColumns: ["id"]
+          },
         ]
+      }
+      cca_activity_types: {
+        Row: {
+          created_at: string
+          id: string
+          is_active: boolean
+          name: string
+          sort_order: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          name: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          name?: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Relationships: []
       }
       cca_sessions: {
         Row: {
           activity_id: string
           created_at: string
+          custom_title: string | null
           description: string | null
           end_time: string | null
+          entry_mode: string | null
           id: string
           is_cancelled: boolean
           location: string | null
           location_id: string | null
           max_participants: number | null
+          requirements: string | null
           session_date: string
           session_type: string | null
           start_time: string | null
@@ -620,13 +678,16 @@ export type Database = {
         Insert: {
           activity_id: string
           created_at?: string
+          custom_title?: string | null
           description?: string | null
           end_time?: string | null
+          entry_mode?: string | null
           id?: string
           is_cancelled?: boolean
           location?: string | null
           location_id?: string | null
           max_participants?: number | null
+          requirements?: string | null
           session_date: string
           session_type?: string | null
           start_time?: string | null
@@ -635,13 +696,16 @@ export type Database = {
         Update: {
           activity_id?: string
           created_at?: string
+          custom_title?: string | null
           description?: string | null
           end_time?: string | null
+          entry_mode?: string | null
           id?: string
           is_cancelled?: boolean
           location?: string | null
           location_id?: string | null
           max_participants?: number | null
+          requirements?: string | null
           session_date?: string
           session_type?: string | null
           start_time?: string | null
@@ -724,6 +788,30 @@ export type Database = {
           options?: string[]
           sort_order?: number | null
           updated_at?: string | null
+        }
+        Relationships: []
+      }
+      departments: {
+        Row: {
+          created_at: string
+          id: string
+          is_active: boolean
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          name?: string
+          updated_at?: string
         }
         Relationships: []
       }
@@ -889,6 +977,7 @@ export type Database = {
       examinations: {
         Row: {
           academic_year: number
+          code: string | null
           created_at: string
           dates_text: string | null
           end_date: string | null
@@ -900,6 +989,7 @@ export type Database = {
         }
         Insert: {
           academic_year?: number
+          code?: string | null
           created_at?: string
           dates_text?: string | null
           end_date?: string | null
@@ -911,6 +1001,7 @@ export type Database = {
         }
         Update: {
           academic_year?: number
+          code?: string | null
           created_at?: string
           dates_text?: string | null
           end_date?: string | null
@@ -1130,6 +1221,38 @@ export type Database = {
           },
         ]
       }
+      lesson_week_subtopics: {
+        Row: {
+          created_at: string | null
+          id: string
+          name: string
+          sort_order: number
+          week_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          name: string
+          sort_order?: number
+          week_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          name?: string
+          sort_order?: number
+          week_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lesson_week_subtopics_week_id_fkey"
+            columns: ["week_id"]
+            isOneToOne: false
+            referencedRelation: "lesson_weeks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       lesson_weeks: {
         Row: {
           created_at: string | null
@@ -1207,6 +1330,7 @@ export type Database = {
       parent_tickets: {
         Row: {
           assigned_to: string | null
+          attachments: Json | null
           campus: string | null
           contact_number: string | null
           created_at: string
@@ -1229,6 +1353,7 @@ export type Database = {
         }
         Insert: {
           assigned_to?: string | null
+          attachments?: Json | null
           campus?: string | null
           contact_number?: string | null
           created_at?: string
@@ -1251,6 +1376,7 @@ export type Database = {
         }
         Update: {
           assigned_to?: string | null
+          attachments?: Json | null
           campus?: string | null
           contact_number?: string | null
           created_at?: string
@@ -1350,6 +1476,48 @@ export type Database = {
           updated_at?: string | null
         }
         Relationships: []
+      }
+      student_cca_enrollments: {
+        Row: {
+          cca_activity_id: string
+          created_at: string
+          created_by: string | null
+          id: string
+          status: string
+          student_id: string
+        }
+        Insert: {
+          cca_activity_id: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          status?: string
+          student_id: string
+        }
+        Update: {
+          cca_activity_id?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          status?: string
+          student_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "student_cca_enrollments_cca_activity_id_fkey"
+            columns: ["cca_activity_id"]
+            isOneToOne: false
+            referencedRelation: "cca_activities"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "student_cca_enrollments_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       student_cocurricular_activities: {
         Row: {
@@ -1817,6 +1985,45 @@ export type Database = {
           },
         ]
       }
+      teacher_assignments: {
+        Row: {
+          class_year_id: number
+          created_at: string
+          id: string
+          subject_id: number
+          teacher_id: string
+        }
+        Insert: {
+          class_year_id: number
+          created_at?: string
+          id?: string
+          subject_id: number
+          teacher_id: string
+        }
+        Update: {
+          class_year_id?: number
+          created_at?: string
+          id?: string
+          subject_id?: number
+          teacher_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "teacher_assignments_class_year_id_fkey"
+            columns: ["class_year_id"]
+            isOneToOne: false
+            referencedRelation: "class_years"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "teacher_assignments_subject_id_fkey"
+            columns: ["subject_id"]
+            isOneToOne: false
+            referencedRelation: "subjects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       term_configurations: {
         Row: {
           academic_year: number
@@ -1891,6 +2098,7 @@ export type Database = {
           can_access_all_campuses: boolean
           can_manage_lesson_plans: boolean | null
           created_at: string
+          departments: string[]
           email: string
           full_name: string | null
           id: string
@@ -1905,6 +2113,7 @@ export type Database = {
           can_access_all_campuses?: boolean
           can_manage_lesson_plans?: boolean | null
           created_at?: string
+          departments?: string[]
           email: string
           full_name?: string | null
           id?: string
@@ -1919,6 +2128,7 @@ export type Database = {
           can_access_all_campuses?: boolean
           can_manage_lesson_plans?: boolean | null
           created_at?: string
+          departments?: string[]
           email?: string
           full_name?: string | null
           id?: string
@@ -1948,7 +2158,9 @@ export type Database = {
         Returns: number
       }
       can_user_access_all_campuses: { Args: never; Returns: boolean }
+      can_write_grades: { Args: { p_period_id: string }; Returns: boolean }
       check_phone_exists: { Args: { phone_number: string }; Returns: Json }
+      current_user_role: { Args: never; Returns: string }
       get_or_create_admission_entry: {
         Args: { target_campus_id?: string; target_month_start: string }
         Returns: string
@@ -1976,11 +2188,16 @@ export type Database = {
       get_user_campus_id: { Args: never; Returns: string }
       has_role: { Args: { _role: string; _user_id: string }; Returns: boolean }
       is_admin: { Args: never; Returns: boolean }
+      is_admin_like: { Args: never; Returns: boolean }
       is_parent: { Args: never; Returns: boolean }
       is_teacher: { Args: never; Returns: boolean }
       is_ticket_owner: {
         Args: { ticket_parent_email: string }
         Returns: boolean
+      }
+      set_academic_period_status: {
+        Args: { p_period_id: string; p_status: string }
+        Returns: undefined
       }
     }
     Enums: {

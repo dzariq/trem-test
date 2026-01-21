@@ -208,11 +208,15 @@ export function useClassAnalysisData(
               if (!Number.isFinite(score)) {
                 return null;
               }
+              // academic_periods can be an object or array depending on query, handle both
+              const periodsData = row.academic_periods as unknown;
+              const periodObj = Array.isArray(periodsData) ? periodsData[0] : periodsData;
+              const academicYear = periodObj && typeof periodObj === 'object' ? (periodObj as Record<string, unknown>).academic_year : null;
               return {
                 student_id: row.student_id,
                 subject_id: row.subject_id,
                 exam_period_id: row.academic_period_id,
-                academic_year: row.academic_periods?.academic_year ?? null,
+                academic_year: typeof academicYear === 'number' ? academicYear : null,
                 score_percent: score as number,
               };
             })
