@@ -9,7 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Save, TrendingUp, TrendingDown, Minus, ChevronDown, ChevronUp, Users, Target, Award, AlertTriangle, BookOpen, BarChart3, FileText, CheckCircle, XCircle, Lightbulb, Copy, Printer, ArrowRight, ArrowUpRight, ArrowDownRight, Scale, Download, FileSpreadsheet, Check, Calendar, UserCheck, Plus, X, ArrowUp, ArrowDown, Search, Loader2 } from "lucide-react";
+import { Save, TrendingUp, TrendingDown, Minus, ChevronDown, ChevronUp, Users, Target, Award, AlertTriangle, BookOpen, BarChart3, FileText, CheckCircle, XCircle, Lightbulb, Copy, Printer, ArrowRight, ArrowUpRight, ArrowDownRight, Scale, Download, FileSpreadsheet, Check, Calendar, UserCheck, Plus, X, ArrowUp, ArrowDown, Search, Loader2, Lock, Info } from "lucide-react";
 import { useGradeEntry } from "@/hooks/useGradeEntry";
 import { useClassAnalysis } from "@/hooks/useClassAnalysis";
 import { useAcademicFilters } from "@/hooks/useAcademicFilters";
@@ -1518,6 +1518,27 @@ export default function TeacherAcademicPage() {
               </Select>
             </div>
 
+            {/* Grading Closed Banner */}
+            {gradeEntry.selectedPeriod && !gradeEntry.selectedPeriod.is_open_for_grading && (
+              <Card className="border-amber-300 bg-amber-50 dark:bg-amber-950/30">
+                <CardContent className="p-3">
+                  <div className="flex items-start gap-3">
+                    <div className="w-8 h-8 rounded-full bg-amber-100 dark:bg-amber-900/50 flex items-center justify-center flex-shrink-0">
+                      <Lock className="h-4 w-4 text-amber-600" />
+                    </div>
+                    <div className="flex-1">
+                      <p className="text-sm font-semibold text-amber-700 dark:text-amber-400">
+                        Grading Closed
+                      </p>
+                      <p className="text-xs text-amber-600 dark:text-amber-500 mt-0.5">
+                        This exam period is closed for grading. Contact an administrator to reopen it.
+                      </p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
             {/* Error display */}
             {gradeEntry.error && (
               <Card className="border-red-200 bg-red-50 dark:bg-red-950/30">
@@ -1812,32 +1833,37 @@ export default function TeacherAcademicPage() {
                             Applies to all
                           </Badge>
                         </div>
-                        <Textarea 
-                          placeholder="Enter a study recommendation for all students in this subject..." 
-                          value={gradeEntry.classRecommendation} 
-                          maxLength={300}
-                          onChange={e => {
-                            const value = e.target.value;
-                            if (value.length > 300) return;
-                            gradeEntry.setClassRecommendation(value);
-                          }} 
-                          className="min-h-[60px] text-sm resize-none border-amber-200 bg-background" 
-                        />
-                        <div className="flex items-center justify-between mt-1">
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="text-xs h-6 px-2 text-amber-600"
-                            onClick={() => {
-                              gradeEntry.applyClassRecommendationToAll();
-                              toast({
-                                title: "Applied to All",
-                                description: "Class recommendation applied to all students.",
-                              });
-                            }}
-                          >
-                            Apply to all students
-                          </Button>
+                    <Textarea 
+                      placeholder="Enter a study recommendation for all students in this subject..." 
+                      value={gradeEntry.classRecommendation} 
+                      maxLength={300}
+                      onChange={e => {
+                        const value = e.target.value;
+                        if (value.length > 300) return;
+                        gradeEntry.setClassRecommendation(value);
+                      }} 
+                      disabled={!gradeEntry.selectedPeriod?.is_open_for_grading}
+                      className={cn(
+                        "min-h-[60px] text-sm resize-none border-amber-200 bg-background",
+                        !gradeEntry.selectedPeriod?.is_open_for_grading && "opacity-60 cursor-not-allowed"
+                      )}
+                    />
+                    <div className="flex items-center justify-between mt-1">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="text-xs h-6 px-2 text-amber-600"
+                        disabled={!gradeEntry.selectedPeriod?.is_open_for_grading}
+                        onClick={() => {
+                          gradeEntry.applyClassRecommendationToAll();
+                          toast({
+                            title: "Applied to All",
+                            description: "Class recommendation applied to all students.",
+                          });
+                        }}
+                      >
+                        Apply to all students
+                      </Button>
                           <p className="text-[10px] text-muted-foreground">
                             {gradeEntry.classRecommendation.length}/300
                           </p>
@@ -1920,7 +1946,11 @@ export default function TeacherAcademicPage() {
                                               gradeEntry.updateGradeInput(student.id, cat.key as "attitude" | "homework" | "quiz" | "exam", val);
                                             }
                                           }} 
-                                          className="text-center h-11 text-base font-medium" 
+                                          disabled={!gradeEntry.selectedPeriod?.is_open_for_grading}
+                                          className={cn(
+                                            "text-center h-11 text-base font-medium",
+                                            !gradeEntry.selectedPeriod?.is_open_for_grading && "opacity-60 cursor-not-allowed"
+                                          )}
                                         />
                                       </div>
                                     ))}
@@ -1953,7 +1983,11 @@ export default function TeacherAcademicPage() {
                                             gradeEntry.updateGradeInput(student.id, "reportComment", e.target.value);
                                           }
                                         }} 
-                                        className="min-h-[70px] text-sm resize-none border-emerald-200 bg-emerald-50/50 dark:bg-emerald-950/20" 
+                                        disabled={!gradeEntry.selectedPeriod?.is_open_for_grading}
+                                        className={cn(
+                                          "min-h-[70px] text-sm resize-none border-emerald-200 bg-emerald-50/50 dark:bg-emerald-950/20",
+                                          !gradeEntry.selectedPeriod?.is_open_for_grading && "opacity-60 cursor-not-allowed"
+                                        )}
                                       />
                                       <p className="text-[10px] text-muted-foreground text-right mt-1">
                                         {(input.reportComment || "").length}/500
@@ -1974,7 +2008,11 @@ export default function TeacherAcademicPage() {
                                             gradeEntry.updateGradeInput(student.id, "studyRecommendation", e.target.value);
                                           }
                                         }} 
-                                        className="min-h-[70px] text-sm resize-none border-amber-200 bg-amber-50/50 dark:bg-amber-950/20" 
+                                        disabled={!gradeEntry.selectedPeriod?.is_open_for_grading}
+                                        className={cn(
+                                          "min-h-[70px] text-sm resize-none border-amber-200 bg-amber-50/50 dark:bg-amber-950/20",
+                                          !gradeEntry.selectedPeriod?.is_open_for_grading && "opacity-60 cursor-not-allowed"
+                                        )}
                                       />
                                       <p className="text-[10px] text-muted-foreground text-right mt-1">
                                         {(input.studyRecommendation || "").length}/300
@@ -1990,7 +2028,11 @@ export default function TeacherAcademicPage() {
                                         placeholder="Internal notes - not visible to parents..." 
                                         value={input.comment} 
                                         onChange={e => gradeEntry.updateGradeInput(student.id, "comment", e.target.value)} 
-                                        className="min-h-[70px] text-sm resize-none border-red-200 bg-red-50/50 dark:bg-red-950/20" 
+                                        disabled={!gradeEntry.selectedPeriod?.is_open_for_grading}
+                                        className={cn(
+                                          "min-h-[70px] text-sm resize-none border-red-200 bg-red-50/50 dark:bg-red-950/20",
+                                          !gradeEntry.selectedPeriod?.is_open_for_grading && "opacity-60 cursor-not-allowed"
+                                        )}
                                       />
                                     </div>
                                   </div>
@@ -2003,46 +2045,78 @@ export default function TeacherAcademicPage() {
                     </div>
 
                     {/* Floating Save Button */}
-                    <Button 
-                      className="fixed z-50 shadow-xl bottom-24 right-4 h-14 w-14 rounded-full p-0"
-                      disabled={gradeEntry.saving || !gradeEntry.selectedPeriod?.is_open_for_grading}
-                      onClick={async () => {
-                        // Check if the period is closed and show a specific message
-                        if (!gradeEntry.selectedPeriod?.is_open_for_grading) {
-                          toast({
-                            title: "Grading Closed",
-                            description: `Grading is closed for ${gradeEntry.selectedPeriod?.name || 'this period'}. Contact admin to open grading.`,
-                            variant: "destructive"
-                          });
-                          return;
-                        }
-                        
-                        const result = await gradeEntry.save();
-                        if (result.success) {
-                          toast({
-                            title: "Grades Saved",
-                            description: `${gradeEntry.selectedSubject?.name} grades for ${gradeEntry.selectedClass} have been saved to database.`,
-                          });
-                        } else {
-                          // Check if it's an RLS/closed period error
-                          const isClosedPeriodError = result.error?.includes('row-level security') || 
-                                                       result.error?.includes('academic_periods');
-                          toast({
-                            title: isClosedPeriodError ? "Grading Closed" : "Save Failed",
-                            description: isClosedPeriodError 
-                              ? `Grading is closed for ${gradeEntry.selectedPeriod?.name || 'this period'}. Contact admin to open grading.`
-                              : (result.error || "Failed to save grades. Please try again."),
-                            variant: "destructive"
-                          });
-                        }
-                      }}
-                    >
-                      {gradeEntry.saving ? (
-                        <Loader2 className="h-6 w-6 animate-spin" />
-                      ) : (
-                        <Save className="h-6 w-6" />
-                      )}
-                    </Button>
+                    {(() => {
+                      const isGradingClosed = !gradeEntry.selectedPeriod?.is_open_for_grading;
+                      const saveButton = (
+                        <Button 
+                          className={cn(
+                            "fixed z-50 shadow-xl bottom-24 right-4",
+                            isGradingClosed 
+                              ? "h-12 px-4 rounded-full gap-2" 
+                              : "h-14 w-14 rounded-full p-0"
+                          )}
+                          variant={isGradingClosed ? "secondary" : "default"}
+                          disabled={gradeEntry.saving || isGradingClosed}
+                          onClick={async () => {
+                            if (isGradingClosed) {
+                              return;
+                            }
+                            
+                            const result = await gradeEntry.save();
+                            if (result.success) {
+                              toast({
+                                title: "Grades Saved",
+                                description: `${gradeEntry.selectedSubject?.name} grades for ${gradeEntry.selectedClass} have been saved to database.`,
+                              });
+                            } else {
+                              const isClosedPeriodError = result.error?.includes('row-level security') || 
+                                                           result.error?.includes('academic_periods');
+                              toast({
+                                title: isClosedPeriodError ? "Grading Closed" : "Save Failed",
+                                description: isClosedPeriodError 
+                                  ? `Grading is closed for ${gradeEntry.selectedPeriod?.name || 'this period'}. Contact admin to open grading.`
+                                  : (result.error || "Failed to save grades. Please try again."),
+                                variant: "destructive"
+                              });
+                            }
+                          }}
+                        >
+                          {gradeEntry.saving ? (
+                            <Loader2 className="h-6 w-6 animate-spin" />
+                          ) : isGradingClosed ? (
+                            <>
+                              <Lock className="h-4 w-4" />
+                              <span className="text-sm font-medium">Grading Closed</span>
+                            </>
+                          ) : (
+                            <Save className="h-6 w-6" />
+                          )}
+                        </Button>
+                      );
+
+                      return isGradingClosed ? (
+                        <Popover>
+                          <PopoverTrigger asChild>
+                            {saveButton}
+                          </PopoverTrigger>
+                          <PopoverContent 
+                            side="top" 
+                            align="end" 
+                            className="w-64 p-3 bg-card border shadow-lg"
+                          >
+                            <div className="flex items-start gap-2">
+                              <Info className="h-4 w-4 text-amber-500 mt-0.5 flex-shrink-0" />
+                              <div>
+                                <p className="text-sm font-medium text-foreground">Grading Period Closed</p>
+                                <p className="text-xs text-muted-foreground mt-1">
+                                  {gradeEntry.selectedPeriod?.name} is currently closed for grading. Contact an administrator to reopen it.
+                                </p>
+                              </div>
+                            </div>
+                          </PopoverContent>
+                        </Popover>
+                      ) : saveButton;
+                    })()}
                   </>
                 )}
               </>
