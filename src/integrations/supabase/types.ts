@@ -2236,6 +2236,10 @@ export type Database = {
       is_admin_like: { Args: never; Returns: boolean }
       is_parent: { Args: never; Returns: boolean }
       is_teacher: { Args: never; Returns: boolean }
+      is_teacher_assigned_to_cca: {
+        Args: { p_activity_id: string }
+        Returns: boolean
+      }
       is_ticket_owner: {
         Args: { ticket_parent_email: string }
         Returns: boolean
