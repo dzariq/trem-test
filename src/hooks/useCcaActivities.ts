@@ -38,6 +38,7 @@ export interface CcaActivity {
   maxParticipants: number | null;
   coordinatorName: string | null;
   coordinatorEmail: string | null;
+  allowFreeText: boolean;
   picTeachers: CcaTeacher[];
   sessions: CcaSession[];
 }
@@ -127,7 +128,8 @@ export function useCcaActivities(options: UseCcaActivitiesOptions = {}) {
           is_active,
           max_participants,
           coordinator_name,
-          coordinator_email
+          coordinator_email,
+          allow_free_text
         `);
 
       if (!includeInactive) {
@@ -245,6 +247,7 @@ export function useCcaActivities(options: UseCcaActivitiesOptions = {}) {
         maxParticipants: a.max_participants,
         coordinatorName: a.coordinator_name,
         coordinatorEmail: a.coordinator_email,
+        allowFreeText: a.allow_free_text ?? false,
         picTeachers: picTeachersMap.get(a.id) || [],
         sessions: sessionsMap.get(a.id) || [],
       }));

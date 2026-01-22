@@ -172,10 +172,10 @@ export function ManageSessionsDialog({
                                 {formatTime(session.startTime, session.endTime)}
                               </span>
                             )}
-                            {session.location && (
+                            {session.locationName && (
                               <span className="flex items-center gap-1">
                                 <MapPin className="h-3 w-3" />
-                                {session.location}
+                                {session.locationName}
                               </span>
                             )}
                           </div>
@@ -285,6 +285,7 @@ export function ManageSessionsDialog({
         session={editingSession}
         saving={saving}
         onSave={handleSave}
+        allowFreeText={activity.allowFreeText}
       />
 
       {/* Delete Confirmation */}

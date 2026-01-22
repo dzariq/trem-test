@@ -6,6 +6,7 @@ export interface CcaSessionFormData {
   sessionDate: string;
   startTime: string | null;
   endTime: string | null;
+  locationId: string | null;
   location: string | null;
   customTitle: string | null;
   description: string | null;
@@ -18,7 +19,9 @@ export interface CcaSession {
   sessionDate: string;
   startTime: string | null;
   endTime: string | null;
+  locationId: string | null;
   location: string | null;
+  locationName: string | null;
   isCancelled: boolean;
   description: string | null;
   customTitle: string | null;
@@ -50,24 +53,28 @@ export function useCcaSessions({ activityId }: UseCcaSessionsOptions) {
           session_date,
           start_time,
           end_time,
+          location_id,
           location,
           is_cancelled,
           description,
           custom_title,
-          requirements
+          requirements,
+          school_locations(name)
         `)
         .eq("activity_id", activityId)
         .order("session_date", { ascending: true });
 
       if (fetchError) throw fetchError;
 
-      const mapped: CcaSession[] = (data || []).map((s) => ({
+      const mapped: CcaSession[] = (data || []).map((s: any) => ({
         id: s.id,
         activityId: s.activity_id,
         sessionDate: s.session_date,
         startTime: s.start_time,
         endTime: s.end_time,
+        locationId: s.location_id,
         location: s.location,
+        locationName: s.school_locations?.name || s.location || null,
         isCancelled: s.is_cancelled,
         description: s.description,
         customTitle: s.custom_title,
@@ -94,6 +101,7 @@ export function useCcaSessions({ activityId }: UseCcaSessionsOptions) {
             session_date: formData.sessionDate,
             start_time: formData.startTime || null,
             end_time: formData.endTime || null,
+            location_id: formData.locationId || null,
             location: formData.location || null,
             custom_title: formData.customTitle || null,
             description: formData.description || null,
@@ -149,6 +157,7 @@ export function useCcaSessions({ activityId }: UseCcaSessionsOptions) {
             session_date: formData.sessionDate,
             start_time: formData.startTime || null,
             end_time: formData.endTime || null,
+            location_id: formData.locationId || null,
             location: formData.location || null,
             custom_title: formData.customTitle || null,
             description: formData.description || null,
