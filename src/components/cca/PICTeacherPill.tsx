@@ -45,6 +45,7 @@ interface PICTeachersListProps {
     fullName: string;
     departments: string[];
     isPrimary?: boolean;
+    role?: string;
   }>;
   fallbackCoordinator?: string | null;
   className?: string;
@@ -55,10 +56,17 @@ export function PICTeachersList({
   fallbackCoordinator,
   className,
 }: PICTeachersListProps) {
-  // Sort: primary teachers first, then alphabetically
+  // Sort: isPrimary desc, then role='PIC' first, then alphabetically by name
   const sortedTeachers = [...teachers].sort((a, b) => {
+    // Primary first
     if (a.isPrimary && !b.isPrimary) return -1;
     if (!a.isPrimary && b.isPrimary) return 1;
+    // Then role 'PIC' before other roles
+    const aIsPIC = (a.role || "").toLowerCase() === "pic";
+    const bIsPIC = (b.role || "").toLowerCase() === "pic";
+    if (aIsPIC && !bIsPIC) return -1;
+    if (!aIsPIC && bIsPIC) return 1;
+    // Then alphabetically by name
     return a.fullName.localeCompare(b.fullName);
   });
 
