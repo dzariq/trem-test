@@ -2211,30 +2211,6 @@ export default function TeacherAcademicPage() {
                         </SelectContent>
                       </Select>
 
-                      <Select
-                        value={
-                          classAnalysis.selectedAcademicYear
-                            ? String(classAnalysis.selectedAcademicYear)
-                            : ""
-                        }
-                        onValueChange={(v) =>
-                          classAnalysis.setSelectedAcademicYear(
-                            v ? Number(v) : null
-                          )
-                        }
-                      >
-                        <SelectTrigger className="w-[110px] h-9">
-                          <SelectValue placeholder="Year" />
-                        </SelectTrigger>
-                        <SelectContent className="bg-card">
-                          {classAnalysis.availableAcademicYears.map((year) => (
-                            <SelectItem key={year} value={String(year)}>
-                              {year}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-
                       {/* Academic Period Dropdown */}
                       <Select
                         value={classAnalysis.selectedPeriodId || ""}
@@ -2251,45 +2227,6 @@ export default function TeacherAcademicPage() {
                           ))}
                         </SelectContent>
                       </Select>
-
-                      {/* Compare Period for Rising/Falling */}
-                      <Select 
-                        value={classAnalysis.comparePeriodId || ""} 
-                        onValueChange={(v) => classAnalysis.setComparePeriodId(v)}
-                      >
-                        <SelectTrigger className="flex-1 h-9">
-                          <SelectValue placeholder="Compare To" />
-                        </SelectTrigger>
-                        <SelectContent className="bg-card">
-                          {classAnalysis.academicPeriodsForYear.filter(p => p.id !== classAnalysis.selectedPeriodId).map((period) => (
-                            <SelectItem key={period.id} value={period.id}>{period.name}</SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-
-                    {/* Selected filters badge */}
-                    <div className="flex flex-wrap items-center gap-1 text-xs">
-                      {classAnalysis.selectedClass && (
-                        <Badge variant="secondary" className="text-[10px] font-medium">
-                          {classAnalysis.selectedClass}
-                        </Badge>
-                      )}
-                        {classAnalysis.selectedAcademicYear && (
-                          <Badge variant="outline" className="text-[10px] font-normal">
-                            {classAnalysis.selectedAcademicYear}
-                          </Badge>
-                        )}
-                        {classAnalysis.selectedPeriodId && (
-                          <Badge variant="outline" className="text-[10px] font-normal">
-                            {classAnalysis.academicPeriodsForYear.find(p => p.id === classAnalysis.selectedPeriodId)?.name}
-                          </Badge>
-                        )}
-                        {classAnalysis.comparePeriodId && (
-                          <Badge variant="outline" className="text-[10px] font-normal">
-                            vs {classAnalysis.academicPeriodsForYear.find(p => p.id === classAnalysis.comparePeriodId)?.name}
-                          </Badge>
-                        )}
                     </div>
 
                     {/* Empty State */}
