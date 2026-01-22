@@ -150,7 +150,7 @@ export function useCcaActivities(options: UseCcaActivitiesOptions = {}) {
 
       const rawActivities = activitiesData || [];
 
-      // Fetch all PIC teachers with user profile info
+      // Fetch all PIC teachers
       const activityIds = rawActivities.map((a) => a.id);
       let picTeachersMap = new Map<string, CcaTeacher[]>();
 
@@ -162,11 +162,7 @@ export function useCcaActivities(options: UseCcaActivitiesOptions = {}) {
             activity_id,
             teacher_user_id,
             role,
-            is_primary,
-            user_profiles!cca_activity_teachers_teacher_user_id_fkey (
-              full_name,
-              departments
-            )
+            is_primary
           `)
           .in("activity_id", activityIds);
 
@@ -174,14 +170,38 @@ export function useCcaActivities(options: UseCcaActivitiesOptions = {}) {
           console.error("[useCcaActivities] teachers query failed:", teachersError);
           // Non-fatal: continue without teachers
         } else if (teachersData) {
+          // Collect unique teacher user IDs
+          const teacherUserIds = [
+            ...new Set(teachersData.map((t: any) => t.teacher_user_id).filter(Boolean)),
+          ];
+
+          // Fetch teacher profiles from the public view (accessible to all authenticated users)
+          let teacherProfilesMap: Record<string, { full_name: string; departments: string[] }> = {};
+          if (teacherUserIds.length > 0) {
+            const { data: profilesData, error: profilesError } = await supabase
+              .from("v_teacher_public")
+              .select("user_id, full_name, departments")
+              .in("user_id", teacherUserIds);
+
+            if (!profilesError && profilesData) {
+              profilesData.forEach((p: any) => {
+                teacherProfilesMap[p.user_id] = {
+                  full_name: p.full_name || "Unknown Teacher",
+                  departments: Array.isArray(p.departments) ? p.departments : [],
+                };
+              });
+            }
+          }
+
           teachersData.forEach((t: any) => {
+            const profile = teacherProfilesMap[t.teacher_user_id];
             const teacher: CcaTeacher = {
               id: t.id,
               teacherUserId: t.teacher_user_id,
               role: t.role || "pic",
               isPrimary: t.is_primary || false,
-              fullName: t.user_profiles?.full_name || "Unknown Teacher",
-              departments: normalizeDepartments(t.user_profiles?.departments),
+              fullName: profile?.full_name || "Unknown Teacher",
+              departments: normalizeDepartments(profile?.departments),
             };
             const existing = picTeachersMap.get(t.activity_id) || [];
             existing.push(teacher);

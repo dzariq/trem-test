@@ -32,11 +32,11 @@ export function CcaTypeTabs({ selectedTypeId, onSelectType }: CcaTypeTabsProps) 
   }
 
   return (
-    <div className="flex gap-2 overflow-x-auto pb-2">
+    <div className="flex flex-wrap gap-2 pb-2">
       {/* Always include "All" tab */}
       <Badge
         variant={selectedTypeId === "all" ? "default" : "outline"}
-        className="cursor-pointer whitespace-nowrap"
+        className="cursor-pointer"
         onClick={() => onSelectType("all")}
       >
         All
@@ -47,7 +47,7 @@ export function CcaTypeTabs({ selectedTypeId, onSelectType }: CcaTypeTabsProps) 
         <Badge
           key={type.id}
           variant={selectedTypeId === type.id ? "default" : "outline"}
-          className="cursor-pointer whitespace-nowrap"
+          className="cursor-pointer"
           onClick={() => onSelectType(type.id)}
         >
           {type.name}
