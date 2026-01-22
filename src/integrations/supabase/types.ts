@@ -2261,6 +2261,14 @@ export type Database = {
             }
             Returns: string
           }
+      get_teacher_public_info: {
+        Args: { p_teacher_user_id: string }
+        Returns: {
+          departments: string[]
+          full_name: string
+          user_id: string
+        }[]
+      }
       get_user_campus_id: { Args: never; Returns: string }
       has_role: { Args: { _role: string; _user_id: string }; Returns: boolean }
       is_admin: { Args: never; Returns: boolean }
