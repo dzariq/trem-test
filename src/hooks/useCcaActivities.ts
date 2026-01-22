@@ -175,22 +175,24 @@ export function useCcaActivities(options: UseCcaActivitiesOptions = {}) {
             ...new Set(teachersData.map((t: any) => t.teacher_user_id).filter(Boolean)),
           ];
 
-          // Fetch teacher profiles from the public view (accessible to all authenticated users)
+          // Fetch teacher profiles using security definer function (accessible to all authenticated users)
           let teacherProfilesMap: Record<string, { full_name: string; departments: string[] }> = {};
           if (teacherUserIds.length > 0) {
-            const { data: profilesData, error: profilesError } = await supabase
-              .from("v_teacher_public")
-              .select("user_id, full_name, departments")
-              .in("user_id", teacherUserIds);
+            // Use Promise.all to fetch all teacher profiles in parallel via RPC
+            const profilePromises = teacherUserIds.map((userId) =>
+              supabase.rpc("get_teacher_public_info", { p_teacher_user_id: userId })
+            );
+            const results = await Promise.all(profilePromises);
 
-            if (!profilesError && profilesData) {
-              profilesData.forEach((p: any) => {
+            results.forEach((result) => {
+              if (result.data && result.data.length > 0) {
+                const p = result.data[0];
                 teacherProfilesMap[p.user_id] = {
                   full_name: p.full_name || "Unknown Teacher",
                   departments: Array.isArray(p.departments) ? p.departments : [],
                 };
-              });
-            }
+              }
+            });
           }
 
           teachersData.forEach((t: any) => {
