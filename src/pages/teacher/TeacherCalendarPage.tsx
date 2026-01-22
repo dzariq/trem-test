@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { TeacherAppLayout } from "@/components/layout/TeacherAppLayout";
 import { AppHeader } from "@/components/layout/AppHeader";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -6,8 +6,8 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { MapPin, Clock, User, ChevronDown, CalendarDays, ClipboardList, FileText, Loader2 } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { MapPin, Clock, User, ChevronDown, CalendarDays, ClipboardList, FileText, Loader2, Settings } from "lucide-react";
 import schoolLogo from "@/assets/school-badge.png";
 
 import { format } from "date-fns";
@@ -31,7 +31,14 @@ import {
 import { listCalendarEvents, type UpcomingEvent } from "@/data/calendar";
 import { useCcaActivities, type CcaActivity } from "@/hooks/useCcaActivities";
 import { PICTeachersList } from "@/components/cca/PICTeacherPill";
+import { ManageSessionsDialog } from "@/components/cca/ManageSessionsDialog";
 import { useAuth } from "@/contexts/AuthContext";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 export default function TeacherCalendarPage() {
   const { user } = useAuth();
@@ -43,6 +50,7 @@ export default function TeacherCalendarPage() {
   const [selectedTag, setSelectedTag] = useState<CalendarTag | null>(null);
   const [ccaCategoryFilter, setCcaCategoryFilter] = useState("all");
   const [selectedCCA, setSelectedCCA] = useState<CcaActivity | null>(null);
+  const [manageSessionsActivity, setManageSessionsActivity] = useState<CcaActivity | null>(null);
   const [events, setEvents] = useState<UpcomingEvent[]>([]);
 
   // Fetch CCA activities from Supabase (show all for teachers, not just "my" activities)
@@ -56,6 +64,18 @@ export default function TeacherCalendarPage() {
     currentUserId: user?.id,
     includeInactive: false,
   });
+
+  // Helper to check if current user is PIC for an activity
+  const isCurrentTeacherPIC = useMemo(() => {
+    return (activity: CcaActivity): boolean => {
+      if (!user?.id) return false;
+      return activity.picTeachers.some(
+        (t) =>
+          t.teacherUserId === user.id &&
+          (t.isPrimary || (t.role || "").toLowerCase() === "pic")
+      );
+    };
+  }, [user?.id]);
 
   // Filter events for teacher role
   const visibleEvents = filterEventsByRole(events, "teacher");
@@ -436,57 +456,65 @@ export default function TeacherCalendarPage() {
                 </div>
               )}
 
-              {!ccaLoading && !ccaError && filteredCCA.map((activity) => (
-                <Card key={activity.id} className="bg-card border-border shadow-sm">
-                  <CardContent className="p-4">
-                    <div className="flex items-start justify-between mb-3">
-                      <div>
-                        <h3 className="font-semibold text-foreground">{activity.name}</h3>
+              {!ccaLoading && !ccaError && filteredCCA.map((activity) => {
+                const isPIC = isCurrentTeacherPIC(activity);
+                return (
+                  <Card key={activity.id} className="bg-card border-border shadow-sm">
+                    <CardContent className="p-4">
+                      <div className="flex items-start justify-between mb-3">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <h3 className="font-semibold text-foreground">{activity.name}</h3>
+                          {isPIC && (
+                            <Badge variant="default" className="text-xs">
+                              PIC
+                            </Badge>
+                          )}
+                        </div>
                         <Badge className={getCcaCategoryColor(activity.category)} variant="secondary">
                           {activity.category}
                         </Badge>
                       </div>
-                    </div>
-                    
-                    <div className="space-y-2 text-sm text-muted-foreground">
-                      {(activity.meetingDay || activity.meetingTime) && (
-                        <div className="flex items-center gap-2">
-                          <Clock className="h-4 w-4" />
-                          <span>
-                            {activity.meetingDay || "TBD"}
-                            {activity.meetingTime ? `, ${activity.meetingTime}` : ""}
-                          </span>
-                        </div>
-                      )}
-                      {activity.location && (
-                        <div className="flex items-center gap-2">
-                          <MapPin className="h-4 w-4" />
-                          <span>{activity.location}</span>
-                        </div>
-                      )}
-                      {(activity.picTeachers.length > 0 || activity.coordinatorName) && (
-                        <div className="flex items-start gap-2">
-                          <User className="h-4 w-4 mt-0.5" />
-                          <span>
-                            {activity.picTeachers.length > 0
-                              ? activity.picTeachers.map((t) => t.fullName).join(", ")
-                              : activity.coordinatorName}
-                          </span>
-                        </div>
-                      )}
-                    </div>
+                      
+                      <div className="space-y-2 text-sm text-muted-foreground">
+                        {(activity.meetingDay || activity.meetingTime) && (
+                          <div className="flex items-center gap-2">
+                            <Clock className="h-4 w-4" />
+                            <span>
+                              {activity.meetingDay || "TBD"}
+                              {activity.meetingTime ? `, ${activity.meetingTime}` : ""}
+                            </span>
+                          </div>
+                        )}
+                        {activity.location && (
+                          <div className="flex items-center gap-2">
+                            <MapPin className="h-4 w-4" />
+                            <span>{activity.location}</span>
+                          </div>
+                        )}
+                        {(activity.picTeachers.length > 0 || activity.coordinatorName) && (
+                          <div className="flex items-start gap-2">
+                            <User className="h-4 w-4 mt-0.5" />
+                            <span>
+                              {activity.picTeachers.length > 0
+                                ? activity.picTeachers.map((t) => t.fullName).join(", ")
+                                : activity.coordinatorName}
+                            </span>
+                          </div>
+                        )}
+                      </div>
 
-                    <Button 
-                      variant="outline" 
-                      size="sm" 
-                      className="w-full mt-4"
-                      onClick={() => setSelectedCCA(activity)}
-                    >
-                      View Details
-                    </Button>
-                  </CardContent>
-                </Card>
-              ))}
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        className="w-full mt-4"
+                        onClick={() => setSelectedCCA(activity)}
+                      >
+                        View Details
+                      </Button>
+                    </CardContent>
+                  </Card>
+                );
+              })}
             </div>
           </TabsContent>
         </Tabs>
@@ -494,19 +522,24 @@ export default function TeacherCalendarPage() {
 
       {/* CCA Details Dialog */}
       <Dialog open={!!selectedCCA} onOpenChange={(open) => !open && setSelectedCCA(null)}>
-        <DialogContent className="max-w-md max-h-[85vh] overflow-y-auto">
+        <DialogContent className="max-w-md max-h-[85vh] flex flex-col">
           {selectedCCA && (
             <>
-              <DialogHeader>
-                <div className="flex items-center gap-2">
+              <DialogHeader className="flex-shrink-0">
+                <div className="flex items-center gap-2 flex-wrap">
                   <DialogTitle className="text-xl">{selectedCCA.name}</DialogTitle>
+                  {isCurrentTeacherPIC(selectedCCA) && (
+                    <Badge variant="default" className="text-xs">
+                      PIC
+                    </Badge>
+                  )}
                   <Badge className={getCcaCategoryColor(selectedCCA.category)} variant="secondary">
                     {selectedCCA.category}
                   </Badge>
                 </div>
               </DialogHeader>
 
-              <div className="space-y-4 pt-2">
+              <div className="flex-1 overflow-y-auto space-y-4 pt-2">
                 {/* Description */}
                 <p className="text-sm text-muted-foreground">
                   {selectedCCA.publicDescription || "Details to be announced"}
@@ -582,10 +615,55 @@ export default function TeacherCalendarPage() {
                   </div>
                 )}
               </div>
+
+              {/* Dialog Footer with Manage Sessions button */}
+              <DialogFooter className="flex-shrink-0 pt-4 border-t">
+                {isCurrentTeacherPIC(selectedCCA) ? (
+                  <Button
+                    onClick={() => {
+                      setManageSessionsActivity(selectedCCA);
+                      setSelectedCCA(null);
+                    }}
+                    className="w-full"
+                  >
+                    <Settings className="h-4 w-4 mr-2" />
+                    Manage Sessions
+                  </Button>
+                ) : (
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <div className="w-full">
+                          <Button
+                            variant="outline"
+                            className="w-full opacity-50 cursor-not-allowed"
+                            disabled
+                          >
+                            <Settings className="h-4 w-4 mr-2" />
+                            Manage Sessions
+                          </Button>
+                        </div>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>Only PIC teachers can schedule/edit sessions.</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                )}
+              </DialogFooter>
             </>
           )}
         </DialogContent>
       </Dialog>
+
+      {/* Manage Sessions Dialog (PIC only) */}
+      {manageSessionsActivity && (
+        <ManageSessionsDialog
+          open={!!manageSessionsActivity}
+          onOpenChange={(open) => !open && setManageSessionsActivity(null)}
+          activity={manageSessionsActivity}
+        />
+      )}
     </TeacherAppLayout>
   );
 }

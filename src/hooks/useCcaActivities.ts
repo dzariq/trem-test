@@ -141,10 +141,8 @@ export function useCcaActivities(options: UseCcaActivitiesOptions = {}) {
         throw activitiesError;
       }
 
+
       const rawActivities = activitiesData || [];
-      
-      // TEMP DEBUG LOG - remove after verification
-      console.log("[useCcaActivities] fetchedCount:", rawActivities.length);
 
       // Fetch all PIC teachers with user profile info
       const activityIds = rawActivities.map((a) => a.id);
@@ -268,11 +266,9 @@ export function useCcaActivities(options: UseCcaActivitiesOptions = {}) {
         });
       }
 
+
       // Sort by name
       mappedActivities.sort((a, b) => a.name.localeCompare(b.name));
-
-      // TEMP DEBUG LOG - remove after verification
-      console.log("[useCcaActivities] filteredCount:", mappedActivities.length);
 
       setActivities(mappedActivities);
     } catch (err: any) {

@@ -2202,6 +2202,10 @@ export type Database = {
         Args: { target_campus_id?: string; target_month_start: string }
         Returns: number
       }
+      can_manage_cca_sessions: {
+        Args: { p_activity_id: string }
+        Returns: boolean
+      }
       can_user_access_all_campuses: { Args: never; Returns: boolean }
       can_write_grades: { Args: { p_period_id: string }; Returns: boolean }
       check_phone_exists: { Args: { phone_number: string }; Returns: Json }
