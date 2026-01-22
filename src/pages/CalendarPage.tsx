@@ -40,6 +40,7 @@ import { useStudentSelection } from "@/hooks/useStudentSelection";
 import { useCcaActivities, type CcaActivity } from "@/hooks/useCcaActivities";
 import { useStudentCcaEnrollments } from "@/hooks/useStudentCcaEnrollments";
 import { PICTeachersList } from "@/components/cca/PICTeacherPill";
+import { CcaTypeTabs, getCcaTypeColor } from "@/components/cca/CcaTypeTabs";
 import { supabase } from "@/lib/supabase";
 import { useCcaSessionsCalendar, type CcaCalendarSession } from "@/hooks/useCcaSessionsCalendar";
 
@@ -54,7 +55,7 @@ export default function CalendarPage() {
   const [currentMonth, setCurrentMonth] = useState<Date>(new Date());
   const [categoryFilter, setCategoryFilter] = useState<TagCategory | "all">("all");
   const [selectedTag, setSelectedTag] = useState<CalendarTag | null>(null);
-  const [ccaCategoryFilter, setCcaCategoryFilter] = useState("all");
+  const [ccaTypeFilter, setCcaTypeFilter] = useState("all"); // Now uses type_id or "all"
   const [selectedCCA, setSelectedCCA] = useState<CcaActivity | null>(null);
   const [events, setEvents] = useState<UpcomingEvent[]>([]);
   const [studentYearLevel, setStudentYearLevel] = useState<string | null>(null);
@@ -94,7 +95,7 @@ export default function CalendarPage() {
     activities: ccaActivities,
     loading: ccaLoading,
     error: ccaError,
-    filterByCategory,
+    filterByTypeId,
   } = useCcaActivities({
     studentYearLevel: studentYearLevel,
     myActivitiesOnly: false,
@@ -106,7 +107,7 @@ export default function CalendarPage() {
     enrollments: enrolledCcas,
     loading: enrolledLoading,
     error: enrolledError,
-    filterByCategory: filterEnrolledByCategory,
+    filterByTypeId: filterEnrolledByTypeId,
   } = useStudentCcaEnrollments({
     studentId: selectedStudentId,
   });
@@ -130,15 +131,8 @@ export default function CalendarPage() {
     filteredEvents = filterEventsByTag(filteredEvents, selectedTag);
   }
 
-  // Get CCA category color
-  const getCcaCategoryColor = (category?: string | null) => {
-    switch ((category ?? "").toLowerCase()) {
-      case "sports": return "bg-orange-100 text-orange-800 dark:bg-orange-900/50 dark:text-orange-300";
-      case "arts": return "bg-pink-100 text-pink-800 dark:bg-pink-900/50 dark:text-pink-300";
-      case "academic": return "bg-indigo-100 text-indigo-800 dark:bg-indigo-900/50 dark:text-indigo-300";
-      default: return "bg-muted text-muted-foreground";
-    }
-  };
+  // Use centralized color function from CcaTypeTabs
+  const getCcaCategoryColor = getCcaTypeColor;
 
   const toDayString = (date: Date) => {
     const year = date.getFullYear();
@@ -219,15 +213,15 @@ export default function CalendarPage() {
     };
   }, [currentMonth, profile?.role]);
 
-  // Filter CCA activities by category
+  // Filter CCA activities by type
   const filteredCCA = useMemo(() => {
-    return filterByCategory(ccaCategoryFilter);
-  }, [filterByCategory, ccaCategoryFilter]);
+    return filterByTypeId(ccaTypeFilter);
+  }, [filterByTypeId, ccaTypeFilter]);
 
-  // Filter enrolled CCAs by category
+  // Filter enrolled CCAs by type
   const filteredEnrolledCCA = useMemo(() => {
-    return filterEnrolledByCategory(ccaCategoryFilter);
-  }, [filterEnrolledByCategory, ccaCategoryFilter]);
+    return filterEnrolledByTypeId(ccaTypeFilter);
+  }, [filterEnrolledByTypeId, ccaTypeFilter]);
 
   // Categories visible to parents (exclude staff-admin and due-dates)
   const parentVisibleCategories: (TagCategory | "all")[] = [
@@ -552,37 +546,11 @@ export default function CalendarPage() {
           </TabsContent>
 
           <TabsContent value="cca" className="mt-4 space-y-4">
-            {/* Filters */}
-            <div className="flex gap-2 overflow-x-auto pb-2">
-              <Badge 
-                variant={ccaCategoryFilter === "all" ? "default" : "outline"}
-                className="cursor-pointer whitespace-nowrap"
-                onClick={() => setCcaCategoryFilter("all")}
-              >
-                All
-              </Badge>
-              <Badge 
-                variant={ccaCategoryFilter === "sports" ? "default" : "outline"}
-                className="cursor-pointer whitespace-nowrap"
-                onClick={() => setCcaCategoryFilter("sports")}
-              >
-                Sports
-              </Badge>
-              <Badge 
-                variant={ccaCategoryFilter === "arts" ? "default" : "outline"}
-                className="cursor-pointer whitespace-nowrap"
-                onClick={() => setCcaCategoryFilter("arts")}
-              >
-                Arts
-              </Badge>
-              <Badge 
-                variant={ccaCategoryFilter === "academic" ? "default" : "outline"}
-                className="cursor-pointer whitespace-nowrap"
-                onClick={() => setCcaCategoryFilter("academic")}
-              >
-                Academic
-              </Badge>
-            </div>
+            {/* Dynamic Type Tabs from Backend */}
+            <CcaTypeTabs
+              selectedTypeId={ccaTypeFilter}
+              onSelectType={setCcaTypeFilter}
+            />
 
             {/* My CCAs (Enrolled) Section */}
             <div className="space-y-3">

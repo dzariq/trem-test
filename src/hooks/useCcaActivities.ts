@@ -30,6 +30,8 @@ export interface CcaActivity {
   publicDescription: string | null;
   internalNotes: string | null;
   category: string;
+  typeId: string | null;
+  typeName: string | null;
   yearLevels: string[];
   meetingDay: string | null;
   meetingTime: string | null;
@@ -121,6 +123,8 @@ export function useCcaActivities(options: UseCcaActivitiesOptions = {}) {
           public_description,
           internal_notes,
           category,
+          type_id,
+          cca_activity_types(id, name),
           year_levels,
           meeting_day,
           meeting_time,
@@ -239,6 +243,8 @@ export function useCcaActivities(options: UseCcaActivitiesOptions = {}) {
         publicDescription: a.public_description,
         internalNotes: a.internal_notes,
         category: a.category || "Other",
+        typeId: a.type_id || null,
+        typeName: a.cca_activity_types?.name || null,
         yearLevels: normalizeYearLevels(a.year_levels),
         meetingDay: a.meeting_day,
         meetingTime: a.meeting_time,
@@ -287,13 +293,22 @@ export function useCcaActivities(options: UseCcaActivitiesOptions = {}) {
     fetchActivities();
   }, [fetchActivities]);
 
-  // Filter by category
+  // Filter by category (legacy) or type ID
   const filterByCategory = useCallback(
     (category: string) => {
       if (category === "all") return activities;
       return activities.filter(
         (a) => a.category.toLowerCase() === category.toLowerCase()
       );
+    },
+    [activities]
+  );
+
+  // Filter by type ID (from cca_activity_types)
+  const filterByTypeId = useCallback(
+    (typeId: string) => {
+      if (typeId === "all") return activities;
+      return activities.filter((a) => a.typeId === typeId);
     },
     [activities]
   );
@@ -310,6 +325,7 @@ export function useCcaActivities(options: UseCcaActivitiesOptions = {}) {
     error,
     refetch: fetchActivities,
     filterByCategory,
+    filterByTypeId,
     categories,
   };
 }
