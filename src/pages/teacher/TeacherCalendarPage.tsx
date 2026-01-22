@@ -30,6 +30,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { listCalendarEvents, type UpcomingEvent } from "@/data/calendar";
 import { useCcaActivities, type CcaActivity } from "@/hooks/useCcaActivities";
+import { useCcaSessionsCalendar, type CcaCalendarSession } from "@/hooks/useCcaSessionsCalendar";
 import { PICTeachersList } from "@/components/cca/PICTeacherPill";
 import { ManageSessionsDialog } from "@/components/cca/ManageSessionsDialog";
 import { useAuth } from "@/contexts/AuthContext";
@@ -52,6 +53,16 @@ export default function TeacherCalendarPage() {
   const [selectedCCA, setSelectedCCA] = useState<CcaActivity | null>(null);
   const [manageSessionsActivity, setManageSessionsActivity] = useState<CcaActivity | null>(null);
   const [events, setEvents] = useState<UpcomingEvent[]>([]);
+
+  // Fetch CCA sessions for calendar display
+  const {
+    sessions: ccaSessions,
+    loading: ccaSessionsLoading,
+    refetch: refetchCcaSessions,
+  } = useCcaSessionsCalendar({
+    year: currentMonth.getFullYear(),
+    month: currentMonth.getMonth() + 1,
+  });
 
   // Fetch CCA activities from Supabase (show all for teachers, not just "my" activities)
   const {
@@ -108,6 +119,19 @@ export default function TeacherCalendarPage() {
     selectedDay >= event.startDay && selectedDay <= event.endDay
   );
 
+  // CCA sessions on selected date
+  const ccaSessionsOnSelectedDate = ccaSessions.filter(
+    (session) => session.sessionDate === selectedDay
+  );
+
+  // Format time display for sessions
+  const formatSessionTime = (startTime: string | null, endTime: string | null) => {
+    if (!startTime && !endTime) return "All Day";
+    const start = startTime || "--:--";
+    const end = endTime || "--:--";
+    return `${start} - ${end}`;
+  };
+
   const getCcaCategoryColor = (category: string) => {
     switch (category.toLowerCase()) {
       case "sports": return "bg-orange-100 text-orange-800 dark:bg-orange-900/50 dark:text-orange-300";
@@ -131,6 +155,13 @@ export default function TeacherCalendarPage() {
   filteredEvents.forEach((event) => {
     if (event.startDay && event.endDay) {
       addRangeDays(event.startDay, event.endDay);
+    }
+  });
+
+  // Add CCA session dates to the calendar highlights
+  ccaSessions.forEach((session) => {
+    if (session.sessionDate) {
+      eventDaySet.add(session.sessionDate);
     }
   });
 
@@ -315,37 +346,70 @@ export default function TeacherCalendarPage() {
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
-                {eventsOnSelectedDate.length > 0 ? (
-                  eventsOnSelectedDate.map((event) => (
-                    <div 
-                      key={event.id}
-                      className="p-3 rounded-lg bg-accent/50 border border-border/50"
-                    >
-                      <div className="flex items-start justify-between mb-2">
-                        <h3 className="font-medium text-foreground">{event.title}</h3>
-                      </div>
-                      <div className="flex flex-wrap gap-1 mb-2">
-                        {event.tags.map((tag) => (
-                          <Badge key={tag} className={`text-xs ${getTagColor(tag)}`}>
-                            {getTagDisplayName(tag)}
-                          </Badge>
-                        ))}
-                      </div>
-                      <div className="flex flex-wrap gap-3 text-sm text-muted-foreground">
-                        <span className="flex items-center gap-1">
-                          <Clock className="h-3 w-3" />
-                          {event.time}
-                        </span>
-                        {event.location && (
-                          <span className="flex items-center gap-1">
-                            <MapPin className="h-3 w-3" />
-                            {event.location}
-                          </span>
-                        )}
-                      </div>
+                {/* CCA Sessions for this date */}
+                {ccaSessionsOnSelectedDate.map((session) => (
+                  <div 
+                    key={session.id}
+                    className="p-3 rounded-lg bg-primary/5 border border-primary/20"
+                  >
+                    <div className="flex items-start justify-between mb-2">
+                      <h3 className="font-medium text-foreground">
+                        {session.customTitle || session.activityName}
+                      </h3>
+                      <Badge className={`text-xs ${getCcaCategoryColor(session.category)}`}>
+                        CCA
+                      </Badge>
                     </div>
-                  ))
-                ) : (
+                    {session.customTitle && (
+                      <p className="text-xs text-muted-foreground mb-2">{session.activityName}</p>
+                    )}
+                    <div className="flex flex-wrap gap-3 text-sm text-muted-foreground">
+                      <span className="flex items-center gap-1">
+                        <Clock className="h-3 w-3" />
+                        {formatSessionTime(session.startTime, session.endTime)}
+                      </span>
+                      {session.locationName && (
+                        <span className="flex items-center gap-1">
+                          <MapPin className="h-3 w-3" />
+                          {session.locationName}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                ))}
+
+                {/* Calendar Events for this date */}
+                {eventsOnSelectedDate.map((event) => (
+                  <div 
+                    key={event.id}
+                    className="p-3 rounded-lg bg-accent/50 border border-border/50"
+                  >
+                    <div className="flex items-start justify-between mb-2">
+                      <h3 className="font-medium text-foreground">{event.title}</h3>
+                    </div>
+                    <div className="flex flex-wrap gap-1 mb-2">
+                      {event.tags.map((tag) => (
+                        <Badge key={tag} className={`text-xs ${getTagColor(tag)}`}>
+                          {getTagDisplayName(tag)}
+                        </Badge>
+                      ))}
+                    </div>
+                    <div className="flex flex-wrap gap-3 text-sm text-muted-foreground">
+                      <span className="flex items-center gap-1">
+                        <Clock className="h-3 w-3" />
+                        {event.time}
+                      </span>
+                      {event.location && (
+                        <span className="flex items-center gap-1">
+                          <MapPin className="h-3 w-3" />
+                          {event.location}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                ))}
+
+                {eventsOnSelectedDate.length === 0 && ccaSessionsOnSelectedDate.length === 0 && (
                   <div className="text-center py-8 text-muted-foreground">
                     <p>No events scheduled for this date</p>
                   </div>
@@ -660,7 +724,13 @@ export default function TeacherCalendarPage() {
       {manageSessionsActivity && (
         <ManageSessionsDialog
           open={!!manageSessionsActivity}
-          onOpenChange={(open) => !open && setManageSessionsActivity(null)}
+          onOpenChange={(open) => {
+            if (!open) {
+              setManageSessionsActivity(null);
+              // Refresh calendar sessions after closing
+              refetchCcaSessions();
+            }
+          }}
           activity={manageSessionsActivity}
         />
       )}
