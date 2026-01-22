@@ -147,6 +147,7 @@ export function useNotifications() {
   });
 
   // Seed initial notifications for testing (runs once if empty)
+  // Seeds role-appropriate notifications based on user profile
   const seedNotificationsMutation = useMutation({
     mutationFn: async () => {
       if (!user?.id) return;
@@ -159,8 +160,32 @@ export function useNotifications() {
       
       if (count && count > 0) return; // Already has notifications
       
+      // Get user's role to seed appropriate notifications
+      const { data: profile } = await supabase
+        .from("user_profiles")
+        .select("role")
+        .eq("user_id", user.id)
+        .single();
+
+      const userRole = profile?.role || "parent";
       const now = new Date();
-      const seedData = [
+      
+      // Common notifications for everyone
+      const commonNotifications = [
+        {
+          user_id: user.id,
+          title: "School Holiday Notice",
+          message: "School will be closed on 29th January for Chinese New Year.",
+          type: "announcement",
+          link_to: userRole === "teacher" ? "/teacher" : "/parent",
+          is_read: true,
+          target_audience: "all",
+          created_at: new Date(now.getTime() - 24 * 60 * 60 * 1000).toISOString(),
+        },
+      ];
+      
+      // Teacher-specific notifications
+      const teacherNotifications = userRole === "teacher" ? [
         {
           user_id: user.id,
           title: "Attendance Reminder",
@@ -168,7 +193,8 @@ export function useNotifications() {
           type: "attendance",
           link_to: "/teacher/attendance",
           is_read: false,
-          created_at: new Date(now.getTime() - 30 * 60 * 1000).toISOString(), // 30 mins ago
+          target_audience: "teacher",
+          created_at: new Date(now.getTime() - 30 * 60 * 1000).toISOString(),
         },
         {
           user_id: user.id,
@@ -177,7 +203,8 @@ export function useNotifications() {
           type: "grade",
           link_to: "/teacher/academic",
           is_read: false,
-          created_at: new Date(now.getTime() - 2 * 60 * 60 * 1000).toISOString(), // 2 hours ago
+          target_audience: "teacher",
+          created_at: new Date(now.getTime() - 2 * 60 * 60 * 1000).toISOString(),
         },
         {
           user_id: user.id,
@@ -186,27 +213,46 @@ export function useNotifications() {
           type: "event",
           link_to: "/teacher/calendar",
           is_read: false,
-          created_at: new Date(now.getTime() - 5 * 60 * 60 * 1000).toISOString(), // 5 hours ago
+          target_audience: "teacher",
+          created_at: new Date(now.getTime() - 5 * 60 * 60 * 1000).toISOString(),
+        },
+      ] : [];
+      
+      // Parent-specific notifications
+      const parentNotifications = userRole === "parent" ? [
+        {
+          user_id: user.id,
+          title: "Report Card Available",
+          message: "Mid-Year 2025 report card is now available for viewing.",
+          type: "report_card",
+          link_to: "/parent/academic",
+          is_read: false,
+          target_audience: "parent",
+          created_at: new Date(now.getTime() - 60 * 60 * 1000).toISOString(),
         },
         {
           user_id: user.id,
-          title: "School Holiday Notice",
-          message: "School will be closed on 29th January for Chinese New Year.",
-          type: "announcement",
-          link_to: "/teacher",
-          is_read: true,
-          created_at: new Date(now.getTime() - 24 * 60 * 60 * 1000).toISOString(), // 1 day ago
+          title: "Parent-Teacher Meeting",
+          message: "PTM scheduled for 20th January. Please book your slot.",
+          type: "ptm",
+          link_to: "/parent/calendar",
+          is_read: false,
+          target_audience: "parent",
+          created_at: new Date(now.getTime() - 3 * 60 * 60 * 1000).toISOString(),
         },
         {
           user_id: user.id,
-          title: "New Curriculum Update",
-          message: "Updated Science curriculum materials are now available for download.",
-          type: "academic",
-          link_to: "/teacher/academic",
+          title: "Fee Payment Reminder",
+          message: "Term 2 school fees are due by 31st January.",
+          type: "payment",
+          link_to: "/parent",
           is_read: true,
-          created_at: new Date(now.getTime() - 48 * 60 * 60 * 1000).toISOString(), // 2 days ago
+          target_audience: "parent",
+          created_at: new Date(now.getTime() - 48 * 60 * 60 * 1000).toISOString(),
         },
-      ];
+      ] : [];
+      
+      const seedData = [...commonNotifications, ...teacherNotifications, ...parentNotifications];
       
       const { error } = await supabase
         .from("notifications")
