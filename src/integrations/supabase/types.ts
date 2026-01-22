@@ -672,6 +672,13 @@ export type Database = {
             referencedRelation: "user_profiles"
             referencedColumns: ["user_id"]
           },
+          {
+            foreignKeyName: "cca_activity_teachers_teacher_user_id_fkey"
+            columns: ["teacher_user_id"]
+            isOneToOne: false
+            referencedRelation: "v_teacher_public"
+            referencedColumns: ["user_id"]
+          },
         ]
       }
       cca_activity_types: {
@@ -2198,7 +2205,24 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      v_teacher_public: {
+        Row: {
+          departments: string[] | null
+          full_name: string | null
+          user_id: string | null
+        }
+        Insert: {
+          departments?: string[] | null
+          full_name?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          departments?: string[] | null
+          full_name?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       calculate_current_headcount: {
