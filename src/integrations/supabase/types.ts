@@ -2248,6 +2248,7 @@ export type Database = {
         Args: { p_period_id: string; p_status: string }
         Returns: undefined
       }
+      teacher_assigned_to_cca: { Args: { _cca_id: string }; Returns: boolean }
     }
     Enums: {
       [_ in never]: never
