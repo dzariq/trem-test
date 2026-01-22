@@ -10,8 +10,16 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Loader2 } from "lucide-react";
 import type { CcaSession, CcaSessionFormData } from "@/hooks/useCcaSessions";
+import { useSchoolLocations } from "@/hooks/useSchoolLocations";
 
 interface SessionFormDialogProps {
   open: boolean;
@@ -19,6 +27,7 @@ interface SessionFormDialogProps {
   session?: CcaSession | null;
   saving: boolean;
   onSave: (data: CcaSessionFormData) => Promise<boolean>;
+  allowFreeText?: boolean;
 }
 
 export function SessionFormDialog({
@@ -27,12 +36,16 @@ export function SessionFormDialog({
   session,
   saving,
   onSave,
+  allowFreeText = false,
 }: SessionFormDialogProps) {
-  const [formData, setFormData] = useState<CcaSessionFormData>({
+  const { locations, loading: locationsLoading } = useSchoolLocations();
+  
+  const [formData, setFormData] = useState({
     sessionDate: "",
     startTime: "",
     endTime: "",
-    location: "",
+    locationId: "",
+    locationFreeText: "",
     customTitle: "",
     description: "",
     requirements: "",
@@ -47,18 +60,19 @@ export function SessionFormDialog({
           sessionDate: session.sessionDate || "",
           startTime: session.startTime || "",
           endTime: session.endTime || "",
-          location: session.location || "",
+          locationId: session.locationId || "",
+          locationFreeText: session.locationId ? "" : (session.location || ""),
           customTitle: session.customTitle || "",
           description: session.description || "",
           requirements: session.requirements || "",
         });
       } else {
-        // Reset for new session
         setFormData({
           sessionDate: "",
           startTime: "",
           endTime: "",
-          location: "",
+          locationId: "",
+          locationFreeText: "",
           customTitle: "",
           description: "",
           requirements: "",
@@ -71,11 +85,19 @@ export function SessionFormDialog({
     e.preventDefault();
     if (!formData.sessionDate) return;
 
+    // Determine location values
+    const selectedLocation = locations.find(l => l.id === formData.locationId);
+    const locationId = formData.locationId || null;
+    const locationText = selectedLocation 
+      ? selectedLocation.name 
+      : (allowFreeText ? formData.locationFreeText : null);
+
     const success = await onSave({
-      ...formData,
+      sessionDate: formData.sessionDate,
       startTime: formData.startTime || null,
       endTime: formData.endTime || null,
-      location: formData.location || null,
+      locationId,
+      location: locationText || null,
       customTitle: formData.customTitle || null,
       description: formData.description || null,
       requirements: formData.requirements || null,
@@ -84,6 +106,13 @@ export function SessionFormDialog({
     if (success) {
       onOpenChange(false);
     }
+  };
+
+  const formatLocationLabel = (loc: { name: string; building: string | null }) => {
+    if (loc.building) {
+      return `${loc.name} (${loc.building})`;
+    }
+    return loc.name;
   };
 
   return (
@@ -136,17 +165,53 @@ export function SessionFormDialog({
             </div>
           </div>
 
-          {/* Location */}
+          {/* Location Dropdown */}
           <div className="space-y-2">
             <Label htmlFor="location">Location</Label>
-            <Input
-              id="location"
-              placeholder="e.g., Sports Hall, Music Room"
-              value={formData.location || ""}
-              onChange={(e) =>
-                setFormData((prev) => ({ ...prev, location: e.target.value }))
+            <Select
+              value={formData.locationId}
+              onValueChange={(value) =>
+                setFormData((prev) => ({ 
+                  ...prev, 
+                  locationId: value,
+                  locationFreeText: "" // Clear free text when selecting from dropdown
+                }))
               }
-            />
+              disabled={locationsLoading}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder={locationsLoading ? "Loading..." : "Select a location"} />
+              </SelectTrigger>
+              <SelectContent>
+                {locations.map((loc) => (
+                  <SelectItem key={loc.id} value={loc.id}>
+                    {formatLocationLabel(loc)}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+
+            {/* Free text fallback when allowed */}
+            {allowFreeText && (
+              <div className="mt-2">
+                <Label htmlFor="locationFreeText" className="text-xs text-muted-foreground">
+                  Or enter custom location
+                </Label>
+                <Input
+                  id="locationFreeText"
+                  placeholder="e.g., External venue"
+                  value={formData.locationFreeText}
+                  onChange={(e) =>
+                    setFormData((prev) => ({ 
+                      ...prev, 
+                      locationFreeText: e.target.value,
+                      locationId: "" // Clear dropdown when typing free text
+                    }))
+                  }
+                  className="mt-1"
+                />
+              </div>
+            )}
           </div>
 
           {/* Custom Title */}
