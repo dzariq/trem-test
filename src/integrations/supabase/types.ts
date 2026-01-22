@@ -629,6 +629,51 @@ export type Database = {
           },
         ]
       }
+      cca_activity_teachers: {
+        Row: {
+          activity_id: string
+          created_at: string
+          id: string
+          is_primary: boolean
+          role: string
+          teacher_user_id: string
+          updated_at: string
+        }
+        Insert: {
+          activity_id: string
+          created_at?: string
+          id?: string
+          is_primary?: boolean
+          role?: string
+          teacher_user_id: string
+          updated_at?: string
+        }
+        Update: {
+          activity_id?: string
+          created_at?: string
+          id?: string
+          is_primary?: boolean
+          role?: string
+          teacher_user_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cca_activity_teachers_activity_id_fkey"
+            columns: ["activity_id"]
+            isOneToOne: false
+            referencedRelation: "cca_activities"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cca_activity_teachers_teacher_user_id_fkey"
+            columns: ["teacher_user_id"]
+            isOneToOne: false
+            referencedRelation: "user_profiles"
+            referencedColumns: ["user_id"]
+          },
+        ]
+      }
       cca_activity_types: {
         Row: {
           created_at: string
