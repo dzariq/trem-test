@@ -81,7 +81,7 @@ export function useStudentCcaEnrollments({ studentId }: UseStudentCcaEnrollments
         return;
       }
 
-      // Fetch PIC teachers for these activities with department info
+      // Fetch PIC teachers for these activities
       const { data: teachersData } = await supabase
         .from("cca_activity_teachers")
         .select(`
@@ -89,9 +89,30 @@ export function useStudentCcaEnrollments({ studentId }: UseStudentCcaEnrollments
           activity_id,
           is_primary,
           role,
-          user_profiles(full_name, departments)
+          teacher_user_id
         `)
         .in("activity_id", activeEnrollments);
+
+      // Collect unique teacher user IDs to fetch from v_teacher_public view
+      const teacherUserIds = [
+        ...new Set((teachersData || []).map((t: any) => t.teacher_user_id).filter(Boolean)),
+      ];
+
+      // Fetch teacher info from the public view (accessible to parents)
+      let teacherProfilesMap: Record<string, { full_name: string; departments: string[] }> = {};
+      if (teacherUserIds.length > 0) {
+        const { data: profilesData } = await supabase
+          .from("v_teacher_public")
+          .select("user_id, full_name, departments")
+          .in("user_id", teacherUserIds);
+
+        (profilesData || []).forEach((p: any) => {
+          teacherProfilesMap[p.user_id] = {
+            full_name: p.full_name || "Unknown",
+            departments: Array.isArray(p.departments) ? p.departments : [],
+          };
+        });
+      }
 
       // Group teachers by activity
       const teachersByActivity: Record<string, EnrolledCcaActivity["picTeachers"]> = {};
@@ -100,9 +121,10 @@ export function useStudentCcaEnrollments({ studentId }: UseStudentCcaEnrollments
         if (!teachersByActivity[actId]) {
           teachersByActivity[actId] = [];
         }
+        const profile = teacherProfilesMap[t.teacher_user_id];
         teachersByActivity[actId].push({
-          fullName: t.user_profiles?.full_name || "Unknown",
-          departments: t.user_profiles?.departments || [],
+          fullName: profile?.full_name || "Unknown",
+          departments: profile?.departments || [],
           isPrimary: t.is_primary || false,
           role: t.role || undefined,
         });

@@ -15,7 +15,7 @@ export function PICTeacherPill({
 }: PICTeacherPillProps) {
   const departmentText = departments.length > 0 
     ? departments.join(", ") 
-    : "No department";
+    : null;
 
   return (
     <div
@@ -33,9 +33,11 @@ export function PICTeacherPill({
           <span className="ml-1.5 text-xs font-normal text-primary">(Lead)</span>
         )}
       </span>
-      <span className="text-xs text-muted-foreground leading-tight mt-0.5">
-        {departmentText}
-      </span>
+      {departmentText && (
+        <span className="text-xs text-muted-foreground leading-tight mt-0.5">
+          {departmentText}
+        </span>
+      )}
     </div>
   );
 }
