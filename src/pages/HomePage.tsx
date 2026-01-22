@@ -14,6 +14,7 @@ import { listAnnouncements, markAnnouncementRead, type Announcement } from "@/da
 import { listUpcomingEvents, type UpcomingEvent } from "@/data/calendar";
 import { useNavigate } from "react-router-dom";
 import { useMyProfile } from "@/hooks/useMyProfile";
+import { useUpcomingCcaSessions } from "@/hooks/useUpcomingCcaSessions";
 
 export default function HomePage() {
   const navigate = useNavigate();
@@ -24,6 +25,12 @@ export default function HomePage() {
   const [events, setEvents] = useState<UpcomingEvent[]>([]);
   const [eventsLoading, setEventsLoading] = useState(true);
   const [eventsError, setEventsError] = useState<string | null>(null);
+
+  // Fetch upcoming CCA sessions for parents
+  const { sessions: ccaSessions, loading: ccaLoading } = useUpcomingCcaSessions({
+    role: "parent",
+    limit: 10,
+  });
 
   useEffect(() => {
     let isMounted = true;
@@ -98,6 +105,7 @@ export default function HomePage() {
   };
 
   const greetingName = profile?.full_name ?? profile?.email ?? "there";
+  const isLoadingEvents = eventsLoading || ccaLoading;
 
   return (
     <AppLayout>
@@ -152,7 +160,7 @@ export default function HomePage() {
         />
       )}
 
-      {eventsLoading && (
+      {isLoadingEvents && (
         <div className="px-4 py-4">
           <Card className="bg-card border-border shadow-sm">
             <CardContent className="p-6 text-center text-sm text-muted-foreground">
@@ -172,8 +180,12 @@ export default function HomePage() {
         </div>
       )}
 
-      {!eventsLoading && !eventsError && (
-        <UpcomingEvents events={events} seeAllPath="/parent/calendar" />
+      {!isLoadingEvents && !eventsError && (
+        <UpcomingEvents 
+          events={events} 
+          ccaSessions={ccaSessions}
+          seeAllPath="/parent/calendar" 
+        />
       )}
       <AttendanceSummary />
       
