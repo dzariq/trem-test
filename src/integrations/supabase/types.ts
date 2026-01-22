@@ -1343,6 +1343,7 @@ export type Database = {
           is_read: boolean
           link_to: string | null
           message: string
+          target_audience: string
           title: string
           type: string
           updated_at: string
@@ -1354,6 +1355,7 @@ export type Database = {
           is_read?: boolean
           link_to?: string | null
           message: string
+          target_audience?: string
           title: string
           type?: string
           updated_at?: string
@@ -1365,6 +1367,7 @@ export type Database = {
           is_read?: boolean
           link_to?: string | null
           message?: string
+          target_audience?: string
           title?: string
           type?: string
           updated_at?: string
@@ -2239,6 +2242,7 @@ export type Database = {
       is_admin: { Args: never; Returns: boolean }
       is_admin_like: { Args: never; Returns: boolean }
       is_parent: { Args: never; Returns: boolean }
+      is_parent_of_student: { Args: { p_student_id: string }; Returns: boolean }
       is_teacher: { Args: never; Returns: boolean }
       is_teacher_assigned_to_cca: {
         Args: { p_activity_id: string }
@@ -2253,6 +2257,7 @@ export type Database = {
         Returns: undefined
       }
       teacher_assigned_to_cca: { Args: { _cca_id: string }; Returns: boolean }
+      user_has_role: { Args: { check_role: string }; Returns: boolean }
     }
     Enums: {
       [_ in never]: never

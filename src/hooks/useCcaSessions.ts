@@ -159,7 +159,7 @@ export function useCcaSessions({ activityId }: UseCcaSessionsOptions) {
             .select("teacher_user_id")
             .eq("activity_id", activityId);
 
-          // Insert notifications for PIC teachers
+          // Insert notifications for PIC teachers (teacher-targeted)
           if (picTeachers && picTeachers.length > 0) {
             const notifications = picTeachers.map((t) => ({
               user_id: t.teacher_user_id,
@@ -167,6 +167,7 @@ export function useCcaSessions({ activityId }: UseCcaSessionsOptions) {
               message: notificationMessage,
               type: "event",
               link_to: "/teacher/calendar",
+              target_audience: "teacher",
             }));
             await supabase.from("notifications").insert(notifications);
           }

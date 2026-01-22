@@ -38,6 +38,7 @@ import { listCalendarEvents, type UpcomingEvent } from "@/data/calendar";
 import { useMyProfile } from "@/hooks/useMyProfile";
 import { useStudentSelection } from "@/hooks/useStudentSelection";
 import { useCcaActivities, type CcaActivity } from "@/hooks/useCcaActivities";
+import { useStudentCcaEnrollments } from "@/hooks/useStudentCcaEnrollments";
 import { PICTeachersList } from "@/components/cca/PICTeacherPill";
 import { supabase } from "@/lib/supabase";
 import { useCcaSessionsCalendar, type CcaCalendarSession } from "@/hooks/useCcaSessionsCalendar";
@@ -98,6 +99,16 @@ export default function CalendarPage() {
     studentYearLevel: studentYearLevel,
     myActivitiesOnly: false,
     includeInactive: false,
+  });
+
+  // Fetch enrolled CCAs for the selected student
+  const {
+    enrollments: enrolledCcas,
+    loading: enrolledLoading,
+    error: enrolledError,
+    filterByCategory: filterEnrolledByCategory,
+  } = useStudentCcaEnrollments({
+    studentId: selectedStudentId,
   });
 
   // Fetch CCA sessions for calendar (parent view)
@@ -212,6 +223,11 @@ export default function CalendarPage() {
   const filteredCCA = useMemo(() => {
     return filterByCategory(ccaCategoryFilter);
   }, [filterByCategory, ccaCategoryFilter]);
+
+  // Filter enrolled CCAs by category
+  const filteredEnrolledCCA = useMemo(() => {
+    return filterEnrolledByCategory(ccaCategoryFilter);
+  }, [filterEnrolledByCategory, ccaCategoryFilter]);
 
   // Categories visible to parents (exclude staff-admin and due-dates)
   const parentVisibleCategories: (TagCategory | "all")[] = [
@@ -568,8 +584,88 @@ export default function CalendarPage() {
               </Badge>
             </div>
 
-            {/* CCA Activities List */}
+            {/* My CCAs (Enrolled) Section */}
             <div className="space-y-3">
+              <div className="flex items-center gap-2">
+                <h3 className="text-base font-semibold text-foreground">My CCAs (Enrolled)</h3>
+                <Badge variant="secondary" className="text-xs">
+                  {filteredEnrolledCCA.length}
+                </Badge>
+              </div>
+
+              {enrolledLoading && (
+                <div className="flex items-center justify-center py-6">
+                  <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+                  <span className="ml-2 text-sm text-muted-foreground">Loading enrolled CCAs...</span>
+                </div>
+              )}
+
+              {enrolledError && (
+                <div className="text-center py-4 text-destructive text-sm">
+                  <p>Failed to load enrolled CCAs</p>
+                </div>
+              )}
+
+              {!enrolledLoading && !enrolledError && filteredEnrolledCCA.length === 0 && (
+                <Card className="bg-muted/30 border-dashed border-border">
+                  <CardContent className="p-4 text-center">
+                    <p className="text-sm text-muted-foreground">
+                      No enrolled CCAs yet
+                    </p>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Browse available activities below to enroll
+                    </p>
+                  </CardContent>
+                </Card>
+              )}
+
+              {!enrolledLoading && !enrolledError && filteredEnrolledCCA.map((activity) => (
+                <Card key={`enrolled-${activity.enrollmentId}`} className="bg-primary/5 border-primary/20 shadow-sm">
+                  <CardContent className="p-4">
+                    <div className="flex items-start justify-between mb-3">
+                      <div className="flex items-center gap-2">
+                        <h3 className="font-semibold text-foreground">{activity.name}</h3>
+                        <Badge variant="secondary" className="text-[10px] px-1.5 py-0 bg-primary/20 text-primary">
+                          Enrolled
+                        </Badge>
+                      </div>
+                      <Badge className={getCcaCategoryColor(activity.category)} variant="secondary">
+                        {activity.category}
+                      </Badge>
+                    </div>
+                    
+                    <div className="space-y-2 text-sm text-muted-foreground">
+                      {(activity.meetingDay || activity.meetingTime) && (
+                        <div className="flex items-center gap-2">
+                          <Clock className="h-4 w-4" />
+                          <span>
+                            {activity.meetingDay || "TBD"}
+                            {activity.meetingTime ? `, ${activity.meetingTime}` : ""}
+                          </span>
+                        </div>
+                      )}
+                      {activity.location && (
+                        <div className="flex items-center gap-2">
+                          <MapPin className="h-4 w-4" />
+                          <span>{activity.location}</span>
+                        </div>
+                      )}
+                      {activity.picTeachers.length > 0 && (
+                        <div className="flex items-start gap-2 pt-1">
+                          <User className="h-4 w-4 flex-shrink-0 mt-0.5" />
+                          <div className="flex-1">
+                            <PICTeachersList teachers={activity.picTeachers} />
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+
+            {/* Available CCA Activities List */}
+            <div className="space-y-3 mt-6">
               <div className="flex items-center gap-2">
                 <h3 className="text-base font-semibold text-foreground">Available CCA Activities</h3>
                 <Badge variant="secondary" className="text-xs">
