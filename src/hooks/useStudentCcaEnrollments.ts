@@ -93,24 +93,28 @@ export function useStudentCcaEnrollments({ studentId }: UseStudentCcaEnrollments
         `)
         .in("activity_id", activeEnrollments);
 
-      // Collect unique teacher user IDs to fetch from v_teacher_public view
+      // Collect unique teacher user IDs to fetch using security definer function
       const teacherUserIds = [
         ...new Set((teachersData || []).map((t: any) => t.teacher_user_id).filter(Boolean)),
       ];
 
-      // Fetch teacher info from the public view (accessible to parents)
+      // Fetch teacher info using the security definer function (accessible to parents)
       let teacherProfilesMap: Record<string, { full_name: string; departments: string[] }> = {};
       if (teacherUserIds.length > 0) {
-        const { data: profilesData } = await supabase
-          .from("v_teacher_public")
-          .select("user_id, full_name, departments")
-          .in("user_id", teacherUserIds);
+        // Use Promise.all to fetch all teacher profiles in parallel via RPC
+        const profilePromises = teacherUserIds.map((userId) =>
+          supabase.rpc("get_teacher_public_info", { p_teacher_user_id: userId })
+        );
+        const results = await Promise.all(profilePromises);
 
-        (profilesData || []).forEach((p: any) => {
-          teacherProfilesMap[p.user_id] = {
-            full_name: p.full_name || "Unknown",
-            departments: Array.isArray(p.departments) ? p.departments : [],
-          };
+        results.forEach((result, index) => {
+          if (result.data && result.data.length > 0) {
+            const p = result.data[0];
+            teacherProfilesMap[p.user_id] = {
+              full_name: p.full_name || "Unknown",
+              departments: Array.isArray(p.departments) ? p.departments : [],
+            };
+          }
         });
       }
 
