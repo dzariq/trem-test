@@ -301,7 +301,7 @@ export default function CalendarPage() {
 
           <TabsContent value="calendar" className="mt-4 space-y-4">
             {/* Category Filter with Dropdowns */}
-            <div className="flex gap-2 overflow-x-auto pb-2">
+            <div className="flex flex-wrap gap-2 pb-2">
               {parentVisibleCategories.map((cat) => {
                 const isSelected = categoryFilter === cat;
                 const visibleTags = cat !== "all" ? getVisibleTagsForCategory(cat as TagCategory) : [];
@@ -312,7 +312,7 @@ export default function CalendarPage() {
                     <Badge
                       key={cat}
                       variant={isSelected && !selectedTag ? "default" : "outline"}
-                      className={`cursor-pointer whitespace-nowrap ${
+                      className={`cursor-pointer ${
                         isSelected && !selectedTag ? "" : cat !== "all" ? getCategoryColor(cat as TagCategory) : ""
                       }`}
                       onClick={() => handleCategoryClick(cat)}
@@ -327,7 +327,7 @@ export default function CalendarPage() {
                     <DropdownMenuTrigger asChild>
                       <Badge
                         variant={isSelected ? "default" : "outline"}
-                        className={`cursor-pointer whitespace-nowrap flex items-center gap-1 ${
+                        className={`cursor-pointer flex items-center gap-1 ${
                           isSelected ? "" : getCategoryColor(cat as TagCategory)
                         }`}
                       >
