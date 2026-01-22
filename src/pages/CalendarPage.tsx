@@ -40,6 +40,7 @@ import { useStudentSelection } from "@/hooks/useStudentSelection";
 import { useCcaActivities, type CcaActivity } from "@/hooks/useCcaActivities";
 import { PICTeachersList } from "@/components/cca/PICTeacherPill";
 import { supabase } from "@/lib/supabase";
+import { useCcaSessionsCalendar, type CcaCalendarSession } from "@/hooks/useCcaSessionsCalendar";
 
 export default function CalendarPage() {
   const { profile } = useMyProfile();
@@ -99,6 +100,15 @@ export default function CalendarPage() {
     includeInactive: false,
   });
 
+  // Fetch CCA sessions for calendar (parent view)
+  const {
+    sessions: ccaSessions,
+    loading: ccaSessionsLoading,
+  } = useCcaSessionsCalendar({
+    year: currentMonth.getFullYear(),
+    month: currentMonth.getMonth() + 1,
+  });
+
   const roleForFilters = profile?.role === "student" ? "student" : "parent";
   // Filter events for parent/student role
   const visibleEvents = filterEventsByRole(events, roleForFilters);
@@ -141,6 +151,11 @@ export default function CalendarPage() {
     (event) => selectedDay >= event.startDay && selectedDay <= event.endDay
   );
 
+  // Filter CCA sessions for the selected date
+  const ccaSessionsForSelectedDate = ccaSessions.filter(
+    (session) => session.sessionDate === selectedDay
+  );
+
   const eventDaySet = new Set<string>();
   const addRangeDays = (startDay: string, endDay: string) => {
     const cursor = parseDayKey(startDay);
@@ -155,6 +170,13 @@ export default function CalendarPage() {
   filteredEvents.forEach((event) => {
     if (event.startDay && event.endDay) {
       addRangeDays(event.startDay, event.endDay);
+    }
+  });
+
+  // Add CCA session dates to highlight set
+  ccaSessions.forEach((session) => {
+    if (session.sessionDate) {
+      eventDaySet.add(session.sessionDate);
     }
   });
 
@@ -378,37 +400,86 @@ export default function CalendarPage() {
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
-                {eventsForSelectedDate.length > 0 ? (
-                  eventsForSelectedDate.map((event) => (
+                {/* School Events */}
+                {eventsForSelectedDate.map((event) => (
+                  <div 
+                    key={event.id}
+                    className="p-3 rounded-lg bg-accent/50 border border-border/50"
+                  >
+                    <div className="flex items-start justify-between mb-2">
+                      <h3 className="font-medium text-foreground">{event.title}</h3>
+                    </div>
+                    <div className="flex flex-wrap gap-1 mb-2">
+                      {event.tags.map((tag) => (
+                        <Badge key={tag} className={`text-xs ${getTagColor(tag)}`}>
+                          {getTagDisplayName(tag)}
+                        </Badge>
+                      ))}
+                    </div>
+                    <div className="flex flex-wrap gap-3 text-sm text-muted-foreground">
+                      <span className="flex items-center gap-1">
+                        <Clock className="h-3 w-3" />
+                        {event.time}
+                      </span>
+                      {event.location && (
+                        <span className="flex items-center gap-1">
+                          <MapPin className="h-3 w-3" />
+                          {event.location}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                ))}
+
+                {/* CCA Sessions */}
+                {ccaSessionsForSelectedDate.map((session) => {
+                  const formatTimeRange = (start: string | null, end: string | null) => {
+                    if (!start) return "All Day";
+                    const formatTime = (t: string) => {
+                      const [h, m] = t.split(":");
+                      const hour = parseInt(h);
+                      const ampm = hour >= 12 ? "PM" : "AM";
+                      const hour12 = hour % 12 || 12;
+                      return `${hour12}:${m} ${ampm}`;
+                    };
+                    return end ? `${formatTime(start)} - ${formatTime(end)}` : formatTime(start);
+                  };
+
+                  return (
                     <div 
-                      key={event.id}
-                      className="p-3 rounded-lg bg-accent/50 border border-border/50"
+                      key={`cca-${session.id}`}
+                      className="p-3 rounded-lg bg-primary/5 border border-primary/20"
                     >
                       <div className="flex items-start justify-between mb-2">
-                        <h3 className="font-medium text-foreground">{event.title}</h3>
-                      </div>
-                      <div className="flex flex-wrap gap-1 mb-2">
-                        {event.tags.map((tag) => (
-                          <Badge key={tag} className={`text-xs ${getTagColor(tag)}`}>
-                            {getTagDisplayName(tag)}
+                        <div className="flex items-center gap-2">
+                          <h3 className="font-medium text-foreground">
+                            {session.customTitle || session.activityName}
+                          </h3>
+                          <Badge variant="secondary" className="text-[10px] px-1.5 py-0 bg-primary/10 text-primary">
+                            CCA
                           </Badge>
-                        ))}
+                        </div>
                       </div>
-                      <div className="flex flex-wrap gap-3 text-sm text-muted-foreground">
+                      <Badge className={getCcaCategoryColor(session.category)} variant="secondary">
+                        {session.category}
+                      </Badge>
+                      <div className="flex flex-wrap gap-3 text-sm text-muted-foreground mt-2">
                         <span className="flex items-center gap-1">
                           <Clock className="h-3 w-3" />
-                          {event.time}
+                          {formatTimeRange(session.startTime, session.endTime)}
                         </span>
-                        {event.location && (
+                        {session.locationName && (
                           <span className="flex items-center gap-1">
                             <MapPin className="h-3 w-3" />
-                            {event.location}
+                            {session.locationName}
                           </span>
                         )}
                       </div>
                     </div>
-                  ))
-                ) : (
+                  );
+                })}
+
+                {eventsForSelectedDate.length === 0 && ccaSessionsForSelectedDate.length === 0 && (
                   <div className="text-center py-8 text-muted-foreground">
                     <p>No events scheduled for this day</p>
                   </div>

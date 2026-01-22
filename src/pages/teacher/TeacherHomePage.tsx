@@ -38,6 +38,7 @@ import {
   fetchStudentsByClass,
 } from "@/data/gradeEntry";
 import { useUpcomingDeadlines } from "@/hooks/useUpcomingDeadlines";
+import { useUpcomingCcaSessions } from "@/hooks/useUpcomingCcaSessions";
 
 type PendingGradeSummary = {
   class: string;
@@ -77,6 +78,12 @@ export default function TeacherHomePage() {
   const [pendingGrades, setPendingGrades] = useState<PendingGradeSummary[]>([]);
   const [pendingGradesLoading, setPendingGradesLoading] = useState(false);
   const { items: deadlines, loading: deadlinesLoading } = useUpcomingDeadlines(5);
+  
+  // Fetch upcoming CCA sessions for teachers (PIC activities)
+  const { sessions: ccaSessions, loading: ccaLoading } = useUpcomingCcaSessions({
+    role: "teacher",
+    limit: 10,
+  });
 
   const selectedClassName = teacherScope.isTeacher
     ? teacherScope.selectedClassYear?.class_name ?? ""
@@ -577,7 +584,7 @@ export default function TeacherHomePage() {
             enableListDrawer={false}
           />
         )}
-        {eventsLoading && (
+        {(eventsLoading || ccaLoading) && (
           <div className="px-4 py-4">
             <Card className="bg-card border-border shadow-sm">
               <CardContent className="p-6 text-center text-sm text-muted-foreground">
@@ -597,8 +604,12 @@ export default function TeacherHomePage() {
           </div>
         )}
 
-        {!eventsLoading && !eventsError && (
-          <UpcomingEvents events={events} seeAllPath="/teacher/calendar" />
+        {!eventsLoading && !ccaLoading && !eventsError && (
+          <UpcomingEvents 
+            events={events} 
+            ccaSessions={ccaSessions}
+            seeAllPath="/teacher/calendar" 
+          />
         )}
         
         {/* Footer with faded school badge */}

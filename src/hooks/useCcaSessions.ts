@@ -94,7 +94,7 @@ export function useCcaSessions({ activityId }: UseCcaSessionsOptions) {
     async (formData: CcaSessionFormData): Promise<boolean> => {
       setSaving(true);
       try {
-        const { error: insertError } = await supabase
+        const { data: insertedSession, error: insertError } = await supabase
           .from("cca_sessions")
           .insert({
             activity_id: activityId,
@@ -107,7 +107,9 @@ export function useCcaSessions({ activityId }: UseCcaSessionsOptions) {
             description: formData.description || null,
             requirements: formData.requirements || null,
             is_cancelled: false,
-          });
+          })
+          .select()
+          .single();
 
         if (insertError) {
           if (insertError.message.includes("row-level security")) {
@@ -124,6 +126,50 @@ export function useCcaSessions({ activityId }: UseCcaSessionsOptions) {
             });
           }
           return false;
+        }
+
+        // Create notification for CCA session
+        if (insertedSession) {
+          const { data: activity } = await supabase
+            .from("cca_activities")
+            .select("name")
+            .eq("id", activityId)
+            .single();
+
+          const sessionDate = new Date(formData.sessionDate);
+          const dateStr = sessionDate.toLocaleDateString("en-GB", { weekday: "short", day: "numeric", month: "short" });
+          const formatTime = (t: string | null) => {
+            if (!t) return "";
+            const [h, m] = t.split(":");
+            const hour = parseInt(h);
+            const ampm = hour >= 12 ? "PM" : "AM";
+            return `${hour % 12 || 12}:${m} ${ampm}`;
+          };
+          const timeStr = formData.startTime 
+            ? formData.endTime 
+              ? `${formatTime(formData.startTime)}–${formatTime(formData.endTime)}`
+              : formatTime(formData.startTime)
+            : "All Day";
+
+          const notificationMessage = `${activity?.name || "CCA"} session scheduled for ${dateStr}, ${timeStr}.`;
+
+          // Get PIC teachers for this activity
+          const { data: picTeachers } = await supabase
+            .from("cca_activity_teachers")
+            .select("teacher_user_id")
+            .eq("activity_id", activityId);
+
+          // Insert notifications for PIC teachers
+          if (picTeachers && picTeachers.length > 0) {
+            const notifications = picTeachers.map((t) => ({
+              user_id: t.teacher_user_id,
+              title: "CCA Session Created",
+              message: notificationMessage,
+              type: "event",
+              link_to: "/teacher/calendar",
+            }));
+            await supabase.from("notifications").insert(notifications);
+          }
         }
 
         toast({
