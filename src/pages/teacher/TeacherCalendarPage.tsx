@@ -7,10 +7,9 @@ import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { MapPin, Clock, User, ChevronDown, CalendarDays, ClipboardList, FileText } from "lucide-react";
+import { MapPin, Clock, User, ChevronDown, CalendarDays, ClipboardList, FileText, Loader2 } from "lucide-react";
 import schoolLogo from "@/assets/school-badge.png";
 
-import { ccaActivities } from "@/data/mockData";
 import { format } from "date-fns";
 import { TagCategory, CalendarTag, TEACHER_HIDDEN_TAGS } from "@/types/calendarTags";
 import {
@@ -30,10 +29,12 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { listCalendarEvents, type UpcomingEvent } from "@/data/calendar";
-
-type CCAActivity = typeof ccaActivities[0];
+import { useCcaActivities, type CcaActivity } from "@/hooks/useCcaActivities";
+import { PICTeachersList } from "@/components/cca/PICTeacherPill";
+import { useAuth } from "@/contexts/AuthContext";
 
 export default function TeacherCalendarPage() {
+  const { user } = useAuth();
   const today = new Date();
   const todayYmd = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
   const [selectedDay, setSelectedDay] = useState<string>(todayYmd);
@@ -41,8 +42,20 @@ export default function TeacherCalendarPage() {
   const [categoryFilter, setCategoryFilter] = useState<TagCategory | "all">("all");
   const [selectedTag, setSelectedTag] = useState<CalendarTag | null>(null);
   const [ccaCategoryFilter, setCcaCategoryFilter] = useState("all");
-  const [selectedCCA, setSelectedCCA] = useState<CCAActivity | null>(null);
+  const [selectedCCA, setSelectedCCA] = useState<CcaActivity | null>(null);
   const [events, setEvents] = useState<UpcomingEvent[]>([]);
+
+  // Fetch CCA activities from Supabase (show all for teachers, not just "my" activities)
+  const {
+    activities: ccaActivities,
+    loading: ccaLoading,
+    error: ccaError,
+    filterByCategory,
+  } = useCcaActivities({
+    myActivitiesOnly: false,
+    currentUserId: user?.id,
+    includeInactive: false,
+  });
 
   // Filter events for teacher role
   const visibleEvents = filterEventsByRole(events, "teacher");
@@ -129,10 +142,8 @@ export default function TeacherCalendarPage() {
     };
   }, [currentMonth]);
 
-  // Filter CCA activities
-  const filteredCCA = ccaCategoryFilter === "all" 
-    ? ccaActivities 
-    : ccaActivities.filter(a => a.category.toLowerCase() === ccaCategoryFilter.toLowerCase());
+  // Filter CCA activities by category
+  const filteredCCA = filterByCategory(ccaCategoryFilter);
 
   // Categories visible to teachers (all except admin-only)
   const teacherVisibleCategories: (TagCategory | "all")[] = [
@@ -405,7 +416,27 @@ export default function TeacherCalendarPage() {
 
             {/* CCA List */}
             <div className="space-y-3">
-              {filteredCCA.map((activity) => (
+              {ccaLoading && (
+                <div className="flex items-center justify-center py-8">
+                  <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+                  <span className="ml-2 text-muted-foreground">Loading CCA activities...</span>
+                </div>
+              )}
+
+              {ccaError && (
+                <div className="text-center py-8 text-destructive">
+                  <p>Failed to load CCA activities</p>
+                  <p className="text-sm">{ccaError}</p>
+                </div>
+              )}
+
+              {!ccaLoading && !ccaError && filteredCCA.length === 0 && (
+                <div className="text-center py-8 text-muted-foreground">
+                  <p>No CCA activities found</p>
+                </div>
+              )}
+
+              {!ccaLoading && !ccaError && filteredCCA.map((activity) => (
                 <Card key={activity.id} className="bg-card border-border shadow-sm">
                   <CardContent className="p-4">
                     <div className="flex items-start justify-between mb-3">
@@ -418,18 +449,31 @@ export default function TeacherCalendarPage() {
                     </div>
                     
                     <div className="space-y-2 text-sm text-muted-foreground">
-                      <div className="flex items-center gap-2">
-                        <Clock className="h-4 w-4" />
-                        <span>{activity.day}, {activity.time}</span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <MapPin className="h-4 w-4" />
-                        <span>{activity.venue}</span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <User className="h-4 w-4" />
-                        <span>{activity.coach}</span>
-                      </div>
+                      {(activity.meetingDay || activity.meetingTime) && (
+                        <div className="flex items-center gap-2">
+                          <Clock className="h-4 w-4" />
+                          <span>
+                            {activity.meetingDay || "TBD"}
+                            {activity.meetingTime ? `, ${activity.meetingTime}` : ""}
+                          </span>
+                        </div>
+                      )}
+                      {activity.location && (
+                        <div className="flex items-center gap-2">
+                          <MapPin className="h-4 w-4" />
+                          <span>{activity.location}</span>
+                        </div>
+                      )}
+                      {(activity.picTeachers.length > 0 || activity.coordinatorName) && (
+                        <div className="flex items-start gap-2">
+                          <User className="h-4 w-4 mt-0.5" />
+                          <span>
+                            {activity.picTeachers.length > 0
+                              ? activity.picTeachers.map((t) => t.fullName).join(", ")
+                              : activity.coordinatorName}
+                          </span>
+                        </div>
+                      )}
                     </div>
 
                     <Button 
@@ -464,60 +508,77 @@ export default function TeacherCalendarPage() {
 
               <div className="space-y-4 pt-2">
                 {/* Description */}
-                <p className="text-sm text-muted-foreground">{selectedCCA.description}</p>
+                <p className="text-sm text-muted-foreground">
+                  {selectedCCA.publicDescription || "Details to be announced"}
+                </p>
 
                 {/* Schedule Info */}
                 <Card className="bg-emerald-50/80 dark:bg-emerald-950/30 border border-emerald-200/60 dark:border-emerald-800/40 rounded-xl">
                   <CardContent className="p-4 space-y-3">
-                    <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
-                        <CalendarDays className="h-4 w-4 text-primary" />
+                    {(selectedCCA.meetingDay || selectedCCA.meetingTime) && (
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
+                          <CalendarDays className="h-4 w-4 text-primary" />
+                        </div>
+                        <div>
+                          <p className="text-xs text-muted-foreground">Schedule</p>
+                          <p className="text-sm font-medium">
+                            {selectedCCA.meetingDay || "TBD"}
+                            {selectedCCA.meetingTime ? `, ${selectedCCA.meetingTime}` : ""}
+                          </p>
+                        </div>
                       </div>
-                      <div>
-                        <p className="text-xs text-muted-foreground">Schedule</p>
-                        <p className="text-sm font-medium">{selectedCCA.day}, {selectedCCA.time}</p>
-                      </div>
-                    </div>
+                    )}
 
-                    <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
-                        <MapPin className="h-4 w-4 text-primary" />
+                    {selectedCCA.location && (
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
+                          <MapPin className="h-4 w-4 text-primary" />
+                        </div>
+                        <div>
+                          <p className="text-xs text-muted-foreground">Venue</p>
+                          <p className="text-sm font-medium">{selectedCCA.location}</p>
+                        </div>
                       </div>
-                      <div>
-                        <p className="text-xs text-muted-foreground">Venue</p>
-                        <p className="text-sm font-medium">{selectedCCA.venue}</p>
-                      </div>
-                    </div>
+                    )}
 
-                    <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
+                    {/* PIC Teachers */}
+                    <div className="flex items-start gap-3">
+                      <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
                         <User className="h-4 w-4 text-primary" />
                       </div>
-                      <div>
-                        <p className="text-xs text-muted-foreground">PIC (Person in Charge)</p>
-                        <p className="text-sm font-medium">{selectedCCA.coach}</p>
+                      <div className="flex-1">
+                        <p className="text-xs text-muted-foreground mb-2">PIC (Person in Charge)</p>
+                        <PICTeachersList
+                          teachers={selectedCCA.picTeachers}
+                          fallbackCoordinator={selectedCCA.coordinatorName}
+                        />
                       </div>
                     </div>
                   </CardContent>
                 </Card>
 
-                {/* Requirements */}
-                <div className="space-y-2">
-                  <div className="flex items-center gap-2">
-                    <ClipboardList className="h-4 w-4 text-muted-foreground" />
-                    <span className="text-sm font-medium">Requirements</span>
+                {/* Requirements from sessions */}
+                {selectedCCA.sessions.length > 0 && selectedCCA.sessions[0].requirements && (
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2">
+                      <ClipboardList className="h-4 w-4 text-muted-foreground" />
+                      <span className="text-sm font-medium">Requirements</span>
+                    </div>
+                    <p className="text-sm text-muted-foreground pl-6">
+                      {selectedCCA.sessions[0].requirements}
+                    </p>
                   </div>
-                  <p className="text-sm text-muted-foreground pl-6">{selectedCCA.requirements}</p>
-                </div>
+                )}
 
                 {/* Operational Notes (Internal) - Teacher Only */}
-                {selectedCCA.operationalNotes && (
+                {selectedCCA.internalNotes && (
                   <div className="space-y-2 p-3 rounded-lg bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800">
                     <div className="flex items-center gap-2">
                       <FileText className="h-4 w-4 text-amber-600 dark:text-amber-400" />
                       <span className="text-sm font-medium text-amber-800 dark:text-amber-300">Operational Notes (Internal)</span>
                     </div>
-                    <p className="text-sm text-amber-700 dark:text-amber-400 pl-6">{selectedCCA.operationalNotes}</p>
+                    <p className="text-sm text-amber-700 dark:text-amber-400 pl-6">{selectedCCA.internalNotes}</p>
                   </div>
                 )}
               </div>
