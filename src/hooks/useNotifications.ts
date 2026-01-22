@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/contexts/AuthContext";
+import { useMyProfile } from "@/hooks/useMyProfile";
 
 export interface Notification {
   id: string;
@@ -10,6 +11,7 @@ export interface Notification {
   type: string;
   link_to: string | null;
   is_read: boolean;
+  target_audience: string;
   created_at: string;
   updated_at: string;
 }
@@ -35,24 +37,34 @@ function formatTimeAgo(dateString: string): string {
 
 export function useNotifications() {
   const { user } = useAuth();
+  const { profile } = useMyProfile();
   const queryClient = useQueryClient();
+  
+  // Determine user role for filtering
+  const userRole = profile?.role || "parent";
 
-  // Fetch notifications
+  // Fetch notifications with role-based filtering
   const { data: notifications = [], isLoading, error } = useQuery({
-    queryKey: ["notifications", user?.id],
+    queryKey: ["notifications", user?.id, userRole],
     queryFn: async () => {
       if (!user?.id) return [];
+      
+      // Determine allowed target audiences based on role
+      const allowedAudiences = userRole === "teacher" 
+        ? ["teacher", "all"]
+        : ["parent", "all"];
       
       const { data, error } = await supabase
         .from("notifications")
         .select("*")
         .eq("user_id", user.id)
+        .in("target_audience", allowedAudiences)
         .order("created_at", { ascending: false });
 
       if (error) throw error;
       return data as Notification[];
     },
-    enabled: !!user?.id,
+    enabled: !!user?.id && !!profile,
   });
 
   // Computed values

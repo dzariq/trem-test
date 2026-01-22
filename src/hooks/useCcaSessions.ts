@@ -161,15 +161,47 @@ export function useCcaSessions({ activityId }: UseCcaSessionsOptions) {
 
           // Insert notifications for PIC teachers (teacher-targeted)
           if (picTeachers && picTeachers.length > 0) {
-            const notifications = picTeachers.map((t) => ({
+            const teacherNotifications = picTeachers.map((t) => ({
               user_id: t.teacher_user_id,
               title: "CCA Session Created",
               message: notificationMessage,
-              type: "event",
+              type: "cca",
               link_to: "/teacher/calendar",
               target_audience: "teacher",
             }));
-            await supabase.from("notifications").insert(notifications);
+            await supabase.from("notifications").insert(teacherNotifications);
+          }
+
+          // Get parents of enrolled students for this activity
+          const { data: enrolledStudents } = await supabase
+            .from("student_cca_enrollments")
+            .select("student_id")
+            .eq("cca_activity_id", activityId)
+            .in("status", ["enrolled", "active"]);
+
+          if (enrolledStudents && enrolledStudents.length > 0) {
+            const studentIds = enrolledStudents.map((e) => e.student_id);
+            
+            // Get guardian user IDs for these students
+            const { data: guardians } = await supabase
+              .from("student_guardians")
+              .select("guardian_user_id")
+              .in("student_id", studentIds);
+
+            if (guardians && guardians.length > 0) {
+              // Deduplicate guardian IDs
+              const uniqueGuardianIds = [...new Set(guardians.map((g) => g.guardian_user_id))];
+              
+              const parentNotifications = uniqueGuardianIds.map((guardianId) => ({
+                user_id: guardianId,
+                title: "CCA Session Scheduled",
+                message: notificationMessage,
+                type: "cca",
+                link_to: "/parent/calendar",
+                target_audience: "parent",
+              }));
+              await supabase.from("notifications").insert(parentNotifications);
+            }
           }
         }
 
