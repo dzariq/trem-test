@@ -63,7 +63,7 @@ export function AttendanceSummary() {
                     className="text-sm font-normal text-muted-foreground h-auto py-1 px-2"
                     disabled={studentsLoading || linkedStudents.length === 0}
                   >
-                    {selectedStudent?.name ?? "Select Student"}
+                    <span className="truncate max-w-[100px]">{selectedStudent?.name ?? "Select Student"}</span>
                     <ChevronDown className="h-3 w-3 ml-1" />
                   </Button>
                 </DropdownMenuTrigger>

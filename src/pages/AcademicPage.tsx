@@ -1469,7 +1469,7 @@ export default function AcademicPage() {
                                   backgroundColor: cardStyle.bg,
                                   borderColor: cardStyle.border
                                 }}>
-                                      <h3 className="font-medium text-foreground text-sm leading-tight mb-2">{grade.subjectName}</h3>
+                                      <h3 className="font-medium text-foreground text-sm leading-tight mb-2 line-clamp-2 break-words">{grade.subjectName}</h3>
                                       <div className="flex items-center justify-between mt-auto">
                                         <div className="flex items-center gap-2">
                                           <p className="text-lg font-semibold text-foreground">
