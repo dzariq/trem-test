@@ -7,7 +7,7 @@ interface TeacherAppLayoutProps {
 
 export function TeacherAppLayout({ children }: TeacherAppLayoutProps) {
   return (
-    <div className="min-h-screen bg-background pb-20 overflow-x-hidden">
+    <div className="min-h-screen bg-background pb-[calc(5rem+var(--safe-bottom))] overflow-x-hidden">
       <div className="mx-auto w-full overflow-x-hidden">
         {children}
       </div>

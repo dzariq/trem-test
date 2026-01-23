@@ -52,7 +52,7 @@ const App = () => (
       <TooltipProvider>
         <Toaster />
         <Sonner />
-        <div className="min-h-screen overflow-x-hidden">
+        <div className="min-h-screen overflow-x-hidden app-shell">
           <BrowserRouter>
             <Routes>
               {/* Role Selection - Landing Page */}

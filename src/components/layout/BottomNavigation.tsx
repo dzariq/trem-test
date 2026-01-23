@@ -44,7 +44,7 @@ export function BottomNavigation() {
   return (
     <nav 
       className={cn(
-        "fixed bottom-0 left-0 right-0 bg-card border-t border-border shadow-lg z-50 transition-transform duration-300",
+        "fixed bottom-0 left-0 right-0 bg-card border-t border-border shadow-lg z-50 transition-transform duration-300 bottom-tabbar",
         isVisible ? "translate-y-0" : "translate-y-full"
       )}
     >

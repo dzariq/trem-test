@@ -36,7 +36,7 @@ export function TeacherBottomNavigation() {
     });
     return () => window.removeEventListener("scroll", handleScroll);
   }, [lastScrollY]);
-  return <nav className={cn("fixed bottom-0 left-0 right-0 bg-card border-t border-border shadow-lg z-50 transition-transform duration-300", isVisible ? "translate-y-0" : "translate-y-full")}>
+  return <nav className={cn("fixed bottom-0 left-0 right-0 bg-card border-t border-border shadow-lg z-50 transition-transform duration-300 bottom-tabbar", isVisible ? "translate-y-0" : "translate-y-full")}>
       <div className="flex justify-around items-center py-2 px-2">
         {navItems.map(item => (
           <NavLink 
