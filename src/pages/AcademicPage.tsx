@@ -2645,26 +2645,39 @@ export default function AcademicPage() {
                     Scores across all exam periods
                   </p>
                   <div className="overflow-x-auto">
-                    <div className="min-w-[320px]">
+                    <div className="min-w-[360px]">
                       {/* Header row with periods */}
                       <div className="flex gap-1 mb-1">
-                        <div className="w-16 shrink-0" />
-                        {heatmapData[0]?.scores.map(s => <div key={s.period} className="flex-1 text-center text-[9px] font-medium text-muted-foreground px-1">
+                        <div className="w-20 h-6 sticky left-0 z-10 bg-card text-[9px] font-semibold text-muted-foreground uppercase tracking-wide flex items-center">
+                          Subject
+                        </div>
+                        {heatmapData[0]?.scores.map(s => (
+                          <div key={s.period} className="w-14 h-6 text-center text-[9px] font-medium text-muted-foreground px-1 flex items-center justify-center">
                             {s.period}
-                          </div>)}
+                          </div>
+                        ))}
                       </div>
                       {/* Subject rows */}
-                      {(heatmapExpanded ? heatmapData : heatmapData.slice(0, 6)).map(row => <div key={row.subject} className="flex gap-1 mb-1">
-                          <div className="w-16 shrink-0 text-[10px] font-medium text-foreground truncate pr-1 flex items-center">
+                      {(heatmapExpanded ? heatmapData : heatmapData.slice(0, 6)).map(row => (
+                        <div key={row.subject} className="flex gap-1 mb-1">
+                          <div className="w-20 h-7 sticky left-0 z-10 bg-card text-[10px] font-medium text-foreground truncate pr-1 flex items-center">
                             {row.subject}
                           </div>
-                          {row.scores.map((cell, idx) => <div key={idx} className="flex-1 h-7 rounded flex items-center justify-center text-[10px] font-semibold text-white transition-all hover:scale-105 cursor-default" style={{
-                        backgroundColor: getHeatmapColor(cell.score),
-                        opacity: cell.score === null ? 0.3 : 1
-                      }} title={`${row.fullName} - ${cell.period}: ${cell.score ?? 'N/A'}%`}>
+                          {row.scores.map((cell, idx) => (
+                            <div
+                              key={idx}
+                              className="w-14 h-7 rounded flex items-center justify-center text-[10px] font-semibold text-white transition-all hover:scale-105 cursor-default"
+                              style={{
+                                backgroundColor: getHeatmapColor(cell.score),
+                                opacity: cell.score === null ? 0.3 : 1
+                              }}
+                              title={`${row.fullName} - ${cell.period}: ${cell.score ?? 'N/A'}%`}
+                            >
                               {cell.score ?? "–"}
-                            </div>)}
-                        </div>)}
+                            </div>
+                          ))}
+                        </div>
+                      ))}
                     </div>
                   </div>
                   {/* View More Button */}

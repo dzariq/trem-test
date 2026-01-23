@@ -51,19 +51,21 @@ export function AttendanceSummary() {
     <section className="px-4 py-4">
       <Card className="bg-card border-border shadow-sm">
         <CardHeader className="pb-2">
-          <CardTitle className="text-lg font-semibold flex items-center justify-between">
-            <span>Attendance Overview</span>
-            <div className="flex items-center gap-2">
+          <CardTitle className="flex items-start justify-between gap-3">
+            <div className="text-base font-semibold">Attendance Overview</div>
+            <div className="flex flex-col items-end">
               {/* Student Selector */}
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button
                     variant="ghost"
                     size="sm"
-                    className="text-sm font-normal text-muted-foreground h-auto py-1 px-2"
+                    className="text-sm font-medium text-muted-foreground h-auto py-1 px-2"
                     disabled={studentsLoading || linkedStudents.length === 0}
                   >
-                    <span className="truncate max-w-[100px]">{selectedStudent?.name ?? "Select Student"}</span>
+                    <span className="truncate max-w-[160px] sm:max-w-[240px] pr-1">
+                      {selectedStudent?.name ?? "Select Student"}
+                    </span>
                     <ChevronDown className="h-3 w-3 ml-1" />
                   </Button>
                 </DropdownMenuTrigger>
@@ -79,32 +81,33 @@ export function AttendanceSummary() {
                   ))}
                 </DropdownMenuContent>
               </DropdownMenu>
-
-              {/* Period Selector */}
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="text-sm font-normal text-muted-foreground h-auto py-1 px-2"
-                    disabled={loading}
-                  >
-                    {selectedPeriod.label}
-                    <ChevronDown className="h-3 w-3 ml-1" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="bg-card border-border">
-                  {PERIOD_OPTIONS.map((option) => (
-                    <DropdownMenuItem
-                      key={option.days}
-                      onClick={() => setSelectedPeriod(option)}
-                      className={selectedPeriod.days === option.days ? "bg-muted" : ""}
+              <div className="mt-1 relative z-10">
+                {/* Period Selector */}
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="text-sm font-normal text-muted-foreground h-auto py-1 px-2"
+                      disabled={loading}
                     >
-                      {option.label}
-                    </DropdownMenuItem>
-                  ))}
-                </DropdownMenuContent>
-              </DropdownMenu>
+                      {selectedPeriod.label}
+                      <ChevronDown className="h-3 w-3 ml-1" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="bg-card border-border">
+                    {PERIOD_OPTIONS.map((option) => (
+                      <DropdownMenuItem
+                        key={option.days}
+                        onClick={() => setSelectedPeriod(option)}
+                        className={selectedPeriod.days === option.days ? "bg-muted" : ""}
+                      >
+                        {option.label}
+                      </DropdownMenuItem>
+                    ))}
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
             </div>
           </CardTitle>
         </CardHeader>

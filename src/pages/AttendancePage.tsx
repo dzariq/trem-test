@@ -674,13 +674,13 @@ export default function AttendancePage() {
 
       {/* Attendance Details Dialog */}
       <Dialog open={!!selectedDay} onOpenChange={(open) => !open && setSelectedDay(null)}>
-        <DialogContent className="max-w-sm mx-4">
+        <DialogContent className="w-screen max-w-screen overflow-x-hidden px-4 pb-safe">
           <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
+            <DialogTitle className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-2">
               <div className={`w-8 h-8 rounded-full flex items-center justify-center ${selectedDay ? getStatusColor(selectedDay.status) : ''}`}>
                 {selectedDay && getStatusIcon(selectedDay.status)}
               </div>
-              <div>
+              <div className="break-words">
                 <p className="text-base font-semibold">
                   {selectedDay && new Date(selectedDay.date).toLocaleDateString("en-US", { 
                     weekday: "long", 
@@ -706,14 +706,14 @@ export default function AttendancePage() {
             {selectedDay?.reason && (
               <div className="space-y-1">
                 <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Reason</p>
-                <p className="text-sm text-foreground">{selectedDay.reason}</p>
+                <p className="text-sm text-foreground break-words">{selectedDay.reason}</p>
               </div>
             )}
             
             {selectedDay?.remarks && (
               <div className="space-y-1">
                 <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Remarks</p>
-                <p className="text-sm text-foreground leading-relaxed">{selectedDay.remarks}</p>
+                <p className="text-sm text-foreground leading-relaxed break-words">{selectedDay.remarks}</p>
               </div>
             )}
             
