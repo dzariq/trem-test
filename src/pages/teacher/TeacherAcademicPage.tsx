@@ -1188,13 +1188,20 @@ export default function TeacherAcademicPage() {
     
     // Map classAnalysis.subjectAverages to the expected format
     const mapped = classAnalysis.subjectAverages.map(sa => ({
+      subjectId: sa.subjectId,
       name: sa.subjectName.length > 10 ? sa.subjectName.substring(0, 10) + "..." : sa.subjectName,
       fullName: sa.subjectName,
-      average: sa.gradeCount > 0 ? sa.average : 0
+      average: sa.gradeCount > 0 ? sa.average : 0,
+      cohortAvg:
+        classAnalysis.cohortAveragesBySubjectId[sa.subjectId] ?? null,
     }));
     
     return mapped;
-  }, [classAnalysis.subjectAverages, classAnalysis.hasData]);
+  }, [
+    classAnalysis.subjectAverages,
+    classAnalysis.hasData,
+    classAnalysis.cohortAveragesBySubjectId,
+  ]);
   
   const selectedStudentData = students.find(s => s.id === selectedStudent);
 
@@ -1330,7 +1337,7 @@ export default function TeacherAcademicPage() {
   }, [radarData]);
 
   // Calculate average per subject across the selected trend range
-  const cohortAverages = useMemo(() => {
+  const trendSubjectAverages = useMemo(() => {
     const subjectTotals: Record<string, { sum: number; count: number }> = {};
 
     trendData.forEach((entry) => {
@@ -1363,7 +1370,11 @@ export default function TeacherAcademicPage() {
     Object.entries(latest).forEach(([key, value]) => {
       if (key !== "period" && key !== "periodId" && key !== "Average" && typeof value === 'number') {
         const shortName = getShortSubjectName(key);
-        const subjectCohortAvg = cohortAverages[key] ?? value;
+        const subjectId = subjectNameToId.get(key);
+        const subjectCohortAvg =
+          (subjectId !== undefined
+            ? classAnalysis.cohortAveragesBySubjectId[subjectId]
+            : undefined) ?? trendSubjectAverages[key] ?? value;
         allSubjects.push({
           name: shortName.length > 8 ? shortName.substring(0, 8) : shortName,
           fullName: key,
@@ -1374,7 +1385,13 @@ export default function TeacherAcademicPage() {
       }
     });
     return allSubjects.filter(s => selectedSubjects.includes(s.fullName)).sort((a, b) => b.delta - a.delta);
-  }, [trendData, selectedSubjects, cohortAverages]);
+  }, [
+    trendData,
+    selectedSubjects,
+    trendSubjectAverages,
+    subjectNameToId,
+    classAnalysis.cohortAveragesBySubjectId,
+  ]);
 
   // Performance Heatmap data (filtered by selectedSubjects)
   const heatmapData = useMemo(() => {
@@ -2430,10 +2447,15 @@ export default function TeacherAcademicPage() {
                       name: s.name,
                       fullName: s.fullName,
                       score: isNaN(s.average) ? 0 : Math.round(s.average),
-                      goal: isNaN(s.average) ? 0 : Math.round(s.average)
+                      goal: isNaN(s.average) ? 0 : Math.round(s.average),
+                      cohortAvg:
+                        typeof s.cohortAvg === "number" ? Math.round(s.cohortAvg) : undefined
                     }))}
                     lineColors={SUBJECT_COLORS}
                     showGoalBadge={false}
+                    showCohortDot={true}
+                    cohortLabel={classAnalysis.cohortYearLevel}
+                    classLabel={classAnalysis.selectedClass}
                   />
                 )}
 
@@ -4128,6 +4150,8 @@ export default function TeacherAcademicPage() {
                   title="Class versus Cohort Average"
                   showGoalBadge={false}
                   showCohortDot={true}
+                  cohortLabel={classAnalysis.cohortYearLevel}
+                  classLabel={classAnalysis.selectedClass}
                 />
 
                 {/* Performance Heatmap */}
@@ -4139,27 +4163,46 @@ export default function TeacherAcademicPage() {
                   <p className="text-[10px] text-muted-foreground -mt-1">
                     Scores across available periods
                   </p>
-                  <div className="overflow-x-auto">
-                    <div className="min-w-[320px]">
-                      {/* Header row with periods */}
-                      <div className="flex gap-1 mb-1">
-                        <div className="w-16 shrink-0" />
-                        {heatmapData[0]?.scores.map(s => <div key={s.period} className="flex-1 text-center text-[9px] font-medium text-muted-foreground px-1">
-                            {s.period}
-                          </div>)}
+                  <div className="flex gap-2">
+                    <div className="w-20 shrink-0">
+                      <div className="h-6 mb-1 text-[9px] font-semibold text-muted-foreground uppercase tracking-wide flex items-center pr-2 border-r border-border bg-card">
+                        Subject
                       </div>
-                      {/* Subject rows */}
-                      {(heatmapExpanded ? heatmapData : heatmapData.slice(0, 6)).map(row => <div key={row.subject} className="flex gap-1 mb-1">
-                          <div className="w-16 shrink-0 text-[10px] font-medium text-foreground truncate pr-1 flex items-center">
-                            {row.subject}
+                      {(heatmapExpanded ? heatmapData : heatmapData.slice(0, 6)).map(row => (
+                        <div key={row.subject} className="h-7 mb-1 text-[10px] font-medium text-foreground truncate pr-2 flex items-center border-r border-border bg-card">
+                          {row.subject}
+                        </div>
+                      ))}
+                    </div>
+                    <div className="overflow-x-auto">
+                      <div className="min-w-max pr-2">
+                        {/* Header row with periods */}
+                        <div className="flex gap-1 mb-1">
+                          {heatmapData[0]?.scores.map(s => (
+                            <div key={s.period} className="w-20 h-6 text-center text-[9px] font-medium text-muted-foreground px-1 flex items-center justify-center whitespace-nowrap">
+                              {s.period}
+                            </div>
+                          ))}
+                        </div>
+                        {/* Subject rows */}
+                        {(heatmapExpanded ? heatmapData : heatmapData.slice(0, 6)).map(row => (
+                          <div key={row.subject} className="flex gap-1 mb-1">
+                            {row.scores.map((cell, idx) => (
+                              <div
+                                key={idx}
+                                className="w-20 h-7 rounded flex items-center justify-center text-[10px] font-semibold text-white transition-all hover:scale-105 cursor-default whitespace-nowrap"
+                                style={{
+                                  backgroundColor: getHeatmapColor(cell.score),
+                                  opacity: cell.score === null ? 0.3 : 1
+                                }}
+                                title={`${row.fullName} - ${cell.period}: ${cell.score ?? 'N/A'}%`}
+                              >
+                                {cell.score ?? "–"}
+                              </div>
+                            ))}
                           </div>
-                          {row.scores.map((cell, idx) => <div key={idx} className="flex-1 h-7 rounded flex items-center justify-center text-[10px] font-semibold text-white transition-all hover:scale-105 cursor-default" style={{
-                        backgroundColor: getHeatmapColor(cell.score),
-                        opacity: cell.score === null ? 0.3 : 1
-                      }} title={`${row.fullName} - ${cell.period}: ${cell.score ?? 'N/A'}%`}>
-                              {cell.score ?? "–"}
-                            </div>)}
-                        </div>)}
+                        ))}
+                      </div>
                     </div>
                   </div>
                   {/* View More Button */}

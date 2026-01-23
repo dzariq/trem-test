@@ -28,6 +28,8 @@ interface SubjectPerformanceChartProps {
   showGoalBadge?: boolean;
   title?: string;
   showCohortDot?: boolean;
+  cohortLabel?: string | null;
+  classLabel?: string | null;
 }
 
 // Default colors
@@ -48,6 +50,8 @@ export function SubjectPerformanceChart({
   showGoalBadge = true,
   title = "Subject Performance",
   showCohortDot = false,
+  cohortLabel = null,
+  classLabel = null,
 }: SubjectPerformanceChartProps) {
   const totalSubjects = data.length;
   const MIN_VISIBLE = 3;
@@ -166,6 +170,19 @@ export function SubjectPerformanceChart({
     }));
   }, [data, animatedZoom, scrollOffset]);
 
+  const maxScore = useMemo(() => {
+    if (data.length === 0) return 100;
+    const maxValue = Math.max(
+      ...data.map((item) => Math.max(item.score, item.cohortAvg ?? 0))
+    );
+    return Math.max(100, Math.ceil(maxValue + 5));
+  }, [data]);
+
+  const cohortLabelText = cohortLabel
+    ? `Cohort Avg (${cohortLabel})`
+    : "Cohort Avg";
+  const classLabelText = classLabel ? `Class Avg (${classLabel})` : "Class Avg";
+
   // Touch handlers
   const handleTouchStart = useCallback((e: TouchEvent<HTMLDivElement>) => {
     if (e.touches.length === 2) {
@@ -283,8 +300,8 @@ export function SubjectPerformanceChart({
           )}
           {showCohortDot && (
             <Badge variant="outline" className="text-[10px] px-1.5 py-0">
-              <span className="w-2 h-2 rounded-full mr-1 bg-black dark:bg-white" />
-              Cohort Avg
+              <span className="w-2 h-2 rounded-full mr-1 bg-black" />
+              {cohortLabelText}
             </Badge>
           )}
         </h4>
@@ -300,7 +317,7 @@ export function SubjectPerformanceChart({
             </button>
           )}
           <span className="text-muted-foreground">
-            {Math.round((totalSubjects / zoomLevel) * 100)}%
+            {zoomLevel > 0 ? Math.round((totalSubjects / zoomLevel) * 100) : 0}%
           </span>
         </div>
       </div>
@@ -308,7 +325,12 @@ export function SubjectPerformanceChart({
       {/* Scroll indicator dots when zoomed in */}
       {zoomLevel < totalSubjects && (
         <div className="flex justify-center gap-1 py-1">
-          {Array.from({ length: Math.ceil(totalSubjects / zoomLevel) }).map((_, i) => (
+          {Array.from({
+            length:
+              Number.isFinite(zoomLevel) && zoomLevel > 0
+                ? Math.max(0, Math.ceil(totalSubjects / zoomLevel))
+                : 0,
+          }).map((_, i) => (
             <div
               key={i}
               className={`h-1.5 rounded-full transition-all duration-200 ${
@@ -382,11 +404,11 @@ export function SubjectPerformanceChart({
           }}
         >
           <ResponsiveContainer width="100%" height="100%" style={{ overflow: 'visible' }}>
-            <ComposedChart data={visibleData} layout="vertical" margin={{ left: 0, right: 16, top: 4, bottom: 4 }}>
+            <ComposedChart data={visibleData} layout="vertical" margin={{ left: 0, right: 28, top: 4, bottom: 4 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" strokeOpacity={0.3} />
               <XAxis 
                 type="number" 
-                domain={[0, 100]}
+                domain={[0, maxScore]}
                 ticks={[0, 25, 50, 75, 100]}
                 tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }}
                 axisLine={false}
@@ -400,20 +422,38 @@ export function SubjectPerformanceChart({
                 axisLine={false}
                 tickLine={false}
               />
-              <Tooltip 
-                contentStyle={{ 
-                  backgroundColor: "hsl(var(--card))", 
-                  border: "1px solid hsl(var(--border))", 
-                  borderRadius: "8px",
-                  fontSize: "11px"
-                }}
-                formatter={(value: number, name: string) => [
-                  `${value}%`, 
-                  name === "score" ? "Score" : name === "goal" ? "Goal" : name
-                ]}
-                labelFormatter={(label) => {
-                  const item = visibleData.find(d => d.displayName === label);
-                  return item?.name || label;
+              <Tooltip
+                content={({ label, active }) => {
+                  if (!active || !label) return null;
+                  const item = visibleData.find((d) => d.displayName === label);
+                  if (!item) return null;
+                  const cohortAvg =
+                    typeof item.cohortAvg === "number" ? item.cohortAvg : null;
+                  const goal =
+                    typeof item.goal === "number" ? item.goal : null;
+                  const diff =
+                    cohortAvg !== null ? Math.round(item.score - cohortAvg) : null;
+                  return (
+                    <div className="rounded-md border border-border bg-card px-3 py-2 text-[11px] shadow-sm">
+                      <div className="text-xs font-semibold text-foreground">{item.name}</div>
+                      <div className="text-muted-foreground">
+                        {classLabelText}: {Math.round(item.score)}%
+                      </div>
+                      {showGoalBadge && goal !== null && (
+                        <div className="text-muted-foreground">Goal: {Math.round(goal)}%</div>
+                      )}
+                      {cohortAvg !== null && (
+                        <>
+                          <div className="text-muted-foreground">
+                            {cohortLabelText}: {Math.round(cohortAvg)}%
+                          </div>
+                          <div className="text-muted-foreground">
+                            Δ: {diff !== null && diff >= 0 ? "+" : ""}{diff ?? 0}
+                          </div>
+                        </>
+                      )}
+                    </div>
+                  );
                 }}
                 trigger="click"
                 cursor={false}
@@ -477,12 +517,12 @@ export function SubjectPerformanceChart({
                     return (
                       <g className="cohort-dots">
                         {visibleData.map((entry, index) => {
-                          if (entry.cohortAvg === undefined) return null;
+                          if (typeof entry.cohortAvg !== "number") return null;
                           
                           const cx = xAxis.scale(entry.cohortAvg);
                           const cy = yAxis.scale(entry.displayName);
                           
-                          if (cx === undefined || cy === undefined) return null;
+                          if (!Number.isFinite(cx) || !Number.isFinite(cy)) return null;
                           
                           // Adjust cy to center of the bar
                           const bandwidth = yAxis.scale.bandwidth ? yAxis.scale.bandwidth() / 2 : 0;
@@ -490,11 +530,11 @@ export function SubjectPerformanceChart({
                           return (
                             <circle
                               key={`cohort-dot-${index}`}
-                              cx={cx}
+                              cx={cx + 2}
                               cy={cy + bandwidth}
                               r={5}
-                              fill="hsl(var(--foreground))"
-                              stroke="hsl(var(--background))"
+                              fill="#111"
+                              stroke="#fff"
                               strokeWidth={2}
                             />
                           );

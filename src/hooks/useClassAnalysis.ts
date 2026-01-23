@@ -11,6 +11,7 @@ import {
   computeSummaryStats,
   computeTrendData,
   computeBoxPlotStats,
+  fetchCohortAveragesByYearLevelAndPeriod,
   ClassAnalysisStudent,
   SubjectInfo,
   AcademicPeriodInfo,
@@ -93,6 +94,10 @@ interface UseClassAnalysisReturn {
   
   // Box Plot tab computed data
   boxPlotStats: BoxPlotStats[];
+
+  // Cohort averages (year-level)
+  cohortAveragesBySubjectId: Record<number, number>;
+  cohortYearLevel: string | null;
 }
 
 export function useClassAnalysis(): UseClassAnalysisReturn {
@@ -119,6 +124,7 @@ export function useClassAnalysis(): UseClassAnalysisReturn {
     []
   );
   const [grades, setGrades] = useState<SubjectGrade[]>([]);
+  const [cohortAveragesBySubjectId, setCohortAveragesBySubjectId] = useState<Record<number, number>>({});
 
   // Loading states
   const [loadingClasses, setLoadingClasses] = useState(false);
@@ -250,6 +256,7 @@ export function useClassAnalysis(): UseClassAnalysisReturn {
       setGrades([]);
       setSelectedSubjectIds([]);
       setBandsSelectedSubjectId(null);
+      setCohortAveragesBySubjectId({});
       return;
     }
     setStudents(rosterStudents);
@@ -262,6 +269,7 @@ export function useClassAnalysis(): UseClassAnalysisReturn {
       setSubjects([]);
       setSelectedSubjectIds([]);
       setBandsSelectedSubjectId(null);
+      setCohortAveragesBySubjectId({});
       return;
     }
 
@@ -401,6 +409,42 @@ export function useClassAnalysis(): UseClassAnalysisReturn {
     }));
     setGrades(mappedGrades);
   }, [selectedClass, gradeRows]);
+
+  const cohortYearLevel = useMemo(() => {
+    const match = (selectedClass ?? "").match(/^Y\d{1,2}/);
+    return match?.[0] ?? null;
+  }, [selectedClass]);
+
+  useEffect(() => {
+    let isMounted = true;
+    const loadCohortAverages = async () => {
+      if (!cohortYearLevel || !selectedPeriodId) {
+        if (isMounted) setCohortAveragesBySubjectId({});
+        return;
+      }
+      try {
+        const averages = await fetchCohortAveragesByYearLevelAndPeriod(
+          cohortYearLevel,
+          selectedPeriodId
+        );
+        if (!isMounted) return;
+        const map: Record<number, number> = {};
+        averages.forEach((entry) => {
+          map[entry.subjectId] = entry.average;
+        });
+        setCohortAveragesBySubjectId(map);
+      } catch (err) {
+        console.error("[classAnalysis/cohortAverages]", err);
+        if (isMounted) {
+          setCohortAveragesBySubjectId({});
+        }
+      }
+    };
+    loadCohortAverages();
+    return () => {
+      isMounted = false;
+    };
+  }, [cohortYearLevel, selectedPeriodId]);
 
   // Actions
   const toggleSubject = useCallback((subjectId: number) => {
@@ -594,5 +638,9 @@ export function useClassAnalysis(): UseClassAnalysisReturn {
     
     // Box Plot tab
     boxPlotStats,
+
+    // Cohort averages
+    cohortAveragesBySubjectId,
+    cohortYearLevel,
   };
 }

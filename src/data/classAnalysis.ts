@@ -58,6 +58,11 @@ export interface SubjectChange {
   change: number;
 }
 
+export interface CohortAverage {
+  subjectId: number;
+  average: number;
+}
+
 const logSupabaseError = (
   context: string,
   error: { code?: string; message?: string; details?: string; hint?: string }
@@ -211,6 +216,31 @@ export async function fetchGradesForAnalysis(
       exam_marks: g.exam_marks || 0,
       total_marks: g.total_marks || 0,
       letter_grade: g.letter_grade,
+    })) || []
+  );
+}
+
+export async function fetchCohortAveragesByYearLevelAndPeriod(
+  yearLevel: string,
+  academicPeriodId: string
+): Promise<CohortAverage[]> {
+  const { data, error } = await supabase.rpc(
+    "get_cohort_averages_by_year_level_and_period_scoped",
+    {
+      p_year_level: yearLevel,
+      p_academic_period_id: academicPeriodId,
+    }
+  );
+
+  if (error) {
+    logSupabaseError("classAnalysis/fetchCohortAveragesByYearLevelAndPeriod", error);
+    throw error;
+  }
+
+  return (
+    data?.map((row: { subject_id: number; cohort_avg: number | null }) => ({
+      subjectId: row.subject_id,
+      average: Number.isFinite(row.cohort_avg) ? (row.cohort_avg as number) : 0,
     })) || []
   );
 }
