@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, type KeyboardEvent } from "react";
 import { useSearchParams } from "react-router-dom";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { AppHeader } from "@/components/layout/AppHeader";
@@ -43,6 +43,7 @@ import { PICTeachersList } from "@/components/cca/PICTeacherPill";
 import { CcaTypeTabs, getCcaTypeColor } from "@/components/cca/CcaTypeTabs";
 import { supabase } from "@/lib/supabase";
 import { useCcaSessionsCalendar, type CcaCalendarSession } from "@/hooks/useCcaSessionsCalendar";
+import { EventDetailsSheet } from "@/components/events/EventDetailsSheet";
 
 export default function CalendarPage() {
   const { profile } = useMyProfile();
@@ -57,6 +58,8 @@ export default function CalendarPage() {
   const [selectedTag, setSelectedTag] = useState<CalendarTag | null>(null);
   const [ccaTypeFilter, setCcaTypeFilter] = useState("all"); // Now uses type_id or "all"
   const [selectedCCA, setSelectedCCA] = useState<CcaActivity | null>(null);
+  const [selectedEventDetails, setSelectedEventDetails] = useState<UpcomingEvent | null>(null);
+  const [eventDetailsOpen, setEventDetailsOpen] = useState(false);
   const [events, setEvents] = useState<UpcomingEvent[]>([]);
   const [studentYearLevel, setStudentYearLevel] = useState<string | null>(null);
 
@@ -223,6 +226,16 @@ export default function CalendarPage() {
     return filterEnrolledByTypeId(ccaTypeFilter);
   }, [filterEnrolledByTypeId, ccaTypeFilter]);
 
+  const getTeacherInChargeLabel = (activity: CcaActivity) => {
+    if (activity.picTeachers.length > 0) {
+      return activity.picTeachers.map((t) => t.fullName).join(", ");
+    }
+    if (activity.coordinatorName) {
+      return activity.coordinatorName;
+    }
+    return null;
+  };
+
   // Categories visible to parents (exclude staff-admin and due-dates)
   const parentVisibleCategories: (TagCategory | "all")[] = [
     "all",
@@ -246,6 +259,19 @@ export default function CalendarPage() {
 
   const handleTagSelect = (tag: CalendarTag) => {
     setSelectedTag(tag);
+  };
+
+  const openEventDetails = (event: UpcomingEvent, triggerEl?: HTMLElement | null) => {
+    triggerEl?.blur?.();
+    setSelectedEventDetails(event);
+    setEventDetailsOpen(true);
+  };
+
+  const handleEventKeyDown = (keyboardEvent: KeyboardEvent<HTMLDivElement>, event: UpcomingEvent) => {
+    if (keyboardEvent.key === "Enter" || keyboardEvent.key === " ") {
+      keyboardEvent.preventDefault();
+      openEventDetails(event, keyboardEvent.currentTarget);
+    }
   };
 
   return (
@@ -366,7 +392,7 @@ export default function CalendarPage() {
             </div>
 
             {/* Calendar Component */}
-            <Card className="bg-card border-border shadow-sm">
+            <Card className="bg-card border-border shadow-sm overflow-hidden">
               <CardContent className="p-3 sm:p-4 md:p-6">
                 <div className="flex justify-center">
                   <Calendar
@@ -510,7 +536,11 @@ export default function CalendarPage() {
                     return (
                       <div 
                         key={event.id}
-                        className="flex items-start gap-4 p-3 rounded-lg border border-border/50 hover:bg-accent/30 transition-colors"
+                        className="flex items-start gap-4 p-3 rounded-lg border border-border/50 hover:bg-accent/30 transition-colors cursor-pointer"
+                        role="button"
+                        tabIndex={0}
+                        onClick={(e) => openEventDetails(event, e.currentTarget)}
+                        onKeyDown={(e) => handleEventKeyDown(e, event)}
                       >
                         <div className="flex flex-col items-center justify-center bg-primary/10 text-primary rounded-lg w-12 h-12 flex-shrink-0">
                           <span className="text-sm font-bold leading-none">{eventDate.getDate()}</span>
@@ -590,16 +620,24 @@ export default function CalendarPage() {
               {!enrolledLoading && !enrolledError && filteredEnrolledCCA.map((activity) => (
                 <Card key={`enrolled-${activity.enrollmentId}`} className="bg-primary/5 border-primary/20 shadow-sm">
                   <CardContent className="p-4">
-                    <div className="flex items-start justify-between mb-3">
-                      <div className="flex items-center gap-2">
+                    <div className="flex items-start justify-between gap-3 mb-3">
+                      <div className="min-w-0">
                         <h3 className="font-semibold text-foreground">{activity.name}</h3>
-                        <Badge variant="secondary" className="text-[10px] px-1.5 py-0 bg-primary/20 text-primary">
+                      </div>
+                      <div className="flex flex-wrap justify-end gap-2 w-fit">
+                        <Badge
+                          variant="secondary"
+                          className="text-[10px] px-1.5 py-0 bg-primary/20 text-primary shrink-0 w-fit"
+                        >
                           Enrolled
                         </Badge>
+                        <Badge
+                          className={`${getCcaCategoryColor(activity.category)} shrink-0 w-fit`}
+                          variant="secondary"
+                        >
+                          {activity.category}
+                        </Badge>
                       </div>
-                      <Badge className={getCcaCategoryColor(activity.category)} variant="secondary">
-                        {activity.category}
-                      </Badge>
                     </div>
                     
                     <div className="space-y-2 text-sm text-muted-foreground">
@@ -618,14 +656,25 @@ export default function CalendarPage() {
                           <span>{activity.location}</span>
                         </div>
                       )}
-                      {activity.picTeachers.length > 0 && (
-                        <div className="flex items-start gap-2 pt-1">
-                          <User className="h-4 w-4 flex-shrink-0 mt-0.5" />
-                          <div className="flex-1">
-                            <PICTeachersList teachers={activity.picTeachers} />
-                          </div>
+                    </div>
+
+                    <div className="flex items-start justify-between gap-3 pt-1">
+                      <div className="flex items-start gap-2 min-w-0">
+                        <User className="h-4 w-4 mt-0.5 shrink-0 text-muted-foreground" />
+                        <div className="min-w-0">
+                          {getTeacherInChargeLabel(activity) ? (
+                            <PICTeachersList
+                              teachers={activity.picTeachers}
+                              fallbackCoordinator={activity.coordinatorName}
+                              className="gap-2"
+                            />
+                          ) : (
+                            <p className="text-xs text-muted-foreground">
+                              Teacher in charge: Not assigned
+                            </p>
+                          )}
                         </div>
-                      )}
+                      </div>
                     </div>
                   </CardContent>
                 </Card>
@@ -664,10 +713,15 @@ export default function CalendarPage() {
               {!ccaLoading && !ccaError && filteredCCA.map((activity) => (
                 <Card key={activity.id} className="bg-card border-border shadow-sm">
                   <CardContent className="p-4">
-                    <div className="flex items-start justify-between mb-3">
-                      <div>
+                    <div className="flex items-start justify-between gap-3 mb-3">
+                      <div className="min-w-0">
                         <h3 className="font-semibold text-foreground">{activity.name}</h3>
-                        <Badge className={getCcaCategoryColor(activity.category)} variant="secondary">
+                      </div>
+                      <div className="flex flex-wrap justify-end gap-2 w-fit">
+                        <Badge
+                          className={`${getCcaCategoryColor(activity.category)} shrink-0 w-fit`}
+                          variant="secondary"
+                        >
                           {activity.category}
                         </Badge>
                       </div>
@@ -689,6 +743,25 @@ export default function CalendarPage() {
                           <span>{activity.location}</span>
                         </div>
                       )}
+                    </div>
+
+                    <div className="flex items-start justify-between gap-3 pt-1 mt-2">
+                      <div className="flex items-start gap-2 min-w-0">
+                        <User className="h-4 w-4 mt-0.5 shrink-0 text-muted-foreground" />
+                        <div className="min-w-0">
+                          {getTeacherInChargeLabel(activity) ? (
+                            <PICTeachersList
+                              teachers={activity.picTeachers}
+                              fallbackCoordinator={activity.coordinatorName}
+                              className="gap-2"
+                            />
+                          ) : (
+                            <p className="text-xs text-muted-foreground">
+                              Teacher in charge: Not assigned
+                            </p>
+                          )}
+                        </div>
+                      </div>
                     </div>
 
                     <p className="text-sm text-muted-foreground mt-3">
@@ -783,6 +856,12 @@ export default function CalendarPage() {
           )}
         </DialogContent>
       </Dialog>
+
+      <EventDetailsSheet
+        open={eventDetailsOpen}
+        onOpenChange={setEventDetailsOpen}
+        event={selectedEventDetails}
+      />
     </AppLayout>
   );
 }

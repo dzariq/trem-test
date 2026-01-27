@@ -5,6 +5,7 @@ import { MapPin, Phone, Mail, Clock, ExternalLink, ChevronLeft } from "lucide-re
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import schoolLogo from "@/assets/school-badge.png";
+import { useScrollToTopOnMount } from "@/hooks/useScrollToTopOnMount";
 
 const campuses = [
   {
@@ -35,6 +36,7 @@ const officeHours = [
 
 export default function ContactPage() {
   const navigate = useNavigate();
+  useScrollToTopOnMount();
   
   const handleCall = (phone: string) => {
     window.location.href = `tel:${phone.replace(/[^0-9+]/g, '')}`;

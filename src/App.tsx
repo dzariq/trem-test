@@ -52,7 +52,10 @@ const App = () => (
       <TooltipProvider>
         <Toaster />
         <Sonner />
-        <div className="min-h-screen overflow-x-hidden app-shell">
+        <div
+          data-app-scroll="true"
+          className="app-shell h-screen overflow-y-auto overflow-x-hidden"
+        >
           <BrowserRouter>
             <Routes>
               {/* Role Selection - Landing Page */}

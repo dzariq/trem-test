@@ -11,7 +11,7 @@ function Calendar({ className, classNames, showOutsideDays = true, ...props }: C
   return (
     <DayPicker
       showOutsideDays={showOutsideDays}
-      className={cn("p-4 pointer-events-auto", className)}
+      className={cn("p-2 sm:p-3 pointer-events-auto", className)}
       classNames={{
         months: "flex flex-col sm:flex-row space-y-4 sm:space-x-4 sm:space-y-0 justify-center",
         month: "space-y-4 w-full",
@@ -24,18 +24,22 @@ function Calendar({ className, classNames, showOutsideDays = true, ...props }: C
         ),
         nav_button_previous: "absolute left-1",
         nav_button_next: "absolute right-1",
-        table: "w-full border-collapse",
-        head_row: "flex w-full justify-between mb-1",
-        head_cell: "text-muted-foreground flex-1 font-medium text-sm text-center py-2",
-        row: "flex w-full mt-1 justify-between",
-        cell: "flex-1 aspect-square text-center p-0.5 relative [&:has([aria-selected].day-range-end)]:rounded-lg [&:has([aria-selected].day-outside)]:bg-accent/50 [&:has([aria-selected])]:bg-accent first:[&:has([aria-selected])]:rounded-lg last:[&:has([aria-selected])]:rounded-lg focus-within:relative focus-within:z-20",
-        day: cn(buttonVariants({ variant: "ghost" }), "h-full w-full p-0 font-normal text-base aria-selected:opacity-100 aspect-square rounded-lg hover:bg-muted active:bg-muted/80"),
+        table: "w-full table-fixed border-collapse",
+        head_row: "grid grid-cols-7 gap-1 mb-1",
+        head_cell: "text-muted-foreground font-medium text-sm text-center py-2",
+        row: "grid grid-cols-7 gap-1 mt-1",
+        cell: "relative grid place-items-center p-0 focus-within:relative focus-within:z-20",
+        day: cn(
+          buttonVariants({ variant: "ghost" }),
+          "relative isolate grid h-9 w-9 place-items-center p-0 text-sm leading-none font-normal rounded-full hover:bg-muted active:bg-muted/80 aria-selected:opacity-100",
+        ),
         day_range_end: "day-range-end",
         day_selected:
-          "bg-primary text-primary-foreground hover:bg-primary hover:text-primary-foreground focus:bg-primary focus:text-primary-foreground rounded-lg",
-        day_today: "bg-accent/50 border-2 border-primary text-foreground rounded-lg font-semibold",
+          "text-primary-foreground hover:text-primary-foreground focus:text-primary-foreground [&::before]:content-[''] [&::before]:absolute [&::before]:h-8 [&::before]:w-8 [&::before]:rounded-full [&::before]:bg-primary [&::before]:z-[-1]",
+        day_today:
+          "font-semibold text-foreground [&::before]:content-[''] [&::before]:absolute [&::before]:h-8 [&::before]:w-8 [&::before]:rounded-full [&::before]:ring-2 [&::before]:ring-primary [&::before]:bg-transparent [&::before]:z-[-1] aria-selected:[&::before]:ring-0",
         day_outside:
-          "day-outside text-muted-foreground opacity-40 aria-selected:bg-accent/50 aria-selected:text-muted-foreground aria-selected:opacity-30",
+          "day-outside text-muted-foreground opacity-40 aria-selected:text-muted-foreground aria-selected:opacity-30",
         day_disabled: "text-muted-foreground opacity-50",
         day_range_middle: "aria-selected:bg-accent aria-selected:text-accent-foreground",
         day_hidden: "invisible",

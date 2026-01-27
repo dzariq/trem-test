@@ -580,17 +580,33 @@ export default function TeacherAcademicPage() {
   
   // Scroll detection for floating save button
   useEffect(() => {
+    const scrollEl = document.querySelector('[data-app-scroll="true"]') as HTMLElement | null;
+    const target: HTMLElement | Window = scrollEl ?? window;
+
+    const getMetrics = () => {
+      if (target instanceof Window) {
+        return {
+          scrollTop: window.scrollY,
+          viewportHeight: window.innerHeight,
+          scrollHeight: document.documentElement.scrollHeight,
+        };
+      }
+      return {
+        scrollTop: target.scrollTop,
+        viewportHeight: target.clientHeight,
+        scrollHeight: target.scrollHeight,
+      };
+    };
+
     const handleScroll = () => {
-      const scrollTop = window.scrollY;
-      const windowHeight = window.innerHeight;
-      const documentHeight = document.documentElement.scrollHeight;
-      const isNearBottom = scrollTop + windowHeight >= documentHeight - 150;
+      const { scrollTop, viewportHeight, scrollHeight } = getMetrics();
+      const isNearBottom = scrollTop + viewportHeight >= scrollHeight - 150;
       setIsAtBottom(isNearBottom);
     };
     
-    window.addEventListener('scroll', handleScroll);
+    target.addEventListener("scroll", handleScroll, { passive: true });
     handleScroll(); // Check initial position
-    return () => window.removeEventListener('scroll', handleScroll);
+    return () => target.removeEventListener("scroll", handleScroll);
   }, []);
   const toggleYear = (year: string) => {
     setSelectedYears(prev => prev.includes(year) ? prev.length > 1 ? prev.filter(y => y !== year) : prev // Keep at least one selected

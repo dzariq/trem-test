@@ -6,8 +6,10 @@ import { Shield, Lock, Eye, Smartphone, Bell, Key, Fingerprint, ChevronRight } f
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Separator } from "@/components/ui/separator";
+import { useScrollToTopOnMount } from "@/hooks/useScrollToTopOnMount";
 export default function SecurityPrivacyPage() {
   const navigate = useNavigate();
+  useScrollToTopOnMount();
   const [twoFactorEnabled, setTwoFactorEnabled] = useState(false);
   const [biometricEnabled, setBiometricEnabled] = useState(true);
   const [loginAlerts, setLoginAlerts] = useState(true);

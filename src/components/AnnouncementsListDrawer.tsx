@@ -17,12 +17,13 @@ interface AnnouncementsListDrawerProps {
 }
 
 export function AnnouncementsListDrawer({ isOpen, onOpenChange }: AnnouncementsListDrawerProps) {
+  const DEFAULT_SNAP_POINT = 0.8;
   const [categoryFilter, setCategoryFilter] = useState<CategoryFilter>("all");
   const [currentView, setCurrentView] = useState<"list" | "detail">("list");
   const [currentAnnouncementIndex, setCurrentAnnouncementIndex] = useState(0);
   const [readIds, setReadIds] = useState<Announcement["id"][]>([]);
   const [slideDirection, setSlideDirection] = useState<"left" | "right" | null>(null);
-  const [snap, setSnap] = useState<number | string | null>(0.85);
+  const [snap, setSnap] = useState<number | string | null>(DEFAULT_SNAP_POINT);
   const [announcements, setAnnouncements] = useState<Announcement[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -70,6 +71,13 @@ export function AnnouncementsListDrawer({ isOpen, onOpenChange }: AnnouncementsL
       setTimeout(() => setCurrentView("list"), 300);
     }
   }, [isOpen]);
+
+  // Reset snap point when opening or switching into detail view.
+  useEffect(() => {
+    if (isOpen && currentView === "detail") {
+      setSnap(DEFAULT_SNAP_POINT);
+    }
+  }, [isOpen, currentView, currentAnnouncementIndex]);
 
   // Refresh read status when returning to list
   useEffect(() => {
@@ -217,7 +225,7 @@ export function AnnouncementsListDrawer({ isOpen, onOpenChange }: AnnouncementsL
     <DrawerPrimitive.Root
       open={isOpen}
       onOpenChange={onOpenChange}
-      snapPoints={currentView === "detail" ? [0.85, 1] : undefined}
+      snapPoints={currentView === "detail" ? [DEFAULT_SNAP_POINT] : undefined}
       activeSnapPoint={currentView === "detail" ? snap : undefined}
       setActiveSnapPoint={currentView === "detail" ? setSnap : undefined}
     >
@@ -230,6 +238,16 @@ export function AnnouncementsListDrawer({ isOpen, onOpenChange }: AnnouncementsL
           )}
           style={{ left: 0, right: 0 }}
         >
+          <DrawerPrimitive.Title className="sr-only">
+            {currentView === "detail" && currentAnnouncement
+              ? currentAnnouncement.title
+              : "Announcements"}
+          </DrawerPrimitive.Title>
+          <DrawerPrimitive.Description className="sr-only">
+            {currentView === "detail"
+              ? "Announcement details"
+              : "Announcements list"}
+          </DrawerPrimitive.Description>
           {/* Drag Handle */}
           <div className="mx-auto mt-3 h-1.5 w-14 rounded-full bg-muted-foreground/30 flex-shrink-0" />
 

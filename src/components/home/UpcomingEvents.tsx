@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, type KeyboardEvent, type MouseEvent } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ChevronRight, MapPin, Clock } from "lucide-react";
@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { useNavigate } from "react-router-dom";
 import type { UpcomingEvent } from "@/data/calendar";
 import type { UpcomingCcaSession } from "@/hooks/useUpcomingCcaSessions";
+import { EventDetailsSheet } from "@/components/events/EventDetailsSheet";
 
 type EventCategory = "all" | "academic" | "sports" | "arts" | "meeting" | "cca";
 
@@ -20,6 +21,8 @@ interface UpcomingEventsProps {
 export function UpcomingEvents({ events, ccaSessions, seeAllPath = "/parent/calendar" }: UpcomingEventsProps) {
   const navigate = useNavigate();
   const [activeFilter, setActiveFilter] = useState<EventCategory>("all");
+  const [detailsOpen, setDetailsOpen] = useState(false);
+  const [selectedEvent, setSelectedEvent] = useState<MergedEvent | null>(null);
 
   // Merge calendar events and CCA sessions, sorted by date
   const mergedEvents = useMemo<MergedEvent[]>(() => {
@@ -98,8 +101,21 @@ export function UpcomingEvents({ events, ccaSessions, seeAllPath = "/parent/cale
     });
   }, [mergedEvents, activeFilter]);
 
+  const openDetails = (event: MergedEvent, triggerEl?: HTMLElement | null) => {
+    triggerEl?.blur?.();
+    setSelectedEvent(event);
+    setDetailsOpen(true);
+  };
+
+  const handleKeyDown = (keyboardEvent: KeyboardEvent, item: MergedEvent) => {
+    if (keyboardEvent.key === "Enter" || keyboardEvent.key === " ") {
+      keyboardEvent.preventDefault();
+      openDetails(item, keyboardEvent.currentTarget as HTMLElement | null);
+    }
+  };
+
   return (
-    <section className="px-4 py-4">
+    <section className="px-4 py-4 overflow-x-hidden">
       <div className="flex items-center justify-between mb-3">
         <h2 className="text-lg font-semibold text-foreground">Upcoming Events</h2>
         <Button 
@@ -112,12 +128,12 @@ export function UpcomingEvents({ events, ccaSessions, seeAllPath = "/parent/cale
       </div>
 
       {/* Filter Tabs */}
-      <div className="flex gap-2 mb-3 overflow-x-auto pb-1">
+      <div className="flex flex-wrap gap-1.5 mb-3">
         {filters.map((filter) => (
           <Badge
             key={filter.value}
             variant={activeFilter === filter.value ? "default" : "outline"}
-            className="cursor-pointer whitespace-nowrap px-3 py-1"
+            className="cursor-pointer w-fit shrink-0 px-compact py-1"
             onClick={() => setActiveFilter(filter.value)}
           >
             {filter.label}
@@ -134,8 +150,19 @@ export function UpcomingEvents({ events, ccaSessions, seeAllPath = "/parent/cale
             const { day, month, full } = formatDateParts(ccaSession.sessionDate);
             const timeLabel = formatTimeRange(ccaSession.startTime, ccaSession.endTime);
             
-            return (
-              <Card key={`cca-${ccaSession.id}`} className="bg-card border-border shadow-sm border-l-4 border-l-primary/50">
+  const handleCardClick = (mouseEvent: MouseEvent<HTMLElement>, event: MergedEvent) => {
+    openDetails(event, mouseEvent.currentTarget);
+  };
+
+  return (
+              <Card
+                key={`cca-${ccaSession.id}`}
+                className="bg-card border-border shadow-sm border-l-4 border-l-primary/50 cursor-pointer"
+                role="button"
+                tabIndex={0}
+                onClick={(e) => handleCardClick(e, ccaSession)}
+                onKeyDown={(e) => handleKeyDown(e, ccaSession)}
+              >
                 <CardContent className="p-3 flex items-center gap-4">
                   <div className={`flex flex-col items-center justify-center rounded-lg w-14 h-14 flex-shrink-0 ${getCcaCategoryColor(ccaSession.category)}`}>
                     <span className="text-lg font-bold leading-none">{day}</span>
@@ -171,13 +198,20 @@ export function UpcomingEvents({ events, ccaSessions, seeAllPath = "/parent/cale
           
           // Regular calendar event
           const calEvent = event as UpcomingEvent;
-          const startDate = calEvent.startDay ?? (calEvent as any).date;
+          const startDate = calEvent.startDay || calEvent.date;
           const allDay = calEvent.allDay ?? true;
           const timeLabel = allDay ? "All Day" : calEvent.time;
           const { day, month, full } = formatDateParts(startDate);
           
           return (
-            <Card key={calEvent.id} className="bg-card border-border shadow-sm">
+            <Card
+              key={calEvent.id}
+              className="bg-card border-border shadow-sm cursor-pointer"
+              role="button"
+              tabIndex={0}
+              onClick={(e) => handleCardClick(e, calEvent)}
+              onKeyDown={(e) => handleKeyDown(e, calEvent)}
+            >
               <CardContent className="p-3 flex items-center gap-4">
                 <div className="flex flex-col items-center justify-center bg-primary text-primary-foreground rounded-lg w-14 h-14 flex-shrink-0">
                   <span className="text-lg font-bold leading-none">{day}</span>
@@ -214,6 +248,12 @@ export function UpcomingEvents({ events, ccaSessions, seeAllPath = "/parent/cale
           CCA sessions shown based on your assigned activities
         </p>
       )}
+
+      <EventDetailsSheet
+        open={detailsOpen}
+        onOpenChange={setDetailsOpen}
+        event={selectedEvent}
+      />
     </section>
   );
 }

@@ -184,7 +184,7 @@ export function NotificationsDrawer({ open, onOpenChange }: NotificationsDrawerP
           </p>
         </div>
 
-        <ScrollArea className="flex-1 px-4 pb-6" style={{ maxHeight: "calc(85vh - 160px)" }}>
+        <ScrollArea className="flex-1 px-4 pb-[calc(1.5rem+var(--safe-bottom))]" style={{ maxHeight: "calc(85vh - 160px - var(--safe-bottom))" }}>
           {isLoading ? (
             <div className="flex items-center justify-center py-12">
               <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
@@ -225,3 +225,4 @@ export function NotificationsDrawer({ open, onOpenChange }: NotificationsDrawerP
     </Drawer>
   );
 }
+

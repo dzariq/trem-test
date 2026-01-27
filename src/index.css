@@ -171,12 +171,20 @@ All colors MUST be HSL.
   padding-right: var(--safe-right);
 }
 
+.safe-area-top { padding-top: var(--safe-top); }
+.safe-area-bottom { padding-bottom: var(--safe-bottom); }
+
 .bottom-tabbar {
   padding-bottom: calc(0.5rem + var(--safe-bottom));
 }
 
 /* Custom scrollbar for dialog/drawer content */
 @layer utilities {
+  .px-compact {
+    padding-left: 0.4rem;
+    padding-right: 0.4rem;
+  }
+
   .drawer-scroll {
     scrollbar-width: thin;
     scrollbar-color: hsl(var(--muted)) transparent;
@@ -197,3 +205,4 @@ All colors MUST be HSL.
     border-radius: 3px;
   }
 }
+

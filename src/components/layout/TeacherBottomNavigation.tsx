@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Home, UserCheck, Calendar, ClipboardList, LucideIcon } from "lucide-react";
 import { NavLink } from "react-router-dom";
 import { cn } from "@/lib/utils";
@@ -20,22 +20,29 @@ const navItems: NavItem[] = [
 ];
 export function TeacherBottomNavigation() {
   const [isVisible, setIsVisible] = useState(true);
-  const [lastScrollY, setLastScrollY] = useState(0);
+  const lastScrollYRef = useRef(0);
   useEffect(() => {
+    const scrollEl = document.querySelector('[data-app-scroll="true"]') as HTMLElement | null;
+    const target: HTMLElement | Window = scrollEl ?? window;
+
+    const getScrollY = () =>
+      target instanceof Window ? target.scrollY : target.scrollTop;
+
     const handleScroll = () => {
-      const currentScrollY = window.scrollY;
+      const currentScrollY = getScrollY();
+      const lastScrollY = lastScrollYRef.current;
       if (currentScrollY < lastScrollY || currentScrollY < 50) {
         setIsVisible(true);
       } else if (currentScrollY > lastScrollY && currentScrollY > 50) {
         setIsVisible(false);
       }
-      setLastScrollY(currentScrollY);
+      lastScrollYRef.current = currentScrollY;
     };
-    window.addEventListener("scroll", handleScroll, {
+    target.addEventListener("scroll", handleScroll, {
       passive: true
     });
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, [lastScrollY]);
+    return () => target.removeEventListener("scroll", handleScroll);
+  }, []);
   return <nav className={cn("fixed bottom-0 left-0 right-0 bg-card border-t border-border shadow-lg z-50 transition-transform duration-300 bottom-tabbar", isVisible ? "translate-y-0" : "translate-y-full")}>
       <div className="flex justify-around items-center py-2 px-2">
         {navItems.map(item => (

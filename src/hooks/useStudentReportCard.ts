@@ -6,6 +6,9 @@ export interface AcademicPeriod {
   name: string;
   code: string;
   sortOrder: number;
+  academicYear: number | null;
+  academicPeriodId: string | null;
+  academicPeriodName: string | null;
 }
 
 export interface SubjectGrade {
@@ -78,7 +81,11 @@ const getBehaviorGrade = (marks: number | null): string => {
   return "E";
 };
 
-export function useStudentReportCard(studentId: string | null, academicPeriodId: string | null) {
+export function useStudentReportCard(
+  studentId: string | null,
+  examPeriodId: string | null,
+  academicPeriodId: string | null = null
+) {
   const [academicPeriods, setAcademicPeriods] = useState<AcademicPeriod[]>([]);
   const [periodsLoading, setPeriodsLoading] = useState(false);
   const [data, setData] = useState<StudentReportCardData>({
@@ -102,6 +109,10 @@ export function useStudentReportCard(studentId: string | null, academicPeriodId:
 
       setPeriodsLoading(true);
       try {
+        const supabaseAny = supabase as unknown as {
+          from: (table: string) => any;
+        };
+
         // Step 1: Get all academic_period_ids from student_grades for this student
         const { data: gradesData, error: gradesError } = await supabase
           .from("student_grades")
@@ -119,7 +130,7 @@ export function useStudentReportCard(studentId: string | null, academicPeriodId:
           // Fallback: get all active periods
           const { data: allPeriods, error: fallbackError } = await supabase
             .from("academic_periods")
-            .select("id, name, code, sort_order, created_at")
+            .select("id, name, code, sort_order, created_at, academic_year")
             .order("sort_order", { ascending: true })
             .order("created_at", { ascending: false });
           
@@ -131,6 +142,9 @@ export function useStudentReportCard(studentId: string | null, academicPeriodId:
               name: p.name,
               code: p.code || "",
               sortOrder: p.sort_order ?? 0,
+              academicYear: p.academic_year ?? null,
+              academicPeriodId: p.id,
+              academicPeriodName: p.name,
             }))
           );
           return;
@@ -150,7 +164,7 @@ export function useStudentReportCard(studentId: string | null, academicPeriodId:
           // No grades yet, show all periods (not just active)
           const { data: allPeriods, error: allPeriodsError } = await supabase
             .from("academic_periods")
-            .select("id, name, code, sort_order, created_at")
+            .select("id, name, code, sort_order, created_at, academic_year")
             .order("sort_order", { ascending: true })
             .order("created_at", { ascending: false });
           
@@ -162,27 +176,92 @@ export function useStudentReportCard(studentId: string | null, academicPeriodId:
               name: p.name,
               code: p.code || "",
               sortOrder: p.sort_order ?? 0,
+              academicYear: p.academic_year ?? null,
+              academicPeriodId: p.id,
+              academicPeriodName: p.name,
             }))
           );
           return;
         }
 
-        // Step 3: Fetch period details for those IDs
+        // Step 3: Prefer exam_periods joined to academic_periods (year-level),
+        // but fall back to academic_periods-only if the table is unavailable.
+        try {
+          const { data: examPeriods, error: examPeriodsError } = await supabaseAny
+            .from("exam_periods")
+            .select(`
+              id,
+              name,
+              code,
+              sort_order,
+              created_at,
+              academic_period_id,
+              academic_periods:academic_period_id (
+                id,
+                name,
+                code,
+                academic_year,
+                sort_order
+              )
+            `)
+            .in("id", uniquePeriodIds)
+            .order("sort_order", { ascending: true })
+            .order("created_at", { ascending: false });
+
+          console.log("[useStudentReportCard] exam_periods query result:", {
+            examPeriods,
+            examPeriodsError,
+            queriedIds: uniquePeriodIds,
+          });
+
+          if (examPeriodsError) {
+            throw examPeriodsError;
+          }
+
+          const mappedExamPeriods: AcademicPeriod[] = (examPeriods || []).map(
+            (p: any) => ({
+              id: p.id,
+              name: p.name,
+              code: p.code || "",
+              sortOrder: p.sort_order ?? 0,
+              academicYear: p.academic_periods?.academic_year ?? null,
+              academicPeriodId: p.academic_period_id ?? p.academic_periods?.id ?? null,
+              academicPeriodName: p.academic_periods?.name ?? null,
+            })
+          );
+
+          console.log(
+            "[useStudentReportCard] Final mapped exam periods:",
+            mappedExamPeriods
+          );
+          setAcademicPeriods(mappedExamPeriods);
+          return;
+        } catch (examPeriodsErr) {
+          console.warn(
+            "[useStudentReportCard] exam_periods lookup failed, falling back to academic_periods:",
+            examPeriodsErr
+          );
+        }
+
+        // Fallback Step 3: Fetch period details for those IDs from academic_periods
         const { data: periods, error: periodsError } = await supabase
           .from("academic_periods")
-          .select("id, name, code, sort_order, created_at")
+          .select("id, name, code, sort_order, created_at, academic_year")
           .in("id", uniquePeriodIds)
           .order("sort_order", { ascending: true })
           .order("created_at", { ascending: false });
 
-        console.log("[useStudentReportCard] academic_periods query result:", { 
-          periods, 
+        console.log("[useStudentReportCard] academic_periods query result:", {
+          periods,
           periodsError,
-          queriedIds: uniquePeriodIds 
+          queriedIds: uniquePeriodIds,
         });
 
         if (periodsError) {
-          console.error("[useStudentReportCard] academic_periods query FAILED:", periodsError);
+          console.error(
+            "[useStudentReportCard] academic_periods query FAILED:",
+            periodsError
+          );
           throw periodsError;
         }
 
@@ -191,8 +270,11 @@ export function useStudentReportCard(studentId: string | null, academicPeriodId:
           name: p.name,
           code: p.code || "",
           sortOrder: p.sort_order ?? 0,
+          academicYear: p.academic_year ?? null,
+          academicPeriodId: p.id,
+          academicPeriodName: p.name,
         }));
-        
+
         console.log("[useStudentReportCard] Final mapped periods:", mappedPeriods);
         setAcademicPeriods(mappedPeriods);
       } catch (err) {
@@ -208,7 +290,7 @@ export function useStudentReportCard(studentId: string | null, academicPeriodId:
 
   // Fetch report card data for selected student and period
   const fetchReportCardData = useCallback(async () => {
-    if (!studentId || !academicPeriodId) {
+    if (!studentId || !examPeriodId) {
       setData({ grades: [], behavior: null, cocurricular: [] });
       return;
     }
@@ -217,8 +299,12 @@ export function useStudentReportCard(studentId: string | null, academicPeriodId:
     setError(null);
 
     try {
+      const supabaseAny = supabase as unknown as {
+        from: (table: string) => any;
+      };
+
       // Fetch grades with subject info
-      const { data: gradesData, error: gradesError } = await supabase
+      let gradesQuery = supabaseAny
         .from("student_grades")
         .select(`
           id,
@@ -234,7 +320,16 @@ export function useStudentReportCard(studentId: string | null, academicPeriodId:
           subjects:subject_id (id, name, category)
         `)
         .eq("student_id", studentId)
-        .eq("academic_period_id", academicPeriodId);
+        .eq("academic_period_id", examPeriodId);
+
+      // If the caller provides a year-level academic period ID, we rely on
+      // the selected exam period as the primary filter. The exam period ID
+      // should uniquely imply its academic year in the current schema.
+      if (academicPeriodId) {
+        void academicPeriodId;
+      }
+
+      const { data: gradesData, error: gradesError } = await gradesQuery;
 
       if (gradesError) {
         console.error("[useStudentReportCard] student_grades query failed:", gradesError);
@@ -261,7 +356,7 @@ export function useStudentReportCard(studentId: string | null, academicPeriodId:
         .from("behavioral_assessments")
         .select("*")
         .eq("student_id", studentId)
-        .eq("academic_period_id", academicPeriodId)
+        .eq("academic_period_id", examPeriodId)
         .maybeSingle();
 
       if (behaviorError) {
@@ -287,14 +382,14 @@ export function useStudentReportCard(studentId: string | null, academicPeriodId:
       // Fetch cocurricular activities for this student and academic period
       console.log("[useStudentReportCard] Fetching cocurricular activities:", {
         selectedStudentId: studentId,
-        selectedAcademicPeriodId: academicPeriodId,
+        selectedAcademicPeriodId: examPeriodId,
       });
 
       const { data: cocurricularData, error: cocurricularError } = await supabase
         .from("student_cocurricular_activities")
         .select("*")
         .eq("student_id", studentId)
-        .eq("academic_period_id", academicPeriodId);
+        .eq("academic_period_id", examPeriodId);
 
       console.log("[useStudentReportCard] Cocurricular query result:", {
         cocurricularData,
@@ -332,7 +427,7 @@ export function useStudentReportCard(studentId: string | null, academicPeriodId:
     } finally {
       setLoading(false);
     }
-  }, [studentId, academicPeriodId]);
+  }, [studentId, examPeriodId, academicPeriodId]);
 
   useEffect(() => {
     fetchReportCardData();
@@ -382,7 +477,7 @@ export function useStudentReportCard(studentId: string | null, academicPeriodId:
   const awards = useMemo(() => {
     console.log("[useStudentReportCard] Computing awards from cocurricular:", {
       cocurricularLength: data.cocurricular.length,
-      academicPeriodId,
+      academicPeriodId: examPeriodId,
     });
 
     if (data.cocurricular.length === 0) {
@@ -417,7 +512,7 @@ export function useStudentReportCard(studentId: string | null, academicPeriodId:
         award: currentPeriod.achievementsAward || "",
       },
     };
-  }, [data.cocurricular, academicPeriodId]);
+  }, [data.cocurricular, examPeriodId]);
 
   // Computed: Check if we have any data
   const hasData = useMemo(() => {

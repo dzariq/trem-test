@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Home, UserCheck, Calendar, HeadphonesIcon, LucideIcon } from "lucide-react";
 import { NavLink } from "react-router-dom";
 import { cn } from "@/lib/utils";
@@ -21,11 +21,18 @@ const navItems: NavItem[] = [
 
 export function BottomNavigation() {
   const [isVisible, setIsVisible] = useState(true);
-  const [lastScrollY, setLastScrollY] = useState(0);
+  const lastScrollYRef = useRef(0);
 
   useEffect(() => {
+    const scrollEl = document.querySelector('[data-app-scroll="true"]') as HTMLElement | null;
+    const target: HTMLElement | Window = scrollEl ?? window;
+
+    const getScrollY = () =>
+      target instanceof Window ? target.scrollY : target.scrollTop;
+
     const handleScroll = () => {
-      const currentScrollY = window.scrollY;
+      const currentScrollY = getScrollY();
+      const lastScrollY = lastScrollYRef.current;
       
       // Show nav when scrolling up, hide when scrolling down
       if (currentScrollY < lastScrollY || currentScrollY < 50) {
@@ -34,12 +41,12 @@ export function BottomNavigation() {
         setIsVisible(false);
       }
       
-      setLastScrollY(currentScrollY);
+      lastScrollYRef.current = currentScrollY;
     };
 
-    window.addEventListener("scroll", handleScroll, { passive: true });
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, [lastScrollY]);
+    target.addEventListener("scroll", handleScroll, { passive: true });
+    return () => target.removeEventListener("scroll", handleScroll);
+  }, []);
 
   return (
     <nav 

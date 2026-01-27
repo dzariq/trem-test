@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useMemo, type KeyboardEvent } from "react";
 import { TeacherAppLayout } from "@/components/layout/TeacherAppLayout";
 import { AppHeader } from "@/components/layout/AppHeader";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -41,6 +41,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { EventDetailsSheet } from "@/components/events/EventDetailsSheet";
 
 export default function TeacherCalendarPage() {
   const { user } = useAuth();
@@ -52,6 +53,8 @@ export default function TeacherCalendarPage() {
   const [selectedTag, setSelectedTag] = useState<CalendarTag | null>(null);
   const [ccaTypeFilter, setCcaTypeFilter] = useState("all"); // Now uses type_id or "all"
   const [selectedCCA, setSelectedCCA] = useState<CcaActivity | null>(null);
+  const [selectedEventDetails, setSelectedEventDetails] = useState<UpcomingEvent | null>(null);
+  const [eventDetailsOpen, setEventDetailsOpen] = useState(false);
   const [manageSessionsActivity, setManageSessionsActivity] = useState<CcaActivity | null>(null);
   const [events, setEvents] = useState<UpcomingEvent[]>([]);
 
@@ -218,6 +221,19 @@ export default function TeacherCalendarPage() {
     setSelectedTag(tag);
   };
 
+  const openEventDetails = (event: UpcomingEvent, triggerEl?: HTMLElement | null) => {
+    triggerEl?.blur?.();
+    setSelectedEventDetails(event);
+    setEventDetailsOpen(true);
+  };
+
+  const handleEventKeyDown = (keyboardEvent: KeyboardEvent<HTMLDivElement>, event: UpcomingEvent) => {
+    if (keyboardEvent.key === "Enter" || keyboardEvent.key === " ") {
+      keyboardEvent.preventDefault();
+      openEventDetails(event, keyboardEvent.currentTarget);
+    }
+  };
+
   return (
     <TeacherAppLayout>
       <AppHeader 
@@ -303,7 +319,7 @@ export default function TeacherCalendarPage() {
             </div>
 
             {/* Calendar Component */}
-            <Card className="bg-card border-border shadow-sm">
+            <Card className="bg-card border-border shadow-sm overflow-hidden">
               <CardContent className="p-3">
                 <Calendar
                   mode="single"
@@ -425,7 +441,11 @@ export default function TeacherCalendarPage() {
                     return (
                       <div 
                         key={event.id}
-                        className="flex items-start gap-4 p-3 rounded-lg border border-border/50 hover:bg-accent/30 transition-colors"
+                        className="flex items-start gap-4 p-3 rounded-lg border border-border/50 hover:bg-accent/30 transition-colors cursor-pointer"
+                        role="button"
+                        tabIndex={0}
+                        onClick={(e) => openEventDetails(event, e.currentTarget)}
+                        onKeyDown={(e) => handleEventKeyDown(e, event)}
                       >
                         <div className="flex flex-col items-center justify-center bg-primary/10 text-primary rounded-lg w-12 h-12 flex-shrink-0">
                           <span className="text-sm font-bold leading-none">{eventDate.getDate()}</span>
@@ -703,6 +723,12 @@ export default function TeacherCalendarPage() {
           activity={manageSessionsActivity}
         />
       )}
+
+      <EventDetailsSheet
+        open={eventDetailsOpen}
+        onOpenChange={setEventDetailsOpen}
+        event={selectedEventDetails}
+      />
     </TeacherAppLayout>
   );
 }

@@ -57,7 +57,8 @@ export function AnnouncementDrawer({
   onNavigate,
   onSeeAll,
 }: AnnouncementDrawerProps) {
-  const [snap, setSnap] = useState<number | string | null>(0.85);
+  const DEFAULT_SNAP_POINT = 0.8;
+  const [snap, setSnap] = useState<number | string | null>(DEFAULT_SNAP_POINT);
   const [slideDirection, setSlideDirection] = useState<"left" | "right" | null>(null);
   const [isRead, setIsRead] = useState(false);
   const touchStartX = useRef<number>(0);
@@ -92,6 +93,13 @@ export function AnnouncementDrawer({
       }
     }
   }, [currentAnnouncement]);
+
+  // Always open at a consistent snap point.
+  useEffect(() => {
+    if (isOpen) {
+      setSnap(DEFAULT_SNAP_POINT);
+    }
+  }, [isOpen, currentIndex]);
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
@@ -182,7 +190,7 @@ export function AnnouncementDrawer({
     <DrawerPrimitive.Root
       open={isOpen}
       onOpenChange={onOpenChange}
-      snapPoints={[0.85, 1]}
+      snapPoints={[DEFAULT_SNAP_POINT]}
       activeSnapPoint={snap}
       setActiveSnapPoint={setSnap}
     >
@@ -190,11 +198,17 @@ export function AnnouncementDrawer({
         <DrawerPrimitive.Overlay className="fixed inset-0 z-50 bg-black/50" />
         <DrawerPrimitive.Content
           className={cn(
-            "fixed inset-x-0 bottom-0 z-50 flex flex-col rounded-t-[24px] border-t bg-background shadow-2xl outline-none",
-            snap === 1 ? "h-[100dvh] rounded-none" : "h-auto max-h-[90vh]"
+            "fixed inset-x-0 bottom-0 z-50 flex flex-col rounded-t-[24px] border-t bg-background shadow-2xl outline-none pb-[var(--safe-bottom)]",
+            snap === 1 ? "h-[calc(100dvh-var(--safe-top))] rounded-none pt-[var(--safe-top)]" : "h-auto max-h-[calc(100vh-var(--safe-top)-var(--safe-bottom))]"
           )}
           style={{ left: 0, right: 0 }}
         >
+          <DrawerPrimitive.Title className="sr-only">
+            {currentAnnouncement.title}
+          </DrawerPrimitive.Title>
+          <DrawerPrimitive.Description className="sr-only">
+            Announcement details
+          </DrawerPrimitive.Description>
           {/* Drag Handle */}
           <div className="mx-auto mt-3 h-1.5 w-14 rounded-full bg-muted-foreground/30 flex-shrink-0" />
 
@@ -342,7 +356,7 @@ export function AnnouncementDrawer({
           </div>
 
           {/* Navigation Footer */}
-          <div className="absolute bottom-0 left-0 right-0 bg-background/98 backdrop-blur-md border-t border-border/50 px-4 py-4 pb-6">
+          <div className="absolute bottom-0 left-0 right-0 bg-background/98 backdrop-blur-md border-t border-border/50 px-4 py-4 pb-[calc(1.5rem+var(--safe-bottom))]">
             <div className="flex items-center justify-between">
               {/* Previous Button */}
               <Button
@@ -390,3 +404,4 @@ export function AnnouncementDrawer({
     </DrawerPrimitive.Root>
   );
 }
+

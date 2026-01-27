@@ -256,11 +256,26 @@ export default function AttendancePage() {
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case "present": return "bg-emerald-500 text-white";
-      case "absent": return "bg-destructive text-destructive-foreground";
-      case "late": return "bg-amber-400 text-white";
-      case "excused": return "bg-purple-500 text-white";
+      case "present": return "bg-emerald-100 text-emerald-700";
+      case "absent": return "bg-destructive/15 text-destructive";
+      case "late": return "bg-amber-100 text-amber-700";
+      case "excused": return "bg-purple-100 text-purple-700";
       default: return "bg-muted text-muted-foreground";
+    }
+  };
+
+  const getStatusTileClasses = (status: string) => {
+    switch (status) {
+      case "present":
+        return "bg-emerald-50 border-emerald-200";
+      case "absent":
+        return "bg-red-50 border-red-200";
+      case "late":
+        return "bg-amber-50 border-amber-200";
+      case "excused":
+        return "bg-purple-50 border-purple-200";
+      default:
+        return "bg-card border-border/70";
     }
   };
 
@@ -584,20 +599,29 @@ export default function AttendancePage() {
           </CardHeader>
           <CardContent className="space-y-4">
             {/* Filter Chips */}
-            <div className="flex gap-2 overflow-x-auto pb-2 -mx-1 px-1">
+            <div className="flex flex-wrap gap-1 pb-1">
               {filterOptions.map((option) => (
-                <Button
+                <button
                   key={option.value}
-                  variant={statusFilter === option.value ? "default" : "outline"}
-                  size="sm"
-                  className="shrink-0 h-8 text-xs"
+                  type="button"
                   onClick={() => setStatusFilter(option.value)}
+                  className={`inline-flex items-center gap-1 h-7 px-compact rounded-full border text-xs font-medium transition-colors ${
+                    statusFilter === option.value
+                      ? "bg-primary/10 border-primary/30 text-primary"
+                      : "bg-white border-border text-foreground/80 hover:bg-muted/50"
+                  }`}
                 >
-                  {option.label}
-                  <span className="ml-1.5 bg-background/20 px-1.5 py-0.5 rounded-full text-[10px]">
+                  <span>{option.label}</span>
+                  <span
+                    className={`ml-0.5 inline-flex items-center justify-center h-5 px-1.5 rounded-full text-[11px] leading-none ${
+                      statusFilter === option.value
+                        ? "bg-primary/15 text-primary"
+                        : "bg-muted text-muted-foreground"
+                    }`}
+                  >
                     {option.count}
                   </span>
-                </Button>
+                </button>
               ))}
             </div>
 
@@ -616,14 +640,13 @@ export default function AttendancePage() {
 
             {/* Weekly Groups */}
             {weeklyBreakdown.map((week, weekIndex) => (
-              <div key={weekIndex} className="space-y-2">
+              <div key={weekIndex} className="space-y-1">
                 {/* Week Separator */}
-                <div className="flex items-center gap-2 pt-2">
-                  <div className="h-px flex-1 bg-border" />
-                  <span className="text-xs font-medium text-muted-foreground px-2">
+                <div className="flex items-center gap-3 mt-3 mb-2">
+                  <span className="text-xs font-semibold text-muted-foreground">
                     Week of {week.weekStart}
                   </span>
-                  <div className="h-px flex-1 bg-border" />
+                  <div className="h-px flex-1 bg-border/70" />
                 </div>
 
                 {/* Days - 2 per row */}
@@ -636,31 +659,25 @@ export default function AttendancePage() {
                       <div 
                         key={dayIndex}
                         onClick={() => setSelectedDay(day as DayRecord)}
-                        className={`flex items-center gap-2 p-2 rounded-md transition-all border cursor-pointer active:scale-95 ${
-                          today 
-                            ? "ring-2 ring-primary/50 " 
-                            : ""
-                        }${
-                          day.status === 'present' ? "bg-emerald-100 border-emerald-300" :
-                          day.status === 'absent' ? "bg-destructive/20 border-destructive/40" :
-                          day.status === 'late' ? "bg-amber-100 border-amber-300" :
-                          day.status === 'excused' ? "bg-purple-100 border-purple-300" :
-                          "bg-muted/30 border-border/50"
-                        }`}
+                        className={`flex items-center gap-2 h-9 px-3 rounded-xl transition-all border cursor-pointer active:scale-[0.98] ${
+                          today ? "ring-1 ring-primary/40" : ""
+                        } ${getStatusTileClasses(day.status)}`}
                       >
                         <div className={`w-6 h-6 rounded-full flex items-center justify-center shrink-0 ${getStatusColor(day.status)}`}>
                           {getStatusIcon(day.status)}
                         </div>
                         <div className="flex-1 min-w-0">
-                          <p className="font-medium text-foreground text-xs">
+                          <p className="font-medium text-foreground text-sm leading-none">
                             {date.toLocaleDateString("en-US", { weekday: "short", day: "numeric" })}
                           </p>
                           {day.reason && (
-                            <p className="text-[9px] text-muted-foreground truncate">{day.reason}</p>
+                            <p className="text-[10px] text-muted-foreground truncate mt-0.5">
+                              {day.reason}
+                            </p>
                           )}
                         </div>
                         {today && (
-                          <span className="text-[8px] font-medium text-primary shrink-0">Today</span>
+                          <span className="text-[9px] font-semibold text-primary shrink-0">Today</span>
                         )}
                       </div>
                     );
