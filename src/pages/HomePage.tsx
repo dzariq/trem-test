@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { AppHeader } from "@/components/layout/AppHeader";
 import { AnnouncementCarousel } from "@/components/home/AnnouncementCarousel";
@@ -11,7 +11,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import schoolBadge from "@/assets/school-badge.png";
 import heroBanner from "@/assets/hero-banner.png";
 import { listAnnouncements, markAnnouncementRead, type Announcement } from "@/data/announcements";
-import { listUpcomingEvents, type UpcomingEvent } from "@/data/calendar";
+import { getUpcomingEvents, listUpcomingEvents, type UpcomingEvent } from "@/data/calendar";
 import { useNavigate } from "react-router-dom";
 import { useMyProfile } from "@/hooks/useMyProfile";
 import { useUpcomingCcaSessions } from "@/hooks/useUpcomingCcaSessions";
@@ -106,6 +106,17 @@ export default function HomePage() {
 
   const greetingName = profile?.full_name ?? profile?.email ?? "there";
   const isLoadingEvents = eventsLoading || ccaLoading;
+  const upcomingEvents = useMemo(
+    () =>
+      getUpcomingEvents({
+        events,
+        fromDate: new Date(),
+        limit: 5,
+        role: profile?.role,
+        selectedStudentId: null,
+      }),
+    [events, profile?.role]
+  );
 
   return (
     <AppLayout>
@@ -182,7 +193,7 @@ export default function HomePage() {
 
       {!isLoadingEvents && !eventsError && (
         <UpcomingEvents 
-          events={events} 
+          events={upcomingEvents} 
           ccaSessions={ccaSessions}
           seeAllPath="/parent/calendar" 
         />

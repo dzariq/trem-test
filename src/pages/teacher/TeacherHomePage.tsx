@@ -25,7 +25,7 @@ import { differenceInDays, format } from "date-fns";
 import { cn } from "@/lib/utils";
 import { listAnnouncements, markAnnouncementRead, type Announcement } from "@/data/announcements";
 import { useNavigate } from "react-router-dom";
-import { listUpcomingEvents, type UpcomingEvent } from "@/data/calendar";
+import { getUpcomingEvents, listUpcomingEvents, type UpcomingEvent } from "@/data/calendar";
 import { useMyProfile } from "@/hooks/useMyProfile";
 import { useTeacherScope } from "@/hooks/useTeacherScope";
 import { supabase } from "@/lib/supabase";
@@ -271,6 +271,18 @@ export default function TeacherHomePage() {
       daysLeft: differenceInDays(new Date(deadline.dueAt), new Date()),
     }))
     .sort((a, b) => a.daysLeft - b.daysLeft);
+
+  const upcomingEvents = useMemo(
+    () =>
+      getUpcomingEvents({
+        events,
+        fromDate: new Date(),
+        limit: 5,
+        role: "teacher",
+        teacherUserId: profile?.id ?? null,
+      }),
+    [events, profile?.id]
+  );
 
   useEffect(() => {
     let isMounted = true;
@@ -606,7 +618,7 @@ export default function TeacherHomePage() {
 
         {!eventsLoading && !ccaLoading && !eventsError && (
           <UpcomingEvents 
-            events={events} 
+            events={upcomingEvents} 
             ccaSessions={ccaSessions}
             seeAllPath="/teacher/calendar" 
           />

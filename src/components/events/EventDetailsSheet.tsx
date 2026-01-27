@@ -46,10 +46,15 @@ export function EventDetailsSheet({ open, onOpenChange, event }: EventDetailsShe
 
   const cca = isCcaSession(event);
   const dateKey = cca ? event.sessionDate : event.startDay || event.date;
-  const dateLabel = formatDateLabel(dateKey);
-  const timeLabel = cca ? formatTimeRange(event.startTime, event.endTime) : event.allDay ? "All Day" : event.time;
-  const locationLabel = cca ? event.locationName || "School" : event.location || "School";
-  const description = cca ? event.description : event.description;
+  const hasValidDateKey = typeof dateKey === "string" && dateKey.length === 10;
+  const dateLabel = hasValidDateKey ? formatDateLabel(dateKey) : "—";
+  const timeLabel = cca
+    ? formatTimeRange(event.startTime, event.endTime)
+    : event.allDay
+      ? "All Day"
+      : event.time || "—";
+  const locationLabel = cca ? event.locationName || "—" : event.location || "—";
+  const description = (cca ? event.description : event.description) || "—";
 
   return (
     <Drawer open={open} onOpenChange={onOpenChange} modal={true}>
@@ -120,14 +125,12 @@ export function EventDetailsSheet({ open, onOpenChange, event }: EventDetailsShe
             </div>
           )}
 
-          {description && (
-            <div className="space-y-1">
-              <p className="text-xs text-muted-foreground">Description</p>
-              <p className="text-sm text-foreground/90 leading-relaxed">
-                {description}
-              </p>
-            </div>
-          )}
+          <div className="space-y-1">
+            <p className="text-xs text-muted-foreground">Description</p>
+            <p className="text-sm text-foreground/90 leading-relaxed">
+              {description}
+            </p>
+          </div>
         </div>
       </DrawerContent>
     </Drawer>

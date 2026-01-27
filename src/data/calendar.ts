@@ -24,6 +24,15 @@ export type ListUpcomingEventsParams = {
   limit?: number;
 };
 
+export type GetUpcomingEventsParams = {
+  events: UpcomingEvent[];
+  fromDate?: Date;
+  limit?: number;
+  role?: string;
+  selectedStudentId?: string | null;
+  teacherUserId?: string | null;
+};
+
 export type ListCalendarEventsParams = {
   role?: string;
 };
@@ -131,6 +140,61 @@ const dedupeRows = (rows: any[]) => {
 
 const sortByStartDate = (rows: any[]) =>
   rows.sort((a, b) => String(a.start_date ?? "").localeCompare(String(b.start_date ?? "")));
+
+const startOfDay = (date: Date) => {
+  const next = new Date(date);
+  next.setHours(0, 0, 0, 0);
+  return next;
+};
+
+const toYmd = (date: Date) => {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+};
+
+const getEventSortKey = (event: UpcomingEvent) => {
+  if (event.start instanceof Date && Number.isFinite(event.start.getTime())) {
+    return event.start.getTime();
+  }
+  if (event.startDay) {
+    const parsed = Date.parse(`${event.startDay}T00:00:00`);
+    if (Number.isFinite(parsed)) {
+      return parsed;
+    }
+  }
+  return Number.POSITIVE_INFINITY;
+};
+
+const getEventDedupeKey = (event: UpcomingEvent) => {
+  const title = (event.title ?? "").trim().toLowerCase();
+  const startDay = event.startDay ?? "";
+  const category = (event.category ?? "").trim().toLowerCase();
+  return `${title}__${startDay}__${category}`;
+};
+
+export function getUpcomingEvents(
+  params: GetUpcomingEventsParams
+): UpcomingEvent[] {
+  const { events, fromDate = new Date(), limit = 5 } = params;
+  const fromDay = toYmd(startOfDay(fromDate));
+
+  const upcoming = events
+    .filter((event) => Boolean(event.startDay) && event.startDay >= fromDay)
+    .sort((a, b) => getEventSortKey(a) - getEventSortKey(b));
+
+  const deduped: UpcomingEvent[] = [];
+  const seenKeys = new Set<string>();
+  upcoming.forEach((event) => {
+    const key = getEventDedupeKey(event);
+    if (seenKeys.has(key)) return;
+    seenKeys.add(key);
+    deduped.push(event);
+  });
+
+  return deduped.slice(0, limit);
+}
 
 const resolveCalendarScope = async (roleOverride?: string) => {
   const profile = await getMyProfile();
@@ -267,20 +331,20 @@ export async function listUpcomingEvents(
   params: ListUpcomingEventsParams = {}
 ): Promise<UpcomingEvent[]> {
   const limit = params.limit ?? DEFAULT_LIMIT;
-  const now = new Date().toISOString();
+  const fromDate = startOfDay(new Date());
+  const fromIso = fromDate.toISOString();
   const { role, campusId, studentIds } = await resolveCalendarScope(params.role);
 
   const baseQuery = () =>
     supabase
       .from("calendar_events")
       .select("*")
-      .gte("start_date", now)
+      .gte("start_date", fromIso)
       .order("start_date", { ascending: true });
 
   const rows = await fetchScopedRows(baseQuery, campusId, studentIds, "listUpcomingEvents", role);
   const filteredRows = filterByTargetRole(rows, role);
 
-  return sortByStartDate(dedupeRows(filteredRows))
-    .slice(0, limit)
-    .map(mapCalendarRow);
+  const mapped = sortByStartDate(dedupeRows(filteredRows)).map(mapCalendarRow);
+  return getUpcomingEvents({ events: mapped, fromDate, limit, role });
 }

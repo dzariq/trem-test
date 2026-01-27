@@ -34,7 +34,7 @@ import {
   getCategoryColor,
   getTagsByCategory,
 } from "@/lib/calendarUtils";
-import { listCalendarEvents, type UpcomingEvent } from "@/data/calendar";
+import { getUpcomingEvents, listCalendarEvents, type UpcomingEvent } from "@/data/calendar";
 import { useMyProfile } from "@/hooks/useMyProfile";
 import { useStudentSelection } from "@/hooks/useStudentSelection";
 import { useCcaActivities, type CcaActivity } from "@/hooks/useCcaActivities";
@@ -157,6 +157,18 @@ export default function CalendarPage() {
 
   const eventsForSelectedDate = filteredEvents.filter(
     (event) => selectedDay >= event.startDay && selectedDay <= event.endDay
+  );
+
+  const upcomingEvents = useMemo(
+    () =>
+      getUpcomingEvents({
+        events: filteredEvents,
+        fromDate: new Date(),
+        limit: 5,
+        role: roleForFilters,
+        selectedStudentId,
+      }),
+    [filteredEvents, roleForFilters, selectedStudentId]
   );
 
   // Filter CCA sessions for the selected date
@@ -529,46 +541,44 @@ export default function CalendarPage() {
                 <CardTitle className="text-lg font-semibold">Upcoming Events</CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
-                {filteredEvents
-                  .slice(0, 5)
-                  .map((event) => {
-                    const eventDate = new Date(`${event.startDay}T00:00:00Z`);
-                    return (
-                      <div 
-                        key={event.id}
-                        className="flex items-start gap-4 p-3 rounded-lg border border-border/50 hover:bg-accent/30 transition-colors cursor-pointer"
-                        role="button"
-                        tabIndex={0}
-                        onClick={(e) => openEventDetails(event, e.currentTarget)}
-                        onKeyDown={(e) => handleEventKeyDown(e, event)}
-                      >
-                        <div className="flex flex-col items-center justify-center bg-primary/10 text-primary rounded-lg w-12 h-12 flex-shrink-0">
-                          <span className="text-sm font-bold leading-none">{eventDate.getDate()}</span>
-                          <span className="text-xs uppercase">{eventDate.toLocaleDateString("en-US", { month: "short" })}</span>
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <h3 className="font-medium text-foreground truncate">{event.title}</h3>
-                          <p className="text-sm text-muted-foreground mb-1">
-                            {event.allDay ? "All Day" : event.time}
-                          </p>
-                          <div className="flex flex-wrap gap-1">
-                            {event.tags.slice(0, 2).map((tag) => (
-                              <Badge key={tag} className={`text-xs ${getTagColor(tag)}`}>
-                                {getTagDisplayName(tag)}
-                              </Badge>
-                            ))}
-                            {event.tags.length > 2 && (
-                              <Badge variant="outline" className="text-xs">
-                                +{event.tags.length - 2}
-                              </Badge>
-                            )}
-                          </div>
+                {upcomingEvents.map((event) => {
+                  const eventDate = new Date(`${event.startDay}T00:00:00Z`);
+                  return (
+                    <div 
+                      key={event.id}
+                      className="flex items-start gap-4 p-3 rounded-lg border border-border/50 hover:bg-accent/30 transition-colors cursor-pointer"
+                      role="button"
+                      tabIndex={0}
+                      onClick={(e) => openEventDetails(event, e.currentTarget)}
+                      onKeyDown={(e) => handleEventKeyDown(e, event)}
+                    >
+                      <div className="flex flex-col items-center justify-center bg-primary/10 text-primary rounded-lg w-12 h-12 flex-shrink-0">
+                        <span className="text-sm font-bold leading-none">{eventDate.getDate()}</span>
+                        <span className="text-xs uppercase">{eventDate.toLocaleDateString("en-US", { month: "short" })}</span>
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <h3 className="font-medium text-foreground truncate">{event.title}</h3>
+                        <p className="text-sm text-muted-foreground mb-1">
+                          {event.allDay ? "All Day" : event.time || "—"}
+                        </p>
+                        <div className="flex flex-wrap gap-1">
+                          {event.tags.slice(0, 2).map((tag) => (
+                            <Badge key={tag} className={`text-xs ${getTagColor(tag)}`}>
+                              {getTagDisplayName(tag)}
+                            </Badge>
+                          ))}
+                          {event.tags.length > 2 && (
+                            <Badge variant="outline" className="text-xs">
+                              +{event.tags.length - 2}
+                            </Badge>
+                          )}
                         </div>
                       </div>
-                    );
-                  })}
+                    </div>
+                  );
+                })}
 
-                {filteredEvents.length === 0 && (
+                {upcomingEvents.length === 0 && (
                   <p className="text-sm text-muted-foreground text-center py-4">No events found</p>
                 )}
               </CardContent>

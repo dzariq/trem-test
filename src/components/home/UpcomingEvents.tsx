@@ -107,6 +107,14 @@ export function UpcomingEvents({ events, ccaSessions, seeAllPath = "/parent/cale
     setDetailsOpen(true);
   };
 
+  const handleCardClick = (
+    mouseEvent: MouseEvent<HTMLElement>,
+    event: MergedEvent | null
+  ) => {
+    if (!event) return;
+    openDetails(event, mouseEvent.currentTarget);
+  };
+
   const handleKeyDown = (keyboardEvent: KeyboardEvent, item: MergedEvent) => {
     if (keyboardEvent.key === "Enter" || keyboardEvent.key === " ") {
       keyboardEvent.preventDefault();
@@ -149,12 +157,9 @@ export function UpcomingEvents({ events, ccaSessions, seeAllPath = "/parent/cale
             const ccaSession = event as UpcomingCcaSession;
             const { day, month, full } = formatDateParts(ccaSession.sessionDate);
             const timeLabel = formatTimeRange(ccaSession.startTime, ccaSession.endTime);
-            
-  const handleCardClick = (mouseEvent: MouseEvent<HTMLElement>, event: MergedEvent) => {
-    openDetails(event, mouseEvent.currentTarget);
-  };
+            const locationLabel = ccaSession.locationName || "—";
 
-  return (
+            return (
               <Card
                 key={`cca-${ccaSession.id}`}
                 className="bg-card border-border shadow-sm border-l-4 border-l-primary/50 cursor-pointer"
@@ -184,12 +189,10 @@ export function UpcomingEvents({ events, ccaSessions, seeAllPath = "/parent/cale
                       </span>
                       <span className="text-xs">{full}</span>
                     </div>
-                    {ccaSession.locationName && (
-                      <div className="flex items-center gap-1 text-sm text-muted-foreground mt-0.5">
-                        <MapPin className="h-3 w-3" />
-                        {ccaSession.locationName}
-                      </div>
-                    )}
+                    <div className="flex items-center gap-1 text-sm text-muted-foreground mt-0.5">
+                      <MapPin className="h-3 w-3" />
+                      {locationLabel}
+                    </div>
                   </div>
                 </CardContent>
               </Card>
@@ -200,7 +203,8 @@ export function UpcomingEvents({ events, ccaSessions, seeAllPath = "/parent/cale
           const calEvent = event as UpcomingEvent;
           const startDate = calEvent.startDay || calEvent.date;
           const allDay = calEvent.allDay ?? true;
-          const timeLabel = allDay ? "All Day" : calEvent.time;
+          const timeLabel = allDay ? "All Day" : calEvent.time || "—";
+          const locationLabel = calEvent.location || "—";
           const { day, month, full } = formatDateParts(startDate);
           
           return (
@@ -228,7 +232,7 @@ export function UpcomingEvents({ events, ccaSessions, seeAllPath = "/parent/cale
                   </div>
                   <div className="flex items-center gap-1 text-sm text-muted-foreground mt-0.5">
                     <MapPin className="h-3 w-3" />
-                    {calEvent.location}
+                    {locationLabel}
                   </div>
                 </div>
               </CardContent>
