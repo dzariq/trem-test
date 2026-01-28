@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Printer, Star, BookOpen, MessageSquare, Trophy, Award, BookMarked, Target, Loader2 } from "lucide-react";
@@ -200,19 +200,54 @@ export function ReportCardDialog({
 }: ReportCardDialogProps) {
   const reportRef = useRef<HTMLDivElement>(null);
   const [isExportingPdf, setIsExportingPdf] = useState(false);
+  const waitForPdfLayout = useCallback(
+    () =>
+      new Promise<void>((resolve) =>
+        requestAnimationFrame(() => requestAnimationFrame(() => resolve()))
+      ),
+    []
+  );
 
   const handleExportPdf = async () => {
     if (!reportRef.current || isExportingPdf) return;
     setIsExportingPdf(true);
     try {
+      await waitForPdfLayout();
       const safeName = studentName.trim().replace(/\s+/g, "_");
       const safeYear = year ? year.trim().replace(/\s+/g, "_") : "year";
       const safePeriod = examType.trim().replace(/\s+/g, "_");
-      const result = await exportElementToPdf({
-        element: reportRef.current,
-        filename: `ReportCard_${safeName || "student"}_${safeYear}_${safePeriod}`,
-      });
-      if (result.savedToDevice) {
+      const exportHost = document.createElement("div");
+      exportHost.style.position = "fixed";
+      exportHost.style.left = "-100000px";
+      exportHost.style.top = "0";
+      exportHost.style.width = "210mm";
+      exportHost.style.background = "#ffffff";
+      exportHost.style.pointerEvents = "none";
+      exportHost.style.zIndex = "-1";
+
+      const cloned = reportRef.current.cloneNode(true) as HTMLElement;
+      cloned.style.width = "210mm";
+      cloned.style.maxWidth = "none";
+      cloned.style.height = "auto";
+      cloned.style.maxHeight = "none";
+      cloned.style.contain = "none";
+      cloned.style.overflow = "visible";
+      cloned.classList.add("pdf-print-root", "pdf-export-root", "pdf-exporting");
+      exportHost.appendChild(cloned);
+      document.body.appendChild(exportHost);
+
+      let result: Awaited<ReturnType<typeof exportElementToPdf>> | undefined;
+      try {
+        result = await exportElementToPdf({
+          element: cloned,
+          filename: `ReportCard_${safeName || "student"}_${safeYear}_${safePeriod}`,
+          marginMm: 0,
+          pdfContentScale: 1,
+        });
+      } finally {
+        exportHost.remove();
+      }
+      if (result?.savedToDevice) {
         toast.success("Saved to Downloads");
       }
     } catch (error) {
@@ -249,7 +284,15 @@ export function ReportCardDialog({
         <div className="flex-1 overflow-auto bg-muted/30 p-2 sm:p-4">
           {/* Portrait container wrapper */}
           <div className="flex justify-center">
-            <div ref={reportRef} className="bg-white rounded-lg shadow-lg" style={{ width: 'min(100%, 210mm)', padding: '12px', fontSize: '10px' }}>
+            <div
+              ref={reportRef}
+              className={`bg-white rounded-lg shadow-lg ${isExportingPdf ? "pdf-export-root pdf-exporting" : ""}`}
+              style={{
+                width: isExportingPdf ? "210mm" : "min(100%, 210mm)",
+                padding: "12px",
+                fontSize: "10px",
+              }}
+            >
             
             {/* Header with both logos */}
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid #d1d5db', paddingBottom: '10px', marginBottom: '10px', gap: '8px', flexWrap: 'wrap' }}>

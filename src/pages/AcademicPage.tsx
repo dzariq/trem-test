@@ -31,6 +31,7 @@ import { generateBehaviorSummary } from "@/lib/summary/behaviorSummary";
 import { exportElementToPdf } from "@/lib/pdf/exportToPdf";
 import { saveAndShareBlob } from "@/lib/export/nativeDownload";
 import { toast } from "@/hooks/use-toast";
+import { OverviewReportPrintDocument } from "@/components/reports/OverviewReportPrintDocument";
 type YearKey = "2022" | "2023" | "2024" | "2025";
 type ExamType = "midYear" | "yearEnd";
 type AnalysisPeriod = {
@@ -626,22 +627,39 @@ export default function AcademicPage() {
   // PDF Report dialog state
   const [overviewReportDialogOpen, setOverviewReportDialogOpen] = useState(false);
   const overviewReportRef = useRef<HTMLDivElement>(null);
+  const overviewReportExportRef = useRef<HTMLDivElement>(null);
   const [trendsReportDialogOpen, setTrendsReportDialogOpen] = useState(false);
   const trendsReportRef = useRef<HTMLDivElement>(null);
+  const trendsReportExportRef = useRef<HTMLDivElement>(null);
+  const [trendsReportExportHtml, setTrendsReportExportHtml] = useState("");
   const [comparisonReportDialogOpen, setComparisonReportDialogOpen] = useState(false);
   const comparisonReportRef = useRef<HTMLDivElement>(null);
+  const comparisonReportExportRef = useRef<HTMLDivElement>(null);
+  const [comparisonReportExportHtml, setComparisonReportExportHtml] = useState("");
   const [heatmapExpanded, setHeatmapExpanded] = useState(false);
   const [chartViewMode, setChartViewMode] = useState<"single" | "multiple">("single");
   const [isAtBottom, setIsAtBottom] = useState(false);
   const pdfDateStamp = useMemo(() => new Date().toISOString().split("T")[0], []);
+  const waitForPdfLayout = useCallback(
+    () =>
+      new Promise<void>((resolve) =>
+        requestAnimationFrame(() => requestAnimationFrame(() => resolve()))
+      ),
+    []
+  );
 
   const handleExportOverviewPdf = useCallback(async () => {
     if (!overviewReportRef.current || isExportingOverviewPdf) return;
     setIsExportingOverviewPdf(true);
     try {
+      await waitForPdfLayout();
+      if (!overviewReportExportRef.current) {
+        throw new Error("PDF export root not available");
+      }
       const result = await exportElementToPdf({
-        element: overviewReportRef.current,
+        element: overviewReportExportRef.current,
         filename: `overview-report-${pdfDateStamp}`,
+        marginMm: 0,
       });
       if (result.savedToDevice) {
         toast.success("Saved to Downloads");
@@ -652,15 +670,21 @@ export default function AcademicPage() {
     } finally {
       setIsExportingOverviewPdf(false);
     }
-  }, [isExportingOverviewPdf, pdfDateStamp]);
+  }, [isExportingOverviewPdf, pdfDateStamp, waitForPdfLayout]);
 
   const handleExportTrendsPdf = useCallback(async () => {
     if (!trendsReportRef.current || isExportingTrendsPdf) return;
+    setTrendsReportExportHtml(trendsReportRef.current.outerHTML);
     setIsExportingTrendsPdf(true);
     try {
+      await waitForPdfLayout();
+      if (!trendsReportExportRef.current) {
+        throw new Error("PDF export root not available");
+      }
       const result = await exportElementToPdf({
-        element: trendsReportRef.current,
+        element: trendsReportExportRef.current,
         filename: `trends-report-${pdfDateStamp}`,
+        marginMm: 0,
       });
       if (result.savedToDevice) {
         toast.success("Saved to Downloads");
@@ -670,16 +694,23 @@ export default function AcademicPage() {
       toast.error("Export failed. Please try again.");
     } finally {
       setIsExportingTrendsPdf(false);
+      setTrendsReportExportHtml("");
     }
-  }, [isExportingTrendsPdf, pdfDateStamp]);
+  }, [isExportingTrendsPdf, pdfDateStamp, waitForPdfLayout]);
 
   const handleExportComparisonPdf = useCallback(async () => {
     if (!comparisonReportRef.current || isExportingComparisonPdf) return;
+    setComparisonReportExportHtml(comparisonReportRef.current.outerHTML);
     setIsExportingComparisonPdf(true);
     try {
+      await waitForPdfLayout();
+      if (!comparisonReportExportRef.current) {
+        throw new Error("PDF export root not available");
+      }
       const result = await exportElementToPdf({
-        element: comparisonReportRef.current,
+        element: comparisonReportExportRef.current,
         filename: `comparison-report-${pdfDateStamp}`,
+        marginMm: 0,
       });
       if (result.savedToDevice) {
         toast.success("Saved to Downloads");
@@ -689,8 +720,9 @@ export default function AcademicPage() {
       toast.error("Export failed. Please try again.");
     } finally {
       setIsExportingComparisonPdf(false);
+      setComparisonReportExportHtml("");
     }
-  }, [isExportingComparisonPdf, pdfDateStamp]);
+  }, [isExportingComparisonPdf, pdfDateStamp, waitForPdfLayout]);
 
   // Scroll detection for floating FAB
   useEffect(() => {
@@ -1103,6 +1135,24 @@ export default function AcademicPage() {
   const bestSubjectScoreDisplay =
     currentScores.length > 0 ? `${safeNumber(bestSubjectInfo.score)}%` : "—";
 
+  const overviewGeneratedOnLabel = useMemo(
+    () =>
+      new Date().toLocaleDateString("en-GB", {
+        day: "numeric",
+        month: "long",
+        year: "numeric",
+      }),
+    []
+  );
+  const overviewBestSubjectLabel = useMemo(
+    () => shortenSubjectName(bestSubjectInfo.name),
+    [bestSubjectInfo.name]
+  );
+  const overviewWeakestSubjectLabel = useMemo(
+    () => shortenSubjectName(weakestSubjectInfo.name),
+    [weakestSubjectInfo.name]
+  );
+
   // Improvement from previous exam
   const improvementStats = useMemo(() => {
     if (!previousPeriodId || !hasPreviousGrades || currentScores.length === 0) {
@@ -1146,6 +1196,36 @@ export default function AcademicPage() {
       );
     return improvements.sort((a, b) => b.improvement - a.improvement).slice(0, 3);
   }, [filteredGradesSubjects, currentPeriodId, previousPeriodId, getScoreFor, hasPreviousGrades]);
+
+  const overviewSubjectPerformancePrint = useMemo(
+    () =>
+      subjectPerformance.map((subject) => ({
+        ...subject,
+        shortName: shortenSubjectName(subject.name),
+      })),
+    [subjectPerformance, shortenSubjectName]
+  );
+  const overviewRisingStarsPrint = useMemo(
+    () =>
+      risingStars.map((item) => ({
+        subjectId: item.subject.id,
+        name: item.subject.name,
+        shortName: shortenSubjectName(item.subject.name),
+        improvement: item.improvement,
+        prev: item.prev,
+        current: item.current,
+      })),
+    [risingStars, shortenSubjectName]
+  );
+  const overviewTopSubjectsPrint = useMemo(
+    () =>
+      top3.map((subject) => ({
+        id: subject.id,
+        name: subject.name,
+        score: safeNumber(getScoreFor(currentPeriodId, subject.id)),
+      })),
+    [top3, currentPeriodId, getScoreFor]
+  );
 
   // Falling behind - subjects with biggest decline from previous exam
   const fallingBehind = useMemo(() => {
@@ -3634,8 +3714,8 @@ export default function AcademicPage() {
             </div>
           </DialogHeader>
           
-          <div className="flex-1 overflow-y-auto" ref={overviewReportRef}>
-            <div className="space-y-4 p-2">
+          <div className="flex-1 overflow-y-auto">
+            <div ref={overviewReportRef} className="space-y-4 p-2">
               {/* Report Header */}
               <div style={{
               display: 'flex',
@@ -4163,8 +4243,8 @@ export default function AcademicPage() {
             </div>
           </DialogHeader>
           
-          <div className="flex-1 overflow-y-auto" ref={trendsReportRef}>
-            <div className="space-y-4 p-2">
+          <div className="flex-1 overflow-y-auto">
+            <div ref={trendsReportRef} className="space-y-4 p-2">
               {/* Report Header */}
               <div style={{
               display: 'flex',
@@ -4907,21 +4987,23 @@ export default function AcademicPage() {
             </div>
           </DialogHeader>
           
-          <div className="flex-1 overflow-y-auto" ref={comparisonReportRef}>
-            {(() => {
-            const examALabel = getPeriodLabel(compareExamAId || null);
-            const examBLabel = getPeriodLabel(compareExamBId || null);
-            const avgA = comparisonData.length > 0 ? Math.round(comparisonData.reduce((sum, d) => sum + d.examA, 0) / comparisonData.length) : 0;
-            const avgB = comparisonData.length > 0 ? Math.round(comparisonData.reduce((sum, d) => sum + d.examB, 0) / comparisonData.length) : 0;
-            const avgDelta = avgA - avgB;
-            const improvedSubjects = comparisonData.filter(d => d.delta > 0);
-            const declinedSubjects = comparisonData.filter(d => d.delta < 0);
-            const improved = improvedSubjects.length;
-            const declined = declinedSubjects.length;
+          <div className="flex-1 overflow-y-auto">
+            <div ref={comparisonReportRef} className="space-y-4 p-2">
+              {(() => {
+              const examALabel = getPeriodLabel(compareExamAId || null);
+              const examBLabel = getPeriodLabel(compareExamBId || null);
+              const avgA = comparisonData.length > 0 ? Math.round(comparisonData.reduce((sum, d) => sum + d.examA, 0) / comparisonData.length) : 0;
+              const avgB = comparisonData.length > 0 ? Math.round(comparisonData.reduce((sum, d) => sum + d.examB, 0) / comparisonData.length) : 0;
+              const avgDelta = avgA - avgB;
+              const improvedSubjects = comparisonData.filter(d => d.delta > 0);
+              const declinedSubjects = comparisonData.filter(d => d.delta < 0);
+              const improved = improvedSubjects.length;
+              const declined = declinedSubjects.length;
 
-            // Best performing subject - the one that improved the most
-            const bestPerforming = improvedSubjects.length > 0 ? improvedSubjects.reduce((best, current) => current.delta > best.delta ? current : best) : null;
-            return <div className="space-y-4 p-2">
+              // Best performing subject - the one that improved the most
+              const bestPerforming = improvedSubjects.length > 0 ? improvedSubjects.reduce((best, current) => current.delta > best.delta ? current : best) : null;
+              return (
+                <>
                   {/* Report Header */}
                   <div style={{
                 display: 'flex',
@@ -5301,11 +5383,75 @@ export default function AcademicPage() {
                     <p>This report was generated automatically by the School Management System</p>
                     <p>© {new Date().getFullYear()} All Rights Reserved</p>
                   </div>
-                </div>;
+                </>
+              );
           })()}
           </div>
+        </div>
         </DialogContent>
       </Dialog>
+
+      {(isExportingOverviewPdf || isExportingTrendsPdf || isExportingComparisonPdf) && (
+        <div
+          id="pdf-export-host"
+          className="pdf-export-host"
+          style={{
+            position: "fixed",
+            left: "0",
+            top: "0",
+            width: "210mm",
+            background: "#fff",
+            zIndex: -1,
+            pointerEvents: "none",
+            opacity: 0,
+          }}
+          aria-hidden="true"
+        >
+          {isExportingOverviewPdf && (
+            <OverviewReportPrintDocument
+              ref={overviewReportExportRef}
+              schoolLogo={schoolLogo}
+              generatedOnLabel={overviewGeneratedOnLabel}
+              examLabel={getExamLabel()}
+              currentAverageDisplay={currentAverageDisplay}
+              currentAverage={currentAverage}
+              currentScoresCount={currentScores.length}
+              bestSubjectLabel={overviewBestSubjectLabel}
+              bestSubjectScoreDisplay={bestSubjectScoreDisplay}
+              improvementText={improvementStats.text}
+              improvementHasDelta={improvementStats.hasDelta}
+              improvementPoints={improvementStats.points}
+              passingCount={passingStats.passingCount}
+              passingTotal={passingStats.totalSubjects}
+              passingPercentage={passingStats.passingPercentage}
+              weakestSubjectLabel={overviewWeakestSubjectLabel}
+              weakestSubjectScoreDisplay={weakestSubjectScoreDisplay}
+              risingStars={overviewRisingStarsPrint}
+              subjectPerformance={overviewSubjectPerformancePrint}
+              gradeDistribution={gradeDistribution}
+              gradeChartColors={gradeChartColors}
+              topSubjects={overviewTopSubjectsPrint}
+              footerYear={new Date().getFullYear()}
+            />
+          )}
+          {isExportingTrendsPdf && (
+            <div
+              id="pdf-root-export"
+              className="pdf-a4 pdf-exporting pdf-export-root"
+              ref={trendsReportExportRef}
+              dangerouslySetInnerHTML={{ __html: trendsReportExportHtml }}
+            />
+          )}
+          {isExportingComparisonPdf && (
+            <div
+              id="pdf-root-export"
+              className="pdf-a4 pdf-exporting pdf-export-root"
+              ref={comparisonReportExportRef}
+              dangerouslySetInnerHTML={{ __html: comparisonReportExportHtml }}
+            />
+          )}
+        </div>
+      )}
     </AppLayout>;
 }
 

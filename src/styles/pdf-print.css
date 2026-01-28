@@ -1,0 +1,82 @@
+/* A4 fixed canvas for PDF */
+.pdf-a4 {
+  width: 210mm;
+  min-height: 297mm;
+  padding: 16mm;
+  box-sizing: border-box;
+  background: #fff;
+  color: #111;
+}
+
+/* Optional: scale down slightly if needed */
+.pdf-a4.pdf-scale-90 {
+  transform: scale(0.9);
+  transform-origin: top left;
+}
+
+/* Print document layout */
+.pdf-print-root {
+  width: 210mm;
+  background: #fff;
+  color: #111;
+}
+
+.pdf-a4-page {
+  width: 210mm;
+  min-height: 297mm;
+  padding: 16mm;
+  box-sizing: border-box;
+  background: #fff;
+  color: #111;
+}
+
+.page-break {
+  page-break-after: always;
+  break-after: page;
+}
+
+/* Ensure export content is never clipped */
+.pdf-exporting,
+.pdf-exporting * {
+  overflow: visible !important;
+}
+
+/* Offscreen export host/root should never clip */
+.pdf-export-host,
+.pdf-export-root {
+  height: auto !important;
+  max-height: none !important;
+  overflow: visible !important;
+  contain: none !important;
+}
+
+.pdf-export-root * {
+  overflow: visible !important;
+  max-height: none !important;
+}
+
+.pdf-export-root .sticky,
+.pdf-export-root [style*="position: sticky"] {
+  position: static !important;
+}
+
+/* Print rules */
+@media print {
+  html,
+  body {
+    margin: 0 !important;
+    padding: 0 !important;
+    background: #fff !important;
+  }
+
+  /* Ensure the export canvas prints as separate pages cleanly */
+  .pdf-a4 {
+    page-break-after: always;
+  }
+
+  /* Avoid breaking cards/charts in half */
+  .avoid-page-break {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+}

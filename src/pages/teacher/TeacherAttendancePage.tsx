@@ -23,6 +23,7 @@ import { type AttendanceStatus } from "@/data/teacherAttendance";
 import { useTeacherScope } from "@/hooks/useTeacherScope";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { exportElementToPdf } from "@/lib/pdf/exportToPdf";
 import {
   Select,
   SelectContent,
@@ -88,9 +89,11 @@ export default function TeacherAttendancePage() {
   // Report states
   const [weeklyAbsentDialogOpen, setWeeklyAbsentDialogOpen] = useState(false);
   const [weeklyAbsentReportOpen, setWeeklyAbsentReportOpen] = useState(false);
+  const [isExportingWeeklyReport, setIsExportingWeeklyReport] = useState(false);
   const [selectedReportWeek, setSelectedReportWeek] = useState<Date>(new Date());
   const [frequentReportDialogOpen, setFrequentReportDialogOpen] = useState(false);
   const [frequentAbsentReportOpen, setFrequentAbsentReportOpen] = useState(false);
+  const [isExportingFrequentReport, setIsExportingFrequentReport] = useState(false);
   const [frequentReportStartDate, setFrequentReportStartDate] = useState<Date>(subMonths(new Date(), 3));
   const [frequentReportEndDate, setFrequentReportEndDate] = useState<Date>(new Date());
   
@@ -274,24 +277,48 @@ export default function TeacherAttendancePage() {
     }
   };
 
-  const handlePrintWeeklyReport = () => {
-    const printContent = weeklyReportRef.current;
-    if (!printContent) return;
-    const printWindow = window.open('', '_blank');
-    if (!printWindow) return;
-    printWindow.document.write(`<!DOCTYPE html><html><head><title>Weekly Absent Report</title><style>@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');*{margin:0;padding:0;box-sizing:border-box;}body{font-family:'Inter',sans-serif;background:#fff;color:#1a1a1a;line-height:1.5;}@page{size:A4;margin:12mm;}@media print{body{-webkit-print-color-adjust:exact;print-color-adjust:exact;}}</style></head><body>${printContent.innerHTML}</body></html>`);
-    printWindow.document.close();
-    printWindow.onload = () => printWindow.print();
+  const handleExportWeeklyReport = async () => {
+    if (!weeklyReportRef.current || isExportingWeeklyReport) return;
+    setIsExportingWeeklyReport(true);
+    try {
+      const dateLabel = format(selectedReportWeek, "yyyy-MM-dd");
+      const result = await exportElementToPdf({
+        element: weeklyReportRef.current,
+        filename: `weekly-absent-report-${dateLabel}`,
+        marginMm: 0,
+        pdfContentScale: 1,
+      });
+      if (result.savedToDevice) {
+        toast.success("Saved to Downloads");
+      }
+    } catch (error) {
+      console.error("[TeacherAttendancePage] Weekly report PDF export failed", error);
+      toast.error("Export failed. Please try again.");
+    } finally {
+      setIsExportingWeeklyReport(false);
+    }
   };
 
-  const handlePrintFrequentReport = () => {
-    const printContent = frequentReportRef.current;
-    if (!printContent) return;
-    const printWindow = window.open('', '_blank');
-    if (!printWindow) return;
-    printWindow.document.write(`<!DOCTYPE html><html><head><title>Attendance Concerns Report</title><style>@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');*{margin:0;padding:0;box-sizing:border-box;}body{font-family:'Inter',sans-serif;background:#fff;color:#1a1a1a;line-height:1.5;}@page{size:A4;margin:12mm;}@media print{body{-webkit-print-color-adjust:exact;print-color-adjust:exact;}}</style></head><body>${printContent.innerHTML}</body></html>`);
-    printWindow.document.close();
-    printWindow.onload = () => printWindow.print();
+  const handleExportFrequentReport = async () => {
+    if (!frequentReportRef.current || isExportingFrequentReport) return;
+    setIsExportingFrequentReport(true);
+    try {
+      const dateLabel = format(new Date(), "yyyy-MM-dd");
+      const result = await exportElementToPdf({
+        element: frequentReportRef.current,
+        filename: `attendance-concerns-report-${dateLabel}`,
+        marginMm: 0,
+        pdfContentScale: 1,
+      });
+      if (result.savedToDevice) {
+        toast.success("Saved to Downloads");
+      }
+    } catch (error) {
+      console.error("[TeacherAttendancePage] Concerns report PDF export failed", error);
+      toast.error("Export failed. Please try again.");
+    } finally {
+      setIsExportingFrequentReport(false);
+    }
   };
 
   return (
@@ -1169,10 +1196,22 @@ export default function TeacherAttendancePage() {
         <DialogContent className="w-full max-w-none p-0 overflow-hidden flex flex-col max-h-[90vh]">
           <DialogHeader className="flex flex-row items-center justify-between px-4 py-3 border-b border-border bg-background sticky top-0 z-10">
             <DialogTitle className="text-sm sm:text-base">Weekly Absent Report</DialogTitle>
-            <Button onClick={handlePrintWeeklyReport} className="gap-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs sm:text-sm px-3 py-2">
-              <Printer className="h-4 w-4" />
-              <span className="hidden sm:inline">Print / Save PDF</span>
-              <span className="sm:hidden">PDF</span>
+            <Button
+              onClick={handleExportWeeklyReport}
+              className="gap-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs sm:text-sm px-3 py-2"
+              disabled={isExportingWeeklyReport}
+            >
+              {isExportingWeeklyReport ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Printer className="h-4 w-4" />
+              )}
+              <span className="hidden sm:inline">
+                {isExportingWeeklyReport ? "Generating..." : "Print / Save PDF"}
+              </span>
+              <span className="sm:hidden">
+                {isExportingWeeklyReport ? "Generating..." : "PDF"}
+              </span>
             </Button>
           </DialogHeader>
           
@@ -1404,10 +1443,22 @@ export default function TeacherAttendancePage() {
         <DialogContent className="w-full max-w-none p-0 overflow-hidden flex flex-col max-h-[90vh]">
           <DialogHeader className="flex flex-row items-center justify-between px-4 py-3 border-b border-border bg-background sticky top-0 z-10">
             <DialogTitle className="text-sm sm:text-base">Attendance Concerns Report</DialogTitle>
-            <Button onClick={handlePrintFrequentReport} className="gap-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs sm:text-sm px-3 py-2">
-              <Printer className="h-4 w-4" />
-              <span className="hidden sm:inline">Print / Save PDF</span>
-              <span className="sm:hidden">PDF</span>
+            <Button
+              onClick={handleExportFrequentReport}
+              className="gap-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs sm:text-sm px-3 py-2"
+              disabled={isExportingFrequentReport}
+            >
+              {isExportingFrequentReport ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Printer className="h-4 w-4" />
+              )}
+              <span className="hidden sm:inline">
+                {isExportingFrequentReport ? "Generating..." : "Print / Save PDF"}
+              </span>
+              <span className="sm:hidden">
+                {isExportingFrequentReport ? "Generating..." : "PDF"}
+              </span>
             </Button>
           </DialogHeader>
           
