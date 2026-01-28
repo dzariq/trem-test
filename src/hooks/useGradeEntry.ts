@@ -8,8 +8,8 @@ import {
   fetchAcademicPeriods,
   fetchExistingGrades,
   saveGrades,
-  fetchClassRecommendation,
-  saveClassRecommendation,
+  fetchClassStudyRecommendation,
+  saveClassStudyRecommendation,
   GradeEntryStudent,
   SubjectInfo,
   AcademicPeriod,
@@ -32,6 +32,7 @@ interface UseGradeEntryReturn {
   existingGrades: Map<string, StudentGradeRecord>;
   gradeInputs: Record<string, GradeInput>;
   classRecommendation: string;
+  classRecommendationUpdatedAt: string | null;
   
   // Selection state
   selectedClass: string | null;
@@ -44,6 +45,7 @@ interface UseGradeEntryReturn {
   loadingStudents: boolean;
   loadingSubjects: boolean;
   loadingGrades: boolean;
+  savingClassRecommendation: boolean;
   saving: boolean;
   error: string | null;
   
@@ -54,7 +56,7 @@ interface UseGradeEntryReturn {
   setSelectedAcademicYear: (year: number | null) => void;
   updateGradeInput: (studentId: string, field: keyof GradeInput, value: string) => void;
   setClassRecommendation: (recommendation: string) => void;
-  applyClassRecommendationToAll: () => void;
+  saveClassRecommendation: () => Promise<{ success: boolean; error?: string }>;
   save: () => Promise<{ success: boolean; error?: string }>;
   
   // Computed stats
@@ -92,12 +94,14 @@ export function useGradeEntry(): UseGradeEntryReturn {
   const [existingGrades, setExistingGrades] = useState<Map<string, StudentGradeRecord>>(new Map());
   const [gradeInputs, setGradeInputs] = useState<Record<string, GradeInput>>({});
   const [classRecommendation, setClassRecommendationState] = useState<string>("");
+  const [classRecommendationUpdatedAt, setClassRecommendationUpdatedAt] = useState<string | null>(null);
   
   // Loading states
   const [loadingClasses, setLoadingClasses] = useState(false);
   const [loadingStudents, setLoadingStudents] = useState(false);
   const [loadingSubjects, setLoadingSubjects] = useState(false);
   const [loadingGrades, setLoadingGrades] = useState(false);
+  const [savingClassRecommendation, setSavingClassRecommendation] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -332,6 +336,7 @@ export function useGradeEntry(): UseGradeEntryReturn {
       setExistingGrades(new Map());
       setGradeInputs({});
       setClassRecommendationState("");
+      setClassRecommendationUpdatedAt(null);
       return;
     }
 
@@ -352,14 +357,13 @@ export function useGradeEntry(): UseGradeEntryReturn {
         setGradeInputs(buildGradeInputsFromExistingGrades(students, grades));
 
         // Load class recommendation
-        const yearLevel = students[0]?.year_level || "";
-        const recommendation = await fetchClassRecommendation(
+        const recommendation = await fetchClassStudyRecommendation(
           selectedClass,
-          yearLevel,
           selectedSubject.id,
           selectedPeriod.id
         );
-        setClassRecommendationState(recommendation || "");
+        setClassRecommendationState(recommendation?.recommendation || "");
+        setClassRecommendationUpdatedAt(recommendation?.updated_at || null);
       } catch (err) {
         setError("Failed to load existing grades");
         console.error(err);
@@ -400,19 +404,61 @@ export function useGradeEntry(): UseGradeEntryReturn {
     setClassRecommendationState(recommendation);
   }, []);
 
-  // Apply class recommendation to all students
-  const applyClassRecommendationToAll = useCallback(() => {
-    setGradeInputs(prev => {
-      const updated = { ...prev };
-      students.forEach(student => {
-        updated[student.id] = {
-          ...(updated[student.id] || emptyGradeInput),
-          studyRecommendation: classRecommendation
-        };
-      });
-      return updated;
-    });
-  }, [students, classRecommendation]);
+  // Save class recommendation only
+  const saveClassRecommendation = useCallback(async (): Promise<{ success: boolean; error?: string }> => {
+    if (!selectedSubject || !selectedPeriod || !selectedClass) {
+      return { success: false, error: "Please select class, subject, and period" };
+    }
+    if (isTeacher) {
+      if (!allowedClassNames.includes(selectedClass)) {
+        toast({
+          title: "Class not available",
+          description: "Please select an assigned class.",
+          variant: "destructive",
+        });
+        return { success: false, error: "Selected class is not available." };
+      }
+      if (allowedSubjectIds && !allowedSubjectIds.includes(selectedSubject.id)) {
+        toast({
+          title: "Subject not available",
+          description: "Please select an assigned subject.",
+          variant: "destructive",
+        });
+        return { success: false, error: "Selected subject is not available." };
+      }
+    }
+
+    setSavingClassRecommendation(true);
+    setError(null);
+
+    try {
+      const result = await saveClassStudyRecommendation(
+        selectedClass,
+        selectedSubject.id,
+        selectedPeriod.id,
+        classRecommendation
+      );
+      if (result.success) {
+        setClassRecommendationState(result.record?.recommendation ?? classRecommendation);
+        setClassRecommendationUpdatedAt(result.record?.updated_at ?? null);
+      }
+      return { success: result.success, error: result.error };
+    } catch (err) {
+      const errorMessage = String(err);
+      setError(errorMessage);
+      return { success: false, error: errorMessage };
+    } finally {
+      setSavingClassRecommendation(false);
+    }
+  }, [
+    allowedClassNames,
+    allowedSubjectIds,
+    classRecommendation,
+    isTeacher,
+    selectedClass,
+    selectedPeriod,
+    selectedSubject,
+  ]);
 
   // Save grades
   const save = useCallback(async (): Promise<{ success: boolean; error?: string }> => {
@@ -454,18 +500,6 @@ export function useGradeEntry(): UseGradeEntryReturn {
       const result = await saveGrades(gradesToSave);
 
       if (result.success) {
-        // Save class recommendation
-        const yearLevel = students[0]?.year_level || "";
-        if (classRecommendation) {
-          await saveClassRecommendation(
-            selectedClass,
-            yearLevel,
-            selectedSubject.id,
-            selectedPeriod.id,
-            classRecommendation
-          );
-        }
-
         // Reload grades to get updated IDs
         const studentIds = students.map(s => s.id);
         const updatedGrades = await fetchExistingGrades(
@@ -494,7 +528,6 @@ export function useGradeEntry(): UseGradeEntryReturn {
     students,
     existingGrades,
     gradeInputs,
-    classRecommendation,
   ]);
 
   // Compute stats
@@ -562,6 +595,7 @@ export function useGradeEntry(): UseGradeEntryReturn {
     existingGrades,
     gradeInputs,
     classRecommendation,
+    classRecommendationUpdatedAt,
     
     // Selection state
     selectedClass,
@@ -574,6 +608,7 @@ export function useGradeEntry(): UseGradeEntryReturn {
     loadingStudents,
     loadingSubjects,
     loadingGrades,
+    savingClassRecommendation,
     saving,
     error,
     
@@ -584,7 +619,7 @@ export function useGradeEntry(): UseGradeEntryReturn {
     setSelectedAcademicYear,
     updateGradeInput,
     setClassRecommendation,
-    applyClassRecommendationToAll,
+    saveClassRecommendation,
     save,
     
     // Computed stats

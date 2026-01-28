@@ -113,9 +113,9 @@ export default function AcademicPage() {
   const role = profile?.role?.toLowerCase() ?? "parent";
   const canViewBreakdown = role !== "parent";
   // Shared academic year / exam selection with localStorage persistence
-  const [selectedAcademicPeriodId, setSelectedAcademicPeriodId] = useState<string>(() => {
+  const [selectedAcademicYearId, setSelectedAcademicYearId] = useState<string>(() => {
     if (typeof window !== 'undefined') {
-      return localStorage.getItem('parent_selected_academic_period_id') || "";
+      return localStorage.getItem('parent_selected_academic_year_id') || "";
     }
     return "";
   });
@@ -128,11 +128,13 @@ export default function AcademicPage() {
   });
 
   // Persist shared selections to localStorage
+  const [selectedAcademicPeriodId, setSelectedAcademicPeriodId] = useState<string>("");
+
   useEffect(() => {
-    if (selectedAcademicPeriodId) {
-      localStorage.setItem("parent_selected_academic_period_id", selectedAcademicPeriodId);
+    if (selectedAcademicYearId) {
+      localStorage.setItem("parent_selected_academic_year_id", selectedAcademicYearId);
     }
-  }, [selectedAcademicPeriodId]);
+  }, [selectedAcademicYearId]);
 
   useEffect(() => {
     if (selectedExamPeriodId) {
@@ -394,18 +396,6 @@ export default function AcademicPage() {
     });
   }, [academicPeriods]);
 
-  const useAcademicPeriodIdForYear = useMemo(() => {
-    const counts = new Map<string, number>();
-    analysisPeriods.forEach((period) => {
-      if (!period.academicPeriodId) return;
-      counts.set(
-        period.academicPeriodId,
-        (counts.get(period.academicPeriodId) ?? 0) + 1
-      );
-    });
-    return Array.from(counts.values()).some((count) => count > 1);
-  }, [analysisPeriods]);
-
   const lastStudentIdRef = useRef<string | null>(null);
   const resetExamForStudentChangeRef = useRef(false);
   useEffect(() => {
@@ -424,14 +414,12 @@ export default function AcademicPage() {
     >();
 
     analysisPeriods.forEach((period) => {
-      const id = useAcademicPeriodIdForYear
-        ? period.academicPeriodId ?? period.yearLabel
-        : period.yearLabel || period.academicPeriodId;
-      if (!id) return;
+      if (!Number.isFinite(period.academicYear)) return;
+      const id = String(period.academicYear);
       if (!map.has(id)) {
         map.set(id, {
           id,
-          label: period.yearLabel || period.academicPeriodName || "Year",
+          label: String(period.academicYear),
           academicYear: period.academicYear ?? null,
         });
       }
@@ -443,33 +431,31 @@ export default function AcademicPage() {
       if (byYear !== 0) return byYear;
       return a.label.localeCompare(b.label);
     });
-  }, [analysisPeriods, useAcademicPeriodIdForYear]);
+  }, [analysisPeriods]);
 
   useEffect(() => {
     if (academicPeriodOptions.length === 0) {
-      setSelectedAcademicPeriodId("");
+      setSelectedAcademicYearId("");
       setSelectedExamPeriodId("");
       setCompareExamAId("");
       setCompareExamBId("");
       return;
     }
 
-    const validAcademicPeriod = academicPeriodOptions.some(
-      (period) => period.id === selectedAcademicPeriodId
+    const validAcademicYear = academicPeriodOptions.some(
+      (period) => period.id === selectedAcademicYearId
     );
-    if (!selectedAcademicPeriodId || !validAcademicPeriod) {
-      setSelectedAcademicPeriodId(academicPeriodOptions[0].id);
+    if (!selectedAcademicYearId || !validAcademicYear) {
+      setSelectedAcademicYearId(academicPeriodOptions[0].id);
     }
-  }, [academicPeriodOptions, selectedAcademicPeriodId]);
+  }, [academicPeriodOptions, selectedAcademicYearId]);
 
   const examPeriodOptions = useMemo(() => {
-    if (!selectedAcademicPeriodId) return [];
+    const selectedYear = Number(selectedAcademicYearId);
+    if (!Number.isFinite(selectedYear)) return [];
 
     const filtered = analysisPeriods.filter((period) => {
-      const yearId = useAcademicPeriodIdForYear
-        ? period.academicPeriodId ?? period.yearLabel
-        : period.yearLabel || period.academicPeriodId;
-      return yearId === selectedAcademicPeriodId;
+      return period.academicYear === selectedYear;
     });
 
     const deduped = Array.from(
@@ -482,7 +468,7 @@ export default function AcademicPage() {
       }
       return a.periodLabel.localeCompare(b.periodLabel);
     });
-  }, [analysisPeriods, selectedAcademicPeriodId, useAcademicPeriodIdForYear]);
+  }, [analysisPeriods, selectedAcademicYearId]);
 
   useEffect(() => {
     if (!ANALYSIS_TAB_VALUES.includes(analysisTab)) {
@@ -491,7 +477,7 @@ export default function AcademicPage() {
   }, [analysisTab]);
 
   useEffect(() => {
-    if (!selectedAcademicPeriodId || examPeriodOptions.length === 0) {
+    if (!selectedAcademicYearId || examPeriodOptions.length === 0) {
       setSelectedExamPeriodId("");
       setCompareExamAId("");
       setCompareExamBId("");
@@ -525,7 +511,7 @@ export default function AcademicPage() {
       setCompareExamBId(nextB);
     }
   }, [
-    selectedAcademicPeriodId,
+    selectedAcademicYearId,
     examPeriodOptions,
     selectedExamPeriodId,
     compareExamAId,
@@ -534,21 +520,59 @@ export default function AcademicPage() {
 
   const selectedAcademicYearLabel = useMemo(() => {
     return (
-      academicPeriodOptions.find((period) => period.id === selectedAcademicPeriodId)
+      academicPeriodOptions.find((period) => period.id === selectedAcademicYearId)
         ?.label ?? ""
     );
-  }, [academicPeriodOptions, selectedAcademicPeriodId]);
+  }, [academicPeriodOptions, selectedAcademicYearId]);
 
   const selectedAcademicPeriodOption = useMemo(() => {
     return (
-      academicPeriodOptions.find((period) => period.id === selectedAcademicPeriodId) ??
+      academicPeriodOptions.find((period) => period.id === selectedAcademicYearId) ??
       null
     );
-  }, [academicPeriodOptions, selectedAcademicPeriodId]);
+  }, [academicPeriodOptions, selectedAcademicYearId]);
+
+  const selectedAcademicYear = useMemo(() => {
+    const parsed = Number(selectedAcademicYearId);
+    return Number.isFinite(parsed) ? parsed : null;
+  }, [selectedAcademicYearId]);
 
   const selectedExamPeriod = useMemo(() => {
     return academicPeriods.find((period) => period.id === selectedExamPeriodId) ?? null;
   }, [academicPeriods, selectedExamPeriodId]);
+
+  const selectedExamPeriodName = useMemo(() => {
+    return (
+      examPeriodOptions.find((period) => period.id === selectedExamPeriodId)
+        ?.periodLabel ?? null
+    );
+  }, [examPeriodOptions, selectedExamPeriodId]);
+
+  const resolvedAcademicPeriodId = useMemo(() => {
+    if (selectedAcademicYear === null || !selectedExamPeriodName) return "";
+    const match = academicPeriods.find(
+      (period) =>
+        period.academicYear === selectedAcademicYear &&
+        period.name === selectedExamPeriodName
+    );
+    return match?.id ?? "";
+  }, [academicPeriods, selectedAcademicYear, selectedExamPeriodName]);
+
+  useEffect(() => {
+    const resolvedId = resolvedAcademicPeriodId || "";
+    setSelectedAcademicPeriodId(resolvedId);
+    console.log("[AcademicPage] resolved selectedAcademicPeriodId", {
+      selectedAcademicPeriodId: resolvedId || null,
+      name: selectedExamPeriodName,
+      year: selectedAcademicYear,
+    });
+    if (!resolvedId && selectedAcademicYear !== null && selectedExamPeriodName) {
+      console.warn("[AcademicPage] selectedAcademicPeriodId missing after resolution", {
+        name: selectedExamPeriodName,
+        year: selectedAcademicYear,
+      });
+    }
+  }, [resolvedAcademicPeriodId, selectedExamPeriodName, selectedAcademicYear]);
 
   const reportCardYearLabel = useMemo(() => {
     if (selectedAcademicPeriodOption?.label) return selectedAcademicPeriodOption.label;
@@ -1424,8 +1448,8 @@ export default function AcademicPage() {
               <div className="flex items-center gap-2">
                 <span className="text-sm font-medium text-muted-foreground shrink-0">Year:</span>
                 <Select
-                  value={selectedAcademicPeriodId}
-                  onValueChange={setSelectedAcademicPeriodId}
+                  value={selectedAcademicYearId}
+                  onValueChange={setSelectedAcademicYearId}
                   disabled={periodsLoading || academicPeriodOptions.length === 0}
                 >
                   <SelectTrigger className="flex-1 h-9 text-sm">
@@ -1570,7 +1594,7 @@ export default function AcademicPage() {
                                     <span className="text-sm font-semibold text-foreground">Teacher's Comment</span>
                                   </div>
                                   <p className="text-sm text-muted-foreground leading-relaxed">
-                                    {expandedInRow.teacherComment || expandedInRow.subjectComment || "No comment available for this subject."}
+                                    {expandedInRow.teacherComment || "No comment available for this subject."}
                                   </p>
                                   {canViewBreakdown && (
                                     <div className="mt-3 pt-3 border-t border-border">
@@ -1853,12 +1877,18 @@ export default function AcademicPage() {
         }
         examType={reportCardExamLabel || "Report Period"}
         year={reportCardYearLabel}
-        subjects={realGrades.map((grade) => ({
-          name: grade.subjectName,
-          score: grade.totalMarks,
-          grade: grade.letterGrade || getGradeFromScore(grade.totalMarks),
-          teacherComment: grade.teacherComment || grade.subjectComment || "",
-        }))}
+        subjects={realGrades.map((grade) => {
+          const override = (grade.subjectComment || "").trim();
+          const classDefault = (grade.classStudyRecommendation || "").trim();
+          return {
+            name: grade.subjectName,
+            score: grade.totalMarks,
+            grade: grade.letterGrade || getGradeFromScore(grade.totalMarks),
+            teacherComment: grade.teacherComment || "",
+            classStudyRecommendation: classDefault || undefined,
+            studyRecommendation: override || undefined,
+          };
+        })}
         behavior={realBehaviorItems}
         homeroomComment={
           realBehavior?.homeroomTeacherComment || "No homeroom teacher comment for this period."
@@ -1923,8 +1953,8 @@ export default function AcademicPage() {
                 <div className="flex items-center gap-2 sm:gap-3">
                   <span className="text-sm font-medium text-muted-foreground shrink-0">Year:</span>
                   <Select
-                    value={selectedAcademicPeriodId}
-                    onValueChange={setSelectedAcademicPeriodId}
+                    value={selectedAcademicYearId}
+                    onValueChange={setSelectedAcademicYearId}
                     disabled={academicPeriodOptions.length === 0}
                   >
                     <SelectTrigger className="w-[120px]">

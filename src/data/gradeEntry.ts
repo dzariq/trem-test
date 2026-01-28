@@ -37,6 +37,15 @@ export interface StudentGradeRecord {
   letter_grade: string | null;
   teacher_comment: string | null;
   subject_comment: string | null;
+  updated_at: string;
+}
+
+export interface ClassStudyRecommendationRecord {
+  class_year_id: number;
+  subject_id: number;
+  academic_period_id: string;
+  recommendation: string;
+  updated_at: string;
 }
 
 export interface GradeInput {
@@ -78,6 +87,21 @@ const logSupabaseError = (
   });
 };
 
+const fetchClassYearId = async (className: string): Promise<number | null> => {
+  const { data, error } = await supabase
+    .from("class_years")
+    .select("id")
+    .eq("class_name", className)
+    .maybeSingle();
+
+  if (error) {
+    logSupabaseError("gradeEntry/fetchClassYearId", error);
+    return null;
+  }
+
+  return data?.id ?? null;
+};
+
 export function buildGradeInputsFromExistingGrades(
   students: GradeEntryStudent[],
   existingGrades: Map<string, StudentGradeRecord>
@@ -91,8 +115,8 @@ export function buildGradeInputsFromExistingGrades(
         homework: existing.homework_marks?.toString() || "",
         quiz: existing.quiz_marks?.toString() || "",
         exam: existing.exam_marks?.toString() || "",
-        reportComment: existing.subject_comment || "",
-        studyRecommendation: "",
+        reportComment: existing.teacher_comment || "",
+        studyRecommendation: existing.subject_comment || "",
         comment: existing.teacher_comment || "",
       };
     } else {
@@ -283,7 +307,7 @@ export async function saveGrades(
 
     // Skip if no data entered
     if (attitude === 0 && homework === 0 && quiz === 0 && exam === 0 && 
-        !grade.gradeInput.reportComment && !grade.gradeInput.studyRecommendation) {
+        !grade.gradeInput.reportComment && !grade.gradeInput.studyRecommendation && !grade.gradeInput.comment) {
       continue;
     }
 
@@ -296,8 +320,8 @@ export async function saveGrades(
       homework_marks: homework,
       quiz_marks: quiz,
       exam_marks: exam,
-      teacher_comment: grade.gradeInput.comment || null,
-      subject_comment: grade.gradeInput.reportComment || null,
+      teacher_comment: grade.gradeInput.reportComment || grade.gradeInput.comment || null,
+      subject_comment: grade.gradeInput.studyRecommendation || null,
     };
 
     if (grade.existingGradeId) {
@@ -350,87 +374,62 @@ export async function saveGrades(
 }
 
 // Fetch class recommendation (using grade_configurations additional_columns or a simple approach)
-export async function fetchClassRecommendation(
+export async function fetchClassStudyRecommendation(
   className: string,
-  yearLevel: string,
   subjectId: number,
   academicPeriodId: string
-): Promise<string | null> {
+): Promise<ClassStudyRecommendationRecord | null> {
+  const classYearId = await fetchClassYearId(className);
+  if (!classYearId) {
+    return null;
+  }
+
   const { data, error } = await supabase
-    .from("grade_configurations")
-    .select("additional_columns")
-    .eq("class", className)
-    .eq("year_level", yearLevel)
+    .from("class_study_recommendations")
+    .select("class_year_id, subject_id, academic_period_id, recommendation, updated_at")
+    .eq("class_year_id", classYearId)
     .eq("subject_id", subjectId)
     .eq("academic_period_id", academicPeriodId)
     .maybeSingle();
 
   if (error) {
-    logSupabaseError("gradeEntry/fetchClassRecommendation", error);
+    logSupabaseError("gradeEntry/fetchClassStudyRecommendation", error);
     return null;
   }
 
-  // Extract recommendation from additional_columns JSON if it exists
-  const additionalColumns = data?.additional_columns as Record<string, unknown> | null;
-  return additionalColumns?.study_recommendation as string | null;
+  return data ?? null;
 }
 
 // Save class recommendation
-export async function saveClassRecommendation(
+export async function saveClassStudyRecommendation(
   className: string,
-  yearLevel: string,
   subjectId: number,
   academicPeriodId: string,
   recommendation: string
-): Promise<{ success: boolean; error?: string }> {
-  // First check if a configuration exists
-  const { data: existing, error: fetchError } = await supabase
-    .from("grade_configurations")
-    .select("id, additional_columns")
-    .eq("class", className)
-    .eq("year_level", yearLevel)
-    .eq("subject_id", subjectId)
-    .eq("academic_period_id", academicPeriodId)
-    .maybeSingle();
-
-  if (fetchError) {
-    logSupabaseError("gradeEntry/saveClassRecommendation/fetch", fetchError);
-    return { success: false, error: fetchError.message };
+): Promise<{ success: boolean; record?: ClassStudyRecommendationRecord; error?: string }> {
+  const classYearId = await fetchClassYearId(className);
+  if (!classYearId) {
+    return { success: false, error: "Unable to resolve class year." };
   }
 
-  const additionalColumns = {
-    ...(existing?.additional_columns as Record<string, unknown> || {}),
-    study_recommendation: recommendation
-  };
-
-  if (existing) {
-    // Update existing
-    const { error } = await supabase
-      .from("grade_configurations")
-      .update({ additional_columns: additionalColumns })
-      .eq("id", existing.id);
-
-    if (error) {
-      logSupabaseError("gradeEntry/saveClassRecommendation/update", error);
-      return { success: false, error: error.message };
-    }
-  } else {
-    // Insert new
-    const { error } = await supabase
-      .from("grade_configurations")
-      .insert({
-        class: className,
-        year_level: yearLevel,
+  const { data, error } = await supabase
+    .from("class_study_recommendations")
+    .upsert(
+      {
+        class_year_id: classYearId,
         subject_id: subjectId,
         academic_period_id: academicPeriodId,
-        additional_columns: additionalColumns
-      });
+        recommendation,
+      },
+      { onConflict: "class_year_id,subject_id,academic_period_id" }
+    )
+    .select("class_year_id, subject_id, academic_period_id, recommendation, updated_at")
+    .single();
 
-    if (error) {
-      logSupabaseError("gradeEntry/saveClassRecommendation/insert", error);
-      return { success: false, error: error.message };
-    }
+  if (error) {
+    logSupabaseError("gradeEntry/saveClassStudyRecommendation", error);
+    return { success: false, error: error.message };
   }
 
-  return { success: true };
+  return { success: true, record: data ?? undefined };
 }

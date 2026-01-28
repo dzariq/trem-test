@@ -188,6 +188,18 @@ const getLetterGrade = (total: number): {
     color: "bg-red-100 text-red-700 border-red-300"
   };
 };
+const formatSavedAt = (value?: string | null): string | null => {
+  if (!value) return null;
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return null;
+  const day = date.getDate();
+  const month = date.toLocaleString("en-GB", { month: "short" });
+  const hours = date.getHours();
+  const minutes = date.getMinutes().toString().padStart(2, "0");
+  const period = hours >= 12 ? "pm" : "am";
+  const hour12 = hours % 12 || 12;
+  return `${day} ${month}, ${hour12}:${minutes}${period}`;
+};
 export default function TeacherAcademicPage() {
   const isMobile = useIsMobile();
   const teacherScope = useTeacherScope();
@@ -1881,26 +1893,40 @@ export default function TeacherAcademicPage() {
                         !gradeEntry.selectedPeriod?.is_open_for_grading && "opacity-60 cursor-not-allowed"
                       )}
                     />
-                    <div className="flex items-center justify-between mt-1">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="text-xs h-6 px-2 text-amber-600"
-                        disabled={!gradeEntry.selectedPeriod?.is_open_for_grading}
-                        onClick={() => {
-                          gradeEntry.applyClassRecommendationToAll();
-                          toast({
-                            title: "Applied to All",
-                            description: "Class recommendation applied to all students.",
-                          });
-                        }}
-                      >
-                        Apply to all students
-                      </Button>
+                    <div className="flex items-center justify-between mt-2">
+                      <div className="flex items-center gap-2">
+                        <Button
+                          size="sm"
+                          className="text-xs h-7 px-3"
+                          disabled={gradeEntry.savingClassRecommendation || !gradeEntry.selectedPeriod?.is_open_for_grading}
+                          onClick={async () => {
+                            const result = await gradeEntry.saveClassRecommendation();
+                            if (result.success) {
+                              toast({
+                                title: "Class Recommendation Saved",
+                                description: "Class default saved successfully.",
+                              });
+                            } else {
+                              toast({
+                                title: "Save Failed",
+                                description: result.error || "Unable to save class recommendation.",
+                                variant: "destructive",
+                              });
+                            }
+                          }}
+                        >
+                          {gradeEntry.savingClassRecommendation ? "Saving..." : "Save"}
+                        </Button>
+                        {gradeEntry.classRecommendationUpdatedAt && (
                           <p className="text-[10px] text-muted-foreground">
-                            {gradeEntry.classRecommendation.length}/300
+                            Saved {formatSavedAt(gradeEntry.classRecommendationUpdatedAt)}
                           </p>
-                        </div>
+                        )}
+                      </div>
+                      <p className="text-[10px] text-muted-foreground">
+                        {gradeEntry.classRecommendation.length}/300
+                      </p>
+                    </div>
                       </CardContent>
                     </Card>
 
@@ -1909,6 +1935,8 @@ export default function TeacherAcademicPage() {
                       {gradeEntry.students.map(student => {
                         const isExpanded = expandedStudents.includes(student.id);
                         const input = gradeEntry.gradeInputs[student.id] || { attitude: "", homework: "", quiz: "", exam: "", reportComment: "", studyRecommendation: "", comment: "" };
+                        const studentGradeRecord = gradeEntry.existingGrades.get(student.id);
+                        const studentSavedAt = formatSavedAt(studentGradeRecord?.updated_at);
                         const attitude = parseInt(input.attitude) || 0;
                         const homework = parseInt(input.homework) || 0;
                         const quiz = parseInt(input.quiz) || 0;
@@ -2032,8 +2060,13 @@ export default function TeacherAcademicPage() {
                                       <label className="text-xs font-medium text-amber-600 mb-1 block">
                                         Study Recommendations
                                       </label>
+                                      {gradeEntry.classRecommendation.trim() && (
+                                        <div className="mb-2 rounded-md border border-amber-200 bg-amber-50/70 px-2 py-1 text-[11px] text-amber-800">
+                                          Class default: {gradeEntry.classRecommendation}
+                                        </div>
+                                      )}
                                       <Textarea 
-                                        placeholder="e.g., Focus on Chapter 5, practice more word problems..." 
+                                        placeholder="Leave blank to use class default" 
                                         value={input.studyRecommendation} 
                                         maxLength={300}
                                         onChange={e => {
@@ -2047,9 +2080,16 @@ export default function TeacherAcademicPage() {
                                           !gradeEntry.selectedPeriod?.is_open_for_grading && "opacity-60 cursor-not-allowed"
                                         )}
                                       />
-                                      <p className="text-[10px] text-muted-foreground text-right mt-1">
-                                        {(input.studyRecommendation || "").length}/300
-                                      </p>
+                                      <div className="flex items-center justify-between mt-1">
+                                        {studentSavedAt ? (
+                                          <p className="text-[10px] text-muted-foreground">Saved {studentSavedAt}</p>
+                                        ) : (
+                                          <span />
+                                        )}
+                                        <p className="text-[10px] text-muted-foreground text-right">
+                                          {(input.studyRecommendation || "").length}/300
+                                        </p>
+                                      </div>
                                     </div>
                                     
                                     {/* Authentic Comments (Internal) */}

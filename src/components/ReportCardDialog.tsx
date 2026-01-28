@@ -558,44 +558,33 @@ export function ReportCardDialog({
               </div>
             </div>
 
-            {/* Learning Tips - Separate Table */}
-            {displayedSubjects.some(s => s.classStudyRecommendation || s.studyRecommendation) && (
+            {/* Study Recommendations - Separate Table */}
+            {displayedSubjects.some(s => (s.studyRecommendation || s.classStudyRecommendation)) && (
               <div style={{ marginBottom: '12px' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '8px', paddingBottom: '6px', borderBottom: '1px solid #065f46' }}>
                   <span style={{ color: '#065f46' }}><IconBookMarked /></span>
-                  <h3 style={{ fontSize: '14px', fontWeight: '700', color: '#065f46' }}>Learning Tips</h3>
+                  <h3 style={{ fontSize: '14px', fontWeight: '700', color: '#065f46' }}>Study Recommendations</h3>
                 </div>
                 
                 <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '11px' }}>
                   <thead>
                     <tr style={{ background: '#065f46', color: 'white' }}>
                       <th style={{ padding: '6px 10px', textAlign: 'left', fontWeight: '600', fontSize: '11px', width: '120px', borderRadius: '4px 0 0 0' }}>Subject</th>
-                      <th style={{ padding: '6px 10px', textAlign: 'left', fontWeight: '600', fontSize: '11px', borderRadius: '0 4px 0 0' }}>Learning Tips</th>
+                      <th style={{ padding: '6px 10px', textAlign: 'left', fontWeight: '600', fontSize: '11px' }}>Class Recommendation (Applies to all)</th>
+                      <th style={{ padding: '6px 10px', textAlign: 'left', fontWeight: '600', fontSize: '11px', borderRadius: '0 4px 0 0' }}>Teacher’s Note for Your Child</th>
                     </tr>
                   </thead>
                   <tbody>
                     {displayedSubjects
-                      .filter(s => s.classStudyRecommendation || s.studyRecommendation)
+                      .filter(s => (s.studyRecommendation || s.classStudyRecommendation))
                       .map((subject, index) => (
                         <tr key={subject.name} style={{ background: index % 2 === 0 ? '#fffbeb' : '#fef3c7', borderBottom: '1px solid #fcd34d' }}>
                           <td style={{ padding: '6px 10px', fontWeight: '600', color: '#1a1a1a', fontSize: '11px' }}>{subject.name}</td>
                           <td style={{ padding: '6px 10px', fontSize: '10px', color: '#374151', lineHeight: '1.5' }}>
-                            {subject.classStudyRecommendation || '-'}
-                            {subject.studyRecommendation && (
-                              <div style={{ marginTop: '6px' }}>
-                                <span style={{ 
-                                  display: 'inline-block',
-                                  background: '#065f46', 
-                                  color: 'white', 
-                                  padding: '2px 8px', 
-                                  borderRadius: '8px', 
-                                  fontSize: '9px', 
-                                  fontWeight: '600',
-                                  marginRight: '6px'
-                                }}>Individual Tips</span>
-                                <span>{subject.studyRecommendation}</span>
-                              </div>
-                            )}
+                            {subject.classStudyRecommendation?.trim() || "-"}
+                          </td>
+                          <td style={{ padding: '6px 10px', fontSize: '10px', color: '#374151', lineHeight: '1.5' }}>
+                            {subject.studyRecommendation?.trim() || "-"}
                           </td>
                         </tr>
                       ))}
