@@ -31,17 +31,17 @@ const TeacherLessonPlansListPage = () => {
     return localStorage.getItem(LS_TEACHER_LP_YEAR) || academicYears[0]?.id || "";
   });
   const [selectedYearLevel, setSelectedYearLevel] = useState<string>(() => {
-    return localStorage.getItem(LS_TEACHER_LP_YEAR_LEVEL) || "";
+    return localStorage.getItem(LS_TEACHER_LP_YEAR_LEVEL) || "all";
   });
   const [selectedSubject, setSelectedSubject] = useState<string>(() => {
-    return localStorage.getItem(LS_TEACHER_LP_SUBJECT) || "";
+    return localStorage.getItem(LS_TEACHER_LP_SUBJECT) || "all";
   });
 
   // Fetch assigned plans
   const { plans, loading, error } = useTeacherAssignedPlans(
     selectedYear ? parseInt(selectedYear) : undefined,
-    selectedYearLevel || undefined,
-    selectedSubject || undefined
+    selectedYearLevel === "all" ? undefined : selectedYearLevel,
+    selectedSubject === "all" ? undefined : selectedSubject
   );
 
   // Get unique year levels and subjects from plans for filter options
@@ -103,7 +103,7 @@ const TeacherLessonPlansListPage = () => {
                 <SelectValue placeholder="Level" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">All Levels</SelectItem>
+                <SelectItem value="all">All Levels</SelectItem>
                 {yearLevels.map((level) => (
                   <SelectItem key={level} value={level}>
                     {level}
@@ -118,7 +118,7 @@ const TeacherLessonPlansListPage = () => {
                 <SelectValue placeholder="Subject" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">All Subjects</SelectItem>
+                <SelectItem value="all">All Subjects</SelectItem>
                 {subjects.map((subject) => (
                   <SelectItem key={subject} value={subject}>
                     {subject}
