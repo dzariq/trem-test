@@ -835,18 +835,14 @@ export default function TeacherAcademicPage() {
   
   const handleSaveGrades = () => {
     if (!selectedStudent) {
-      toast({
-        title: "No Student Selected",
-        description: "Please select a student to save.",
-        variant: "destructive"
-      });
+      toast.error("No student selected", "Please select a student to save.");
       return;
     }
     const categoryLabels = { grades: "Grades", behavior: "Behavior", awards: "Awards" };
-    toast({
-      title: `${categoryLabels[entryCategory]} Saved`,
-      description: `${categoryLabels[entryCategory]} saved for ${students.find(s => s.id === selectedStudent)?.name} in Class ${selectedClass}.`
-    });
+    toast.success(
+      `${categoryLabels[entryCategory]} saved`,
+      `${categoryLabels[entryCategory]} saved for ${students.find(s => s.id === selectedStudent)?.name} in Class ${selectedClass}.`
+    );
   };
 
   // ============ USE REAL DATA FROM classAnalysis ============
@@ -1801,10 +1797,10 @@ export default function TeacherAcademicPage() {
                 <Button 
                   className="fixed z-50 shadow-xl bottom-24 right-4 h-14 w-14 rounded-full p-0 bg-purple-600 hover:bg-purple-700"
                   onClick={() => {
-                    toast({
-                      title: "Behavior Saved",
-                      description: `Homeroom behavior for ${selectedClass} has been saved.`,
-                    });
+                    toast.success(
+                      "Behavior saved",
+                      `Homeroom behavior for ${selectedClass} has been saved.`
+                    );
                   }}
                 >
                   <Save className="h-6 w-6" />
@@ -1972,16 +1968,12 @@ export default function TeacherAcademicPage() {
                           onClick={async () => {
                             const result = await gradeEntry.saveClassRecommendation();
                             if (result.success) {
-                              toast({
-                                title: "Class Recommendation Saved",
-                                description: "Class default saved successfully.",
-                              });
+                              toast.success("Class recommendation saved", "Class default saved successfully.");
                             } else {
-                              toast({
-                                title: "Save Failed",
-                                description: result.error || "Unable to save class recommendation.",
-                                variant: "destructive",
-                              });
+                              toast.error(
+                                "Save failed",
+                                result.error || "Unable to save class recommendation."
+                              );
                             }
                           }}
                         >
@@ -2207,20 +2199,19 @@ export default function TeacherAcademicPage() {
                             
                             const result = await gradeEntry.save();
                             if (result.success) {
-                              toast({
-                                title: "Grades Saved",
-                                description: `${gradeEntry.selectedSubject?.name} grades for ${gradeEntry.selectedClass} have been saved to database.`,
-                              });
+                              toast.success(
+                                "Grades saved",
+                                `${gradeEntry.selectedSubject?.name} grades for ${gradeEntry.selectedClass} have been saved to database.`
+                              );
                             } else {
                               const isClosedPeriodError = result.error?.includes('row-level security') || 
                                                            result.error?.includes('academic_periods');
-                              toast({
-                                title: isClosedPeriodError ? "Grading Closed" : "Save Failed",
-                                description: isClosedPeriodError 
+                              toast.error(
+                                isClosedPeriodError ? "Grading closed" : "Save failed",
+                                isClosedPeriodError 
                                   ? `Grading is closed for ${gradeEntry.selectedPeriod?.name || 'this period'}. Contact admin to open grading.`
-                                  : (result.error || "Failed to save grades. Please try again."),
-                                variant: "destructive"
-                              });
+                                  : (result.error || "Failed to save grades. Please try again.")
+                              );
                             }
                           }}
                         >

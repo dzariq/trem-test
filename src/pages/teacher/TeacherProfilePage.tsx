@@ -32,7 +32,7 @@ import {
 } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useNavigate } from "react-router-dom";
-import { toast } from "sonner";
+import { toast } from "@/hooks/use-toast";
 import { useMyProfile } from "@/hooks/useMyProfile";
 import { updateMyProfile } from "@/data/profile";
 

@@ -30,7 +30,7 @@ import { StudentPillSelector } from "@/components/home/StudentPillSelector";
 import { generateBehaviorSummary } from "@/lib/summary/behaviorSummary";
 import { exportElementToPdf } from "@/lib/pdf/exportToPdf";
 import { saveAndShareBlob } from "@/lib/export/nativeDownload";
-import { toast } from "sonner";
+import { toast } from "@/hooks/use-toast";
 type YearKey = "2022" | "2023" | "2024" | "2025";
 type ExamType = "midYear" | "yearEnd";
 type AnalysisPeriod = {

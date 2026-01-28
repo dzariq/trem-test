@@ -6,7 +6,7 @@ import collinzLogo from "@/assets/collinz-school-logo.png";
 import schoolBadge from "@/assets/school-badge.png";
 import cambridgeLogo from "@/assets/cambridge-logo.jpg";
 import { exportElementToPdf } from "@/lib/pdf/exportToPdf";
-import { toast } from "sonner";
+import { toast } from "@/hooks/use-toast";
 
 // SVG Icon components for print compatibility
 const IconStar = () => (

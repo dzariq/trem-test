@@ -49,7 +49,7 @@ import {
   X
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { toast } from "sonner";
+import { toast } from "@/hooks/use-toast";
 import { PDFViewerDialog } from "@/components/PDFViewerDialog";
 import { cn } from "@/lib/utils";
 import { useMyProfile } from "@/hooks/useMyProfile";

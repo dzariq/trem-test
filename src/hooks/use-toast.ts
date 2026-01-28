@@ -3,13 +3,22 @@ import * as React from "react";
 import type { ToastActionElement, ToastProps } from "@/components/ui/toast";
 
 const TOAST_LIMIT = 1;
-const TOAST_REMOVE_DELAY = 1000000;
+const TOAST_REMOVE_DELAY = 600;
+
+const DEFAULT_DURATIONS = {
+  success: 2000,
+  info: 3500,
+  error: 5000,
+  destructive: 5000,
+  default: 2000,
+} as const;
 
 type ToasterToast = ToastProps & {
   id: string;
   title?: React.ReactNode;
   description?: React.ReactNode;
   action?: ToastActionElement;
+  duration?: number;
 };
 
 const actionTypes = {
@@ -51,6 +60,20 @@ interface State {
 }
 
 const toastTimeouts = new Map<string, ReturnType<typeof setTimeout>>();
+const autoDismissTimeouts = new Map<string, ReturnType<typeof setTimeout>>();
+
+const clearAutoDismiss = (toastId?: string) => {
+  if (!toastId) {
+    autoDismissTimeouts.forEach((timeout) => clearTimeout(timeout));
+    autoDismissTimeouts.clear();
+    return;
+  }
+  const timeout = autoDismissTimeouts.get(toastId);
+  if (timeout) {
+    clearTimeout(timeout);
+    autoDismissTimeouts.delete(toastId);
+  }
+};
 
 const addToRemoveQueue = (toastId: string) => {
   if (toastTimeouts.has(toastId)) {
@@ -88,6 +111,11 @@ export const reducer = (state: State, action: Action): State => {
       // ! Side effects ! - This could be extracted into a dismissToast() action,
       // but I'll keep it here for simplicity
       if (toastId) {
+        clearAutoDismiss(toastId);
+      } else {
+        clearAutoDismiss();
+      }
+      if (toastId) {
         addToRemoveQueue(toastId);
       } else {
         state.toasts.forEach((toast) => {
@@ -108,6 +136,7 @@ export const reducer = (state: State, action: Action): State => {
       };
     }
     case "REMOVE_TOAST":
+      clearAutoDismiss(action.toastId);
       if (action.toastId === undefined) {
         return {
           ...state,
@@ -134,7 +163,35 @@ function dispatch(action: Action) {
 
 type Toast = Omit<ToasterToast, "id">;
 
-function toast({ ...props }: Toast) {
+const resolveDuration = (variant?: ToastProps["variant"], duration?: number) => {
+  if (typeof duration === "number") return duration;
+  const key = variant ?? "default";
+  if (key === "success") return DEFAULT_DURATIONS.success;
+  if (key === "info") return DEFAULT_DURATIONS.info;
+  if (key === "error") return DEFAULT_DURATIONS.error;
+  if (key === "destructive") return DEFAULT_DURATIONS.destructive;
+  return DEFAULT_DURATIONS.default;
+};
+
+type ToastFn = ((props: Toast) => { id: string; dismiss: () => void; update: (props: ToasterToast) => void }) & {
+  success: (title: React.ReactNode, description?: React.ReactNode, options?: Omit<Toast, "title" | "description">) => {
+    id: string;
+    dismiss: () => void;
+    update: (props: ToasterToast) => void;
+  };
+  info: (title: React.ReactNode, description?: React.ReactNode, options?: Omit<Toast, "title" | "description">) => {
+    id: string;
+    dismiss: () => void;
+    update: (props: ToasterToast) => void;
+  };
+  error: (title: React.ReactNode, description?: React.ReactNode, options?: Omit<Toast, "title" | "description">) => {
+    id: string;
+    dismiss: () => void;
+    update: (props: ToasterToast) => void;
+  };
+};
+
+const toast = (({ duration, variant = "default", ...props }: Toast) => {
   const id = genId();
 
   const update = (props: ToasterToast) =>
@@ -144,11 +201,24 @@ function toast({ ...props }: Toast) {
     });
   const dismiss = () => dispatch({ type: "DISMISS_TOAST", toastId: id });
 
+  const resolvedDuration = resolveDuration(variant, duration);
+  clearAutoDismiss(id);
+  if (resolvedDuration > 0) {
+    autoDismissTimeouts.set(
+      id,
+      setTimeout(() => {
+        dismiss();
+      }, resolvedDuration)
+    );
+  }
+
   dispatch({
     type: "ADD_TOAST",
     toast: {
       ...props,
       id,
+      variant,
+      duration: resolvedDuration,
       open: true,
       onOpenChange: (open) => {
         if (!open) dismiss();
@@ -161,7 +231,14 @@ function toast({ ...props }: Toast) {
     dismiss,
     update,
   };
-}
+}) as ToastFn;
+
+toast.success = (title, description, options) =>
+  toast({ title, description, variant: "success", ...options });
+toast.info = (title, description, options) =>
+  toast({ title, description, variant: "info", ...options });
+toast.error = (title, description, options) =>
+  toast({ title, description, variant: "error", ...options });
 
 function useToast() {
   const [state, setState] = React.useState<State>(memoryState);

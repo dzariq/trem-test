@@ -161,16 +161,9 @@ export default function TeacherAttendancePage() {
   const handleSubmit = async () => {
     const result = await save();
     if (result.success) {
-      toast({
-        title: "Attendance Submitted",
-        description: result.message,
-      });
+      toast.success("Attendance submitted", result.message);
     } else {
-      toast({
-        title: "Error",
-        description: result.message,
-        variant: "destructive"
-      });
+      toast.error("Attendance submission failed", result.message);
     }
   };
 
