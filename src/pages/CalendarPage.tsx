@@ -38,7 +38,7 @@ import { getUpcomingEvents, listCalendarEvents, type UpcomingEvent } from "@/dat
 import { useMyProfile } from "@/hooks/useMyProfile";
 import { useStudentSelection } from "@/hooks/useStudentSelection";
 import { useCcaActivities, type CcaActivity } from "@/hooks/useCcaActivities";
-import { useStudentCcaEnrollments } from "@/hooks/useStudentCcaEnrollments";
+import { useStudentCcaEnrollments, type EnrolledCcaActivity } from "@/hooks/useStudentCcaEnrollments";
 import { PICTeachersList } from "@/components/cca/PICTeacherPill";
 import { CcaTypeTabs, getCcaTypeColor } from "@/components/cca/CcaTypeTabs";
 import { supabase } from "@/lib/supabase";
@@ -238,11 +238,12 @@ export default function CalendarPage() {
     return filterEnrolledByTypeId(ccaTypeFilter);
   }, [filterEnrolledByTypeId, ccaTypeFilter]);
 
-  const getTeacherInChargeLabel = (activity: CcaActivity) => {
+  const getTeacherInChargeLabel = (activity: CcaActivity | EnrolledCcaActivity) => {
     if (activity.picTeachers.length > 0) {
       return activity.picTeachers.map((t) => t.fullName).join(", ");
     }
-    if (activity.coordinatorName) {
+    // coordinatorName only exists on CcaActivity, not EnrolledCcaActivity
+    if ('coordinatorName' in activity && activity.coordinatorName) {
       return activity.coordinatorName;
     }
     return null;
@@ -675,7 +676,7 @@ export default function CalendarPage() {
                           {getTeacherInChargeLabel(activity) ? (
                             <PICTeachersList
                               teachers={activity.picTeachers}
-                              fallbackCoordinator={activity.coordinatorName}
+                              fallbackCoordinator={null}
                               className="gap-2"
                             />
                           ) : (

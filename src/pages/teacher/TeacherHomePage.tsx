@@ -279,9 +279,9 @@ export default function TeacherHomePage() {
         fromDate: new Date(),
         limit: 5,
         role: "teacher",
-        teacherUserId: profile?.id ?? null,
+        teacherUserId: profile?.user_id ?? null,
       }),
-    [events, profile?.id]
+    [events, profile?.user_id]
   );
 
   useEffect(() => {
