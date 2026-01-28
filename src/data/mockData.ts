@@ -547,167 +547,56 @@ export const classAverages = {
 
 import type { CalendarEvent } from "@/types/calendarTags";
 
+// Helper to create complete CalendarEvent from minimal data
+const createCalendarEvent = (
+  id: number,
+  title: string,
+  date: string,
+  time: string,
+  tags: CalendarEvent['tags'],
+  location: string,
+  category: string = "general"
+): CalendarEvent => ({
+  id,
+  title,
+  date,
+  time,
+  tags,
+  location,
+  startDay: date,
+  endDay: date,
+  allDay: time === "All Day",
+  start: time === "All Day" ? null : new Date(`${date}T${time.replace(/\s*(AM|PM)/i, (_, ampm) => ampm.toUpperCase() === 'PM' && !time.startsWith('12') ? '' : '').replace(/(\d+):(\d+)/, (_, h, m) => {
+    const isPM = time.toUpperCase().includes('PM');
+    const hour = parseInt(h);
+    const adjustedHour = isPM && hour !== 12 ? hour + 12 : (!isPM && hour === 12 ? 0 : hour);
+    return `${String(adjustedHour).padStart(2, '0')}:${m}:00`;
+  })}`),
+  end: null,
+  category,
+});
+
 export const calendarEvents: CalendarEvent[] = [
-  { 
-    id: 1, 
-    title: "Sports Day", 
-    date: "2026-01-15", 
-    time: "8:00 AM", 
-    tags: ["external-event", "family-event", "preschool", "primary-school", "secondary-school"], 
-    location: "School Field" 
-  },
-  { 
-    id: 2, 
-    title: "Parent-Teacher Conference", 
-    date: "2026-01-20", 
-    time: "9:00 AM", 
-    tags: ["parent-teacher-conference", "primary-school"], 
-    location: "Classroom" 
-  },
-  { 
-    id: 3, 
-    title: "Mid-Year Exam Starts", 
-    date: "2026-01-25", 
-    time: "8:30 AM", 
-    tags: ["mid-year-exam", "primary-school", "secondary-school"], 
-    location: "Exam Hall" 
-  },
-  { 
-    id: 4, 
-    title: "Chinese New Year", 
-    date: "2026-01-29", 
-    time: "All Day", 
-    tags: ["public-holiday"], 
-    location: "" 
-  },
-  { 
-    id: 5, 
-    title: "Science Fair", 
-    date: "2026-01-28", 
-    time: "10:00 AM", 
-    tags: ["special-event-major", "family-event", "primary-school", "secondary-school"], 
-    location: "Assembly Hall" 
-  },
-  { 
-    id: 6, 
-    title: "Art Exhibition", 
-    date: "2026-02-05", 
-    time: "2:00 PM", 
-    tags: ["internal-event", "preschool", "primary-school"], 
-    location: "Art Room" 
-  },
-  { 
-    id: 7, 
-    title: "Swimming Carnival", 
-    date: "2026-02-12", 
-    time: "9:00 AM", 
-    tags: ["external-event", "family-event", "primary-school", "secondary-school"], 
-    location: "Swimming Pool" 
-  },
-  { 
-    id: 8, 
-    title: "Teacher Meeting", 
-    date: "2026-01-22", 
-    time: "2:00 PM", 
-    tags: ["teacher-meeting"], 
-    location: "Staff Room" 
-  },
-  { 
-    id: 9, 
-    title: "Admin Meeting", 
-    date: "2026-01-23", 
-    time: "10:00 AM", 
-    tags: ["admin-meeting"], 
-    location: "Conference Room" 
-  },
-  { 
-    id: 10, 
-    title: "Staff Team Building", 
-    date: "2026-02-15", 
-    time: "9:00 AM", 
-    tags: ["staff-team-building"], 
-    location: "Outdoor Camp" 
-  },
-  { 
-    id: 11, 
-    title: "Grades Due (Primary)", 
-    date: "2026-02-01", 
-    time: "5:00 PM", 
-    tags: ["teacher-due-date-primary", "primary-school"], 
-    location: "" 
-  },
-  { 
-    id: 12, 
-    title: "Term Break", 
-    date: "2026-03-15", 
-    time: "All Day", 
-    tags: ["school-holiday-term-break", "preschool", "primary-school", "secondary-school"], 
-    location: "" 
-  },
-  { 
-    id: 13, 
-    title: "Open Day", 
-    date: "2026-02-20", 
-    time: "9:00 AM", 
-    tags: ["open-day", "family-event", "preschool", "primary-school", "secondary-school"], 
-    location: "Main Campus" 
-  },
-  { 
-    id: 14, 
-    title: "Cambridge IGCSE Exam", 
-    date: "2026-05-01", 
-    time: "8:00 AM", 
-    tags: ["cambridge-igcse", "secondary-school"], 
-    location: "Exam Hall" 
-  },
-  { 
-    id: 15, 
-    title: "Back to School Day", 
-    date: "2026-01-06", 
-    time: "7:30 AM", 
-    tags: ["back-to-school", "preschool", "primary-school", "secondary-school"], 
-    location: "School Campus" 
-  },
-  { 
-    id: 16, 
-    title: "Parent Workshop: Digital Safety", 
-    date: "2026-02-25", 
-    time: "6:00 PM", 
-    tags: ["parent-enrichment-workshop", "family-event"], 
-    location: "Auditorium" 
-  },
-  { 
-    id: 17, 
-    title: "Student Extra Math Classes", 
-    date: "2026-01-18", 
-    time: "3:30 PM", 
-    tags: ["student-extra-classes", "secondary-school"], 
-    location: "Room 201" 
-  },
-  { 
-    id: 18, 
-    title: "Board of Governors Meeting", 
-    date: "2026-02-10", 
-    time: "10:00 AM", 
-    tags: ["bog-meeting"], 
-    location: "Boardroom" 
-  },
-  { 
-    id: 19, 
-    title: "Field Trip: Science Museum", 
-    date: "2026-03-01", 
-    time: "8:00 AM", 
-    tags: ["field-trip", "primary-school"], 
-    location: "Science Museum" 
-  },
-  { 
-    id: 20, 
-    title: "Student Enrichment: Coding Workshop", 
-    date: "2026-03-05", 
-    time: "2:00 PM", 
-    tags: ["student-enrichment-workshop", "primary-school", "secondary-school"], 
-    location: "Computer Lab" 
-  }
+  createCalendarEvent(1, "Sports Day", "2026-01-15", "8:00 AM", ["external-event", "family-event", "preschool", "primary-school", "secondary-school"], "School Field", "events"),
+  createCalendarEvent(2, "Parent-Teacher Conference", "2026-01-20", "9:00 AM", ["parent-teacher-conference", "primary-school"], "Classroom", "meetings"),
+  createCalendarEvent(3, "Mid-Year Exam Starts", "2026-01-25", "8:30 AM", ["mid-year-exam", "primary-school", "secondary-school"], "Exam Hall", "exams"),
+  createCalendarEvent(4, "Chinese New Year", "2026-01-29", "All Day", ["public-holiday"], "", "holidays"),
+  createCalendarEvent(5, "Science Fair", "2026-01-28", "10:00 AM", ["special-event-major", "family-event", "primary-school", "secondary-school"], "Assembly Hall", "events"),
+  createCalendarEvent(6, "Art Exhibition", "2026-02-05", "2:00 PM", ["internal-event", "preschool", "primary-school"], "Art Room", "events"),
+  createCalendarEvent(7, "Swimming Carnival", "2026-02-12", "9:00 AM", ["external-event", "family-event", "primary-school", "secondary-school"], "Swimming Pool", "events"),
+  createCalendarEvent(8, "Teacher Meeting", "2026-01-22", "2:00 PM", ["teacher-meeting"], "Staff Room", "meetings"),
+  createCalendarEvent(9, "Admin Meeting", "2026-01-23", "10:00 AM", ["admin-meeting"], "Conference Room", "meetings"),
+  createCalendarEvent(10, "Staff Team Building", "2026-02-15", "9:00 AM", ["staff-team-building"], "Outdoor Camp", "events"),
+  createCalendarEvent(11, "Grades Due (Primary)", "2026-02-01", "5:00 PM", ["teacher-due-date-primary", "primary-school"], "", "deadlines"),
+  createCalendarEvent(12, "Term Break", "2026-03-15", "All Day", ["school-holiday-term-break", "preschool", "primary-school", "secondary-school"], "", "holidays"),
+  createCalendarEvent(13, "Open Day", "2026-02-20", "9:00 AM", ["open-day", "family-event", "preschool", "primary-school", "secondary-school"], "Main Campus", "events"),
+  createCalendarEvent(14, "Cambridge IGCSE Exam", "2026-05-01", "8:00 AM", ["cambridge-igcse", "secondary-school"], "Exam Hall", "exams"),
+  createCalendarEvent(15, "Back to School Day", "2026-01-06", "7:30 AM", ["back-to-school", "preschool", "primary-school", "secondary-school"], "School Campus", "events"),
+  createCalendarEvent(16, "Parent Workshop: Digital Safety", "2026-02-25", "6:00 PM", ["parent-enrichment-workshop", "family-event"], "Auditorium", "events"),
+  createCalendarEvent(17, "Student Extra Math Classes", "2026-01-18", "3:30 PM", ["student-extra-classes", "secondary-school"], "Room 201", "classes"),
+  createCalendarEvent(18, "Board of Governors Meeting", "2026-02-10", "10:00 AM", ["bog-meeting"], "Boardroom", "meetings"),
+  createCalendarEvent(19, "Field Trip: Science Museum", "2026-03-01", "8:00 AM", ["field-trip", "primary-school"], "Science Museum", "events"),
+  createCalendarEvent(20, "Student Enrichment: Coding Workshop", "2026-03-05", "2:00 PM", ["student-enrichment-workshop", "primary-school", "secondary-school"], "Computer Lab", "events"),
 ];
 
 export const ccaActivities = [

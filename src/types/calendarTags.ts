@@ -169,12 +169,12 @@ export interface CalendarEvent {
   date: string;
   time: string;
   tags: CalendarTag[];
-  location?: string;
-  startDay?: string;
-  endDay?: string;
-  allDay?: boolean;
-  start?: Date | null;
-  end?: Date | null;
+  location: string;
+  startDay: string;
+  endDay: string;
+  allDay: boolean;
+  start: Date | null;
+  end: Date | null;
   description?: string;
-  category?: string;
+  category: string;
 }
