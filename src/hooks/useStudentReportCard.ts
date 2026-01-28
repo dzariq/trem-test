@@ -63,10 +63,6 @@ export interface StudentReportCardData {
 }
 
 const isDev = import.meta.env?.DEV;
-const normalizeClassName = (value?: string | null) =>
-  (value ?? "").trim().toUpperCase();
-
-// Removed problematic module-level cache - now fetching fresh each time
 
 // Helper: derive letter grade from total marks
 const getGradeFromScore = (score: number): string => {
@@ -88,34 +84,15 @@ const getBehaviorGrade = (marks: number | null): string => {
   return "E";
 };
 
-const getClassYearByNameMap = async (): Promise<Map<string, number>> => {
-  // Always fetch fresh to avoid stale cache issues
-  const { data, error } = await supabase
-    .from("class_years")
-    .select("id, class_name");
-
-  if (error) {
-    console.error("[useStudentReportCard] class_years query failed:", error);
-    return new Map();
-  }
-
-  const map = new Map<string, number>();
-  (data || []).forEach((row: any) => {
-    const normalizedName = normalizeClassName(row.class_name);
-    map.set(normalizedName, row.id);
-    console.log("[CSR] Mapping class:", normalizedName, "->", row.id);
+const getStudentClassYearId = async (studentId: string): Promise<number | null> => {
+  const { data, error } = await supabase.rpc("get_student_class_year_id", {
+    p_student_id: studentId,
   });
-  
-  console.log("[CSR] Total class_years loaded:", map.size);
-  return map;
-};
-
-const resolveClassYearId = async (className: string): Promise<number | null> => {
-  const map = await getClassYearByNameMap();
-  const normalized = normalizeClassName(className);
-  const result = map.get(normalized) ?? null;
-  console.log("[CSR] resolveClassYearId:", className, "->", normalized, "-> id:", result);
-  return result;
+  if (error) {
+    console.error("[useStudentReportCard] get_student_class_year_id failed:", error);
+    return null;
+  }
+  return data ?? null;
 };
 
 export function useStudentReportCard(
@@ -132,7 +109,7 @@ export function useStudentReportCard(
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const missingAcademicPeriodLoggedRef = useRef(false);
+  const loggedCsrRowsRef = useRef(false);
 
   // Fetch academic periods that have grades for this student
   useEffect(() => {
@@ -286,16 +263,13 @@ export function useStudentReportCard(
         userId: userData.user?.id ?? null,
       });
 
-      const supabaseAny = supabase as unknown as {
-        from: (table: string) => any;
-      };
-
       // Fetch grades with subject info
-      let gradesQuery = supabaseAny
+      let gradesQuery = supabase
         .from("student_grades")
         .select(`
           id,
           subject_id,
+          academic_period_id,
           quiz_marks,
           homework_marks,
           exam_marks,
@@ -323,40 +297,14 @@ export function useStudentReportCard(
         throw gradesError;
       }
 
-      let classRecommendationMap = new Map<number, string>();
-      let classNameFromStudent: string | null = null;
+      let classRecommendationMap = new Map<string, string>();
       let classYearId: number | null = null;
 
       if (studentId) {
-        const { data: studentRow, error: studentError } = await supabase
-          .from("students")
-          .select("class")
-          .eq("id", studentId)
-          .maybeSingle();
-
-        if (studentError) {
-          console.error("[useStudentReportCard] students query failed:", studentError);
-        } else {
-          classNameFromStudent = studentRow?.class ?? null;
-        }
+        classYearId = await getStudentClassYearId(studentId);
       }
 
-      if (classNameFromStudent) {
-        classYearId = await resolveClassYearId(classNameFromStudent);
-      }
-
-      // Always log CSR resolution for debugging
-      console.log("[CSR] resolved classYearId", classYearId, "student.class", classNameFromStudent);
-
-      // Use examPeriodId (the selected exam period) for CSR lookup since that's the academic period context
-      const csrAcademicPeriodId = examPeriodId;
-      console.log("[CSR] csrAcademicPeriodId:", csrAcademicPeriodId, "examPeriodId:", examPeriodId);
-
-      if (!classYearId) {
-        console.warn("[useStudentReportCard] CSR skipped: missing class_year_id");
-      } else if (!csrAcademicPeriodId) {
-        console.warn("[useStudentReportCard] CSR skipped: missing exam period id");
-      } else if (gradesData && gradesData.length > 0) {
+      if (classYearId && gradesData && gradesData.length > 0) {
         const subjectIds = Array.from(
           new Set(
             gradesData
@@ -364,20 +312,20 @@ export function useStudentReportCard(
               .filter((id: any): id is number => Number.isInteger(id))
           )
         );
+        const uniqueAcademicPeriodIds = Array.from(
+          new Set(
+            gradesData
+              .map((g: any) => g.academic_period_id)
+              .filter((id: any): id is string => typeof id === "string" && id.length > 0)
+          )
+        );
 
-        if (subjectIds.length > 0) {
-          // Always log CSR query params for debugging
-          console.log("[useStudentReportCard] CSR query params:", {
-            classYearId,
-            csrAcademicPeriodId,
-            subjectIds,
-          });
-          
+        if (subjectIds.length > 0 && uniqueAcademicPeriodIds.length > 0) {
           const { data: classRecommendations, error: classRecommendationsError } = await supabase
             .from("class_study_recommendations")
             .select("subject_id, academic_period_id, recommendation, updated_at")
             .eq("class_year_id", classYearId)
-            .eq("academic_period_id", csrAcademicPeriodId)
+            .in("academic_period_id", uniqueAcademicPeriodIds)
             .in("subject_id", subjectIds)
             .order("updated_at", { ascending: false });
 
@@ -385,27 +333,35 @@ export function useStudentReportCard(
             console.error("[useStudentReportCard] class_study_recommendations query failed:", classRecommendationsError);
           } else {
             const rows = classRecommendations || [];
-            // Always log CSR data for debugging
-            console.log("[useStudentReportCard] CSR data returned:", {
-              length: rows.length,
-              rows: rows,
-            });
-            
+            if (isDev && !loggedCsrRowsRef.current) {
+              console.log("[useStudentReportCard] CSR rows fetched:", rows);
+              loggedCsrRowsRef.current = true;
+            }
+
             rows.forEach((rec: any) => {
-              if (!classRecommendationMap.has(rec.subject_id) && rec.recommendation) {
-                classRecommendationMap.set(rec.subject_id, rec.recommendation);
+              const key = `${rec.subject_id}:${rec.academic_period_id}`;
+              if (!classRecommendationMap.has(key) && rec.recommendation) {
+                classRecommendationMap.set(key, rec.recommendation);
               }
             });
-            
-            console.log("[useStudentReportCard] CSR map after processing:", {
-              keys: Array.from(classRecommendationMap.keys()),
-              values: Array.from(classRecommendationMap.entries()),
-            });
+
+            if (isDev) {
+              console.log("[useStudentReportCard] CSR map keys:", Array.from(classRecommendationMap.keys()));
+            }
           }
         }
       }
 
-      const grades: SubjectGrade[] = (gradesData || []).map((g: any) => ({
+      const grades: SubjectGrade[] = (gradesData || []).map((g: any) => {
+        const lookupKey = `${g.subject_id}:${g.academic_period_id}`;
+        const lookupValue = classRecommendationMap.get(lookupKey) ?? "-";
+        if (isDev) {
+          console.log("[useStudentReportCard] CSR lookup:", {
+            key: lookupKey,
+            value: lookupValue,
+          });
+        }
+        return {
         id: g.id,
         subjectId: g.subject_id,
         subjectName: g.subjects?.name || `Subject ${g.subject_id}`,
@@ -418,8 +374,9 @@ export function useStudentReportCard(
         letterGrade: g.letter_grade || (g.total_marks ? getGradeFromScore(g.total_marks) : null),
         subjectComment: g.subject_comment,
         teacherComment: g.teacher_comment,
-        classStudyRecommendation: classRecommendationMap.get(g.subject_id) ?? "-",
-      }));
+        classStudyRecommendation: lookupValue,
+      };
+      });
 
       // Fetch behavior assessment
       const { data: behaviorData, error: behaviorError } = await supabase
