@@ -351,17 +351,13 @@ export function useStudentReportCard(
         console.log("[CSR] resolved classYearId", classYearId, "student.class", classNameFromStudent);
       }
 
-      if (academicPeriodId) {
-        missingAcademicPeriodLoggedRef.current = false;
-      }
+      // Use examPeriodId (the selected exam period) for CSR lookup since that's the academic period context
+      const csrAcademicPeriodId = examPeriodId;
 
       if (!classYearId) {
         console.warn("[useStudentReportCard] CSR skipped: missing class_year_id");
-      } else if (!academicPeriodId) {
-        if (!missingAcademicPeriodLoggedRef.current) {
-          console.warn("[useStudentReportCard] CSR skipped: missing selected academic_period_id");
-          missingAcademicPeriodLoggedRef.current = true;
-        }
+      } else if (!csrAcademicPeriodId) {
+        console.warn("[useStudentReportCard] CSR skipped: missing exam period id");
       } else if (gradesData && gradesData.length > 0) {
         const subjectIds = Array.from(
           new Set(
@@ -375,14 +371,14 @@ export function useStudentReportCard(
           if (isDev) {
             console.log("[useStudentReportCard] CSR query params:", {
               classYearId,
-              academicPeriodId,
+              csrAcademicPeriodId,
             });
           }
           const { data: classRecommendations, error: classRecommendationsError } = await supabase
             .from("class_study_recommendations")
             .select("subject_id, academic_period_id, recommendation, updated_at")
             .eq("class_year_id", classYearId)
-            .eq("academic_period_id", academicPeriodId)
+            .eq("academic_period_id", csrAcademicPeriodId)
             .in("subject_id", subjectIds)
             .order("updated_at", { ascending: false });
 

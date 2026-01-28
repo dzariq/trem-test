@@ -708,9 +708,59 @@ export type Database = {
         }
         Relationships: []
       }
+      cca_session_pics: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          id: string
+          role: Database["public"]["Enums"]["cca_pic_role"]
+          session_id: string
+          teacher_user_id: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          role: Database["public"]["Enums"]["cca_pic_role"]
+          session_id: string
+          teacher_user_id: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          role?: Database["public"]["Enums"]["cca_pic_role"]
+          session_id?: string
+          teacher_user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cca_session_pics_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "cca_sessions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cca_session_pics_teacher_user_id_fkey"
+            columns: ["teacher_user_id"]
+            isOneToOne: false
+            referencedRelation: "user_profiles"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "cca_session_pics_teacher_user_id_fkey"
+            columns: ["teacher_user_id"]
+            isOneToOne: false
+            referencedRelation: "v_teacher_public"
+            referencedColumns: ["user_id"]
+          },
+        ]
+      }
       cca_sessions: {
         Row: {
           activity_id: string
+          allowed_classes: string[]
           created_at: string
           custom_title: string | null
           description: string | null
@@ -729,6 +779,7 @@ export type Database = {
         }
         Insert: {
           activity_id: string
+          allowed_classes?: string[]
           created_at?: string
           custom_title?: string | null
           description?: string | null
@@ -747,6 +798,7 @@ export type Database = {
         }
         Update: {
           activity_id?: string
+          allowed_classes?: string[]
           created_at?: string
           custom_title?: string | null
           description?: string | null
@@ -776,6 +828,61 @@ export type Database = {
             columns: ["location_id"]
             isOneToOne: false
             referencedRelation: "school_locations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      class_study_recommendations: {
+        Row: {
+          academic_period_id: string
+          class_year_id: number
+          created_at: string
+          id: string
+          recommendation: string
+          subject_id: number
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          academic_period_id: string
+          class_year_id: number
+          created_at?: string
+          id?: string
+          recommendation?: string
+          subject_id: number
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          academic_period_id?: string
+          class_year_id?: number
+          created_at?: string
+          id?: string
+          recommendation?: string
+          subject_id?: number
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "class_study_recommendations_academic_period_id_fkey"
+            columns: ["academic_period_id"]
+            isOneToOne: false
+            referencedRelation: "academic_periods"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "class_study_recommendations_class_year_id_fkey"
+            columns: ["class_year_id"]
+            isOneToOne: false
+            referencedRelation: "class_years"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "class_study_recommendations_subject_id_fkey"
+            columns: ["subject_id"]
+            isOneToOne: false
+            referencedRelation: "subjects"
             referencedColumns: ["id"]
           },
         ]
@@ -1812,6 +1919,7 @@ export type Database = {
           archived: boolean
           campus_id: string | null
           class: string
+          class_year_id: number | null
           created_at: string
           departure_date: string | null
           departure_reason: string | null
@@ -1853,6 +1961,7 @@ export type Database = {
           archived?: boolean
           campus_id?: string | null
           class: string
+          class_year_id?: number | null
           created_at?: string
           departure_date?: string | null
           departure_reason?: string | null
@@ -1894,6 +2003,7 @@ export type Database = {
           archived?: boolean
           campus_id?: string | null
           class?: string
+          class_year_id?: number | null
           created_at?: string
           departure_date?: string | null
           departure_reason?: string | null
@@ -2237,6 +2347,20 @@ export type Database = {
       can_write_grades: { Args: { p_period_id: string }; Returns: boolean }
       check_phone_exists: { Args: { phone_number: string }; Returns: Json }
       current_user_role: { Args: never; Returns: string }
+      get_cohort_averages_by_year_level_and_period: {
+        Args: { p_academic_period_id: string; p_year_level: string }
+        Returns: {
+          cohort_avg: number
+          subject_id: number
+        }[]
+      }
+      get_cohort_averages_by_year_level_and_period_scoped: {
+        Args: { p_academic_period_id: string; p_year_level: string }
+        Returns: {
+          cohort_avg: number
+          subject_id: number
+        }[]
+      }
       get_or_create_admission_entry: {
         Args: { target_campus_id?: string; target_month_start: string }
         Returns: string
@@ -2292,7 +2416,7 @@ export type Database = {
       user_has_role: { Args: { check_role: string }; Returns: boolean }
     }
     Enums: {
-      [_ in never]: never
+      cca_pic_role: "lead" | "sub"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -2419,6 +2543,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      cca_pic_role: ["lead", "sub"],
+    },
   },
 } as const
