@@ -233,12 +233,12 @@ const toast = (({ duration, variant = "default", ...props }: Toast) => {
   };
 }) as ToastFn;
 
-toast.success = (title, description, options) =>
-  toast({ title, description, variant: "success", ...options });
-toast.info = (title, description, options) =>
-  toast({ title, description, variant: "info", ...options });
-toast.error = (title, description, options) =>
-  toast({ title, description, variant: "error", ...options });
+toast.success = (title: React.ReactNode, description?: React.ReactNode, options?: Omit<Toast, "title" | "description">) =>
+  toast({ title: title as string & React.ReactNode, description: description as string & React.ReactNode, variant: "success", ...options });
+toast.info = (title: React.ReactNode, description?: React.ReactNode, options?: Omit<Toast, "title" | "description">) =>
+  toast({ title: title as string & React.ReactNode, description: description as string & React.ReactNode, variant: "info", ...options });
+toast.error = (title: React.ReactNode, description?: React.ReactNode, options?: Omit<Toast, "title" | "description">) =>
+  toast({ title: title as string & React.ReactNode, description: description as string & React.ReactNode, variant: "error", ...options });
 
 function useToast() {
   const [state, setState] = React.useState<State>(memoryState);

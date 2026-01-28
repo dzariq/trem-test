@@ -36,8 +36,8 @@ import TeacherDNAPage from "./pages/teacher/TeacherDNAPage";
 import TeacherTimetablePage from "./pages/teacher/TeacherTimetablePage";
 import TeacherHandbookPage from "./pages/teacher/TeacherHandbookPage";
 import TeacherAnnouncementsPage from "./pages/teacher/TeacherAnnouncementsPage";
-import TeacherLessonPlansPage from "./pages/teacher/TeacherLessonPlansPage";
-import LessonPlanDetailPage from "./pages/teacher/LessonPlanDetailPage";
+import TeacherLessonPlansListPage from "./pages/teacher/TeacherLessonPlansListPage";
+import TeacherMLPDetailPage from "./pages/teacher/TeacherMLPDetailPage";
 import WeekConfigPage from "./pages/teacher/WeekConfigPage";
 import TeacherGuard from "./components/auth/TeacherGuard";
 
@@ -104,10 +104,10 @@ const App = () => (
                   path="/teacher/announcements"
                   element={<TeacherAnnouncementsPage />}
                 />
-                <Route path="/teacher/lesson-plans" element={<TeacherLessonPlansPage />} />
+                <Route path="/teacher/lesson-plans" element={<TeacherLessonPlansListPage />} />
                 <Route
                   path="/teacher/lesson-plans/:id"
-                  element={<LessonPlanDetailPage />}
+                  element={<TeacherMLPDetailPage />}
                 />
                 <Route path="/teacher/week-config" element={<WeekConfigPage />} />
                 <Route

@@ -1235,6 +1235,42 @@ export type Database = {
         }
         Relationships: []
       }
+      lesson_plan_class_assignments: {
+        Row: {
+          class_year_id: number
+          created_at: string
+          id: string
+          lesson_plan_id: string
+        }
+        Insert: {
+          class_year_id: number
+          created_at?: string
+          id?: string
+          lesson_plan_id: string
+        }
+        Update: {
+          class_year_id?: number
+          created_at?: string
+          id?: string
+          lesson_plan_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lesson_plan_class_assignments_class_year_id_fkey"
+            columns: ["class_year_id"]
+            isOneToOne: false
+            referencedRelation: "class_years"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "lesson_plan_class_assignments_lesson_plan_id_fkey"
+            columns: ["lesson_plan_id"]
+            isOneToOne: false
+            referencedRelation: "lesson_plans"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       lesson_plan_details: {
         Row: {
           approval: Json | null
@@ -1312,35 +1348,164 @@ export type Database = {
           },
         ]
       }
+      lesson_plan_teacher_assignments: {
+        Row: {
+          created_at: string
+          id: string
+          lesson_plan_id: string
+          teacher_user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          lesson_plan_id: string
+          teacher_user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          lesson_plan_id?: string
+          teacher_user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lesson_plan_teacher_assignments_lesson_plan_id_fkey"
+            columns: ["lesson_plan_id"]
+            isOneToOne: false
+            referencedRelation: "lesson_plans"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "lesson_plan_teacher_assignments_teacher_user_id_fkey"
+            columns: ["teacher_user_id"]
+            isOneToOne: false
+            referencedRelation: "user_profiles"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "lesson_plan_teacher_assignments_teacher_user_id_fkey"
+            columns: ["teacher_user_id"]
+            isOneToOne: false
+            referencedRelation: "v_teacher_public"
+            referencedColumns: ["user_id"]
+          },
+        ]
+      }
       lesson_plans: {
         Row: {
           academic_year: number
           class: string
           created_at: string | null
+          description: string | null
           id: string
+          is_master: boolean | null
           subject: string
           teacher_id: string
+          title: string | null
           updated_at: string | null
+          year_level: string | null
         }
         Insert: {
           academic_year: number
           class: string
           created_at?: string | null
+          description?: string | null
           id?: string
+          is_master?: boolean | null
           subject: string
           teacher_id: string
+          title?: string | null
           updated_at?: string | null
+          year_level?: string | null
         }
         Update: {
           academic_year?: number
           class?: string
           created_at?: string | null
+          description?: string | null
           id?: string
+          is_master?: boolean | null
           subject?: string
           teacher_id?: string
+          title?: string | null
           updated_at?: string | null
+          year_level?: string | null
         }
         Relationships: []
+      }
+      lesson_reflections: {
+        Row: {
+          areas_for_improvement: string | null
+          class_year_id: number
+          created_at: string
+          follow_up_actions: string | null
+          id: string
+          learning_outcomes_achieved: boolean | null
+          lesson_plan_detail_id: string
+          reflection_notes: string | null
+          student_engagement: string | null
+          teacher_user_id: string
+          updated_at: string
+          what_went_well: string | null
+        }
+        Insert: {
+          areas_for_improvement?: string | null
+          class_year_id: number
+          created_at?: string
+          follow_up_actions?: string | null
+          id?: string
+          learning_outcomes_achieved?: boolean | null
+          lesson_plan_detail_id: string
+          reflection_notes?: string | null
+          student_engagement?: string | null
+          teacher_user_id: string
+          updated_at?: string
+          what_went_well?: string | null
+        }
+        Update: {
+          areas_for_improvement?: string | null
+          class_year_id?: number
+          created_at?: string
+          follow_up_actions?: string | null
+          id?: string
+          learning_outcomes_achieved?: boolean | null
+          lesson_plan_detail_id?: string
+          reflection_notes?: string | null
+          student_engagement?: string | null
+          teacher_user_id?: string
+          updated_at?: string
+          what_went_well?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lesson_reflections_class_year_id_fkey"
+            columns: ["class_year_id"]
+            isOneToOne: false
+            referencedRelation: "class_years"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "lesson_reflections_lesson_plan_detail_id_fkey"
+            columns: ["lesson_plan_detail_id"]
+            isOneToOne: false
+            referencedRelation: "lesson_plan_details"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "lesson_reflections_teacher_user_id_fkey"
+            columns: ["teacher_user_id"]
+            isOneToOne: false
+            referencedRelation: "user_profiles"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "lesson_reflections_teacher_user_id_fkey"
+            columns: ["teacher_user_id"]
+            isOneToOne: false
+            referencedRelation: "v_teacher_public"
+            referencedColumns: ["user_id"]
+          },
+        ]
       }
       lesson_topics: {
         Row: {
@@ -2385,6 +2550,10 @@ export type Database = {
             }
             Returns: string
           }
+      get_student_class_year_id: {
+        Args: { p_student_id: string }
+        Returns: number
+      }
       get_teacher_public_info: {
         Args: { p_teacher_user_id: string }
         Returns: {
