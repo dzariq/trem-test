@@ -418,8 +418,9 @@ export const BoxPlotChart: React.FC<BoxPlotChartProps> = ({
   return (
     <div 
       ref={chartContainerRef}
-      className="w-full relative touch-none"
-      style={{ height: height + 30 }}
+      // Keep chart clipped to the card to avoid mobile overflow.
+      className="w-full max-w-full overflow-hidden relative touch-none"
+      style={{ height }}
       onTouchStart={handleTouchStart}
       onTouchMove={handleTouchMove}
       onTouchEnd={handleTouchEnd}
@@ -473,9 +474,9 @@ export const BoxPlotChart: React.FC<BoxPlotChartProps> = ({
 
       <ResponsiveContainer width="100%" height="100%">
         <svg
-          viewBox={`0 0 ${chartWidth} ${height + 30}`}
+          viewBox={`0 0 ${chartWidth} ${height}`}
           preserveAspectRatio="xMidYMid meet"
-          style={{ overflow: 'visible' }}
+          style={{ width: "100%", height: "100%", overflow: "hidden" }}
         >
           {/* Legend - Horizontal at TOP */}
           <g transform={`translate(50, 8)`}>

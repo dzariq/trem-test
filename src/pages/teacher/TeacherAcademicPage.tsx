@@ -12,6 +12,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Save, TrendingUp, TrendingDown, Minus, ChevronDown, ChevronUp, Users, Target, Award, AlertTriangle, BookOpen, BarChart3, FileText, CheckCircle, XCircle, Lightbulb, Copy, Printer, ArrowRight, ArrowUpRight, ArrowDownRight, Scale, Download, FileSpreadsheet, Check, Calendar, UserCheck, Plus, X, ArrowUp, ArrowDown, Search, Loader2, Lock, Info } from "lucide-react";
 import { useGradeEntry } from "@/hooks/useGradeEntry";
 import { useClassAnalysis } from "@/hooks/useClassAnalysis";
+import { useClassAnalysisData } from "@/hooks/useClassAnalysisData";
 import { useAcademicFilters } from "@/hooks/useAcademicFilters";
 import { useTeacherScope } from "@/hooks/useTeacherScope";
 import { Carousel, CarouselContent, CarouselItem } from "@/components/ui/carousel";
@@ -493,6 +494,23 @@ export default function TeacherAcademicPage() {
   // Whiskers Analysis year filter
   const [whiskersAnalysisYear, setWhiskersAnalysisYear] = useState<string>("all");
   const [whiskersExpanded, setWhiskersExpanded] = useState(false);
+
+  const studentSelectedClassYearId = useMemo(() => {
+    if (!boxPlotClass) return null;
+    const classYear = teacherScope.allowedClassYears.find(
+      (cls) => cls.class_name === boxPlotClass
+    );
+    return classYear?.id ?? null;
+  }, [boxPlotClass, teacherScope.allowedClassYears]);
+
+  // Box Plot student-mode data should be fetched using the student selector class,
+  // not the global overview class selection.
+  const boxPlotStudentClassId =
+    boxPlotViewMode === "student" && studentSelectedClassYearId ? boxPlotClass : null;
+  const boxPlotStudentAnalysis = useClassAnalysisData({
+    classId: boxPlotStudentClassId,
+    examPeriodIds: classAnalysis.academicPeriods.map((period) => period.id),
+  });
   
   // Available classes from real data (academicFilters hook)
   const allAvailableClasses = useMemo(() => academicFilters.classes, [academicFilters.classes]);
@@ -539,6 +557,13 @@ export default function TeacherAcademicPage() {
     if (!boxPlotClass) return [];
     return academicFilters.getStudentsForClass(boxPlotClass);
   }, [boxPlotClass, academicFilters]);
+
+  useEffect(() => {
+    if (!boxPlotClass) return;
+    setBoxPlotStudentId("");
+    setBoxPlotStudentSubjects([]);
+    setBoxPlotStudentSubjectSearch("");
+  }, [boxPlotClass]);
   
   // Initialize boxplot selections when academic filters load
   useEffect(() => {
@@ -1085,23 +1110,68 @@ export default function TeacherAcademicPage() {
     getPeriodExamType,
   ]);
 
-  const analysisStudentsForBoxPlot = useMemo(() => {
-    return classAnalysis.students.map((student) => {
-      const yearMatch = student.year_level?.match(/(\d+)/);
-      const yearGroup = yearMatch ? `Year ${yearMatch[1]}` : student.year_level || "Year";
-      return {
-        id: student.id,
-        name: student.name,
-        class_id: student.class,
-        year_group: yearGroup,
-      };
-    });
-  }, [classAnalysis.students]);
+  const studentBoxPlotAssessmentRecords = useMemo(() => {
+    const studentById = new Map(
+      boxPlotStudentAnalysis.rosterStudents.map((student) => [student.id, student])
+    );
+
+    return boxPlotStudentAnalysis.gradeRows
+      .map((grade) => {
+        if (!Number.isFinite(grade.score_percent)) return null;
+        const student = studentById.get(grade.student_id);
+        const subjectName = subjectIdToName.get(grade.subject_id) || `Subject ${grade.subject_id}`;
+        const yearLabel =
+          grade.academic_year !== null && grade.academic_year !== undefined
+            ? String(grade.academic_year)
+            : "Unknown";
+        if (!student || yearLabel === "Unknown") return null;
+        const yearMatch = student.year_level?.match(/(\d+)/);
+        const yearGroup = yearMatch ? `Year ${yearMatch[1]}` : student.year_level || "Year";
+        return {
+          student_id: student.id,
+          student_name: student.name,
+          academic_year: yearLabel,
+          subject: subjectName,
+          exam_type: getPeriodExamType(grade.exam_period_id),
+          score_numeric: grade.score_percent,
+          class_id: student.class,
+          year_group: yearGroup,
+        };
+      })
+      .filter((record): record is {
+        student_id: string;
+        student_name: string;
+        academic_year: string;
+        subject: string;
+        exam_type: "Mid-Year" | "Year-End";
+        score_numeric: number;
+        class_id: string;
+        year_group: string;
+      } => record !== null);
+  }, [
+    boxPlotStudentAnalysis.gradeRows,
+    boxPlotStudentAnalysis.rosterStudents,
+    subjectIdToName,
+    getPeriodExamType,
+  ]);
+
+  const boxPlotAssessmentRecords = useMemo(() => {
+    return boxPlotViewMode === "student"
+      ? studentBoxPlotAssessmentRecords
+      : analysisAssessmentRecords;
+  }, [boxPlotViewMode, studentBoxPlotAssessmentRecords, analysisAssessmentRecords]);
+
+  const boxPlotStudentLookup = useMemo(() => {
+    const records = boxPlotStudentsForClass.length > 0
+      ? boxPlotStudentsForClass
+      : boxPlotStudentAnalysis.rosterStudents;
+    return new Map(records.map((student) => [student.id, student]));
+  }, [boxPlotStudentsForClass, boxPlotStudentAnalysis.rosterStudents]);
 
   // Available years from data
   const availableBoxPlotYears = useMemo(
-    () => getAvailableYears(analysisAssessmentRecords),
-    [analysisAssessmentRecords]
+    () => getAvailableYears(boxPlotAssessmentRecords),
+    [boxPlotAssessmentRecords]
   );
 
   useEffect(() => {
@@ -5619,13 +5689,11 @@ export default function TeacherAcademicPage() {
                       );
                     }
                     
-                      const student = analysisStudentsForBoxPlot.find(
-                        (item) => item.id === boxPlotStudentId
-                      );
+                      const student = boxPlotStudentLookup.get(boxPlotStudentId);
                       chartTitle = student ? `${student.name}'s Score Distribution` : "Student Score Distribution";
                       
                       boxPlotData = calculateStudentBoxPlotData(
-                        analysisAssessmentRecords,
+                        boxPlotAssessmentRecords,
                         boxPlotStudentId,
                         boxPlotStudentSubjects.length > 0 ? boxPlotStudentSubjects : undefined,
                         boxPlotStudentExamType && boxPlotStudentExamType !== "all" ? boxPlotStudentExamType : undefined,
@@ -5660,7 +5728,7 @@ export default function TeacherAcademicPage() {
                     chartTitle = `${subjectLabel} - ${cohortLabel}`;
                     
                       boxPlotData = calculateSubjectBoxPlotData(
-                        analysisAssessmentRecords,
+                        boxPlotAssessmentRecords,
                         boxPlotSubjects,
                         boxPlotCohortType,
                         boxPlotSelectedClasses,
@@ -5705,7 +5773,7 @@ export default function TeacherAcademicPage() {
                           <CardTitle className="text-sm">{chartTitle}</CardTitle>
                         </CardHeader>
                         <CardContent className="relative">
-                          <div className="overflow-x-auto">
+                          <div className="w-full max-w-full overflow-hidden">
                             <BoxPlotChart 
                               data={boxPlotData} 
                               showMean={true} 
@@ -7328,7 +7396,7 @@ export default function TeacherAcademicPage() {
                   // Generate CSV data for box plot
                   const boxPlotData = boxPlotViewMode === "student" && boxPlotStudentId
                     ? calculateStudentBoxPlotData(
-                        analysisAssessmentRecords,
+                        boxPlotAssessmentRecords,
                         boxPlotStudentId,
                         boxPlotStudentSubjects.length > 0 ? boxPlotStudentSubjects : undefined,
                         boxPlotStudentExamType && boxPlotStudentExamType !== "all" ? boxPlotStudentExamType : undefined,
@@ -7336,7 +7404,7 @@ export default function TeacherAcademicPage() {
                         boxPlotEndYear
                       )
                     : calculateSubjectBoxPlotData(
-                        analysisAssessmentRecords,
+                        boxPlotAssessmentRecords,
                         boxPlotSubjects,
                         boxPlotCohortType,
                         boxPlotSelectedClasses,
@@ -7399,7 +7467,7 @@ export default function TeacherAcademicPage() {
             {(() => {
               const boxPlotData = boxPlotViewMode === "student" && boxPlotStudentId
                 ? calculateStudentBoxPlotData(
-                    analysisAssessmentRecords,
+                    boxPlotAssessmentRecords,
                     boxPlotStudentId,
                     boxPlotStudentSubjects.length > 0 ? boxPlotStudentSubjects : undefined,
                     boxPlotStudentExamType && boxPlotStudentExamType !== "all" ? boxPlotStudentExamType : undefined,
@@ -7407,7 +7475,7 @@ export default function TeacherAcademicPage() {
                     boxPlotEndYear
                   )
                 : calculateSubjectBoxPlotData(
-                    analysisAssessmentRecords,
+                    boxPlotAssessmentRecords,
                     boxPlotSubjects,
                     boxPlotCohortType,
                     boxPlotSelectedClasses,
@@ -7418,9 +7486,7 @@ export default function TeacherAcademicPage() {
                   );
               
               const insights = generateInsights(boxPlotData);
-              const selectedStudent = analysisStudentsForBoxPlot.find(
-                (student) => student.id === boxPlotStudentId
-              );
+              const selectedStudent = boxPlotStudentLookup.get(boxPlotStudentId) || null;
               const reportTitle = boxPlotViewMode === "student" 
                 ? `Student: ${selectedStudent?.name || 'N/A'}`
                 : `Subjects: ${boxPlotSubjects.length === 0 ? 'All' : boxPlotSubjects.slice(0, 3).join(', ')}${boxPlotSubjects.length > 3 ? ` +${boxPlotSubjects.length - 3} more` : ''}`;
