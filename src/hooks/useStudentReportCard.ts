@@ -66,8 +66,7 @@ const isDev = import.meta.env?.DEV;
 const normalizeClassName = (value?: string | null) =>
   (value ?? "").trim().toUpperCase();
 
-let classYearByNameCache: Map<string, number> | null = null;
-let classYearFetchPromise: Promise<Map<string, number>> | null = null;
+// Removed problematic module-level cache - now fetching fresh each time
 
 // Helper: derive letter grade from total marks
 const getGradeFromScore = (score: number): string => {
@@ -90,34 +89,33 @@ const getBehaviorGrade = (marks: number | null): string => {
 };
 
 const getClassYearByNameMap = async (): Promise<Map<string, number>> => {
-  if (classYearByNameCache) return classYearByNameCache;
-  if (classYearFetchPromise) return classYearFetchPromise;
+  // Always fetch fresh to avoid stale cache issues
+  const { data, error } = await supabase
+    .from("class_years")
+    .select("id, class_name");
 
-  classYearFetchPromise = (async () => {
-    const { data, error } = await supabase
-      .from("class_years")
-      .select("id, class_name");
+  if (error) {
+    console.error("[useStudentReportCard] class_years query failed:", error);
+    return new Map();
+  }
 
-    if (error) {
-      console.error("[useStudentReportCard] class_years query failed:", error);
-      classYearByNameCache = new Map();
-      return classYearByNameCache;
-    }
-
-    const map = new Map<string, number>();
-    (data || []).forEach((row: any) => {
-      map.set(normalizeClassName(row.class_name), row.id);
-    });
-    classYearByNameCache = map;
-    return map;
-  })();
-
-  return classYearFetchPromise;
+  const map = new Map<string, number>();
+  (data || []).forEach((row: any) => {
+    const normalizedName = normalizeClassName(row.class_name);
+    map.set(normalizedName, row.id);
+    console.log("[CSR] Mapping class:", normalizedName, "->", row.id);
+  });
+  
+  console.log("[CSR] Total class_years loaded:", map.size);
+  return map;
 };
 
 const resolveClassYearId = async (className: string): Promise<number | null> => {
   const map = await getClassYearByNameMap();
-  return map.get(normalizeClassName(className)) ?? null;
+  const normalized = normalizeClassName(className);
+  const result = map.get(normalized) ?? null;
+  console.log("[CSR] resolveClassYearId:", className, "->", normalized, "-> id:", result);
+  return result;
 };
 
 export function useStudentReportCard(
