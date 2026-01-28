@@ -347,12 +347,12 @@ export function useStudentReportCard(
         classYearId = await resolveClassYearId(classNameFromStudent);
       }
 
-      if (isDev) {
-        console.log("[CSR] resolved classYearId", classYearId, "student.class", classNameFromStudent);
-      }
+      // Always log CSR resolution for debugging
+      console.log("[CSR] resolved classYearId", classYearId, "student.class", classNameFromStudent);
 
       // Use examPeriodId (the selected exam period) for CSR lookup since that's the academic period context
       const csrAcademicPeriodId = examPeriodId;
+      console.log("[CSR] csrAcademicPeriodId:", csrAcademicPeriodId, "examPeriodId:", examPeriodId);
 
       if (!classYearId) {
         console.warn("[useStudentReportCard] CSR skipped: missing class_year_id");
@@ -368,12 +368,13 @@ export function useStudentReportCard(
         );
 
         if (subjectIds.length > 0) {
-          if (isDev) {
-            console.log("[useStudentReportCard] CSR query params:", {
-              classYearId,
-              csrAcademicPeriodId,
-            });
-          }
+          // Always log CSR query params for debugging
+          console.log("[useStudentReportCard] CSR query params:", {
+            classYearId,
+            csrAcademicPeriodId,
+            subjectIds,
+          });
+          
           const { data: classRecommendations, error: classRecommendationsError } = await supabase
             .from("class_study_recommendations")
             .select("subject_id, academic_period_id, recommendation, updated_at")
@@ -386,22 +387,22 @@ export function useStudentReportCard(
             console.error("[useStudentReportCard] class_study_recommendations query failed:", classRecommendationsError);
           } else {
             const rows = classRecommendations || [];
-            if (isDev) {
-              console.log("[useStudentReportCard] CSR data:", {
-                length: rows.length,
-                first: rows[0] ?? null,
-              });
-            }
+            // Always log CSR data for debugging
+            console.log("[useStudentReportCard] CSR data returned:", {
+              length: rows.length,
+              rows: rows,
+            });
+            
             rows.forEach((rec: any) => {
               if (!classRecommendationMap.has(rec.subject_id) && rec.recommendation) {
                 classRecommendationMap.set(rec.subject_id, rec.recommendation);
               }
             });
-            if (isDev) {
-              console.log("[useStudentReportCard] CSR map keys:", Array.from(classRecommendationMap.keys()));
-              const example = rows.find((rec: any) => rec.subject_id === 23);
-              console.log("[useStudentReportCard] CSR example subject_id=23:", example ?? null);
-            }
+            
+            console.log("[useStudentReportCard] CSR map after processing:", {
+              keys: Array.from(classRecommendationMap.keys()),
+              values: Array.from(classRecommendationMap.entries()),
+            });
           }
         }
       }
