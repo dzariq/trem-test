@@ -76,7 +76,7 @@ export function BottomSheet({
       modal={modal}
     >
       <DrawerPrimitive.Portal>
-        <DrawerPrimitive.Overlay className="fixed inset-0 z-50 bg-black/80" />
+        <DrawerPrimitive.Overlay className="fixed inset-0 z-[100] bg-black/80" />
         <DrawerPrimitive.Content
           ref={contentRef}
           tabIndex={-1}
@@ -86,7 +86,7 @@ export function BottomSheet({
             contentRef.current?.focus();
           }}
           className={cn(
-            "fixed inset-x-0 bottom-0 z-50 flex flex-col border bg-background outline-none",
+            "fixed inset-x-0 bottom-0 z-[100] flex flex-col border bg-background outline-none",
             "rounded-t-2xl shadow-xl pb-[env(safe-area-inset-bottom)]",
             "h-[100dvh] max-h-[calc(100dvh-env(safe-area-inset-top))]",
             "sm:inset-x-1/2 sm:-translate-x-1/2 sm:bottom-6 sm:max-w-xl sm:rounded-2xl",

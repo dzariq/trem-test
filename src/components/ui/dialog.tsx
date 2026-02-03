@@ -19,7 +19,7 @@ const DialogOverlay = React.forwardRef<
   <DialogPrimitive.Overlay
     ref={ref}
     className={cn(
-      "fixed inset-0 z-50 bg-black/80 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0",
+      "fixed inset-0 z-[100] bg-black/80 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0",
       className,
     )}
     {...props}
@@ -40,7 +40,7 @@ const DialogContent = React.forwardRef<
     <DialogPrimitive.Content
       ref={ref}
       className={cn(
-        "fixed !inset-x-0 !bottom-0 !left-0 !right-0 !top-auto z-50 grid !w-screen !max-w-none gap-4 border-t border-x-0 border-b-0 bg-background pt-6 px-4 pb-[calc(1rem+var(--safe-bottom))] shadow-lg duration-300 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:slide-out-to-bottom data-[state=open]:slide-in-from-bottom !rounded-t-2xl !rounded-b-none !translate-x-0 !translate-y-0 max-h-[calc(100vh-var(--safe-top)-var(--safe-bottom))] overflow-hidden",
+        "fixed !inset-x-0 !bottom-0 !left-0 !right-0 !top-auto z-[100] grid !w-screen !max-w-none gap-4 border-t border-x-0 border-b-0 bg-background pt-6 px-4 pb-[calc(1rem+var(--safe-bottom))] shadow-lg duration-300 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:slide-out-to-bottom data-[state=open]:slide-in-from-bottom !rounded-t-2xl !rounded-b-none !translate-x-0 !translate-y-0 max-h-[calc(100vh-var(--safe-top)-var(--safe-bottom))] overflow-hidden",
         className,
       )}
       {...props}

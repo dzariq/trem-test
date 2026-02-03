@@ -828,7 +828,7 @@ export default function CalendarPage() {
               {selectedCCA.publicDescription || "Details to be announced"}
             </p>
 
-            <Card className="bg-emerald-50/80 dark:bg-emerald-950/30 border border-emerald-200/60 dark:border-emerald-800/40 rounded-xl">
+            <Card className="bg-primary/5 dark:bg-primary/10 border border-primary/20 dark:border-primary/30 rounded-xl">
               <CardContent className="p-4 space-y-3">
                 {(selectedCCA.meetingDay || selectedCCA.meetingTime) && (
                   <div className="flex items-center gap-3">
