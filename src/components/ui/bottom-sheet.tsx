@@ -35,14 +35,16 @@ export function BottomSheet({
   const [activeSnapPoint, setActiveSnapPoint] = React.useState<number | string | null>(defaultSnapPoint);
   const contentRef = React.useRef<HTMLDivElement | null>(null);
   const ignoreCloseRef = React.useRef(false);
-  const orderedSnapPoints = React.useMemo(() => {
+
+  // Keep snap points in ascending order for proper gesture handling
+  const sortedSnapPoints = React.useMemo(() => {
     if (!snapPoints || snapPoints.length === 0) return snapPoints;
-    const unique = Array.from(new Set(snapPoints));
-    const defaultIndex = unique.findIndex((point) => point === defaultSnapPoint);
-    if (defaultIndex === -1) return [defaultSnapPoint, ...unique];
-    if (defaultIndex === 0) return unique;
-    return [unique[defaultIndex], ...unique.slice(0, defaultIndex), ...unique.slice(defaultIndex + 1)];
-  }, [snapPoints, defaultSnapPoint]);
+    return [...new Set(snapPoints)].sort((a, b) => {
+      const numA = typeof a === 'number' ? a : parseFloat(a);
+      const numB = typeof b === 'number' ? b : parseFloat(b);
+      return numA - numB;
+    });
+  }, [snapPoints]);
 
   // Snap logic: reset to default when opening for a consistent entry height.
   React.useEffect(() => {
@@ -69,7 +71,7 @@ export function BottomSheet({
     <DrawerPrimitive.Root
       open={open}
       onOpenChange={onOpenChange}
-      snapPoints={orderedSnapPoints}
+      snapPoints={sortedSnapPoints}
       activeSnapPoint={activeSnapPoint}
       setActiveSnapPoint={setActiveSnapPoint}
       scrollLockTimeout={0}
