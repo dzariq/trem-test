@@ -300,32 +300,43 @@ export default function CalendarPage() {
     return enrolledCcas.some((e) => e.activityId === activityId);
   };
 
-  // Handle Join/Switch button click
+  // Handle Join/Switch button click - wrapped in try-catch to prevent app freezing
   const handleJoinOrSwitch = async (activity: CcaActivity) => {
-    const currentClub = await getCurrentEnrolledClub();
+    try {
+      const currentClub = await getCurrentEnrolledClub();
 
-    if (currentClub && currentClub.id !== activity.id) {
-      // Student is enrolled in a different club - show switch dialog
-      setCurrentClubName(currentClub.name);
-      setTargetClub({ id: activity.id, name: activity.name });
-      setSwitchDialogOpen(true);
-    } else if (!currentClub) {
-      // Not enrolled in any club - show join dialog
-      setCurrentClubName(null);
-      setTargetClub({ id: activity.id, name: activity.name });
-      setSwitchDialogOpen(true);
+      if (currentClub && currentClub.id !== activity.id) {
+        // Student is enrolled in a different club - show switch dialog
+        setCurrentClubName(currentClub.name);
+        setTargetClub({ id: activity.id, name: activity.name });
+        setSwitchDialogOpen(true);
+      } else if (!currentClub) {
+        // Not enrolled in any club - show join dialog
+        setCurrentClubName(null);
+        setTargetClub({ id: activity.id, name: activity.name });
+        setSwitchDialogOpen(true);
+      }
+      // If already in this club, do nothing (button shouldn't be shown)
+    } catch (error) {
+      console.error("[CalendarPage] Error in handleJoinOrSwitch:", error);
+      // Don't show error toast - the hook handles it
     }
-    // If already in this club, do nothing (button shouldn't be shown)
   };
 
-  // Confirm switch/join action
+  // Confirm switch/join action - wrapped in try-catch to prevent app freezing
   const handleConfirmSwitch = async () => {
     if (!targetClub) return;
 
-    if (currentClubName) {
-      await switchClub(targetClub.id, targetClub.name);
-    } else {
-      await joinClub(targetClub.id, targetClub.name);
+    try {
+      if (currentClubName) {
+        await switchClub(targetClub.id, targetClub.name);
+      } else {
+        await joinClub(targetClub.id, targetClub.name);
+      }
+    } catch (error) {
+      console.error("[CalendarPage] Error in handleConfirmSwitch:", error);
+      setSwitchDialogOpen(false);
+      setTargetClub(null);
     }
   };
 
