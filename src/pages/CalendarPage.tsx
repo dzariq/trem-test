@@ -127,11 +127,10 @@ export default function CalendarPage() {
 
   const categoryOrder: TagCategory[] = useMemo(() => {
     const base: TagCategory[] = ["school-level", "exams", "holidays", "events", "students", "parents"];
-    if (roleForFilters === "teacher") {
-      base.push("staff-admin", "due-dates");
-    }
+    // Teacher category filters are handled in the Teacher Calendar page, not here
+    // This page is only for parent/student roles
     return base;
-  }, [roleForFilters]);
+  }, []);
 
   const categoryPillStyles: Record<TagCategory, string> = {
     "school-level": "bg-blue-100 text-blue-800 dark:bg-blue-900/50 dark:text-blue-300",

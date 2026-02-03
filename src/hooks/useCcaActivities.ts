@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo, useCallback } from "react";
 import { supabase } from "@/lib/supabase";
-
+import { isStudentEligibleForCca } from "@/lib/yearLevelMapping";
 // Types
 export interface CcaTeacher {
   id: string;
@@ -287,13 +287,10 @@ export function useCcaActivities(options: UseCcaActivitiesOptions = {}) {
         );
       }
 
-      // Filter by student year level eligibility (for parent app)
+      // Filter by student year level eligibility using Key Stage mapping
       if (studentYearLevel !== undefined) {
         mappedActivities = mappedActivities.filter((activity) => {
-          const levels = activity.yearLevels;
-          if (levels.includes("All")) return true;
-          if (!studentYearLevel) return levels.includes("All");
-          return levels.includes(studentYearLevel);
+          return isStudentEligibleForCca(studentYearLevel, activity.yearLevels);
         });
       }
 

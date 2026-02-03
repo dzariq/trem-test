@@ -89,6 +89,76 @@ export type Database = {
         }
         Relationships: []
       }
+      admission_events: {
+        Row: {
+          academic_year: number
+          campus_id: string | null
+          class_year_id: number | null
+          created_at: string
+          created_by: string | null
+          event_date: string
+          event_type: string
+          id: string
+          previous_school: string | null
+          remarks: string | null
+          student_id: string | null
+          updated_at: string
+          year_level: string | null
+        }
+        Insert: {
+          academic_year?: number
+          campus_id?: string | null
+          class_year_id?: number | null
+          created_at?: string
+          created_by?: string | null
+          event_date?: string
+          event_type: string
+          id?: string
+          previous_school?: string | null
+          remarks?: string | null
+          student_id?: string | null
+          updated_at?: string
+          year_level?: string | null
+        }
+        Update: {
+          academic_year?: number
+          campus_id?: string | null
+          class_year_id?: number | null
+          created_at?: string
+          created_by?: string | null
+          event_date?: string
+          event_type?: string
+          id?: string
+          previous_school?: string | null
+          remarks?: string | null
+          student_id?: string | null
+          updated_at?: string
+          year_level?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "admission_events_campus_id_fkey"
+            columns: ["campus_id"]
+            isOneToOne: false
+            referencedRelation: "campuses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "admission_events_class_year_id_fkey"
+            columns: ["class_year_id"]
+            isOneToOne: false
+            referencedRelation: "class_years"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "admission_events_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       admission_manual_entries: {
         Row: {
           add_stud_entered: number | null
@@ -1804,6 +1874,61 @@ export type Database = {
         }
         Relationships: []
       }
+      student_campus_transfers: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          from_campus_id: string | null
+          id: string
+          reason: string | null
+          student_id: string
+          to_campus_id: string
+          transfer_date: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          from_campus_id?: string | null
+          id?: string
+          reason?: string | null
+          student_id: string
+          to_campus_id: string
+          transfer_date: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          from_campus_id?: string | null
+          id?: string
+          reason?: string | null
+          student_id?: string
+          to_campus_id?: string
+          transfer_date?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "student_campus_transfers_from_campus_id_fkey"
+            columns: ["from_campus_id"]
+            isOneToOne: false
+            referencedRelation: "campuses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "student_campus_transfers_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "student_campus_transfers_to_campus_id_fkey"
+            columns: ["to_campus_id"]
+            isOneToOne: false
+            referencedRelation: "campuses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       student_cca_enrollments: {
         Row: {
           cca_activity_id: string
@@ -2384,6 +2509,44 @@ export type Database = {
         }
         Relationships: []
       }
+      term_week_ranges: {
+        Row: {
+          created_at: string
+          end_date: string
+          id: string
+          start_date: string
+          term_configuration_id: string
+          updated_at: string
+          week_number: number
+        }
+        Insert: {
+          created_at?: string
+          end_date: string
+          id?: string
+          start_date: string
+          term_configuration_id: string
+          updated_at?: string
+          week_number: number
+        }
+        Update: {
+          created_at?: string
+          end_date?: string
+          id?: string
+          start_date?: string
+          term_configuration_id?: string
+          updated_at?: string
+          week_number?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "term_week_ranges_term_configuration_id_fkey"
+            columns: ["term_configuration_id"]
+            isOneToOne: false
+            referencedRelation: "term_configurations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       ticket_responses: {
         Row: {
           created_at: string
@@ -2573,6 +2736,14 @@ export type Database = {
         Args: { p_activity_id: string }
         Returns: boolean
       }
+      is_teacher_of_class_name: {
+        Args: { p_class_name: string }
+        Returns: boolean
+      }
+      is_teacher_of_class_year: {
+        Args: { p_class_year_id: number }
+        Returns: boolean
+      }
       is_ticket_owner: {
         Args: { ticket_parent_email: string }
         Returns: boolean
@@ -2581,6 +2752,7 @@ export type Database = {
         Args: { p_period_id: string; p_status: string }
         Returns: undefined
       }
+      teacher_allowed_class_year_ids: { Args: never; Returns: number[] }
       teacher_assigned_to_cca: { Args: { _cca_id: string }; Returns: boolean }
       user_has_role: { Args: { check_role: string }; Returns: boolean }
     }
