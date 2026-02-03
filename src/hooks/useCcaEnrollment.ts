@@ -151,7 +151,7 @@ export function useCcaEnrollment({ studentId, onEnrollmentSuccess }: UseCcaEnrol
           // Re-enroll (update status)
           const { error: updateError } = await supabase
             .from("student_cca_enrollments")
-            .update({ status: "enrolled", updated_at: new Date().toISOString() })
+            .update({ status: "enrolled" })
             .eq("id", existingEnrollment.id);
 
           if (updateError) {
@@ -236,7 +236,7 @@ export function useCcaEnrollment({ studentId, onEnrollmentSuccess }: UseCcaEnrol
       try {
         const { error } = await supabase
           .from("student_cca_enrollments")
-          .update({ status: "withdrawn", updated_at: new Date().toISOString() })
+          .update({ status: "withdrawn" })
           .eq("id", enrollmentId)
           .eq("student_id", studentId);
 

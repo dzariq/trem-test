@@ -242,10 +242,16 @@ export function useEligibleCcaActivities(options: UseEligibleCcaActivitiesOption
         sessions: sessionsMap.get(a.id) || [],
       }));
 
-      // Sort by name
-      mappedActivities.sort((a, b) => a.name.localeCompare(b.name));
+      // Filter out activities with no eligible years (strict enforcement)
+      // Only show clubs that have at least one eligibility row in cca_club_year_eligibility
+      const filteredActivities = mappedActivities.filter(
+        (activity) => activity.eligibleYears.length > 0
+      );
 
-      setActivities(mappedActivities);
+      // Sort by name
+      filteredActivities.sort((a, b) => a.name.localeCompare(b.name));
+
+      setActivities(filteredActivities);
     } catch (err: any) {
       console.error("[useEligibleCcaActivities] Error:", err);
       setError(err?.message || "Failed to load CCA activities");

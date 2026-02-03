@@ -133,7 +133,7 @@ export function useCcaClubEnrollment({ studentId, onSuccess }: UseCcaClubEnrollm
           // Re-enroll by updating status
           const { error: updateError } = await supabase
             .from("student_cca_enrollments")
-            .update({ status: "enrolled", updated_at: new Date().toISOString() })
+            .update({ status: "enrolled" })
             .eq("id", existing.id);
 
           if (updateError) {
@@ -228,7 +228,7 @@ export function useCcaClubEnrollment({ studentId, onSuccess }: UseCcaClubEnrollm
         if (currentClub) {
           const { error: withdrawError } = await supabase
             .from("student_cca_enrollments")
-            .update({ status: "withdrawn", updated_at: new Date().toISOString() })
+            .update({ status: "withdrawn" })
             .eq("student_id", studentId)
             .in("status", ["enrolled", "active"]);
 
@@ -255,7 +255,7 @@ export function useCcaClubEnrollment({ studentId, onSuccess }: UseCcaClubEnrollm
           // Update existing record
           const { error: updateError } = await supabase
             .from("student_cca_enrollments")
-            .update({ status: "enrolled", updated_at: new Date().toISOString() })
+            .update({ status: "enrolled" })
             .eq("id", existing.id);
 
           if (updateError) {
@@ -318,16 +318,12 @@ export function useCcaClubEnrollment({ studentId, onSuccess }: UseCcaClubEnrollm
         toast({ title: "Error", description: "No student selected", variant: "destructive" });
         return false;
       }
-      if (!studentId) {
-        toast({ title: "Error", description: "No student selected", variant: "destructive" });
-        return false;
-      }
 
       setEnrolling(true);
       try {
         const { error } = await supabase
           .from("student_cca_enrollments")
-          .update({ status: "withdrawn", updated_at: new Date().toISOString() })
+          .update({ status: "withdrawn" })
           .eq("student_id", studentId)
           .eq("cca_activity_id", activityId)
           .in("status", ["enrolled", "active"]);

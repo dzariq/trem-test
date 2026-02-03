@@ -1,46 +1,47 @@
+import * as React from "react";
 import { cn } from "@/lib/utils";
 
-interface PICTeacherPillProps {
+interface PICTeacherPillProps extends React.HTMLAttributes<HTMLDivElement> {
   name: string;
   departments: string[];
   isPrimary?: boolean;
-  className?: string;
 }
 
-export function PICTeacherPill({
-  name,
-  departments,
-  isPrimary = false,
-  className,
-}: PICTeacherPillProps) {
-  const departmentText = departments.length > 0 
-    ? departments.join(", ") 
-    : null;
+export const PICTeacherPill = React.forwardRef<HTMLDivElement, PICTeacherPillProps>(
+  ({ name, departments, isPrimary = false, className, ...props }, ref) => {
+    const departmentText = departments.length > 0 
+      ? departments.join(", ") 
+      : null;
 
-  return (
-    <div
-      className={cn(
-        "inline-flex flex-col px-3 py-2 rounded-lg border",
-        isPrimary
-          ? "bg-primary/10 border-primary/30"
-          : "bg-muted/50 border-border",
-        className
-      )}
-    >
-      <span className="text-sm font-semibold text-foreground leading-tight">
-        {name}
-        {isPrimary && (
-          <span className="ml-1.5 text-xs font-normal text-primary">(Lead)</span>
+    return (
+      <div
+        ref={ref}
+        className={cn(
+          "inline-flex flex-col px-3 py-2 rounded-lg border",
+          isPrimary
+            ? "bg-primary/10 border-primary/30"
+            : "bg-muted/50 border-border",
+          className
         )}
-      </span>
-      {departmentText && (
-        <span className="text-xs text-muted-foreground leading-tight mt-0.5">
-          {departmentText}
+        {...props}
+      >
+        <span className="text-sm font-semibold text-foreground leading-tight">
+          {name}
+          {isPrimary && (
+            <span className="ml-1.5 text-xs font-normal text-primary">(Lead)</span>
+          )}
         </span>
-      )}
-    </div>
-  );
-}
+        {departmentText && (
+          <span className="text-xs text-muted-foreground leading-tight mt-0.5">
+            {departmentText}
+          </span>
+        )}
+      </div>
+    );
+  }
+);
+
+PICTeacherPill.displayName = "PICTeacherPill";
 
 interface PICTeachersListProps {
   teachers: Array<{
