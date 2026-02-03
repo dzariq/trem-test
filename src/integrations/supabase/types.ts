@@ -778,6 +778,35 @@ export type Database = {
         }
         Relationships: []
       }
+      cca_club_year_eligibility: {
+        Row: {
+          club_id: string
+          created_at: string | null
+          id: string
+          year_code: string
+        }
+        Insert: {
+          club_id: string
+          created_at?: string | null
+          id?: string
+          year_code: string
+        }
+        Update: {
+          club_id?: string
+          created_at?: string | null
+          id?: string
+          year_code?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cca_club_year_eligibility_club_id_fkey"
+            columns: ["club_id"]
+            isOneToOne: false
+            referencedRelation: "cca_activities"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       cca_session_pics: {
         Row: {
           created_at: string
