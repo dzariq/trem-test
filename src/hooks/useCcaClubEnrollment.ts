@@ -318,6 +318,10 @@ export function useCcaClubEnrollment({ studentId, onSuccess }: UseCcaClubEnrollm
         toast({ title: "Error", description: "No student selected", variant: "destructive" });
         return false;
       }
+      if (!studentId) {
+        toast({ title: "Error", description: "No student selected", variant: "destructive" });
+        return false;
+      }
 
       setEnrolling(true);
       try {
