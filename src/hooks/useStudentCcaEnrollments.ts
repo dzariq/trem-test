@@ -66,7 +66,7 @@ export function useStudentCcaEnrollments({ studentId }: UseStudentCcaEnrollments
           )
         `)
         .eq("student_id", studentId)
-        .in("status", ["enrolled", "active"]);
+        .eq("status", "active");
 
       if (fetchError) throw fetchError;
 
