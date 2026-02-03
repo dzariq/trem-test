@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { MapPin, Clock, ChevronDown, CalendarDays, User, Loader2 } from "lucide-react";
+import { MapPin, Clock, CalendarDays, User, Loader2 } from "lucide-react";
 import schoolLogo from "@/assets/school-badge.png";
 import {
   Select,
@@ -17,22 +17,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import { TagCategory, CalendarTag, PARENT_HIDDEN_TAGS } from "@/types/calendarTags";
 import {
   filterEventsByRole,
-  filterEventsByCategory,
-  filterEventsByTag,
   getTagColor,
   getTagDisplayName,
-  getCategoryDisplayName,
-  getCategoryColor,
-  getTagsByCategory,
 } from "@/lib/calendarUtils";
 import { getUpcomingEvents, listCalendarEvents, type UpcomingEvent } from "@/data/calendar";
 import { useMyProfile } from "@/hooks/useMyProfile";
@@ -44,24 +33,35 @@ import { CcaTypeTabs, getCcaTypeColor } from "@/components/cca/CcaTypeTabs";
 import { supabase } from "@/lib/supabase";
 import { useCcaSessionsCalendar, type CcaCalendarSession } from "@/hooks/useCcaSessionsCalendar";
 import { EventDetailsSheet } from "@/components/events/EventDetailsSheet";
+import { EventTypeFilterSheet } from "@/components/calendar/EventTypeFilterSheet";
+import { UpcomingEventsSection } from "@/components/calendar/UpcomingEventsSection";
+import {
+  getDefaultFilters,
+  filterEventsByTypes,
+  type EventTypeFilter,
+} from "@/lib/calendarFilters";
 
 export default function CalendarPage() {
   const { profile } = useMyProfile();
   const [searchParams] = useSearchParams();
   const initialTab = searchParams.get("tab") || "calendar";
-  
+
   const today = new Date();
   const todayYmd = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
   const [selectedDay, setSelectedDay] = useState<string>(todayYmd);
   const [currentMonth, setCurrentMonth] = useState<Date>(new Date());
-  const [categoryFilter, setCategoryFilter] = useState<TagCategory | "all">("all");
-  const [selectedTag, setSelectedTag] = useState<CalendarTag | null>(null);
-  const [ccaTypeFilter, setCcaTypeFilter] = useState("all"); // Now uses type_id or "all"
+  const [ccaTypeFilter, setCcaTypeFilter] = useState("all");
   const [selectedCCA, setSelectedCCA] = useState<CcaActivity | null>(null);
   const [selectedEventDetails, setSelectedEventDetails] = useState<UpcomingEvent | null>(null);
   const [eventDetailsOpen, setEventDetailsOpen] = useState(false);
   const [events, setEvents] = useState<UpcomingEvent[]>([]);
   const [studentYearLevel, setStudentYearLevel] = useState<string | null>(null);
+
+  // Multi-select event type filter (replaces old single-select category dropdown)
+  const roleForFilters = profile?.role === "student" ? "student" : "parent";
+  const [selectedEventTypes, setSelectedEventTypes] = useState<EventTypeFilter[]>(
+    () => getDefaultFilters(roleForFilters as "parent" | "teacher" | "student")
+  );
 
   const {
     linkedStudents,
@@ -71,7 +71,6 @@ export default function CalendarPage() {
     setSelectedStudentId,
   } = useStudentSelection();
 
-  // Fetch student year level
   useEffect(() => {
     if (!selectedStudentId) {
       setStudentYearLevel(null);
@@ -84,7 +83,7 @@ export default function CalendarPage() {
         .select("year_level")
         .eq("id", selectedStudentId)
         .maybeSingle();
-      
+
       if (!error && data) {
         setStudentYearLevel(data.year_level);
       }
@@ -93,7 +92,6 @@ export default function CalendarPage() {
     fetchYearLevel();
   }, [selectedStudentId]);
 
-  // Fetch CCA activities from Supabase with year level filtering
   const {
     activities: ccaActivities,
     loading: ccaLoading,
@@ -105,7 +103,6 @@ export default function CalendarPage() {
     includeInactive: false,
   });
 
-  // Fetch enrolled CCAs for the selected student
   const {
     enrollments: enrolledCcas,
     loading: enrolledLoading,
@@ -115,7 +112,6 @@ export default function CalendarPage() {
     studentId: selectedStudentId,
   });
 
-  // Fetch CCA sessions for calendar (parent view)
   const {
     sessions: ccaSessions,
     loading: ccaSessionsLoading,
@@ -124,17 +120,10 @@ export default function CalendarPage() {
     month: currentMonth.getMonth() + 1,
   });
 
-  const roleForFilters = profile?.role === "student" ? "student" : "parent";
-  // Filter events for parent/student role
+  // Filter events: role-based first, then by selected event types
   const visibleEvents = filterEventsByRole(events, roleForFilters);
-  let filteredEvents = filterEventsByCategory(visibleEvents, categoryFilter);
-  
-  // Apply tag filter if a specific tag is selected
-  if (selectedTag) {
-    filteredEvents = filterEventsByTag(filteredEvents, selectedTag);
-  }
+  const filteredEvents = filterEventsByTypes(visibleEvents, selectedEventTypes);
 
-  // Use centralized color function from CcaTypeTabs
   const getCcaCategoryColor = getCcaTypeColor;
 
   const toDayString = (date: Date) => {
@@ -159,22 +148,11 @@ export default function CalendarPage() {
     (event) => selectedDay >= event.startDay && selectedDay <= event.endDay
   );
 
-  const upcomingEvents = useMemo(
-    () =>
-      getUpcomingEvents({
-        events: filteredEvents,
-        fromDate: new Date(),
-        limit: 5,
-        role: roleForFilters,
-        selectedStudentId,
-      }),
-    [filteredEvents, roleForFilters, selectedStudentId]
-  );
-
-  // Filter CCA sessions for the selected date
-  const ccaSessionsForSelectedDate = ccaSessions.filter(
-    (session) => session.sessionDate === selectedDay
-  );
+  // CCA sessions on the calendar also show if "cca" filter is active
+  const showCcaSessions = selectedEventTypes.includes("cca");
+  const ccaSessionsForSelectedDate = showCcaSessions
+    ? ccaSessions.filter((session) => session.sessionDate === selectedDay)
+    : [];
 
   const eventDaySet = new Set<string>();
   const addRangeDays = (startDay: string, endDay: string) => {
@@ -193,12 +171,13 @@ export default function CalendarPage() {
     }
   });
 
-  // Add CCA session dates to highlight set
-  ccaSessions.forEach((session) => {
-    if (session.sessionDate) {
-      eventDaySet.add(session.sessionDate);
-    }
-  });
+  if (showCcaSessions) {
+    ccaSessions.forEach((session) => {
+      if (session.sessionDate) {
+        eventDaySet.add(session.sessionDate);
+      }
+    });
+  }
 
   const visibleMonth = toMonthString(currentMonth);
   const hasEventsSet = new Set(
@@ -228,12 +207,10 @@ export default function CalendarPage() {
     };
   }, [currentMonth, profile?.role]);
 
-  // Filter CCA activities by type
   const filteredCCA = useMemo(() => {
     return filterByTypeId(ccaTypeFilter);
   }, [filterByTypeId, ccaTypeFilter]);
 
-  // Filter enrolled CCAs by type
   const filteredEnrolledCCA = useMemo(() => {
     return filterEnrolledByTypeId(ccaTypeFilter);
   }, [filterEnrolledByTypeId, ccaTypeFilter]);
@@ -242,36 +219,10 @@ export default function CalendarPage() {
     if (activity.picTeachers.length > 0) {
       return activity.picTeachers.map((t) => t.fullName).join(", ");
     }
-    // coordinatorName only exists on CcaActivity, not EnrolledCcaActivity
     if ('coordinatorName' in activity && activity.coordinatorName) {
       return activity.coordinatorName;
     }
     return null;
-  };
-
-  // Categories visible to parents (exclude staff-admin and due-dates)
-  const parentVisibleCategories: (TagCategory | "all")[] = [
-    "all",
-    "school-level",
-    "exams",
-    "holidays",
-    "events",
-    "students",
-    "parents",
-  ];
-
-  // Get visible tags for a category (filter out hidden tags for parents)
-  const getVisibleTagsForCategory = (category: TagCategory): CalendarTag[] => {
-    return getTagsByCategory(category).filter(tag => !PARENT_HIDDEN_TAGS.includes(tag));
-  };
-
-  const handleCategoryClick = (cat: TagCategory | "all") => {
-    setCategoryFilter(cat);
-    setSelectedTag(null);
-  };
-
-  const handleTagSelect = (tag: CalendarTag) => {
-    setSelectedTag(tag);
   };
 
   const openEventDetails = (event: UpcomingEvent, triggerEl?: HTMLElement | null) => {
@@ -289,7 +240,7 @@ export default function CalendarPage() {
 
   return (
     <AppLayout>
-      <AppHeader 
+      <AppHeader
         leftContent={
           <div className="flex items-center gap-2">
             <img src={schoolLogo} alt="School Logo" className="h-16 w-auto -my-3 drop-shadow-md" />
@@ -339,69 +290,12 @@ export default function CalendarPage() {
           </TabsList>
 
           <TabsContent value="calendar" className="mt-4 space-y-4">
-            {/* Category Filter with Dropdowns */}
-            <div className="flex flex-wrap gap-2 pb-2">
-              {parentVisibleCategories.map((cat) => {
-                const isSelected = categoryFilter === cat;
-                const visibleTags = cat !== "all" ? getVisibleTagsForCategory(cat as TagCategory) : [];
-                const hasSubTags = visibleTags.length > 0;
-
-                if (cat === "all" || !hasSubTags) {
-                  return (
-                    <Badge
-                      key={cat}
-                      variant={isSelected && !selectedTag ? "default" : "outline"}
-                      className={`cursor-pointer ${
-                        isSelected && !selectedTag ? "" : cat !== "all" ? getCategoryColor(cat as TagCategory) : ""
-                      }`}
-                      onClick={() => handleCategoryClick(cat)}
-                    >
-                      {cat === "all" ? "All" : getCategoryDisplayName(cat as TagCategory)}
-                    </Badge>
-                  );
-                }
-
-                return (
-                  <DropdownMenu key={cat}>
-                    <DropdownMenuTrigger asChild>
-                      <Badge
-                        variant={isSelected ? "default" : "outline"}
-                        className={`cursor-pointer flex items-center gap-1 ${
-                          isSelected ? "" : getCategoryColor(cat as TagCategory)
-                        }`}
-                      >
-                        {selectedTag && categoryFilter === cat 
-                          ? getTagDisplayName(selectedTag)
-                          : getCategoryDisplayName(cat as TagCategory)
-                        }
-                        <ChevronDown className="h-3 w-3" />
-                      </Badge>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent className="bg-card z-50" align="start">
-                      <DropdownMenuItem 
-                        onClick={() => handleCategoryClick(cat)}
-                        className="cursor-pointer"
-                      >
-                        All {getCategoryDisplayName(cat as TagCategory)}
-                      </DropdownMenuItem>
-                      {visibleTags.map((tag) => (
-                        <DropdownMenuItem 
-                          key={tag}
-                          onClick={() => {
-                            setCategoryFilter(cat);
-                            handleTagSelect(tag);
-                          }}
-                          className="cursor-pointer"
-                        >
-                          <Badge className={`text-xs mr-2 ${getTagColor(tag)}`}>
-                            {getTagDisplayName(tag)}
-                          </Badge>
-                        </DropdownMenuItem>
-                      ))}
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                );
-              })}
+            {/* Event Type Filter — multi-select bottom sheet */}
+            <div className="flex flex-wrap gap-2 pb-2 items-center">
+              <EventTypeFilterSheet
+                selectedTypes={selectedEventTypes}
+                onApply={setSelectedEventTypes}
+              />
             </div>
 
             {/* Calendar Component */}
@@ -422,7 +316,7 @@ export default function CalendarPage() {
                       selected: (date) => toDayString(date) === selectedDay,
                     }}
                     modifiersStyles={{
-                      hasEvent: { 
+                      hasEvent: {
                         backgroundColor: "hsl(var(--primary) / 0.1)",
                         fontWeight: "bold"
                       },
@@ -441,17 +335,16 @@ export default function CalendarPage() {
             <Card className="bg-card border-border shadow-sm">
               <CardHeader className="pb-2">
                 <CardTitle className="text-lg font-semibold">
-                  {parseDayKey(selectedDay).toLocaleDateString("en-US", { 
-                    weekday: "long", 
-                    month: "long", 
-                    day: "numeric" 
+                  {parseDayKey(selectedDay).toLocaleDateString("en-US", {
+                    weekday: "long",
+                    month: "long",
+                    day: "numeric"
                   })}
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
-                {/* School Events */}
                 {eventsForSelectedDate.map((event) => (
-                  <div 
+                  <div
                     key={event.id}
                     className="p-3 rounded-lg bg-accent/50 border border-border/50"
                   >
@@ -495,7 +388,7 @@ export default function CalendarPage() {
                   };
 
                   return (
-                    <div 
+                    <div
                       key={`cca-${session.id}`}
                       className="p-3 rounded-lg bg-primary/5 border border-primary/20"
                     >
@@ -536,58 +429,14 @@ export default function CalendarPage() {
               </CardContent>
             </Card>
 
-            {/* Upcoming Events List */}
-            <Card className="bg-card border-border shadow-sm">
-              <CardHeader className="pb-2">
-                <CardTitle className="text-lg font-semibold">Upcoming Events</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                {upcomingEvents.map((event) => {
-                  const eventDate = new Date(`${event.startDay}T00:00:00Z`);
-                  return (
-                    <div 
-                      key={event.id}
-                      className="flex items-start gap-4 p-3 rounded-lg border border-border/50 hover:bg-accent/30 transition-colors cursor-pointer"
-                      role="button"
-                      tabIndex={0}
-                      onClick={(e) => openEventDetails(event, e.currentTarget)}
-                      onKeyDown={(e) => handleEventKeyDown(e, event)}
-                    >
-                      <div className="flex flex-col items-center justify-center bg-primary/10 text-primary rounded-lg w-12 h-12 flex-shrink-0">
-                        <span className="text-sm font-bold leading-none">{eventDate.getDate()}</span>
-                        <span className="text-xs uppercase">{eventDate.toLocaleDateString("en-US", { month: "short" })}</span>
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <h3 className="font-medium text-foreground truncate">{event.title}</h3>
-                        <p className="text-sm text-muted-foreground mb-1">
-                          {event.allDay ? "All Day" : event.time || "—"}
-                        </p>
-                        <div className="flex flex-wrap gap-1">
-                          {event.tags.slice(0, 2).map((tag) => (
-                            <Badge key={tag} className={`text-xs ${getTagColor(tag)}`}>
-                              {getTagDisplayName(tag)}
-                            </Badge>
-                          ))}
-                          {event.tags.length > 2 && (
-                            <Badge variant="outline" className="text-xs">
-                              +{event.tags.length - 2}
-                            </Badge>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })}
-
-                {upcomingEvents.length === 0 && (
-                  <p className="text-sm text-muted-foreground text-center py-4">No events found</p>
-                )}
-              </CardContent>
-            </Card>
+            {/* Upcoming Events with tab switcher */}
+            <UpcomingEventsSection
+              events={filteredEvents}
+              onEventClick={openEventDetails}
+            />
           </TabsContent>
 
           <TabsContent value="cca" className="mt-4 space-y-4">
-            {/* Dynamic Type Tabs from Backend */}
             <CcaTypeTabs
               selectedTypeId={ccaTypeFilter}
               onSelectType={setCcaTypeFilter}
@@ -650,7 +499,7 @@ export default function CalendarPage() {
                         </Badge>
                       </div>
                     </div>
-                    
+
                     <div className="space-y-2 text-sm text-muted-foreground">
                       {(activity.meetingDay || activity.meetingTime) && (
                         <div className="flex items-center gap-2">
@@ -737,7 +586,7 @@ export default function CalendarPage() {
                         </Badge>
                       </div>
                     </div>
-                    
+
                     <div className="space-y-2 text-sm text-muted-foreground">
                       {(activity.meetingDay || activity.meetingTime) && (
                         <div className="flex items-center gap-2">
@@ -779,9 +628,9 @@ export default function CalendarPage() {
                       {activity.publicDescription || "Details to be announced"}
                     </p>
 
-                    <Button 
-                      variant="outline" 
-                      size="sm" 
+                    <Button
+                      variant="outline"
+                      size="sm"
                       className="w-full mt-4"
                       onClick={() => setSelectedCCA(activity)}
                     >
@@ -810,12 +659,10 @@ export default function CalendarPage() {
               </DialogHeader>
 
               <div className="space-y-4 pt-2">
-                {/* Description */}
                 <p className="text-sm text-muted-foreground">
                   {selectedCCA.publicDescription || "Details to be announced"}
                 </p>
 
-                {/* Schedule Info */}
                 <Card className="bg-emerald-50/80 dark:bg-emerald-950/30 border border-emerald-200/60 dark:border-emerald-800/40 rounded-xl">
                   <CardContent className="p-4 space-y-3">
                     {(selectedCCA.meetingDay || selectedCCA.meetingTime) && (
@@ -845,7 +692,6 @@ export default function CalendarPage() {
                       </div>
                     )}
 
-                    {/* PIC Teachers */}
                     {(selectedCCA.picTeachers.length > 0 || selectedCCA.coordinatorName) && (
                       <div className="flex items-start gap-3">
                         <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
