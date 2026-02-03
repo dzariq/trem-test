@@ -2755,6 +2755,16 @@ export type Database = {
       teacher_allowed_class_year_ids: { Args: never; Returns: number[] }
       teacher_assigned_to_cca: { Args: { _cca_id: string }; Returns: boolean }
       user_has_role: { Args: { check_role: string }; Returns: boolean }
+      validate_cca_enrollment_eligibility: {
+        Args: { p_activity_id: string; p_student_id: string }
+        Returns: {
+          activity_year_levels: string[]
+          error_message: string
+          is_eligible: boolean
+          student_key_stage: string
+          student_year_level: string
+        }[]
+      }
     }
     Enums: {
       cca_pic_role: "lead" | "sub"

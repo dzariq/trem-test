@@ -86,13 +86,15 @@ export default function CalendarPage() {
     fetchYearLevel();
   }, [selectedStudentId]);
 
+  // Only fetch CCA activities if we have a valid student year level
+  // This prevents showing all activities when year level is not available
   const {
     activities: ccaActivities,
     loading: ccaLoading,
     error: ccaError,
     filterByTypeId,
   } = useCcaActivities({
-    studentYearLevel: studentYearLevel,
+    studentYearLevel: studentYearLevel ?? undefined,
     myActivitiesOnly: false,
     includeInactive: false,
   });
@@ -698,13 +700,36 @@ export default function CalendarPage() {
                 </div>
               )}
 
-              {!ccaLoading && !ccaError && filteredCCA.length === 0 && (
-                <div className="text-center py-8 text-muted-foreground">
-                  <p>No CCA activities available for this year level</p>
-                </div>
+              {/* Empty state: No student year level */}
+              {!ccaLoading && !ccaError && !studentYearLevel && (
+                <Card className="bg-muted/30 border-dashed border-border">
+                  <CardContent className="p-6 text-center">
+                    <p className="text-sm text-muted-foreground">
+                      Unable to determine student's year level
+                    </p>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Please contact administration to update student information
+                    </p>
+                  </CardContent>
+                </Card>
               )}
 
-              {!ccaLoading && !ccaError && filteredCCA.map((activity) => (
+              {/* Empty state: No eligible activities */}
+              {!ccaLoading && !ccaError && studentYearLevel && filteredCCA.length === 0 && (
+                <Card className="bg-muted/30 border-dashed border-border">
+                  <CardContent className="p-6 text-center">
+                    <p className="text-sm text-muted-foreground">
+                      No eligible CCA activities found
+                    </p>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      There are no activities available for {studentYearLevel} students
+                      {ccaTypeFilter !== "all" ? " in this category" : ""}
+                    </p>
+                  </CardContent>
+                </Card>
+              )}
+
+              {!ccaLoading && !ccaError && studentYearLevel && filteredCCA.map((activity) => (
                 <Card key={activity.id} className="bg-card border-border shadow-sm">
                   <CardContent className="p-4">
                     <div className="flex items-start justify-between gap-3 mb-3">
