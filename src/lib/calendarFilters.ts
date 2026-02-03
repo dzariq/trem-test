@@ -59,9 +59,32 @@ export function filterEventsByTypes(
     FILTER_TO_CATEGORIES[type].forEach((cat) => allowedCategories.add(cat));
   });
 
-  return events.filter((event) =>
-    event.tags.some((tag) => allowedCategories.has(TAG_CATEGORIES[tag]))
-  );
+  return events.filter((event) => {
+    // First check if any tags match the allowed categories
+    if (event.tags.some((tag) => allowedCategories.has(TAG_CATEGORIES[tag]))) {
+      return true;
+    }
+
+    // Also check the event category field (from event_type/event_category in DB)
+    // This ensures we match events that use the web admin's classification system
+    const category = (event.category || "").toLowerCase();
+
+    // Map category strings to our filter types
+    if (selectedTypes.includes("exam") && (category.includes("exam") || category.includes("test") || category.includes("assessment"))) {
+      return true;
+    }
+    if (selectedTypes.includes("holiday") && category.includes("holiday")) {
+      return true;
+    }
+    if (selectedTypes.includes("academic") && (category.includes("academic") || category.includes("school") || category.includes("class"))) {
+      return true;
+    }
+    if (selectedTypes.includes("event") && (category.includes("event") || category.includes("activity") || category.includes("meeting"))) {
+      return true;
+    }
+
+    return false;
+  });
 }
 
 // --- Upcoming events tab filtering ---
@@ -87,6 +110,40 @@ export function getFutureEvents(events: UpcomingEvent[]): UpcomingEvent[] {
   return events.filter((e) => e.endDay >= todayYmd);
 }
 
+/**
+ * Check if event is an exam based on tags, category, or event type.
+ * This matches the web admin portal logic which checks event_type.
+ */
+const isExamEvent = (event: UpcomingEvent): boolean => {
+  // Check tags first (mobile tag system)
+  if (event.tags.some((tag) => TAG_CATEGORIES[tag] === "exams")) {
+    return true;
+  }
+  // Check category (matches web admin's event_category field)
+  const category = (event.category || "").toLowerCase();
+  if (category.includes("exam") || category.includes("test") || category.includes("assessment")) {
+    return true;
+  }
+  return false;
+};
+
+/**
+ * Check if event is a holiday based on tags, category, or event type.
+ * This matches the web admin portal logic which checks event_type.
+ */
+const isHolidayEvent = (event: UpcomingEvent): boolean => {
+  // Check tags first (mobile tag system)
+  if (event.tags.some((tag) => TAG_CATEGORIES[tag] === "holidays")) {
+    return true;
+  }
+  // Check category (matches web admin's event_category or event_type field)
+  const category = (event.category || "").toLowerCase();
+  if (category.includes("holiday")) {
+    return true;
+  }
+  return false;
+};
+
 // Filter for a specific tab
 export function filterByUpcomingTab(
   events: UpcomingEvent[],
@@ -100,19 +157,15 @@ export function filterByUpcomingTab(
       return future.slice(0, limit);
 
     case "exams":
-      return future
-        .filter((e) => e.tags.some((tag) => TAG_CATEGORIES[tag] === "exams"))
-        .slice(0, limit);
+      return future.filter(isExamEvent).slice(0, limit);
 
     case "holidays": {
-      // Only multi-day holidays (stacked)
-      return future
-        .filter(
-          (e) =>
-            e.tags.some((tag) => TAG_CATEGORIES[tag] === "holidays") &&
-            e.startDay !== e.endDay
-        )
-        .slice(0, limit);
+      // Holidays - prefer multi-day but show single-day if none multi-day exist
+      const holidays = future.filter(isHolidayEvent);
+      const multiDay = holidays.filter((e) => e.startDay !== e.endDay);
+      // If we have multi-day holidays, show those; otherwise show all holidays
+      const toShow = multiDay.length > 0 ? multiDay : holidays;
+      return toShow.slice(0, limit);
     }
 
     default:

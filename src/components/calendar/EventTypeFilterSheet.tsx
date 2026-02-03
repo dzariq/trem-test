@@ -1,5 +1,5 @@
 import { useState, useCallback } from "react";
-import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerDescription, DrawerFooter } from "@/components/ui/drawer";
+import { BottomSheet } from "@/components/ui/bottom-sheet";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Filter, Check } from "lucide-react";
@@ -18,7 +18,7 @@ interface EventTypeFilterSheetProps {
 /**
  * Bottom sheet with multi-select pills for event type visibility.
  * Triggered by a filter icon pill next to the calendar.
- * Changes are local UI state only — no DB writes.
+ * Changes are local UI state only - no DB writes.
  */
 export function EventTypeFilterSheet({ selectedTypes, onApply }: EventTypeFilterSheetProps) {
   const [open, setOpen] = useState(false);
@@ -60,47 +60,42 @@ export function EventTypeFilterSheet({ selectedTypes, onApply }: EventTypeFilter
         )}
       </Badge>
 
-      <Drawer open={open} onOpenChange={setOpen}>
-        <DrawerContent>
-          <DrawerHeader className="text-left">
-            <DrawerTitle>Filter Event Types</DrawerTitle>
-            <DrawerDescription>
-              Select which event types to show on the calendar
-            </DrawerDescription>
-          </DrawerHeader>
+      <BottomSheet
+        open={open}
+        onOpenChange={setOpen}
+        snapPoints={[0, 0.75, 1]}
+        defaultSnapPoint={0.75}
+        title="Filter Event Types"
+        description="Select which event types to show on the calendar"
+        bodyClassName="px-4 py-3 space-y-4"
+      >
+        <div className="flex flex-wrap gap-2">
+          {EVENT_TYPE_FILTERS.map((type) => {
+            const isSelected = draft.includes(type);
+            return (
+              <button
+                key={type}
+                type="button"
+                onClick={() => toggle(type)}
+                className={
+                  `inline-flex items-center gap-1.5 rounded-full px-4 py-2 text-sm font-medium transition-all border ${
+                    isSelected
+                      ? `${EVENT_TYPE_COLORS[type]} border-transparent`
+                      : "bg-muted/30 text-muted-foreground border-border"
+                  }`
+                }
+              >
+                {isSelected && <Check className="h-3.5 w-3.5" />}
+                {EVENT_TYPE_LABELS[type]}
+              </button>
+            );
+          })}
+        </div>
 
-          <div className="px-4 pb-2 flex flex-wrap gap-2">
-            {EVENT_TYPE_FILTERS.map((type) => {
-              const isSelected = draft.includes(type);
-              return (
-                <button
-                  key={type}
-                  type="button"
-                  onClick={() => toggle(type)}
-                  className={`
-                    inline-flex items-center gap-1.5 rounded-full px-4 py-2 text-sm font-medium
-                    transition-all border
-                    ${
-                      isSelected
-                        ? `${EVENT_TYPE_COLORS[type]} border-transparent`
-                        : "bg-muted/30 text-muted-foreground border-border"
-                    }
-                  `}
-                >
-                  {isSelected && <Check className="h-3.5 w-3.5" />}
-                  {EVENT_TYPE_LABELS[type]}
-                </button>
-              );
-            })}
-          </div>
-
-          <DrawerFooter>
-            <Button onClick={handleApply} className="w-full">
-              Apply Filters
-            </Button>
-          </DrawerFooter>
-        </DrawerContent>
-      </Drawer>
+        <Button onClick={handleApply} className="w-full">
+          Apply Filters
+        </Button>
+      </BottomSheet>
     </>
   );
 }

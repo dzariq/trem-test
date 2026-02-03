@@ -1,4 +1,4 @@
-import { Drawer, DrawerContent, DrawerDescription, DrawerHeader, DrawerTitle } from "@/components/ui/drawer";
+import { BottomSheet } from "@/components/ui/bottom-sheet";
 import { Badge } from "@/components/ui/badge";
 import { CalendarDays, Clock, MapPin } from "lucide-react";
 import type { UpcomingEvent } from "@/data/calendar";
@@ -47,92 +47,93 @@ export function EventDetailsSheet({ open, onOpenChange, event }: EventDetailsShe
   const cca = isCcaSession(event);
   const dateKey = cca ? event.sessionDate : event.startDay || event.date;
   const hasValidDateKey = typeof dateKey === "string" && dateKey.length === 10;
-  const dateLabel = hasValidDateKey ? formatDateLabel(dateKey) : "—";
+  const dateLabel = hasValidDateKey ? formatDateLabel(dateKey) : "-";
   const timeLabel = cca
     ? formatTimeRange(event.startTime, event.endTime)
     : event.allDay
       ? "All Day"
-      : event.time || "—";
-  const locationLabel = cca ? event.locationName || "—" : event.location || "—";
-  const description = (cca ? event.description : event.description) || "—";
+      : event.time || "-";
+  const locationLabel = cca ? event.locationName || "-" : event.location || "-";
+  const description = (cca ? event.description : event.description) || "-";
 
   return (
-    <Drawer open={open} onOpenChange={onOpenChange} modal={true}>
-      <DrawerContent className="max-h-[90vh]">
-        <DrawerHeader className="text-left">
-          <div className="flex flex-wrap items-center gap-2">
-            <DrawerTitle className="text-xl">{cca ? event.customTitle || event.activityName : event.title}</DrawerTitle>
-            {cca ? (
-              <>
-                <Badge variant="secondary" className="text-[10px] px-1.5 py-0 shrink-0 w-fit">
-                  CCA
-                </Badge>
-                <Badge variant="secondary" className="text-xs shrink-0 w-fit">
-                  {event.category}
-                </Badge>
-              </>
-            ) : (
+    <BottomSheet
+      open={open}
+      onOpenChange={onOpenChange}
+      snapPoints={[0, 0.75, 1]}
+      defaultSnapPoint={0.75}
+      title={
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="text-lg font-semibold">
+            {cca ? event.customTitle || event.activityName : event.title}
+          </span>
+          {cca ? (
+            <>
+              <Badge variant="secondary" className="text-[10px] px-1.5 py-0 shrink-0 w-fit">
+                CCA
+              </Badge>
               <Badge variant="secondary" className="text-xs shrink-0 w-fit">
                 {event.category}
               </Badge>
-            )}
-          </div>
-          <DrawerDescription className="text-sm">
-            Event details
-          </DrawerDescription>
-        </DrawerHeader>
-
-        <div className="px-4 pb-[calc(1.25rem+var(--safe-bottom))] space-y-4">
-          <div className="grid gap-3">
-            <div className="flex items-start gap-3">
-              <div className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
-                <CalendarDays className="h-4 w-4 text-primary" />
-              </div>
-              <div>
-                <p className="text-xs text-muted-foreground">Date</p>
-                <p className="text-sm font-medium text-foreground">{dateLabel}</p>
-              </div>
-            </div>
-
-            <div className="flex items-start gap-3">
-              <div className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
-                <Clock className="h-4 w-4 text-primary" />
-              </div>
-              <div>
-                <p className="text-xs text-muted-foreground">Time</p>
-                <p className="text-sm font-medium text-foreground">{timeLabel}</p>
-              </div>
-            </div>
-
-            <div className="flex items-start gap-3">
-              <div className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
-                <MapPin className="h-4 w-4 text-primary" />
-              </div>
-              <div>
-                <p className="text-xs text-muted-foreground">Location</p>
-                <p className="text-sm font-medium text-foreground">{locationLabel}</p>
-              </div>
-            </div>
-          </div>
-
-          {!cca && event.tags.length > 0 && (
-            <div className="flex flex-wrap gap-2">
-              {event.tags.map((tag) => (
-                <Badge key={tag} className={`text-xs shrink-0 w-fit ${getTagColor(tag)}`}>
-                  {getTagDisplayName(tag)}
-                </Badge>
-              ))}
-            </div>
+            </>
+          ) : (
+            <Badge variant="secondary" className="text-xs shrink-0 w-fit">
+              {event.category}
+            </Badge>
           )}
-
-          <div className="space-y-1">
-            <p className="text-xs text-muted-foreground">Description</p>
-            <p className="text-sm text-foreground/90 leading-relaxed">
-              {description}
-            </p>
+        </div>
+      }
+      description="Event details"
+      bodyClassName="px-4 py-3 space-y-4"
+    >
+      <div className="grid gap-3">
+        <div className="flex items-start gap-3">
+          <div className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+            <CalendarDays className="h-4 w-4 text-primary" />
+          </div>
+          <div>
+            <p className="text-xs text-muted-foreground">Date</p>
+            <p className="text-sm font-medium text-foreground">{dateLabel}</p>
           </div>
         </div>
-      </DrawerContent>
-    </Drawer>
+
+        <div className="flex items-start gap-3">
+          <div className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+            <Clock className="h-4 w-4 text-primary" />
+          </div>
+          <div>
+            <p className="text-xs text-muted-foreground">Time</p>
+            <p className="text-sm font-medium text-foreground">{timeLabel}</p>
+          </div>
+        </div>
+
+        <div className="flex items-start gap-3">
+          <div className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+            <MapPin className="h-4 w-4 text-primary" />
+          </div>
+          <div>
+            <p className="text-xs text-muted-foreground">Location</p>
+            <p className="text-sm font-medium text-foreground">{locationLabel}</p>
+          </div>
+        </div>
+      </div>
+
+      {!cca && event.tags.length > 0 && (
+        <div className="flex flex-wrap gap-2">
+          {event.tags.map((tag) => (
+            <Badge key={tag} className={`text-xs shrink-0 w-fit ${getTagColor(tag)}`}>
+              {getTagDisplayName(tag)}
+            </Badge>
+          ))}
+        </div>
+      )}
+
+      <div className="space-y-1">
+        <p className="text-xs text-muted-foreground">Description</p>
+        <p className="text-sm text-foreground/90 leading-relaxed">
+          {description}
+        </p>
+      </div>
+    </BottomSheet>
   );
 }

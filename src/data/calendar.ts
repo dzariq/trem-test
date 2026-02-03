@@ -1,7 +1,7 @@
 import { supabase } from "@/lib/supabase";
 import type { CalendarTag } from "@/types/calendarTags";
-import { getMyProfile } from "@/data/profile";
-import { listMyLinkedStudents } from "@/data/students";
+import { getMyProfile, type UserProfile } from "@/data/profile";
+import { listMyLinkedStudents, type LinkedStudent } from "@/data/students";
 
 export type UpcomingEvent = {
   id: string | number;
@@ -17,6 +17,12 @@ export type UpcomingEvent = {
   location: string;
   date: string;
   time: string;
+  visibility?: string;
+  visibleDepartments?: string[];
+  visibleUserIds?: string[];
+  studentId?: string | null;
+  campusId?: string | null;
+  schoolLevel?: string | null;
 };
 
 export type ListUpcomingEventsParams = {
@@ -46,12 +52,6 @@ const logSupabaseError = (label: string, error: any) => {
     details: error?.details,
     hint: error?.hint,
   });
-};
-
-const isMissingColumn = (error: { message?: string; code?: string } | null, column: string) => {
-  if (!error?.message) return false;
-  const message = error.message.toLowerCase();
-  return message.includes("does not exist") && message.includes(column.toLowerCase());
 };
 
 const formatTimeLabel = (startDateTime?: string | null, endDateTime?: string | null) => {
@@ -86,7 +86,6 @@ const mapCalendarRow = (row: any): UpcomingEvent => {
 
   return {
     id: row.id,
-    // Prefer title/name fields if available.
     title: row.title ?? "Event",
     description: row.description ?? "",
     start: startDateTime ? new Date(startDateTime) : null,
@@ -99,47 +98,102 @@ const mapCalendarRow = (row: any): UpcomingEvent => {
     location: row.location ?? "School",
     date: startDay,
     time: timeLabel,
+    // Additional fields for visibility filtering
+    visibility: row.visibility ?? "public",
+    visibleDepartments: row.visible_departments ?? [],
+    visibleUserIds: row.visible_user_ids ?? [],
+    studentId: row.student_id ?? null,
+    campusId: row.campus_id ?? null,
+    schoolLevel: row.school_level ?? null,
   };
 };
 
-const normalizeTargetRoles = (targetRoles: any): string[] => {
-  if (!targetRoles) return [];
-  if (Array.isArray(targetRoles)) {
-    return targetRoles.map((role) => String(role).toLowerCase());
+/**
+ * Client-side visibility filter that matches web admin portal logic.
+ *
+ * Visibility rules:
+ * - 'public' or 'staff': visible to all authenticated users (teachers, parents, students)
+ * - 'departments': only visible to users in the specified departments
+ * - 'users': only visible to specified user IDs
+ *
+ * For parents: also show events tied to their linked students
+ * For teachers: also show events tied to their assigned campus
+ */
+const isEventVisibleToUser = (
+  event: UpcomingEvent,
+  profile: UserProfile,
+  linkedStudentIds: string[]
+): boolean => {
+  const visibility = event.visibility || "public";
+  const role = profile.role?.toLowerCase() ?? "";
+
+  // Public and staff events are visible to all authenticated users
+  if (visibility === "public" || visibility === "staff") {
+    return true;
   }
-  if (typeof targetRoles === "string") {
-    return targetRoles
-      .split(",")
-      .map((role) => role.trim().toLowerCase())
-      .filter(Boolean);
+
+  // Department-based visibility (primarily for teachers)
+  if (visibility === "departments") {
+    // For now, show department events to teachers (web admin shows these to staff)
+    if (role === "teacher" || role === "admin") {
+      return true;
+    }
+    return false;
   }
-  return [];
+
+  // User-specific visibility
+  if (visibility === "users") {
+    const visibleUserIds = event.visibleUserIds || [];
+    if (visibleUserIds.includes(profile.user_id)) {
+      return true;
+    }
+    return false;
+  }
+
+  // For parents: check if event is tied to their linked students
+  if (role === "parent" && event.studentId) {
+    return linkedStudentIds.includes(event.studentId);
+  }
+
+  // For teachers: check campus matching
+  if (role === "teacher" && event.campusId && profile.assigned_campus_id) {
+    return event.campusId === profile.assigned_campus_id || event.campusId === null;
+  }
+
+  // Default: show the event (be permissive rather than hiding events)
+  return true;
 };
 
-const matchesTargetRole = (targetRoles: any, role?: string | null) => {
-  if (!role) return true;
-  const normalizedRole = role.toLowerCase();
-  const roles = normalizeTargetRoles(targetRoles);
-  if (roles.length === 0) return true;
-  return roles.includes(normalizedRole) || roles.includes("all");
+/**
+ * Filter events by visibility rules based on user role and profile
+ */
+const filterEventsByVisibility = (
+  events: UpcomingEvent[],
+  profile: UserProfile,
+  linkedStudentIds: string[]
+): UpcomingEvent[] => {
+  const role = profile.role?.toLowerCase() ?? "";
+
+  // Admin sees everything
+  if (role === "admin") {
+    return events;
+  }
+
+  return events.filter((event) => isEventVisibleToUser(event, profile, linkedStudentIds));
 };
 
-// Apply role targeting client-side to avoid query operator mismatches.
-const filterByTargetRole = (rows: any[], role?: string | null) =>
-  rows.filter((row) => matchesTargetRole(row.target_roles, role));
-
-const dedupeRows = (rows: any[]) => {
-  const map = new Map<string | number, any>();
-  rows.forEach((row) => {
-    if (!map.has(row.id)) {
-      map.set(row.id, row);
+const dedupeRows = (events: UpcomingEvent[]): UpcomingEvent[] => {
+  const map = new Map<string | number, UpcomingEvent>();
+  events.forEach((event) => {
+    if (!map.has(event.id)) {
+      map.set(event.id, event);
     }
   });
   return Array.from(map.values());
 };
 
-const sortByStartDate = (rows: any[]) =>
-  rows.sort((a, b) => String(a.start_date ?? "").localeCompare(String(b.start_date ?? "")));
+const sortByStartDate = (events: UpcomingEvent[]): UpcomingEvent[] =>
+  events.sort((a, b) => (a.startDay ?? "").localeCompare(b.startDay ?? ""));
 
 const startOfDay = (date: Date) => {
   const next = new Date(date);
@@ -196,79 +250,16 @@ export function getUpcomingEvents(
   return deduped.slice(0, limit);
 }
 
+/**
+ * Resolve calendar scope: get user profile and linked students for visibility filtering.
+ */
 const resolveCalendarScope = async (roleOverride?: string) => {
   const profile = await getMyProfile();
   const role = roleOverride ?? profile.role ?? null;
-  const campusId = profile.assigned_campus_id ?? profile.campus_id ?? null;
   const linkedStudents = await listMyLinkedStudents();
   const studentIds = linkedStudents.map((student) => student.id).filter(Boolean);
 
-  return { role, campusId, studentIds };
-};
-
-const buildCampusFilter = (campusId: string | null) => {
-  if (!campusId) return null;
-  return `campus_id.eq.${campusId},campus_id.is.null`;
-};
-
-const buildVisibilityStudentFilter = (options: { includeStudent: boolean }, studentIds: string[]) => {
-  if (options.includeStudent && studentIds.length > 0) {
-    return `visibility.eq.public,student_id.in.(${studentIds.join(",")})`;
-  }
-  return "visibility.eq.public";
-};
-
-const fetchScopedRows = async (
-  baseQuery: () => any,
-  campusId: string | null,
-  studentIds: string[],
-  label: string,
-  role?: string | null
-) => {
-  const buildQuery = (options: { includeCampus: boolean; includeStudent: boolean }) => {
-    let query = baseQuery();
-    const visibilityStudentFilter = buildVisibilityStudentFilter(options, studentIds);
-    query = query.or(visibilityStudentFilter);
-    if (options.includeCampus) {
-      const campusFilter = buildCampusFilter(campusId);
-      if (campusFilter) {
-        // Apply campus scope as a separate OR filter so null campuses remain visible.
-        query = query.or(campusFilter);
-      }
-    }
-    return query;
-  };
-
-  let options = {
-    includeCampus: Boolean(campusId),
-    includeStudent: studentIds.length > 0,
-  };
-
-  let { data, error } = await buildQuery(options);
-  if (error) {
-    logSupabaseError(`${label} role=${role ?? "unknown"} campus=${campusId ?? "none"} students=${studentIds.length}`, error);
-  }
-
-  if (error) {
-    const missingCampus = options.includeCampus && isMissingColumn(error, "campus_id");
-    const missingStudent = options.includeStudent && isMissingColumn(error, "student_id");
-    if (missingCampus || missingStudent) {
-      options = {
-        includeCampus: missingCampus ? false : options.includeCampus,
-        includeStudent: missingStudent ? false : options.includeStudent,
-      };
-      ({ data, error } = await buildQuery(options));
-      if (error) {
-        logSupabaseError(`${label} fallback role=${role ?? "unknown"} campus=${campusId ?? "none"} students=${studentIds.length}`, error);
-      }
-    }
-  }
-
-  if (error) {
-    throw new Error(error.message);
-  }
-
-  return data ?? [];
+  return { profile, role, studentIds, linkedStudents };
 };
 
 export async function listCalendarEvents(
@@ -276,55 +267,48 @@ export async function listCalendarEvents(
   month: number,
   params: ListCalendarEventsParams = {}
 ): Promise<UpcomingEvent[]> {
-  const { role, campusId, studentIds } = await resolveCalendarScope(params.role);
+  const { profile, role, studentIds } = await resolveCalendarScope(params.role);
   const monthStr = String(month).padStart(2, "0");
   const monthStart = `${year}-${monthStr}-01T00:00:00Z`;
   const nextMonthDate = new Date(Date.UTC(year, month - 1, 1));
   nextMonthDate.setUTCMonth(nextMonthDate.getUTCMonth() + 1);
   const nextMonthStart = nextMonthDate.toISOString().slice(0, 19) + "Z";
 
-  const baseQuery = () =>
-    supabase
-      .from("calendar_events")
-      .select("*")
-      .lt("start_date", nextMonthStart)
-      .gte("end_date", monthStart)
-      .order("start_date", { ascending: true });
+  // Fetch all events for the month range (same approach as web admin portal)
+  const { data: rows, error } = await supabase
+    .from("calendar_events")
+    .select("*")
+    .lt("start_date", nextMonthStart)
+    .gte("end_date", monthStart)
+    .order("start_date", { ascending: true });
 
-  const rows = await fetchScopedRows(baseQuery, campusId, studentIds, "listCalendarEvents", role);
+  if (error) {
+    logSupabaseError(`listCalendarEvents role=${role ?? "unknown"}`, error);
+    throw new Error(error.message);
+  }
+
+  const allEvents = (rows ?? []).map(mapCalendarRow);
+
   console.log("[calendar] fetched rows", {
-    count: rows.length,
-    sample: rows[0],
+    count: allEvents.length,
+    sample: allEvents[0],
     role,
-    campusId,
     studentIdsCount: studentIds.length,
     rangeStart: monthStart,
     rangeEnd: nextMonthStart,
   });
-  const targetRoleStats = rows.reduce(
-    (acc, row) => {
-      const roles = normalizeTargetRoles(row.target_roles);
-      if (roles.length === 0) {
-        acc.missingTargetRoles += 1;
-        return acc;
-      }
-      if (roles.includes("all")) {
-        acc.matchedAll += 1;
-      }
-      if (role && roles.includes(role.toLowerCase())) {
-        acc.matchedRole += 1;
-      }
-      return acc;
-    },
-    { missingTargetRoles: 0, matchedAll: 0, matchedRole: 0 }
-  );
-  const filteredRows = filterByTargetRole(rows, role);
-  console.log("[calendar] after client filter", {
-    count: filteredRows.length,
-    filteredOut: rows.length - filteredRows.length,
-    reasons: targetRoleStats,
+
+  // Apply client-side visibility filtering based on user role and profile
+  const filteredEvents = filterEventsByVisibility(allEvents, profile, studentIds);
+
+  console.log("[calendar] after visibility filter", {
+    total: allEvents.length,
+    visible: filteredEvents.length,
+    filteredOut: allEvents.length - filteredEvents.length,
+    role,
   });
-  return sortByStartDate(dedupeRows(filteredRows)).map(mapCalendarRow);
+
+  return sortByStartDate(dedupeRows(filteredEvents));
 }
 
 export async function listUpcomingEvents(
@@ -333,18 +317,25 @@ export async function listUpcomingEvents(
   const limit = params.limit ?? DEFAULT_LIMIT;
   const fromDate = startOfDay(new Date());
   const fromIso = fromDate.toISOString();
-  const { role, campusId, studentIds } = await resolveCalendarScope(params.role);
+  const { profile, role, studentIds } = await resolveCalendarScope(params.role);
 
-  const baseQuery = () =>
-    supabase
-      .from("calendar_events")
-      .select("*")
-      .gte("start_date", fromIso)
-      .order("start_date", { ascending: true });
+  // Fetch all upcoming events (same approach as web admin portal)
+  const { data: rows, error } = await supabase
+    .from("calendar_events")
+    .select("*")
+    .gte("start_date", fromIso)
+    .order("start_date", { ascending: true });
 
-  const rows = await fetchScopedRows(baseQuery, campusId, studentIds, "listUpcomingEvents", role);
-  const filteredRows = filterByTargetRole(rows, role);
+  if (error) {
+    logSupabaseError(`listUpcomingEvents role=${role ?? "unknown"}`, error);
+    throw new Error(error.message);
+  }
 
-  const mapped = sortByStartDate(dedupeRows(filteredRows)).map(mapCalendarRow);
+  const allEvents = (rows ?? []).map(mapCalendarRow);
+
+  // Apply client-side visibility filtering
+  const filteredEvents = filterEventsByVisibility(allEvents, profile, studentIds);
+  const mapped = sortByStartDate(dedupeRows(filteredEvents));
+
   return getUpcomingEvents({ events: mapped, fromDate, limit, role });
 }

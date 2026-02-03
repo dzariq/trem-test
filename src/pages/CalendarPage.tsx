@@ -7,8 +7,9 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { MapPin, Clock, CalendarDays, User, Loader2 } from "lucide-react";
+import { BottomSheet } from "@/components/ui/bottom-sheet";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuRadioGroup, DropdownMenuRadioItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { MapPin, Clock, CalendarDays, User, Loader2, ChevronDown } from "lucide-react";
 import schoolLogo from "@/assets/school-badge.png";
 import {
   Select,
@@ -17,13 +18,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { TagCategory, CalendarTag, PARENT_HIDDEN_TAGS } from "@/types/calendarTags";
+import { CATEGORY_DISPLAY_NAMES, TAG_CATEGORIES, TagCategory, CalendarTag } from "@/types/calendarTags";
 import {
   filterEventsByRole,
   getTagColor,
   getTagDisplayName,
 } from "@/lib/calendarUtils";
-import { getUpcomingEvents, listCalendarEvents, type UpcomingEvent } from "@/data/calendar";
+import { listCalendarEvents, type UpcomingEvent } from "@/data/calendar";
 import { useMyProfile } from "@/hooks/useMyProfile";
 import { useStudentSelection } from "@/hooks/useStudentSelection";
 import { useCcaActivities, type CcaActivity } from "@/hooks/useCcaActivities";
@@ -33,13 +34,8 @@ import { CcaTypeTabs, getCcaTypeColor } from "@/components/cca/CcaTypeTabs";
 import { supabase } from "@/lib/supabase";
 import { useCcaSessionsCalendar, type CcaCalendarSession } from "@/hooks/useCcaSessionsCalendar";
 import { EventDetailsSheet } from "@/components/events/EventDetailsSheet";
-import { EventTypeFilterSheet } from "@/components/calendar/EventTypeFilterSheet";
 import { UpcomingEventsSection } from "@/components/calendar/UpcomingEventsSection";
-import {
-  getDefaultFilters,
-  filterEventsByTypes,
-  type EventTypeFilter,
-} from "@/lib/calendarFilters";
+import { cn } from "@/lib/utils";
 
 export default function CalendarPage() {
   const { profile } = useMyProfile();
@@ -57,11 +53,9 @@ export default function CalendarPage() {
   const [events, setEvents] = useState<UpcomingEvent[]>([]);
   const [studentYearLevel, setStudentYearLevel] = useState<string | null>(null);
 
-  // Multi-select event type filter (replaces old single-select category dropdown)
   const roleForFilters = profile?.role === "student" ? "student" : "parent";
-  const [selectedEventTypes, setSelectedEventTypes] = useState<EventTypeFilter[]>(
-    () => getDefaultFilters(roleForFilters as "parent" | "teacher" | "student")
-  );
+  const [selectedCategory, setSelectedCategory] = useState<TagCategory | "all">("all");
+  const [selectedEventSubtype, setSelectedEventSubtype] = useState<CalendarTag | "all">("all");
 
   const {
     linkedStudents,
@@ -120,9 +114,74 @@ export default function CalendarPage() {
     month: currentMonth.getMonth() + 1,
   });
 
-  // Filter events: role-based first, then by selected event types
   const visibleEvents = filterEventsByRole(events, roleForFilters);
-  const filteredEvents = filterEventsByTypes(visibleEvents, selectedEventTypes);
+
+  const eventSubtypeOptions: { value: CalendarTag | "all"; label: string }[] = [
+    { value: "all", label: "All Events" },
+    { value: "special-event-major", label: "Special Event (Major)" },
+    { value: "internal-event", label: "Internal Event" },
+    { value: "external-event", label: "External Event" },
+    { value: "open-day", label: "Open Day" },
+    { value: "field-trip", label: "Field Trip" },
+  ];
+
+  const categoryOrder: TagCategory[] = useMemo(() => {
+    const base: TagCategory[] = ["school-level", "exams", "holidays", "events", "students", "parents"];
+    if (roleForFilters === "teacher") {
+      base.push("staff-admin", "due-dates");
+    }
+    return base;
+  }, [roleForFilters]);
+
+  const categoryPillStyles: Record<TagCategory, string> = {
+    "school-level": "bg-blue-100 text-blue-800 dark:bg-blue-900/50 dark:text-blue-300",
+    "exams": "bg-red-100 text-red-800 dark:bg-red-900/50 dark:text-red-300",
+    "holidays": "bg-green-100 text-green-800 dark:bg-green-900/50 dark:text-green-300",
+    "events": "bg-purple-100 text-purple-800 dark:bg-purple-900/50 dark:text-purple-300",
+    "students": "bg-teal-100 text-teal-800 dark:bg-teal-900/50 dark:text-teal-300",
+    "parents": "bg-pink-100 text-pink-800 dark:bg-pink-900/50 dark:text-pink-300",
+    "staff-admin": "bg-slate-100 text-slate-800 dark:bg-slate-900/50 dark:text-slate-300",
+    "due-dates": "bg-amber-100 text-amber-800 dark:bg-amber-900/50 dark:text-amber-300",
+  };
+
+  const availableCategories = categoryOrder;
+
+  const matchesCategory = (event: UpcomingEvent, category: TagCategory) => {
+    if (event.tags.some((tag) => TAG_CATEGORIES[tag] === category)) return true;
+    const categoryText = (event.category || "").toLowerCase();
+    if (category === "exams") return categoryText.includes("exam") || categoryText.includes("test") || categoryText.includes("assessment");
+    if (category === "holidays") return categoryText.includes("holiday");
+    if (category === "school-level") return categoryText.includes("academic") || categoryText.includes("school") || categoryText.includes("class");
+    if (category === "events") return categoryText.includes("event") || categoryText.includes("activity") || categoryText.includes("meeting");
+    if (category === "students") return categoryText.includes("student");
+    if (category === "parents") return categoryText.includes("parent") || categoryText.includes("family");
+    if (category === "staff-admin") return categoryText.includes("staff") || categoryText.includes("admin") || categoryText.includes("meeting");
+    if (category === "due-dates") return categoryText.includes("due") || categoryText.includes("deadline");
+    return false;
+  };
+
+  const matchesEventSubtype = (event: UpcomingEvent, subtype: CalendarTag) => {
+    if (event.tags.includes(subtype)) return true;
+    const categoryText = (event.category || "").toLowerCase();
+    if (subtype === "special-event-major") return categoryText.includes("special") || categoryText.includes("major");
+    if (subtype === "internal-event") return categoryText.includes("internal");
+    if (subtype === "external-event") return categoryText.includes("external");
+    if (subtype === "open-day") return categoryText.includes("open day");
+    if (subtype === "field-trip") return categoryText.includes("field trip");
+    return false;
+  };
+
+  // Filter by category pill first, then by the single-select Events dropdown.
+  const filteredEvents = useMemo(() => {
+    let filtered = visibleEvents;
+    if (selectedCategory !== "all") {
+      filtered = filtered.filter((event) => matchesCategory(event, selectedCategory));
+    }
+    if (selectedEventSubtype !== "all" && (selectedCategory === "all" || selectedCategory === "events")) {
+      filtered = filtered.filter((event) => matchesEventSubtype(event, selectedEventSubtype as CalendarTag));
+    }
+    return filtered;
+  }, [visibleEvents, selectedCategory, selectedEventSubtype]);
 
   const getCcaCategoryColor = getCcaTypeColor;
 
@@ -149,7 +208,8 @@ export default function CalendarPage() {
   );
 
   // CCA sessions on the calendar also show if "cca" filter is active
-  const showCcaSessions = selectedEventTypes.includes("cca");
+  // Show CCA sessions when viewing all or event-related filters.
+  const showCcaSessions = selectedCategory === "all" || selectedCategory === "events";
   const ccaSessionsForSelectedDate = showCcaSessions
     ? ccaSessions.filter((session) => session.sessionDate === selectedDay)
     : [];
@@ -282,20 +342,95 @@ export default function CalendarPage() {
         }
       />
 
-      <section className="px-4 pt-4">
+      <section className="px-4 pt-3">
         <Tabs defaultValue={initialTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-2 bg-muted/50">
-            <TabsTrigger value="calendar">Main Calendar</TabsTrigger>
-            <TabsTrigger value="cca">CCA Activities</TabsTrigger>
-          </TabsList>
+          <div className="sticky top-[64px] z-30 -mx-4 px-4 pb-2 bg-background/95 backdrop-blur">
+            <TabsList className="grid w-full grid-cols-2 rounded-full bg-muted/40 p-1">
+              <TabsTrigger
+                value="calendar"
+                className="rounded-full text-sm data-[state=active]:bg-background data-[state=active]:shadow-sm"
+              >
+                Main Calendar
+              </TabsTrigger>
+              <TabsTrigger
+                value="cca"
+                className="rounded-full text-sm data-[state=active]:bg-background data-[state=active]:shadow-sm"
+              >
+                CCA Activities
+              </TabsTrigger>
+            </TabsList>
+          </div>
 
-          <TabsContent value="calendar" className="mt-4 space-y-4">
-            {/* Event Type Filter — multi-select bottom sheet */}
-            <div className="flex flex-wrap gap-2 pb-2 items-center">
-              <EventTypeFilterSheet
-                selectedTypes={selectedEventTypes}
-                onApply={setSelectedEventTypes}
-              />
+          <TabsContent value="calendar" className="mt-3 space-y-4">
+            {/* Filter pills */}
+            <div className="flex flex-wrap gap-2 pb-2">
+              <button
+                type="button"
+                className={cn(
+                  "inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium border transition-colors",
+                  selectedCategory === "all"
+                    ? "bg-foreground text-background border-foreground"
+                    : "bg-muted/40 text-muted-foreground border-border"
+                )}
+                onClick={() => {
+                  setSelectedCategory("all");
+                  setSelectedEventSubtype("all");
+                }}
+              >
+                All
+              </button>
+
+              {availableCategories.map((category) =>
+                category === "events" ? (
+                  <DropdownMenu key={category}>
+                    <DropdownMenuTrigger asChild>
+                      <button
+                        type="button"
+                        className={cn(
+                          "inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium border transition-colors",
+                          categoryPillStyles[category],
+                          selectedCategory === category ? "ring-2 ring-primary/30" : "opacity-80"
+                        )}
+                        onClick={() => setSelectedCategory("events")}
+                      >
+                        Events
+                        <ChevronDown className="h-3.5 w-3.5" />
+                      </button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="start" sideOffset={6} className="min-w-[200px]">
+                      <DropdownMenuRadioGroup
+                        value={selectedEventSubtype}
+                        onValueChange={(value) => {
+                          setSelectedCategory("events");
+                          setSelectedEventSubtype(value as CalendarTag | "all");
+                        }}
+                      >
+                        {eventSubtypeOptions.map((option) => (
+                          <DropdownMenuRadioItem key={option.value} value={option.value}>
+                            {option.label}
+                          </DropdownMenuRadioItem>
+                        ))}
+                      </DropdownMenuRadioGroup>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                ) : (
+                  <button
+                    key={category}
+                    type="button"
+                    className={cn(
+                      "inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium border transition-colors",
+                      categoryPillStyles[category],
+                      selectedCategory === category ? "ring-2 ring-primary/30" : "opacity-80"
+                    )}
+                    onClick={() => {
+                      setSelectedCategory(category);
+                      setSelectedEventSubtype("all");
+                    }}
+                  >
+                    {CATEGORY_DISPLAY_NAMES[category]}
+                  </button>
+                )
+              )}
             </div>
 
             {/* Calendar Component */}
@@ -644,75 +779,79 @@ export default function CalendarPage() {
         </Tabs>
       </section>
 
-      {/* CCA Details Dialog */}
-      <Dialog open={!!selectedCCA} onOpenChange={(open) => !open && setSelectedCCA(null)}>
-        <DialogContent className="max-w-md max-h-[85vh] overflow-y-auto">
-          {selectedCCA && (
-            <>
-              <DialogHeader>
-                <div className="flex items-center gap-2">
-                  <DialogTitle className="text-xl">{selectedCCA.name}</DialogTitle>
-                  <Badge className={getCcaCategoryColor(selectedCCA.category)} variant="secondary">
-                    {selectedCCA.category}
-                  </Badge>
-                </div>
-              </DialogHeader>
+      {/* CCA Details Bottom Sheet */}
+      <BottomSheet
+        open={!!selectedCCA}
+        onOpenChange={(open) => !open && setSelectedCCA(null)}
+        snapPoints={[0, 0.75, 1]}
+        defaultSnapPoint={0.75}
+        title={
+          <div className="flex items-center gap-2">
+            <span className="text-lg font-semibold">{selectedCCA?.name}</span>
+            {selectedCCA && (
+              <Badge className={getCcaCategoryColor(selectedCCA.category)} variant="secondary">
+                {selectedCCA.category}
+              </Badge>
+            )}
+          </div>
+        }
+        description="CCA details"
+        bodyClassName="px-4 py-3 space-y-4"
+      >
+        {selectedCCA && (
+          <>
+            <p className="text-sm text-muted-foreground">
+              {selectedCCA.publicDescription || "Details to be announced"}
+            </p>
 
-              <div className="space-y-4 pt-2">
-                <p className="text-sm text-muted-foreground">
-                  {selectedCCA.publicDescription || "Details to be announced"}
-                </p>
+            <Card className="bg-emerald-50/80 dark:bg-emerald-950/30 border border-emerald-200/60 dark:border-emerald-800/40 rounded-xl">
+              <CardContent className="p-4 space-y-3">
+                {(selectedCCA.meetingDay || selectedCCA.meetingTime) && (
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
+                      <CalendarDays className="h-4 w-4 text-primary" />
+                    </div>
+                    <div>
+                      <p className="text-xs text-muted-foreground">Schedule</p>
+                      <p className="text-sm font-medium">
+                        {selectedCCA.meetingDay || "TBD"}
+                        {selectedCCA.meetingTime ? `, ${selectedCCA.meetingTime}` : ""}
+                      </p>
+                    </div>
+                  </div>
+                )}
 
-                <Card className="bg-emerald-50/80 dark:bg-emerald-950/30 border border-emerald-200/60 dark:border-emerald-800/40 rounded-xl">
-                  <CardContent className="p-4 space-y-3">
-                    {(selectedCCA.meetingDay || selectedCCA.meetingTime) && (
-                      <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
-                          <CalendarDays className="h-4 w-4 text-primary" />
-                        </div>
-                        <div>
-                          <p className="text-xs text-muted-foreground">Schedule</p>
-                          <p className="text-sm font-medium">
-                            {selectedCCA.meetingDay || "TBD"}
-                            {selectedCCA.meetingTime ? `, ${selectedCCA.meetingTime}` : ""}
-                          </p>
-                        </div>
-                      </div>
-                    )}
+                {selectedCCA.location && (
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
+                      <MapPin className="h-4 w-4 text-primary" />
+                    </div>
+                    <div>
+                      <p className="text-xs text-muted-foreground">Venue</p>
+                      <p className="text-sm font-medium">{selectedCCA.location}</p>
+                    </div>
+                  </div>
+                )}
 
-                    {selectedCCA.location && (
-                      <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
-                          <MapPin className="h-4 w-4 text-primary" />
-                        </div>
-                        <div>
-                          <p className="text-xs text-muted-foreground">Venue</p>
-                          <p className="text-sm font-medium">{selectedCCA.location}</p>
-                        </div>
-                      </div>
-                    )}
-
-                    {(selectedCCA.picTeachers.length > 0 || selectedCCA.coordinatorName) && (
-                      <div className="flex items-start gap-3">
-                        <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
-                          <User className="h-4 w-4 text-primary" />
-                        </div>
-                        <div className="flex-1">
-                          <p className="text-xs text-muted-foreground mb-2">PIC (Person in Charge)</p>
-                          <PICTeachersList
-                            teachers={selectedCCA.picTeachers}
-                            fallbackCoordinator={selectedCCA.coordinatorName}
-                          />
-                        </div>
-                      </div>
-                    )}
-                  </CardContent>
-                </Card>
-              </div>
-            </>
-          )}
-        </DialogContent>
-      </Dialog>
+                {(selectedCCA.picTeachers.length > 0 || selectedCCA.coordinatorName) && (
+                  <div className="flex items-start gap-3">
+                    <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+                      <User className="h-4 w-4 text-primary" />
+                    </div>
+                    <div className="flex-1">
+                      <p className="text-xs text-muted-foreground mb-2">PIC (Person in Charge)</p>
+                      <PICTeachersList
+                        teachers={selectedCCA.picTeachers}
+                        fallbackCoordinator={selectedCCA.coordinatorName}
+                      />
+                    </div>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </>
+        )}
+      </BottomSheet>
 
       <EventDetailsSheet
         open={eventDetailsOpen}
