@@ -6,9 +6,8 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { BottomSheet } from "@/components/ui/bottom-sheet";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuRadioGroup, DropdownMenuRadioItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { MapPin, Clock, User, CalendarDays, ClipboardList, FileText, Loader2, Settings, ChevronDown } from "lucide-react";
+import { MapPin, Clock, User, Loader2, ChevronDown } from "lucide-react";
 import schoolLogo from "@/assets/school-badge.png";
 
 import { format } from "date-fns";
@@ -21,16 +20,10 @@ import {
 import { listCalendarEvents, type UpcomingEvent } from "@/data/calendar";
 import { useCcaActivities, type CcaActivity } from "@/hooks/useCcaActivities";
 import { useCcaSessionsCalendar } from "@/hooks/useCcaSessionsCalendar";
-import { PICTeachersList } from "@/components/cca/PICTeacherPill";
 import { CcaTypeTabs, getCcaTypeColor } from "@/components/cca/CcaTypeTabs";
+import { CcaDetailsSheet } from "@/components/cca/CcaDetailsSheet";
 import { ManageSessionsSheet } from "@/components/cca/ManageSessionsSheet";
 import { useAuth } from "@/contexts/AuthContext";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
 import { EventDetailsSheet } from "@/components/events/EventDetailsSheet";
 import { UpcomingEventsSection } from "@/components/calendar/UpcomingEventsSection";
 import { cn } from "@/lib/utils";
@@ -567,139 +560,19 @@ export default function TeacherCalendarPage() {
         </Tabs>
       </section>
 
-      {/* CCA Details Bottom Sheet */}
-      <BottomSheet
+      {/* CCA Details - Responsive: BottomSheet on mobile, centered Dialog on desktop */}
+      <CcaDetailsSheet
         open={!!selectedCCA}
         onOpenChange={(open) => !open && setSelectedCCA(null)}
-        snapPoints={[0, 0.75, 1]}
-        defaultSnapPoint={0.75}
-        title={
-          <div className="flex items-center gap-2 flex-wrap">
-            <span className="text-lg font-semibold">{selectedCCA?.name}</span>
-            {selectedCCA && isCurrentTeacherPIC(selectedCCA) && (
-              <Badge variant="default" className="text-xs">
-                PIC
-              </Badge>
-            )}
-            {selectedCCA && (
-              <Badge className={getCcaCategoryColor(selectedCCA.category)} variant="secondary">
-                {selectedCCA.category}
-              </Badge>
-            )}
-          </div>
-        }
-        description="CCA details"
-        bodyClassName="px-4 py-3 space-y-4"
-      >
-        {selectedCCA && (
-          <>
-            <p className="text-sm text-muted-foreground">
-              {selectedCCA.publicDescription || "Details to be announced"}
-            </p>
-
-            <Card className="bg-emerald-50/80 dark:bg-emerald-950/30 border border-emerald-200/60 dark:border-emerald-800/40 rounded-xl">
-              <CardContent className="p-4 space-y-3">
-                {(selectedCCA.meetingDay || selectedCCA.meetingTime) && (
-                  <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
-                      <CalendarDays className="h-4 w-4 text-primary" />
-                    </div>
-                    <div>
-                      <p className="text-xs text-muted-foreground">Schedule</p>
-                      <p className="text-sm font-medium">
-                        {selectedCCA.meetingDay || "TBD"}
-                        {selectedCCA.meetingTime ? `, ${selectedCCA.meetingTime}` : ""}
-                      </p>
-                    </div>
-                  </div>
-                )}
-
-                {selectedCCA.location && (
-                  <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
-                      <MapPin className="h-4 w-4 text-primary" />
-                    </div>
-                    <div>
-                      <p className="text-xs text-muted-foreground">Venue</p>
-                      <p className="text-sm font-medium">{selectedCCA.location}</p>
-                    </div>
-                  </div>
-                )}
-
-                <div className="flex items-start gap-3">
-                  <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
-                    <User className="h-4 w-4 text-primary" />
-                  </div>
-                  <div className="flex-1">
-                    <p className="text-xs text-muted-foreground mb-2">PIC (Person in Charge)</p>
-                    <PICTeachersList
-                      teachers={selectedCCA.picTeachers}
-                      fallbackCoordinator={selectedCCA.coordinatorName}
-                    />
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            {selectedCCA.sessions.length > 0 && selectedCCA.sessions[0].requirements && (
-              <div className="space-y-2">
-                <div className="flex items-center gap-2">
-                  <ClipboardList className="h-4 w-4 text-muted-foreground" />
-                  <span className="text-sm font-medium">Requirements</span>
-                </div>
-                <p className="text-sm text-muted-foreground pl-6">
-                  {selectedCCA.sessions[0].requirements}
-                </p>
-              </div>
-            )}
-
-            {selectedCCA.internalNotes && (
-              <div className="space-y-2 p-3 rounded-lg bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800">
-                <div className="flex items-center gap-2">
-                  <FileText className="h-4 w-4 text-amber-600 dark:text-amber-400" />
-                  <span className="text-sm font-medium text-amber-800 dark:text-amber-300">Operational Notes (Internal)</span>
-                </div>
-                <p className="text-sm text-amber-700 dark:text-amber-400 pl-6">{selectedCCA.internalNotes}</p>
-              </div>
-            )}
-
-            <div className="pt-4 border-t">
-              {isCurrentTeacherPIC(selectedCCA) ? (
-                <Button
-                  onClick={() => {
-                    setManageSessionsActivity(selectedCCA);
-                    setSelectedCCA(null);
-                  }}
-                  className="w-full"
-                >
-                  <Settings className="h-4 w-4 mr-2" />
-                  Manage Sessions
-                </Button>
-              ) : (
-                <TooltipProvider>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <div className="w-full">
-                        <Button
-                          variant="outline"
-                          className="w-full opacity-50 cursor-not-allowed"
-                          disabled
-                        >
-                          <Settings className="h-4 w-4 mr-2" />
-                          Manage Sessions
-                        </Button>
-                      </div>
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      <p>Only PIC teachers can schedule/edit sessions.</p>
-                    </TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
-              )}
-            </div>
-          </>
-        )}
-      </BottomSheet>
+        activity={selectedCCA}
+        isPIC={selectedCCA ? isCurrentTeacherPIC(selectedCCA) : false}
+        onManageSessions={() => {
+          if (selectedCCA) {
+            setManageSessionsActivity(selectedCCA);
+            setSelectedCCA(null);
+          }
+        }}
+      />
 
       {/* Manage Sessions Bottom Sheet (PIC only) — replaces old Dialog */}
       {manageSessionsActivity && (

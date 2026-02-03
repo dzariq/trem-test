@@ -2,6 +2,7 @@ import * as React from "react";
 import { Drawer as DrawerPrimitive } from "vaul";
 
 import { cn } from "@/lib/utils";
+import { useIsSmallScreen } from "@/hooks/use-mobile";
 
 interface BottomSheetProps {
   open: boolean;
@@ -16,6 +17,11 @@ interface BottomSheetProps {
   bodyClassName?: string;
   showHandle?: boolean;
   modal?: boolean;
+  /**
+   * When true, centers the sheet as a dialog on desktop (sm+) screens.
+   * Bottom sheet behavior preserved on mobile.
+   */
+  centeredOnDesktop?: boolean;
 }
 
 export function BottomSheet({
@@ -31,8 +37,11 @@ export function BottomSheet({
   bodyClassName,
   showHandle = true,
   modal = true,
+  centeredOnDesktop = true,
 }: BottomSheetProps) {
-  const [activeSnapPoint, setActiveSnapPoint] = React.useState<number | string | null>(defaultSnapPoint);
+  const isSmallScreen = useIsSmallScreen();
+  const useSnapPoints = !centeredOnDesktop || isSmallScreen;
+  const [activeSnapPoint, setActiveSnapPoint] = React.useState<number | string | null>(null);
   const contentRef = React.useRef<HTMLDivElement | null>(null);
   const ignoreCloseRef = React.useRef(false);
 
@@ -48,8 +57,13 @@ export function BottomSheet({
 
   // Snap logic: reset to default when opening for a consistent entry height.
   React.useEffect(() => {
+    if (!useSnapPoints) {
+      setActiveSnapPoint(null);
+      return undefined;
+    }
     if (open) {
-      // Avoid closing immediately if the drawer last snapped to 0 when it was closed.
+      // Force a snap point update on open so Vaul applies the transform
+      // after the content mounts (prevents the "first open is invisible" bug).
       ignoreCloseRef.current = true;
       setActiveSnapPoint(defaultSnapPoint);
       const id = requestAnimationFrame(() => {
@@ -57,74 +71,93 @@ export function BottomSheet({
       });
       return () => cancelAnimationFrame(id);
     }
+    // Reset when closed so the next open always triggers a snap update.
+    setActiveSnapPoint(null);
     return undefined;
-  }, [open, defaultSnapPoint]);
+  }, [open, defaultSnapPoint, useSnapPoints]);
 
   // Gesture logic: when user drags to the 0 snap point, close the sheet.
   React.useEffect(() => {
+    if (!useSnapPoints) return;
     if (open && !ignoreCloseRef.current && activeSnapPoint === 0) {
       onOpenChange(false);
     }
-  }, [open, activeSnapPoint, onOpenChange]);
+  }, [open, activeSnapPoint, onOpenChange, useSnapPoints]);
+
+  const snapPointsProp = useSnapPoints ? sortedSnapPoints : undefined;
+  const activeSnapPointProp = useSnapPoints ? activeSnapPoint : undefined;
+  const setActiveSnapPointProp = useSnapPoints ? setActiveSnapPoint : undefined;
+  const isFullSnap = useSnapPoints && activeSnapPoint === 1;
+  const shouldCenter = centeredOnDesktop && !useSnapPoints;
 
   return (
     <DrawerPrimitive.Root
       open={open}
       onOpenChange={onOpenChange}
-      snapPoints={sortedSnapPoints}
-      activeSnapPoint={activeSnapPoint}
-      setActiveSnapPoint={setActiveSnapPoint}
+      snapPoints={snapPointsProp}
+      activeSnapPoint={activeSnapPointProp}
+      setActiveSnapPoint={setActiveSnapPointProp}
       scrollLockTimeout={0}
       modal={modal}
     >
       <DrawerPrimitive.Portal>
         <DrawerPrimitive.Overlay className="fixed inset-0 z-[100] bg-black/80" />
-        <DrawerPrimitive.Content
-          ref={contentRef}
-          tabIndex={-1}
-          onOpenAutoFocus={(event) => {
-            // Ensure focus moves into the sheet even when there are no focusable elements.
-            event.preventDefault();
-            contentRef.current?.focus();
-          }}
+        <div
           className={cn(
-            "fixed inset-x-0 bottom-0 z-[100] flex flex-col border bg-background outline-none",
-            "rounded-t-2xl shadow-xl pb-[env(safe-area-inset-bottom)]",
-            "h-[100dvh] max-h-[calc(100dvh-env(safe-area-inset-top))]",
-            "sm:inset-x-1/2 sm:-translate-x-1/2 sm:bottom-6 sm:max-w-xl sm:rounded-2xl",
-            activeSnapPoint === 1 && "rounded-none pt-[env(safe-area-inset-top)]",
-            className,
+            "fixed inset-0 z-[100] flex",
+            shouldCenter ? "items-center justify-center" : "items-end"
           )}
         >
-          {showHandle && (
-            <DrawerPrimitive.Handle className="mx-auto mt-3 h-1.5 w-12 rounded-full bg-muted-foreground/30" />
-          )}
-
-          {(title || description) && (
-            <div className={cn("flex-shrink-0 px-4 pb-3 pt-3 border-b border-border", headerClassName)}>
-              {title && (
-                <DrawerPrimitive.Title className="text-lg font-semibold flex items-center gap-2">
-                  {title}
-                </DrawerPrimitive.Title>
-              )}
-              {description && (
-                <DrawerPrimitive.Description className="text-sm text-muted-foreground">
-                  {description}
-                </DrawerPrimitive.Description>
-              )}
-            </div>
-          )}
-
-          <div
+          <DrawerPrimitive.Content
+            ref={contentRef}
+            tabIndex={-1}
+            onOpenAutoFocus={(event) => {
+              // Ensure focus moves into the sheet even when there are no focusable elements.
+              event.preventDefault();
+              contentRef.current?.focus();
+            }}
             className={cn(
-              "flex-1 overflow-y-auto overscroll-contain",
-              "pb-[calc(1rem+env(safe-area-inset-bottom))]",
-              bodyClassName,
+              "pointer-events-auto flex flex-col border bg-background outline-none shadow-xl",
+              "pb-[env(safe-area-inset-bottom)]",
+              useSnapPoints
+                ? "fixed inset-x-0 bottom-0 z-[100] rounded-t-2xl h-[100dvh] max-h-[calc(100dvh-env(safe-area-inset-top))]"
+                : "relative z-[100] rounded-2xl w-[min(90vw,640px)] max-h-[85vh] sm:after:hidden",
+              !useSnapPoints && centeredOnDesktop === false &&
+                "sm:inset-x-1/2 sm:-translate-x-1/2 sm:bottom-6 sm:max-w-xl sm:rounded-2xl",
+              isFullSnap && "rounded-none pt-[env(safe-area-inset-top)] sm:rounded-2xl sm:pt-0",
+              className,
             )}
           >
-            {children}
-          </div>
-        </DrawerPrimitive.Content>
+            {showHandle && (
+              <DrawerPrimitive.Handle className="mx-auto mt-3 h-1.5 w-12 rounded-full bg-muted-foreground/30" />
+            )}
+
+            {(title || description) && (
+              <div className={cn("flex-shrink-0 px-4 pb-3 pt-3 border-b border-border", headerClassName)}>
+                {title && (
+                  <DrawerPrimitive.Title className="text-lg font-semibold flex items-center gap-2">
+                    {title}
+                  </DrawerPrimitive.Title>
+                )}
+                {description && (
+                  <DrawerPrimitive.Description className="text-sm text-muted-foreground">
+                    {description}
+                  </DrawerPrimitive.Description>
+                )}
+              </div>
+            )}
+
+            <div
+              className={cn(
+                "flex-1 overflow-y-auto overscroll-contain",
+                "pb-[calc(1rem+env(safe-area-inset-bottom))]",
+                bodyClassName,
+              )}
+            >
+              {children}
+            </div>
+          </DrawerPrimitive.Content>
+        </div>
       </DrawerPrimitive.Portal>
     </DrawerPrimitive.Root>
   );
