@@ -65,6 +65,7 @@ export function useCcaClubEnrollment({ studentId, onSuccess }: UseCcaClubEnrollm
 
   /**
    * Get the student's current enrolled club (if any)
+   * Valid statuses: 'active', 'inactive', 'pending'
    */
   const getCurrentEnrolledClub = useCallback(async (): Promise<{ id: string; name: string } | null> => {
     if (!studentId) return null;
@@ -78,7 +79,7 @@ export function useCcaClubEnrollment({ studentId, onSuccess }: UseCcaClubEnrollm
         cca_activities(id, name)
       `)
       .eq("student_id", studentId)
-      .in("status", ["enrolled", "active"])
+      .eq("status", "active")
       .limit(1)
       .maybeSingle();
 
@@ -113,7 +114,18 @@ export function useCcaClubEnrollment({ studentId, onSuccess }: UseCcaClubEnrollm
           return { success: false, error: eligibility.error };
         }
 
-        // Check for existing enrollment
+        // First, deactivate any existing active enrollments (enforce 1 active club rule)
+        const { error: deactivateError } = await supabase
+          .from("student_cca_enrollments")
+          .update({ status: "inactive" })
+          .eq("student_id", studentId)
+          .eq("status", "active");
+
+        if (deactivateError) {
+          console.error("[useCcaClubEnrollment] deactivate error:", deactivateError);
+        }
+
+        // Check for existing enrollment record for this specific club
         const { data: existing } = await supabase
           .from("student_cca_enrollments")
           .select("id, status")
@@ -122,7 +134,7 @@ export function useCcaClubEnrollment({ studentId, onSuccess }: UseCcaClubEnrollm
           .maybeSingle();
 
         if (existing) {
-          if (existing.status === "enrolled" || existing.status === "active") {
+          if (existing.status === "active") {
             toast({
               title: "Already Enrolled",
               description: "You are already enrolled in this club",
@@ -130,10 +142,10 @@ export function useCcaClubEnrollment({ studentId, onSuccess }: UseCcaClubEnrollm
             return { success: false, error: "Already enrolled" };
           }
 
-          // Re-enroll by updating status
+          // Re-activate by updating status to 'active'
           const { error: updateError } = await supabase
             .from("student_cca_enrollments")
-            .update({ status: "enrolled" })
+            .update({ status: "active" })
             .eq("id", existing.id);
 
           if (updateError) {
@@ -146,11 +158,11 @@ export function useCcaClubEnrollment({ studentId, onSuccess }: UseCcaClubEnrollm
             return { success: false, error: updateError.message };
           }
         } else {
-          // Create new enrollment
+          // Create new enrollment with status 'active'
           const { error: insertError } = await supabase.from("student_cca_enrollments").insert({
             student_id: studentId,
             cca_activity_id: activityId,
-            status: "enrolled",
+            status: "active",
           });
 
           if (insertError) {
@@ -224,38 +236,36 @@ export function useCcaClubEnrollment({ studentId, onSuccess }: UseCcaClubEnrollm
           return { success: false, error: "Already in this club" };
         }
 
-        // Withdraw from current club(s) - set all active enrollments to withdrawn
-        if (currentClub) {
-          const { error: withdrawError } = await supabase
-            .from("student_cca_enrollments")
-            .update({ status: "withdrawn" })
-            .eq("student_id", studentId)
-            .in("status", ["enrolled", "active"]);
+        // Deactivate all currently active enrollments (enforce 1 active club rule)
+        const { error: deactivateError } = await supabase
+          .from("student_cca_enrollments")
+          .update({ status: "inactive" })
+          .eq("student_id", studentId)
+          .eq("status", "active");
 
-          if (withdrawError) {
-            console.error("[useCcaClubEnrollment] withdraw error:", withdrawError);
-            toast({
-              title: "Switch Failed",
-              description: "Unable to leave current club",
-              variant: "destructive",
-            });
-            return { success: false, error: withdrawError.message };
-          }
+        if (deactivateError) {
+          console.error("[useCcaClubEnrollment] deactivate error:", deactivateError);
+          toast({
+            title: "Switch Failed",
+            description: "Unable to leave current club",
+            variant: "destructive",
+          });
+          return { success: false, error: deactivateError.message };
         }
 
         // Check for existing enrollment record for new club
         const { data: existing } = await supabase
           .from("student_cca_enrollments")
-          .select("id")
+          .select("id, status")
           .eq("student_id", studentId)
           .eq("cca_activity_id", newActivityId)
           .maybeSingle();
 
         if (existing) {
-          // Update existing record
+          // Update existing record to 'active'
           const { error: updateError } = await supabase
             .from("student_cca_enrollments")
-            .update({ status: "enrolled" })
+            .update({ status: "active" })
             .eq("id", existing.id);
 
           if (updateError) {
@@ -268,11 +278,11 @@ export function useCcaClubEnrollment({ studentId, onSuccess }: UseCcaClubEnrollm
             return { success: false, error: updateError.message };
           }
         } else {
-          // Create new enrollment
+          // Create new enrollment with status 'active'
           const { error: insertError } = await supabase.from("student_cca_enrollments").insert({
             student_id: studentId,
             cca_activity_id: newActivityId,
-            status: "enrolled",
+            status: "active",
           });
 
           if (insertError) {
@@ -310,7 +320,7 @@ export function useCcaClubEnrollment({ studentId, onSuccess }: UseCcaClubEnrollm
   );
 
   /**
-   * Withdraw from a club
+   * Withdraw from a club (set to inactive)
    */
   const withdrawFromClub = useCallback(
     async (activityId: string): Promise<boolean> => {
@@ -323,10 +333,10 @@ export function useCcaClubEnrollment({ studentId, onSuccess }: UseCcaClubEnrollm
       try {
         const { error } = await supabase
           .from("student_cca_enrollments")
-          .update({ status: "withdrawn" })
+          .update({ status: "inactive" })
           .eq("student_id", studentId)
           .eq("cca_activity_id", activityId)
-          .in("status", ["enrolled", "active"]);
+          .eq("status", "active");
 
         if (error) {
           console.error("[useCcaClubEnrollment] withdraw error:", error);
