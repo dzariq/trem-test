@@ -2718,6 +2718,12 @@ export type Database = {
           subject_id: number
         }[]
       }
+      get_eligible_cca_activities: {
+        Args: { p_student_id: string }
+        Returns: {
+          activity_id: string
+        }[]
+      }
       get_or_create_admission_entry: {
         Args: { target_campus_id?: string; target_month_start: string }
         Returns: string
