@@ -8,12 +8,18 @@ export interface SessionStudent {
   class: string;
   yearLevel: string;
   isEnrolled: boolean;
+  isEligible: boolean;
 }
 
 interface SessionEnrollmentInfo {
   enrolledCount: number;
   maxParticipants: number;
   isFull: boolean;
+}
+
+interface EligibilityInfo {
+  eligibleYears: string[];
+  activityName: string;
 }
 
 interface UseSessionEnrollmentOptions {
@@ -24,6 +30,7 @@ interface UseSessionEnrollmentOptions {
 /**
  * Hook for managing student enrollment in CCA sessions.
  * Teachers can enroll/unenroll students they are assigned to.
+ * Enforces year-level eligibility based on cca_club_year_eligibility table.
  */
 export function useSessionEnrollment({ sessionId, activityId }: UseSessionEnrollmentOptions) {
   const [students, setStudents] = useState<SessionStudent[]>([]);
@@ -32,15 +39,20 @@ export function useSessionEnrollment({ sessionId, activityId }: UseSessionEnroll
     maxParticipants: 25,
     isFull: false,
   });
+  const [eligibilityInfo, setEligibilityInfo] = useState<EligibilityInfo>({
+    eligibleYears: [],
+    activityName: "",
+  });
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   /**
    * Fetch students that the teacher is assigned to along with their enrollment status
+   * and check eligibility based on club's year requirements
    */
   const fetchStudents = useCallback(async () => {
-    if (!sessionId) return;
+    if (!sessionId || !activityId) return;
 
     setLoading(true);
     setError(null);
@@ -52,15 +64,35 @@ export function useSessionEnrollment({ sessionId, activityId }: UseSessionEnroll
 
       const teacherUserId = userData.user.id;
 
-      // Get teacher's assigned class_year_ids
-      const { data: assignments, error: assignmentError } = await supabase
-        .from("teacher_assignments")
-        .select("class_year_id")
-        .eq("teacher_id", teacherUserId);
+      // Fetch in parallel: teacher assignments, activity info, eligible years
+      const [assignmentsResult, activityResult, eligibilityResult] = await Promise.all([
+        supabase
+          .from("teacher_assignments")
+          .select("class_year_id")
+          .eq("teacher_id", teacherUserId),
+        supabase
+          .from("cca_activities")
+          .select("id, name")
+          .eq("id", activityId)
+          .single(),
+        supabase
+          .from("cca_club_year_eligibility")
+          .select("year_code")
+          .eq("club_id", activityId),
+      ]);
 
-      if (assignmentError) throw assignmentError;
+      if (assignmentsResult.error) throw assignmentsResult.error;
 
-      const classYearIds = (assignments || []).map((a) => a.class_year_id);
+      // Store activity name and eligible years
+      const activityName = activityResult.data?.name || "";
+      const eligibleYears = (eligibilityResult.data || []).map((e) => e.year_code).sort();
+      
+      setEligibilityInfo({
+        eligibleYears,
+        activityName,
+      });
+
+      const classYearIds = (assignmentsResult.data || []).map((a) => a.class_year_id);
 
       if (classYearIds.length === 0) {
         setStudents([]);
@@ -84,39 +116,31 @@ export function useSessionEnrollment({ sessionId, activityId }: UseSessionEnroll
         return;
       }
 
-      // Get students in these classes
-      const { data: studentsData, error: studentsError } = await supabase
-        .from("students")
-        .select("id, name, class, year_level")
-        .in("class", classNames)
-        .eq("archived", false)
-        .order("name");
+      // Get students and enrollments in parallel
+      const [studentsResult, enrollmentsResult, sessionResult] = await Promise.all([
+        supabase
+          .from("students")
+          .select("id, name, class, year_level")
+          .in("class", classNames)
+          .eq("archived", false)
+          .order("name"),
+        supabase
+          .from("cca_session_enrollments")
+          .select("student_id")
+          .eq("session_id", sessionId)
+          .eq("status", "enrolled"),
+        supabase
+          .from("cca_sessions")
+          .select("max_participants")
+          .eq("id", sessionId)
+          .single(),
+      ]);
 
-      if (studentsError) throw studentsError;
+      if (studentsResult.error) throw studentsResult.error;
+      if (enrollmentsResult.error) throw enrollmentsResult.error;
 
-      // Get existing enrollments for this session
-      const { data: enrollments, error: enrollError } = await supabase
-        .from("cca_session_enrollments")
-        .select("student_id")
-        .eq("session_id", sessionId)
-        .eq("status", "enrolled");
-
-      if (enrollError) throw enrollError;
-
-      const enrolledStudentIds = new Set((enrollments || []).map((e) => e.student_id));
-
-      // Get session capacity info
-      const { data: sessionData, error: sessionError } = await supabase
-        .from("cca_sessions")
-        .select("max_participants")
-        .eq("id", sessionId)
-        .single();
-
-      if (sessionError && sessionError.code !== "PGRST116") {
-        console.warn("Session fetch error:", sessionError);
-      }
-
-      const maxParticipants = sessionData?.max_participants || 25;
+      const enrolledStudentIds = new Set((enrollmentsResult.data || []).map((e) => e.student_id));
+      const maxParticipants = sessionResult.data?.max_participants || 25;
       const enrolledCount = enrolledStudentIds.size;
 
       setEnrollmentInfo({
@@ -125,13 +149,24 @@ export function useSessionEnrollment({ sessionId, activityId }: UseSessionEnroll
         isFull: enrolledCount >= maxParticipants,
       });
 
-      // Map students with enrollment status
-      const mapped: SessionStudent[] = (studentsData || []).map((s: any) => ({
+      // Helper to check if student year is eligible
+      const isYearEligible = (studentYear: string | null): boolean => {
+        // If no eligibility restrictions, everyone is eligible
+        if (eligibleYears.length === 0) return true;
+        if (!studentYear) return false;
+        // Normalize year format (e.g., "y2" -> "Y2")
+        const normalizedYear = studentYear.toUpperCase().trim();
+        return eligibleYears.includes(normalizedYear);
+      };
+
+      // Map students with enrollment status and eligibility
+      const mapped: SessionStudent[] = (studentsResult.data || []).map((s: any) => ({
         id: s.id,
         name: s.name || "Unknown",
         class: s.class || "",
         yearLevel: s.year_level || "",
         isEnrolled: enrolledStudentIds.has(s.id),
+        isEligible: isYearEligible(s.year_level),
       }));
 
       setStudents(mapped);
@@ -142,21 +177,65 @@ export function useSessionEnrollment({ sessionId, activityId }: UseSessionEnroll
     } finally {
       setLoading(false);
     }
-  }, [sessionId]);
+  }, [sessionId, activityId]);
 
   /**
-   * Enroll a student in the session
+   * Check if a student is eligible for this activity
+   */
+  const checkStudentEligibility = useCallback(
+    (studentYearLevel: string | null): { eligible: boolean; message: string | null } => {
+      const { eligibleYears, activityName } = eligibilityInfo;
+      
+      // If no eligibility restrictions, everyone is eligible
+      if (eligibleYears.length === 0) {
+        return { eligible: true, message: null };
+      }
+      
+      if (!studentYearLevel) {
+        return { 
+          eligible: false, 
+          message: `Cannot enroll: ${activityName || "This club"} requires a valid year level.`
+        };
+      }
+      
+      const normalizedYear = studentYearLevel.toUpperCase().trim();
+      if (!eligibleYears.includes(normalizedYear)) {
+        const yearsDisplay = eligibleYears.join(", ");
+        return {
+          eligible: false,
+          message: `Cannot enroll: ${activityName || "This club"} is only available for ${yearsDisplay}.`
+        };
+      }
+      
+      return { eligible: true, message: null };
+    },
+    [eligibilityInfo]
+  );
+
+  /**
+   * Enroll a student in the session (with eligibility and capacity checks)
    */
   const enrollStudent = useCallback(
-    async (studentId: string): Promise<boolean> => {
+    async (studentId: string, studentYearLevel: string): Promise<boolean> => {
       if (!sessionId) {
         toast({ title: "Error", description: "No session selected", variant: "destructive" });
         return false;
       }
 
+      // Check eligibility first (UI guard)
+      const eligibility = checkStudentEligibility(studentYearLevel);
+      if (!eligibility.eligible) {
+        toast({
+          title: "Not Eligible",
+          description: eligibility.message || "Student is not eligible for this activity",
+          variant: "destructive",
+        });
+        return false;
+      }
+
       setSaving(true);
       try {
-        // Check if session is full first
+        // Check if session is full
         const { data: isFull } = await supabase.rpc("is_cca_session_full", { p_session_id: sessionId });
 
         if (isFull) {
@@ -176,7 +255,14 @@ export function useSessionEnrollment({ sessionId, activityId }: UseSessionEnroll
         });
 
         if (insertError) {
-          if (insertError.message.includes("duplicate")) {
+          // Handle backend eligibility enforcement errors
+          if (insertError.message.includes("not eligible") || insertError.message.includes("only available for")) {
+            toast({
+              title: "Not Eligible",
+              description: insertError.message,
+              variant: "destructive",
+            });
+          } else if (insertError.message.includes("duplicate")) {
             toast({
               title: "Already Enrolled",
               description: "This student is already enrolled in this session",
@@ -205,7 +291,7 @@ export function useSessionEnrollment({ sessionId, activityId }: UseSessionEnroll
         setSaving(false);
       }
     },
-    [sessionId, fetchStudents]
+    [sessionId, fetchStudents, checkStudentEligibility]
   );
 
   /**
@@ -285,6 +371,7 @@ export function useSessionEnrollment({ sessionId, activityId }: UseSessionEnroll
   return {
     students,
     enrollmentInfo,
+    eligibilityInfo,
     loading,
     saving,
     error,
@@ -293,5 +380,6 @@ export function useSessionEnrollment({ sessionId, activityId }: UseSessionEnroll
     unenrollStudent,
     filterStudents,
     availableClasses,
+    checkStudentEligibility,
   };
 }
