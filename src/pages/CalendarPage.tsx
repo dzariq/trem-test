@@ -115,7 +115,7 @@ export default function CalendarPage() {
     studentId: selectedStudentId,
   });
 
-  // Club enrollment hook
+  // Club enrollment hook - pass role to block parent mutations
   const {
     switchClub,
     joinClub,
@@ -123,6 +123,7 @@ export default function CalendarPage() {
     getCurrentEnrolledClub,
   } = useCcaClubEnrollment({
     studentId: selectedStudentId,
+    userRole: profile?.role,
     onSuccess: () => {
       refetchEnrollments();
       refetchActivities();
@@ -892,7 +893,8 @@ export default function CalendarPage() {
                         >
                           View Details
                         </Button>
-                        {!alreadyEnrolled && (
+                        {/* Only show Switch/Join button for non-parent roles */}
+                        {roleForFilters !== "parent" && !alreadyEnrolled && (
                           <Button
                             size="sm"
                             className="flex-1"

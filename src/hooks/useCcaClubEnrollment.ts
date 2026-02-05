@@ -11,15 +11,20 @@ export interface ClubEnrollmentResult {
 interface UseCcaClubEnrollmentOptions {
   studentId: string | null;
   onSuccess?: () => void;
+  /** User role - parents are blocked from mutations */
+  userRole?: string | null;
 }
 
 /**
  * Hook for self-service CCA club enrollment (join/switch).
  * Uses validate_cca_enrollment_eligibility RPC for server-side validation.
+ * Parents are blocked from using mutation functions.
  */
-export function useCcaClubEnrollment({ studentId, onSuccess }: UseCcaClubEnrollmentOptions) {
+export function useCcaClubEnrollment({ studentId, onSuccess, userRole }: UseCcaClubEnrollmentOptions) {
   const [enrolling, setEnrolling] = useState(false);
   const [checkingEligibility, setCheckingEligibility] = useState(false);
+
+  const isParent = userRole === "parent";
 
   /**
    * Check if student is eligible for a specific activity
@@ -96,6 +101,12 @@ export function useCcaClubEnrollment({ studentId, onSuccess }: UseCcaClubEnrollm
    */
   const joinClub = useCallback(
     async (activityId: string, activityName: string): Promise<ClubEnrollmentResult> => {
+      // Block parents from modifying enrollments
+      if (isParent) {
+        toast({ title: "Not Allowed", description: "Parents cannot modify CCA enrollments", variant: "destructive" });
+        return { success: false, error: "Parents cannot modify enrollments" };
+      }
+
       if (!studentId) {
         toast({ title: "Error", description: "No student selected", variant: "destructive" });
         return { success: false, error: "No student selected" };
@@ -194,7 +205,7 @@ export function useCcaClubEnrollment({ studentId, onSuccess }: UseCcaClubEnrollm
         setEnrolling(false);
       }
     },
-    [studentId, checkEligibility, onSuccess]
+    [studentId, checkEligibility, onSuccess, isParent]
   );
 
   /**
@@ -206,6 +217,12 @@ export function useCcaClubEnrollment({ studentId, onSuccess }: UseCcaClubEnrollm
       newActivityId: string,
       newActivityName: string
     ): Promise<ClubEnrollmentResult> => {
+      // Block parents from modifying enrollments
+      if (isParent) {
+        toast({ title: "Not Allowed", description: "Parents cannot modify CCA enrollments", variant: "destructive" });
+        return { success: false, error: "Parents cannot modify enrollments" };
+      }
+
       if (!studentId) {
         toast({ title: "Error", description: "No student selected", variant: "destructive" });
         return { success: false, error: "No student selected" };
@@ -316,7 +333,7 @@ export function useCcaClubEnrollment({ studentId, onSuccess }: UseCcaClubEnrollm
         setEnrolling(false);
       }
     },
-    [studentId, checkEligibility, getCurrentEnrolledClub, onSuccess]
+    [studentId, checkEligibility, getCurrentEnrolledClub, onSuccess, isParent]
   );
 
   /**
