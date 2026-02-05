@@ -250,7 +250,7 @@ export default function TeacherCalendarPage() {
 
       <section className="px-4 pt-3">
         <Tabs defaultValue="calendar" className="w-full">
-          <div className="sticky top-[64px] z-30 -mx-4 px-4 pb-2 bg-background/95 backdrop-blur">
+          <div className="pb-2">
             <TabsList className="grid w-full grid-cols-2 rounded-full bg-muted/40 p-1">
               <TabsTrigger
                 value="calendar"
