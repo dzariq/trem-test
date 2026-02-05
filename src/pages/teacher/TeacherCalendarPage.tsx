@@ -6,12 +6,11 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuRadioGroup, DropdownMenuRadioItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { MapPin, Clock, User, Loader2, ChevronDown, Eye } from "lucide-react";
+import { MapPin, Clock, User, Loader2, Eye } from "lucide-react";
 import schoolLogo from "@/assets/school-badge.png";
 
 import { format } from "date-fns";
-import { CATEGORY_DISPLAY_NAMES, TAG_CATEGORIES, TagCategory, CalendarTag } from "@/types/calendarTags";
+import { TAG_CATEGORIES, type TagCategory, type CalendarTag } from "@/types/calendarTags";
 import {
   filterEventsByRole,
   getTagColor,
@@ -27,6 +26,8 @@ import { SessionDetailsSheet } from "@/components/cca/SessionDetailsSheet";
 import { useAuth } from "@/contexts/AuthContext";
 import { EventDetailsSheet } from "@/components/events/EventDetailsSheet";
 import { UpcomingEventsSection } from "@/components/calendar/UpcomingEventsSection";
+import { CategoryFilterPill } from "@/components/calendar/CategoryFilterPill";
+import { TEACHER_CATEGORY_ORDER, mapDbCategoryToTag } from "@/lib/calendarCategorySubtypes";
 import { cn } from "@/lib/utils";
 
 export default function TeacherCalendarPage() {
@@ -90,36 +91,8 @@ export default function TeacherCalendarPage() {
 
   const visibleEvents = filterEventsByRole(events, "teacher");
 
-  const eventSubtypeOptions: { value: CalendarTag | "all"; label: string }[] = [
-    { value: "all", label: "All Events" },
-    { value: "special-event-major", label: "Special Event (Major)" },
-    { value: "internal-event", label: "Internal Event" },
-    { value: "external-event", label: "External Event" },
-    { value: "open-day", label: "Open Day" },
-    { value: "field-trip", label: "Field Trip" },
-  ];
-
-  const categoryOrder: TagCategory[] = [
-    "school-level",
-    "exams",
-    "holidays",
-    "events",
-    "students",
-    "parents",
-    "staff-admin",
-    "due-dates",
-  ];
-
-  const categoryPillStyles: Record<TagCategory, string> = {
-    "school-level": "bg-blue-100 text-blue-800 dark:bg-blue-900/50 dark:text-blue-300",
-    "exams": "bg-red-100 text-red-800 dark:bg-red-900/50 dark:text-red-300",
-    "holidays": "bg-green-100 text-green-800 dark:bg-green-900/50 dark:text-green-300",
-    "events": "bg-purple-100 text-purple-800 dark:bg-purple-900/50 dark:text-purple-300",
-    "students": "bg-teal-100 text-teal-800 dark:bg-teal-900/50 dark:text-teal-300",
-    "parents": "bg-pink-100 text-pink-800 dark:bg-pink-900/50 dark:text-pink-300",
-    "staff-admin": "bg-slate-100 text-slate-800 dark:bg-slate-900/50 dark:text-slate-300",
-    "due-dates": "bg-amber-100 text-amber-800 dark:bg-amber-900/50 dark:text-amber-300",
-  };
+  // Use shared category order for teachers
+  const availableCategories = TEACHER_CATEGORY_ORDER;
 
   const matchesCategory = (event: UpcomingEvent, category: TagCategory) => {
     if (event.tags.some((tag) => TAG_CATEGORIES[tag] === category)) return true;
@@ -127,7 +100,7 @@ export default function TeacherCalendarPage() {
     if (category === "exams") return categoryText.includes("exam") || categoryText.includes("test") || categoryText.includes("assessment");
     if (category === "holidays") return categoryText.includes("holiday");
     if (category === "school-level") return categoryText.includes("academic") || categoryText.includes("school") || categoryText.includes("class");
-    if (category === "events") return categoryText.includes("event") || categoryText.includes("activity") || categoryText.includes("meeting");
+    if (category === "events") return categoryText.includes("event") || categoryText.includes("activity");
     if (category === "students") return categoryText.includes("student");
     if (category === "parents") return categoryText.includes("parent") || categoryText.includes("family");
     if (category === "staff-admin") return categoryText.includes("staff") || categoryText.includes("admin") || categoryText.includes("meeting");
@@ -135,25 +108,23 @@ export default function TeacherCalendarPage() {
     return false;
   };
 
-  const matchesEventSubtype = (event: UpcomingEvent, subtype: CalendarTag) => {
+  const matchesSubtype = (event: UpcomingEvent, subtype: CalendarTag) => {
     if (event.tags.includes(subtype)) return true;
+    const mappedTag = mapDbCategoryToTag(event.category || "");
+    if (mappedTag === subtype) return true;
     const categoryText = (event.category || "").toLowerCase();
-    if (subtype === "special-event-major") return categoryText.includes("special") || categoryText.includes("major");
-    if (subtype === "internal-event") return categoryText.includes("internal");
-    if (subtype === "external-event") return categoryText.includes("external");
-    if (subtype === "open-day") return categoryText.includes("open day");
-    if (subtype === "field-trip") return categoryText.includes("field trip");
-    return false;
+    const subtypeText = subtype.replace(/-/g, " ").toLowerCase();
+    return categoryText.includes(subtypeText);
   };
 
-  // Filter by category pill first, then by the single-select Events dropdown.
+  // Filter by category pill first, then by subtype.
   const filteredEvents = useMemo(() => {
     let filtered = visibleEvents;
     if (selectedCategory !== "all") {
       filtered = filtered.filter((event) => matchesCategory(event, selectedCategory));
     }
-    if (selectedEventSubtype !== "all" && (selectedCategory === "all" || selectedCategory === "events")) {
-      filtered = filtered.filter((event) => matchesEventSubtype(event, selectedEventSubtype as CalendarTag));
+    if (selectedEventSubtype !== "all" && selectedCategory !== "all") {
+      filtered = filtered.filter((event) => matchesSubtype(event, selectedEventSubtype as CalendarTag));
     }
     return filtered;
   }, [visibleEvents, selectedCategory, selectedEventSubtype]);
@@ -312,57 +283,23 @@ export default function TeacherCalendarPage() {
                 All
               </button>
 
-              {categoryOrder.map((category) =>
-                category === "events" ? (
-                  <DropdownMenu key={category}>
-                    <DropdownMenuTrigger asChild>
-                      <button
-                        type="button"
-                        className={cn(
-                          "inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium border transition-colors",
-                          categoryPillStyles[category],
-                          selectedCategory === category ? "ring-2 ring-primary/30" : "opacity-80"
-                        )}
-                        onClick={() => setSelectedCategory("events")}
-                      >
-                        Events
-                        <ChevronDown className="h-3.5 w-3.5" />
-                      </button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="start" sideOffset={6} className="min-w-[200px]">
-                      <DropdownMenuRadioGroup
-                        value={selectedEventSubtype}
-                        onValueChange={(value) => {
-                          setSelectedCategory("events");
-                          setSelectedEventSubtype(value as CalendarTag | "all");
-                        }}
-                      >
-                        {eventSubtypeOptions.map((option) => (
-                          <DropdownMenuRadioItem key={option.value} value={option.value}>
-                            {option.label}
-                          </DropdownMenuRadioItem>
-                        ))}
-                      </DropdownMenuRadioGroup>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                ) : (
-                  <button
-                    key={category}
-                    type="button"
-                    className={cn(
-                      "inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium border transition-colors",
-                      categoryPillStyles[category],
-                      selectedCategory === category ? "ring-2 ring-primary/30" : "opacity-80"
-                    )}
-                    onClick={() => {
-                      setSelectedCategory(category);
-                      setSelectedEventSubtype("all");
-                    }}
-                  >
-                    {CATEGORY_DISPLAY_NAMES[category]}
-                  </button>
-                )
-              )}
+              {/* Category pills with dropdowns */}
+              {availableCategories.map((category) => (
+                <CategoryFilterPill
+                  key={category}
+                  category={category}
+                  isSelected={selectedCategory === category}
+                  selectedSubtype={selectedCategory === category ? selectedEventSubtype : "all"}
+                  onCategorySelect={(cat) => {
+                    setSelectedCategory(cat);
+                    setSelectedEventSubtype("all");
+                  }}
+                  onSubtypeSelect={(cat, subtype) => {
+                    setSelectedCategory(cat);
+                    setSelectedEventSubtype(subtype);
+                  }}
+                />
+              ))}
             </div>
 
             {/* Calendar Component */}

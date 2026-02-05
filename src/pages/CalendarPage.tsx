@@ -8,17 +8,9 @@ import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { BottomSheet } from "@/components/ui/bottom-sheet";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuRadioGroup, DropdownMenuRadioItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { MapPin, Clock, CalendarDays, User, Loader2, ChevronDown, ArrowRightLeft } from "lucide-react";
+import { MapPin, Clock, CalendarDays, User, Loader2, ArrowRightLeft } from "lucide-react";
 import schoolLogo from "@/assets/school-badge.png";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { CATEGORY_DISPLAY_NAMES, TAG_CATEGORIES, TagCategory, CalendarTag } from "@/types/calendarTags";
+import { TAG_CATEGORIES, type TagCategory, type CalendarTag } from "@/types/calendarTags";
 import {
   filterEventsByRole,
   getTagColor,
@@ -37,6 +29,13 @@ import { supabase } from "@/lib/supabase";
 import { useCcaSessionsCalendar, type CcaCalendarSession } from "@/hooks/useCcaSessionsCalendar";
 import { EventDetailsSheet } from "@/components/events/EventDetailsSheet";
 import { UpcomingEventsSection } from "@/components/calendar/UpcomingEventsSection";
+import { CategoryFilterPill } from "@/components/calendar/CategoryFilterPill";
+import { 
+  PARENT_CATEGORY_ORDER, 
+  TEACHER_CATEGORY_ORDER,
+  CATEGORY_PILL_STYLES,
+  mapDbCategoryToTag,
+} from "@/lib/calendarCategorySubtypes";
 import { cn } from "@/lib/utils";
 
 export default function CalendarPage() {
@@ -143,40 +142,19 @@ export default function CalendarPage() {
 
   const visibleEvents = filterEventsByRole(events, roleForFilters);
 
-  const eventSubtypeOptions: { value: CalendarTag | "all"; label: string }[] = [
-    { value: "all", label: "All Events" },
-    { value: "special-event-major", label: "Special Event (Major)" },
-    { value: "internal-event", label: "Internal Event" },
-    { value: "external-event", label: "External Event" },
-    { value: "open-day", label: "Open Day" },
-    { value: "field-trip", label: "Field Trip" },
-  ];
+  // Get available categories based on role
+  const availableCategories = useMemo(() => {
+    return roleForFilters === "parent" ? PARENT_CATEGORY_ORDER : TEACHER_CATEGORY_ORDER;
+  }, [roleForFilters]);
 
-  const categoryOrder: TagCategory[] = useMemo(() => {
-    const base: TagCategory[] = ["school-level", "exams", "holidays", "events", "students", "parents"];
-    return base;
-  }, []);
-
-  const categoryPillStyles: Record<TagCategory, string> = {
-    "school-level": "bg-blue-100 text-blue-800 dark:bg-blue-900/50 dark:text-blue-300",
-    "exams": "bg-red-100 text-red-800 dark:bg-red-900/50 dark:text-red-300",
-    "holidays": "bg-green-100 text-green-800 dark:bg-green-900/50 dark:text-green-300",
-    "events": "bg-purple-100 text-purple-800 dark:bg-purple-900/50 dark:text-purple-300",
-    "students": "bg-teal-100 text-teal-800 dark:bg-teal-900/50 dark:text-teal-300",
-    "parents": "bg-pink-100 text-pink-800 dark:bg-pink-900/50 dark:text-pink-300",
-    "staff-admin": "bg-slate-100 text-slate-800 dark:bg-slate-900/50 dark:text-slate-300",
-    "due-dates": "bg-amber-100 text-amber-800 dark:bg-amber-900/50 dark:text-amber-300",
-  };
-
-  const availableCategories = categoryOrder;
-
+  // Check if event matches a category
   const matchesCategory = (event: UpcomingEvent, category: TagCategory) => {
     if (event.tags.some((tag) => TAG_CATEGORIES[tag] === category)) return true;
     const categoryText = (event.category || "").toLowerCase();
     if (category === "exams") return categoryText.includes("exam") || categoryText.includes("test") || categoryText.includes("assessment");
     if (category === "holidays") return categoryText.includes("holiday");
     if (category === "school-level") return categoryText.includes("academic") || categoryText.includes("school") || categoryText.includes("class");
-    if (category === "events") return categoryText.includes("event") || categoryText.includes("activity") || categoryText.includes("meeting");
+    if (category === "events") return categoryText.includes("event") || categoryText.includes("activity");
     if (category === "students") return categoryText.includes("student");
     if (category === "parents") return categoryText.includes("parent") || categoryText.includes("family");
     if (category === "staff-admin") return categoryText.includes("staff") || categoryText.includes("admin") || categoryText.includes("meeting");
@@ -184,25 +162,35 @@ export default function CalendarPage() {
     return false;
   };
 
-  const matchesEventSubtype = (event: UpcomingEvent, subtype: CalendarTag) => {
+  // Check if event matches a specific subtype tag
+  const matchesSubtype = (event: UpcomingEvent, subtype: CalendarTag) => {
+    // Direct tag match
     if (event.tags.includes(subtype)) return true;
+    
+    // Try to map the DB category to our tag system
+    const mappedTag = mapDbCategoryToTag(event.category || "");
+    if (mappedTag === subtype) return true;
+    
+    // Fallback text-based matching for legacy data
     const categoryText = (event.category || "").toLowerCase();
-    if (subtype === "special-event-major") return categoryText.includes("special") || categoryText.includes("major");
-    if (subtype === "internal-event") return categoryText.includes("internal");
-    if (subtype === "external-event") return categoryText.includes("external");
-    if (subtype === "open-day") return categoryText.includes("open day");
-    if (subtype === "field-trip") return categoryText.includes("field trip");
-    return false;
+    const subtypeText = subtype.replace(/-/g, " ").toLowerCase();
+    return categoryText.includes(subtypeText);
   };
 
+  // Filter events based on selected category and subtype
   const filteredEvents = useMemo(() => {
     let filtered = visibleEvents;
+    
+    // Filter by category
     if (selectedCategory !== "all") {
       filtered = filtered.filter((event) => matchesCategory(event, selectedCategory));
     }
-    if (selectedEventSubtype !== "all" && (selectedCategory === "all" || selectedCategory === "events")) {
-      filtered = filtered.filter((event) => matchesEventSubtype(event, selectedEventSubtype as CalendarTag));
+    
+    // Filter by subtype within the selected category
+    if (selectedEventSubtype !== "all" && selectedCategory !== "all") {
+      filtered = filtered.filter((event) => matchesSubtype(event, selectedEventSubtype as CalendarTag));
     }
+    
     return filtered;
   }, [visibleEvents, selectedCategory, selectedEventSubtype]);
 
@@ -398,6 +386,7 @@ export default function CalendarPage() {
           <TabsContent value="calendar" className="mt-3 space-y-4">
             {/* Filter pills */}
             <div className="flex flex-wrap gap-2 pb-2">
+              {/* All button */}
               <button
                 type="button"
                 className={cn(
@@ -414,57 +403,23 @@ export default function CalendarPage() {
                 All
               </button>
 
-              {availableCategories.map((category) =>
-                category === "events" ? (
-                  <DropdownMenu key={category}>
-                    <DropdownMenuTrigger asChild>
-                      <button
-                        type="button"
-                        className={cn(
-                          "inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium border transition-colors",
-                          categoryPillStyles[category],
-                          selectedCategory === category ? "ring-2 ring-primary/30" : "opacity-80"
-                        )}
-                        onClick={() => setSelectedCategory("events")}
-                      >
-                        Events
-                        <ChevronDown className="h-3.5 w-3.5" />
-                      </button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="start" sideOffset={6} className="min-w-[200px]">
-                      <DropdownMenuRadioGroup
-                        value={selectedEventSubtype}
-                        onValueChange={(value) => {
-                          setSelectedCategory("events");
-                          setSelectedEventSubtype(value as CalendarTag | "all");
-                        }}
-                      >
-                        {eventSubtypeOptions.map((option) => (
-                          <DropdownMenuRadioItem key={option.value} value={option.value}>
-                            {option.label}
-                          </DropdownMenuRadioItem>
-                        ))}
-                      </DropdownMenuRadioGroup>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                ) : (
-                  <button
-                    key={category}
-                    type="button"
-                    className={cn(
-                      "inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium border transition-colors",
-                      categoryPillStyles[category],
-                      selectedCategory === category ? "ring-2 ring-primary/30" : "opacity-80"
-                    )}
-                    onClick={() => {
-                      setSelectedCategory(category);
-                      setSelectedEventSubtype("all");
-                    }}
-                  >
-                    {CATEGORY_DISPLAY_NAMES[category]}
-                  </button>
-                )
-              )}
+              {/* Category pills with dropdowns */}
+              {availableCategories.map((category) => (
+                <CategoryFilterPill
+                  key={category}
+                  category={category}
+                  isSelected={selectedCategory === category}
+                  selectedSubtype={selectedCategory === category ? selectedEventSubtype : "all"}
+                  onCategorySelect={(cat) => {
+                    setSelectedCategory(cat);
+                    setSelectedEventSubtype("all");
+                  }}
+                  onSubtypeSelect={(cat, subtype) => {
+                    setSelectedCategory(cat);
+                    setSelectedEventSubtype(subtype);
+                  }}
+                />
+              ))}
             </div>
 
             {/* Calendar Component */}
