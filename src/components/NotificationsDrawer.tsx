@@ -21,7 +21,10 @@ import {
   ClipboardCheck,
   MessageSquare,
   GraduationCap,
-  Loader2
+  Loader2,
+  Palette,
+  Palmtree,
+  PenLine
 } from "lucide-react";
 import { useState } from "react";
 
@@ -40,7 +43,10 @@ type NotificationType =
   | "photo"
   | "permission"
   | "ptm"
-  | "message";
+  | "message"
+  | "cca"
+  | "holiday"
+  | "exam";
 
 interface NotificationsDrawerProps {
   open: boolean;
@@ -79,6 +85,9 @@ export function NotificationsDrawer({ open, onOpenChange }: NotificationsDrawerP
       case "permission": return ClipboardCheck;
       case "ptm": return MessageSquare;
       case "message": return MessageSquare;
+      case "cca": return Palette;
+      case "holiday": return Palmtree;
+      case "exam": return PenLine;
       default: return Bell;
     }
   };
@@ -100,6 +109,9 @@ export function NotificationsDrawer({ open, onOpenChange }: NotificationsDrawerP
       case "permission": return "bg-teal-500 text-white";
       case "ptm": return "bg-violet-500 text-white";
       case "message": return "bg-sky-500 text-white";
+      case "cca": return "bg-emerald-500 text-white";
+      case "holiday": return "bg-teal-500 text-white";
+      case "exam": return "bg-rose-500 text-white";
       default: return "bg-muted text-muted-foreground";
     }
   };
