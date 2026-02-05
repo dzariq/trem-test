@@ -122,7 +122,7 @@ export function BottomSheet({
               useSnapPoints
                 ? "fixed inset-x-0 bottom-0 z-[100] rounded-t-2xl h-[100dvh] max-h-[calc(100dvh-env(safe-area-inset-top))]"
                 : "relative z-[100] rounded-2xl w-[min(90vw,640px)] max-h-[85vh] sm:after:hidden",
-              !useSnapPoints && centeredOnDesktop === false &&
+              !useSnapPoints && !centeredOnDesktop &&
                 "sm:inset-x-1/2 sm:-translate-x-1/2 sm:bottom-6 sm:max-w-xl sm:rounded-2xl",
               isFullSnap && "rounded-none pt-[env(safe-area-inset-top)] sm:rounded-2xl sm:pt-0",
               className,

@@ -1005,8 +1005,8 @@ export default function CalendarPage() {
               </CardContent>
             </Card>
 
-            {/* Join/Switch button in bottom sheet */}
-            {!isEnrolledInActivity(selectedCCA.id) && (
+            {/* Join/Switch button in bottom sheet - Only show for non-parent roles */}
+            {roleForFilters !== "parent" && !isEnrolledInActivity(selectedCCA.id) && (
               <Button
                 className="w-full"
                 onClick={() => handleJoinOrSwitch(selectedCCA)}
