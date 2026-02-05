@@ -11,8 +11,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Users, Search, Loader2, UserPlus, UserMinus, AlertCircle } from "lucide-react";
+import { Users, Search, Loader2, UserPlus, UserMinus, AlertCircle, Ban } from "lucide-react";
 import { useSessionEnrollment, type SessionStudent } from "@/hooks/useSessionEnrollment";
+import { toast } from "@/hooks/use-toast";
 
 interface ManageStudentsSheetProps {
   open: boolean;
@@ -26,6 +27,7 @@ interface ManageStudentsSheetProps {
 /**
  * Full-height sheet for managing student enrollment in a CCA session.
  * Teachers can enroll/unenroll students they are assigned to.
+ * Enforces year-level eligibility based on club configuration.
  */
 export function ManageStudentsSheet({
   open,
@@ -41,6 +43,7 @@ export function ManageStudentsSheet({
   const {
     students,
     enrollmentInfo,
+    eligibilityInfo,
     loading,
     saving,
     error,
@@ -49,6 +52,7 @@ export function ManageStudentsSheet({
     unenrollStudent,
     filterStudents,
     availableClasses,
+    checkStudentEligibility,
   } = useSessionEnrollment({ sessionId, activityId });
 
   useEffect(() => {
@@ -74,12 +78,30 @@ export function ManageStudentsSheet({
   const availableStudents = filteredStudents.filter((s) => !s.isEnrolled);
 
   const handleEnroll = async (student: SessionStudent) => {
-    await enrollStudent(student.id);
+    // Pass year level for eligibility check
+    await enrollStudent(student.id, student.yearLevel);
   };
 
   const handleUnenroll = async (student: SessionStudent) => {
     await unenrollStudent(student.id);
   };
+
+  /**
+   * Handle tap on disabled enroll button - show eligibility message
+   */
+  const handleIneligibleTap = (student: SessionStudent) => {
+    const eligibility = checkStudentEligibility(student.yearLevel);
+    toast({
+      title: "Not Eligible",
+      description: eligibility.message || `${student.name} is not eligible for this activity`,
+      variant: "destructive",
+    });
+  };
+
+  // Format eligible years for display
+  const eligibleYearsDisplay = eligibilityInfo.eligibleYears.length > 0
+    ? eligibilityInfo.eligibleYears.join(", ")
+    : null;
 
   return (
     <BottomSheet
@@ -96,18 +118,30 @@ export function ManageStudentsSheet({
       description={`${activityName} - ${sessionTitle}`}
       bodyClassName="px-4 py-3 space-y-4"
     >
-      {/* Enrollment Count */}
-      <div className="flex items-center justify-between p-3 rounded-lg bg-primary/5 border border-primary/20">
-        <div className="flex items-center gap-2">
-          <Users className="h-5 w-5 text-primary" />
-          <span className="font-medium">Enrolled Students</span>
+      {/* Enrollment Count & Eligibility Info */}
+      <div className="space-y-2">
+        <div className="flex items-center justify-between p-3 rounded-lg bg-primary/5 border border-primary/20">
+          <div className="flex items-center gap-2">
+            <Users className="h-5 w-5 text-primary" />
+            <span className="font-medium">Enrolled Students</span>
+          </div>
+          <Badge
+            variant={enrollmentInfo.isFull ? "destructive" : "secondary"}
+            className="text-base px-3 py-1"
+          >
+            {enrollmentInfo.enrolledCount} / {enrollmentInfo.maxParticipants}
+          </Badge>
         </div>
-        <Badge
-          variant={enrollmentInfo.isFull ? "destructive" : "secondary"}
-          className="text-base px-3 py-1"
-        >
-          {enrollmentInfo.enrolledCount} / {enrollmentInfo.maxParticipants}
-        </Badge>
+        
+        {/* Eligible Years Badge */}
+        {eligibleYearsDisplay && (
+          <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-muted/50 border border-border">
+            <span className="text-sm text-muted-foreground">Eligible Years:</span>
+            <Badge variant="outline" className="font-medium">
+              {eligibleYearsDisplay}
+            </Badge>
+          </div>
+        )}
       </div>
 
       {/* Search & Filters */}
@@ -202,38 +236,66 @@ export function ManageStudentsSheet({
           <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
             Available ({availableStudents.length})
           </p>
-          {availableStudents.map((student) => (
-            <Card key={student.id} className="bg-card border-border">
-              <CardContent className="p-3">
-                <div className="flex items-center justify-between gap-2">
-                  <div className="flex-1 min-w-0">
-                    <p className="font-medium text-foreground truncate">{student.name}</p>
-                    <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                      <span>{student.class}</span>
-                      <span>•</span>
-                      <span>{student.yearLevel}</span>
+          {availableStudents.map((student) => {
+            const isEligible = student.isEligible;
+            const isFull = enrollmentInfo.isFull;
+            const canEnroll = isEligible && !isFull;
+
+            return (
+              <Card 
+                key={student.id} 
+                className={`border-border ${!isEligible ? 'bg-muted/30 opacity-75' : 'bg-card'}`}
+              >
+                <CardContent className="p-3">
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="flex-1 min-w-0">
+                      <p className="font-medium text-foreground truncate">{student.name}</p>
+                      <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                        <span>{student.class}</span>
+                        <span>•</span>
+                        <span>{student.yearLevel}</span>
+                        {!isEligible && (
+                          <>
+                            <span>•</span>
+                            <span className="text-destructive font-medium flex items-center gap-1">
+                              <Ban className="h-3 w-3" />
+                              Not eligible
+                            </span>
+                          </>
+                        )}
+                      </div>
                     </div>
+                    {isFull ? (
+                      <Badge variant="secondary" className="flex-shrink-0">
+                        Full
+                      </Badge>
+                    ) : !isEligible ? (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="flex-shrink-0 text-muted-foreground border-muted"
+                        onClick={() => handleIneligibleTap(student)}
+                      >
+                        <Ban className="h-4 w-4 mr-1" />
+                        Ineligible
+                      </Button>
+                    ) : (
+                      <Button
+                        variant="default"
+                        size="sm"
+                        className="flex-shrink-0"
+                        onClick={() => handleEnroll(student)}
+                        disabled={saving}
+                      >
+                        <UserPlus className="h-4 w-4 mr-1" />
+                        Enroll
+                      </Button>
+                    )}
                   </div>
-                  {enrollmentInfo.isFull ? (
-                    <Badge variant="secondary" className="flex-shrink-0">
-                      Full
-                    </Badge>
-                  ) : (
-                    <Button
-                      variant="default"
-                      size="sm"
-                      className="flex-shrink-0"
-                      onClick={() => handleEnroll(student)}
-                      disabled={saving}
-                    >
-                      <UserPlus className="h-4 w-4 mr-1" />
-                      Enroll
-                    </Button>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
-          ))}
+                </CardContent>
+              </Card>
+            );
+          })}
         </div>
       )}
 
