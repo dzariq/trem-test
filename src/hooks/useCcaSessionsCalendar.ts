@@ -11,6 +11,7 @@ export interface CcaCalendarSession {
   locationName: string | null;
   customTitle: string | null;
   description: string | null;
+  requirements: string | null;
   isCancelled: boolean;
   category: string;
 }
@@ -51,6 +52,7 @@ export function useCcaSessionsCalendar({ year, month }: UseCcaSessionsCalendarOp
           location_id,
           custom_title,
           description,
+          requirements,
           is_cancelled,
           cca_activities!inner(
             name,
@@ -75,6 +77,7 @@ export function useCcaSessionsCalendar({ year, month }: UseCcaSessionsCalendarOp
         locationName: s.school_locations?.name || s.location || null,
         customTitle: s.custom_title,
         description: s.description,
+        requirements: s.requirements,
         isCancelled: s.is_cancelled,
         category: s.cca_activities?.category || "Other",
       }));

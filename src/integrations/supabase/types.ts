@@ -807,6 +807,51 @@ export type Database = {
           },
         ]
       }
+      cca_session_enrollments: {
+        Row: {
+          created_at: string
+          enrolled_by: string | null
+          id: string
+          session_id: string
+          status: string
+          student_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          enrolled_by?: string | null
+          id?: string
+          session_id: string
+          status?: string
+          student_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          enrolled_by?: string | null
+          id?: string
+          session_id?: string
+          status?: string
+          student_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cca_session_enrollments_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "cca_sessions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cca_session_enrollments_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       cca_session_pics: {
         Row: {
           created_at: string
@@ -2748,6 +2793,10 @@ export type Database = {
             }
             Returns: string
           }
+      get_session_enrollment_count: {
+        Args: { p_session_id: string }
+        Returns: number
+      }
       get_student_class_year_id: {
         Args: { p_student_id: string }
         Returns: number
@@ -2764,6 +2813,7 @@ export type Database = {
       has_role: { Args: { _role: string; _user_id: string }; Returns: boolean }
       is_admin: { Args: never; Returns: boolean }
       is_admin_like: { Args: never; Returns: boolean }
+      is_cca_session_full: { Args: { p_session_id: string }; Returns: boolean }
       is_parent: { Args: never; Returns: boolean }
       is_parent_of_student: { Args: { p_student_id: string }; Returns: boolean }
       is_teacher: { Args: never; Returns: boolean }

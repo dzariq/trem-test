@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuRadioGroup, DropdownMenuRadioItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { MapPin, Clock, User, Loader2, ChevronDown } from "lucide-react";
+import { MapPin, Clock, User, Loader2, ChevronDown, Eye } from "lucide-react";
 import schoolLogo from "@/assets/school-badge.png";
 
 import { format } from "date-fns";
@@ -19,10 +19,11 @@ import {
 } from "@/lib/calendarUtils";
 import { listCalendarEvents, type UpcomingEvent } from "@/data/calendar";
 import { useCcaActivities, type CcaActivity } from "@/hooks/useCcaActivities";
-import { useCcaSessionsCalendar } from "@/hooks/useCcaSessionsCalendar";
+import { useCcaSessionsCalendar, type CcaCalendarSession } from "@/hooks/useCcaSessionsCalendar";
 import { CcaTypeTabs, getCcaTypeColor } from "@/components/cca/CcaTypeTabs";
 import { CcaDetailsSheet } from "@/components/cca/CcaDetailsSheet";
 import { ManageSessionsSheet } from "@/components/cca/ManageSessionsSheet";
+import { SessionDetailsSheet } from "@/components/cca/SessionDetailsSheet";
 import { useAuth } from "@/contexts/AuthContext";
 import { EventDetailsSheet } from "@/components/events/EventDetailsSheet";
 import { UpcomingEventsSection } from "@/components/calendar/UpcomingEventsSection";
@@ -39,6 +40,8 @@ export default function TeacherCalendarPage() {
   const [selectedEventDetails, setSelectedEventDetails] = useState<UpcomingEvent | null>(null);
   const [eventDetailsOpen, setEventDetailsOpen] = useState(false);
   const [manageSessionsActivity, setManageSessionsActivity] = useState<CcaActivity | null>(null);
+  const [selectedSession, setSelectedSession] = useState<CcaCalendarSession | null>(null);
+  const [sessionDetailsOpen, setSessionDetailsOpen] = useState(false);
   const [events, setEvents] = useState<UpcomingEvent[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<TagCategory | "all">("all");
   const [selectedEventSubtype, setSelectedEventSubtype] = useState<CalendarTag | "all">("all");
@@ -73,6 +76,17 @@ export default function TeacherCalendarPage() {
       );
     };
   }, [user?.id]);
+
+  // Check if teacher is PIC of a session's activity
+  const isTeacherPICOfSession = useMemo(() => {
+    return (session: CcaCalendarSession): boolean => {
+      if (!user?.id) return false;
+      // Find the activity for this session
+      const activity = ccaActivities.find((a) => a.id === session.activityId);
+      if (!activity) return false;
+      return isCurrentTeacherPIC(activity);
+    };
+  }, [user?.id, ccaActivities, isCurrentTeacherPIC]);
 
   const visibleEvents = filterEventsByRole(events, "teacher");
 
@@ -407,7 +421,7 @@ export default function TeacherCalendarPage() {
                     {session.customTitle && (
                       <p className="text-xs text-muted-foreground mb-2">{session.activityName}</p>
                     )}
-                    <div className="flex flex-wrap gap-3 text-sm text-muted-foreground">
+                    <div className="flex flex-wrap gap-3 text-sm text-muted-foreground mb-3">
                       <span className="flex items-center gap-1">
                         <Clock className="h-3 w-3" />
                         {formatSessionTime(session.startTime, session.endTime)}
@@ -419,6 +433,18 @@ export default function TeacherCalendarPage() {
                         </span>
                       )}
                     </div>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="w-full"
+                      onClick={() => {
+                        setSelectedSession(session);
+                        setSessionDetailsOpen(true);
+                      }}
+                    >
+                      <Eye className="h-4 w-4 mr-2" />
+                      View Session
+                    </Button>
                   </div>
                 ))}
 
@@ -592,6 +618,33 @@ export default function TeacherCalendarPage() {
         open={eventDetailsOpen}
         onOpenChange={setEventDetailsOpen}
         event={selectedEventDetails}
+      />
+
+      {/* Session Details Sheet */}
+      <SessionDetailsSheet
+        open={sessionDetailsOpen}
+        onOpenChange={(open) => {
+          setSessionDetailsOpen(open);
+          if (!open) {
+            setSelectedSession(null);
+            refetchCcaSessions();
+          }
+        }}
+        session={selectedSession ? {
+          id: selectedSession.id,
+          activityId: selectedSession.activityId,
+          activityName: selectedSession.activityName,
+          sessionDate: selectedSession.sessionDate,
+          startTime: selectedSession.startTime,
+          endTime: selectedSession.endTime,
+          locationName: selectedSession.locationName,
+          customTitle: selectedSession.customTitle,
+          description: selectedSession.description,
+          requirements: selectedSession.requirements,
+          isCancelled: selectedSession.isCancelled,
+          category: selectedSession.category,
+        } : null}
+        isPIC={selectedSession ? isTeacherPICOfSession(selectedSession) : false}
       />
     </TeacherAppLayout>
   );
