@@ -5,15 +5,16 @@ import { useMyProfile } from "@/hooks/useMyProfile";
 
 export interface Notification {
   id: string;
-  user_id: string;
+  user_id: string | null;
   title: string;
   message: string;
   type: string;
   link_to: string | null;
-  is_read: boolean;
+  is_read: boolean; // Computed from notification_reads join
   target_audience: string;
   created_at: string;
   updated_at: string;
+  source_key: string | null;
 }
 
 // Format time ago from date
@@ -43,7 +44,7 @@ export function useNotifications() {
   // Determine user role for filtering
   const userRole = profile?.role || "parent";
 
-  // Fetch notifications with role-based filtering
+  // Fetch notifications with per-user read state via notification_reads
   const { data: notifications = [], isLoading, error } = useQuery({
     queryKey: ["notifications", user?.id, userRole],
     queryFn: async () => {
@@ -54,15 +55,34 @@ export function useNotifications() {
         ? ["teacher", "all"]
         : ["parent", "all"];
       
+      // Fetch notifications with left join to notification_reads for current user
       const { data, error } = await supabase
         .from("notifications")
-        .select("*")
-        .eq("user_id", user.id)
+        .select(`
+          *,
+          notification_reads!left(read_at)
+        `)
         .in("target_audience", allowedAudiences)
-        .order("created_at", { ascending: false });
+        .order("created_at", { ascending: false })
+        .limit(50);
 
       if (error) throw error;
-      return data as Notification[];
+      
+      // Map notifications with computed is_read based on notification_reads
+      return (data || []).map((n: any) => ({
+        id: n.id,
+        user_id: n.user_id,
+        title: n.title,
+        message: n.message,
+        type: n.type,
+        link_to: n.link_to,
+        target_audience: n.target_audience,
+        created_at: n.created_at,
+        updated_at: n.updated_at,
+        source_key: n.source_key,
+        // is_read is true if there's a notification_reads entry for this user
+        is_read: Array.isArray(n.notification_reads) && n.notification_reads.length > 0,
+      })) as Notification[];
     },
     enabled: !!user?.id && !!profile,
   });
@@ -76,13 +96,20 @@ export function useNotifications() {
     time: formatTimeAgo(n.created_at),
   }));
 
-  // Mark single notification as read
+  // Mark single notification as read (insert into notification_reads)
   const markAsReadMutation = useMutation({
     mutationFn: async (notificationId: string) => {
+      if (!user?.id) return;
+      
       const { error } = await supabase
-        .from("notifications")
-        .update({ is_read: true })
-        .eq("id", notificationId);
+        .from("notification_reads")
+        .upsert({
+          notification_id: notificationId,
+          user_id: user.id,
+          read_at: new Date().toISOString(),
+        }, {
+          onConflict: "notification_id,user_id",
+        });
       
       if (error) throw error;
     },
@@ -91,26 +118,35 @@ export function useNotifications() {
     },
   });
 
-  // Mark all as read
+  // Mark all as read (insert into notification_reads for all unread)
   const markAllAsReadMutation = useMutation({
     mutationFn: async () => {
       if (!user?.id) return;
       
+      const unreadNotifications = notifications.filter(n => !n.is_read);
+      if (unreadNotifications.length === 0) return;
+      
+      const reads = unreadNotifications.map(n => ({
+        notification_id: n.id,
+        user_id: user.id,
+        read_at: new Date().toISOString(),
+      }));
+      
       const { error } = await supabase
-        .from("notifications")
-        .update({ is_read: true })
-        .eq("user_id", user.id)
-        .eq("is_read", false);
+        .from("notification_reads")
+        .upsert(reads, {
+          onConflict: "notification_id,user_id",
+        });
       
       if (error) throw error;
     },
     onMutate: async () => {
       // Optimistic update
       await queryClient.cancelQueries({ queryKey: ["notifications", user?.id] });
-      const previous = queryClient.getQueryData<Notification[]>(["notifications", user?.id]);
+      const previous = queryClient.getQueryData<Notification[]>(["notifications", user?.id, userRole]);
       
       queryClient.setQueryData<Notification[]>(
-        ["notifications", user?.id],
+        ["notifications", user?.id, userRole],
         (old) => old?.map(n => ({ ...n, is_read: true })) || []
       );
       
@@ -118,7 +154,7 @@ export function useNotifications() {
     },
     onError: (_err, _vars, context) => {
       if (context?.previous) {
-        queryClient.setQueryData(["notifications", user?.id], context.previous);
+        queryClient.setQueryData(["notifications", user?.id, userRole], context.previous);
       }
     },
     onSettled: () => {
@@ -126,31 +162,41 @@ export function useNotifications() {
     },
   });
 
-  // Delete notification
+  // Dismiss notification (delete from notification_reads - effectively hide for user)
+  // Note: We don't delete the notification itself, just mark as dismissed
   const deleteNotificationMutation = useMutation({
     mutationFn: async (notificationId: string) => {
+      if (!user?.id) return;
+      
+      // For now, dismissing is the same as marking as read
+      // In the future, we could add a dismissed column to notification_reads
       const { error } = await supabase
-        .from("notifications")
-        .delete()
-        .eq("id", notificationId);
+        .from("notification_reads")
+        .upsert({
+          notification_id: notificationId,
+          user_id: user.id,
+          read_at: new Date().toISOString(),
+        }, {
+          onConflict: "notification_id,user_id",
+        });
       
       if (error) throw error;
     },
     onMutate: async (notificationId) => {
-      // Optimistic update
       await queryClient.cancelQueries({ queryKey: ["notifications", user?.id] });
-      const previous = queryClient.getQueryData<Notification[]>(["notifications", user?.id]);
+      const previous = queryClient.getQueryData<Notification[]>(["notifications", user?.id, userRole]);
       
+      // Optimistically mark as read (hide from unread)
       queryClient.setQueryData<Notification[]>(
-        ["notifications", user?.id],
-        (old) => old?.filter(n => n.id !== notificationId) || []
+        ["notifications", user?.id, userRole],
+        (old) => old?.map(n => n.id === notificationId ? { ...n, is_read: true } : n) || []
       );
       
       return { previous };
     },
     onError: (_err, _vars, context) => {
       if (context?.previous) {
-        queryClient.setQueryData(["notifications", user?.id], context.previous);
+        queryClient.setQueryData(["notifications", user?.id, userRole], context.previous);
       }
     },
     onSettled: () => {
@@ -158,122 +204,10 @@ export function useNotifications() {
     },
   });
 
-  // Seed initial notifications for testing (runs once if empty)
-  // Seeds role-appropriate notifications based on user profile
+  // Seed notifications is no longer needed since we generate from real data
   const seedNotificationsMutation = useMutation({
     mutationFn: async () => {
-      if (!user?.id) return;
-      
-      // Check if user already has notifications
-      const { count } = await supabase
-        .from("notifications")
-        .select("*", { count: "exact", head: true })
-        .eq("user_id", user.id);
-      
-      if (count && count > 0) return; // Already has notifications
-      
-      // Get user's role to seed appropriate notifications
-      const { data: profile } = await supabase
-        .from("user_profiles")
-        .select("role")
-        .eq("user_id", user.id)
-        .single();
-
-      const userRole = profile?.role || "parent";
-      const now = new Date();
-      
-      // Common notifications for everyone
-      const commonNotifications = [
-        {
-          user_id: user.id,
-          title: "School Holiday Notice",
-          message: "School will be closed on 29th January for Chinese New Year.",
-          type: "announcement",
-          link_to: userRole === "teacher" ? "/teacher" : "/parent",
-          is_read: true,
-          target_audience: "all",
-          created_at: new Date(now.getTime() - 24 * 60 * 60 * 1000).toISOString(),
-        },
-      ];
-      
-      // Teacher-specific notifications
-      const teacherNotifications = userRole === "teacher" ? [
-        {
-          user_id: user.id,
-          title: "Attendance Reminder",
-          message: "Please submit attendance for Class 5A before 9:00 AM.",
-          type: "attendance",
-          link_to: "/teacher/attendance",
-          is_read: false,
-          target_audience: "teacher",
-          created_at: new Date(now.getTime() - 30 * 60 * 1000).toISOString(),
-        },
-        {
-          user_id: user.id,
-          title: "Grade Submission Due",
-          message: "Mid-Year exam grades for Class 5A are due by January 15th.",
-          type: "grade",
-          link_to: "/teacher/academic",
-          is_read: false,
-          target_audience: "teacher",
-          created_at: new Date(now.getTime() - 2 * 60 * 60 * 1000).toISOString(),
-        },
-        {
-          user_id: user.id,
-          title: "Staff Meeting",
-          message: "Weekly staff meeting scheduled for Friday at 3:00 PM in the conference room.",
-          type: "event",
-          link_to: "/teacher/calendar",
-          is_read: false,
-          target_audience: "teacher",
-          created_at: new Date(now.getTime() - 5 * 60 * 60 * 1000).toISOString(),
-        },
-      ] : [];
-      
-      // Parent-specific notifications
-      const parentNotifications = userRole === "parent" ? [
-        {
-          user_id: user.id,
-          title: "Report Card Available",
-          message: "Mid-Year 2025 report card is now available for viewing.",
-          type: "report_card",
-          link_to: "/parent/academic",
-          is_read: false,
-          target_audience: "parent",
-          created_at: new Date(now.getTime() - 60 * 60 * 1000).toISOString(),
-        },
-        {
-          user_id: user.id,
-          title: "Parent-Teacher Meeting",
-          message: "PTM scheduled for 20th January. Please book your slot.",
-          type: "ptm",
-          link_to: "/parent/calendar",
-          is_read: false,
-          target_audience: "parent",
-          created_at: new Date(now.getTime() - 3 * 60 * 60 * 1000).toISOString(),
-        },
-        {
-          user_id: user.id,
-          title: "Fee Payment Reminder",
-          message: "Term 2 school fees are due by 31st January.",
-          type: "payment",
-          link_to: "/parent",
-          is_read: true,
-          target_audience: "parent",
-          created_at: new Date(now.getTime() - 48 * 60 * 60 * 1000).toISOString(),
-        },
-      ] : [];
-      
-      const seedData = [...commonNotifications, ...teacherNotifications, ...parentNotifications];
-      
-      const { error } = await supabase
-        .from("notifications")
-        .insert(seedData);
-      
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["notifications", user?.id] });
+      // No-op - notifications are now generated from real data via triggers
     },
   });
 

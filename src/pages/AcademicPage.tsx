@@ -1499,10 +1499,12 @@ export default function AcademicPage() {
   };
   const filteredSubjects = subjectFilter === "all" ? academicData.subjects : academicData.subjects.filter(s => s.name === subjectFilter);
   return <AppLayout>
-      <AppHeader leftContent={<div className="flex items-center gap-2">
+      <AppHeader 
+        showChildSelector
+        leftContent={<div className="flex items-center gap-2">
             <img src={schoolLogo} alt="School Logo" crossOrigin="anonymous" className="h-16 w-auto -my-3 drop-shadow-md" />
             <h1 className="text-xl font-semibold text-foreground">Academic</h1>
-          </div>} rightContent={<StudentPillSelector onStudentChange={setSelectedStudentId} />} />
+          </div>} />
 
       {/* Main Tab Switcher - Report Card / Grade Analysis */}
       <section className="px-4 pt-4">

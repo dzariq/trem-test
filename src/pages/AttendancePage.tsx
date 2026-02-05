@@ -381,44 +381,12 @@ export default function AttendancePage() {
       />
       
       <AppHeader
+        showChildSelector
         leftContent={
           <div className="flex items-center gap-2">
             <img src={schoolLogo} alt="School Logo" className="h-16 w-auto -my-3 drop-shadow-md" />
             <h1 className="text-xl font-semibold text-foreground">Attendance</h1>
           </div>
-        }
-        rightContent={
-          <Select
-            value={selectedStudentId}
-            onValueChange={setSelectedStudentId}
-            disabled={studentsLoading || linkedStudents.length === 0}
-          >
-            <SelectTrigger className="w-32 h-8 text-sm">
-              <SelectValue placeholder="Student" />
-            </SelectTrigger>
-            <SelectContent className="bg-card">
-              {studentsLoading && (
-                <SelectItem value="loading" disabled>
-                  Loading...
-                </SelectItem>
-              )}
-              {!studentsLoading && studentsError && (
-                <SelectItem value="error" disabled>
-                  {studentsError}
-                </SelectItem>
-              )}
-              {!studentsLoading && !studentsError && linkedStudents.length === 0 && (
-                <SelectItem value="empty" disabled>
-                  No linked students yet. Please contact admin.
-                </SelectItem>
-              )}
-              {!studentsLoading && !studentsError && linkedStudents.map((student) => (
-                <SelectItem key={student.id} value={student.id}>
-                  {student.name.split(" ")[0]} {student.name.split(" ")[1]?.[0]}.
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
         }
       />
       
@@ -570,21 +538,21 @@ export default function AttendancePage() {
 
             {/* Summary Stats */}
             <div className="grid grid-cols-4 gap-3">
-              <div className="text-center p-3 rounded-xl bg-emerald-50 dark:bg-emerald-950/30">
-                <p className="text-2xl font-bold" style={{ color: "hsl(160, 84%, 39%)" }}>{monthlySummary.present}</p>
-                <p className="text-xs text-muted-foreground">Present</p>
+              <div className="flex flex-col items-center justify-center p-3 rounded-xl bg-emerald-50 dark:bg-emerald-950/30 min-h-[72px]">
+                <p className="text-2xl font-bold leading-none" style={{ color: "hsl(160, 84%, 39%)" }}>{monthlySummary.present}</p>
+                <p className="text-xs text-muted-foreground mt-1.5">Present</p>
               </div>
-              <div className="text-center p-3 rounded-xl bg-destructive/10">
-                <p className="text-2xl font-bold text-destructive">{monthlySummary.absent}</p>
-                <p className="text-xs text-muted-foreground">Absent</p>
+              <div className="flex flex-col items-center justify-center p-3 rounded-xl bg-destructive/10 min-h-[72px]">
+                <p className="text-2xl font-bold leading-none text-destructive">{monthlySummary.absent}</p>
+                <p className="text-xs text-muted-foreground mt-1.5">Absent</p>
               </div>
-              <div className="text-center p-3 rounded-xl bg-amber-50 dark:bg-amber-950/30">
-                <p className="text-2xl font-bold" style={{ color: "hsl(38, 92%, 40%)" }}>{monthlySummary.late}</p>
-                <p className="text-xs text-muted-foreground">Late</p>
+              <div className="flex flex-col items-center justify-center p-3 rounded-xl bg-amber-50 dark:bg-amber-950/30 min-h-[72px]">
+                <p className="text-2xl font-bold leading-none" style={{ color: "hsl(38, 92%, 40%)" }}>{monthlySummary.late}</p>
+                <p className="text-xs text-muted-foreground mt-1.5">Late</p>
               </div>
-              <div className="text-center p-3 rounded-xl bg-purple-50 dark:bg-purple-950/30">
-                <p className="text-2xl font-bold" style={{ color: "hsl(271, 91%, 55%)" }}>{monthlySummary.excused}</p>
-                <p className="text-xs text-muted-foreground">Excused</p>
+              <div className="flex flex-col items-center justify-center p-3 rounded-xl bg-purple-50 dark:bg-purple-950/30 min-h-[72px]">
+                <p className="text-2xl font-bold leading-none" style={{ color: "hsl(271, 91%, 55%)" }}>{monthlySummary.excused}</p>
+                <p className="text-xs text-muted-foreground mt-1.5">Excused</p>
               </div>
             </div>
           </CardContent>
