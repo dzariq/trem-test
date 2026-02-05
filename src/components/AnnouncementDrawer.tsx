@@ -49,6 +49,10 @@ interface AnnouncementDrawerProps {
   onSeeAll?: () => void;
 }
 
+// Snap points: 60% half screen, 100% full screen
+const SNAP_POINTS = [0.6, 1] as const;
+const DEFAULT_SNAP = 0.6;
+
 export function AnnouncementDrawer({
   announcements,
   currentIndex,
@@ -57,8 +61,8 @@ export function AnnouncementDrawer({
   onNavigate,
   onSeeAll,
 }: AnnouncementDrawerProps) {
-  const DEFAULT_SNAP_POINT = 0.8;
-  const [snap, setSnap] = useState<number | string | null>(DEFAULT_SNAP_POINT);
+  // Use shared snap points for consistent drag behavior
+  const [snap, setSnap] = useState<number | string | null>(DEFAULT_SNAP);
   const [slideDirection, setSlideDirection] = useState<"left" | "right" | null>(null);
   const [isRead, setIsRead] = useState(false);
   const touchStartX = useRef<number>(0);
@@ -97,7 +101,7 @@ export function AnnouncementDrawer({
   // Always open at a consistent snap point.
   useEffect(() => {
     if (isOpen) {
-      setSnap(DEFAULT_SNAP_POINT);
+      setSnap(DEFAULT_SNAP);
     }
   }, [isOpen, currentIndex]);
 
@@ -190,7 +194,7 @@ export function AnnouncementDrawer({
     <DrawerPrimitive.Root
       open={isOpen}
       onOpenChange={onOpenChange}
-      snapPoints={[DEFAULT_SNAP_POINT]}
+      snapPoints={SNAP_POINTS as unknown as (number | string)[]}
       activeSnapPoint={snap}
       setActiveSnapPoint={setSnap}
     >
