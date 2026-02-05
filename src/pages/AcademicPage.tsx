@@ -403,7 +403,12 @@ export default function AcademicPage() {
     const previous = lastStudentIdRef.current;
     const current = selectedStudentId ?? null;
     if (previous && current && previous !== current) {
+      // Student changed - reset all period selections to force refetch with new data
       resetExamForStudentChangeRef.current = true;
+      setSelectedAcademicYearId("");
+      setSelectedExamPeriodId("");
+      setCompareExamAId("");
+      setCompareExamBId("");
     }
     lastStudentIdRef.current = current;
   }, [selectedStudentId]);
