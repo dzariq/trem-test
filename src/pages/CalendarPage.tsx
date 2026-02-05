@@ -34,7 +34,8 @@ import {
   PARENT_CATEGORY_ORDER, 
   TEACHER_CATEGORY_ORDER,
   CATEGORY_PILL_STYLES,
-  mapDbCategoryToTag,
+  mapDbToCategory,
+  mapDbToSubtype,
 } from "@/lib/calendarCategorySubtypes";
 import { cn } from "@/lib/utils";
 
@@ -147,18 +148,15 @@ export default function CalendarPage() {
     return roleForFilters === "parent" ? PARENT_CATEGORY_ORDER : TEACHER_CATEGORY_ORDER;
   }, [roleForFilters]);
 
-  // Check if event matches a category
+  // Check if event matches a category using DB fields
   const matchesCategory = (event: UpcomingEvent, category: TagCategory) => {
+    // First check if any tags match the category
     if (event.tags.some((tag) => TAG_CATEGORIES[tag] === category)) return true;
-    const categoryText = (event.category || "").toLowerCase();
-    if (category === "exams") return categoryText.includes("exam") || categoryText.includes("test") || categoryText.includes("assessment");
-    if (category === "holidays") return categoryText.includes("holiday");
-    if (category === "school-level") return categoryText.includes("academic") || categoryText.includes("school") || categoryText.includes("class");
-    if (category === "events") return categoryText.includes("event") || categoryText.includes("activity");
-    if (category === "students") return categoryText.includes("student");
-    if (category === "parents") return categoryText.includes("parent") || categoryText.includes("family");
-    if (category === "staff-admin") return categoryText.includes("staff") || categoryText.includes("admin") || categoryText.includes("meeting");
-    if (category === "due-dates") return categoryText.includes("due") || categoryText.includes("deadline");
+    
+    // Use the improved mapping function
+    const mappedCategory = mapDbToCategory(event.category || "", (event as any).eventType);
+    if (mappedCategory === category) return true;
+    
     return false;
   };
 
@@ -167,14 +165,13 @@ export default function CalendarPage() {
     // Direct tag match
     if (event.tags.includes(subtype)) return true;
     
-    // Try to map the DB category to our tag system
-    const mappedTag = mapDbCategoryToTag(event.category || "");
-    if (mappedTag === subtype) return true;
-    
-    // Fallback text-based matching for legacy data
-    const categoryText = (event.category || "").toLowerCase();
-    const subtypeText = subtype.replace(/-/g, " ").toLowerCase();
-    return categoryText.includes(subtypeText);
+    // Use improved mapping that includes title for better classification
+    const mappedSubtype = mapDbToSubtype(
+      event.category || "", 
+      (event as any).eventType,
+      event.title || ""
+    );
+    return mappedSubtype === subtype;
   };
 
   // Filter events based on selected category and subtype
