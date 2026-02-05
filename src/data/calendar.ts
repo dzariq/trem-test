@@ -14,6 +14,7 @@ export type UpcomingEvent = {
   allDay: boolean;
   tags: CalendarTag[];
   category: string;
+  eventType: string; // Added for better subtype mapping
   location: string;
   date: string;
   time: string;
@@ -95,6 +96,7 @@ const mapCalendarRow = (row: any): UpcomingEvent => {
     allDay: Boolean(allDay),
     tags: (Array.isArray(row.event_tags) ? row.event_tags : []) as CalendarTag[],
     category,
+    eventType: row.event_type ?? "", // Include event_type for subtype mapping
     location: row.location ?? "School",
     date: startDay,
     time: timeLabel,

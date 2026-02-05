@@ -73,7 +73,6 @@ export const CATEGORIES_WITH_DROPDOWN: TagCategory[] = [
 
 // Default category order for parent view (exclude staff-admin and due-dates)
 export const PARENT_CATEGORY_ORDER: TagCategory[] = [
-  "school-level",
   "exams",
   "holidays",
   "events",
@@ -83,7 +82,6 @@ export const PARENT_CATEGORY_ORDER: TagCategory[] = [
 
 // Full category order for teacher/admin view
 export const TEACHER_CATEGORY_ORDER: TagCategory[] = [
-  "school-level",
   "exams",
   "holidays",
   "events",
@@ -113,50 +111,152 @@ export const CATEGORY_PILL_STYLES: Record<TagCategory, string> = {
   "due-dates": "bg-amber-100 text-amber-800 dark:bg-amber-900/50 dark:text-amber-300",
 };
 
-// Map legacy DB category values to our tag system
-export function mapDbCategoryToTag(dbCategory: string): CalendarTag | null {
-  const normalized = (dbCategory || "").toLowerCase().trim();
+/**
+ * Determines the top-level category from DB event_category field
+ */
+export function mapDbToCategory(eventCategory: string, eventType?: string): TagCategory | null {
+  const cat = (eventCategory || "").toLowerCase().trim();
+  const type = (eventType || "").toLowerCase().trim();
   
   // Exams
-  if (normalized.includes("mid-year") || normalized.includes("midyear")) return "mid-year-exam";
-  if (normalized.includes("year-end") || normalized.includes("yearend") || normalized.includes("final")) return "year-end-exam";
-  if (normalized.includes("igcse")) return "cambridge-igcse";
-  if (normalized.includes("checkpoint")) return "cambridge-checkpoint";
-  if (normalized.includes("exam") || normalized.includes("test") || normalized.includes("assessment")) return "mid-year-exam";
+  if (cat === "exam" || cat === "examination" || type.includes("exam")) return "exams";
   
   // Holidays
-  if (normalized.includes("replacement") && normalized.includes("holiday")) return "replacement-public-holiday";
-  if (normalized.includes("public") && normalized.includes("holiday")) return "public-holiday";
-  if (normalized.includes("term break") || normalized.includes("school holiday")) return "school-holiday-term-break";
-  if (normalized.includes("holiday")) return "public-holiday";
+  if (cat === "holiday" || type.includes("holiday") || type === "break") return "holidays";
   
   // Events
-  if (normalized.includes("special") || normalized.includes("major")) return "special-event-major";
-  if (normalized.includes("internal")) return "internal-event";
-  if (normalized.includes("external")) return "external-event";
-  if (normalized.includes("open day")) return "open-day";
-  if (normalized.includes("field trip")) return "field-trip";
+  if (cat === "event" || cat === "school events" || cat === "competition" || 
+      cat === "sports" || cat === "cca" || cat === "field_trip" ||
+      type === "school_event" || type === "social" || type === "sports" || type === "field_trip") return "events";
   
   // Staff & Admin
-  if (normalized.includes("team building")) return "staff-team-building";
-  if (normalized.includes("teacher meeting")) return "teacher-meeting";
-  if (normalized.includes("admin meeting")) return "admin-meeting";
-  if (normalized.includes("bog") || normalized.includes("board of governors")) return "bog-meeting";
-  if (normalized.includes("bts") || normalized.includes("back to school")) return "back-to-school";
-  
-  // Due Dates
-  if (normalized.includes("due") && normalized.includes("primary")) return "teacher-due-date-primary";
-  if (normalized.includes("due") && normalized.includes("secondary")) return "teacher-due-date-secondary";
-  if (normalized.includes("due") && normalized.includes("admin")) return "admin-due-date";
+  if (cat === "admin" || cat === "meeting" || type === "meeting") return "staff-admin";
   
   // Students
-  if (normalized.includes("extra class")) return "student-extra-classes";
-  if (normalized.includes("student") && normalized.includes("workshop")) return "student-enrichment-workshop";
+  if (cat === "student_life" || type === "student") return "students";
   
   // Parents
-  if (normalized.includes("ptc") || normalized.includes("parent-teacher") || normalized.includes("parent teacher")) return "parent-teacher-conference";
-  if (normalized.includes("parent") && normalized.includes("workshop")) return "parent-enrichment-workshop";
-  if (normalized.includes("family")) return "family-event";
+  if (cat === "parent" || type === "parent") return "parents";
+  
+  // Academic is often a catch-all - try to parse from type
+  if (cat === "academic") {
+    if (type.includes("exam")) return "exams";
+    if (type.includes("holiday")) return "holidays";
+    if (type.includes("meeting")) return "staff-admin";
+    // Default academic to events
+    return "events";
+  }
   
   return null;
+}
+
+/**
+ * Determines the specific subtype from DB fields + title
+ * This is used for filtering by specific exam/holiday/event types
+ */
+export function mapDbToSubtype(
+  eventCategory: string, 
+  eventType: string | undefined,
+  title: string
+): CalendarTag | null {
+  const cat = (eventCategory || "").toLowerCase().trim();
+  const type = (eventType || "").toLowerCase().trim();
+  const titleLower = (title || "").toLowerCase();
+  
+  // ========== EXAMS ==========
+  if (cat === "exam" || cat === "examination" || type.includes("exam")) {
+    // Check title for specific exam type
+    if (titleLower.includes("igcse") || titleLower.includes("ig ")) return "cambridge-igcse";
+    if (titleLower.includes("checkpoint") || titleLower.includes("cp trial") || titleLower.includes("cp y")) return "cambridge-checkpoint";
+    if (titleLower.includes("mid-year") || titleLower.includes("mye") || titleLower.includes("mid year")) return "mid-year-exam";
+    if (titleLower.includes("year-end") || titleLower.includes("yee") || titleLower.includes("year end")) return "year-end-exam";
+    // Check event_type for exam subtype hints
+    if (type === "examination" || type === "exam") {
+      // Default based on title patterns
+      if (titleLower.includes("trial")) return "cambridge-igcse"; // Trial exams are usually Cambridge prep
+    }
+    // Fallback: if title has "ex1/ex2" patterns, try to classify
+    if (titleLower.includes("ex1") || titleLower.includes("ex2")) return "mid-year-exam";
+    if (titleLower.includes("ex3") || titleLower.includes("ex4")) return "year-end-exam";
+    // Generic exam - default to mid-year
+    return "mid-year-exam";
+  }
+  
+  // ========== HOLIDAYS ==========
+  if (cat === "holiday" || type.includes("holiday") || type === "break") {
+    if (titleLower.includes("replacement")) return "replacement-public-holiday";
+    if (titleLower.includes("term") || titleLower.includes("school holiday")) return "school-holiday-term-break";
+    if (type === "public_holiday" || titleLower.includes("public")) return "public-holiday";
+    if (type === "school_holiday" || titleLower.includes("break")) return "school-holiday-term-break";
+    // Default holidays to public-holiday
+    return "public-holiday";
+  }
+  
+  // ========== EVENTS ==========
+  if (cat === "event" || cat === "school events" || cat === "competition" || 
+      cat === "sports" || cat === "cca" || type === "school_event" || type === "social") {
+    if (titleLower.includes("open day")) return "open-day";
+    if (cat === "field_trip" || titleLower.includes("field trip")) return "field-trip";
+    if (titleLower.includes("special") || titleLower.includes("major")) return "special-event-major";
+    if (titleLower.includes("external")) return "external-event";
+    // Default events to internal-event
+    return "internal-event";
+  }
+  
+  // ========== FIELD TRIPS ==========
+  if (cat === "field_trip" || type === "field_trip") {
+    return "field-trip";
+  }
+  
+  // ========== STAFF & ADMIN ==========
+  if (cat === "admin" || cat === "meeting" || type === "meeting") {
+    if (titleLower.includes("bog") || titleLower.includes("board of governors")) return "bog-meeting";
+    if (titleLower.includes("bts") || titleLower.includes("back to school")) return "back-to-school";
+    if (titleLower.includes("team building")) return "staff-team-building";
+    if (titleLower.includes("admin")) return "admin-meeting";
+    if (titleLower.includes("tsm") || titleLower.includes("teacher")) return "teacher-meeting";
+    // AHM/OHM are usually teacher meetings
+    if (titleLower.includes("ahm") || titleLower.includes("ohm")) return "teacher-meeting";
+    // Default to teacher-meeting
+    return "teacher-meeting";
+  }
+  
+  // ========== STUDENTS ==========
+  if (cat === "student_life" || type === "student") {
+    if (titleLower.includes("extra class")) return "student-extra-classes";
+    if (titleLower.includes("workshop") || titleLower.includes("enrichment")) return "student-enrichment-workshop";
+    return "student-extra-classes";
+  }
+  
+  // ========== PARENTS ==========
+  if (cat === "parent" || type === "parent") {
+    if (titleLower.includes("ptc") || titleLower.includes("conference")) return "parent-teacher-conference";
+    if (titleLower.includes("workshop") || titleLower.includes("enrichment")) return "parent-enrichment-workshop";
+    if (titleLower.includes("family")) return "family-event";
+    return "parent-teacher-conference";
+  }
+  
+  // ========== ACADEMIC (catch-all) ==========
+  if (cat === "academic") {
+    // Try to classify based on title
+    if (titleLower.includes("exam") || titleLower.includes("mye") || titleLower.includes("yee")) {
+      if (titleLower.includes("mid") || titleLower.includes("mye")) return "mid-year-exam";
+      if (titleLower.includes("year-end") || titleLower.includes("yee")) return "year-end-exam";
+      return "mid-year-exam";
+    }
+    if (titleLower.includes("holiday")) return "public-holiday";
+    if (titleLower.includes("bts")) return "back-to-school";
+    if (titleLower.includes("ptc")) return "parent-teacher-conference";
+    if (titleLower.includes("ahm") || titleLower.includes("ohm") || titleLower.includes("tsm") || titleLower.includes("meeting")) return "teacher-meeting";
+    if (titleLower.includes("orientation")) return "internal-event";
+    // Default academic to internal-event
+    return "internal-event";
+  }
+  
+  return null;
+}
+
+// Legacy function for backwards compatibility
+export function mapDbCategoryToTag(dbCategory: string, title?: string): CalendarTag | null {
+  return mapDbToSubtype(dbCategory, undefined, title || "");
 }

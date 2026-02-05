@@ -555,7 +555,8 @@ const createCalendarEvent = (
   time: string,
   tags: CalendarEvent['tags'],
   location: string,
-  category: string = "general"
+  category: string = "general",
+  eventType: string = "academic"
 ): CalendarEvent => ({
   id,
   title,
@@ -574,6 +575,7 @@ const createCalendarEvent = (
   })}`),
   end: null,
   category,
+  eventType,
 });
 
 export const calendarEvents: CalendarEvent[] = [

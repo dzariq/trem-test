@@ -177,4 +177,5 @@ export interface CalendarEvent {
   end: Date | null;
   description?: string;
   category: string;
+  eventType: string;
 }
