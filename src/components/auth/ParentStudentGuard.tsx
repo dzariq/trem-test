@@ -21,11 +21,11 @@ export default function ParentStudentGuard() {
       return;
     }
     
-    // If no profile or wrong role, redirect with error
+    // If no profile or wrong role, redirect silently (no warning toast)
     if (!profile || !allowedRoles.has(profile.role)) {
       if (!didRedirect.current) {
         didRedirect.current = true;
-        toast.error("This portal is only available to parent/student accounts.");
+        // Removed the incorrect warning toast - auth routing handles role mismatches
       }
       navigate("/", { replace: true, state: { from: location.pathname } });
     }

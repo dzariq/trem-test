@@ -5,12 +5,15 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { Badge } from "@/components/ui/badge";
 import { NotificationsDrawer } from "@/components/NotificationsDrawer";
 import { useNotifications } from "@/hooks/useNotifications";
+import { ChildSelectorDropdown } from "@/components/home/ChildSelectorDropdown";
 
 interface AppHeaderProps {
   title?: string;
   showNotifications?: boolean;
   showProfile?: boolean;
   showBack?: boolean;
+  /** Show child selector dropdown in header (parent routes) */
+  showChildSelector?: boolean;
   rightContent?: React.ReactNode;
   leftContent?: React.ReactNode;
 }
@@ -20,6 +23,7 @@ export function AppHeader({
   showNotifications = false, 
   showProfile = false,
   showBack = false,
+  showChildSelector = false,
   rightContent,
   leftContent
 }: AppHeaderProps) {
@@ -45,6 +49,11 @@ export function AppHeader({
           </div>
           
           <div className="flex items-center gap-2">
+            {/* Child selector dropdown for parent routes */}
+            {showChildSelector && !isTeacherPortal && (
+              <ChildSelectorDropdown />
+            )}
+            
             {rightContent}
             
             {showNotifications && (

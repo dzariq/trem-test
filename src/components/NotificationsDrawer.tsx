@@ -1,11 +1,5 @@
-import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import {
-  Drawer,
-  DrawerContent,
-  DrawerHeader,
-  DrawerTitle,
-} from "@/components/ui/drawer";
+import { BottomSheet } from "@/components/ui/bottom-sheet";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -63,18 +57,10 @@ export function NotificationsDrawer({ open, onOpenChange }: NotificationsDrawerP
     markAsRead,
     markAllAsRead,
     deleteNotification,
-    seedNotifications,
     isMarkingAllRead
   } = useNotifications();
   
   const [filter, setFilter] = useState<"all" | "unread">("all");
-
-  // Seed notifications on first load if empty
-  useEffect(() => {
-    if (open && notifications.length === 0 && !isLoading) {
-      seedNotifications();
-    }
-  }, [open, notifications.length, isLoading, seedNotifications]);
 
   const getTypeIcon = (type: string) => {
     switch (type as NotificationType) {
@@ -136,93 +122,95 @@ export function NotificationsDrawer({ open, onOpenChange }: NotificationsDrawerP
     : notifications.filter(n => !n.is_read);
 
   return (
-    <Drawer open={open} onOpenChange={onOpenChange}>
-      <DrawerContent className="max-h-[85vh]">
-        <DrawerHeader className="border-b border-border pb-4">
-          <DrawerTitle className="flex items-center gap-2">
-            <Bell className="h-5 w-5" />
-            Notifications
-          </DrawerTitle>
-        </DrawerHeader>
-        
-        <div className="px-4 py-3">
-          {/* Filter and Actions */}
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex gap-2">
-              <Badge 
-                variant={filter === "all" ? "default" : "outline"}
-                className="cursor-pointer"
-                onClick={() => setFilter("all")}
-              >
-                All ({notifications.length})
-              </Badge>
-              <Badge 
-                variant={filter === "unread" ? "default" : "outline"}
-                className="cursor-pointer"
-                onClick={() => setFilter("unread")}
-              >
-                Unread ({unreadCount})
-              </Badge>
-            </div>
-            {unreadCount > 0 && (
-              <Button 
-                variant="ghost" 
-                size="sm" 
-                onClick={() => markAllAsRead()} 
-                className="text-xs"
-                disabled={isMarkingAllRead}
-              >
-                {isMarkingAllRead ? (
-                  <Loader2 className="h-3 w-3 mr-1 animate-spin" />
-                ) : null}
-                Mark all read
-              </Button>
+    <BottomSheet
+      open={open}
+      onOpenChange={onOpenChange}
+      title={
+        <div className="flex items-center gap-2">
+          <Bell className="h-5 w-5" />
+          Notifications
+        </div>
+      }
+      snapPoints={[0, 0.5, 0.85, 1]}
+      defaultSnapPoint={0.85}
+      showHandle
+    >
+      <div className="px-4 py-3">
+        {/* Filter and Actions */}
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex gap-2">
+            <Badge 
+              variant={filter === "all" ? "default" : "outline"}
+              className="cursor-pointer"
+              onClick={() => setFilter("all")}
+            >
+              All ({notifications.length})
+            </Badge>
+            <Badge 
+              variant={filter === "unread" ? "default" : "outline"}
+              className="cursor-pointer"
+              onClick={() => setFilter("unread")}
+            >
+              Unread ({unreadCount})
+            </Badge>
+          </div>
+          {unreadCount > 0 && (
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              onClick={() => markAllAsRead()} 
+              className="text-xs"
+              disabled={isMarkingAllRead}
+            >
+              {isMarkingAllRead ? (
+                <Loader2 className="h-3 w-3 mr-1 animate-spin" />
+              ) : null}
+              Mark all read
+            </Button>
+          )}
+        </div>
+        <p className="text-xs text-muted-foreground text-center">
+          Swipe left to dismiss • Tap to open
+        </p>
+      </div>
+
+      <ScrollArea className="flex-1 px-4">
+        {isLoading ? (
+          <div className="flex items-center justify-center py-12">
+            <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+          </div>
+        ) : (
+          <div className="space-y-2 pb-6">
+            {filteredNotifications.map((notification) => {
+              const Icon = getTypeIcon(notification.type);
+              const hasLink = !!notification.link_to;
+              
+              return (
+                <SwipeableNotification
+                  key={notification.id}
+                  id={notification.id}
+                  icon={<Icon className="h-5 w-5" />}
+                  iconBgClass={getTypeColor(notification.type)}
+                  title={notification.title}
+                  message={notification.message}
+                  time={notification.time}
+                  isRead={notification.is_read}
+                  hasLink={hasLink}
+                  onClick={() => handleNotificationClick(notification)}
+                  onDelete={() => deleteNotification(notification.id)}
+                />
+              );
+            })}
+
+            {filteredNotifications.length === 0 && (
+              <div className="text-center py-12">
+                <Bell className="h-12 w-12 mx-auto text-muted-foreground/50 mb-3" />
+                <p className="text-muted-foreground">No notifications</p>
+              </div>
             )}
           </div>
-          <p className="text-xs text-muted-foreground text-center">
-            Swipe left to delete • Tap to open
-          </p>
-        </div>
-
-        <ScrollArea className="flex-1 px-4 pb-[calc(1.5rem+var(--safe-bottom))]" style={{ maxHeight: "calc(85vh - 160px - var(--safe-bottom))" }}>
-          {isLoading ? (
-            <div className="flex items-center justify-center py-12">
-              <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-            </div>
-          ) : (
-            <div className="space-y-2">
-              {filteredNotifications.map((notification) => {
-                const Icon = getTypeIcon(notification.type);
-                const hasLink = !!notification.link_to;
-                
-                return (
-                  <SwipeableNotification
-                    key={notification.id}
-                    id={notification.id}
-                    icon={<Icon className="h-5 w-5" />}
-                    iconBgClass={getTypeColor(notification.type)}
-                    title={notification.title}
-                    message={notification.message}
-                    time={notification.time}
-                    isRead={notification.is_read}
-                    hasLink={hasLink}
-                    onClick={() => handleNotificationClick(notification)}
-                    onDelete={() => deleteNotification(notification.id)}
-                  />
-                );
-              })}
-
-              {filteredNotifications.length === 0 && (
-                <div className="text-center py-12">
-                  <Bell className="h-12 w-12 mx-auto text-muted-foreground/50 mb-3" />
-                  <p className="text-muted-foreground">No notifications</p>
-                </div>
-              )}
-            </div>
-          )}
-        </ScrollArea>
-      </DrawerContent>
-    </Drawer>
+        )}
+      </ScrollArea>
+    </BottomSheet>
   );
 }
-

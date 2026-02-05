@@ -367,44 +367,12 @@ export default function CalendarPage() {
   return (
     <AppLayout>
       <AppHeader
+        showChildSelector
         leftContent={
           <div className="flex items-center gap-2">
             <img src={schoolLogo} alt="School Logo" className="h-16 w-auto -my-3 drop-shadow-md" />
             <h1 className="text-xl font-semibold text-foreground">Calendar</h1>
           </div>
-        }
-        rightContent={
-          <Select
-            value={selectedStudentId}
-            onValueChange={setSelectedStudentId}
-            disabled={studentsLoading || linkedStudents.length === 0}
-          >
-            <SelectTrigger className="w-32 h-8 text-sm">
-              <SelectValue placeholder="Student" />
-            </SelectTrigger>
-            <SelectContent className="bg-card">
-              {studentsLoading && (
-                <SelectItem value="loading" disabled>
-                  Loading...
-                </SelectItem>
-              )}
-              {!studentsLoading && studentsError && (
-                <SelectItem value="error" disabled>
-                  {studentsError}
-                </SelectItem>
-              )}
-              {!studentsLoading && !studentsError && linkedStudents.length === 0 && (
-                <SelectItem value="empty" disabled>
-                  No linked students yet. Please contact admin.
-                </SelectItem>
-              )}
-              {!studentsLoading && !studentsError && linkedStudents.map((student) => (
-                <SelectItem key={student.id} value={student.id}>
-                  {student.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
         }
       />
 

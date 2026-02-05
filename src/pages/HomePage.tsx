@@ -5,7 +5,6 @@ import { AnnouncementCarousel } from "@/components/home/AnnouncementCarousel";
 import { UpcomingEvents } from "@/components/home/UpcomingEvents";
 import { QuickLinks } from "@/components/home/QuickLinks";
 import { AttendanceSummary } from "@/components/home/AttendanceSummary";
-import { StudentPillSelector } from "@/components/home/StudentPillSelector";
 import { WelcomeTypingAnimation } from "@/components/home/WelcomeTypingAnimation";
 import { Card, CardContent } from "@/components/ui/card";
 import schoolBadge from "@/assets/school-badge.png";
@@ -124,6 +123,7 @@ export default function HomePage() {
         title="" 
         showNotifications 
         showProfile 
+        showChildSelector
         leftContent={
           <div className="flex items-center gap-3">
             <img 
@@ -131,7 +131,6 @@ export default function HomePage() {
               alt="School Badge" 
               className="h-16 w-auto -my-3 drop-shadow-md" 
             />
-            <StudentPillSelector />
           </div>
         }
       />
