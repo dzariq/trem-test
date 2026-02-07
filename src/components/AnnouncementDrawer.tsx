@@ -361,31 +361,31 @@ export function AnnouncementDrawer({
           </div>
 
           {/* Navigation Footer */}
-          <div className="absolute bottom-0 left-0 right-0 bg-background/98 backdrop-blur-md border-t border-border/50 px-4 py-4 pb-[calc(1.5rem+var(--safe-bottom))]">
-            <div className="flex items-center justify-between">
+          <div className="absolute bottom-0 left-0 right-0 bg-background/98 backdrop-blur-md border-t border-border/50 px-5 py-4 pb-[calc(1.5rem+var(--safe-bottom))]">
+            <div className="flex items-center justify-between gap-4">
               {/* Previous Button */}
               <Button
                 variant="outline"
                 size="sm"
                 onClick={goToPrevious}
                 disabled={currentIndex === 0}
-                className="gap-1.5 rounded-full px-4"
+                className="gap-1 rounded-full px-3 flex-shrink-0"
               >
                 <ChevronLeft className="h-4 w-4" />
                 Prev
               </Button>
 
               {/* Dots Indicator */}
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1.5 flex-wrap justify-center overflow-hidden">
                 {announcements.map((_, idx) => (
                   <button
                     key={idx}
                     onClick={() => onNavigate(idx)}
                     className={cn(
-                      "rounded-full transition-all duration-200",
+                      "rounded-full transition-all duration-200 flex-shrink-0",
                       idx === currentIndex
-                        ? "w-7 h-2.5 bg-primary"
-                        : "w-2.5 h-2.5 bg-muted-foreground/25 hover:bg-muted-foreground/40"
+                        ? "w-6 h-2 bg-primary"
+                        : "w-2 h-2 bg-muted-foreground/25 hover:bg-muted-foreground/40"
                     )}
                   />
                 ))}
@@ -397,7 +397,7 @@ export function AnnouncementDrawer({
                 size="sm"
                 onClick={goToNext}
                 disabled={currentIndex === announcements.length - 1}
-                className="gap-1.5 rounded-full px-4"
+                className="gap-1 rounded-full px-3 flex-shrink-0"
               >
                 Next
                 <ChevronRight className="h-4 w-4" />
