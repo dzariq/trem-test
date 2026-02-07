@@ -612,7 +612,7 @@ export default function CalendarPage() {
             {/* My CCAs (Enrolled) Section */}
             <div className="space-y-3">
               <div className="flex items-center gap-2">
-                <h3 className="text-base font-semibold text-foreground">My CCAs (Enrolled)</h3>
+                <h3 className="text-base font-semibold text-foreground">Enrolled CCA Activities</h3>
                 <Badge variant="secondary" className="text-xs">
                   {filteredEnrolledCCA.length}
                 </Badge>
