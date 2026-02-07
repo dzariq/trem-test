@@ -1,122 +1,123 @@
 
-# CCA Card UI/UX Improvements
+# Plan: Display Study Recommendations in Parent Academic Report Card
 
 ## Overview
 
-Redesign the teacher display in "My CCAs (Enrolled)" cards to be more compact and visually appealing, with color-coded teacher pills and a short description.
+Enhance the expanded subject card in the Parent Academic page to display study recommendations in addition to the teacher's comment. The system supports two types of study recommendations:
 
-## Current State Issues
+1. **Class Study Recommendation** - A recommendation that applies to all students in the class (stored in `class_study_recommendations` table)
+2. **Individual Study Recommendation** - A personalized recommendation specific to each student (stored as `subject_comment` in `student_grades` table)
 
-From the screenshot:
-- Teacher pills are too large (showing name + department + "(Lead)" text)
-- Takes up too much vertical space on mobile
-- No description visible on the card
-- Color scheme uses green tones that don't differentiate lead from supporting teachers
+When both are filled in, both should appear as separate sections.
 
-## Design Changes
+---
 
-### 1. Simplified Teacher Pills
+## Current State Analysis
 
-**Before:**
+### Data Flow
+- `useStudentReportCard` hook already fetches both:
+  - `subject_comment` from `student_grades` (mapped to `subjectComment`) - Individual recommendation
+  - `recommendation` from `class_study_recommendations` (mapped to `classStudyRecommendation`) - Class-wide recommendation
+
+### UI Issue
+- Currently only displays `teacherComment` in the expanded card
+- Both study recommendation fields are fetched but not rendered
+
+---
+
+## Implementation Plan
+
+### Step 1: Update SubjectGrade Interface Naming (Optional Clarity)
+File: `src/hooks/useStudentReportCard.ts`
+
+The current naming is slightly confusing:
+- `subjectComment` is actually the individual study recommendation
+- Consider renaming to `individualStudyRecommendation` for clarity (optional)
+
+### Step 2: Update Expanded Subject Card UI
+File: `src/pages/AcademicPage.tsx` (lines ~1675-1711)
+
+Modify the expanded section to display:
+
 ```
-[ Teacher Adam (Lead)  ]  [ Test 5      ]
-  Maths, Science            (gray bg)
-  (green bg)
-```
-
-**After:**
-```
-[ Teacher Adam ]  [ Test 5 ]
-  (yellow bg)      (light yellow bg)
-```
-
-Changes:
-- Remove department text from pills
-- Remove "(Lead)" text label
-- Make pills single-line (name only)
-- Reduce padding for compact size
-
-### 2. Color Scheme Update
-
-| Teacher Type | Background Color | Text Color |
-|--------------|------------------|------------|
-| Lead (Primary) | `bg-yellow-400` (bright yellow) | `text-yellow-900` |
-| Supporting | `bg-yellow-100` (light yellow) | `text-yellow-800` |
-
-### 3. Add Description
-
-Show the `publicDescription` field on the card (truncated to 2 lines):
-- Position: Below the title/badges, above meeting time
-- Style: Small text, muted color, line-clamp-2 for overflow
-
-## Technical Implementation
-
-### File: `src/components/cca/PICTeacherPill.tsx`
-
-Create a new compact variant of the pill component:
-
-```tsx
-// Add new prop: variant = "default" | "compact"
-// When variant="compact":
-// - Only show teacher name (no departments)
-// - No "(Lead)" text
-// - Smaller padding: px-2 py-1
-// - Color based on isPrimary:
-//   - Primary: bg-yellow-400 text-yellow-900
-//   - Non-primary: bg-yellow-100 text-yellow-800
++------------------------------------------+
+| Teacher's Comment                        |
+| [teacherComment text]                    |
++------------------------------------------+
+| Study Tips                               |
+|                                          |
+| [Class Study Recommendation - if exists] |
+| "For the class: [recommendation text]"   |
+|                                          |
+| [Individual Recommendation - if exists]  |
+| "For [student name]: [recommendation]"   |
++------------------------------------------+
 ```
 
-Update `PICTeachersList` to accept a `variant` prop and pass it to pills.
+**Logic:**
+1. If `classStudyRecommendation` exists and is not "-" or empty, show it with label "Class Recommendation"
+2. If `subjectComment` (individual study recommendation) exists, show it with label "Personal Recommendation"
+3. If only one exists, show just that one
+4. If neither exists, show "No study tips available"
 
-### File: `src/pages/CalendarPage.tsx`
+### Step 3: Visual Design
 
-Update the enrolled CCA card rendering:
+Use distinct styling for each recommendation type:
+- **Class Recommendation**: Use a subtle amber/yellow background with a graduation cap or book icon
+- **Individual Recommendation**: Use a subtle blue/teal background with a star or user icon
+- Both should be visually distinct from the Teacher's Comment section
 
-1. Add description display after the title section:
-```tsx
-{activity.publicDescription && (
-  <p className="text-xs text-muted-foreground line-clamp-2 mt-1">
-    {activity.publicDescription}
-  </p>
-)}
-```
+---
 
-2. Use compact variant for teacher pills:
-```tsx
-<PICTeachersList
-  teachers={activity.picTeachers}
-  fallbackCoordinator={null}
-  variant="compact"
-/>
-```
+## Technical Details
 
-## Visual Mockup (After)
-
-```text
-+--------------------------------------------------+
-| Art Club                    [Enrolled] [Indoor]  |
-|                                                  |
-| Explore creativity through painting and drawing  |
-|                                                  |
-| (clock) Wednesday, 3:30 PM - 5:00 PM             |
-| (pin)   Art Room                                 |
-| (user)  [Teacher Adam] [Test 5]                  |
-|          (yellow)       (light yellow)           |
-+--------------------------------------------------+
-```
-
-## Files to Modify
+### Files to Modify
 
 | File | Changes |
 |------|---------|
-| `src/components/cca/PICTeacherPill.tsx` | Add `variant` prop for compact mode with yellow color scheme |
-| `src/pages/CalendarPage.tsx` | Add description display, use compact teacher pills |
+| `src/pages/AcademicPage.tsx` | Update expanded subject card section (around line 1676-1711) to render both study recommendations |
 
-## Expected Behavior
+### Data Already Available
+The grade object in the expanded section already contains:
+- `expandedInRow.teacherComment` - Teacher's comment
+- `expandedInRow.subjectComment` - Individual study recommendation
+- `expandedInRow.classStudyRecommendation` - Class-wide recommendation
 
-1. Teacher pills show only names (no departments, no "Lead" text)
-2. Lead teacher has bright yellow background
-3. Supporting teachers have light yellow background
-4. Pills are smaller and more compact
-5. CCA description appears below the title (2 lines max)
-6. Overall card is more informative yet less cluttered
+### Example Rendering Logic
+```tsx
+{/* Study Tips Section */}
+{(hasClassRecommendation || hasIndividualRecommendation) && (
+  <div className="mt-3 pt-3 border-t border-amber-200">
+    <div className="flex items-center gap-2 mb-2">
+      <Lightbulb className="h-4 w-4 text-amber-600" />
+      <span className="text-sm font-semibold text-amber-700">Study Tips</span>
+    </div>
+    
+    {/* Class Recommendation */}
+    {hasClassRecommendation && (
+      <div className="bg-amber-50 rounded-lg p-3 mb-2">
+        <p className="text-xs font-medium text-amber-600 mb-1">For the Class</p>
+        <p className="text-sm text-amber-900">{classStudyRecommendation}</p>
+      </div>
+    )}
+    
+    {/* Individual Recommendation */}
+    {hasIndividualRecommendation && (
+      <div className="bg-blue-50 rounded-lg p-3">
+        <p className="text-xs font-medium text-blue-600 mb-1">For {studentName}</p>
+        <p className="text-sm text-blue-900">{individualRecommendation}</p>
+      </div>
+    )}
+  </div>
+)}
+```
+
+---
+
+## Summary of Changes
+
+1. Add a new "Study Tips" section below the Teacher's Comment in the expanded subject card
+2. Display class-wide recommendations when available (from `classStudyRecommendation`)
+3. Display individual recommendations when available (from `subjectComment`)
+4. Use distinct visual styling to differentiate between class-wide and personal recommendations
+5. Handle all edge cases (neither, one, or both recommendations present)
