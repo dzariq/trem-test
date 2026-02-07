@@ -5,14 +5,35 @@ interface PICTeacherPillProps extends React.HTMLAttributes<HTMLDivElement> {
   name: string;
   departments: string[];
   isPrimary?: boolean;
+  variant?: "default" | "compact";
 }
 
 export const PICTeacherPill = React.forwardRef<HTMLDivElement, PICTeacherPillProps>(
-  ({ name, departments, isPrimary = false, className, ...props }, ref) => {
+  ({ name, departments, isPrimary = false, variant = "default", className, ...props }, ref) => {
     const departmentText = departments.length > 0 
       ? departments.join(", ") 
       : null;
 
+    // Compact variant: name only, yellow colors, smaller padding
+    if (variant === "compact") {
+      return (
+        <div
+          ref={ref}
+          className={cn(
+            "inline-flex px-2 py-1 rounded-md text-xs font-medium",
+            isPrimary
+              ? "bg-yellow-400 text-yellow-900"
+              : "bg-yellow-100 text-yellow-800",
+            className
+          )}
+          {...props}
+        >
+          {name}
+        </div>
+      );
+    }
+
+    // Default variant: full display with departments
     return (
       <div
         ref={ref}
@@ -52,12 +73,14 @@ interface PICTeachersListProps {
   }>;
   fallbackCoordinator?: string | null;
   className?: string;
+  variant?: "default" | "compact";
 }
 
 export function PICTeachersList({
   teachers,
   fallbackCoordinator,
   className,
+  variant = "default",
 }: PICTeachersListProps) {
   // Sort: isPrimary desc, then role='PIC' first, then alphabetically by name
   const sortedTeachers = [...teachers].sort((a, b) => {
@@ -82,6 +105,7 @@ export function PICTeachersList({
             name={fallbackCoordinator}
             departments={[]}
             isPrimary={false}
+            variant={variant}
           />
         </div>
       );
@@ -99,6 +123,7 @@ export function PICTeachersList({
           name={teacher.fullName}
           departments={teacher.departments}
           isPrimary={teacher.isPrimary}
+          variant={variant}
         />
       ))}
     </div>
