@@ -9,7 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Progress } from "@/components/ui/progress";
-import { Download, FileText, Award, Trophy, BookOpen, TrendingUp, TrendingDown, Check, ArrowUp, ArrowDown, Minus, BarChart3, GitCompare, Target, AlertTriangle, Star, Goal, CheckCircle2, Circle, Edit2, ChevronDown, MessageSquare, Calendar, Sparkles, Printer, FileSpreadsheet, ArrowRightLeft, Loader2 } from "lucide-react";
+import { Download, FileText, Award, Trophy, BookOpen, TrendingUp, TrendingDown, Check, ArrowUp, ArrowDown, Minus, BarChart3, GitCompare, Target, AlertTriangle, Star, Goal, CheckCircle2, Circle, Edit2, ChevronDown, MessageSquare, Calendar, Sparkles, Printer, FileSpreadsheet, ArrowRightLeft, Loader2, Lightbulb, Users, User } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import schoolLogo from "@/assets/school-badge.png";
@@ -1683,32 +1683,74 @@ export default function AcademicPage() {
                                   <p className="text-sm text-muted-foreground leading-relaxed">
                                     {expandedInRow.teacherComment || "No comment available for this subject."}
                                   </p>
-                                  {canViewBreakdown && (
-                                    <div className="mt-3 pt-3 border-t border-border">
-                                      <p className="text-xs font-medium text-muted-foreground mb-2">Score Breakdown</p>
-                                      <div className="grid grid-cols-4 gap-2">
-                                        <div className="text-center p-2 bg-muted/50 rounded-md">
-                                          <p className="text-xs text-muted-foreground">Quiz</p>
-                                          <p className="text-sm font-semibold">{expandedInRow.quizMarks}</p>
-                                        </div>
-                                        <div className="text-center p-2 bg-muted/50 rounded-md">
-                                          <p className="text-xs text-muted-foreground">HW</p>
-                                          <p className="text-sm font-semibold">{expandedInRow.homeworkMarks}</p>
-                                        </div>
-                                        <div className="text-center p-2 bg-muted/50 rounded-md">
-                                          <p className="text-xs text-muted-foreground">Exam</p>
-                                          <p className="text-sm font-semibold">{expandedInRow.examMarks}</p>
-                                        </div>
-                                        <div className="text-center p-2 bg-muted/50 rounded-md">
-                                          <p className="text-xs text-muted-foreground">Att</p>
-                                          <p className="text-sm font-semibold">{expandedInRow.attitudeMarks}</p>
+                                    {canViewBreakdown && (
+                                      <div className="mt-3 pt-3 border-t border-border">
+                                        <p className="text-xs font-medium text-muted-foreground mb-2">Score Breakdown</p>
+                                        <div className="grid grid-cols-4 gap-2">
+                                          <div className="text-center p-2 bg-muted/50 rounded-md">
+                                            <p className="text-xs text-muted-foreground">Quiz</p>
+                                            <p className="text-sm font-semibold">{expandedInRow.quizMarks}</p>
+                                          </div>
+                                          <div className="text-center p-2 bg-muted/50 rounded-md">
+                                            <p className="text-xs text-muted-foreground">HW</p>
+                                            <p className="text-sm font-semibold">{expandedInRow.homeworkMarks}</p>
+                                          </div>
+                                          <div className="text-center p-2 bg-muted/50 rounded-md">
+                                            <p className="text-xs text-muted-foreground">Exam</p>
+                                            <p className="text-sm font-semibold">{expandedInRow.examMarks}</p>
+                                          </div>
+                                          <div className="text-center p-2 bg-muted/50 rounded-md">
+                                            <p className="text-xs text-muted-foreground">Att</p>
+                                            <p className="text-sm font-semibold">{expandedInRow.attitudeMarks}</p>
+                                          </div>
                                         </div>
                                       </div>
-                                    </div>
-                                  )}
+                                    )}
+                                    
+                                    {/* Study Tips Section */}
+                                    {(() => {
+                                      const hasClassRecommendation = expandedInRow.classStudyRecommendation && 
+                                        expandedInRow.classStudyRecommendation !== "-" && 
+                                        expandedInRow.classStudyRecommendation.trim() !== "";
+                                      const hasIndividualRecommendation = expandedInRow.subjectComment && 
+                                        expandedInRow.subjectComment.trim() !== "";
+                                      
+                                      if (!hasClassRecommendation && !hasIndividualRecommendation) return null;
+                                      
+                                      return (
+                                        <div className="mt-3 pt-3 border-t border-amber-200/50">
+                                          <div className="flex items-center gap-2 mb-2">
+                                            <Lightbulb className="h-4 w-4 text-amber-600" />
+                                            <span className="text-sm font-semibold text-amber-700">Study Tips</span>
+                                          </div>
+                                          
+                                          {/* Class Study Recommendation */}
+                                          {hasClassRecommendation && (
+                                            <div className="bg-amber-50 dark:bg-amber-950/30 rounded-lg p-3 mb-2 border border-amber-200/50">
+                                              <div className="flex items-center gap-1.5 mb-1">
+                                                <Users className="h-3.5 w-3.5 text-amber-600" />
+                                                <p className="text-xs font-medium text-amber-600">For the Class</p>
+                                              </div>
+                                              <p className="text-sm text-amber-900 dark:text-amber-100">{expandedInRow.classStudyRecommendation}</p>
+                                            </div>
+                                          )}
+                                          
+                                          {/* Individual Study Recommendation */}
+                                          {hasIndividualRecommendation && (
+                                            <div className="bg-blue-50 dark:bg-blue-950/30 rounded-lg p-3 border border-blue-200/50">
+                                              <div className="flex items-center gap-1.5 mb-1">
+                                                <User className="h-3.5 w-3.5 text-blue-600" />
+                                                <p className="text-xs font-medium text-blue-600">Personal Recommendation</p>
+                                              </div>
+                                              <p className="text-sm text-blue-900 dark:text-blue-100">{expandedInRow.subjectComment}</p>
+                                            </div>
+                                          )}
+                                        </div>
+                                      );
+                                    })()}
+                                  </div>
                                 </div>
-                              </div>
-                            )}
+                              )}
                           </div>;
                       });
                     })()}
