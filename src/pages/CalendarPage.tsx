@@ -791,7 +791,7 @@ export default function CalendarPage() {
                 return (
                   <Card key={activity.id} className="bg-card border-border shadow-sm">
                     <CardContent className="p-4">
-                      <div className="flex items-start justify-between gap-3 mb-3">
+                      <div className="flex items-start justify-between gap-3 mb-2">
                         <div className="min-w-0">
                           <h3 className="font-semibold text-foreground">{activity.name}</h3>
                           {activity.eligibleYears.length > 0 && (
@@ -818,6 +818,13 @@ export default function CalendarPage() {
                         </div>
                       </div>
 
+                      {/* Description */}
+                      {activity.publicDescription && (
+                        <p className="text-xs text-muted-foreground line-clamp-2 mb-3">
+                          {activity.publicDescription}
+                        </p>
+                      )}
+
                       <div className="space-y-2 text-sm text-muted-foreground">
                         {(activity.meetingDay || activity.meetingTime) && (
                           <div className="flex items-center gap-2">
@@ -834,30 +841,19 @@ export default function CalendarPage() {
                             <span>{activity.location}</span>
                           </div>
                         )}
-                      </div>
-
-                      <div className="flex items-start justify-between gap-3 pt-1 mt-2">
-                        <div className="flex items-start gap-2 min-w-0">
-                          <User className="h-4 w-4 mt-0.5 shrink-0 text-muted-foreground" />
-                          <div className="min-w-0">
-                            {getTeacherInChargeLabel(activity) ? (
-                              <PICTeachersList
-                                teachers={activity.picTeachers}
-                                fallbackCoordinator={activity.coordinatorName}
-                                className="gap-2"
-                              />
-                            ) : (
-                              <p className="text-xs text-muted-foreground">
-                                Teacher in charge: Not assigned
-                              </p>
-                            )}
-                          </div>
+                        <div className="flex items-center gap-2">
+                          <User className="h-4 w-4" />
+                          {getTeacherInChargeLabel(activity) ? (
+                            <PICTeachersList
+                              teachers={activity.picTeachers}
+                              fallbackCoordinator={activity.coordinatorName}
+                              variant="compact"
+                            />
+                          ) : (
+                            <span className="text-xs">Not assigned</span>
+                          )}
                         </div>
                       </div>
-
-                      <p className="text-sm text-muted-foreground mt-3">
-                        {activity.publicDescription || "Details to be announced"}
-                      </p>
 
                       <div className="flex gap-2 mt-4">
                         <Button
