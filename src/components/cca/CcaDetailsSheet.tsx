@@ -83,6 +83,7 @@ export function CcaDetailsSheet({
               <PICTeachersList
                 teachers={activity.picTeachers}
                 fallbackCoordinator={activity.coordinatorName}
+                variant="compact"
               />
             </div>
           </div>
