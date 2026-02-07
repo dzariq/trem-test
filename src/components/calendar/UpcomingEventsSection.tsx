@@ -3,14 +3,14 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import type { UpcomingEvent } from "@/data/calendar";
-import { getTagColor, getTagDisplayName } from "@/lib/calendarUtils";
+import { getTagDisplayName } from "@/lib/calendarUtils";
+import { TAG_CATEGORIES } from "@/types/calendarTags";
 import {
   UPCOMING_TABS,
   UPCOMING_TAB_COLORS,
   filterByUpcomingTab,
   formatDateRange,
   getDaysDuration,
-  getEventTypeColor,
   type UpcomingTab,
 } from "@/lib/calendarFilters";
 import { cn } from "@/lib/utils";
@@ -72,7 +72,6 @@ export function UpcomingEventsSection({ events, onEventClick }: UpcomingEventsSe
           const isMultiDay = event.startDay !== event.endDay;
           const [sY, sM, sD] = event.startDay.split("-").map(Number);
           const eventDate = new Date(sY, sM - 1, sD);
-          const indicatorColor = getEventTypeColor(event);
 
           return (
             <div
@@ -83,13 +82,10 @@ export function UpcomingEventsSection({ events, onEventClick }: UpcomingEventsSe
               onClick={(e) => onEventClick(event, e.currentTarget)}
               onKeyDown={(e) => handleEventKeyDown(e, event)}
             >
-              {/* Color indicator strip */}
-              <div className={`w-1 self-stretch rounded-full flex-shrink-0 ${indicatorColor}`} />
-
-              {/* Date box */}
-              <div className="flex flex-col items-center justify-center bg-primary/10 text-primary rounded-lg w-12 h-12 flex-shrink-0">
-                <span className="text-sm font-bold leading-none">{eventDate.getDate()}</span>
-                <span className="text-xs uppercase">
+              {/* Date box - enlarged */}
+              <div className="flex flex-col items-center justify-center bg-primary/10 text-primary rounded-xl w-16 h-16 flex-shrink-0">
+                <span className="text-lg font-bold leading-none">{eventDate.getDate()}</span>
+                <span className="text-xs uppercase mt-0.5">
                   {eventDate.toLocaleDateString("en-US", { month: "short" })}
                 </span>
               </div>
@@ -112,11 +108,21 @@ export function UpcomingEventsSection({ events, onEventClick }: UpcomingEventsSe
                 )}
 
                 <div className="flex flex-wrap gap-1">
-                  {event.tags.slice(0, 2).map((tag) => (
-                    <Badge key={tag} className={`text-xs ${getTagColor(tag)}`}>
-                      {getTagDisplayName(tag)}
-                    </Badge>
-                  ))}
+                  {event.tags.slice(0, 2).map((tag) => {
+                    // Use master category colors: purple for events, red for exams, green for holidays
+                    const tagCategory = TAG_CATEGORIES[tag];
+                    let badgeColor = "bg-purple-500 text-white"; // default events color
+                    if (tagCategory === "exams") {
+                      badgeColor = "bg-red-500 text-white";
+                    } else if (tagCategory === "holidays") {
+                      badgeColor = "bg-green-500 text-white";
+                    }
+                    return (
+                      <Badge key={tag} className={`text-xs ${badgeColor}`}>
+                        {getTagDisplayName(tag)}
+                      </Badge>
+                    );
+                  })}
                   {event.tags.length > 2 && (
                     <Badge variant="outline" className="text-xs">
                       +{event.tags.length - 2}
