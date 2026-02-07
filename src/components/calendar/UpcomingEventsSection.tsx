@@ -6,12 +6,14 @@ import type { UpcomingEvent } from "@/data/calendar";
 import { getTagColor, getTagDisplayName } from "@/lib/calendarUtils";
 import {
   UPCOMING_TABS,
+  UPCOMING_TAB_COLORS,
   filterByUpcomingTab,
   formatDateRange,
   getDaysDuration,
   getEventTypeColor,
   type UpcomingTab,
 } from "@/lib/calendarFilters";
+import { cn } from "@/lib/utils";
 
 interface UpcomingEventsSectionProps {
   events: UpcomingEvent[];
@@ -25,7 +27,7 @@ interface UpcomingEventsSectionProps {
  * - Event cards have a colored left indicator based on event type
  */
 export function UpcomingEventsSection({ events, onEventClick }: UpcomingEventsSectionProps) {
-  const [activeTab, setActiveTab] = useState<UpcomingTab>("upcoming");
+  const [activeTab, setActiveTab] = useState<UpcomingTab>("events");
 
   const filteredEvents = useMemo(
     () => filterByUpcomingTab(events, activeTab),
@@ -50,7 +52,14 @@ export function UpcomingEventsSection({ events, onEventClick }: UpcomingEventsSe
         <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as UpcomingTab)}>
           <TabsList className="grid w-full grid-cols-3 h-9 bg-muted/50">
             {UPCOMING_TABS.map((tab) => (
-              <TabsTrigger key={tab.value} value={tab.value} className="text-xs">
+              <TabsTrigger 
+                key={tab.value} 
+                value={tab.value} 
+                className={cn(
+                  "text-xs transition-colors",
+                  activeTab === tab.value && UPCOMING_TAB_COLORS[tab.value]
+                )}
+              >
                 {tab.label}
               </TabsTrigger>
             ))}
