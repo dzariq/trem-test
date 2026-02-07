@@ -647,7 +647,7 @@ export default function CalendarPage() {
               {!enrolledLoading && !enrolledError && filteredEnrolledCCA.map((activity) => (
                 <Card 
                   key={`enrolled-${activity.enrollmentId}`} 
-                  className="bg-primary/5 border-primary/20 shadow-sm cursor-pointer hover:bg-primary/10 transition-colors active:scale-[0.99]"
+                  className="bg-emerald-50/80 dark:bg-emerald-950/30 border border-emerald-200/60 dark:border-emerald-800/40 shadow-sm cursor-pointer hover:bg-emerald-100/80 dark:hover:bg-emerald-900/40 transition-colors active:scale-[0.99]"
                   onClick={() => setSelectedEnrolledCCA(activity)}
                   role="button"
                   tabIndex={0}
