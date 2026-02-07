@@ -89,13 +89,20 @@ export function filterEventsByTypes(
 
 // --- Upcoming events tab filtering ---
 
-export type UpcomingTab = "upcoming" | "exams" | "holidays";
+export type UpcomingTab = "events" | "exams" | "holidays";
 
 export const UPCOMING_TABS: { value: UpcomingTab; label: string }[] = [
-  { value: "upcoming", label: "Upcoming" },
+  { value: "events", label: "Events" },
   { value: "exams", label: "Exams" },
   { value: "holidays", label: "Holidays" },
 ];
+
+// Tab colors matching the category filter button colors
+export const UPCOMING_TAB_COLORS: Record<UpcomingTab, string> = {
+  events: "bg-purple-500 text-white data-[state=active]:bg-purple-500 data-[state=active]:text-white",
+  exams: "bg-red-500 text-white data-[state=active]:bg-red-500 data-[state=active]:text-white",
+  holidays: "bg-green-500 text-white data-[state=active]:bg-green-500 data-[state=active]:text-white",
+};
 
 const toYmd = (date: Date) => {
   const year = date.getFullYear();
@@ -144,6 +151,27 @@ const isHolidayEvent = (event: UpcomingEvent): boolean => {
   return false;
 };
 
+/**
+ * Check if event belongs to Events, Students, or Parents categories.
+ * This filters for special events, field trips, student activities, PTC, family events, etc.
+ */
+const isEventsEvent = (event: UpcomingEvent): boolean => {
+  // Check tags for events, students, parents categories
+  if (event.tags.some((tag) => {
+    const cat = TAG_CATEGORIES[tag];
+    return cat === "events" || cat === "students" || cat === "parents";
+  })) {
+    return true;
+  }
+  // Also check category string field
+  const category = (event.category || "").toLowerCase();
+  return category.includes("event") || 
+         category.includes("student") || 
+         category.includes("parent") ||
+         category.includes("family") ||
+         category.includes("conference");
+};
+
 // Filter for a specific tab
 export function filterByUpcomingTab(
   events: UpcomingEvent[],
@@ -153,8 +181,8 @@ export function filterByUpcomingTab(
   const future = getFutureEvents(events);
 
   switch (tab) {
-    case "upcoming":
-      return future.slice(0, limit);
+    case "events":
+      return future.filter(isEventsEvent).slice(0, limit);
 
     case "exams":
       return future.filter(isExamEvent).slice(0, limit);
