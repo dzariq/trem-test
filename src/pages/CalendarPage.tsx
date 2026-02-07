@@ -668,10 +668,10 @@ export default function CalendarPage() {
                           Enrolled
                         </Badge>
                         <Badge
-                          className={`${getCcaCategoryColor(activity.category)} shrink-0 w-fit`}
+                          className={`${getCcaCategoryColor(activity.typeName || activity.category)} shrink-0 w-fit`}
                           variant="secondary"
                         >
-                          {activity.category}
+                          {activity.typeName || activity.category}
                         </Badge>
                       </div>
                     </div>
@@ -810,10 +810,10 @@ export default function CalendarPage() {
                             </Badge>
                           )}
                           <Badge
-                            className={`${getCcaCategoryColor(activity.category)} shrink-0 w-fit`}
+                            className={`${getCcaCategoryColor(activity.typeName || activity.category)} shrink-0 w-fit`}
                             variant="secondary"
                           >
-                            {activity.category}
+                            {activity.typeName || activity.category}
                           </Badge>
                         </div>
                       </div>

@@ -64,6 +64,18 @@ export function CcaTypeTabs({ selectedTypeId, onSelectType }: CcaTypeTabsProps) 
 export function getCcaTypeColor(typeName: string | null | undefined): string {
   const name = (typeName ?? "").toLowerCase();
   switch (name) {
+    // CCA Type categories (Indoor, Outdoor, etc.)
+    case "indoor":
+    case "indoor cca":
+      return "bg-sky-100 text-sky-800 dark:bg-sky-900/50 dark:text-sky-300";
+    case "outdoor":
+    case "outdoor cca":
+      return "bg-amber-100 text-amber-800 dark:bg-amber-900/50 dark:text-amber-300";
+    case "enrichment":
+      return "bg-teal-100 text-teal-800 dark:bg-teal-900/50 dark:text-teal-300";
+    case "competition":
+      return "bg-rose-100 text-rose-800 dark:bg-rose-900/50 dark:text-rose-300";
+    // Legacy category names
     case "sports":
       return "bg-orange-100 text-orange-800 dark:bg-orange-900/50 dark:text-orange-300";
     case "arts":
@@ -86,6 +98,18 @@ export function getCcaTypeColor(typeName: string | null | undefined): string {
 export function getCcaTypeBadgeColor(typeName: string | null | undefined): string {
   const name = (typeName ?? "").toLowerCase();
   switch (name) {
+    // CCA Type categories (Indoor, Outdoor, etc.)
+    case "indoor":
+    case "indoor cca":
+      return "bg-sky-500 text-white";
+    case "outdoor":
+    case "outdoor cca":
+      return "bg-amber-500 text-white";
+    case "enrichment":
+      return "bg-teal-500 text-white";
+    case "competition":
+      return "bg-rose-500 text-white";
+    // Legacy category names
     case "sports":
       return "bg-orange-500 text-white";
     case "arts":
