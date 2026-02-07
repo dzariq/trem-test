@@ -294,8 +294,11 @@ export default function CalendarPage() {
   }, [currentMonth, profile?.role]);
 
   const filteredCCA = useMemo(() => {
-    return filterByTypeId(ccaTypeFilter);
-  }, [filterByTypeId, ccaTypeFilter]);
+    // Filter by type, then exclude already-enrolled activities
+    const byType = filterByTypeId(ccaTypeFilter);
+    const enrolledIds = new Set(enrolledCcas.map((e) => e.activityId));
+    return byType.filter((activity) => !enrolledIds.has(activity.id));
+  }, [filterByTypeId, ccaTypeFilter, enrolledCcas]);
 
   const filteredEnrolledCCA = useMemo(() => {
     return filterEnrolledByTypeId(ccaTypeFilter);
