@@ -45,7 +45,7 @@ export default function TeacherCalendarPage() {
   const [sessionDetailsOpen, setSessionDetailsOpen] = useState(false);
   const [events, setEvents] = useState<UpcomingEvent[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<TagCategory | "all">("all");
-  const [selectedEventSubtype, setSelectedEventSubtype] = useState<CalendarTag | "all">("all");
+  const [selectedSubtypes, setSelectedSubtypes] = useState<(CalendarTag | "all")[]>(["all"]);
 
   const {
     sessions: ccaSessions,
@@ -120,17 +120,19 @@ export default function TeacherCalendarPage() {
     return mappedSubtype === subtype;
   };
 
-  // Filter by category pill first, then by subtype.
+  // Filter by category pill first, then by subtypes.
   const filteredEvents = useMemo(() => {
     let filtered = visibleEvents;
     if (selectedCategory !== "all") {
       filtered = filtered.filter((event) => matchesCategory(event, selectedCategory));
     }
-    if (selectedEventSubtype !== "all" && selectedCategory !== "all") {
-      filtered = filtered.filter((event) => matchesSubtype(event, selectedEventSubtype as CalendarTag));
+    if (selectedCategory !== "all" && !selectedSubtypes.includes("all") && selectedSubtypes.length > 0) {
+      filtered = filtered.filter((event) => 
+        selectedSubtypes.some((subtype) => matchesSubtype(event, subtype as CalendarTag))
+      );
     }
     return filtered;
-  }, [visibleEvents, selectedCategory, selectedEventSubtype]);
+  }, [visibleEvents, selectedCategory, selectedSubtypes]);
 
   const toDayString = (date: Date) => {
     const year = date.getFullYear();
@@ -280,7 +282,7 @@ export default function TeacherCalendarPage() {
                 )}
                 onClick={() => {
                   setSelectedCategory("all");
-                  setSelectedEventSubtype("all");
+                  setSelectedSubtypes(["all"]);
                 }}
               >
                 All
@@ -292,14 +294,10 @@ export default function TeacherCalendarPage() {
                   key={category}
                   category={category}
                   isSelected={selectedCategory === category}
-                  selectedSubtype={selectedCategory === category ? selectedEventSubtype : "all"}
-                  onCategorySelect={(cat) => {
+                  selectedSubtypes={selectedCategory === category ? selectedSubtypes : ["all"]}
+                  onSubtypeSelect={(cat, subtypes) => {
                     setSelectedCategory(cat);
-                    setSelectedEventSubtype("all");
-                  }}
-                  onSubtypeSelect={(cat, subtype) => {
-                    setSelectedCategory(cat);
-                    setSelectedEventSubtype(subtype);
+                    setSelectedSubtypes(subtypes);
                   }}
                 />
               ))}
