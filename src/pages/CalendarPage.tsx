@@ -855,20 +855,12 @@ export default function CalendarPage() {
                         </div>
                       </div>
 
-                      <div className="flex gap-2 mt-4">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="flex-1"
-                          onClick={() => setSelectedCCA(activity)}
-                        >
-                          View Details
-                        </Button>
-                        {/* Only show Switch/Join button for non-parent roles */}
-                        {roleForFilters !== "parent" && !alreadyEnrolled && (
+                      {/* Only show Switch/Join button for non-parent roles */}
+                      {roleForFilters !== "parent" && !alreadyEnrolled && (
+                        <div className="mt-4">
                           <Button
                             size="sm"
-                            className="flex-1"
+                            className="w-full"
                             onClick={() => handleJoinOrSwitch(activity)}
                             disabled={enrolling}
                           >
@@ -883,8 +875,8 @@ export default function CalendarPage() {
                               "Join Club"
                             )}
                           </Button>
-                        )}
-                      </div>
+                        </div>
+                      )}
                     </CardContent>
                   </Card>
                 );
