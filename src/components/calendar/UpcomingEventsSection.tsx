@@ -51,18 +51,28 @@ export function UpcomingEventsSection({ events, onEventClick }: UpcomingEventsSe
       <div className="px-4 pb-3">
         <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as UpcomingTab)}>
           <TabsList className="grid w-full grid-cols-3 h-9 bg-muted/50">
-            {UPCOMING_TABS.map((tab) => (
-              <TabsTrigger 
-                key={tab.value} 
-                value={tab.value} 
-                className={cn(
-                  "text-xs transition-colors",
-                  activeTab === tab.value && UPCOMING_TAB_COLORS[tab.value]
-                )}
-              >
-                {tab.label}
-              </TabsTrigger>
-            ))}
+            {UPCOMING_TABS.map((tab) => {
+              const isActive = activeTab === tab.value;
+              // Apply color based on tab type when active
+              let activeClass = "";
+              if (isActive) {
+                if (tab.value === "events") activeClass = "bg-purple-500 text-white";
+                else if (tab.value === "exams") activeClass = "bg-red-500 text-white";
+                else if (tab.value === "holidays") activeClass = "bg-green-600 text-white";
+              }
+              return (
+                <TabsTrigger 
+                  key={tab.value} 
+                  value={tab.value} 
+                  className={cn(
+                    "text-xs transition-colors",
+                    isActive && activeClass
+                  )}
+                >
+                  {tab.label}
+                </TabsTrigger>
+              );
+            })}
           </TabsList>
         </Tabs>
       </div>
