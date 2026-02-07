@@ -1,9 +1,8 @@
-import { ChevronDown } from "lucide-react";
+import { useState } from "react";
+import { ChevronDown, Check } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
-  DropdownMenuRadioGroup,
-  DropdownMenuRadioItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { CATEGORY_DISPLAY_NAMES, type TagCategory, type CalendarTag } from "@/types/calendarTags";
@@ -17,32 +16,66 @@ import { cn } from "@/lib/utils";
 interface CategoryFilterPillProps {
   category: TagCategory;
   isSelected: boolean;
-  selectedSubtype: CalendarTag | "all";
-  onCategorySelect: (category: TagCategory) => void;
-  onSubtypeSelect: (category: TagCategory, subtype: CalendarTag | "all") => void;
+  selectedSubtypes: (CalendarTag | "all")[];
+  onSubtypeSelect: (category: TagCategory, subtypes: (CalendarTag | "all")[]) => void;
 }
 
 export function CategoryFilterPill({
   category,
   isSelected,
-  selectedSubtype,
-  onCategorySelect,
+  selectedSubtypes,
   onSubtypeSelect,
 }: CategoryFilterPillProps) {
+  const [open, setOpen] = useState(false);
   const hasDropdown = CATEGORIES_WITH_DROPDOWN.includes(category);
   const subtypeOptions = CATEGORY_SUBTYPES[category] || [];
   const pillStyle = CATEGORY_PILL_STYLES[category];
   const displayName = CATEGORY_DISPLAY_NAMES[category];
 
-  // Get current label - show subtype name if not "all"
-  const currentLabel =
-    selectedSubtype !== "all" && isSelected
-      ? subtypeOptions.find((opt) => opt.value === selectedSubtype)?.label || displayName
-      : displayName;
+  // Get current label - show first subtype name if not "all", or count if multiple
+  const getDisplayLabel = () => {
+    if (!isSelected || selectedSubtypes.length === 0 || selectedSubtypes.includes("all")) {
+      return displayName;
+    }
+    if (selectedSubtypes.length === 1) {
+      const opt = subtypeOptions.find((o) => o.value === selectedSubtypes[0]);
+      return opt?.label || displayName;
+    }
+    // Multiple selected - show category name with count
+    return `${displayName} (${selectedSubtypes.length})`;
+  };
+
+  const handleItemClick = (value: CalendarTag | "all") => {
+    if (value === "all") {
+      // Clicking "All" selects only "all" for this category
+      onSubtypeSelect(category, ["all"]);
+    } else {
+      // Remove "all" if present, then toggle this specific subtype
+      const withoutAll = selectedSubtypes.filter((s) => s !== "all");
+      
+      if (withoutAll.includes(value)) {
+        // Already selected - remove it
+        const newSelection = withoutAll.filter((s) => s !== value);
+        // If nothing left, revert to "all"
+        onSubtypeSelect(category, newSelection.length > 0 ? newSelection : ["all"]);
+      } else {
+        // Add to selection
+        onSubtypeSelect(category, [...withoutAll, value]);
+      }
+    }
+    // Keep dropdown open for multi-select
+  };
+
+  const isItemSelected = (value: CalendarTag | "all") => {
+    if (value === "all") {
+      return selectedSubtypes.includes("all") || selectedSubtypes.length === 0;
+    }
+    return selectedSubtypes.includes(value);
+  };
 
   if (hasDropdown) {
     return (
-      <DropdownMenu>
+      <DropdownMenu open={open} onOpenChange={setOpen}>
         <DropdownMenuTrigger asChild>
           <button
             type="button"
@@ -51,9 +84,8 @@ export function CategoryFilterPill({
               pillStyle,
               isSelected ? "ring-2 ring-primary/30" : "opacity-80"
             )}
-            onClick={() => onCategorySelect(category)}
           >
-            <span className="truncate max-w-[120px]">{currentLabel}</span>
+            <span className="truncate max-w-[120px]">{getDisplayLabel()}</span>
             <ChevronDown className="h-3.5 w-3.5 shrink-0" />
           </button>
         </DropdownMenuTrigger>
@@ -62,22 +94,27 @@ export function CategoryFilterPill({
           sideOffset={6} 
           className="min-w-[220px] max-h-[300px] overflow-y-auto bg-card border-border z-50"
         >
-          <DropdownMenuRadioGroup
-            value={isSelected ? selectedSubtype : "all"}
-            onValueChange={(value) => {
-              onSubtypeSelect(category, value as CalendarTag | "all");
-            }}
-          >
-            {subtypeOptions.map((option) => (
-              <DropdownMenuRadioItem 
-                key={option.value} 
-                value={option.value}
-                className="cursor-pointer"
+          {subtypeOptions.map((option) => (
+            <button
+              key={option.value}
+              type="button"
+              onClick={() => handleItemClick(option.value)}
+              className={cn(
+                "flex w-full items-center gap-2 px-3 py-2 text-sm cursor-pointer hover:bg-accent transition-colors",
+                isItemSelected(option.value) && "bg-accent/50"
+              )}
+            >
+              <span
+                className={cn(
+                  "flex h-4 w-4 items-center justify-center rounded border border-primary",
+                  isItemSelected(option.value) ? "bg-primary text-primary-foreground" : "bg-transparent"
+                )}
               >
-                {option.label}
-              </DropdownMenuRadioItem>
-            ))}
-          </DropdownMenuRadioGroup>
+                {isItemSelected(option.value) && <Check className="h-3 w-3" />}
+              </span>
+              <span>{option.label}</span>
+            </button>
+          ))}
         </DropdownMenuContent>
       </DropdownMenu>
     );
@@ -92,7 +129,7 @@ export function CategoryFilterPill({
         pillStyle,
         isSelected ? "ring-2 ring-primary/30" : "opacity-80"
       )}
-      onClick={() => onCategorySelect(category)}
+      onClick={() => onSubtypeSelect(category, ["all"])}
     >
       {displayName}
     </button>

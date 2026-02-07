@@ -62,6 +62,7 @@ export default function CalendarPage() {
 
   const roleForFilters = profile?.role === "student" ? "student" : "parent";
   const [selectedCategory, setSelectedCategory] = useState<TagCategory | "all">("all");
+  const [selectedSubtypes, setSelectedSubtypes] = useState<(CalendarTag | "all")[]>(["all"]);
   const [selectedEventSubtype, setSelectedEventSubtype] = useState<CalendarTag | "all">("all");
 
   const {
@@ -174,7 +175,7 @@ export default function CalendarPage() {
     return mappedSubtype === subtype;
   };
 
-  // Filter events based on selected category and subtype
+  // Filter events based on selected category and subtypes
   const filteredEvents = useMemo(() => {
     let filtered = visibleEvents;
     
@@ -183,13 +184,15 @@ export default function CalendarPage() {
       filtered = filtered.filter((event) => matchesCategory(event, selectedCategory));
     }
     
-    // Filter by subtype within the selected category
-    if (selectedEventSubtype !== "all" && selectedCategory !== "all") {
-      filtered = filtered.filter((event) => matchesSubtype(event, selectedEventSubtype as CalendarTag));
+    // Filter by subtypes within the selected category (if specific subtypes selected)
+    if (selectedCategory !== "all" && !selectedSubtypes.includes("all") && selectedSubtypes.length > 0) {
+      filtered = filtered.filter((event) => 
+        selectedSubtypes.some((subtype) => matchesSubtype(event, subtype as CalendarTag))
+      );
     }
     
     return filtered;
-  }, [visibleEvents, selectedCategory, selectedEventSubtype]);
+  }, [visibleEvents, selectedCategory, selectedSubtypes]);
 
   const getCcaCategoryColor = getCcaTypeColor;
 
@@ -394,7 +397,7 @@ export default function CalendarPage() {
                 )}
                 onClick={() => {
                   setSelectedCategory("all");
-                  setSelectedEventSubtype("all");
+                  setSelectedSubtypes(["all"]);
                 }}
               >
                 All
@@ -406,14 +409,10 @@ export default function CalendarPage() {
                   key={category}
                   category={category}
                   isSelected={selectedCategory === category}
-                  selectedSubtype={selectedCategory === category ? selectedEventSubtype : "all"}
-                  onCategorySelect={(cat) => {
+                  selectedSubtypes={selectedCategory === category ? selectedSubtypes : ["all"]}
+                  onSubtypeSelect={(cat, subtypes) => {
                     setSelectedCategory(cat);
-                    setSelectedEventSubtype("all");
-                  }}
-                  onSubtypeSelect={(cat, subtype) => {
-                    setSelectedCategory(cat);
-                    setSelectedEventSubtype(subtype);
+                    setSelectedSubtypes(subtypes);
                   }}
                 />
               ))}
