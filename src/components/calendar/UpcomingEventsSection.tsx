@@ -126,13 +126,11 @@ export function UpcomingEventsSection({ events, onEventClick }: UpcomingEventsSe
                     // Determine badge color based on tag category or event.category
                     let badgeColor = "bg-purple-100 text-purple-800"; // default events color
                     let displayText = getTagDisplayName(tag);
-                    let isHoliday = false;
                     
                     if (tagCategory === "exams" || category.includes("exam")) {
                       badgeColor = "bg-red-100 text-red-800"; // red like Exams filter
                     } else if (tagCategory === "holidays" || category.includes("holiday")) {
                       badgeColor = "bg-emerald-100 text-emerald-800"; // green like Holidays filter
-                      isHoliday = true;
                     } else if (tagCategory === "students" || category.includes("student")) {
                       badgeColor = "bg-teal-100 text-teal-800"; // teal like Students filter
                     } else if (tagCategory === "parents" || category.includes("parent")) {
@@ -141,7 +139,7 @@ export function UpcomingEventsSection({ events, onEventClick }: UpcomingEventsSe
                     
                     return (
                       <Badge key={tag} className={`text-xs ${badgeColor}`}>
-                        {isHoliday ? displayText.toUpperCase() : displayText}
+                        {displayText}
                       </Badge>
                     );
                   })}
