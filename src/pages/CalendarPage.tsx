@@ -24,6 +24,7 @@ import { useStudentCcaEnrollments, type EnrolledCcaActivity } from "@/hooks/useS
 import { useCcaClubEnrollment } from "@/hooks/useCcaClubEnrollment";
 import { PICTeachersList } from "@/components/cca/PICTeacherPill";
 import { CcaTypeTabs, getCcaTypeColor } from "@/components/cca/CcaTypeTabs";
+import { CcaDetailsSheet } from "@/components/cca/CcaDetailsSheet";
 import { ClubSwitchConfirmDialog } from "@/components/cca/ClubSwitchConfirmDialog";
 import { supabase } from "@/lib/supabase";
 import { useCcaSessionsCalendar, type CcaCalendarSession } from "@/hooks/useCcaSessionsCalendar";
@@ -59,6 +60,9 @@ export default function CalendarPage() {
   const [switchDialogOpen, setSwitchDialogOpen] = useState(false);
   const [targetClub, setTargetClub] = useState<{ id: string; name: string } | null>(null);
   const [currentClubName, setCurrentClubName] = useState<string | null>(null);
+  
+  // State for viewing enrolled CCA details
+  const [selectedEnrolledCCA, setSelectedEnrolledCCA] = useState<EnrolledCcaActivity | null>(null);
 
   const roleForFilters = profile?.role === "student" ? "student" : "parent";
   // Track which categories are selected and their subtypes
@@ -638,7 +642,19 @@ export default function CalendarPage() {
               )}
 
               {!enrolledLoading && !enrolledError && filteredEnrolledCCA.map((activity) => (
-                <Card key={`enrolled-${activity.enrollmentId}`} className="bg-primary/5 border-primary/20 shadow-sm">
+                <Card 
+                  key={`enrolled-${activity.enrollmentId}`} 
+                  className="bg-primary/5 border-primary/20 shadow-sm cursor-pointer hover:bg-primary/10 transition-colors active:scale-[0.99]"
+                  onClick={() => setSelectedEnrolledCCA(activity)}
+                  role="button"
+                  tabIndex={0}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" || e.key === " ") {
+                      e.preventDefault();
+                      setSelectedEnrolledCCA(activity);
+                    }
+                  }}
+                >
                   <CardContent className="p-4">
                     <div className="flex items-start justify-between gap-3 mb-3">
                       <div className="min-w-0">
@@ -999,6 +1015,40 @@ export default function CalendarPage() {
           </>
         )}
       </BottomSheet>
+
+      {/* Enrolled CCA Details Sheet */}
+      <CcaDetailsSheet
+        open={!!selectedEnrolledCCA}
+        onOpenChange={(open) => !open && setSelectedEnrolledCCA(null)}
+        activity={selectedEnrolledCCA ? {
+          id: selectedEnrolledCCA.id,
+          name: selectedEnrolledCCA.name,
+          publicDescription: selectedEnrolledCCA.publicDescription,
+          internalNotes: null,
+          category: selectedEnrolledCCA.category || "Indoor CCA",
+          typeId: selectedEnrolledCCA.typeId,
+          typeName: selectedEnrolledCCA.typeName,
+          yearLevels: [],
+          meetingDay: selectedEnrolledCCA.meetingDay,
+          meetingTime: selectedEnrolledCCA.meetingTime,
+          location: selectedEnrolledCCA.location,
+          isActive: true,
+          maxParticipants: null,
+          coordinatorName: null,
+          coordinatorEmail: null,
+          allowFreeText: false,
+          picTeachers: selectedEnrolledCCA.picTeachers.map((t, idx) => ({
+            id: `teacher-${idx}`,
+            teacherUserId: "",
+            role: t.role || "PIC",
+            isPrimary: t.isPrimary || false,
+            fullName: t.fullName,
+            departments: t.departments,
+          })),
+          sessions: [],
+        } : null}
+        isPIC={false}
+      />
 
       <EventDetailsSheet
         open={eventDetailsOpen}
