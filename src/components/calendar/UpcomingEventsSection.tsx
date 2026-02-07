@@ -127,6 +127,11 @@ export function UpcomingEventsSection({ events, onEventClick }: UpcomingEventsSe
                     let badgeColor = "bg-purple-100 text-purple-800"; // default events color
                     let displayText = getTagDisplayName(tag);
                     
+                    // Normalize "HOLIDAY" to "Holidays" for display
+                    if (displayText.toUpperCase() === "HOLIDAY" || displayText.toUpperCase() === "HOLIDAYS") {
+                      displayText = "Holidays";
+                    }
+                    
                     if (tagCategory === "exams" || category.includes("exam")) {
                       badgeColor = "bg-red-100 text-red-800"; // red like Exams filter
                     } else if (tagCategory === "holidays" || category.includes("holiday")) {
