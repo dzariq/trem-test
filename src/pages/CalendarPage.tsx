@@ -61,9 +61,9 @@ export default function CalendarPage() {
   const [currentClubName, setCurrentClubName] = useState<string | null>(null);
 
   const roleForFilters = profile?.role === "student" ? "student" : "parent";
-  const [selectedCategory, setSelectedCategory] = useState<TagCategory | "all">("all");
-  const [selectedSubtypes, setSelectedSubtypes] = useState<(CalendarTag | "all")[]>(["all"]);
-  const [selectedEventSubtype, setSelectedEventSubtype] = useState<CalendarTag | "all">("all");
+  // Track which categories are selected and their subtypes
+  const [categoryFilters, setCategoryFilters] = useState<Record<TagCategory, (CalendarTag | "all")[]>>({} as Record<TagCategory, (CalendarTag | "all")[]>);
+  const [isAllSelected, setIsAllSelected] = useState(true);
 
   const {
     linkedStudents,
@@ -175,24 +175,37 @@ export default function CalendarPage() {
     return mappedSubtype === subtype;
   };
 
-  // Filter events based on selected category and subtypes
+  // Get list of active categories (those with selections)
+  const activeCategories = useMemo(() => {
+    return Object.entries(categoryFilters)
+      .filter(([_, subtypes]) => subtypes.length > 0)
+      .map(([cat]) => cat as TagCategory);
+  }, [categoryFilters]);
+
+  // Filter events based on selected categories and their subtypes
   const filteredEvents = useMemo(() => {
-    let filtered = visibleEvents;
-    
-    // Filter by category
-    if (selectedCategory !== "all") {
-      filtered = filtered.filter((event) => matchesCategory(event, selectedCategory));
+    // If "All" is selected, show all events
+    if (isAllSelected || activeCategories.length === 0) {
+      return visibleEvents;
     }
     
-    // Filter by subtypes within the selected category (if specific subtypes selected)
-    if (selectedCategory !== "all" && !selectedSubtypes.includes("all") && selectedSubtypes.length > 0) {
-      filtered = filtered.filter((event) => 
-        selectedSubtypes.some((subtype) => matchesSubtype(event, subtype as CalendarTag))
-      );
-    }
-    
-    return filtered;
-  }, [visibleEvents, selectedCategory, selectedSubtypes]);
+    // Filter to events that match ANY of the selected categories
+    return visibleEvents.filter((event) => {
+      return activeCategories.some((category) => {
+        // Check if event matches the category
+        if (!matchesCategory(event, category)) return false;
+        
+        // Check subtypes within the category
+        const subtypes = categoryFilters[category] || [];
+        if (subtypes.includes("all") || subtypes.length === 0) {
+          return true; // All subtypes in this category
+        }
+        
+        // Check if event matches any of the selected subtypes
+        return subtypes.some((subtype) => matchesSubtype(event, subtype as CalendarTag));
+      });
+    });
+  }, [visibleEvents, isAllSelected, activeCategories, categoryFilters]);
 
   const getCcaCategoryColor = getCcaTypeColor;
 
@@ -218,7 +231,7 @@ export default function CalendarPage() {
     (event) => selectedDay >= event.startDay && selectedDay <= event.endDay
   );
 
-  const showCcaSessions = selectedCategory === "all" || selectedCategory === "events";
+  const showCcaSessions = isAllSelected || activeCategories.includes("events");
   const ccaSessionsForSelectedDate = showCcaSessions
     ? ccaSessions.filter((session) => session.sessionDate === selectedDay)
     : [];
@@ -391,31 +404,58 @@ export default function CalendarPage() {
                 type="button"
                 className={cn(
                   "inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium border transition-colors",
-                  selectedCategory === "all"
+                  isAllSelected
                     ? "bg-foreground text-background border-foreground"
                     : "bg-muted/40 text-muted-foreground border-border"
                 )}
                 onClick={() => {
-                  setSelectedCategory("all");
-                  setSelectedSubtypes(["all"]);
+                  setIsAllSelected(true);
+                  setCategoryFilters({} as Record<TagCategory, (CalendarTag | "all")[]>);
                 }}
               >
                 All
               </button>
 
               {/* Category pills with dropdowns */}
-              {availableCategories.map((category) => (
-                <CategoryFilterPill
-                  key={category}
-                  category={category}
-                  isSelected={selectedCategory === category}
-                  selectedSubtypes={selectedCategory === category ? selectedSubtypes : ["all"]}
-                  onSubtypeSelect={(cat, subtypes) => {
-                    setSelectedCategory(cat);
-                    setSelectedSubtypes(subtypes);
-                  }}
-                />
-              ))}
+              {availableCategories.map((category) => {
+                const subtypes = categoryFilters[category] || [];
+                const isSelected = subtypes.length > 0;
+                
+                return (
+                  <CategoryFilterPill
+                    key={category}
+                    category={category}
+                    isSelected={isSelected}
+                    selectedSubtypes={subtypes.length > 0 ? subtypes : ["all"]}
+                    onToggleCategory={(cat) => {
+                      setIsAllSelected(false);
+                      setCategoryFilters((prev) => {
+                        const current = prev[cat] || [];
+                        if (current.length > 0) {
+                          // Deselect this category
+                          const newFilters = { ...prev };
+                          delete newFilters[cat];
+                          // If no categories left, select All
+                          if (Object.keys(newFilters).length === 0) {
+                            setIsAllSelected(true);
+                          }
+                          return newFilters;
+                        } else {
+                          // Select this category with "all" subtypes
+                          return { ...prev, [cat]: ["all"] };
+                        }
+                      });
+                    }}
+                    onSubtypeChange={(cat, subtypes) => {
+                      setIsAllSelected(false);
+                      setCategoryFilters((prev) => ({
+                        ...prev,
+                        [cat]: subtypes,
+                      }));
+                    }}
+                  />
+                );
+              })}
             </div>
 
             {/* Calendar Component */}

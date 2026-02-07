@@ -17,14 +17,16 @@ interface CategoryFilterPillProps {
   category: TagCategory;
   isSelected: boolean;
   selectedSubtypes: (CalendarTag | "all")[];
-  onSubtypeSelect: (category: TagCategory, subtypes: (CalendarTag | "all")[]) => void;
+  onToggleCategory: (category: TagCategory) => void;
+  onSubtypeChange: (category: TagCategory, subtypes: (CalendarTag | "all")[]) => void;
 }
 
 export function CategoryFilterPill({
   category,
   isSelected,
   selectedSubtypes,
-  onSubtypeSelect,
+  onToggleCategory,
+  onSubtypeChange,
 }: CategoryFilterPillProps) {
   const [open, setOpen] = useState(false);
   const hasDropdown = CATEGORIES_WITH_DROPDOWN.includes(category);
@@ -47,8 +49,8 @@ export function CategoryFilterPill({
 
   const handleItemClick = (value: CalendarTag | "all") => {
     if (value === "all") {
-      // Clicking "All" selects only "all" for this category
-      onSubtypeSelect(category, ["all"]);
+      // Clicking "All" selects the category with all subtypes
+      onSubtypeChange(category, ["all"]);
     } else {
       // Remove "all" if present, then toggle this specific subtype
       const withoutAll = selectedSubtypes.filter((s) => s !== "all");
@@ -57,10 +59,10 @@ export function CategoryFilterPill({
         // Already selected - remove it
         const newSelection = withoutAll.filter((s) => s !== value);
         // If nothing left, revert to "all"
-        onSubtypeSelect(category, newSelection.length > 0 ? newSelection : ["all"]);
+        onSubtypeChange(category, newSelection.length > 0 ? newSelection : ["all"]);
       } else {
         // Add to selection
-        onSubtypeSelect(category, [...withoutAll, value]);
+        onSubtypeChange(category, [...withoutAll, value]);
       }
     }
     // Keep dropdown open for multi-select
@@ -73,6 +75,11 @@ export function CategoryFilterPill({
     return selectedSubtypes.includes(value);
   };
 
+  // Handle pill click (not dropdown) - toggle category selection
+  const handlePillClick = () => {
+    onToggleCategory(category);
+  };
+
   if (hasDropdown) {
     return (
       <DropdownMenu open={open} onOpenChange={setOpen}>
@@ -82,8 +89,16 @@ export function CategoryFilterPill({
             className={cn(
               "inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium border transition-colors",
               pillStyle,
-              isSelected ? "ring-2 ring-primary/30" : "opacity-80"
+              isSelected ? "ring-2 ring-primary/30" : "opacity-60"
             )}
+            onClick={(e) => {
+              // If not selected, clicking the pill toggles it on
+              if (!isSelected) {
+                e.preventDefault();
+                handlePillClick();
+              }
+              // If already selected, let the dropdown open
+            }}
           >
             <span className="truncate max-w-[120px]">{getDisplayLabel()}</span>
             <ChevronDown className="h-3.5 w-3.5 shrink-0" />
@@ -127,9 +142,9 @@ export function CategoryFilterPill({
       className={cn(
         "inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium border transition-colors",
         pillStyle,
-        isSelected ? "ring-2 ring-primary/30" : "opacity-80"
+        isSelected ? "ring-2 ring-primary/30" : "opacity-60"
       )}
-      onClick={() => onSubtypeSelect(category, ["all"])}
+      onClick={handlePillClick}
     >
       {displayName}
     </button>
