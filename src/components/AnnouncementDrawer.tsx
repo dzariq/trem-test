@@ -98,12 +98,13 @@ export function AnnouncementDrawer({
     }
   }, [currentAnnouncement]);
 
-  // Always open at a consistent snap point.
+  // Set default snap only when drawer first opens, NOT when navigating between announcements
   useEffect(() => {
     if (isOpen) {
       setSnap(DEFAULT_SNAP);
     }
-  }, [isOpen, currentIndex]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpen]); // Intentionally exclude currentIndex to preserve snap when navigating
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
