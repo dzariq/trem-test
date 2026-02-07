@@ -119,17 +119,29 @@ export function UpcomingEventsSection({ events, onEventClick }: UpcomingEventsSe
 
                 <div className="flex flex-wrap gap-1">
                   {event.tags.slice(0, 2).map((tag) => {
-                    // Use master category colors: purple for events, red for exams, green for holidays
+                    // Match colors to the top calendar filter colors
                     const tagCategory = TAG_CATEGORIES[tag];
-                    let badgeColor = "bg-purple-500 text-white"; // default events color
-                    if (tagCategory === "exams") {
-                      badgeColor = "bg-red-500 text-white";
-                    } else if (tagCategory === "holidays") {
-                      badgeColor = "bg-green-500 text-white";
+                    const category = (event.category || "").toLowerCase();
+                    
+                    // Determine badge color based on tag category or event.category
+                    let badgeColor = "bg-purple-100 text-purple-800"; // default events color
+                    let displayText = getTagDisplayName(tag);
+                    let isHoliday = false;
+                    
+                    if (tagCategory === "exams" || category.includes("exam")) {
+                      badgeColor = "bg-red-100 text-red-800"; // red like Exams filter
+                    } else if (tagCategory === "holidays" || category.includes("holiday")) {
+                      badgeColor = "bg-emerald-100 text-emerald-800"; // green like Holidays filter
+                      isHoliday = true;
+                    } else if (tagCategory === "students" || category.includes("student")) {
+                      badgeColor = "bg-teal-100 text-teal-800"; // teal like Students filter
+                    } else if (tagCategory === "parents" || category.includes("parent")) {
+                      badgeColor = "bg-pink-100 text-pink-800"; // pink like Parents filter
                     }
+                    
                     return (
                       <Badge key={tag} className={`text-xs ${badgeColor}`}>
-                        {getTagDisplayName(tag)}
+                        {isHoliday ? displayText.toUpperCase() : displayText}
                       </Badge>
                     );
                   })}
