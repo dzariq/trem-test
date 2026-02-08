@@ -532,7 +532,7 @@ const TeacherMLPDetailPage = () => {
                             open={expandedWeeks.has(week.id)}
                             onOpenChange={() => handleWeekToggle(week.id)}
                           >
-                            <div className="rounded-lg border border-amber-200/50 dark:border-amber-800/50 bg-amber-50/30 dark:bg-amber-950/20">
+                            <div className="rounded-lg border border-amber-300 dark:border-amber-700 bg-card">
                               <CollapsibleTrigger asChild>
                                 <div className="py-2 px-3 cursor-pointer hover:bg-amber-100/50 dark:hover:bg-amber-900/30 flex items-center justify-between">
                                   <div className="flex items-center gap-2">

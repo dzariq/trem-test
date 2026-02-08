@@ -108,7 +108,7 @@ export function TeacherLessonReflectionForm({
       {isExpanded && (
         <CardContent className="px-4 pb-4 space-y-4">
           {/* Learning Outcomes Achieved */}
-          <div className="flex items-center justify-between p-3 rounded-lg bg-muted/50">
+          <div className="flex items-center justify-between p-3 rounded-lg bg-card border border-amber-200 dark:border-amber-700">
             <Label htmlFor={`outcomes-${lesson.id}`} className="text-sm font-medium cursor-pointer">
               Learning outcomes achieved?
             </Label>
