@@ -33,7 +33,7 @@ import { cn } from "@/lib/utils";
 import { useMLPContent, useLessonReflections, useHomeworkManagement } from "@/hooks/useTeacherLessonPlans";
 import { ReadOnlyLessonContent } from "@/components/lessonplan/ReadOnlyLessonContent";
 import { TeacherLessonReflectionForm } from "@/components/lessonplan/TeacherLessonReflectionForm";
-import { TeacherHomeworkForm } from "@/components/lessonplan/TeacherHomeworkForm";
+import { HomeworkSubTabs } from "@/components/lessonplan/HomeworkSubTabs";
 
 const TeacherMLPDetailPage = () => {
   const navigate = useNavigate();
@@ -590,95 +590,22 @@ const TeacherMLPDetailPage = () => {
 
       {/* Homework Tab */}
       {activeTab === "homework" && (
-        <div className="p-4 space-y-3 pb-24">
-          {topics.length === 0 ? (
-            <div className="text-center py-12">
-              <ClipboardList className="h-12 w-12 mx-auto text-sky-400/50 mb-3" />
-              <p className="text-muted-foreground">No topics found</p>
-            </div>
-          ) : (
-            topics.map((topic) => (
-              <Collapsible
-                key={topic.id}
-                open={expandedTopics.has(topic.id)}
-                onOpenChange={() => handleTopicToggle(topic.id)}
-              >
-                <Card className="border-sky-200/50 dark:border-sky-800/50">
-                  <CollapsibleTrigger asChild>
-                    <CardHeader className="py-3 px-4 cursor-pointer hover:bg-sky-50/50 dark:hover:bg-sky-950/30">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                          {expandedTopics.has(topic.id) ? (
-                            <ChevronDown className="h-4 w-4 text-sky-600 dark:text-sky-400" />
-                          ) : (
-                            <ChevronRight className="h-4 w-4 text-sky-600 dark:text-sky-400" />
-                          )}
-                          <CardTitle className="text-sm font-medium">{topic.title}</CardTitle>
-                        </div>
-                        <Badge variant="secondary" className="text-xs bg-sky-100 text-sky-700 dark:bg-sky-900/50 dark:text-sky-300">
-                          {getWeeksForTopic(topic.id).length} weeks
-                        </Badge>
-                      </div>
-                    </CardHeader>
-                  </CollapsibleTrigger>
-                  <CollapsibleContent>
-                    <CardContent className="px-4 pb-4 pt-0 space-y-2">
-                      {getWeeksForTopic(topic.id).map((week) => (
-                        <Collapsible
-                          key={week.id}
-                          open={expandedWeeks.has(week.id)}
-                          onOpenChange={() => handleWeekToggle(week.id)}
-                        >
-                          <Card className="bg-sky-50/30 dark:bg-sky-950/20 border-sky-200/50 dark:border-sky-800/50">
-                            <CollapsibleTrigger asChild>
-                              <CardHeader className="py-2 px-3 cursor-pointer hover:bg-sky-100/50 dark:hover:bg-sky-900/30">
-                                <div className="flex items-center justify-between">
-                                  <div className="flex items-center gap-2">
-                                    {loadingWeeks.has(week.id) ? (
-                                      <Loader2 className="h-3.5 w-3.5 animate-spin text-sky-600 dark:text-sky-400" />
-                                    ) : expandedWeeks.has(week.id) ? (
-                                      <ChevronDown className="h-3.5 w-3.5 text-sky-600 dark:text-sky-400" />
-                                    ) : (
-                                      <ChevronRight className="h-3.5 w-3.5 text-sky-600 dark:text-sky-400" />
-                                    )}
-                                    <span className="text-xs font-medium">
-                                      Week {week.weekNumber}: {week.title}
-                                    </span>
-                                  </div>
-                                </div>
-                              </CardHeader>
-                            </CollapsibleTrigger>
-                            <CollapsibleContent>
-                              <CardContent className="px-3 pb-3 pt-0 space-y-2">
-                                {!isLessonsLoaded(week.id) ? (
-                                  <div className="flex items-center justify-center py-4">
-                                    <Loader2 className="h-4 w-4 animate-spin text-sky-600 dark:text-sky-400" />
-                                  </div>
-                                ) : getLessonsForWeek(week.id).length === 0 ? (
-                                  <p className="text-xs text-muted-foreground text-center py-2">
-                                    No lessons in this week
-                                  </p>
-                                ) : (
-                                  getLessonsForWeek(week.id).map((lesson) => (
-                                    <TeacherHomeworkForm
-                                      key={lesson.id}
-                                      lesson={lesson}
-                                      onSave={(homework) => handleSaveHomework(lesson.id, homework)}
-                                      saving={savingHomework}
-                                    />
-                                  ))
-                                )}
-                              </CardContent>
-                            </CollapsibleContent>
-                          </Card>
-                        </Collapsible>
-                      ))}
-                    </CardContent>
-                  </CollapsibleContent>
-                </Card>
-              </Collapsible>
-            ))
-          )}
+        <div className="p-4 pb-24">
+          <HomeworkSubTabs
+            lessonPlanId={id!}
+            topics={topics}
+            classYearId={selectedClassId}
+            expandedTopics={expandedTopics}
+            expandedWeeks={expandedWeeks}
+            loadingWeeks={loadingWeeks}
+            onTopicToggle={handleTopicToggle}
+            onWeekToggle={handleWeekToggle}
+            getWeeksForTopic={getWeeksForTopic}
+            getLessonsForWeek={getLessonsForWeek}
+            isLessonsLoaded={isLessonsLoaded}
+            onSaveHomework={handleSaveHomework}
+            savingHomework={savingHomework}
+          />
         </div>
       )}
     </TeacherAppLayout>

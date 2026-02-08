@@ -1382,6 +1382,67 @@ export type Database = {
         }
         Relationships: []
       }
+      homework_submissions: {
+        Row: {
+          class_year_id: number
+          created_at: string
+          id: string
+          lesson_plan_detail_id: string
+          marked_by: string | null
+          notes: string | null
+          student_id: string
+          submitted: boolean
+          submitted_at: string | null
+          updated_at: string
+        }
+        Insert: {
+          class_year_id: number
+          created_at?: string
+          id?: string
+          lesson_plan_detail_id: string
+          marked_by?: string | null
+          notes?: string | null
+          student_id: string
+          submitted?: boolean
+          submitted_at?: string | null
+          updated_at?: string
+        }
+        Update: {
+          class_year_id?: number
+          created_at?: string
+          id?: string
+          lesson_plan_detail_id?: string
+          marked_by?: string | null
+          notes?: string | null
+          student_id?: string
+          submitted?: boolean
+          submitted_at?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "homework_submissions_class_year_id_fkey"
+            columns: ["class_year_id"]
+            isOneToOne: false
+            referencedRelation: "class_years"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "homework_submissions_lesson_plan_detail_id_fkey"
+            columns: ["lesson_plan_detail_id"]
+            isOneToOne: false
+            referencedRelation: "lesson_plan_details"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "homework_submissions_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       lesson_plan_class_assignments: {
         Row: {
           class_year_id: number
