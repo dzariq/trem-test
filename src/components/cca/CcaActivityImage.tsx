@@ -51,7 +51,7 @@ function getCategoryBgColor(isEnrolled: boolean): string {
   // Yellow/amber for enrolled, gray for available
   return isEnrolled 
     ? "bg-amber-100 dark:bg-amber-900/30" 
-    : "bg-gray-100 dark:bg-gray-800/30";
+    : "bg-gray-200 dark:bg-gray-700/50";
 }
 
 /**
@@ -61,7 +61,7 @@ function getCategoryIconColor(isEnrolled: boolean): string {
   // Yellow/amber for enrolled, gray for available
   return isEnrolled 
     ? "text-amber-600 dark:text-amber-400" 
-    : "text-gray-500 dark:text-gray-400";
+    : "text-gray-400 dark:text-gray-500";
 }
 
 /**
