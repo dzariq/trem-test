@@ -1,39 +1,29 @@
 
-
-# Plan: Move Class Selector to Header (Same Row as Subject)
+# Plan: Fix Content Tab Hover Highlights and Apply Green Theme
 
 ## Summary
-Move the class selector from inside the Reflections tab to the header area, placing it on the same row as the subject name. This makes class selection consistent across all three tabs (Content, Reflections, and Homework).
+Fix the hover highlight overflow issue in the Content tab where the gray highlight extends beyond the rounded corners of cards. Also change from gray colors to light green colors to match the Content tab's theme.
 
 ---
 
-## Current State
+## Problem Analysis
 
-**Header Structure (lines 297-314):**
-```
-[Back Button] [Subject Name]
-              [Year Level • Academic Year]
-```
+From the screenshot, the issue is visible on "Week 1: HAHAHAH i think this work?" - the gray hover highlight bleeds outside the rounded card container.
 
-**Class Selector Location:**
-- Currently inside the Reflections tab only (lines 398-414)
-- Not visible in Content or Homework tabs
+**Root Cause:**
+1. The `CardHeader` has `hover:bg-muted/50` but the parent `Card` doesn't have `overflow-hidden` to clip the hover background within the rounded corners
+2. The Content tab uses gray (`muted`) colors instead of green (`primary`) colors like the Homework tab uses blue (`sky`) colors
 
----
-
-## Proposed Design
-
-**New Header Layout:**
-```
-[Back Button] [Subject Name]        [Class Dropdown ▼]
-              [Year Level • Academic Year]
-```
-
-The class dropdown will:
-- Appear on the right side of the header row
-- Be positioned next to the subject name
-- Use a compact styling to fit in the header
-- Remain visible across all tabs
+**Comparison:**
+| Element | Current (Content) | Homework Tab | Should Be (Content) |
+|---------|------------------|--------------|---------------------|
+| Topic border | default | `border-sky-200/50` | `border-primary/30` |
+| Topic hover | `hover:bg-muted/50` | `hover:bg-sky-50/50` | `hover:bg-primary/10` |
+| Week bg | `bg-muted/30` | `bg-sky-50/30` | `bg-primary/5` |
+| Week border | default | `border-sky-200/50` | `border-primary/30` |
+| Week hover | `hover:bg-muted/50` | `hover:bg-sky-100/50` | `hover:bg-primary/10` |
+| Icons | `text-muted-foreground` | `text-sky-600` | `text-primary` |
+| Badge | default secondary | `bg-sky-100 text-sky-700` | `bg-primary/10 text-primary` |
 
 ---
 
@@ -41,96 +31,110 @@ The class dropdown will:
 
 ### File: `src/pages/teacher/TeacherMLPDetailPage.tsx`
 
-**Step 1: Update Header Layout**
+The Content tab currently uses the shared `renderLessonStructure` function. Since we need different styling for Content (green) vs the generic structure, we'll need to either:
 
-Modify the header section (lines 298-314) to:
-- Add flex row layout with space-between for the main header
-- Place the class selector on the right side of the subject name row
-- Use a compact select trigger with reduced width
+**Option A**: Update the `renderLessonStructure` to accept theme parameters
+**Option B**: Create a dedicated Content tab structure like Homework has
+
+**Chosen Approach**: Option B - Create dedicated Content structure matching Homework's pattern for consistency and cleaner code.
+
+**Changes:**
+
+1. **Replace the Content tab** from using `renderLessonStructure` to a dedicated green-themed structure similar to how Homework tab is implemented
+
+2. **Apply green theme throughout:**
+   - Topic Card: `border-primary/30` + `overflow-hidden`
+   - Topic Header hover: `hover:bg-primary/10`
+   - Topic chevron icons: `text-primary`
+   - Week Badge: `bg-primary/10 text-primary`
+   - Week Card: `bg-primary/5 border-primary/30 overflow-hidden`
+   - Week Header hover: `hover:bg-primary/10`
+   - Week chevron/loader icons: `text-primary`
+
+3. **Add `overflow-hidden`** to all Cards to ensure hover effects are clipped within rounded corners
+
+---
+
+## Code Changes
+
+**Lines ~369-410**: Replace the Content tab implementation
 
 **Before:**
 ```tsx
-<div className="flex items-center gap-3 px-4 py-3">
-  <Button variant="ghost" size="sm" onClick={...}>
-    <ArrowLeft className="h-4 w-4" />
-  </Button>
-  <div className="flex-1 min-w-0">
-    <h1 className="text-sm font-semibold truncate">{planInfo.subject}</h1>
-    <p className="text-xs text-muted-foreground">
-      {planInfo.yearLevel} • {planInfo.academicYear}
-    </p>
-  </div>
-</div>
+{activeTab === "content" && renderLessonStructure(
+  (lesson) => (
+    <Card className={cn("cursor-pointer transition-colors", ...)}>
+      ...
+    </Card>
+  ),
+  <BookOpen className="h-12 w-12 mx-auto text-muted-foreground/50 mb-3" />,
+  "No topics found",
+  ""
+)}
 ```
 
 **After:**
 ```tsx
-<div className="flex items-center gap-3 px-4 py-3">
-  <Button variant="ghost" size="sm" onClick={...}>
-    <ArrowLeft className="h-4 w-4" />
-  </Button>
-  <div className="flex-1 min-w-0">
-    <h1 className="text-sm font-semibold truncate">{planInfo.subject}</h1>
-    <p className="text-xs text-muted-foreground">
-      {planInfo.yearLevel} • {planInfo.academicYear}
-    </p>
+{activeTab === "content" && (
+  <div className="p-4 space-y-3 pb-24">
+    {topics.length === 0 ? (
+      <div className="text-center py-12">
+        <BookOpen className="h-12 w-12 mx-auto text-primary/50 mb-3" />
+        <p className="text-muted-foreground">No topics found</p>
+      </div>
+    ) : (
+      topics.map((topic) => (
+        <Collapsible key={topic.id} open={...} onOpenChange={...}>
+          <Card className="border-primary/30 overflow-hidden">
+            <CollapsibleTrigger asChild>
+              <CardHeader className="py-3 px-4 cursor-pointer hover:bg-primary/10">
+                {/* Green-themed chevron icons */}
+                <ChevronDown className="h-4 w-4 text-primary" />
+                {/* Green badge */}
+                <Badge className="bg-primary/10 text-primary">
+                  {weeksCount} weeks
+                </Badge>
+              </CardHeader>
+            </CollapsibleTrigger>
+            <CollapsibleContent>
+              {/* Week cards with green theme */}
+              <Card className="bg-primary/5 border-primary/30 overflow-hidden">
+                <CardHeader className="hover:bg-primary/10">
+                  {/* Green chevrons */}
+                </CardHeader>
+                {/* Lessons... */}
+              </Card>
+            </CollapsibleContent>
+          </Card>
+        </Collapsible>
+      ))
+    )}
   </div>
-  {/* Class Selector - Moved to header */}
-  <Select
-    value={selectedClassId?.toString() || ""}
-    onValueChange={(val) => setSelectedClassId(val ? parseInt(val) : undefined)}
-  >
-    <SelectTrigger className="w-auto min-w-[100px] h-8 text-xs">
-      <SelectValue placeholder="Class" />
-    </SelectTrigger>
-    <SelectContent>
-      {assignedClasses.map((cls) => (
-        <SelectItem key={cls.classYearId} value={cls.classYearId.toString()}>
-          {cls.className}
-        </SelectItem>
-      ))}
-    </SelectContent>
-  </Select>
-</div>
+)}
 ```
-
-**Step 2: Remove Class Selector from Reflections Tab**
-
-Delete the class selector block from inside the Reflections tab (lines 397-414):
-```tsx
-// Remove this block:
-<div className="sticky top-[88px] z-10 px-4 py-3 bg-background border-b border-border">
-  <Select...>
-</div>
-```
-
-**Step 3: Update "Select a class" Empty State**
-
-The "Select a class to view reflections" message becomes less relevant since the class selector is always visible in the header. However, we should still handle the case where no class is selected.
-
-Update the empty state styling to work with the new layout (adjust the `top` offset for sticky elements since the class selector row is removed).
 
 ---
 
 ## Visual Outcome
 
 **Before:**
-- Class selector only visible in Reflections tab
-- Users must switch to Reflections tab to change class
-- Inconsistent experience across tabs
+- Gray hover highlights extend beyond rounded card corners
+- Gray theme doesn't match the green Content tab
 
 **After:**
-- Class selector visible in header at all times
-- Same row as the subject name (right-aligned)
-- Consistent class selection across Content, Reflections, and Homework tabs
-- Compact dropdown that doesn't clutter the header
+- Hover highlights are properly contained within rounded corners (via `overflow-hidden`)
+- Light green theme throughout Content tab:
+  - `bg-primary/10` for hover states
+  - `bg-primary/5` for week card backgrounds
+  - `border-primary/30` for subtle green borders
+  - `text-primary` for icons and badges
+- Consistent with how Homework (blue) and Reflections (yellow) tabs are styled
 
 ---
 
 ## Files to Modify
 
 1. `src/pages/teacher/TeacherMLPDetailPage.tsx`
-   - Move Select component to header area
-   - Remove redundant class selector from Reflections tab
-   - Adjust sticky positioning offsets
-
+   - Replace Content tab's `renderLessonStructure` call with dedicated green-themed structure
+   - Add `overflow-hidden` to all Cards
+   - Apply green color classes throughout
