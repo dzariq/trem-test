@@ -83,30 +83,28 @@ export function TeacherHomeworkForm({
         <CardContent className="px-4 pb-4 space-y-4">
           {/* Homework Assignment */}
           <div className="space-y-2">
-            <div className="flex items-center justify-between">
-              <Label htmlFor={`homework-${lesson.id}`} className="text-sm font-medium flex items-center gap-2">
-                <ClipboardList className="h-4 w-4 text-sky-600 dark:text-sky-400" />
-                Homework Assignment
-              </Label>
-              {lesson.homework && lesson.homework.trim() && (
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={() => {
-                    try {
-                      setHomework(lesson.homework || "");
-                    } catch (error) {
-                      console.error("Error inserting from lesson plan:", error);
-                    }
-                  }}
-                  className="h-7 text-xs gap-1.5 border-sky-200 text-sky-700 hover:bg-sky-50 dark:border-sky-800 dark:text-sky-300 dark:hover:bg-sky-950"
-                >
-                  <ClipboardCopy className="h-3 w-3" />
-                  Insert from Lesson Plan
-                </Button>
-              )}
-            </div>
+            <Label htmlFor={`homework-${lesson.id}`} className="text-sm font-medium flex items-center gap-2">
+              <ClipboardList className="h-4 w-4 text-sky-600 dark:text-sky-400" />
+              Homework Assignment
+            </Label>
+            {lesson.homework && lesson.homework.trim() && (
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  try {
+                    setHomework(lesson.homework || "");
+                  } catch (error) {
+                    console.error("Error inserting from lesson plan:", error);
+                  }
+                }}
+                className="h-7 text-xs gap-1.5 border-sky-200 text-sky-700 hover:bg-sky-50 dark:border-sky-800 dark:text-sky-300 dark:hover:bg-sky-950"
+              >
+                <ClipboardCopy className="h-3 w-3" />
+                Insert from Lesson Plan
+              </Button>
+            )}
             <Textarea
               id={`homework-${lesson.id}`}
               value={homework}
