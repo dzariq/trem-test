@@ -1,201 +1,136 @@
 
-# Plan: Redesign Teacher Lesson Plans with Color Themes and Homework Tab
+
+# Plan: Move Class Selector to Header (Same Row as Subject)
 
 ## Summary
-This plan addresses four key improvements for the teacher lesson plans module:
-1. Fix sharp highlight edges on tabs to match rounded corners
-2. Apply green color theme for Content tab
-3. Apply yellow color theme for Reflections tab
-4. Add a new Homework tab for assigning homework to students
-5. Auto-navigate to today's lesson based on date
+Move the class selector from inside the Reflections tab to the header area, placing it on the same row as the subject name. This makes class selection consistent across all three tabs (Content, Reflections, and Homework).
 
 ---
 
-## Current State Analysis
+## Current State
 
-**TeacherMLPDetailPage.tsx** (Mobile Lesson Plan Detail):
-- Uses `Tabs` with Content and Reflections tabs
-- Current tabs have gray styling with square highlights (`rounded-none`)
-- No color differentiation between tabs
+**Header Structure (lines 297-314):**
+```
+[Back Button] [Subject Name]
+              [Year Level • Academic Year]
+```
 
-**Design Issues Found:**
-- `TabsList` uses `rounded-none` causing sharp edges
-- `TabsTrigger` defaults to gray background, no color theming
-- No visual distinction between Content (green) and Reflections (yellow) tabs
+**Class Selector Location:**
+- Currently inside the Reflections tab only (lines 398-414)
+- Not visible in Content or Homework tabs
 
 ---
 
-## Design Changes
+## Proposed Design
 
-### Color Theme System
+**New Header Layout:**
+```
+[Back Button] [Subject Name]        [Class Dropdown ▼]
+              [Year Level • Academic Year]
+```
 
-| Tab | Primary Color | Background | Border | Icon Color |
-|-----|---------------|------------|--------|------------|
-| **Content** | Green (primary) | `bg-primary/10` | `border-primary/30` | `text-primary` |
-| **Reflections** | Yellow (amber) | `bg-amber-50` | `border-amber-200` | `text-amber-600` |
-| **Homework** | Blue (sky) | `bg-sky-50` | `border-sky-200` | `text-sky-600` |
-
-### Tab Styling
-- Change `rounded-none` to `rounded-lg` on TabsList
-- Apply themed backgrounds when tabs are active
-- Match highlight color to active tab's theme
+The class dropdown will:
+- Appear on the right side of the header row
+- Be positioned next to the subject name
+- Use a compact styling to fit in the header
+- Remain visible across all tabs
 
 ---
 
 ## Implementation Details
 
-### File 1: `src/pages/teacher/TeacherMLPDetailPage.tsx`
+### File: `src/pages/teacher/TeacherMLPDetailPage.tsx`
 
-**Tab Structure Updates:**
-- Add third tab for "Homework" with a `ClipboardList` icon
-- Change TabsList from `rounded-none` to `rounded-lg`
-- Apply color themes to each TabsTrigger:
-  - Content: green theme when active
-  - Reflections: yellow/amber theme when active
-  - Homework: blue theme when active
+**Step 1: Update Header Layout**
 
-**Auto-Open Today's Lesson:**
-- Add `useEffect` to check lesson dates against current date
-- When topics/weeks load, find the lesson matching today's date
-- Auto-expand that topic and week, pre-select the lesson
+Modify the header section (lines 298-314) to:
+- Add flex row layout with space-between for the main header
+- Place the class selector on the right side of the subject name row
+- Use a compact select trigger with reduced width
 
-**Homework Tab Content:**
-- Mirror the Content tab structure (topics > weeks > lessons)
-- Each lesson shows homework text from the lesson_plan_details table
-- Teachers can assign/edit homework text with a save button
-- Display "No homework assigned" when empty
-
+**Before:**
 ```tsx
-// Tab color configuration
-const tabThemes = {
-  content: {
-    active: "bg-primary/20 text-primary border-primary/30",
-    icon: "text-primary",
-  },
-  reflections: {
-    active: "bg-amber-100 text-amber-700 border-amber-200",
-    icon: "text-amber-600",
-  },
-  homework: {
-    active: "bg-sky-100 text-sky-700 border-sky-200",
-    icon: "text-sky-600",
-  },
-};
+<div className="flex items-center gap-3 px-4 py-3">
+  <Button variant="ghost" size="sm" onClick={...}>
+    <ArrowLeft className="h-4 w-4" />
+  </Button>
+  <div className="flex-1 min-w-0">
+    <h1 className="text-sm font-semibold truncate">{planInfo.subject}</h1>
+    <p className="text-xs text-muted-foreground">
+      {planInfo.yearLevel} • {planInfo.academicYear}
+    </p>
+  </div>
+</div>
 ```
 
-### File 2: `src/components/lessonplan/TeacherLessonReflectionForm.tsx`
-
-**Yellow Theme Enhancement:**
-- Currently uses emerald (green) for reflected and amber (yellow) for not reflected
-- Flip this: use amber/yellow as the primary theme color for all reflection cards
-- Use subtle green accent only for the "Reflected" status badge
-- Keep the yellow theme consistent throughout the form
-
-### File 3: `src/components/lessonplan/ReadOnlyLessonContent.tsx`
-
-**Green Theme Enhancement:**
-- Add subtle green background tint to Cards (`bg-primary/5`)
-- Icon colors already use `text-primary` (green) - keep this
-- Add green border accent to cards (`border-primary/20`)
-
-### File 4: New Component - `src/components/lessonplan/TeacherHomeworkForm.tsx`
-
-**New Component for Homework Tab:**
-- Similar structure to TeacherLessonReflectionForm
-- Blue color theme (sky colors)
-- Fields:
-  - Homework assignment (textarea)
-  - Due date (optional date picker)
-  - Save button
-- Fetches/saves to existing `homework` field in lesson_plan_details
-
-### File 5: `src/hooks/useTeacherLessonPlans.ts`
-
-**Add Homework Management:**
-- Add `useHomeworkManagement` hook or extend existing hooks
-- Functions to:
-  - Fetch homework for lessons
-  - Save/update homework text
-- Similar pattern to `useLessonReflections`
-
----
-
-## Auto-Navigate to Today's Lesson
-
-Logic to add in TeacherMLPDetailPage:
-1. When lessons are loaded, find lesson with date matching today
-2. Get the week and topic containing that lesson
-3. Auto-expand the topic and week
-4. Pre-select the lesson
-
-```typescript
-useEffect(() => {
-  const today = format(new Date(), "yyyy-MM-dd");
-  
-  // Find lesson matching today's date
-  for (const topic of topics) {
-    const weeks = getWeeksForTopic(topic.id);
-    for (const week of weeks) {
-      if (!isLessonsLoaded(week.id)) continue;
-      const lessons = getLessonsForWeek(week.id);
-      const todayLesson = lessons.find(l => l.date === today);
-      if (todayLesson) {
-        setExpandedTopics(new Set([topic.id]));
-        setExpandedWeeks(new Set([week.id]));
-        setSelectedLessonId(todayLesson.id);
-        return;
-      }
-    }
-  }
-}, [topics, /* dependencies */]);
+**After:**
+```tsx
+<div className="flex items-center gap-3 px-4 py-3">
+  <Button variant="ghost" size="sm" onClick={...}>
+    <ArrowLeft className="h-4 w-4" />
+  </Button>
+  <div className="flex-1 min-w-0">
+    <h1 className="text-sm font-semibold truncate">{planInfo.subject}</h1>
+    <p className="text-xs text-muted-foreground">
+      {planInfo.yearLevel} • {planInfo.academicYear}
+    </p>
+  </div>
+  {/* Class Selector - Moved to header */}
+  <Select
+    value={selectedClassId?.toString() || ""}
+    onValueChange={(val) => setSelectedClassId(val ? parseInt(val) : undefined)}
+  >
+    <SelectTrigger className="w-auto min-w-[100px] h-8 text-xs">
+      <SelectValue placeholder="Class" />
+    </SelectTrigger>
+    <SelectContent>
+      {assignedClasses.map((cls) => (
+        <SelectItem key={cls.classYearId} value={cls.classYearId.toString()}>
+          {cls.className}
+        </SelectItem>
+      ))}
+    </SelectContent>
+  </Select>
+</div>
 ```
+
+**Step 2: Remove Class Selector from Reflections Tab**
+
+Delete the class selector block from inside the Reflections tab (lines 397-414):
+```tsx
+// Remove this block:
+<div className="sticky top-[88px] z-10 px-4 py-3 bg-background border-b border-border">
+  <Select...>
+</div>
+```
+
+**Step 3: Update "Select a class" Empty State**
+
+The "Select a class to view reflections" message becomes less relevant since the class selector is always visible in the header. However, we should still handle the case where no class is selected.
+
+Update the empty state styling to work with the new layout (adjust the `top` offset for sticky elements since the class selector row is removed).
 
 ---
 
 ## Visual Outcome
 
 **Before:**
-- Gray tabs with sharp edges
-- No color differentiation
-- No homework assignment tab
+- Class selector only visible in Reflections tab
+- Users must switch to Reflections tab to change class
+- Inconsistent experience across tabs
 
 **After:**
-- Rounded tabs with smooth transitions
-- Content tab: Green theme (consistent with app branding)
-- Reflections tab: Yellow theme (warm, reflective feel)
-- Homework tab: Blue theme (task-oriented feel)
-- Auto-opens to today's lesson for convenience
+- Class selector visible in header at all times
+- Same row as the subject name (right-aligned)
+- Consistent class selection across Content, Reflections, and Homework tabs
+- Compact dropdown that doesn't clutter the header
 
 ---
 
-## Technical Details
+## Files to Modify
 
-### Component Dependencies
-- Lucide icons: `ClipboardList` for Homework tab
-- No new packages required
+1. `src/pages/teacher/TeacherMLPDetailPage.tsx`
+   - Move Select component to header area
+   - Remove redundant class selector from Reflections tab
+   - Adjust sticky positioning offsets
 
-### Database
-- Homework data already exists in `lesson_plan_details.homework` field
-- No schema changes needed
-
-### Files to Modify
-1. `src/pages/teacher/TeacherMLPDetailPage.tsx` - Main tab restructure, add Homework tab
-2. `src/components/lessonplan/TeacherLessonReflectionForm.tsx` - Yellow theme
-3. `src/components/lessonplan/ReadOnlyLessonContent.tsx` - Green theme enhancement
-4. `src/hooks/useTeacherLessonPlans.ts` - Add homework save/load functions
-
-### Files to Create
-1. `src/components/lessonplan/TeacherHomeworkForm.tsx` - New homework form component
-
----
-
-## Summary of Changes
-
-| Change | Description |
-|--------|-------------|
-| Fix tab corners | Change `rounded-none` to `rounded-lg` on TabsList |
-| Green theme (Content) | Apply `bg-primary/10` active state, green icons |
-| Yellow theme (Reflections) | Apply `bg-amber-100` active state, amber icons |
-| Blue theme (Homework) | New tab with `bg-sky-100` active state |
-| Homework tab | New functionality to assign homework per lesson |
-| Auto-open today | Navigate to today's lesson on page load |
