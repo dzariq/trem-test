@@ -45,7 +45,7 @@ export function ReadOnlyLessonContent({ lesson }: ReadOnlyLessonContentProps) {
   return (
     <div className="space-y-4">
       {/* Basic Information */}
-      <Card>
+      <Card className="border-primary/20 bg-primary/5">
         <CardHeader className="py-3 px-4">
           <div className="flex items-center gap-2">
             <FileText className="h-4 w-4 text-primary" />
@@ -70,7 +70,7 @@ export function ReadOnlyLessonContent({ lesson }: ReadOnlyLessonContentProps) {
               <Label className="text-xs text-muted-foreground">Subtopics</Label>
               <div className="flex flex-wrap gap-1">
                 {lesson.subtopics.map((subtopic, idx) => (
-                  <Badge key={idx} variant="secondary" className="text-xs">{subtopic}</Badge>
+                  <Badge key={idx} variant="secondary" className="text-xs bg-primary/10 text-primary">{subtopic}</Badge>
                 ))}
               </div>
             </div>
@@ -80,7 +80,7 @@ export function ReadOnlyLessonContent({ lesson }: ReadOnlyLessonContentProps) {
 
       {/* Learning Objectives */}
       {lesson.learningObjectives.length > 0 && (
-        <Card>
+        <Card className="border-primary/20 bg-primary/5">
           <CardHeader className="py-3 px-4">
             <div className="flex items-center gap-2">
               <Target className="h-4 w-4 text-primary" />
@@ -101,7 +101,7 @@ export function ReadOnlyLessonContent({ lesson }: ReadOnlyLessonContentProps) {
       )}
 
       {/* Lesson Flow */}
-      <Card>
+      <Card className="border-primary/20 bg-primary/5">
         <CardHeader className="py-3 px-4">
           <div className="flex items-center gap-2">
             <Workflow className="h-4 w-4 text-primary" />
@@ -109,9 +109,9 @@ export function ReadOnlyLessonContent({ lesson }: ReadOnlyLessonContentProps) {
           </div>
         </CardHeader>
         <CardContent className="px-4 pb-4 space-y-3">
-          {renderFlowSection(lessonFlow.beginning, "Beginning", "bg-sky-50")}
-          {renderFlowSection(lessonFlow.middle, "Middle", "bg-amber-50")}
-          {renderFlowSection(lessonFlow.end, "End", "bg-emerald-50")}
+          {renderFlowSection(lessonFlow.beginning, "Beginning", "bg-primary/10")}
+          {renderFlowSection(lessonFlow.middle, "Middle", "bg-primary/15")}
+          {renderFlowSection(lessonFlow.end, "End", "bg-primary/20")}
           
           {!lessonFlow.beginning.steps.length && !lessonFlow.middle.steps.length && !lessonFlow.end.steps.length && (
             <p className="text-sm text-muted-foreground italic">No lesson flow defined</p>
@@ -121,7 +121,7 @@ export function ReadOnlyLessonContent({ lesson }: ReadOnlyLessonContentProps) {
 
       {/* Resources */}
       {lesson.resources && (
-        <Card>
+        <Card className="border-primary/20 bg-primary/5">
           <CardHeader className="py-3 px-4">
             <div className="flex items-center gap-2">
               <Package className="h-4 w-4 text-primary" />
@@ -136,7 +136,7 @@ export function ReadOnlyLessonContent({ lesson }: ReadOnlyLessonContentProps) {
 
       {/* Homework */}
       {lesson.homework && (
-        <Card>
+        <Card className="border-primary/20 bg-primary/5">
           <CardHeader className="py-3 px-4">
             <div className="flex items-center gap-2">
               <BookOpen className="h-4 w-4 text-primary" />

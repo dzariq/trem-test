@@ -65,7 +65,7 @@ export function TeacherLessonReflectionForm({
   return (
     <Card className={cn(
       "border transition-all",
-      hasReflection ? "border-emerald-200 dark:border-emerald-800 bg-emerald-50/30 dark:bg-emerald-950/20" : "border-amber-200 dark:border-amber-800 bg-amber-50/30 dark:bg-amber-950/20"
+      "border-amber-200 dark:border-amber-800 bg-amber-50/30 dark:bg-amber-950/20"
     )}>
       <CardHeader 
         className="py-3 px-4 cursor-pointer"
