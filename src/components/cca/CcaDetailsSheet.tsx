@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/tooltip";
 import { PICTeachersList } from "@/components/cca/PICTeacherPill";
 import { getCcaTypeColor } from "@/components/cca/CcaTypeTabs";
+import { CcaActivityImage } from "@/components/cca/CcaActivityImage";
 import type { CcaActivity } from "@/hooks/useCcaActivities";
 
 interface CcaDetailsSheetProps {
@@ -41,6 +42,16 @@ export function CcaDetailsSheet({
   // Shared content for both mobile and desktop
   const sheetContent = activity ? (
     <>
+      {/* Hero Image */}
+      <CcaActivityImage
+        imageUrl={activity.imageUrl}
+        activityName={activity.name}
+        category={activity.category}
+        typeName={activity.typeName}
+        variant="details"
+        className="mb-4"
+      />
+
       <p className="text-sm text-muted-foreground">
         {activity.publicDescription || "Details to be announced"}
       </p>

@@ -624,6 +624,7 @@ export type Database = {
           coordinator_name: string | null
           created_at: string
           id: string
+          image_url: string | null
           internal_notes: string | null
           is_active: boolean
           is_club: boolean
@@ -646,6 +647,7 @@ export type Database = {
           coordinator_name?: string | null
           created_at?: string
           id?: string
+          image_url?: string | null
           internal_notes?: string | null
           is_active?: boolean
           is_club?: boolean
@@ -668,6 +670,7 @@ export type Database = {
           coordinator_name?: string | null
           created_at?: string
           id?: string
+          image_url?: string | null
           internal_notes?: string | null
           is_active?: boolean
           is_club?: boolean
