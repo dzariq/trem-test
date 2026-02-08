@@ -366,45 +366,125 @@ const TeacherMLPDetailPage = () => {
         </Tabs>
       </div>
 
-      {/* Content Tab */}
-      {activeTab === "content" && renderLessonStructure(
-        (lesson) => (
-          <Card
-            key={lesson.id}
-            className={cn(
-              "cursor-pointer transition-colors",
-              selectedLessonId === lesson.id
-                ? "border-primary bg-primary/5"
-                : "hover:bg-muted/50"
-            )}
-            onClick={() =>
-              setSelectedLessonId(selectedLessonId === lesson.id ? null : lesson.id)
-            }
-          >
-            <CardHeader className="py-2 px-3">
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-medium">
-                  L{lesson.lessonNumber}: {lesson.title || "Untitled"}
-                </span>
-                {selectedLessonId === lesson.id ? (
-                  <ChevronDown className="h-3 w-3 text-muted-foreground" />
-                ) : (
-                  <ChevronRight className="h-3 w-3 text-muted-foreground" />
-                )}
-              </div>
-            </CardHeader>
-            {selectedLessonId === lesson.id && (
-              <CardContent
-                className="px-3 pb-3 pt-0"
-                onClick={(e) => e.stopPropagation()}
+      {/* Content Tab - Green Theme */}
+      {activeTab === "content" && (
+        <div className="p-4 space-y-3 pb-24">
+          {topics.length === 0 ? (
+            <div className="text-center py-12">
+              <FileText className="h-12 w-12 mx-auto text-primary/50 mb-3" />
+              <p className="text-muted-foreground">No topics found</p>
+            </div>
+          ) : (
+            topics.map((topic) => (
+              <Collapsible
+                key={topic.id}
+                open={expandedTopics.has(topic.id)}
+                onOpenChange={() => handleTopicToggle(topic.id)}
               >
-                <ReadOnlyLessonContent lesson={lesson} />
-              </CardContent>
-            )}
-          </Card>
-        ),
-        <FileText className="h-12 w-12 mx-auto text-muted-foreground/50 mb-3" />,
-        "No topics found"
+                <Card className="border-primary/30 overflow-hidden">
+                  <CollapsibleTrigger asChild>
+                    <CardHeader className="py-3 px-4 cursor-pointer hover:bg-primary/10">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          {expandedTopics.has(topic.id) ? (
+                            <ChevronDown className="h-4 w-4 text-primary" />
+                          ) : (
+                            <ChevronRight className="h-4 w-4 text-primary" />
+                          )}
+                          <CardTitle className="text-sm font-medium">{topic.title}</CardTitle>
+                        </div>
+                        <Badge variant="secondary" className="text-xs bg-primary/10 text-primary">
+                          {getWeeksForTopic(topic.id).length} weeks
+                        </Badge>
+                      </div>
+                    </CardHeader>
+                  </CollapsibleTrigger>
+                  <CollapsibleContent>
+                    <CardContent className="px-4 pb-4 pt-0 space-y-2">
+                      {getWeeksForTopic(topic.id).map((week) => (
+                        <Collapsible
+                          key={week.id}
+                          open={expandedWeeks.has(week.id)}
+                          onOpenChange={() => handleWeekToggle(week.id)}
+                        >
+                          <Card className="bg-primary/5 border-primary/30 overflow-hidden">
+                            <CollapsibleTrigger asChild>
+                              <CardHeader className="py-2 px-3 cursor-pointer hover:bg-primary/10">
+                                <div className="flex items-center justify-between">
+                                  <div className="flex items-center gap-2">
+                                    {loadingWeeks.has(week.id) ? (
+                                      <Loader2 className="h-3.5 w-3.5 animate-spin text-primary" />
+                                    ) : expandedWeeks.has(week.id) ? (
+                                      <ChevronDown className="h-3.5 w-3.5 text-primary" />
+                                    ) : (
+                                      <ChevronRight className="h-3.5 w-3.5 text-primary" />
+                                    )}
+                                    <span className="text-xs font-medium">
+                                      Week {week.weekNumber}: {week.title}
+                                    </span>
+                                  </div>
+                                </div>
+                              </CardHeader>
+                            </CollapsibleTrigger>
+                            <CollapsibleContent>
+                              <CardContent className="px-3 pb-3 pt-0 space-y-2">
+                                {!isLessonsLoaded(week.id) ? (
+                                  <div className="flex items-center justify-center py-4">
+                                    <Loader2 className="h-4 w-4 animate-spin text-primary" />
+                                  </div>
+                                ) : getLessonsForWeek(week.id).length === 0 ? (
+                                  <p className="text-xs text-muted-foreground text-center py-2">
+                                    No lessons in this week
+                                  </p>
+                                ) : (
+                                  getLessonsForWeek(week.id).map((lesson) => (
+                                    <Card
+                                      key={lesson.id}
+                                      className={cn(
+                                        "cursor-pointer transition-colors overflow-hidden",
+                                        selectedLessonId === lesson.id
+                                          ? "border-primary bg-primary/5"
+                                          : "hover:bg-primary/10"
+                                      )}
+                                      onClick={() =>
+                                        setSelectedLessonId(selectedLessonId === lesson.id ? null : lesson.id)
+                                      }
+                                    >
+                                      <CardHeader className="py-2 px-3">
+                                        <div className="flex items-center justify-between">
+                                          <span className="text-xs font-medium">
+                                            L{lesson.lessonNumber}: {lesson.title || "Untitled"}
+                                          </span>
+                                          {selectedLessonId === lesson.id ? (
+                                            <ChevronDown className="h-3 w-3 text-primary" />
+                                          ) : (
+                                            <ChevronRight className="h-3 w-3 text-primary" />
+                                          )}
+                                        </div>
+                                      </CardHeader>
+                                      {selectedLessonId === lesson.id && (
+                                        <CardContent
+                                          className="px-3 pb-3 pt-0"
+                                          onClick={(e) => e.stopPropagation()}
+                                        >
+                                          <ReadOnlyLessonContent lesson={lesson} />
+                                        </CardContent>
+                                      )}
+                                    </Card>
+                                  ))
+                                )}
+                              </CardContent>
+                            </CollapsibleContent>
+                          </Card>
+                        </Collapsible>
+                      ))}
+                    </CardContent>
+                  </CollapsibleContent>
+                </Card>
+              </Collapsible>
+            ))
+          )}
+        </div>
       )}
 
       {/* Reflections Tab */}
