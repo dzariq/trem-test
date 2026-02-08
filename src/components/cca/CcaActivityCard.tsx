@@ -30,7 +30,7 @@ export function CcaActivityCard({
   onClick,
   className,
 }: CcaActivityCardProps) {
-  const isEnrolledVariant = variant === "enrolled";
+  const isEnrolledState = variant === "enrolled" || isEnrolled;
   
   // Get teacher info based on activity type
   const hasTeacherInfo = 
@@ -61,15 +61,15 @@ export function CcaActivityCard({
           category={activity.category}
           typeName={activity.typeName}
           variant="details"
-          isEnrolled={isEnrolledVariant || isEnrolled}
+          isEnrolled={isEnrolledState}
           className="w-full h-full rounded-none"
         />
         
         {/* Decorative gradient circles overlay */}
         <div className="absolute inset-0 opacity-30 pointer-events-none">
-          <div className="absolute top-4 left-8 w-16 h-16 rounded-full bg-yellow-300/40" />
-          <div className="absolute top-12 right-12 w-24 h-24 rounded-full bg-amber-200/50" />
-          <div className="absolute bottom-8 left-1/4 w-12 h-12 rounded-full bg-yellow-400/30" />
+          <div className={`absolute top-4 left-8 w-16 h-16 rounded-full ${isEnrolledState ? "bg-yellow-300/40" : "bg-gray-300/50"}`} />
+          <div className={`absolute top-12 right-12 w-24 h-24 rounded-full ${isEnrolledState ? "bg-amber-200/50" : "bg-gray-200/60"}`} />
+          <div className={`absolute bottom-8 left-1/4 w-12 h-12 rounded-full ${isEnrolledState ? "bg-yellow-400/30" : "bg-gray-300/40"}`} />
         </div>
         
         {/* Gradient overlay that fades to background */}
@@ -78,14 +78,14 @@ export function CcaActivityCard({
         {/* Overlaid Badges - positioned at top */}
         <div className="absolute top-3 left-3 right-3 flex justify-between items-start">
           {/* Enrolled Badge (left) */}
-          {(isEnrolledVariant || isEnrolled) && (
+          {isEnrolledState && (
             <Badge
               className="bg-primary text-primary-foreground shadow-md"
             >
               Enrolled
             </Badge>
           )}
-          {!isEnrolledVariant && !isEnrolled && <div />}
+          {!isEnrolledState && <div />}
           
           {/* Category Badge (right) */}
           <Badge
