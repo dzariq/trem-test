@@ -64,6 +64,13 @@ export function CcaActivityCard({
           className="w-full h-full rounded-none"
         />
         
+        {/* Decorative gradient circles overlay */}
+        <div className="absolute inset-0 opacity-20 pointer-events-none">
+          <div className="absolute top-4 left-8 w-16 h-16 rounded-full bg-primary/30" />
+          <div className="absolute top-12 right-12 w-24 h-24 rounded-full bg-secondary/30" />
+          <div className="absolute bottom-8 left-1/4 w-12 h-12 rounded-full bg-primary/20" />
+        </div>
+        
         {/* Gradient overlay that fades to background */}
         <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-card" />
         
