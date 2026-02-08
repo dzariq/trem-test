@@ -48,9 +48,9 @@ function getCategoryIcon(category: string | null | undefined): LucideIcon {
  * Map category/type to background color class for fallback icon
  */
 function getCategoryBgColor(isEnrolled: boolean): string {
-  // Yellow/amber for enrolled, gray for available
+  // Green for enrolled, gray for available
   return isEnrolled 
-    ? "bg-amber-100 dark:bg-amber-900/30" 
+    ? "bg-emerald-100 dark:bg-emerald-900/30" 
     : "bg-gray-200 dark:bg-gray-700/50";
 }
 
@@ -58,9 +58,9 @@ function getCategoryBgColor(isEnrolled: boolean): string {
  * Map to icon color based on enrollment status
  */
 function getCategoryIconColor(isEnrolled: boolean): string {
-  // Yellow/amber for enrolled, gray for available
+  // Green for enrolled, gray for available
   return isEnrolled 
-    ? "text-amber-600 dark:text-amber-400" 
+    ? "text-emerald-600 dark:text-emerald-400" 
     : "text-gray-400 dark:text-gray-500";
 }
 
