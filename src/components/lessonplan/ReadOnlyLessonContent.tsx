@@ -45,7 +45,7 @@ export function ReadOnlyLessonContent({ lesson }: ReadOnlyLessonContentProps) {
   return (
     <div className="space-y-4">
       {/* Basic Information */}
-      <Card className="border-primary/20 bg-primary/5">
+      <Card className="border-primary/20 bg-card">
         <CardHeader className="py-3 px-4">
           <div className="flex items-center gap-2">
             <FileText className="h-4 w-4 text-primary" />
@@ -80,7 +80,7 @@ export function ReadOnlyLessonContent({ lesson }: ReadOnlyLessonContentProps) {
 
       {/* Learning Objectives */}
       {lesson.learningObjectives.length > 0 && (
-        <Card className="border-primary/20 bg-primary/5">
+        <Card className="border-primary/20 bg-card">
           <CardHeader className="py-3 px-4">
             <div className="flex items-center gap-2">
               <Target className="h-4 w-4 text-primary" />
@@ -101,7 +101,7 @@ export function ReadOnlyLessonContent({ lesson }: ReadOnlyLessonContentProps) {
       )}
 
       {/* Lesson Flow */}
-      <Card className="border-primary/20 bg-primary/5">
+      <Card className="border-primary/20 bg-card">
         <CardHeader className="py-3 px-4">
           <div className="flex items-center gap-2">
             <Workflow className="h-4 w-4 text-primary" />
@@ -121,7 +121,7 @@ export function ReadOnlyLessonContent({ lesson }: ReadOnlyLessonContentProps) {
 
       {/* Resources */}
       {lesson.resources && (
-        <Card className="border-primary/20 bg-primary/5">
+        <Card className="border-primary/20 bg-card">
           <CardHeader className="py-3 px-4">
             <div className="flex items-center gap-2">
               <Package className="h-4 w-4 text-primary" />
@@ -136,7 +136,7 @@ export function ReadOnlyLessonContent({ lesson }: ReadOnlyLessonContentProps) {
 
       {/* Homework */}
       {lesson.homework && (
-        <Card className="border-primary/20 bg-primary/5">
+        <Card className="border-primary/20 bg-card">
           <CardHeader className="py-3 px-4">
             <div className="flex items-center gap-2">
               <BookOpen className="h-4 w-4 text-primary" />
