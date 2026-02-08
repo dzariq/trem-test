@@ -61,6 +61,7 @@ export function CcaActivityCard({
           category={activity.category}
           typeName={activity.typeName}
           variant="details"
+          isEnrolled={isEnrolledVariant || isEnrolled}
           className="w-full h-full rounded-none"
         />
         
