@@ -25,7 +25,7 @@ import { useCcaClubEnrollment } from "@/hooks/useCcaClubEnrollment";
 import { PICTeachersList } from "@/components/cca/PICTeacherPill";
 import { CcaTypeTabs, getCcaTypeColor } from "@/components/cca/CcaTypeTabs";
 import { CcaDetailsSheet } from "@/components/cca/CcaDetailsSheet";
-import { CcaActivityImage } from "@/components/cca/CcaActivityImage";
+import { CcaActivityCard } from "@/components/cca/CcaActivityCard";
 import { ClubSwitchConfirmDialog } from "@/components/cca/ClubSwitchConfirmDialog";
 import { supabase } from "@/lib/supabase";
 import { useCcaSessionsCalendar, type CcaCalendarSession } from "@/hooks/useCcaSessionsCalendar";
@@ -646,92 +646,12 @@ export default function CalendarPage() {
               )}
 
               {!enrolledLoading && !enrolledError && filteredEnrolledCCA.map((activity) => (
-                <Card 
-                  key={`enrolled-${activity.enrollmentId}`} 
-                  className="bg-emerald-50/80 dark:bg-emerald-950/30 border border-emerald-200/60 dark:border-emerald-800/40 shadow-sm cursor-pointer hover:bg-emerald-100/80 dark:hover:bg-emerald-900/40 transition-colors active:scale-[0.99]"
+                <CcaActivityCard
+                  key={`enrolled-${activity.enrollmentId}`}
+                  activity={activity}
+                  variant="enrolled"
                   onClick={() => setSelectedEnrolledCCA(activity)}
-                  role="button"
-                  tabIndex={0}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter" || e.key === " ") {
-                      e.preventDefault();
-                      setSelectedEnrolledCCA(activity);
-                    }
-                  }}
-                >
-                  <CardContent className="p-4">
-                    <div className="flex gap-3">
-                      {/* Activity Image */}
-                      <CcaActivityImage
-                        imageUrl={activity.imageUrl}
-                        activityName={activity.name}
-                        category={activity.category}
-                        typeName={activity.typeName}
-                        variant="card"
-                      />
-                      
-                      {/* Content */}
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-start justify-between gap-3 mb-2">
-                          <div className="min-w-0">
-                            <h3 className="font-semibold text-foreground">{activity.name}</h3>
-                          </div>
-                          <div className="flex flex-wrap justify-end gap-2 w-fit">
-                            <Badge
-                              variant="secondary"
-                              className="text-[10px] px-1.5 py-0 bg-primary/20 text-primary shrink-0 w-fit"
-                            >
-                              Enrolled
-                            </Badge>
-                            <Badge
-                              className={`${getCcaCategoryColor(activity.typeName || activity.category)} shrink-0 w-fit`}
-                              variant="secondary"
-                            >
-                              {activity.typeName || activity.category}
-                            </Badge>
-                          </div>
-                        </div>
-
-                        {/* Description */}
-                        {activity.publicDescription && (
-                          <p className="text-xs text-muted-foreground line-clamp-2 mb-3">
-                            {activity.publicDescription}
-                          </p>
-                        )}
-
-                        <div className="space-y-2 text-sm text-muted-foreground">
-                          {(activity.meetingDay || activity.meetingTime) && (
-                            <div className="flex items-center gap-2">
-                              <Clock className="h-4 w-4" />
-                              <span>
-                                {activity.meetingDay || "TBD"}
-                                {activity.meetingTime ? `, ${activity.meetingTime}` : ""}
-                              </span>
-                            </div>
-                          )}
-                          {activity.location && (
-                            <div className="flex items-center gap-2">
-                              <MapPin className="h-4 w-4" />
-                              <span>{activity.location}</span>
-                            </div>
-                          )}
-                          <div className="flex items-center gap-2">
-                            <User className="h-4 w-4" />
-                            {getTeacherInChargeLabel(activity) ? (
-                              <PICTeachersList
-                                teachers={activity.picTeachers}
-                                fallbackCoordinator={null}
-                                variant="compact"
-                              />
-                            ) : (
-                              <span className="text-xs">Not assigned</span>
-                            )}
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
+                />
               ))}
             </div>
 
@@ -807,110 +727,13 @@ export default function CalendarPage() {
                 const alreadyEnrolled = isEnrolledInActivity(activity.id);
 
                 return (
-                  <Card key={activity.id} className="bg-card border-border shadow-sm">
-                    <CardContent className="p-4">
-                      <div className="flex gap-3">
-                        {/* Activity Image */}
-                        <CcaActivityImage
-                          imageUrl={activity.imageUrl}
-                          activityName={activity.name}
-                          category={activity.category}
-                          typeName={activity.typeName}
-                          variant="card"
-                        />
-                        
-                        {/* Content */}
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-start justify-between gap-3 mb-2">
-                            <div className="min-w-0">
-                              <h3 className="font-semibold text-foreground">{activity.name}</h3>
-                              {activity.eligibleYears.length > 0 && (
-                                <p className="text-xs text-muted-foreground mt-0.5">
-                                  Years: {activity.eligibleYears.join(", ")}
-                                </p>
-                              )}
-                            </div>
-                            <div className="flex flex-wrap justify-end gap-2 w-fit">
-                              {alreadyEnrolled && (
-                                <Badge
-                                  variant="secondary"
-                                  className="text-[10px] px-1.5 py-0 bg-primary/20 text-primary shrink-0 w-fit"
-                                >
-                                  Enrolled
-                                </Badge>
-                              )}
-                              <Badge
-                                className={`${getCcaCategoryColor(activity.typeName || activity.category)} shrink-0 w-fit`}
-                                variant="secondary"
-                              >
-                                {activity.typeName || activity.category}
-                              </Badge>
-                            </div>
-                          </div>
-
-                          {/* Description */}
-                          {activity.publicDescription && (
-                            <p className="text-xs text-muted-foreground line-clamp-2 mb-3">
-                              {activity.publicDescription}
-                            </p>
-                          )}
-
-                          <div className="space-y-2 text-sm text-muted-foreground">
-                            {(activity.meetingDay || activity.meetingTime) && (
-                              <div className="flex items-center gap-2">
-                                <Clock className="h-4 w-4" />
-                                <span>
-                                  {activity.meetingDay || "TBD"}
-                                  {activity.meetingTime ? `, ${activity.meetingTime}` : ""}
-                                </span>
-                              </div>
-                            )}
-                            {activity.location && (
-                              <div className="flex items-center gap-2">
-                                <MapPin className="h-4 w-4" />
-                                <span>{activity.location}</span>
-                              </div>
-                            )}
-                            <div className="flex items-center gap-2">
-                              <User className="h-4 w-4" />
-                              {getTeacherInChargeLabel(activity) ? (
-                                <PICTeachersList
-                                  teachers={activity.picTeachers}
-                                  fallbackCoordinator={activity.coordinatorName}
-                                  variant="compact"
-                                />
-                              ) : (
-                                <span className="text-xs">Not assigned</span>
-                              )}
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* Only show Switch/Join button for non-parent roles */}
-                      {roleForFilters !== "parent" && !alreadyEnrolled && (
-                        <div className="mt-4">
-                          <Button
-                            size="sm"
-                            className="w-full"
-                            onClick={() => handleJoinOrSwitch(activity)}
-                            disabled={enrolling}
-                          >
-                            {enrolling ? (
-                              <Loader2 className="h-4 w-4 animate-spin" />
-                            ) : enrolledCcas.length > 0 ? (
-                              <>
-                                <ArrowRightLeft className="h-4 w-4 mr-1" />
-                                Switch
-                              </>
-                            ) : (
-                              "Join Club"
-                            )}
-                          </Button>
-                        </div>
-                      )}
-                    </CardContent>
-                  </Card>
+                  <CcaActivityCard
+                    key={activity.id}
+                    activity={activity}
+                    variant="available"
+                    isEnrolled={alreadyEnrolled}
+                    onClick={() => setSelectedCCA(activity)}
+                  />
                 );
               })}
             </div>
