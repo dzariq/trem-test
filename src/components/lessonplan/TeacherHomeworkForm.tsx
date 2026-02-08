@@ -93,8 +93,13 @@ export function TeacherHomeworkForm({
                   type="button"
                   variant="outline"
                   size="sm"
-                  onClick={() => setHomework(lesson.homework || "")}
-                  disabled={homework === lesson.homework}
+                  onClick={() => {
+                    try {
+                      setHomework(lesson.homework || "");
+                    } catch (error) {
+                      console.error("Error inserting from lesson plan:", error);
+                    }
+                  }}
                   className="h-7 text-xs gap-1.5 border-sky-200 text-sky-700 hover:bg-sky-50 dark:border-sky-800 dark:text-sky-300 dark:hover:bg-sky-950"
                 >
                   <ClipboardCopy className="h-3 w-3" />
