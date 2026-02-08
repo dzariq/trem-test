@@ -46,59 +46,17 @@ function getCategoryIcon(category: string | null | undefined): LucideIcon {
 /**
  * Map category/type to background color class for fallback icon
  */
-function getCategoryBgColor(category: string | null | undefined): string {
-  const name = (category ?? "").toLowerCase();
-  switch (name) {
-    case "arts":
-    case "art":
-      return "bg-pink-100 dark:bg-pink-900/30";
-    case "sports":
-    case "outdoor":
-    case "outdoor cca":
-      return "bg-amber-100 dark:bg-amber-900/30";
-    case "indoor":
-    case "indoor cca":
-      return "bg-sky-100 dark:bg-sky-900/30";
-    case "music":
-      return "bg-violet-100 dark:bg-violet-900/30";
-    case "academic":
-      return "bg-indigo-100 dark:bg-indigo-900/30";
-    case "competition":
-      return "bg-rose-100 dark:bg-rose-900/30";
-    case "enrichment":
-      return "bg-teal-100 dark:bg-teal-900/30";
-    default:
-      return "bg-muted";
-  }
+function getCategoryBgColor(_category: string | null | undefined): string {
+  // Use consistent yellow/amber theme for all CCA fallback icons
+  return "bg-amber-100 dark:bg-amber-900/30";
 }
 
 /**
  * Map category/type to icon color class
  */
-function getCategoryIconColor(category: string | null | undefined): string {
-  const name = (category ?? "").toLowerCase();
-  switch (name) {
-    case "arts":
-    case "art":
-      return "text-pink-500 dark:text-pink-400";
-    case "sports":
-    case "outdoor":
-    case "outdoor cca":
-      return "text-amber-500 dark:text-amber-400";
-    case "indoor":
-    case "indoor cca":
-      return "text-sky-500 dark:text-sky-400";
-    case "music":
-      return "text-violet-500 dark:text-violet-400";
-    case "academic":
-      return "text-indigo-500 dark:text-indigo-400";
-    case "competition":
-      return "text-rose-500 dark:text-rose-400";
-    case "enrichment":
-      return "text-teal-500 dark:text-teal-400";
-    default:
-      return "text-muted-foreground/60";
-  }
+function getCategoryIconColor(_category: string | null | undefined): string {
+  // Use consistent yellow/amber theme for all CCA fallback icons
+  return "text-amber-600 dark:text-amber-400";
 }
 
 /**
