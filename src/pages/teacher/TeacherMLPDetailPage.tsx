@@ -311,6 +311,22 @@ const TeacherMLPDetailPage = () => {
               {planInfo.yearLevel} • {planInfo.academicYear}
             </p>
           </div>
+          {/* Global Class Selector */}
+          <Select
+            value={selectedClassId?.toString() || ""}
+            onValueChange={(val) => setSelectedClassId(val ? parseInt(val) : undefined)}
+          >
+            <SelectTrigger className="w-auto min-w-[100px] h-8 text-xs">
+              <SelectValue placeholder="Class" />
+            </SelectTrigger>
+            <SelectContent>
+              {assignedClasses.map((cls) => (
+                <SelectItem key={cls.classYearId} value={cls.classYearId.toString()}>
+                  {cls.className}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
 
         {/* Tabs with color themes */}
@@ -394,29 +410,10 @@ const TeacherMLPDetailPage = () => {
       {/* Reflections Tab */}
       {activeTab === "reflections" && (
         <div className="space-y-0">
-          {/* Class Selector */}
-          <div className="sticky top-[88px] z-10 px-4 py-3 bg-background border-b border-border">
-            <Select
-              value={selectedClassId?.toString() || ""}
-              onValueChange={(val) => setSelectedClassId(val ? parseInt(val) : undefined)}
-            >
-              <SelectTrigger className="w-full">
-                <SelectValue placeholder="Select a class" />
-              </SelectTrigger>
-              <SelectContent>
-                {assignedClasses.map((cls) => (
-                  <SelectItem key={cls.classYearId} value={cls.classYearId.toString()}>
-                    {cls.className}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
           {!selectedClassId ? (
             <div className="text-center py-12 px-4">
               <MessageSquare className="h-12 w-12 mx-auto text-amber-400/50 mb-3" />
-              <p className="text-muted-foreground">Select a class to view reflections</p>
+              <p className="text-muted-foreground">Select a class from the header to view reflections</p>
             </div>
           ) : reflectionsLoading ? (
             <div className="p-4 space-y-3">
