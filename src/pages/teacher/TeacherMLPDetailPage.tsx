@@ -328,14 +328,16 @@ const TeacherMLPDetailPage = () => {
             </SelectContent>
           </Select>
         </div>
+      </div>
 
-        {/* Tabs with color themes */}
+      {/* Tabs with color themes - below header, aligned with content */}
+      <div className="px-4 pt-4">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-3 rounded-full h-10 bg-muted p-1">
+          <TabsList className="grid w-full grid-cols-3 rounded-xl h-10 bg-muted/50 p-1">
             <TabsTrigger 
               value="content" 
               className={cn(
-                "gap-2 text-xs rounded-full",
+                "gap-2 text-xs rounded-lg",
                 "data-[state=active]:bg-primary/20 data-[state=active]:text-primary data-[state=active]:shadow-none"
               )}
             >
@@ -345,7 +347,7 @@ const TeacherMLPDetailPage = () => {
             <TabsTrigger 
               value="reflections" 
               className={cn(
-                "gap-2 text-xs rounded-full",
+                "gap-2 text-xs rounded-lg",
                 "data-[state=active]:bg-amber-100 data-[state=active]:text-amber-700 dark:data-[state=active]:bg-amber-900/50 dark:data-[state=active]:text-amber-300 data-[state=active]:shadow-none"
               )}
             >
@@ -355,7 +357,7 @@ const TeacherMLPDetailPage = () => {
             <TabsTrigger 
               value="homework" 
               className={cn(
-                "gap-2 text-xs rounded-full",
+                "gap-2 text-xs rounded-lg",
                 "data-[state=active]:bg-sky-100 data-[state=active]:text-sky-700 dark:data-[state=active]:bg-sky-900/50 dark:data-[state=active]:text-sky-300 data-[state=active]:shadow-none"
               )}
             >
