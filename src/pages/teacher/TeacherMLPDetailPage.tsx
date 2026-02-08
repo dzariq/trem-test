@@ -331,11 +331,11 @@ const TeacherMLPDetailPage = () => {
 
         {/* Tabs with color themes */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-3 rounded-lg h-10 bg-muted/30 p-1">
+          <TabsList className="grid w-full grid-cols-3 rounded-none h-10 bg-muted/30 p-1">
             <TabsTrigger 
               value="content" 
               className={cn(
-                "gap-2 text-xs rounded-lg",
+                "gap-2 text-xs rounded-sm",
                 "data-[state=active]:bg-primary/20 data-[state=active]:text-primary data-[state=active]:shadow-none"
               )}
             >
@@ -345,7 +345,7 @@ const TeacherMLPDetailPage = () => {
             <TabsTrigger 
               value="reflections" 
               className={cn(
-                "gap-2 text-xs rounded-lg",
+                "gap-2 text-xs rounded-sm",
                 "data-[state=active]:bg-amber-100 data-[state=active]:text-amber-700 dark:data-[state=active]:bg-amber-900/50 dark:data-[state=active]:text-amber-300 data-[state=active]:shadow-none"
               )}
             >
@@ -355,7 +355,7 @@ const TeacherMLPDetailPage = () => {
             <TabsTrigger 
               value="homework" 
               className={cn(
-                "gap-2 text-xs rounded-lg",
+                "gap-2 text-xs rounded-sm",
                 "data-[state=active]:bg-sky-100 data-[state=active]:text-sky-700 dark:data-[state=active]:bg-sky-900/50 dark:data-[state=active]:text-sky-300 data-[state=active]:shadow-none"
               )}
             >
