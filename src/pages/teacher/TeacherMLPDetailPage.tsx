@@ -337,8 +337,8 @@ const TeacherMLPDetailPage = () => {
             <TabsTrigger 
               value="content" 
               className={cn(
-                "gap-2 text-xs rounded-lg",
-                "data-[state=active]:bg-primary/20 data-[state=active]:text-primary data-[state=active]:shadow-none"
+                "gap-2 text-xs rounded-xl",
+                "data-[state=active]:bg-emerald-100 data-[state=active]:text-emerald-700 dark:data-[state=active]:bg-emerald-900/50 dark:data-[state=active]:text-emerald-300 data-[state=active]:shadow-none"
               )}
             >
               <BookOpen className="h-3.5 w-3.5" />
@@ -347,7 +347,7 @@ const TeacherMLPDetailPage = () => {
             <TabsTrigger 
               value="reflections" 
               className={cn(
-                "gap-2 text-xs rounded-lg",
+                "gap-2 text-xs rounded-xl",
                 "data-[state=active]:bg-amber-100 data-[state=active]:text-amber-700 dark:data-[state=active]:bg-amber-900/50 dark:data-[state=active]:text-amber-300 data-[state=active]:shadow-none"
               )}
             >
@@ -357,7 +357,7 @@ const TeacherMLPDetailPage = () => {
             <TabsTrigger 
               value="homework" 
               className={cn(
-                "gap-2 text-xs rounded-lg",
+                "gap-2 text-xs rounded-xl",
                 "data-[state=active]:bg-sky-100 data-[state=active]:text-sky-700 dark:data-[state=active]:bg-sky-900/50 dark:data-[state=active]:text-sky-300 data-[state=active]:shadow-none"
               )}
             >
