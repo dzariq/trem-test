@@ -40,10 +40,7 @@ export function CcaActivityCard({
   return (
     <Card
       className={cn(
-        "overflow-hidden cursor-pointer transition-all active:scale-[0.99]",
-        isEnrolledVariant
-          ? "bg-emerald-50/80 dark:bg-emerald-950/30 border-emerald-200/60 dark:border-emerald-800/40 hover:bg-emerald-100/80 dark:hover:bg-emerald-900/40"
-          : "bg-card border-border hover:bg-muted/50",
+        "overflow-hidden cursor-pointer transition-all active:scale-[0.99] bg-card border-border hover:shadow-md",
         className
       )}
       onClick={onClick}
@@ -56,8 +53,8 @@ export function CcaActivityCard({
         }
       }}
     >
-      {/* Hero Image Section */}
-      <div className="relative h-32 bg-gradient-to-br from-muted/50 to-muted overflow-hidden">
+      {/* Hero Image Section with Gradient Overlay */}
+      <div className="relative h-36 overflow-hidden">
         <CcaActivityImage
           imageUrl={activity.imageUrl}
           activityName={activity.name}
@@ -67,7 +64,10 @@ export function CcaActivityCard({
           className="w-full h-full rounded-none"
         />
         
-        {/* Overlaid Badges */}
+        {/* Gradient overlay that fades to background */}
+        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-card" />
+        
+        {/* Overlaid Badges - positioned at top */}
         <div className="absolute top-3 left-3 right-3 flex justify-between items-start">
           {/* Enrolled Badge (left) */}
           {(isEnrolledVariant || isEnrolled) && (
