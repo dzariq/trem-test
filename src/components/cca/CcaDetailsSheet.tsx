@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { CalendarDays, MapPin, User, ClipboardList, FileText, Settings } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -12,6 +13,7 @@ import {
 import { PICTeachersList } from "@/components/cca/PICTeacherPill";
 import { getCcaTypeColor } from "@/components/cca/CcaTypeTabs";
 import { CcaActivityImage } from "@/components/cca/CcaActivityImage";
+import { CcaImageUpload } from "@/components/cca/CcaImageUpload";
 import type { CcaActivity } from "@/hooks/useCcaActivities";
 
 interface CcaDetailsSheetProps {
@@ -20,6 +22,7 @@ interface CcaDetailsSheetProps {
   activity: CcaActivity | null;
   isPIC?: boolean;
   onManageSessions?: () => void;
+  onActivityUpdated?: () => void;
 }
 
 /**
@@ -36,21 +39,43 @@ export function CcaDetailsSheet({
   activity,
   isPIC = false,
   onManageSessions,
+  onActivityUpdated,
 }: CcaDetailsSheetProps) {
   const getCcaCategoryColor = getCcaTypeColor;
+  const [localImageUrl, setLocalImageUrl] = useState<string | null | undefined>(undefined);
+
+  // Use local state if updated, otherwise use activity's image
+  const displayImageUrl = localImageUrl !== undefined ? localImageUrl : activity?.imageUrl;
+
+  const handleImageUploadComplete = (newUrl: string | null) => {
+    setLocalImageUrl(newUrl);
+    onActivityUpdated?.();
+  };
 
   // Shared content for both mobile and desktop
   const sheetContent = activity ? (
     <>
-      {/* Hero Image */}
-      <CcaActivityImage
-        imageUrl={activity.imageUrl}
-        activityName={activity.name}
-        category={activity.category}
-        typeName={activity.typeName}
-        variant="details"
-        className="mb-4"
-      />
+      {/* Hero Image - Editable for PIC teachers */}
+      {isPIC ? (
+        <CcaImageUpload
+          activityId={activity.id}
+          activityName={activity.name}
+          currentImageUrl={displayImageUrl}
+          category={activity.category}
+          typeName={activity.typeName}
+          onUploadComplete={handleImageUploadComplete}
+          className="mb-4"
+        />
+      ) : (
+        <CcaActivityImage
+          imageUrl={displayImageUrl}
+          activityName={activity.name}
+          category={activity.category}
+          typeName={activity.typeName}
+          variant="details"
+          className="mb-4"
+        />
+      )}
 
       <p className="text-sm text-muted-foreground">
         {activity.publicDescription || "Details to be announced"}
