@@ -576,3 +576,63 @@ export function useLessonReflections(lessonPlanId: string | undefined, classYear
     getReflection,
   };
 }
+
+/**
+ * Hook to manage homework for lessons
+ */
+export function useHomeworkManagement() {
+  const [saving, setSaving] = useState(false);
+
+  const saveHomework = useCallback(async (lessonPlanDetailId: string, homework: string) => {
+    setSaving(true);
+
+    try {
+      const { error } = await supabase
+        .from("lesson_plan_details")
+        .update({ 
+          homework: homework.trim() || null,
+          updated_at: new Date().toISOString() 
+        })
+        .eq("id", lessonPlanDetailId);
+
+      if (error) {
+        if (error.code === "42501") {
+          toast({
+            title: "Access Denied",
+            description: "You don't have permission to update homework for this lesson.",
+            variant: "destructive",
+          });
+          return false;
+        }
+        throw error;
+      }
+
+      toast({
+        title: "Saved",
+        description: "Homework saved successfully",
+      });
+
+      return true;
+    } catch (err) {
+      console.error("Error saving homework:", err);
+      toast({
+        title: "Error",
+        description: "Failed to save homework. Please try again.",
+        variant: "destructive",
+      });
+      return false;
+    } finally {
+      setSaving(false);
+    }
+  }, []);
+
+  const getHomework = useCallback((lesson: LessonDetail) => {
+    return lesson.homework || "";
+  }, []);
+
+  return {
+    saving,
+    saveHomework,
+    getHomework,
+  };
+}
