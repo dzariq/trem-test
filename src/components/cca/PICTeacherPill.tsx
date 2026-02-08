@@ -14,7 +14,7 @@ export const PICTeacherPill = React.forwardRef<HTMLDivElement, PICTeacherPillPro
       ? departments.join(", ") 
       : null;
 
-    // Compact variant: name only, yellow colors, smaller padding
+    // Compact variant: name only, green colors (matching primary theme), smaller padding
     if (variant === "compact") {
       return (
         <div
@@ -22,8 +22,8 @@ export const PICTeacherPill = React.forwardRef<HTMLDivElement, PICTeacherPillPro
           className={cn(
             "inline-flex px-2 py-1 rounded-md text-xs font-medium",
             isPrimary
-              ? "bg-yellow-400 text-yellow-900"
-              : "bg-yellow-100 text-yellow-800",
+              ? "bg-primary text-primary-foreground"
+              : "bg-primary/20 text-primary",
             className
           )}
           {...props}
