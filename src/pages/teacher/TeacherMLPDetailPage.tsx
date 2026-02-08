@@ -75,11 +75,11 @@ const TeacherMLPDetailPage = () => {
   } = useHomeworkManagement();
 
   // Set default class when loaded
-  useState(() => {
+  useEffect(() => {
     if (assignedClasses.length > 0 && !selectedClassId) {
       setSelectedClassId(assignedClasses[0].classYearId);
     }
-  });
+  }, [assignedClasses, selectedClassId]);
 
   // Auto-navigate to today's lesson
   useEffect(() => {
