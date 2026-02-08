@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { 
   Info, 
-  Trophy, 
+  HeadphonesIcon, 
   Dumbbell,
   BarChart3,
   Award,
@@ -20,7 +20,7 @@ import { PDFViewerDialog } from "@/components/PDFViewerDialog";
 
 const quickLinks = [
   { icon: Info, label: "Info", action: "info-dialog", bgColor: "bg-emerald-100", iconColor: "text-emerald-600" },
-  { icon: Trophy, label: "Student Awards", path: "/parent/awards", bgColor: "bg-blue-100", iconColor: "text-blue-600" },
+  { icon: HeadphonesIcon, label: "Support", path: "/parent/support", bgColor: "bg-blue-100", iconColor: "text-blue-600" },
   { icon: Award, label: "Awards", path: "/parent/academic?tab=cocurriculum", bgColor: "bg-purple-100", iconColor: "text-purple-600" },
   { icon: Dumbbell, label: "CCA Activities", path: "/parent/calendar?tab=cca", bgColor: "bg-amber-100", iconColor: "text-amber-600" },
   { icon: BarChart3, label: "Grade Analysis", path: "/parent/academic?section=analysis", bgColor: "bg-rose-100", iconColor: "text-rose-600" },

@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { Home, UserCheck, Calendar, HeadphonesIcon, LucideIcon } from "lucide-react";
+import { Home, UserCheck, Calendar, BookOpen, LucideIcon } from "lucide-react";
 import { NavLink } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import academicOwlIcon from "@/assets/academic-owl-icon.png";
@@ -16,7 +16,7 @@ const navItems: NavItem[] = [
   { to: "/parent/attendance", icon: UserCheck, label: "Attendance" },
   { to: "/parent/academic", customIcon: academicOwlIcon, label: "Academic" },
   { to: "/parent/calendar", icon: Calendar, label: "Calendar" },
-  { to: "/parent/support", icon: HeadphonesIcon, label: "Support" },
+  { to: "/parent/homework", icon: BookOpen, label: "Homework" },
 ];
 
 export function BottomNavigation() {
