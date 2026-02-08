@@ -75,8 +75,13 @@ export function CcaActivityCard({
           <div className={`absolute bottom-8 left-1/4 w-12 h-12 rounded-full ${isEnrolledState ? "bg-primary/20" : "bg-gray-400/20"}`} />
         </div>
         
-        {/* Gradient overlay that fades to background */}
-        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-card" />
+        {/* Gradient overlay that fades to content background - smooth transition */}
+        <div className={cn(
+          "absolute inset-0 bg-gradient-to-b",
+          isEnrolledState 
+            ? "from-transparent via-transparent to-card" 
+            : "from-gray-300/50 via-gray-200/30 to-muted/50"
+        )} />
         
         {/* Overlaid Badges - positioned at top */}
         <div className="absolute top-3 left-3 right-3 flex justify-between items-start">
