@@ -1,140 +1,120 @@
 
-# Plan: Fix Content Tab Hover Highlights and Apply Green Theme
+# Plan: Add "Insert from Lesson Plan" Button to Homework Form
 
 ## Summary
-Fix the hover highlight overflow issue in the Content tab where the gray highlight extends beyond the rounded corners of cards. Also change from gray colors to light green colors to match the Content tab's theme.
+Add a button to the Homework Assignment form that allows teachers to insert/restore the homework text that's already saved in the lesson plan. This gives teachers the flexibility to:
+- Quickly restore the original homework if they cleared the textarea
+- Use the saved homework as a starting point and modify it
 
 ---
 
-## Problem Analysis
+## Current Behavior
 
-From the screenshot, the issue is visible on "Week 1: HAHAHAH i think this work?" - the gray hover highlight bleeds outside the rounded card container.
+The `TeacherHomeworkForm` component:
+1. Receives `lesson` prop which contains `lesson.homework` (the saved homework from the database)
+2. Initializes local state `homework` with `lesson.homework`
+3. Teachers can type in the textarea and save
 
-**Root Cause:**
-1. The `CardHeader` has `hover:bg-muted/50` but the parent `Card` doesn't have `overflow-hidden` to clip the hover background within the rounded corners
-2. The Content tab uses gray (`muted`) colors instead of green (`primary`) colors like the Homework tab uses blue (`sky`) colors
+**The Issue**: If a teacher clears the textarea or wants to reset to the original, they have no easy way to restore it without refreshing the page.
 
-**Comparison:**
-| Element | Current (Content) | Homework Tab | Should Be (Content) |
-|---------|------------------|--------------|---------------------|
-| Topic border | default | `border-sky-200/50` | `border-primary/30` |
-| Topic hover | `hover:bg-muted/50` | `hover:bg-sky-50/50` | `hover:bg-primary/10` |
-| Week bg | `bg-muted/30` | `bg-sky-50/30` | `bg-primary/5` |
-| Week border | default | `border-sky-200/50` | `border-primary/30` |
-| Week hover | `hover:bg-muted/50` | `hover:bg-sky-100/50` | `hover:bg-primary/10` |
-| Icons | `text-muted-foreground` | `text-sky-600` | `text-primary` |
-| Badge | default secondary | `bg-sky-100 text-sky-700` | `bg-primary/10 text-primary` |
+---
+
+## Proposed Solution
+
+Add a small "Insert from Lesson Plan" button above or beside the textarea that:
+1. Copies the original `lesson.homework` value into the textarea
+2. Is only visible/enabled when there's saved homework to insert
+3. Uses a subtle styling to not distract from the main save action
+
+---
+
+## UI Design
+
+```
+┌─────────────────────────────────────────────────┐
+│ 📋 Homework Assignment          [Insert from LP]│
+├─────────────────────────────────────────────────┤
+│                                                 │
+│  [Textarea for homework entry...]               │
+│                                                 │
+└─────────────────────────────────────────────────┘
+│          [💾 Save Homework]                     │
+└─────────────────────────────────────────────────┘
+```
+
+The "Insert from LP" button will:
+- Appear on the right side of the label row
+- Use `variant="outline"` with sky theme colors
+- Show a clipboard/copy icon
+- Be disabled if no saved homework exists
+- Have tooltip or helper text explaining the action
 
 ---
 
 ## Implementation Details
 
-### File: `src/pages/teacher/TeacherMLPDetailPage.tsx`
-
-The Content tab currently uses the shared `renderLessonStructure` function. Since we need different styling for Content (green) vs the generic structure, we'll need to either:
-
-**Option A**: Update the `renderLessonStructure` to accept theme parameters
-**Option B**: Create a dedicated Content tab structure like Homework has
-
-**Chosen Approach**: Option B - Create dedicated Content structure matching Homework's pattern for consistency and cleaner code.
+### File: `src/components/lessonplan/TeacherHomeworkForm.tsx`
 
 **Changes:**
 
-1. **Replace the Content tab** from using `renderLessonStructure` to a dedicated green-themed structure similar to how Homework tab is implemented
+1. **Add import** for the `ClipboardCopy` icon (or similar)
 
-2. **Apply green theme throughout:**
-   - Topic Card: `border-primary/30` + `overflow-hidden`
-   - Topic Header hover: `hover:bg-primary/10`
-   - Topic chevron icons: `text-primary`
-   - Week Badge: `bg-primary/10 text-primary`
-   - Week Card: `bg-primary/5 border-primary/30 overflow-hidden`
-   - Week Header hover: `hover:bg-primary/10`
-   - Week chevron/loader icons: `text-primary`
-
-3. **Add `overflow-hidden`** to all Cards to ensure hover effects are clipped within rounded corners
-
----
-
-## Code Changes
-
-**Lines ~369-410**: Replace the Content tab implementation
+2. **Update the label row** (lines 85-89) to include the insert button:
 
 **Before:**
 ```tsx
-{activeTab === "content" && renderLessonStructure(
-  (lesson) => (
-    <Card className={cn("cursor-pointer transition-colors", ...)}>
-      ...
-    </Card>
-  ),
-  <BookOpen className="h-12 w-12 mx-auto text-muted-foreground/50 mb-3" />,
-  "No topics found",
-  ""
-)}
+<Label htmlFor={`homework-${lesson.id}`} className="text-sm font-medium flex items-center gap-2">
+  <ClipboardList className="h-4 w-4 text-sky-600 dark:text-sky-400" />
+  Homework Assignment
+</Label>
 ```
 
 **After:**
 ```tsx
-{activeTab === "content" && (
-  <div className="p-4 space-y-3 pb-24">
-    {topics.length === 0 ? (
-      <div className="text-center py-12">
-        <BookOpen className="h-12 w-12 mx-auto text-primary/50 mb-3" />
-        <p className="text-muted-foreground">No topics found</p>
-      </div>
-    ) : (
-      topics.map((topic) => (
-        <Collapsible key={topic.id} open={...} onOpenChange={...}>
-          <Card className="border-primary/30 overflow-hidden">
-            <CollapsibleTrigger asChild>
-              <CardHeader className="py-3 px-4 cursor-pointer hover:bg-primary/10">
-                {/* Green-themed chevron icons */}
-                <ChevronDown className="h-4 w-4 text-primary" />
-                {/* Green badge */}
-                <Badge className="bg-primary/10 text-primary">
-                  {weeksCount} weeks
-                </Badge>
-              </CardHeader>
-            </CollapsibleTrigger>
-            <CollapsibleContent>
-              {/* Week cards with green theme */}
-              <Card className="bg-primary/5 border-primary/30 overflow-hidden">
-                <CardHeader className="hover:bg-primary/10">
-                  {/* Green chevrons */}
-                </CardHeader>
-                {/* Lessons... */}
-              </Card>
-            </CollapsibleContent>
-          </Card>
-        </Collapsible>
-      ))
-    )}
-  </div>
-)}
+<div className="flex items-center justify-between">
+  <Label htmlFor={`homework-${lesson.id}`} className="text-sm font-medium flex items-center gap-2">
+    <ClipboardList className="h-4 w-4 text-sky-600 dark:text-sky-400" />
+    Homework Assignment
+  </Label>
+  {lesson.homework && lesson.homework.trim() && (
+    <Button
+      type="button"
+      variant="outline"
+      size="sm"
+      onClick={() => setHomework(lesson.homework || "")}
+      disabled={homework === lesson.homework}
+      className="h-7 text-xs gap-1.5 border-sky-200 text-sky-700 hover:bg-sky-50 dark:border-sky-800 dark:text-sky-300 dark:hover:bg-sky-950"
+    >
+      <ClipboardCopy className="h-3 w-3" />
+      Insert from Lesson Plan
+    </Button>
+  )}
+</div>
 ```
+
+3. **Button Logic:**
+   - Only shows if `lesson.homework` exists and is not empty
+   - Disabled if current textarea already matches the saved homework
+   - Clicking sets the textarea to `lesson.homework`
 
 ---
 
 ## Visual Outcome
 
 **Before:**
-- Gray hover highlights extend beyond rounded card corners
-- Gray theme doesn't match the green Content tab
+- Teachers must manually retype or remember original homework if cleared
 
 **After:**
-- Hover highlights are properly contained within rounded corners (via `overflow-hidden`)
-- Light green theme throughout Content tab:
-  - `bg-primary/10` for hover states
-  - `bg-primary/5` for week card backgrounds
-  - `border-primary/30` for subtle green borders
-  - `text-primary` for icons and badges
-- Consistent with how Homework (blue) and Reflections (yellow) tabs are styled
+- A small "Insert from Lesson Plan" button appears when saved homework exists
+- One click restores/inserts the original homework into the textarea
+- Button is disabled when textarea already matches saved content (no action needed)
+- Uses sky-blue theme consistent with the Homework tab
 
 ---
 
 ## Files to Modify
 
-1. `src/pages/teacher/TeacherMLPDetailPage.tsx`
-   - Replace Content tab's `renderLessonStructure` call with dedicated green-themed structure
-   - Add `overflow-hidden` to all Cards
-   - Apply green color classes throughout
+1. `src/components/lessonplan/TeacherHomeworkForm.tsx`
+   - Add `ClipboardCopy` import
+   - Update label section to include the insert button
+   - Button triggers `setHomework(lesson.homework)`
