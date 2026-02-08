@@ -14,6 +14,7 @@ export interface EnrolledCcaActivity {
   location: string | null;
   publicDescription: string | null;
   enrollmentStatus: string;
+  imageUrl: string | null;
   picTeachers: {
     fullName: string;
     departments: string[];
@@ -62,7 +63,8 @@ export function useStudentCcaEnrollments({ studentId }: UseStudentCcaEnrollments
             meeting_time,
             location,
             public_description,
-            is_active
+            is_active,
+            image_url
           )
         `)
         .eq("student_id", studentId)
@@ -150,6 +152,7 @@ export function useStudentCcaEnrollments({ studentId }: UseStudentCcaEnrollments
           location: e.cca_activities?.location || null,
           publicDescription: e.cca_activities?.public_description || null,
           enrollmentStatus: e.status,
+          imageUrl: e.cca_activities?.image_url || null,
           picTeachers: teachersByActivity[e.cca_activity_id] || [],
         }));
 
