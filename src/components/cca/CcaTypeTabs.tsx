@@ -1,10 +1,60 @@
 import { Badge } from "@/components/ui/badge";
 import { Loader2 } from "lucide-react";
 import { useCcaTypes, type CcaType } from "@/hooks/useCcaTypes";
+import { cn } from "@/lib/utils";
 
 interface CcaTypeTabsProps {
   selectedTypeId: string; // "all" or type_id
   onSelectType: (typeId: string) => void;
+}
+
+/**
+ * Get color classes for CCA type tabs based on selection state.
+ * Returns [unselected, selected] classes.
+ */
+function getTypeTabColors(typeName: string): { light: string; strong: string } {
+  const name = typeName.toLowerCase();
+  switch (name) {
+    case "indoor":
+    case "indoor cca":
+      return {
+        light: "bg-sky-100 text-sky-700 border-sky-200 hover:bg-sky-150",
+        strong: "bg-sky-500 text-white border-sky-500",
+      };
+    case "outdoor":
+    case "outdoor cca":
+      return {
+        light: "bg-amber-100 text-amber-700 border-amber-200 hover:bg-amber-150",
+        strong: "bg-amber-500 text-white border-amber-500",
+      };
+    case "enrichment":
+    case "indoor talks/workshop":
+      return {
+        light: "bg-teal-100 text-teal-700 border-teal-200 hover:bg-teal-150",
+        strong: "bg-teal-500 text-white border-teal-500",
+      };
+    case "competition":
+      return {
+        light: "bg-rose-100 text-rose-700 border-rose-200 hover:bg-rose-150",
+        strong: "bg-rose-500 text-white border-rose-500",
+      };
+    case "sports":
+      return {
+        light: "bg-orange-100 text-orange-700 border-orange-200 hover:bg-orange-150",
+        strong: "bg-orange-500 text-white border-orange-500",
+      };
+    case "event":
+    case "events":
+      return {
+        light: "bg-purple-100 text-purple-700 border-purple-200 hover:bg-purple-150",
+        strong: "bg-purple-500 text-white border-purple-500",
+      };
+    default:
+      return {
+        light: "bg-muted text-muted-foreground border-border hover:bg-muted/80",
+        strong: "bg-primary text-primary-foreground border-primary",
+      };
+  }
 }
 
 /**
@@ -31,28 +81,46 @@ export function CcaTypeTabs({ selectedTypeId, onSelectType }: CcaTypeTabsProps) 
     );
   }
 
+  // "All" tab colors
+  const allColors = {
+    light: "bg-emerald-100 text-emerald-700 border-emerald-200 hover:bg-emerald-150",
+    strong: "bg-emerald-600 text-white border-emerald-600",
+  };
+  const isAllSelected = selectedTypeId === "all";
+
   return (
     <div className="flex flex-wrap gap-2 pb-2">
       {/* Always include "All" tab */}
       <Badge
-        variant={selectedTypeId === "all" ? "default" : "outline"}
-        className="cursor-pointer"
+        variant="outline"
+        className={cn(
+          "cursor-pointer border transition-colors",
+          isAllSelected ? allColors.strong : allColors.light
+        )}
         onClick={() => onSelectType("all")}
       >
         All
       </Badge>
       
       {/* Dynamic tabs from backend */}
-      {types.map((type) => (
-        <Badge
-          key={type.id}
-          variant={selectedTypeId === type.id ? "default" : "outline"}
-          className="cursor-pointer"
-          onClick={() => onSelectType(type.id)}
-        >
-          {type.name}
-        </Badge>
-      ))}
+      {types.map((type) => {
+        const isSelected = selectedTypeId === type.id;
+        const colors = getTypeTabColors(type.name);
+        
+        return (
+          <Badge
+            key={type.id}
+            variant="outline"
+            className={cn(
+              "cursor-pointer border transition-colors",
+              isSelected ? colors.strong : colors.light
+            )}
+            onClick={() => onSelectType(type.id)}
+          >
+            {type.name}
+          </Badge>
+        );
+      })}
     </div>
   );
 }
