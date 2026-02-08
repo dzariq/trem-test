@@ -214,18 +214,18 @@ export function LessonFlowEditor({ lessonFlow, onChange, isEditMode = true }: Le
       </CardHeader>
       <CardContent className="px-4 pb-4">
         <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as typeof activeTab)}>
-          <TabsList className="grid w-full grid-cols-3 mb-4 h-auto">
-            <TabsTrigger value="beginning" className="text-xs flex-col py-2 px-1 gap-0.5">
+          <TabsList className="grid w-full grid-cols-3 mb-4 h-auto bg-primary/10 p-1">
+            <TabsTrigger value="beginning" className="text-xs flex-col py-2 px-1 gap-0.5 data-[state=active]:bg-primary/20 data-[state=active]:text-primary">
               <span>Beginning</span>
-              <span className="text-muted-foreground text-[10px]">({getDuration(safeFlow.beginning)}m)</span>
+              <span className="text-muted-foreground text-[10px] data-[state=active]:text-primary/70">({getDuration(safeFlow.beginning)}m)</span>
             </TabsTrigger>
-            <TabsTrigger value="middle" className="text-xs flex-col py-2 px-1 gap-0.5">
+            <TabsTrigger value="middle" className="text-xs flex-col py-2 px-1 gap-0.5 data-[state=active]:bg-primary/20 data-[state=active]:text-primary">
               <span>Middle</span>
-              <span className="text-muted-foreground text-[10px]">({getDuration(safeFlow.middle)}m)</span>
+              <span className="text-muted-foreground text-[10px] data-[state=active]:text-primary/70">({getDuration(safeFlow.middle)}m)</span>
             </TabsTrigger>
-            <TabsTrigger value="end" className="text-xs flex-col py-2 px-1 gap-0.5">
+            <TabsTrigger value="end" className="text-xs flex-col py-2 px-1 gap-0.5 data-[state=active]:bg-primary/20 data-[state=active]:text-primary">
               <span>End</span>
-              <span className="text-muted-foreground text-[10px]">({getDuration(safeFlow.end)}m)</span>
+              <span className="text-muted-foreground text-[10px] data-[state=active]:text-primary/70">({getDuration(safeFlow.end)}m)</span>
             </TabsTrigger>
           </TabsList>
           
