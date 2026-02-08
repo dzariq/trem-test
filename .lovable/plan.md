@@ -1,145 +1,103 @@
 
 
-# Plan: Add CCA Activity Image Upload Capability
+# Plan: Fix Tab Highlight Styling and Update Week Tabs to Light Green
 
-## Problem Identified
-
-After investigating the Supabase connection:
-
-1. **The database connection is working correctly** - all queries succeed with 200 responses
-2. **The `image_url` column exists** in `cca_activities` table (all values currently NULL)
-3. **The storage bucket `cca-activity-images` exists** and is public (0 objects currently)
-4. **RLS policies are correctly configured** for teacher image uploads
-
-The actual issue is that there's **no UI to upload CCA activity images** - the schema is ready but the upload feature hasn't been built yet.
+## Summary
+This plan addresses two issues in the lesson plan tabs:
+1. Fix the mismatch between rounded box corners and sharp highlight edges when tabs are selected
+2. Change the Week 1/Week 2/Week 3 tabs from gray to a light green color scheme for better visual appeal
 
 ---
 
-## Implementation Plan
+## Problem Analysis
 
-### Step 1: Create Image Upload Component
+### Issue 1: Sharp Highlight Edges
+- The `TabsList` container uses `rounded-lg` (8px border radius)
+- The `TabsTrigger` uses `rounded-md` (6px border radius) 
+- The focus ring uses `ring-offset-2` which creates a 2px gap with sharp corners
+- When a tab is selected, the background highlight doesn't match the outer container's rounded corners
 
-Create a reusable `CcaImageUpload` component that:
-- Displays the current image (or fallback icon)
-- Shows an "Upload" button for PIC teachers
-- Handles file selection and upload to Supabase Storage
-- Updates the `image_url` in the `cca_activities` table
+### Issue 2: Gray Color Theme
+- Currently the `TabsList` uses `bg-muted/50` which appears as a subtle gray
+- The user wants the Week tabs (Beginning, Middle, End in the Lesson Flow Editor) to use a light green theme consistent with other parts of the app
 
-**New File: `src/components/cca/CcaImageUpload.tsx`**
+---
 
-Features:
-- Accept image files (JPEG, PNG, WebP)
-- Max file size: 5MB
-- Compress/resize if needed
-- Show upload progress
-- Handle errors gracefully
-- Preview before confirming
+## Solution
 
-### Step 2: Add Image Upload to CCA Details Sheet (Teacher View)
+### Changes to `src/components/ui/tabs.tsx`
 
-Modify `CcaDetailsSheet.tsx` to:
-- Show an "Edit Image" button when the user is a PIC teacher
-- Allow clicking on the hero image to open the upload dialog
-- Refresh the activity data after successful upload
+**TabsList Updates:**
+- Keep `rounded-lg` for the container
+- Add consistent padding to allow tab triggers to sit nicely inside
 
-### Step 3: Create Upload Handler Hook
+**TabsTrigger Updates:**
+- Change `rounded-md` to `rounded-lg` to match the container's border radius
+- Ensure the active state background fills the space properly with matching rounded corners
 
-**New File: `src/hooks/useCcaImageUpload.ts`**
+### Changes to `src/components/lessonplan/LessonFlowEditor.tsx`
 
-This hook will handle:
-- Uploading the file to `cca-activity-images` bucket
-- Updating the `cca_activities.image_url` column
-- Returning upload progress and error states
+**Color Theme Updates:**
+- Update the `TabsList` to use a light green background instead of gray
+- Update the `TabsTrigger` active state to use a green highlight color
+- Apply consistent green theme: lighter green for inactive tabs, darker green for active selection
 
 ---
 
 ## Technical Details
 
-### Storage Path Convention
-```
-cca-activity-images/{activity_id}/{timestamp}_{original_filename}
-```
+### File 1: `src/components/ui/tabs.tsx`
 
-Example: `cca-activity-images/7908db09-dd1a-4122-bde5-d01f945eb034/1707350400_art-club-photo.jpg`
+Update the `TabsTrigger` component:
+- Change `rounded-md` to `rounded-lg` to match container corners
+- This ensures the selected highlight has rounded edges that match the container
 
-### Upload Flow
+```typescript
+// Before
+"inline-flex items-center justify-center whitespace-nowrap rounded-md px-3 py-1.5 ..."
 
-```text
-1. Teacher clicks "Upload Image" button
-2. File picker opens (accept: image/*)
-3. User selects file
-4. Preview shown with Confirm/Cancel buttons
-5. On confirm:
-   a. Upload to Storage: cca-activity-images/{activity_id}/...
-   b. Get public URL
-   c. UPDATE cca_activities SET image_url = {public_url}
-   d. Refresh activity data
-6. Show success toast
+// After  
+"inline-flex items-center justify-center whitespace-nowrap rounded-lg px-3 py-1.5 ..."
 ```
 
-### Security
+### File 2: `src/components/lessonplan/LessonFlowEditor.tsx`
 
-The existing RLS policies already allow:
-- Teachers to INSERT/UPDATE/DELETE in `cca-activity-images` bucket
-- Public SELECT (reading images)
+Update the `TabsList` with a light green theme:
+- Change `bg-muted/50` to use `bg-primary/10` (light green background)
+- Add custom styling to the `TabsTrigger` for green active state
 
-No additional database changes needed.
-
----
-
-## Files to Create/Modify
-
-| File | Action | Description |
-|------|--------|-------------|
-| `src/hooks/useCcaImageUpload.ts` | Create | Hook for handling image upload logic |
-| `src/components/cca/CcaImageUpload.tsx` | Create | Upload button + preview component |
-| `src/components/cca/CcaDetailsSheet.tsx` | Modify | Add image upload for PIC teachers |
-| `src/pages/teacher/TeacherCalendarPage.tsx` | Modify | Pass refetch callback to sheets |
-
----
-
-## UI Preview
-
-### Before Upload (Fallback Icon)
-```
-+----------------------------------+
-|                                  |
-|        [Category Icon]           |
-|        (Palette for Art)         |
-|                                  |
-|    [Click to upload image]       |
-+----------------------------------+
-```
-
-### Upload Dialog
-```
-+----------------------------------+
-|  Upload Activity Image           |
-|                                  |
-|  [Image Preview]                 |
-|                                  |
-|  art-club-photo.jpg (1.2MB)      |
-|                                  |
-|  [Cancel]        [Upload]        |
-+----------------------------------+
-```
-
-### After Upload (Image Displayed)
-```
-+----------------------------------+
-|                                  |
-|     [Uploaded Image]             |
-|                                  |
-|    [Change Image] (PIC only)     |
-+----------------------------------+
+```tsx
+// Updated TabsList
+<TabsList className="grid w-full grid-cols-3 mb-4 h-auto bg-primary/10 p-1">
+  <TabsTrigger 
+    value="beginning" 
+    className="text-xs flex-col py-2 px-1 gap-0.5 data-[state=active]:bg-primary/20 data-[state=active]:text-primary"
+  >
+    ...
+  </TabsTrigger>
+  // Similar for middle and end tabs
+</TabsList>
 ```
 
 ---
 
-## Summary
+## Visual Outcome
 
-1. Create `useCcaImageUpload` hook for handling file uploads to Supabase Storage
-2. Create `CcaImageUpload` component with preview and upload functionality
-3. Integrate upload capability into `CcaDetailsSheet` for PIC teachers
-4. The existing database schema and storage bucket are ready - no migrations needed
+**Before:**
+- Tabs have gray background with sharp-edged selection highlights
+- Week tabs appear dull and inconsistent with the app's green theme
+
+**After:**
+- Tabs have rounded selection highlights matching the container corners
+- Week tabs (Beginning, Middle, End) have a light green theme:
+  - Container: Light green tint (`bg-primary/10`)
+  - Active tab: Slightly darker green background (`bg-primary/20`) with green text
+  - Inactive tabs: Muted text on transparent background
+
+---
+
+## Files to Modify
+
+1. `src/components/ui/tabs.tsx` - Fix rounded corners on TabsTrigger
+2. `src/components/lessonplan/LessonFlowEditor.tsx` - Apply light green color theme
 
