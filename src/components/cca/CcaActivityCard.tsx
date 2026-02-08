@@ -40,7 +40,10 @@ export function CcaActivityCard({
   return (
     <Card
       className={cn(
-        "overflow-hidden cursor-pointer transition-all active:scale-[0.99] bg-card border-border hover:shadow-md",
+        "overflow-hidden cursor-pointer transition-all active:scale-[0.99] border-border hover:shadow-md",
+        isEnrolledState 
+          ? "bg-card" 
+          : "bg-muted/50 border-muted",
         className
       )}
       onClick={onClick}
