@@ -65,11 +65,11 @@ export function CcaActivityCard({
           className="w-full h-full rounded-none"
         />
         
-        {/* Decorative gradient circles overlay */}
-        <div className="absolute inset-0 opacity-30 pointer-events-none">
-          <div className={`absolute top-4 left-8 w-16 h-16 rounded-full ${isEnrolledState ? "bg-emerald-300/40" : "bg-gray-300/50"}`} />
-          <div className={`absolute top-12 right-12 w-24 h-24 rounded-full ${isEnrolledState ? "bg-emerald-200/50" : "bg-gray-200/60"}`} />
-          <div className={`absolute bottom-8 left-1/4 w-12 h-12 rounded-full ${isEnrolledState ? "bg-emerald-400/30" : "bg-gray-300/40"}`} />
+        {/* Decorative gradient circles overlay - matching announcement layout */}
+        <div className="absolute inset-0 opacity-20 pointer-events-none">
+          <div className={`absolute top-4 left-8 w-16 h-16 rounded-full ${isEnrolledState ? "bg-primary/30" : "bg-gray-400/30"}`} />
+          <div className={`absolute top-12 right-12 w-24 h-24 rounded-full ${isEnrolledState ? "bg-secondary/30" : "bg-gray-300/30"}`} />
+          <div className={`absolute bottom-8 left-1/4 w-12 h-12 rounded-full ${isEnrolledState ? "bg-primary/20" : "bg-gray-400/20"}`} />
         </div>
         
         {/* Gradient overlay that fades to background */}
