@@ -1729,7 +1729,7 @@ export default function AcademicPage() {
                                             <div className="bg-amber-50 dark:bg-amber-950/30 rounded-lg p-3 mb-2 border border-amber-200/50">
                                               <div className="flex items-center gap-1.5 mb-1">
                                                 <Users className="h-3.5 w-3.5 text-amber-600" />
-                                                <p className="text-xs font-medium text-amber-600">For the Class</p>
+                                                <p className="text-xs font-medium text-amber-600">Comments for All Students</p>
                                               </div>
                                               <p className="text-sm text-amber-900 dark:text-amber-100">{expandedInRow.classStudyRecommendation}</p>
                                             </div>
@@ -1740,7 +1740,7 @@ export default function AcademicPage() {
                                             <div className="bg-blue-50 dark:bg-blue-950/30 rounded-lg p-3 border border-blue-200/50">
                                               <div className="flex items-center gap-1.5 mb-1">
                                                 <User className="h-3.5 w-3.5 text-blue-600" />
-                                                <p className="text-xs font-medium text-blue-600">Personal Recommendation</p>
+                                                <p className="text-xs font-medium text-blue-600">Special Remarks (This Student Only)</p>
                                               </div>
                                               <p className="text-sm text-blue-900 dark:text-blue-100">{expandedInRow.subjectComment}</p>
                                             </div>

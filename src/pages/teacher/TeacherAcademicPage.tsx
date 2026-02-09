@@ -1948,10 +1948,10 @@ export default function TeacherAcademicPage() {
                             <Users className="h-3.5 w-3.5 text-amber-600" />
                           </div>
                           <label className="text-xs font-semibold text-amber-700 dark:text-amber-400 flex-1">
-                            Class Study Recommendation
+                            Comments for All Students
                           </label>
                           <Badge variant="outline" className="text-[10px] border-amber-300 text-amber-600 whitespace-nowrap">
-                            Applies to all
+                            Class-wide
                           </Badge>
                         </div>
                     <Textarea 
@@ -2127,19 +2127,28 @@ export default function TeacherAcademicPage() {
                                       </p>
                                     </div>
                                     
-                                    {/* Study Recommendations */}
+                                    {/* Individual Study Recommendation (This Student Only) */}
                                     <div>
-                                      <label className="text-xs font-medium text-amber-600 mb-1 block">
-                                        Study Recommendations
-                                      </label>
+                                      <div className="flex items-center gap-2 mb-1">
+                                        <label className="text-xs font-medium text-blue-600">
+                                          Special Remarks (this student only)
+                                        </label>
+                                        <Badge variant="outline" className="text-[9px] px-1.5 py-0 border-blue-200 text-blue-500">
+                                          Optional
+                                        </Badge>
+                                      </div>
                                       {gradeEntry.classRecommendation.trim() && (
-                                        <div className="mb-2 rounded-md border border-amber-200 bg-amber-50/70 px-2 py-1 text-[11px] text-amber-800">
-                                          Class default: {gradeEntry.classRecommendation}
+                                        <div className="mb-2 rounded-md border border-amber-200 bg-amber-50/70 px-2 py-1">
+                                          <div className="flex items-center gap-1 mb-0.5">
+                                            <Users className="h-3 w-3 text-amber-600" />
+                                            <span className="text-[10px] font-medium text-amber-700">Class recommendation (shown to all):</span>
+                                          </div>
+                                          <p className="text-[11px] text-amber-800">{gradeEntry.classRecommendation}</p>
                                         </div>
                                       )}
                                       <Textarea 
-                                        placeholder="Leave blank to use class default" 
-                                        value={input.studyRecommendation} 
+                                        placeholder="Enter individual study tips for this student..." 
+                                        value={input.studyRecommendation}
                                         maxLength={300}
                                         onChange={e => {
                                           if (e.target.value.length <= 300) {
@@ -2148,7 +2157,7 @@ export default function TeacherAcademicPage() {
                                         }} 
                                         disabled={!gradeEntry.selectedPeriod?.is_open_for_grading}
                                         className={cn(
-                                          "min-h-[70px] text-sm resize-none border-amber-200 bg-amber-50/50 dark:bg-amber-950/20",
+                                          "min-h-[70px] text-sm resize-none border-blue-200 bg-blue-50/50 dark:bg-blue-950/20",
                                           !gradeEntry.selectedPeriod?.is_open_for_grading && "opacity-60 cursor-not-allowed"
                                         )}
                                       />
