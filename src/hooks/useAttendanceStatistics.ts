@@ -43,7 +43,10 @@ export interface StudentConcern {
 }
 
 interface UseAttendanceStatisticsProps {
-  selectedClass: string;
+  /** Single class filter (legacy). Ignored when selectedClasses is provided. */
+  selectedClass?: string;
+  /** Multi-class filter. When provided and non-empty, takes priority over selectedClass. */
+  selectedClasses?: string[];
   selectedYear: number;
   selectedMonth: number;
   concernsTimeRange: "week" | "month" | "custom";
@@ -65,12 +68,19 @@ const logSupabaseError = (
 
 export function useAttendanceStatistics({
   selectedClass,
+  selectedClasses,
   selectedYear,
   selectedMonth,
   concernsTimeRange,
   concernsCustomStartDate,
   concernsCustomEndDate,
 }: UseAttendanceStatisticsProps) {
+  // Resolve the class filter: prefer selectedClasses, fallback to selectedClass
+  const effectiveClasses = useMemo(() => {
+    if (selectedClasses && selectedClasses.length > 0) return selectedClasses;
+    if (selectedClass) return [selectedClass];
+    return [];
+  }, [selectedClass, selectedClasses]);
   const [yearlyData, setYearlyData] = useState<AttendanceRecord[]>([]);
   const [monthlyData, setMonthlyData] = useState<AttendanceRecord[]>([]);
   const [concernsData, setConcernsData] = useState<AttendanceRecord[]>([]);
@@ -82,7 +92,7 @@ export function useAttendanceStatistics({
 
   // Fetch yearly data for chart
   useEffect(() => {
-    if (!selectedClass) {
+    if (effectiveClasses.length === 0) {
       setYearlyData([]);
       return;
     }
@@ -98,7 +108,7 @@ export function useAttendanceStatistics({
         const { data, error: queryError } = await supabase
           .from("attendance")
           .select("*")
-          .eq("class", selectedClass)
+          .in("class", effectiveClasses)
           .gte("date", startDate)
           .lte("date", endDate)
           .order("date", { ascending: true });
@@ -137,11 +147,11 @@ export function useAttendanceStatistics({
     };
 
     fetchYearlyData();
-  }, [selectedClass, selectedYear]);
+  }, [effectiveClasses, selectedYear]);
 
   // Fetch monthly data for daily breakdown
   useEffect(() => {
-    if (!selectedClass) {
+    if (effectiveClasses.length === 0) {
       setMonthlyData([]);
       return;
     }
@@ -158,7 +168,7 @@ export function useAttendanceStatistics({
         const { data, error: queryError } = await supabase
           .from("attendance")
           .select("*")
-          .eq("class", selectedClass)
+          .in("class", effectiveClasses)
           .gte("date", startDateStr)
           .lte("date", endDateStr)
           .order("date", { ascending: false });
@@ -226,11 +236,11 @@ export function useAttendanceStatistics({
     };
 
     fetchMonthlyData();
-  }, [selectedClass, selectedYear, selectedMonth]);
+  }, [effectiveClasses, selectedYear, selectedMonth]);
 
   // Fetch concerns data based on time range
   useEffect(() => {
-    if (!selectedClass) {
+    if (effectiveClasses.length === 0) {
       setConcernsData([]);
       setConcernsStudentNames({});
       return;
@@ -260,7 +270,7 @@ export function useAttendanceStatistics({
         const { data, error: queryError } = await supabase
           .from("attendance")
           .select("*")
-          .eq("class", selectedClass)
+          .in("class", effectiveClasses)
           .gte("date", startDateStr)
           .lte("date", endDateStr);
 
@@ -323,7 +333,7 @@ export function useAttendanceStatistics({
     };
 
     fetchConcernsData();
-  }, [selectedClass, concernsTimeRange, concernsCustomStartDate, concernsCustomEndDate]);
+  }, [effectiveClasses, concernsTimeRange, concernsCustomStartDate, concernsCustomEndDate]);
 
   // Compute yearly chart data (grouped by month)
   const chartData = useMemo<MonthlyChartData[]>(() => {
