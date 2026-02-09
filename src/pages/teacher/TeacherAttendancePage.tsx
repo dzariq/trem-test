@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { CalendarIcon, Check, X, Clock, AlertCircle, Save, ChevronLeft, ChevronRight as ChevronRightIcon, Users, FileText, TrendingUp, Printer, Loader2 } from "lucide-react";
+import { CalendarIcon, Check, X, Clock, AlertCircle, Save, ChevronLeft, ChevronRight as ChevronRightIcon, Users, FileText, TrendingUp, Printer, Loader2, Filter } from "lucide-react";
 import schoolLogo from "@/assets/school-badge.png";
 import collinzLogo from "@/assets/collinz-school-logo.png";
 import cambridgeLogo from "@/assets/cambridge-logo.jpg";
@@ -21,6 +21,8 @@ import { useTeacherAttendance } from "@/hooks/useTeacherAttendance";
 import { useAttendanceStatistics, type DailyBreakdown } from "@/hooks/useAttendanceStatistics";
 import { type AttendanceStatus } from "@/data/teacherAttendance";
 import { useTeacherScope } from "@/hooks/useTeacherScope";
+import { useAttendanceScopeFilter } from "@/hooks/useAttendanceScopeFilter";
+import { AttendanceScopeFilterSheet, AttendanceScopeFilterPill } from "@/components/attendance/AttendanceScopeFilterSheet";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { exportElementToPdf } from "@/lib/pdf/exportToPdf";
@@ -86,6 +88,10 @@ export default function TeacherAttendancePage() {
   const [selectedMonth, setSelectedMonth] = useState(0); // January
   const [selectedDayStats, setSelectedDayStats] = useState<DailyBreakdown | null>(null);
   
+  // Scope filter for statistics
+  const scopeFilter = useAttendanceScopeFilter();
+  const [scopeFilterOpen, setScopeFilterOpen] = useState(false);
+  
   // Report states
   const [weeklyAbsentDialogOpen, setWeeklyAbsentDialogOpen] = useState(false);
   const [weeklyAbsentReportOpen, setWeeklyAbsentReportOpen] = useState(false);
@@ -117,7 +123,7 @@ export default function TeacherAttendancePage() {
     isLoading: statsLoading,
     error: statsError,
   } = useAttendanceStatistics({
-    selectedClass: statsSelectedClass,
+    selectedClasses: scopeFilter.resolvedClassNames,
     selectedYear: parseInt(selectedYear),
     selectedMonth,
     concernsTimeRange,
@@ -543,38 +549,36 @@ export default function TeacherAttendancePage() {
             </div>
           )}
 
-          {/* Class Selector for Statistics */}
-          <Select 
-            value={statsSelectedClass} 
-            onValueChange={(value) => {
-              setStatsSelectedClass(value);
-              setSelectedClass(value);
-            }}
-            disabled={loadingClasses || !hasTeacherClasses}
-          >
-            <SelectTrigger>
-              <SelectValue placeholder={loadingClasses ? "Loading..." : "Select Class"} />
-            </SelectTrigger>
-            <SelectContent>
-              {statsClasses.map((cls) => (
-                <SelectItem key={cls} value={cls}>Class {cls}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          {/* Scope Filter */}
+          <div className="flex items-center gap-2">
+            <AttendanceScopeFilterPill
+              filter={scopeFilter}
+              onClick={() => setScopeFilterOpen(true)}
+            />
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-8"
+              onClick={() => setScopeFilterOpen(true)}
+            >
+              <Filter className="h-3.5 w-3.5 mr-1.5" />
+              Filter
+            </Button>
+          </div>
 
-          {/* Empty State when no class is selected */}
-          {!statsSelectedClass && (
+          {/* Empty State when no classes resolved */}
+          {scopeFilter.resolvedClassNames.length === 0 && !scopeFilter.loading && (
             <Card>
               <CardContent className="py-12 text-center">
                 <Users className="h-12 w-12 mx-auto mb-3 text-muted-foreground/50" />
-                <p className="text-muted-foreground font-medium">Select a class to view statistics</p>
-                <p className="text-sm text-muted-foreground/70 mt-1">Choose a class from the dropdown above</p>
+                <p className="text-muted-foreground font-medium">No classes to display</p>
+                <p className="text-sm text-muted-foreground/70 mt-1">Adjust your filter or check class assignments</p>
               </CardContent>
             </Card>
           )}
 
-          {/* Show statistics content when class is selected */}
-          {statsSelectedClass && (
+          {/* Show statistics content when classes are available */}
+          {scopeFilter.resolvedClassNames.length > 0 && (
             <>
               {/* Yearly Overview Chart */}
               <Card>
@@ -1557,6 +1561,13 @@ export default function TeacherAttendancePage() {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Attendance Scope Filter Bottom Sheet */}
+      <AttendanceScopeFilterSheet
+        open={scopeFilterOpen}
+        onOpenChange={setScopeFilterOpen}
+        filter={scopeFilter}
+      />
     </TeacherAppLayout>
   );
 }
