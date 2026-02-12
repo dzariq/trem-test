@@ -11,17 +11,14 @@ export interface StudentInfo {
   class: string;
 }
 
-export interface HomeworkSubmission {
+export interface HomeworkStudentRecord {
   id: string;
-  lessonPlanDetailId: string;
-  classYearId: number;
+  homeworkId: string;
   studentId: string;
-  submitted: boolean;
+  status: string; // "assigned" | "submitted"
   submittedAt: string | null;
   markedBy: string | null;
-  notes: string | null;
-  createdAt: string;
-  updatedAt: string;
+  markedAt: string | null;
 }
 
 export interface LessonWithHomework {
@@ -29,6 +26,7 @@ export interface LessonWithHomework {
   topicTitle: string;
   weekNumber: number;
   weekTitle: string;
+  homeworkAssignmentId: string;
 }
 
 /**
@@ -81,24 +79,27 @@ export function useClassStudents(classYearId: number | undefined) {
 }
 
 /**
- * Hook to manage homework submissions for a lesson plan and class
+ * Hook to manage homework tracking via homework_assignment_students table
  */
 export function useHomeworkSubmissions(
   lessonPlanId: string | undefined,
   classYearId: number | undefined
 ) {
   const { user } = useAuth();
-  const [submissions, setSubmissions] = useState<Map<string, Map<string, HomeworkSubmission>>>(
+  // Map: homeworkAssignmentId -> studentId -> record
+  const [submissions, setSubmissions] = useState<Map<string, Map<string, HomeworkStudentRecord>>>(
     new Map()
   );
+  // Map: lessonPlanDetailId -> homeworkAssignmentId
+  const [assignmentMap, setAssignmentMap] = useState<Map<string, string>>(new Map());
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
 
-  // Fetch all submissions for lessons in this plan and class
   useEffect(() => {
     const fetchSubmissions = async () => {
       if (!lessonPlanId || !classYearId) {
         setSubmissions(new Map());
+        setAssignmentMap(new Map());
         return;
       }
 
@@ -113,6 +114,7 @@ export function useHomeworkSubmissions(
 
         if (!topicsData || topicsData.length === 0) {
           setSubmissions(new Map());
+          setAssignmentMap(new Map());
           setLoading(false);
           return;
         }
@@ -126,6 +128,7 @@ export function useHomeworkSubmissions(
 
         if (!weeksData || weeksData.length === 0) {
           setSubmissions(new Map());
+          setAssignmentMap(new Map());
           setLoading(false);
           return;
         }
@@ -139,46 +142,67 @@ export function useHomeworkSubmissions(
 
         if (!lessonsData || lessonsData.length === 0) {
           setSubmissions(new Map());
+          setAssignmentMap(new Map());
           setLoading(false);
           return;
         }
 
         const lessonIds = lessonsData.map((l) => l.id);
 
-        // Fetch submissions for this class
-        const { data: submissionsData, error } = await supabase
-          .from("homework_submissions")
-          .select("*")
+        // Find homework_assignments for this class + these lessons
+        const { data: assignments, error: assignErr } = await supabase
+          .from("homework_assignments")
+          .select("id, lesson_plan_detail_id")
           .in("lesson_plan_detail_id", lessonIds)
           .eq("class_year_id", classYearId);
 
+        if (assignErr) throw assignErr;
+
+        if (!assignments || assignments.length === 0) {
+          setSubmissions(new Map());
+          setAssignmentMap(new Map());
+          setLoading(false);
+          return;
+        }
+
+        // Build lessonDetailId -> assignmentId map
+        const aMap = new Map<string, string>();
+        const assignmentIds: string[] = [];
+        assignments.forEach((a: any) => {
+          aMap.set(a.lesson_plan_detail_id, a.id);
+          assignmentIds.push(a.id);
+        });
+        setAssignmentMap(aMap);
+
+        // Fetch student records
+        const { data: studentRecords, error } = await supabase
+          .from("homework_assignment_students")
+          .select("*")
+          .in("homework_id", assignmentIds);
+
         if (error) throw error;
 
-        // Organize by lessonId -> studentId -> submission
-        const submissionsMap = new Map<string, Map<string, HomeworkSubmission>>();
-        (submissionsData || []).forEach((s: any) => {
-          const lessonMap = submissionsMap.get(s.lesson_plan_detail_id) || new Map();
-          lessonMap.set(s.student_id, {
-            id: s.id,
-            lessonPlanDetailId: s.lesson_plan_detail_id,
-            classYearId: s.class_year_id,
-            studentId: s.student_id,
-            submitted: s.submitted,
-            submittedAt: s.submitted_at,
-            markedBy: s.marked_by,
-            notes: s.notes,
-            createdAt: s.created_at,
-            updatedAt: s.updated_at,
+        const submissionsMap = new Map<string, Map<string, HomeworkStudentRecord>>();
+        (studentRecords || []).forEach((r: any) => {
+          const hwMap = submissionsMap.get(r.homework_id) || new Map();
+          hwMap.set(r.student_id, {
+            id: r.id,
+            homeworkId: r.homework_id,
+            studentId: r.student_id,
+            status: r.status,
+            submittedAt: r.submitted_at,
+            markedBy: r.marked_by,
+            markedAt: r.marked_at,
           });
-          submissionsMap.set(s.lesson_plan_detail_id, lessonMap);
+          submissionsMap.set(r.homework_id, hwMap);
         });
 
         setSubmissions(submissionsMap);
       } catch (err) {
-        console.error("Error fetching submissions:", err);
+        console.error("Error fetching homework tracking:", err);
         toast({
           title: "Error",
-          description: "Failed to load homework submissions",
+          description: "Failed to load homework tracking data",
           variant: "destructive",
         });
       } finally {
@@ -193,85 +217,81 @@ export function useHomeworkSubmissions(
   const toggleSubmission = useCallback(
     async (lessonPlanDetailId: string, studentId: string, currentStatus: boolean) => {
       if (!classYearId || !user?.id) {
-        toast({
-          title: "Error",
-          description: "Please select a class first",
-          variant: "destructive",
-        });
+        toast({ title: "Error", description: "Please select a class first", variant: "destructive" });
+        return false;
+      }
+
+      const homeworkId = assignmentMap.get(lessonPlanDetailId);
+      if (!homeworkId) {
+        toast({ title: "Error", description: "No homework assignment found for this lesson", variant: "destructive" });
         return false;
       }
 
       setSaving(true);
 
       try {
-        const lessonSubmissions = submissions.get(lessonPlanDetailId);
-        const existingSubmission = lessonSubmissions?.get(studentId);
-
-        const newStatus = !currentStatus;
+        const hwSubmissions = submissions.get(homeworkId);
+        const existing = hwSubmissions?.get(studentId);
+        const newStatus = currentStatus ? "assigned" : "submitted";
         const now = new Date().toISOString();
 
-        if (existingSubmission) {
-          // Update existing submission
+        if (existing) {
           const { error } = await supabase
-            .from("homework_submissions")
+            .from("homework_assignment_students")
             .update({
-              submitted: newStatus,
-              submitted_at: newStatus ? now : null,
+              status: newStatus,
+              submitted_at: newStatus === "submitted" ? now : null,
               marked_by: user.id,
+              marked_at: now,
               updated_at: now,
             })
-            .eq("id", existingSubmission.id);
+            .eq("id", existing.id);
 
           if (error) throw error;
 
-          // Update local state
           setSubmissions((prev) => {
             const next = new Map(prev);
-            const lessonMap = new Map(next.get(lessonPlanDetailId) || []);
-            lessonMap.set(studentId, {
-              ...existingSubmission,
-              submitted: newStatus,
-              submittedAt: newStatus ? now : null,
+            const hwMap = new Map(next.get(homeworkId) || []);
+            hwMap.set(studentId, {
+              ...existing,
+              status: newStatus,
+              submittedAt: newStatus === "submitted" ? now : null,
               markedBy: user.id,
-              updatedAt: now,
+              markedAt: now,
             });
-            next.set(lessonPlanDetailId, lessonMap);
+            next.set(homeworkId, hwMap);
             return next;
           });
         } else {
-          // Create new submission
+          // Create new record (shouldn't normally happen since auto-created on assign)
           const { data, error } = await supabase
-            .from("homework_submissions")
+            .from("homework_assignment_students")
             .insert({
-              lesson_plan_detail_id: lessonPlanDetailId,
-              class_year_id: classYearId,
+              homework_id: homeworkId,
               student_id: studentId,
-              submitted: newStatus,
-              submitted_at: newStatus ? now : null,
+              status: newStatus,
+              submitted_at: newStatus === "submitted" ? now : null,
               marked_by: user.id,
+              marked_at: now,
             })
             .select()
             .single();
 
           if (error) throw error;
 
-          // Update local state
           setSubmissions((prev) => {
             const next = new Map(prev);
-            const lessonMap = new Map(next.get(lessonPlanDetailId) || []);
-            lessonMap.set(studentId, {
+            const hwMap = new Map(next.get(homeworkId) || []);
+            hwMap.set(studentId, {
               id: data.id,
-              lessonPlanDetailId: data.lesson_plan_detail_id,
-              classYearId: data.class_year_id,
+              homeworkId: data.homework_id,
               studentId: data.student_id,
-              submitted: data.submitted,
+              status: data.status,
               submittedAt: data.submitted_at,
               markedBy: data.marked_by,
-              notes: data.notes,
-              createdAt: data.created_at,
-              updatedAt: data.updated_at,
+              markedAt: data.marked_at,
             });
-            next.set(lessonPlanDetailId, lessonMap);
+            next.set(homeworkId, hwMap);
             return next;
           });
         }
@@ -279,48 +299,49 @@ export function useHomeworkSubmissions(
         return true;
       } catch (err) {
         console.error("Error toggling submission:", err);
-        toast({
-          title: "Error",
-          description: "Failed to update submission status",
-          variant: "destructive",
-        });
+        toast({ title: "Error", description: "Failed to update submission status", variant: "destructive" });
         return false;
       } finally {
         setSaving(false);
       }
     },
-    [classYearId, user?.id, submissions]
+    [classYearId, user?.id, submissions, assignmentMap]
   );
 
   // Get submission status for a student on a lesson
   const getSubmissionStatus = useCallback(
     (lessonPlanDetailId: string, studentId: string): boolean => {
-      const lessonSubmissions = submissions.get(lessonPlanDetailId);
-      if (!lessonSubmissions) return false;
-      const submission = lessonSubmissions.get(studentId);
-      return submission?.submitted || false;
+      const homeworkId = assignmentMap.get(lessonPlanDetailId);
+      if (!homeworkId) return false;
+      const hwSubs = submissions.get(homeworkId);
+      if (!hwSubs) return false;
+      const record = hwSubs.get(studentId);
+      return record?.status === "submitted";
     },
-    [submissions]
+    [submissions, assignmentMap]
   );
 
   // Get submission count for a lesson
   const getSubmissionCount = useCallback(
     (lessonPlanDetailId: string, totalStudents: number): { submitted: number; total: number } => {
-      const lessonSubmissions = submissions.get(lessonPlanDetailId);
-      if (!lessonSubmissions) return { submitted: 0, total: totalStudents };
+      const homeworkId = assignmentMap.get(lessonPlanDetailId);
+      if (!homeworkId) return { submitted: 0, total: totalStudents };
+      const hwSubs = submissions.get(homeworkId);
+      if (!hwSubs) return { submitted: 0, total: totalStudents };
 
       let submittedCount = 0;
-      lessonSubmissions.forEach((s) => {
-        if (s.submitted) submittedCount++;
+      hwSubs.forEach((r) => {
+        if (r.status === "submitted") submittedCount++;
       });
 
       return { submitted: submittedCount, total: totalStudents };
     },
-    [submissions]
+    [submissions, assignmentMap]
   );
 
   return {
     submissions,
+    assignmentMap,
     loading,
     saving,
     toggleSubmission,

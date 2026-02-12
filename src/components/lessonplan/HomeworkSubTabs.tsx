@@ -13,6 +13,7 @@ interface HomeworkSubTabsProps {
   lessonPlanId: string;
   topics: LessonTopic[];
   classYearId: number | undefined;
+  subject: string;
   expandedTopics: Set<string>;
   expandedWeeks: Set<string>;
   loadingWeeks: Set<string>;
@@ -21,7 +22,7 @@ interface HomeworkSubTabsProps {
   getWeeksForTopic: (topicId: string) => LessonWeek[];
   getLessonsForWeek: (weekId: string) => LessonDetail[];
   isLessonsLoaded: (weekId: string) => boolean;
-  onSaveHomework: (lessonId: string, homework: string) => Promise<boolean>;
+  onSaveHomework: (lessonId: string, homework: string, classYearId?: number, subject?: string) => Promise<boolean>;
   savingHomework: boolean;
 }
 
@@ -29,6 +30,7 @@ export function HomeworkSubTabs({
   lessonPlanId,
   topics,
   classYearId,
+  subject,
   expandedTopics,
   expandedWeeks,
   loadingWeeks,
@@ -143,7 +145,7 @@ export function HomeworkSubTabs({
                                     <TeacherHomeworkForm
                                       key={lesson.id}
                                       lesson={lesson}
-                                      onSave={(homework) => onSaveHomework(lesson.id, homework)}
+                                      onSave={(homework) => onSaveHomework(lesson.id, homework, classYearId, subject)}
                                       saving={savingHomework}
                                     />
                                   ))

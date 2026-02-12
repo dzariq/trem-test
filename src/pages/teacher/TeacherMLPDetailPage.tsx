@@ -165,8 +165,8 @@ const TeacherMLPDetailPage = () => {
   );
 
   const handleSaveHomework = useCallback(
-    async (lessonPlanDetailId: string, homework: string) => {
-      return await saveHomework(lessonPlanDetailId, homework);
+    async (lessonPlanDetailId: string, homework: string, classYearId?: number, subject?: string) => {
+      return await saveHomework(lessonPlanDetailId, homework, classYearId, subject);
     },
     [saveHomework]
   );
@@ -595,6 +595,7 @@ const TeacherMLPDetailPage = () => {
             lessonPlanId={id!}
             topics={topics}
             classYearId={selectedClassId}
+            subject={planInfo?.subject || ""}
             expandedTopics={expandedTopics}
             expandedWeeks={expandedWeeks}
             loadingWeeks={loadingWeeks}

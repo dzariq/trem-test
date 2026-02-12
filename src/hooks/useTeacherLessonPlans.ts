@@ -578,19 +578,28 @@ export function useLessonReflections(lessonPlanId: string | undefined, classYear
 }
 
 /**
- * Hook to manage homework for lessons
+ * Hook to manage homework for lessons — also creates homework_assignments + homework_assignment_students
  */
 export function useHomeworkManagement() {
+  const { user } = useAuth();
   const [saving, setSaving] = useState(false);
 
-  const saveHomework = useCallback(async (lessonPlanDetailId: string, homework: string) => {
+  const saveHomework = useCallback(async (
+    lessonPlanDetailId: string,
+    homework: string,
+    classYearId?: number,
+    subject?: string,
+  ) => {
     setSaving(true);
 
     try {
+      const trimmed = homework.trim() || null;
+
+      // 1. Save to lesson_plan_details
       const { error } = await supabase
         .from("lesson_plan_details")
         .update({ 
-          homework: homework.trim() || null,
+          homework: trimmed,
           updated_at: new Date().toISOString() 
         })
         .eq("id", lessonPlanDetailId);
@@ -605,6 +614,71 @@ export function useHomeworkManagement() {
           return false;
         }
         throw error;
+      }
+
+      // 2. Upsert homework_assignments + auto-create student rows
+      if (classYearId && user?.id && trimmed) {
+        // Check if assignment already exists for this lesson+class
+        const { data: existing } = await supabase
+          .from("homework_assignments")
+          .select("id")
+          .eq("lesson_plan_detail_id", lessonPlanDetailId)
+          .eq("class_year_id", classYearId)
+          .maybeSingle();
+
+        let assignmentId: string;
+
+        if (existing) {
+          // Update existing
+          await supabase
+            .from("homework_assignments")
+            .update({
+              instructions: trimmed,
+              updated_at: new Date().toISOString(),
+            })
+            .eq("id", existing.id);
+          assignmentId = existing.id;
+        } else {
+          // Create new
+          const { data: newAssignment, error: insertErr } = await supabase
+            .from("homework_assignments")
+            .insert({
+              lesson_plan_detail_id: lessonPlanDetailId,
+              class_year_id: classYearId,
+              created_by: user.id,
+              instructions: trimmed,
+              subject: subject || "Unknown",
+            })
+            .select("id")
+            .single();
+
+          if (insertErr) {
+            console.error("Error creating homework_assignment:", insertErr);
+          } else {
+            assignmentId = newAssignment.id;
+          }
+        }
+
+        // Auto-create homework_assignment_students for all students in class
+        if (assignmentId!) {
+          const { data: students } = await supabase
+            .from("students")
+            .select("id")
+            .eq("class_year_id", classYearId);
+
+          if (students && students.length > 0) {
+            const rows = students.map((s) => ({
+              homework_id: assignmentId,
+              student_id: s.id,
+              status: "assigned",
+            }));
+
+            // Use upsert to avoid duplicates (unique constraint on homework_id+student_id)
+            await supabase
+              .from("homework_assignment_students")
+              .upsert(rows, { onConflict: "homework_id,student_id", ignoreDuplicates: true });
+          }
+        }
       }
 
       toast({
@@ -624,7 +698,7 @@ export function useHomeworkManagement() {
     } finally {
       setSaving(false);
     }
-  }, []);
+  }, [user?.id]);
 
   const getHomework = useCallback((lesson: LessonDetail) => {
     return lesson.homework || "";
