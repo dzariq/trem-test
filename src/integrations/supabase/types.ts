@@ -1382,6 +1382,111 @@ export type Database = {
         }
         Relationships: []
       }
+      homework_assignment_students: {
+        Row: {
+          created_at: string
+          homework_id: string
+          id: string
+          marked_at: string | null
+          marked_by: string | null
+          status: string
+          student_id: string
+          submitted_at: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          homework_id: string
+          id?: string
+          marked_at?: string | null
+          marked_by?: string | null
+          status?: string
+          student_id: string
+          submitted_at?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          homework_id?: string
+          id?: string
+          marked_at?: string | null
+          marked_by?: string | null
+          status?: string
+          student_id?: string
+          submitted_at?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "homework_assignment_students_homework_id_fkey"
+            columns: ["homework_id"]
+            isOneToOne: false
+            referencedRelation: "homework_assignments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "homework_assignment_students_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      homework_assignments: {
+        Row: {
+          class_year_id: number
+          created_at: string
+          created_by: string
+          due_date: string | null
+          id: string
+          instructions: string
+          lesson_plan_detail_id: string | null
+          subject: string
+          title: string | null
+          updated_at: string
+        }
+        Insert: {
+          class_year_id: number
+          created_at?: string
+          created_by: string
+          due_date?: string | null
+          id?: string
+          instructions: string
+          lesson_plan_detail_id?: string | null
+          subject: string
+          title?: string | null
+          updated_at?: string
+        }
+        Update: {
+          class_year_id?: number
+          created_at?: string
+          created_by?: string
+          due_date?: string | null
+          id?: string
+          instructions?: string
+          lesson_plan_detail_id?: string | null
+          subject?: string
+          title?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "homework_assignments_class_year_id_fkey"
+            columns: ["class_year_id"]
+            isOneToOne: false
+            referencedRelation: "class_years"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "homework_assignments_lesson_plan_detail_id_fkey"
+            columns: ["lesson_plan_detail_id"]
+            isOneToOne: false
+            referencedRelation: "lesson_plan_details"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       homework_submissions: {
         Row: {
           class_year_id: number
@@ -2372,6 +2477,42 @@ export type Database = {
           },
         ]
       }
+      student_siblings: {
+        Row: {
+          created_at: string
+          id: string
+          sibling_student_id: string
+          student_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          sibling_student_id: string
+          student_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          sibling_student_id?: string
+          student_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "student_siblings_sibling_student_id_fkey"
+            columns: ["sibling_student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "student_siblings_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       students: {
         Row: {
           address: string | null
@@ -2403,9 +2544,11 @@ export type Database = {
           parent1_ic: string | null
           parent1_name: string | null
           parent1_phone: string | null
+          parent1_user_id: string | null
           parent2_ic: string | null
           parent2_name: string | null
           parent2_phone: string | null
+          parent2_user_id: string | null
           previous: string | null
           relationship_type: string | null
           remarks: string | null
@@ -2445,9 +2588,11 @@ export type Database = {
           parent1_ic?: string | null
           parent1_name?: string | null
           parent1_phone?: string | null
+          parent1_user_id?: string | null
           parent2_ic?: string | null
           parent2_name?: string | null
           parent2_phone?: string | null
+          parent2_user_id?: string | null
           previous?: string | null
           relationship_type?: string | null
           remarks?: string | null
@@ -2487,9 +2632,11 @@ export type Database = {
           parent1_ic?: string | null
           parent1_name?: string | null
           parent1_phone?: string | null
+          parent1_user_id?: string | null
           parent2_ic?: string | null
           parent2_name?: string | null
           parent2_phone?: string | null
+          parent2_user_id?: string | null
           previous?: string | null
           relationship_type?: string | null
           remarks?: string | null
@@ -2764,8 +2911,11 @@ export type Database = {
           departments: string[]
           email: string
           full_name: string | null
+          ic_number: string | null
           id: string
           is_active: boolean
+          parent_relationship: string | null
+          parent_relationship_other: string | null
           phone: string | null
           role: string
           updated_at: string
@@ -2779,8 +2929,11 @@ export type Database = {
           departments?: string[]
           email: string
           full_name?: string | null
+          ic_number?: string | null
           id?: string
           is_active?: boolean
+          parent_relationship?: string | null
+          parent_relationship_other?: string | null
           phone?: string | null
           role?: string
           updated_at?: string
@@ -2794,8 +2947,11 @@ export type Database = {
           departments?: string[]
           email?: string
           full_name?: string | null
+          ic_number?: string | null
           id?: string
           is_active?: boolean
+          parent_relationship?: string | null
+          parent_relationship_other?: string | null
           phone?: string | null
           role?: string
           updated_at?: string

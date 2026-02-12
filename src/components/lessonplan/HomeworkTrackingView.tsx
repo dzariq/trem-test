@@ -26,6 +26,7 @@ export function HomeworkTrackingView({
 }: HomeworkTrackingViewProps) {
   const { students, loading: studentsLoading } = useClassStudents(classYearId);
   const {
+    assignmentMap,
     loading: submissionsLoading,
     saving,
     toggleSubmission,
@@ -41,7 +42,6 @@ export function HomeworkTrackingView({
       const weeks = getWeeksForTopic(topic.id);
       weeks.forEach((week) => {
         if (!isLessonsLoaded(week.id)) {
-          // Trigger load if not loaded
           onWeekToggle(week.id);
           return;
         }
@@ -49,11 +49,13 @@ export function HomeworkTrackingView({
         const lessons = getLessonsForWeek(week.id);
         lessons.forEach((lesson) => {
           if (lesson.homework && lesson.homework.trim()) {
+            const homeworkAssignmentId = assignmentMap.get(lesson.id) || "";
             result.push({
               lesson,
               topicTitle: topic.title,
               weekNumber: week.weekNumber,
               weekTitle: week.title,
+              homeworkAssignmentId,
             });
           }
         });
@@ -61,9 +63,8 @@ export function HomeworkTrackingView({
     });
 
     return result;
-  }, [topics, getWeeksForTopic, getLessonsForWeek, isLessonsLoaded, onWeekToggle]);
+  }, [topics, getWeeksForTopic, getLessonsForWeek, isLessonsLoaded, onWeekToggle, assignmentMap]);
 
-  // No class selected
   if (!classYearId) {
     return (
       <div className="text-center py-12">
@@ -73,7 +74,6 @@ export function HomeworkTrackingView({
     );
   }
 
-  // Loading states
   if (studentsLoading || submissionsLoading) {
     return (
       <div className="flex flex-col items-center justify-center py-12 gap-3">
@@ -83,7 +83,6 @@ export function HomeworkTrackingView({
     );
   }
 
-  // No lessons with homework
   if (lessonsWithHomework.length === 0) {
     return (
       <div className="text-center py-12">
@@ -96,7 +95,6 @@ export function HomeworkTrackingView({
     );
   }
 
-  // No students in class
   if (students.length === 0) {
     return (
       <div className="text-center py-12">
@@ -108,7 +106,6 @@ export function HomeworkTrackingView({
 
   return (
     <div className="space-y-3">
-      {/* Summary Card */}
       <Card className="bg-sky-50/50 dark:bg-sky-950/30 border-sky-200/50 dark:border-sky-800/50">
         <CardContent className="py-3 px-4">
           <div className="flex items-center justify-between text-sm">
@@ -122,7 +119,6 @@ export function HomeworkTrackingView({
         </CardContent>
       </Card>
 
-      {/* Lesson Cards */}
       {lessonsWithHomework.map((item) => (
         <HomeworkTrackingCard
           key={item.lesson.id}
