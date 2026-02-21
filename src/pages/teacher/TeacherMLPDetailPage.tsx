@@ -57,6 +57,7 @@ const TeacherMLPDetailPage = () => {
     getWeeksForTopic,
     getLessonsForWeek,
     isLessonsLoaded,
+    updateLessonHomework,
   } = useMLPContent(id);
 
   const {
@@ -166,9 +167,14 @@ const TeacherMLPDetailPage = () => {
 
   const handleSaveHomework = useCallback(
     async (lessonPlanDetailId: string, homework: string, classYearId?: number, subject?: string) => {
-      return await saveHomework(lessonPlanDetailId, homework, classYearId, subject);
+      const success = await saveHomework(lessonPlanDetailId, homework, classYearId, subject);
+      if (success) {
+        // Optimistically update local lesson state so badge shows "Assigned" immediately
+        updateLessonHomework(lessonPlanDetailId, homework);
+      }
+      return success;
     },
-    [saveHomework]
+    [saveHomework, updateLessonHomework]
   );
 
   if (loading) {

@@ -314,6 +314,23 @@ export function useMLPContent(lessonPlanId: string | undefined) {
     return lessons.get(weekId) || [];
   }, [lessons]);
 
+  // Optimistically update a lesson's homework text in local state
+  const updateLessonHomework = useCallback((lessonId: string, homework: string) => {
+    setLessons(prev => {
+      const next = new Map(prev);
+      for (const [weekId, weekLessons] of next) {
+        const idx = weekLessons.findIndex(l => l.id === lessonId);
+        if (idx !== -1) {
+          const updated = [...weekLessons];
+          updated[idx] = { ...updated[idx], homework };
+          next.set(weekId, updated);
+          break;
+        }
+      }
+      return next;
+    });
+  }, []);
+
   return {
     topics,
     weeks,
@@ -325,6 +342,7 @@ export function useMLPContent(lessonPlanId: string | undefined) {
     getWeeksForTopic,
     getLessonsForWeek,
     isLessonsLoaded: (weekId: string) => lessons.has(weekId),
+    updateLessonHomework,
   };
 }
 
