@@ -3,93 +3,97 @@ import { supabase } from "@/integrations/supabase/client";
 
 export interface HomeworkItem {
   id: string;
-  title: string;
-  homework: string;
-  date: string | null;
+  assignmentId: string;
+  title: string | null;
+  instructions: string;
+  dueDate: string | null;
   subject: string;
-  className: string;
-  yearLevel: string | null;
+  status: "pending" | "submitted" | "late";
+  submittedAt: string | null;
+  lessonTitle: string | null;
+  lessonDate: string | null;
 }
 
 export function useStudentHomework(studentId: string | null) {
-  // First get the student's class
-  const { data: student } = useQuery({
-    queryKey: ["student-class", studentId],
-    queryFn: async () => {
-      if (!studentId) return null;
-      
-      const { data, error } = await supabase
-        .from("students")
-        .select("class, year_level")
-        .eq("id", studentId)
-        .single();
-      
-      if (error) throw error;
-      return data;
-    },
-    enabled: !!studentId,
-  });
-
-  // Then fetch homework for that class
   const homeworkQuery = useQuery({
-    queryKey: ["student-homework", student?.class, student?.year_level],
+    queryKey: ["student-homework", studentId],
     queryFn: async () => {
-      if (!student?.class) return [];
+      if (!studentId) return [];
 
-      // Query lesson_plan_details with homework through the joins
+      // Phase 1: Query through homework_assignment_students → homework_assignments
       const { data, error } = await supabase
-        .from("lesson_plan_details")
+        .from("homework_assignment_students")
         .select(`
           id,
-          title,
-          homework,
-          date,
-          lesson_weeks!inner (
+          status,
+          submitted_at,
+          homework_assignments!inner (
             id,
-            lesson_topics!inner (
-              id,
-              lesson_plans!inner (
-                subject,
-                class,
-                year_level
-              )
-            )
+            title,
+            instructions,
+            due_date,
+            subject,
+            lesson_plan_detail_id
           )
         `)
-        .not("homework", "is", null)
-        .neq("homework", "")
-        .order("date", { ascending: false });
+        .eq("student_id", studentId)
+        .order("created_at", { ascending: false });
 
       if (error) throw error;
 
-      // Filter by class and transform the data
-      const homework: HomeworkItem[] = (data || [])
-        .filter((item: any) => {
-          const lessonPlan = item.lesson_weeks?.lesson_topics?.lesson_plans;
-          return lessonPlan?.class === student.class;
-        })
-        .map((item: any) => {
-          const lessonPlan = item.lesson_weeks?.lesson_topics?.lesson_plans;
-          return {
-            id: item.id,
-            title: item.title,
-            homework: item.homework,
-            date: item.date,
-            subject: lessonPlan?.subject || "Unknown",
-            className: lessonPlan?.class || "",
-            yearLevel: lessonPlan?.year_level,
-          };
-        });
+      // Get lesson plan detail info for context
+      const lessonDetailIds = (data || [])
+        .map((r: any) => r.homework_assignments?.lesson_plan_detail_id)
+        .filter(Boolean);
 
-      return homework;
+      let lessonDetailsMap: Record<string, { title: string; date: string | null }> = {};
+      if (lessonDetailIds.length > 0) {
+        const { data: lessonDetails } = await supabase
+          .from("lesson_plan_details")
+          .select("id, title, date")
+          .in("id", lessonDetailIds);
+
+        (lessonDetails || []).forEach((ld: any) => {
+          lessonDetailsMap[ld.id] = { title: ld.title, date: ld.date };
+        });
+      }
+
+      const items: HomeworkItem[] = (data || []).map((row: any) => {
+        const hw = row.homework_assignments;
+        const lessonDetail = hw.lesson_plan_detail_id
+          ? lessonDetailsMap[hw.lesson_plan_detail_id]
+          : null;
+
+        // Determine status
+        let status: "pending" | "submitted" | "late" = "pending";
+        if (row.status === "submitted") {
+          status = "submitted";
+        } else if (hw.due_date && new Date(hw.due_date) < new Date()) {
+          status = "late";
+        }
+
+        return {
+          id: row.id,
+          assignmentId: hw.id,
+          title: hw.title || lessonDetail?.title || null,
+          instructions: hw.instructions,
+          dueDate: hw.due_date,
+          subject: hw.subject || "Unknown",
+          status,
+          submittedAt: row.submitted_at,
+          lessonTitle: lessonDetail?.title || null,
+          lessonDate: lessonDetail?.date || null,
+        };
+      });
+
+      return items;
     },
-    enabled: !!student?.class,
+    enabled: !!studentId,
   });
 
   return {
     homework: homeworkQuery.data || [],
     isLoading: homeworkQuery.isLoading,
     error: homeworkQuery.error,
-    studentClass: student?.class,
   };
 }
