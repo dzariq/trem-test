@@ -50,7 +50,7 @@ export function useClassStudents(classYearId: number | undefined) {
       try {
         const { data, error: fetchError } = await supabase
           .from("students")
-          .select("id, name, student_id, class")
+          .select("id, name, student_ic, class")
           .eq("class_year_id", classYearId)
           .order("name");
 
@@ -59,7 +59,7 @@ export function useClassStudents(classYearId: number | undefined) {
         const formattedStudents: StudentInfo[] = (data || []).map((s) => ({
           id: s.id,
           name: s.name,
-          studentId: s.student_id || "",
+          studentId: s.student_ic || "",
           class: s.class || "",
         }));
 
