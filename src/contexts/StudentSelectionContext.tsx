@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useMemo, useState, useCallback, ReactNode } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { listMyLinkedStudents, type LinkedStudent } from "@/data/students";
+import { useAuth } from "@/contexts/AuthContext";
 
 const STORAGE_KEY = "selected_student_id";
 
@@ -23,6 +24,7 @@ const StudentSelectionContext = createContext<StudentSelectionContextType | unde
 
 export function StudentSelectionProvider({ children }: { children: ReactNode }) {
   const queryClient = useQueryClient();
+  const { loading: authLoading, user } = useAuth();
   const [linkedStudents, setLinkedStudents] = useState<LinkedStudent[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -43,9 +45,17 @@ export function StudentSelectionProvider({ children }: { children: ReactNode }) 
     }
   }, []);
 
+  // Only fetch students after auth is initialized and user exists
   useEffect(() => {
+    if (authLoading) return; // Still initializing auth — don't query yet
+    if (!user) {
+      // Auth done but no user — clear students, not an error
+      setLinkedStudents([]);
+      setLoading(false);
+      return;
+    }
     loadStudents();
-  }, [loadStudents]);
+  }, [authLoading, user, loadStudents]);
 
   // Persist to localStorage
   useEffect(() => {
