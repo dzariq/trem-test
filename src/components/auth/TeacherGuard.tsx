@@ -10,8 +10,11 @@ export default function TeacherGuard() {
   const location = useLocation();
   const didRedirect = useRef(false);
 
+  // Profile may still be loading even after auth loading finishes
+  const profileStillLoading = !loading && !!user && !profile;
+
   useEffect(() => {
-    if (loading) return;
+    if (loading || profileStillLoading) return;
     
     // If no user, redirect to login
     if (!user) {
@@ -19,18 +22,18 @@ export default function TeacherGuard() {
       return;
     }
     
-    // If no profile or wrong role, redirect with error
-    if (!profile || profile.role !== "teacher") {
+    // Profile loaded but wrong role — redirect with error
+    if (profile && profile.role !== "teacher") {
       if (!didRedirect.current) {
         didRedirect.current = true;
         toast.error("This portal is only available to teacher accounts.");
       }
       navigate("/", { replace: true, state: { from: location.pathname } });
     }
-  }, [loading, user, profile, navigate, location.pathname]);
+  }, [loading, profileStillLoading, user, profile, navigate, location.pathname]);
 
-  // Show loading spinner while checking auth
-  if (loading) {
+  // Show loading spinner while checking auth or profile
+  if (loading || profileStillLoading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
