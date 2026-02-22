@@ -5,23 +5,11 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/
 import { Button } from "@/components/ui/button";
 import { teacherHandbookData, sectionColors } from "@/data/teacherHandbookData";
 import { cn } from "@/lib/utils";
-import { PDFViewerDialog } from "@/components/PDFViewerDialog";
+import { HandbookReportDialog } from "@/components/HandbookReportDialog";
 import schoolBadge from "@/assets/school-badge.png";
 import {
-  Compass,
-  Shield,
-  BookOpen,
-  Home,
-  Users,
-  Building,
-  Clock,
-  Briefcase,
-  Calendar,
-  Shirt,
-  FileCheck,
-  CheckCircle,
-  FileText,
-  Eye
+  Compass, Shield, BookOpen, Home, Users, Building, Clock,
+  Briefcase, Calendar, Shirt, FileCheck, CheckCircle, FileText
 } from "lucide-react";
 
 // Import section images
@@ -68,8 +56,17 @@ const sectionImages: Record<string, string> = {
   acknowledgement: acknowledgementImg
 };
 
+// Transform teacher handbook data into the format expected by HandbookReportDialog
+const teacherHandbookSections = teacherHandbookData.sections.map((section) => ({
+  title: section.title,
+  items: section.main_points.map((mp) => ({
+    heading: mp.point,
+    points: mp.subpoints,
+  })),
+}));
+
 export default function TeacherHandbookPage() {
-  const [isPdfOpen, setIsPdfOpen] = useState(false);
+  const [isReportOpen, setIsReportOpen] = useState(false);
 
   return (
     <TeacherAppLayout>
@@ -86,11 +83,11 @@ export default function TeacherHandbookPage() {
       <div className="px-4 py-4 space-y-4">
         {/* View Full PDF Button */}
         <Button 
-          onClick={() => setIsPdfOpen(true)}
+          onClick={() => setIsReportOpen(true)}
           className="w-full gap-2"
           size="lg"
         >
-          <Eye className="h-5 w-5" />
+          <FileText className="h-5 w-5" />
           View Full Handbook PDF
         </Button>
 
@@ -113,17 +110,11 @@ export default function TeacherHandbookPage() {
               <AccordionItem 
                 key={section.key} 
                 value={section.key}
-                className={cn(
-                  "border rounded-xl px-4 bg-card",
-                  colors.border
-                )}
+                className={cn("border rounded-xl px-4 bg-card", colors.border)}
               >
                 <AccordionTrigger className="hover:no-underline py-3">
                   <div className="flex items-center gap-3">
-                    <div className={cn(
-                      "w-9 h-9 rounded-lg flex items-center justify-center",
-                      colors.bg
-                    )}>
+                    <div className={cn("w-9 h-9 rounded-lg flex items-center justify-center", colors.bg)}>
                       <Icon className={cn("h-4 w-4", colors.text)} />
                     </div>
                     <span className="font-medium text-foreground text-left text-sm">
@@ -133,7 +124,6 @@ export default function TeacherHandbookPage() {
                 </AccordionTrigger>
                 <AccordionContent className="pb-4">
                   <div className="space-y-4">
-                    {/* Section Image */}
                     <div className="flex justify-center">
                       <img 
                         src={image} 
@@ -141,8 +131,6 @@ export default function TeacherHandbookPage() {
                         className="w-32 h-32 object-cover rounded-xl border border-border"
                       />
                     </div>
-
-                    {/* Main Points Nested Accordion */}
                     <Accordion type="single" collapsible className="space-y-2">
                       {section.main_points.map((mainPoint, idx) => (
                         <AccordionItem 
@@ -176,12 +164,13 @@ export default function TeacherHandbookPage() {
         </Accordion>
       </div>
 
-      {/* PDF Viewer Dialog */}
-      <PDFViewerDialog
-        open={isPdfOpen}
-        onOpenChange={setIsPdfOpen}
-        pdfUrl="/documents/teacher-handbook.pdf"
-        title="Teacher Handbook"
+      {/* Handbook Report Dialog — uses same HTML→PDF pattern as Class Analysis */}
+      <HandbookReportDialog
+        open={isReportOpen}
+        onOpenChange={setIsReportOpen}
+        title="Teacher Handbook 2026"
+        subtitle={teacherHandbookData.purpose}
+        sections={teacherHandbookSections}
         downloadFileName="Teacher_Handbook_2026.pdf"
       />
     </TeacherAppLayout>

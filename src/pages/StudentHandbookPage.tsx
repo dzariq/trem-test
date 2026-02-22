@@ -2,8 +2,8 @@ import { useState } from "react";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { AppHeader } from "@/components/layout/AppHeader";
 import { Button } from "@/components/ui/button";
-import { FileText, ChevronDown, ChevronUp, Target, BookOpen, HandHeart, Backpack, Clock, Shirt, Users, Utensils, ClipboardList, Scale, FileSignature } from "lucide-react";
-import { PDFViewerDialog } from "@/components/PDFViewerDialog";
+import { FileText, Target, BookOpen, HandHeart, Backpack, Clock, Shirt, Users, Utensils, ClipboardList, Scale, FileSignature } from "lucide-react";
+import { HandbookReportDialog } from "@/components/HandbookReportDialog";
 import { studentHandbookData } from "@/data/studentHandbookData";
 import {
   Accordion,
@@ -54,8 +54,17 @@ const sectionImages: Record<string, string> = {
   behaviour_contract: contractImg,
 };
 
+// Transform student handbook data into the format expected by HandbookReportDialog
+const studentHandbookSections = studentHandbookData.sections.map((section) => ({
+  title: section.title,
+  items: section.subsections.map((sub) => ({
+    heading: sub.subtitle,
+    points: sub.points,
+  })),
+}));
+
 export default function StudentHandbookPage() {
-  const [pdfOpen, setPdfOpen] = useState(false);
+  const [reportOpen, setReportOpen] = useState(false);
 
   return (
     <AppLayout>
@@ -64,7 +73,7 @@ export default function StudentHandbookPage() {
       <section className="px-4 pt-4 pb-8 space-y-4">
         {/* PDF View Button */}
         <Button 
-          onClick={() => setPdfOpen(true)} 
+          onClick={() => setReportOpen(true)} 
           className="w-full gap-2"
           variant="outline"
         >
@@ -102,7 +111,6 @@ export default function StudentHandbookPage() {
                   </div>
                 </AccordionTrigger>
                 <AccordionContent className="px-4 pb-4">
-                  {/* Section Image */}
                   {sectionImage && (
                     <div className="mb-4 flex justify-center">
                       <img 
@@ -112,8 +120,6 @@ export default function StudentHandbookPage() {
                       />
                     </div>
                   )}
-
-                  {/* Subsections */}
                   <Accordion type="single" collapsible className="space-y-2">
                     {section.subsections.map((subsection, subIdx) => (
                       <AccordionItem 
@@ -144,11 +150,13 @@ export default function StudentHandbookPage() {
         </Accordion>
       </section>
 
-      <PDFViewerDialog
-        open={pdfOpen}
-        onOpenChange={setPdfOpen}
-        pdfUrl="/documents/student-handbook.pdf"
-        title="Student Handbook"
+      {/* Handbook Report Dialog — uses same HTML→PDF pattern as Class Analysis */}
+      <HandbookReportDialog
+        open={reportOpen}
+        onOpenChange={setReportOpen}
+        title="Student Handbook 2026"
+        subtitle="School vision, mission, core values, rules, and discipline policies"
+        sections={studentHandbookSections}
         downloadFileName="Student_Handbook_2026.pdf"
       />
     </AppLayout>
