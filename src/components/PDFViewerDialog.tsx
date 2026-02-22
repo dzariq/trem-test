@@ -6,7 +6,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Download, X, Maximize2, Minimize2, ExternalLink, Loader2 } from "lucide-react";
+import { Download, X, Maximize2, Minimize2, ExternalLink } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { Capacitor } from "@capacitor/core";
 
@@ -27,107 +27,56 @@ export function PDFViewerDialog({
 }: PDFViewerDialogProps) {
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
-  const [pdfBlobUrl, setPdfBlobUrl] = useState<string | null>(null);
-  const [loadError, setLoadError] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
+  const [embedFailed, setEmbedFailed] = useState(false);
   const isNative = Capacitor.isNativePlatform();
 
   useEffect(() => {
-    const checkMobile = () => {
-      setIsMobile(
-        /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
-          navigator.userAgent
-        )
-      );
-    };
-    checkMobile();
+    setIsMobile(
+      /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
+        navigator.userAgent
+      )
+    );
   }, []);
 
-  const getAbsoluteUrl = useCallback(() => {
-    if (pdfUrl.startsWith("http")) return pdfUrl;
-    return window.location.origin + pdfUrl;
-  }, [pdfUrl]);
-
-  // Fetch PDF as blob for reliable viewing and downloading
+  // Reset embed error when dialog opens
   useEffect(() => {
-    if (!open || isNative) return;
-    
-    let cancelled = false;
-    setIsLoading(true);
-    setLoadError(false);
-    setPdfBlobUrl(null);
+    if (open) setEmbedFailed(false);
+  }, [open]);
 
-    const fetchPdf = async () => {
-      try {
-        const url = getAbsoluteUrl();
-        const response = await fetch(url);
-        
-        if (!response.ok) {
-          throw new Error(`Failed to fetch PDF: ${response.status}`);
-        }
-
-        const contentType = response.headers.get("content-type") || "";
-        // If the response isn't a PDF (e.g. HTML auth page), treat as error
-        if (!contentType.includes("pdf") && !contentType.includes("octet-stream")) {
-          console.warn("[PDFViewer] Unexpected content-type:", contentType);
-          throw new Error("Response is not a PDF");
-        }
-
-        const blob = await response.blob();
-        if (cancelled) return;
-        
-        const blobUrl = URL.createObjectURL(blob);
-        setPdfBlobUrl(blobUrl);
-      } catch (err) {
-        console.error("[PDFViewer] Error loading PDF:", err);
-        if (!cancelled) setLoadError(true);
-      } finally {
-        if (!cancelled) setIsLoading(false);
-      }
-    };
-
-    fetchPdf();
-
-    return () => {
-      cancelled = true;
-      setPdfBlobUrl((prev) => {
-        if (prev) URL.revokeObjectURL(prev);
-        return null;
-      });
-    };
-  }, [open, pdfUrl, getAbsoluteUrl, isNative]);
+  // Resolve to an absolute URL — never hits any Lovable API
+  const resolvedPdfUrl = pdfUrl.startsWith("http")
+    ? pdfUrl
+    : window.location.origin + pdfUrl;
 
   const handleOpenInBrowser = useCallback(async () => {
-    const url = pdfBlobUrl || getAbsoluteUrl();
     if (isNative) {
       try {
         const { Browser } = await import("@capacitor/browser");
-        await Browser.open({ url: getAbsoluteUrl() });
+        await Browser.open({ url: resolvedPdfUrl });
       } catch {
-        window.open(getAbsoluteUrl(), "_blank");
+        window.open(resolvedPdfUrl, "_blank");
       }
     } else {
-      window.open(url, "_blank");
+      window.open(resolvedPdfUrl, "_blank");
     }
-  }, [getAbsoluteUrl, isNative, pdfBlobUrl]);
+  }, [resolvedPdfUrl, isNative]);
 
   const handleDownload = useCallback(async () => {
     if (isNative) {
       try {
         const { Browser } = await import("@capacitor/browser");
-        await Browser.open({ url: getAbsoluteUrl() });
+        await Browser.open({ url: resolvedPdfUrl });
         toast.success(`Opening ${title}...`);
       } catch {
-        window.open(getAbsoluteUrl(), "_blank");
+        window.open(resolvedPdfUrl, "_blank");
       }
       return;
     }
 
-    // Web: use blob URL for reliable download
+    // Web: anchor download pointing directly at the PDF URL
     try {
-      const urlToUse = pdfBlobUrl || getAbsoluteUrl();
       const link = document.createElement("a");
-      link.href = urlToUse;
+      link.href = resolvedPdfUrl;
       link.download = downloadFileName;
       link.rel = "noopener";
       document.body.appendChild(link);
@@ -135,9 +84,11 @@ export function PDFViewerDialog({
       document.body.removeChild(link);
       toast.success(`Downloading ${title}...`);
     } catch {
-      window.open(getAbsoluteUrl(), "_blank");
+      window.open(resolvedPdfUrl, "_blank");
     }
-  }, [getAbsoluteUrl, isNative, pdfBlobUrl, downloadFileName, title]);
+  }, [resolvedPdfUrl, isNative, downloadFileName, title]);
+
+  const showEmbedViewer = !isNative && !isMobile && !embedFailed;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -155,82 +106,55 @@ export function PDFViewerDialog({
                 onClick={() => setIsFullscreen(!isFullscreen)}
                 className="h-8 w-8"
               >
-                {isFullscreen ? (
-                  <Minimize2 className="h-4 w-4" />
-                ) : (
-                  <Maximize2 className="h-4 w-4" />
-                )}
+                {isFullscreen ? <Minimize2 className="h-4 w-4" /> : <Maximize2 className="h-4 w-4" />}
               </Button>
             )}
-            {(isMobile || isNative) && (
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleOpenInBrowser}
-                className="gap-2"
-              >
-                <ExternalLink className="h-4 w-4" />
-                Open
-              </Button>
-            )}
-            <Button
-              variant="default"
-              size="sm"
-              onClick={handleDownload}
-              className="gap-2"
-            >
+            <Button variant="outline" size="sm" onClick={handleOpenInBrowser} className="gap-2">
+              <ExternalLink className="h-4 w-4" />
+              Open
+            </Button>
+            <Button variant="default" size="sm" onClick={handleDownload} className="gap-2">
               <Download className="h-4 w-4" />
               Download
             </Button>
-            <Button
-              variant="destructive"
-              size="icon"
-              onClick={() => onOpenChange(false)}
-              className="h-8 w-8"
-            >
+            <Button variant="destructive" size="icon" onClick={() => onOpenChange(false)} className="h-8 w-8">
               <X className="h-4 w-4" />
             </Button>
           </div>
         </DialogHeader>
+
         <div className="flex-1 overflow-hidden bg-muted/30">
-          {isNative ? (
+          {showEmbedViewer ? (
+            <object
+              data={resolvedPdfUrl}
+              type="application/pdf"
+              className="w-full h-full"
+              onError={() => setEmbedFailed(true)}
+            >
+              {/* Fallback rendered inside <object> if browser can't display */}
+              <div className="flex flex-col items-center justify-center h-full gap-4 p-6 text-center">
+                <p className="text-sm text-muted-foreground">
+                  Your browser cannot display this PDF inline.
+                </p>
+                <Button onClick={handleOpenInBrowser} className="gap-2">
+                  <ExternalLink className="h-4 w-4" />
+                  Open PDF in New Tab
+                </Button>
+              </div>
+            </object>
+          ) : (
             <div className="flex flex-col items-center justify-center h-full gap-4 p-6 text-center">
               <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center">
                 <ExternalLink className="h-8 w-8 text-primary" />
               </div>
               <p className="text-sm text-muted-foreground max-w-xs">
-                PDF preview is not supported in the app viewer. Tap below to open
-                in your device's PDF viewer.
+                Tap below to open the PDF in your viewer.
               </p>
               <Button onClick={handleOpenInBrowser} className="gap-2">
                 <ExternalLink className="h-4 w-4" />
                 Open {title}
               </Button>
             </div>
-          ) : isLoading ? (
-            <div className="flex flex-col items-center justify-center h-full gap-3">
-              <Loader2 className="h-8 w-8 animate-spin text-primary" />
-              <p className="text-sm text-muted-foreground">Loading PDF…</p>
-            </div>
-          ) : loadError || !pdfBlobUrl ? (
-            <div className="flex flex-col items-center justify-center h-full gap-4 p-6 text-center">
-              <div className="w-16 h-16 rounded-full bg-destructive/10 flex items-center justify-center">
-                <ExternalLink className="h-8 w-8 text-destructive" />
-              </div>
-              <p className="text-sm text-muted-foreground max-w-xs">
-                Unable to preview the PDF inline. You can open it in a new tab instead.
-              </p>
-              <Button onClick={() => window.open(getAbsoluteUrl(), "_blank")} className="gap-2">
-                <ExternalLink className="h-4 w-4" />
-                Open in New Tab
-              </Button>
-            </div>
-          ) : (
-            <iframe
-              src={pdfBlobUrl}
-              className="w-full h-full border-0"
-              title={title}
-            />
           )}
         </div>
       </DialogContent>
