@@ -50,7 +50,8 @@ import {
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "@/hooks/use-toast";
-import { PDFViewerDialog } from "@/components/PDFViewerDialog";
+import { HandbookReportDialog } from "@/components/HandbookReportDialog";
+import { studentHandbookData } from "@/data/studentHandbookData";
 import { cn } from "@/lib/utils";
 import { useMyProfile } from "@/hooks/useMyProfile";
 import { type LinkedStudent } from "@/data/students";
@@ -531,19 +532,29 @@ export default function ProfilePage() {
         </DialogContent>
       </Dialog>
 
-      {/* PDF Viewer Dialogs */}
-      <PDFViewerDialog
+      {/* Handbook & Timetable Report Dialogs */}
+      <HandbookReportDialog
         open={isPdfOpen}
         onOpenChange={setIsPdfOpen}
-        pdfUrl="/documents/student-handbook.pdf"
         title="Student Handbook"
+        subtitle={`Academic Year ${studentHandbookData.academic_year}`}
+        sections={studentHandbookData.sections.map(s => ({
+          title: s.title,
+          items: s.subsections.map(sub => ({ heading: sub.subtitle, points: sub.points })),
+        }))}
         downloadFileName="Student_Handbook_2026.pdf"
       />
-      <PDFViewerDialog
+      <HandbookReportDialog
         open={isTimetablePdfOpen}
         onOpenChange={setIsTimetablePdfOpen}
-        pdfUrl="/documents/student-timetable.pdf"
         title="Student Timetable"
+        subtitle="Academic Year 2026"
+        sections={[{
+          title: "Weekly Timetable",
+          items: [
+            { heading: "Note", points: ["The student timetable is currently being updated. Please contact the school office for the latest version."] },
+          ],
+        }]}
         downloadFileName="Student_Timetable_2026.pdf"
       />
 
