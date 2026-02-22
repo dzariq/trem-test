@@ -23,20 +23,20 @@ export const subjectGroups: SubjectGroup[] = [
     ]
   },
   {
-    baseName: "Malay",
-    shortName: "Malay",
-    variants: [
-      { name: "Malay (First Language)", shortName: "Malay 1L" },
-      { name: "Malay (Foreign Language)", shortName: "Malay FL" }
-    ]
-  },
-  {
     baseName: "Chinese",
     shortName: "Chinese",
     variants: [
       { name: "Chinese (Foreign Language)", shortName: "Chinese FL" },
       { name: "Chinese (Second Language)", shortName: "Chinese 2L" },
       { name: "Chinese (Beginner)", shortName: "Chinese B." }
+    ]
+  },
+  {
+    baseName: "Malay",
+    shortName: "Malay",
+    variants: [
+      { name: "Malay (First Language)", shortName: "Malay 1L" },
+      { name: "Malay (Foreign Language)", shortName: "Malay FL" }
     ]
   },
   {
@@ -63,13 +63,7 @@ export const subjectGroups: SubjectGroup[] = [
     variants: [
       { name: "Business Studies", shortName: "Biz Studies" },
       { name: "Accounting", shortName: "Accounting" },
-      { name: "Economics", shortName: "Econs" }
-    ]
-  },
-  {
-    baseName: "Social Studies",
-    shortName: "Social St.",
-    variants: [
+      { name: "Economics", shortName: "Econs" },
       { name: "Global Perspectives", shortName: "Global Persp" },
       { name: "Geography", shortName: "Geography" },
       { name: "History", shortName: "History" }
