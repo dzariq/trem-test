@@ -1,4 +1,4 @@
-import { useRef, useState, useCallback } from "react";
+import { useRef, useState, useCallback, useEffect } from "react";
 import {
   Dialog,
   DialogContent,
@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Printer, Loader2, X } from "lucide-react";
 import { exportElementToPdf } from "@/lib/pdf/exportToPdf";
 import { toast } from "@/hooks/use-toast";
-import schoolBadge from "@/assets/school-badge.png";
+import schoolBadgeSrc from "@/assets/school-badge.png";
 
 interface HandbookSection {
   title: string;
@@ -35,6 +35,28 @@ export function HandbookReportDialog({
 }: HandbookReportDialogProps) {
   const contentRef = useRef<HTMLDivElement>(null);
   const [isExporting, setIsExporting] = useState(false);
+  const [logoBase64, setLogoBase64] = useState<string>(schoolBadgeSrc);
+
+  // Convert school badge to base64 data URL for reliable html2canvas capture
+  useEffect(() => {
+    const img = new Image();
+    img.crossOrigin = "anonymous";
+    img.onload = () => {
+      try {
+        const canvas = document.createElement("canvas");
+        canvas.width = img.naturalWidth;
+        canvas.height = img.naturalHeight;
+        const ctx = canvas.getContext("2d");
+        if (ctx) {
+          ctx.drawImage(img, 0, 0);
+          setLogoBase64(canvas.toDataURL("image/png"));
+        }
+      } catch {
+        // Keep original src as fallback
+      }
+    };
+    img.src = schoolBadgeSrc;
+  }, []);
 
   const handleExportPdf = useCallback(async () => {
     if (!contentRef.current || isExporting) return;
@@ -60,7 +82,7 @@ export function HandbookReportDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="w-[95vw] max-w-3xl h-[90vh] rounded-2xl overflow-hidden flex flex-col p-0 gap-0">
+      <DialogContent hideClose className="w-[95vw] max-w-3xl h-[90vh] rounded-2xl overflow-hidden flex flex-col p-0 gap-0">
         <DialogHeader className="px-4 py-3 border-b border-border flex flex-row items-center justify-between space-y-0 bg-background">
           <DialogTitle className="text-base font-semibold">{title}</DialogTitle>
           <div className="flex items-center gap-2">
@@ -93,7 +115,7 @@ export function HandbookReportDialog({
           <div ref={contentRef} style={{ background: "#ffffff", color: "#111", padding: "16px", fontFamily: "sans-serif" }}>
             {/* Report Header */}
             <div style={{ display: "flex", alignItems: "center", gap: "12px", marginBottom: "16px", paddingBottom: "10px", borderBottom: "2px solid #3b82f6" }}>
-              <img src={schoolBadge} alt="School Logo" crossOrigin="anonymous" style={{ width: "40px", height: "40px", objectFit: "contain" }} />
+              <img src={logoBase64} alt="School Logo" style={{ width: "40px", height: "40px", objectFit: "contain" }} />
               <div>
                 <div style={{ fontWeight: 700, fontSize: "16px" }}>{title}</div>
                 {subtitle && <div style={{ fontSize: "11px", color: "#666" }}>{subtitle}</div>}
