@@ -313,7 +313,7 @@ export default function SupportPage() {
 
   return (
     <AppLayout>
-      <AppHeader title="Parent Support" showChildSelector />
+      <AppHeader title="Parent Support" showBack showChildSelector />
 
       <section className="px-4 pt-4">
         <Card className="bg-card border-border shadow-sm">

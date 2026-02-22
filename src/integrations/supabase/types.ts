@@ -504,6 +504,159 @@ export type Database = {
           },
         ]
       }
+      bug_report_attachments: {
+        Row: {
+          bug_id: string
+          created_at: string
+          file_name: string
+          file_url: string
+          id: string
+        }
+        Insert: {
+          bug_id: string
+          created_at?: string
+          file_name: string
+          file_url: string
+          id?: string
+        }
+        Update: {
+          bug_id?: string
+          created_at?: string
+          file_name?: string
+          file_url?: string
+          id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bug_report_attachments_bug_id_fkey"
+            columns: ["bug_id"]
+            isOneToOne: false
+            referencedRelation: "bug_reports"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      bug_report_comments: {
+        Row: {
+          author_id: string
+          bug_id: string
+          comment: string
+          created_at: string
+          id: string
+        }
+        Insert: {
+          author_id: string
+          bug_id: string
+          comment: string
+          created_at?: string
+          id?: string
+        }
+        Update: {
+          author_id?: string
+          bug_id?: string
+          comment?: string
+          created_at?: string
+          id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bug_report_comments_bug_id_fkey"
+            columns: ["bug_id"]
+            isOneToOne: false
+            referencedRelation: "bug_reports"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      bug_report_status_history: {
+        Row: {
+          bug_id: string
+          changed_by: string
+          created_at: string
+          id: string
+          new_status: string
+          old_status: string
+        }
+        Insert: {
+          bug_id: string
+          changed_by: string
+          created_at?: string
+          id?: string
+          new_status: string
+          old_status: string
+        }
+        Update: {
+          bug_id?: string
+          changed_by?: string
+          created_at?: string
+          id?: string
+          new_status?: string
+          old_status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bug_report_status_history_bug_id_fkey"
+            columns: ["bug_id"]
+            isOneToOne: false
+            referencedRelation: "bug_reports"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      bug_reports: {
+        Row: {
+          actual_result: string | null
+          assigned_to: string | null
+          category: string
+          created_at: string
+          created_by: string
+          environment: Json | null
+          expected_result: string | null
+          id: string
+          module: string | null
+          resolution_notes: string | null
+          severity: string
+          status: string
+          steps_to_reproduce: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          actual_result?: string | null
+          assigned_to?: string | null
+          category?: string
+          created_at?: string
+          created_by: string
+          environment?: Json | null
+          expected_result?: string | null
+          id?: string
+          module?: string | null
+          resolution_notes?: string | null
+          severity?: string
+          status?: string
+          steps_to_reproduce: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          actual_result?: string | null
+          assigned_to?: string | null
+          category?: string
+          created_at?: string
+          created_by?: string
+          environment?: Json | null
+          expected_result?: string | null
+          id?: string
+          module?: string | null
+          resolution_notes?: string | null
+          severity?: string
+          status?: string
+          steps_to_reproduce?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       calendar_events: {
         Row: {
           campus_id: string | null
