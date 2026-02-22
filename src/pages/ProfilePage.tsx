@@ -543,6 +543,7 @@ export default function ProfilePage() {
           items: s.subsections.map(sub => ({ heading: sub.subtitle, points: sub.points })),
         }))}
         downloadFileName="Student_Handbook_2026.pdf"
+        originalPdfUrl="/documents/student-handbook.pdf"
       />
       <HandbookReportDialog
         open={isTimetablePdfOpen}
@@ -556,6 +557,7 @@ export default function ProfilePage() {
           ],
         }]}
         downloadFileName="Student_Timetable_2026.pdf"
+        originalPdfUrl="/documents/student-timetable.pdf"
       />
 
       {/* Student Details Drawer - Mobile friendly with drag to close */}
