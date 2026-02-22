@@ -56,7 +56,14 @@ const sectionImages: Record<string, string> = {
   acknowledgement: acknowledgementImg
 };
 
-// Transform teacher handbook data into the format expected by HandbookReportDialog
+// Build section image map by index
+const teacherSectionImageMap: Record<number, string> = {};
+teacherHandbookData.sections.forEach((section, idx) => {
+  if (sectionImages[section.key]) {
+    teacherSectionImageMap[idx] = sectionImages[section.key];
+  }
+});
+
 const teacherHandbookSections = teacherHandbookData.sections.map((section) => ({
   title: section.title,
   items: section.main_points.map((mp) => ({
@@ -172,6 +179,8 @@ export default function TeacherHandbookPage() {
         subtitle={teacherHandbookData.purpose}
         sections={teacherHandbookSections}
         downloadFileName="Teacher_Handbook_2026.pdf"
+        sectionImages={teacherSectionImageMap}
+        originalPdfUrl="/documents/teacher-handbook.pdf"
       />
     </TeacherAppLayout>
   );

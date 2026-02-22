@@ -54,6 +54,14 @@ const sectionImages: Record<string, string> = {
   behaviour_contract: contractImg,
 };
 
+// Build section image map by index
+const studentSectionImageMap: Record<number, string> = {};
+studentHandbookData.sections.forEach((section, idx) => {
+  if (sectionImages[section.key]) {
+    studentSectionImageMap[idx] = sectionImages[section.key];
+  }
+});
+
 // Transform student handbook data into the format expected by HandbookReportDialog
 const studentHandbookSections = studentHandbookData.sections.map((section) => ({
   title: section.title,
@@ -158,6 +166,8 @@ export default function StudentHandbookPage() {
         subtitle="School vision, mission, core values, rules, and discipline policies"
         sections={studentHandbookSections}
         downloadFileName="Student_Handbook_2026.pdf"
+        sectionImages={studentSectionImageMap}
+        originalPdfUrl="/documents/student-handbook.pdf"
       />
     </AppLayout>
   );
