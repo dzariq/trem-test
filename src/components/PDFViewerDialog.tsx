@@ -27,7 +27,6 @@ export function PDFViewerDialog({
 }: PDFViewerDialogProps) {
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
-  const [embedFailed, setEmbedFailed] = useState(false);
   const isNative = Capacitor.isNativePlatform();
 
   useEffect(() => {
@@ -38,10 +37,6 @@ export function PDFViewerDialog({
     );
   }, []);
 
-  // Reset embed error when dialog opens
-  useEffect(() => {
-    if (open) setEmbedFailed(false);
-  }, [open]);
 
   // Resolve to an absolute URL — never hits any Lovable API
   const resolvedPdfUrl = pdfUrl.startsWith("http")
@@ -88,7 +83,7 @@ export function PDFViewerDialog({
     }
   }, [resolvedPdfUrl, isNative, downloadFileName, title]);
 
-  const showEmbedViewer = !isNative && !isMobile && !embedFailed;
+  
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -124,38 +119,22 @@ export function PDFViewerDialog({
         </DialogHeader>
 
         <div className="flex-1 overflow-hidden bg-muted/30">
-          {showEmbedViewer ? (
-            <object
-              data={resolvedPdfUrl}
-              type="application/pdf"
-              className="w-full h-full"
-              onError={() => setEmbedFailed(true)}
-            >
-              {/* Fallback rendered inside <object> if browser can't display */}
-              <div className="flex flex-col items-center justify-center h-full gap-4 p-6 text-center">
-                <p className="text-sm text-muted-foreground">
-                  Your browser cannot display this PDF inline.
-                </p>
-                <Button onClick={handleOpenInBrowser} className="gap-2">
-                  <ExternalLink className="h-4 w-4" />
-                  Open PDF in New Tab
-                </Button>
-              </div>
-            </object>
-          ) : (
-            <div className="flex flex-col items-center justify-center h-full gap-4 p-6 text-center">
-              <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center">
-                <ExternalLink className="h-8 w-8 text-primary" />
-              </div>
-              <p className="text-sm text-muted-foreground max-w-xs">
-                Tap below to open the PDF in your viewer.
-              </p>
-              <Button onClick={handleOpenInBrowser} className="gap-2">
-                <ExternalLink className="h-4 w-4" />
-                Open {title}
-              </Button>
+          <div className="flex flex-col items-center justify-center h-full gap-4 p-6 text-center">
+            <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center">
+              <ExternalLink className="h-8 w-8 text-primary" />
             </div>
-          )}
+            <p className="text-sm text-muted-foreground max-w-xs">
+              Your browser cannot display this PDF inline.
+            </p>
+            <Button onClick={handleOpenInBrowser} className="gap-2">
+              <ExternalLink className="h-4 w-4" />
+              Open PDF in New Tab
+            </Button>
+            <Button variant="outline" onClick={handleDownload} className="gap-2">
+              <Download className="h-4 w-4" />
+              Download
+            </Button>
+          </div>
         </div>
       </DialogContent>
     </Dialog>
