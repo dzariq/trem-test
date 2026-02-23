@@ -17,7 +17,7 @@ interface AnnouncementsListDrawerProps {
 }
 
 export function AnnouncementsListDrawer({ isOpen, onOpenChange }: AnnouncementsListDrawerProps) {
-  const DEFAULT_SNAP_POINT = 0.8;
+  const DEFAULT_SNAP_POINT = 0.7;
   const [categoryFilter, setCategoryFilter] = useState<CategoryFilter>("all");
   const [currentView, setCurrentView] = useState<"list" | "detail">("list");
   const [currentAnnouncementIndex, setCurrentAnnouncementIndex] = useState(0);
@@ -130,6 +130,11 @@ export function AnnouncementsListDrawer({ isOpen, onOpenChange }: AnnouncementsL
     }
   };
 
+  const isImageUrl = (url: string) => {
+    const ext = url.split('?')[0].split('.').pop()?.toLowerCase();
+    return ['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg', 'bmp'].includes(ext ?? '');
+  };
+
   const getFileIcon = (fileName: string) => {
     const ext = fileName.split('.').pop()?.toLowerCase();
     if (ext === 'pdf') return { icon: FileText, color: "text-red-500", bg: "bg-red-500/10" };
@@ -221,6 +226,11 @@ export function AnnouncementsListDrawer({ isOpen, onOpenChange }: AnnouncementsL
 
   const attachmentCount = currentAnnouncement?.attachments?.length || 0;
 
+  // Use the first image attachment as the hero image for detail view
+  const firstImageAttachment = currentAnnouncement?.attachments?.find(a => isImageUrl(a.url));
+  const heroImage = firstImageAttachment?.url ?? currentAnnouncement?.image ?? null;
+  const nonHeroAttachments = currentAnnouncement?.attachments?.filter(a => a !== firstImageAttachment) ?? [];
+
   return (
     <DrawerPrimitive.Root
       open={isOpen}
@@ -296,7 +306,10 @@ export function AnnouncementsListDrawer({ isOpen, onOpenChange }: AnnouncementsL
                     </p>
                   )}
 
-                  {!loading && !error && filteredAnnouncements.map((announcement, index) => (
+                  {!loading && !error && filteredAnnouncements.map((announcement, index) => {
+                    const cardImageAttachment = announcement.attachments?.find(a => isImageUrl(a.url));
+                    const cardImage = cardImageAttachment?.url ?? announcement.image;
+                    return (
                     <Card
                       key={announcement.id}
                       className="bg-card border-border shadow-sm overflow-hidden cursor-pointer active:scale-[0.98] transition-transform"
@@ -304,9 +317,9 @@ export function AnnouncementsListDrawer({ isOpen, onOpenChange }: AnnouncementsL
                     >
                       {/* Image header or default pattern */}
                       <div className="relative h-32 overflow-hidden">
-                        {announcement.image ? (
+                        {cardImage ? (
                           <img
-                            src={announcement.image}
+                            src={cardImage}
                             alt={announcement.title}
                             className="w-full h-full object-cover"
                           />
@@ -361,7 +374,8 @@ export function AnnouncementsListDrawer({ isOpen, onOpenChange }: AnnouncementsL
                         </div>
                       </CardContent>
                     </Card>
-                  ))}
+                    );
+                  })}
 
                   {!loading && !error && filteredAnnouncements.length === 0 && (
                     <div className="text-center py-12">
@@ -437,9 +451,9 @@ export function AnnouncementsListDrawer({ isOpen, onOpenChange }: AnnouncementsL
                   >
                     {/* Image Header */}
                     <div className="relative h-52 overflow-hidden">
-                      {currentAnnouncement.image ? (
+                      {heroImage ? (
                         <img
-                          src={currentAnnouncement.image}
+                          src={heroImage}
                           alt={currentAnnouncement.title}
                           className="w-full h-full object-cover"
                         />
@@ -470,10 +484,10 @@ export function AnnouncementsListDrawer({ isOpen, onOpenChange }: AnnouncementsL
                       </div>
 
                       {/* Attachments */}
-                      {currentAnnouncement.attachments && currentAnnouncement.attachments.length > 0 && (
+                      {nonHeroAttachments.length > 0 && (
                         <div className="mb-6">
                           <div className="flex flex-wrap gap-2">
-                            {currentAnnouncement.attachments.map((attachment, idx) => {
+                            {nonHeroAttachments.map((attachment, idx) => {
                               const { icon: Icon, color, bg } = getFileIcon(attachment.name);
                               return (
                                 <a

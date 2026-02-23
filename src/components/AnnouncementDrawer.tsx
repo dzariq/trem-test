@@ -49,9 +49,9 @@ interface AnnouncementDrawerProps {
   onSeeAll?: () => void;
 }
 
-// Snap points: 60% half screen, 100% full screen
-const SNAP_POINTS = [0.6, 1] as const;
-const DEFAULT_SNAP = 0.6;
+// Snap points: 70% half screen, 100% full screen
+const SNAP_POINTS = [0.7, 1] as const;
+const DEFAULT_SNAP = 0.7;
 
 export function AnnouncementDrawer({
   announcements,
@@ -130,6 +130,11 @@ export function AnnouncementDrawer({
     }
   };
 
+  const isImageUrl = (url: string) => {
+    const ext = url.split('?')[0].split('.').pop()?.toLowerCase();
+    return ['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg', 'bmp'].includes(ext ?? '');
+  };
+
   const getFileIcon = (fileName: string) => {
     const ext = fileName.split('.').pop()?.toLowerCase();
     if (ext === 'pdf') return { icon: FileText, color: "text-red-500", bg: "bg-red-500/10" };
@@ -190,6 +195,12 @@ export function AnnouncementDrawer({
   if (!currentAnnouncement) return null;
 
   const attachmentCount = currentAnnouncement.attachments?.length || 0;
+
+  // Use the first image attachment as the hero image, falling back to the announcement's own image
+  const firstImageAttachment = currentAnnouncement.attachments?.find(a => isImageUrl(a.url));
+  const heroImage = firstImageAttachment?.url ?? currentAnnouncement.image;
+  // Filter out the image used as hero from the attachments list
+  const nonHeroAttachments = currentAnnouncement.attachments?.filter(a => a !== firstImageAttachment) ?? [];
 
   return (
     <DrawerPrimitive.Root
@@ -280,9 +291,9 @@ export function AnnouncementDrawer({
               >
                 {/* Image Header */}
                 <div className="relative h-52 overflow-hidden">
-                  {currentAnnouncement.image ? (
+                  {heroImage ? (
                     <img
-                      src={currentAnnouncement.image}
+                      src={heroImage}
                       alt={currentAnnouncement.title}
                       className="w-full h-full object-cover"
                     />
@@ -313,10 +324,10 @@ export function AnnouncementDrawer({
                   </div>
 
                   {/* Attachments - Moved Up */}
-                  {currentAnnouncement.attachments && currentAnnouncement.attachments.length > 0 && (
+                  {nonHeroAttachments.length > 0 && (
                     <div className="mb-6">
                       <div className="flex flex-wrap gap-2">
-                        {currentAnnouncement.attachments.map((attachment, idx) => {
+                        {nonHeroAttachments.map((attachment, idx) => {
                           const { icon: Icon, color, bg } = getFileIcon(attachment.name);
                           return (
                             <a
