@@ -1,28 +1,38 @@
 
+# Rename and Reorganize Study Recommendations in Grade Entry
 
-## Fix Subject Group Filter - Final 7 Groups
+## What Changes
 
-### Current State (8 groups)
-English, Malay, Chinese, Mathematics, Science, Humanities, Social Studies, Others
+### 1. Rename "Comments for All Students" to "Study Recommendation"
+The class-wide section (amber-themed card at the top) will be renamed from "Comments for All Students" to **"Study Recommendation"**, keeping the **"Class-wide"** pill badge.
 
-### New State (7 groups, reordered)
+### 2. Rename individual student section
+The per-student section currently labeled "Special Remarks (this student only)" will be renamed to **"Study Recommendation"**, with the pill badge changed from "Optional" to **"Individual"**.
 
-| # | Group | Subjects |
-|---|-------|----------|
-| 1 | **English** | English (First Language), English (Second Language) |
-| 2 | **Chinese** | Chinese (Foreign Language), Chinese (Second Language), Chinese (Beginner) |
-| 3 | **Malay** | Malay (First Language), Malay (Foreign Language) |
-| 4 | **Mathematics** | Mathematics, Additional Mathematics |
-| 5 | **Science** | Science, Biology, Chemistry, Physics |
-| 6 | **Humanities** | Business Studies, Accounting, Economics, Global Perspectives, Geography, History |
-| 7 | **Others** | ICT, Living Skills & Arts, Art, Music, Moral, Islamic Studies |
+### 3. Reorder individual student fields
+Currently the order inside each student card is:
+1. Report Card Comments
+2. Special Remarks (study recommendation)
+3. Authentic Comments (Internal)
 
-### What changes
-- **Reorder**: English -> Chinese -> Malay (previously English -> Malay -> Chinese)
-- **Merge Social Studies into Humanities**: Geography, History, Global Perspectives move into the Humanities group
-- **Remove** the standalone "Social Studies" group
-- **Keep Mathematics** as its own group
+New order:
+1. Report Card Comments
+2. Authentic Comments (Internal)
+3. Study Recommendation (Individual)
 
-### Technical detail
-Single file change: `src/data/subjectsConfig.ts` -- update the `subjectGroups` array order and merge Social Studies variants into Humanities. All pages (AcademicPage, TeacherAcademicPage) automatically pick up the change since they import from this shared config.
+This places the individual study recommendation after the authentic comment, as requested.
 
+### 4. Database verification
+The backend already supports both recommendation types:
+- **Class-wide**: stored in the `class_study_recommendations` table
+- **Individual**: stored in the `student_grades.subject_comment` column
+
+No database changes are needed -- both fields already exist.
+
+## Technical Details
+
+**File to modify:** `src/pages/teacher/TeacherAcademicPage.tsx`
+
+- **Line ~1951**: Change label text from `"Comments for All Students"` to `"Study Recommendation"`
+- **Lines ~2130-2173**: Rename "Special Remarks (this student only)" to "Study Recommendation", change badge from "Optional" to "Individual"
+- **Lines ~2104-2191**: Reorder the three comment sections so Authentic Comments comes before the individual Study Recommendation
