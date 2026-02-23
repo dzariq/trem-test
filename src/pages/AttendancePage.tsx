@@ -657,8 +657,8 @@ export default function AttendancePage() {
       <BottomSheet
         open={!!selectedDay}
         onOpenChange={(open) => !open && setSelectedDay(null)}
-        snapPoints={[0, 0.4]}
-        defaultSnapPoint={0.4}
+        snapPoints={[0, 0.55]}
+        defaultSnapPoint={0.55}
         showHandle={true}
       >
         {selectedDay && (
@@ -677,15 +677,16 @@ export default function AttendancePage() {
                     year: "numeric",
                   })}
                 </p>
-                <p className={`text-sm font-medium mt-0.5 ${
-                  selectedDay.status === 'present' ? "text-emerald-600" :
-                  selectedDay.status === 'absent' ? "text-destructive" :
-                  selectedDay.status === 'late' ? "text-amber-600" :
-                  selectedDay.status === 'excused' ? "text-purple-600" :
-                  "text-muted-foreground"
+                <span className={`inline-flex items-center gap-1.5 mt-2 px-3 py-1 rounded-full text-sm font-bold tracking-wide ${
+                  selectedDay.status === 'present' ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-400" :
+                  selectedDay.status === 'absent' ? "bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-400" :
+                  selectedDay.status === 'late' ? "bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-400" :
+                  selectedDay.status === 'excused' ? "bg-purple-100 text-purple-700 dark:bg-purple-900/40 dark:text-purple-400" :
+                  "bg-muted text-muted-foreground"
                 }`}>
+                  {getStatusIcon(selectedDay.status)}
                   {getStatusLabel(selectedDay.status)}
-                </p>
+                </span>
               </div>
             </div>
 
