@@ -1676,79 +1676,127 @@ export default function AcademicPage() {
                             {expandedInRow && (
                               <div className="animate-fade-in">
                                 <div className="rounded-xl p-4 relative mt-1 transition-colors bg-primary/5 border border-primary/20">
-                                  <div className="flex items-center gap-2 mb-2">
-                                    <MessageSquare className="h-4 w-4 text-primary" />
-                                    <span className="text-sm font-semibold text-foreground">Teacher's Comment</span>
-                                  </div>
-                                  <p className="text-sm text-muted-foreground leading-relaxed">
-                                    {expandedInRow.teacherComment || "No comment available for this subject."}
-                                  </p>
-                                    {canViewBreakdown && (
-                                      <div className="mt-3 pt-3 border-t border-border">
-                                        <p className="text-xs font-medium text-muted-foreground mb-2">Score Breakdown</p>
-                                        <div className="grid grid-cols-4 gap-2">
-                                          <div className="text-center p-2 bg-muted/50 rounded-md">
-                                            <p className="text-xs text-muted-foreground">Quiz</p>
-                                            <p className="text-sm font-semibold">{expandedInRow.quizMarks}</p>
-                                          </div>
-                                          <div className="text-center p-2 bg-muted/50 rounded-md">
-                                            <p className="text-xs text-muted-foreground">HW</p>
-                                            <p className="text-sm font-semibold">{expandedInRow.homeworkMarks}</p>
-                                          </div>
-                                          <div className="text-center p-2 bg-muted/50 rounded-md">
-                                            <p className="text-xs text-muted-foreground">Exam</p>
-                                            <p className="text-sm font-semibold">{expandedInRow.examMarks}</p>
-                                          </div>
-                                          <div className="text-center p-2 bg-muted/50 rounded-md">
-                                            <p className="text-xs text-muted-foreground">Att</p>
-                                            <p className="text-sm font-semibold">{expandedInRow.attitudeMarks}</p>
-                                          </div>
-                                        </div>
-                                      </div>
-                                    )}
+                                  {/* Tab Switcher */}
+                                  {(() => {
+                                    const hasClassRecommendation = expandedInRow.classStudyRecommendation && 
+                                      expandedInRow.classStudyRecommendation !== "-" && 
+                                      expandedInRow.classStudyRecommendation.trim() !== "";
+                                    const hasIndividualRecommendation = expandedInRow.subjectComment && 
+                                      expandedInRow.subjectComment.trim() !== "";
+                                    const hasStudyTips = hasClassRecommendation || hasIndividualRecommendation;
                                     
-                                    {/* Study Tips Section */}
-                                    {(() => {
-                                      const hasClassRecommendation = expandedInRow.classStudyRecommendation && 
-                                        expandedInRow.classStudyRecommendation !== "-" && 
-                                        expandedInRow.classStudyRecommendation.trim() !== "";
-                                      const hasIndividualRecommendation = expandedInRow.subjectComment && 
-                                        expandedInRow.subjectComment.trim() !== "";
-                                      
-                                      if (!hasClassRecommendation && !hasIndividualRecommendation) return null;
-                                      
-                                      return (
-                                        <div className="mt-3 pt-3 border-t border-amber-200/50">
-                                          <div className="flex items-center gap-2 mb-2">
-                                            <Lightbulb className="h-4 w-4 text-amber-600" />
-                                            <span className="text-sm font-semibold text-amber-700">Study Tips</span>
-                                          </div>
-                                          
-                                          {/* Class Study Recommendation */}
-                                          {hasClassRecommendation && (
-                                            <div className="bg-amber-50 dark:bg-amber-950/30 rounded-lg p-3 mb-2 border border-amber-200/50">
-                                              <div className="flex items-center gap-1.5 mb-1">
-                                                <Users className="h-3.5 w-3.5 text-amber-600" />
-                                                <p className="text-xs font-medium text-amber-600">Comments for All Students</p>
-                                              </div>
-                                              <p className="text-sm text-amber-900 dark:text-amber-100">{expandedInRow.classStudyRecommendation}</p>
-                                            </div>
-                                          )}
-                                          
-                                          {/* Individual Study Recommendation */}
-                                          {hasIndividualRecommendation && (
-                                            <div className="bg-blue-50 dark:bg-blue-950/30 rounded-lg p-3 border border-blue-200/50">
-                                              <div className="flex items-center gap-1.5 mb-1">
-                                                <User className="h-3.5 w-3.5 text-blue-600" />
-                                                <p className="text-xs font-medium text-blue-600">Special Remarks (This Student Only)</p>
-                                              </div>
-                                              <p className="text-sm text-blue-900 dark:text-blue-100">{expandedInRow.subjectComment}</p>
-                                            </div>
-                                          )}
+                                    return (
+                                      <>
+                                        {/* Tab Pills */}
+                                        <div className="flex items-center gap-2 mb-3">
+                                          <button
+                                            onClick={(e) => { e.stopPropagation(); setExpandedSection("comment"); }}
+                                            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${
+                                              expandedSection === "comment"
+                                                ? "bg-primary text-primary-foreground"
+                                                : "bg-muted text-muted-foreground hover:bg-accent"
+                                            }`}
+                                          >
+                                            <MessageSquare className="h-3.5 w-3.5" />
+                                            Comment
+                                          </button>
+                                          <button
+                                            onClick={(e) => { e.stopPropagation(); setExpandedSection("tips"); }}
+                                            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${
+                                              expandedSection === "tips"
+                                                ? "bg-amber-500 text-white"
+                                                : "bg-muted text-muted-foreground hover:bg-accent"
+                                            }`}
+                                          >
+                                            <Lightbulb className="h-3.5 w-3.5" />
+                                            Study Tips
+                                          </button>
                                         </div>
-                                      );
-                                    })()}
-                                  </div>
+
+                                        {/* Comment Tab Content */}
+                                        {expandedSection === "comment" && (
+                                          <>
+                                            <p className="text-sm text-muted-foreground leading-relaxed">
+                                              {expandedInRow.teacherComment || "No comment available for this subject."}
+                                            </p>
+                                            {canViewBreakdown && (
+                                              <div className="mt-3 pt-3 border-t border-border">
+                                                <p className="text-xs font-medium text-muted-foreground mb-2">Score Breakdown</p>
+                                                <div className="grid grid-cols-4 gap-2">
+                                                  <div className="text-center p-2 bg-muted/50 rounded-md">
+                                                    <p className="text-xs text-muted-foreground">Quiz</p>
+                                                    <p className="text-sm font-semibold">{expandedInRow.quizMarks}</p>
+                                                  </div>
+                                                  <div className="text-center p-2 bg-muted/50 rounded-md">
+                                                    <p className="text-xs text-muted-foreground">HW</p>
+                                                    <p className="text-sm font-semibold">{expandedInRow.homeworkMarks}</p>
+                                                  </div>
+                                                  <div className="text-center p-2 bg-muted/50 rounded-md">
+                                                    <p className="text-xs text-muted-foreground">Exam</p>
+                                                    <p className="text-sm font-semibold">{expandedInRow.examMarks}</p>
+                                                  </div>
+                                                  <div className="text-center p-2 bg-muted/50 rounded-md">
+                                                    <p className="text-xs text-muted-foreground">Att</p>
+                                                    <p className="text-sm font-semibold">{expandedInRow.attitudeMarks}</p>
+                                                  </div>
+                                                </div>
+                                              </div>
+                                            )}
+                                          </>
+                                        )}
+
+                                        {/* Study Tips Tab Content */}
+                                        {expandedSection === "tips" && (
+                                          <div className="space-y-2">
+                                            {/* Sub-tabs: Class Wide / Individual */}
+                                            {hasClassRecommendation && hasIndividualRecommendation ? (
+                                              <Tabs defaultValue="class" className="w-full">
+                                                <TabsList className="w-full h-8 bg-amber-100/50 dark:bg-amber-950/30">
+                                                  <TabsTrigger value="class" className="flex-1 text-xs gap-1 data-[state=active]:bg-amber-500 data-[state=active]:text-white">
+                                                    <Users className="h-3 w-3" />
+                                                    Class Wide
+                                                  </TabsTrigger>
+                                                  <TabsTrigger value="individual" className="flex-1 text-xs gap-1 data-[state=active]:bg-blue-500 data-[state=active]:text-white">
+                                                    <User className="h-3 w-3" />
+                                                    Individual
+                                                  </TabsTrigger>
+                                                </TabsList>
+                                                <TabsContent value="class" className="mt-2">
+                                                  <div className="bg-amber-50 dark:bg-amber-950/30 rounded-lg p-3 border border-amber-200/50">
+                                                    <p className="text-sm text-amber-900 dark:text-amber-100">{expandedInRow.classStudyRecommendation}</p>
+                                                  </div>
+                                                </TabsContent>
+                                                <TabsContent value="individual" className="mt-2">
+                                                  <div className="bg-blue-50 dark:bg-blue-950/30 rounded-lg p-3 border border-blue-200/50">
+                                                    <p className="text-sm text-blue-900 dark:text-blue-100">{expandedInRow.subjectComment}</p>
+                                                  </div>
+                                                </TabsContent>
+                                              </Tabs>
+                                            ) : hasClassRecommendation ? (
+                                              <div className="bg-amber-50 dark:bg-amber-950/30 rounded-lg p-3 border border-amber-200/50">
+                                                <div className="flex items-center gap-1.5 mb-1">
+                                                  <Users className="h-3.5 w-3.5 text-amber-600" />
+                                                  <p className="text-xs font-medium text-amber-600">Class Wide</p>
+                                                </div>
+                                                <p className="text-sm text-amber-900 dark:text-amber-100">{expandedInRow.classStudyRecommendation}</p>
+                                              </div>
+                                            ) : hasIndividualRecommendation ? (
+                                              <div className="bg-blue-50 dark:bg-blue-950/30 rounded-lg p-3 border border-blue-200/50">
+                                                <div className="flex items-center gap-1.5 mb-1">
+                                                  <User className="h-3.5 w-3.5 text-blue-600" />
+                                                  <p className="text-xs font-medium text-blue-600">Individual</p>
+                                                </div>
+                                                <p className="text-sm text-blue-900 dark:text-blue-100">{expandedInRow.subjectComment}</p>
+                                              </div>
+                                            ) : (
+                                              <p className="text-sm text-muted-foreground italic">No study tips available for this subject.</p>
+                                            )}
+                                          </div>
+                                        )}
+                                      </>
+                                    );
+                                  })()}
+                                </div>
                                 </div>
                               )}
                           </div>;
