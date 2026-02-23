@@ -263,9 +263,9 @@ export function AnnouncementDrawer({
                 </Button>
               )}
               <Button
-                variant="ghost"
+                variant="outline"
                 size="icon"
-                className="h-8 w-8 rounded-full hover:bg-muted"
+                className="h-8 w-8 rounded-md"
                 onClick={() => onOpenChange(false)}
               >
                 <X className="h-4 w-4" />
