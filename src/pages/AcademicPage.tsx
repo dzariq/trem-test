@@ -1858,7 +1858,7 @@ export default function AcademicPage() {
                         const config = gradeConfig[item.grade] || gradeConfig.C;
                         return (
                           <Card key={index} className={`${config.bg} ${config.border} overflow-hidden relative`}>
-                            <div className={`absolute -right-1 -bottom-3 text-[4.5rem] font-black leading-none ${config.watermark} select-none pointer-events-none`}>
+                            <div className={`absolute right-2 -bottom-3 text-[4.5rem] font-black leading-none ${config.watermark} select-none pointer-events-none`}>
                               {item.grade}
                             </div>
                             <CardContent className="p-3 relative z-10">
