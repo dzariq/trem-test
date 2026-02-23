@@ -2147,7 +2147,7 @@ export default function TeacherAcademicPage() {
                                     {/* Individual Study Recommendation */}
                                     <div>
                                       <div className="flex items-center gap-2 mb-1">
-                                        <label className="text-xs font-medium text-blue-600">
+                                        <label className="text-xs font-medium text-amber-600">
                                           Study Recommendation
                                         </label>
                                         <Badge variant="outline" className="text-[9px] px-1.5 py-0 border-blue-200 text-blue-500">
@@ -2174,7 +2174,7 @@ export default function TeacherAcademicPage() {
                                         }} 
                                         disabled={!gradeEntry.selectedPeriod?.is_open_for_grading}
                                         className={cn(
-                                          "min-h-[70px] text-sm resize-none border-blue-200 bg-blue-50/50 dark:bg-blue-950/20",
+                                          "min-h-[70px] text-sm resize-none border-amber-200 bg-amber-50/50 dark:bg-amber-950/20",
                                           !gradeEntry.selectedPeriod?.is_open_for_grading && "opacity-60 cursor-not-allowed"
                                         )}
                                       />
