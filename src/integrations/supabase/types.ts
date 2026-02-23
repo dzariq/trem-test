@@ -2528,6 +2528,7 @@ export type Database = {
           letter_grade: string | null
           quiz_marks: number
           student_id: string
+          study_recommendation: string | null
           subject_comment: string | null
           subject_id: number
           teacher_comment: string | null
@@ -2546,6 +2547,7 @@ export type Database = {
           letter_grade?: string | null
           quiz_marks?: number
           student_id: string
+          study_recommendation?: string | null
           subject_comment?: string | null
           subject_id: number
           teacher_comment?: string | null
@@ -2564,6 +2566,7 @@ export type Database = {
           letter_grade?: string | null
           quiz_marks?: number
           student_id?: string
+          study_recommendation?: string | null
           subject_comment?: string | null
           subject_id?: number
           teacher_comment?: string | null
