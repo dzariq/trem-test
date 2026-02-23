@@ -1675,7 +1675,11 @@ export default function AcademicPage() {
                             {/* Expanded Comment Box - Full Width */}
                             {expandedInRow && (
                               <div className="animate-fade-in">
-                                <div className="rounded-xl p-4 relative mt-1 transition-colors bg-primary/5 border border-primary/20">
+                                <div className={`rounded-xl p-4 relative mt-1 transition-colors ${
+                                  expandedSection === "tips" 
+                                    ? "bg-amber-50 dark:bg-amber-950/20 border border-amber-200" 
+                                    : "bg-primary/5 border border-primary/20"
+                                }`}>
                                   {/* Tab Switcher */}
                                   {(() => {
                                     const hasClassRecommendation = expandedInRow.classStudyRecommendation && 
