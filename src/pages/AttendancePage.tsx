@@ -662,54 +662,53 @@ export default function AttendancePage() {
         showHandle={true}
       >
         {selectedDay && (
-          <div className="px-5 py-4 space-y-4">
-            {/* Status Icon + Date */}
-            <div className="flex items-start gap-4">
-              <div className={`w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 ${getStatusColor(selectedDay.status)}`}>
-                {getStatusIcon(selectedDay.status)}
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-base font-semibold text-foreground">
-                  {new Date(selectedDay.date).toLocaleDateString("en-US", {
-                    weekday: "long",
-                    day: "numeric",
-                    month: "long",
-                    year: "numeric",
-                  })}
-                </p>
-                <span className={`inline-flex items-center gap-1.5 mt-2 px-3 py-1 rounded-full text-sm font-bold tracking-wide ${
-                  selectedDay.status === 'present' ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-400" :
-                  selectedDay.status === 'absent' ? "bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-400" :
-                  selectedDay.status === 'late' ? "bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-400" :
-                  selectedDay.status === 'excused' ? "bg-purple-100 text-purple-700 dark:bg-purple-900/40 dark:text-purple-400" :
-                  "bg-muted text-muted-foreground"
-                }`}>
-                  {getStatusIcon(selectedDay.status)}
-                  {getStatusLabel(selectedDay.status)}
-                </span>
-              </div>
+          <div className="px-5 py-5 space-y-4">
+            {/* Date - full width, larger */}
+            <p className="text-xl font-bold text-foreground">
+              {new Date(selectedDay.date).toLocaleDateString("en-US", {
+                weekday: "long",
+                day: "numeric",
+                month: "long",
+                year: "numeric",
+              })}
+            </p>
+
+            {/* Status pill - full width */}
+            <div className={`w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-base font-bold tracking-wide ${
+              selectedDay.status === 'present' ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-400" :
+              selectedDay.status === 'absent' ? "bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-400" :
+              selectedDay.status === 'late' ? "bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-400" :
+              selectedDay.status === 'excused' ? "bg-purple-100 text-purple-700 dark:bg-purple-900/40 dark:text-purple-400" :
+              "bg-muted text-muted-foreground"
+            }`}>
+              {getStatusIcon(selectedDay.status)}
+              {getStatusLabel(selectedDay.status)}
             </div>
 
             <Separator />
 
-            {/* Details */}
-            <div className="space-y-3">
+            {/* Remarks */}
+            <div className="space-y-2">
               {selectedDay.reason && (
-                <div className="space-y-1">
-                  <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Reason</p>
-                  <p className="text-sm text-foreground break-words">{selectedDay.reason}</p>
-                </div>
+                <p className="text-sm text-foreground break-words">{selectedDay.reason}</p>
               )}
 
               {selectedDay.remarks && (
-                <div className="space-y-1">
-                  <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Remarks</p>
-                  <p className="text-sm text-foreground leading-relaxed break-words">{selectedDay.remarks}</p>
-                </div>
+                <p className="text-sm text-foreground leading-relaxed break-words">{selectedDay.remarks}</p>
               )}
 
-              {!selectedDay.reason && !selectedDay.remarks && selectedDay.status === 'present' && (
-                <p className="text-sm text-muted-foreground italic">No additional remarks for this day.</p>
+              {!selectedDay.reason && !selectedDay.remarks && (
+                <p className="text-sm text-muted-foreground italic">
+                  {selectedDay.status === 'present'
+                    ? "Your child arrived on time today. Great job! 🎉"
+                    : selectedDay.status === 'absent'
+                    ? "Your child was absent today. Please ensure to inform the school for any absences."
+                    : selectedDay.status === 'late'
+                    ? "Your child arrived late today. Please try to ensure punctuality going forward."
+                    : selectedDay.status === 'excused'
+                    ? "Your child's absence has been excused for this day."
+                    : "No additional remarks for this day."}
+                </p>
               )}
             </div>
           </div>
