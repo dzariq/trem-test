@@ -1948,7 +1948,7 @@ export default function TeacherAcademicPage() {
                             <Users className="h-3.5 w-3.5 text-amber-600" />
                           </div>
                           <label className="text-xs font-semibold text-amber-700 dark:text-amber-400 flex-1">
-                            Comments for All Students
+                            Study Recommendation
                           </label>
                           <Badge variant="outline" className="text-[10px] border-amber-300 text-amber-600 whitespace-nowrap">
                             Class-wide
@@ -2127,14 +2127,31 @@ export default function TeacherAcademicPage() {
                                       </p>
                                     </div>
                                     
-                                    {/* Individual Study Recommendation (This Student Only) */}
+                                    {/* Authentic Comments (Internal) */}
+                                    <div>
+                                      <label className="text-xs font-medium text-red-600 mb-1 flex items-center gap-1">
+                                        Authentic Comments <span className="text-[10px] text-red-400">(Internal)</span>
+                                      </label>
+                                      <Textarea 
+                                        placeholder="Internal notes - not visible to parents..." 
+                                        value={input.comment} 
+                                        onChange={e => gradeEntry.updateGradeInput(student.id, "comment", e.target.value)} 
+                                        disabled={!gradeEntry.selectedPeriod?.is_open_for_grading}
+                                        className={cn(
+                                          "min-h-[70px] text-sm resize-none border-red-200 bg-red-50/50 dark:bg-red-950/20",
+                                          !gradeEntry.selectedPeriod?.is_open_for_grading && "opacity-60 cursor-not-allowed"
+                                        )}
+                                      />
+                                    </div>
+
+                                    {/* Individual Study Recommendation */}
                                     <div>
                                       <div className="flex items-center gap-2 mb-1">
                                         <label className="text-xs font-medium text-blue-600">
-                                          Special Remarks (this student only)
+                                          Study Recommendation
                                         </label>
                                         <Badge variant="outline" className="text-[9px] px-1.5 py-0 border-blue-200 text-blue-500">
-                                          Optional
+                                          Individual
                                         </Badge>
                                       </div>
                                       {gradeEntry.classRecommendation.trim() && (
@@ -2171,23 +2188,6 @@ export default function TeacherAcademicPage() {
                                           {(input.studyRecommendation || "").length}/300
                                         </p>
                                       </div>
-                                    </div>
-                                    
-                                    {/* Authentic Comments (Internal) */}
-                                    <div>
-                                      <label className="text-xs font-medium text-red-600 mb-1 flex items-center gap-1">
-                                        Authentic Comments <span className="text-[10px] text-red-400">(Internal)</span>
-                                      </label>
-                                      <Textarea 
-                                        placeholder="Internal notes - not visible to parents..." 
-                                        value={input.comment} 
-                                        onChange={e => gradeEntry.updateGradeInput(student.id, "comment", e.target.value)} 
-                                        disabled={!gradeEntry.selectedPeriod?.is_open_for_grading}
-                                        className={cn(
-                                          "min-h-[70px] text-sm resize-none border-red-200 bg-red-50/50 dark:bg-red-950/20",
-                                          !gradeEntry.selectedPeriod?.is_open_for_grading && "opacity-60 cursor-not-allowed"
-                                        )}
-                                      />
                                     </div>
                                   </div>
                                 </CardContent>
