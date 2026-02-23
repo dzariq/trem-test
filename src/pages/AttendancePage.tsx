@@ -22,12 +22,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { BottomSheet } from "@/components/ui/bottom-sheet";
+import { Separator } from "@/components/ui/separator";
 import { useStudentSelection } from "@/hooks/useStudentSelection";
 import { useParentAttendance, useRollingAttendance } from "@/hooks/useParentAttendance";
 
@@ -657,57 +653,67 @@ export default function AttendancePage() {
         </Card>
       </section>
 
-      {/* Attendance Details Dialog */}
-      <Dialog open={!!selectedDay} onOpenChange={(open) => !open && setSelectedDay(null)}>
-        <DialogContent className="w-screen max-w-screen overflow-x-hidden px-4 pb-safe">
-          <DialogHeader>
-            <DialogTitle className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-2">
-              <div className={`w-8 h-8 rounded-full flex items-center justify-center ${selectedDay ? getStatusColor(selectedDay.status) : ''}`}>
-                {selectedDay && getStatusIcon(selectedDay.status)}
+      {/* Attendance Details Bottom Sheet */}
+      <BottomSheet
+        open={!!selectedDay}
+        onOpenChange={(open) => !open && setSelectedDay(null)}
+        snapPoints={[0, 0.4]}
+        defaultSnapPoint={0.4}
+        showHandle={true}
+      >
+        {selectedDay && (
+          <div className="px-5 py-4 space-y-4">
+            {/* Status Icon + Date */}
+            <div className="flex items-start gap-4">
+              <div className={`w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 ${getStatusColor(selectedDay.status)}`}>
+                {getStatusIcon(selectedDay.status)}
               </div>
-              <div className="break-words">
-                <p className="text-base font-semibold">
-                  {selectedDay && new Date(selectedDay.date).toLocaleDateString("en-US", { 
-                    weekday: "long", 
-                    day: "numeric", 
+              <div className="flex-1 min-w-0">
+                <p className="text-base font-semibold text-foreground">
+                  {new Date(selectedDay.date).toLocaleDateString("en-US", {
+                    weekday: "long",
+                    day: "numeric",
                     month: "long",
-                    year: "numeric"
+                    year: "numeric",
                   })}
                 </p>
-                <p className={`text-sm ${
-                  selectedDay?.status === 'present' ? "text-emerald-600" :
-                  selectedDay?.status === 'absent' ? "text-destructive" :
-                  selectedDay?.status === 'late' ? "text-amber-600" :
-                  selectedDay?.status === 'excused' ? "text-purple-600" :
+                <p className={`text-sm font-medium mt-0.5 ${
+                  selectedDay.status === 'present' ? "text-emerald-600" :
+                  selectedDay.status === 'absent' ? "text-destructive" :
+                  selectedDay.status === 'late' ? "text-amber-600" :
+                  selectedDay.status === 'excused' ? "text-purple-600" :
                   "text-muted-foreground"
                 }`}>
-                  {selectedDay && getStatusLabel(selectedDay.status)}
+                  {getStatusLabel(selectedDay.status)}
                 </p>
               </div>
-            </DialogTitle>
-          </DialogHeader>
-          
-          <div className="space-y-4 pt-2">
-            {selectedDay?.reason && (
-              <div className="space-y-1">
-                <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Reason</p>
-                <p className="text-sm text-foreground break-words">{selectedDay.reason}</p>
-              </div>
-            )}
-            
-            {selectedDay?.remarks && (
-              <div className="space-y-1">
-                <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Remarks</p>
-                <p className="text-sm text-foreground leading-relaxed break-words">{selectedDay.remarks}</p>
-              </div>
-            )}
-            
-            {!selectedDay?.reason && !selectedDay?.remarks && selectedDay?.status === 'present' && (
-              <p className="text-sm text-muted-foreground">No additional remarks for this day.</p>
-            )}
+            </div>
+
+            <Separator />
+
+            {/* Details */}
+            <div className="space-y-3">
+              {selectedDay.reason && (
+                <div className="space-y-1">
+                  <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Reason</p>
+                  <p className="text-sm text-foreground break-words">{selectedDay.reason}</p>
+                </div>
+              )}
+
+              {selectedDay.remarks && (
+                <div className="space-y-1">
+                  <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Remarks</p>
+                  <p className="text-sm text-foreground leading-relaxed break-words">{selectedDay.remarks}</p>
+                </div>
+              )}
+
+              {!selectedDay.reason && !selectedDay.remarks && selectedDay.status === 'present' && (
+                <p className="text-sm text-muted-foreground italic">No additional remarks for this day.</p>
+              )}
+            </div>
           </div>
-        </DialogContent>
-      </Dialog>
+        )}
+      </BottomSheet>
     </AppLayout>
   );
 }
