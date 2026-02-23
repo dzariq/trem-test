@@ -49,9 +49,9 @@ interface AnnouncementDrawerProps {
   onSeeAll?: () => void;
 }
 
-// Snap points: 70% screen height, 100% full screen
-const SNAP_POINTS = [0.8, 1] as const;
-const DEFAULT_SNAP = 0.8;
+// Snap points: 95% screen height, 100% full screen
+const SNAP_POINTS = [0.95, 1] as const;
+const DEFAULT_SNAP = 0.95;
 
 export function AnnouncementDrawer({
   announcements,
