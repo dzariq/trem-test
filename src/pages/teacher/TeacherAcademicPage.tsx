@@ -2135,13 +2135,15 @@ export default function TeacherAcademicPage() {
                                       <Textarea 
                                         placeholder="Internal notes - not visible to parents..." 
                                         value={input.comment} 
-                                        onChange={e => gradeEntry.updateGradeInput(student.id, "comment", e.target.value)} 
+                                        onChange={e => gradeEntry.updateGradeInput(student.id, "comment", e.target.value.slice(0, 300))} 
+                                        maxLength={300}
                                         disabled={!gradeEntry.selectedPeriod?.is_open_for_grading}
                                         className={cn(
                                           "min-h-[70px] text-sm resize-none border-red-200 bg-red-50/50 dark:bg-red-950/20",
                                           !gradeEntry.selectedPeriod?.is_open_for_grading && "opacity-60 cursor-not-allowed"
                                         )}
                                       />
+                                      <p className="text-[10px] text-muted-foreground text-right mt-0.5">{(input.comment || "").length}/300</p>
                                     </div>
 
                                     {/* Individual Study Recommendation */}
