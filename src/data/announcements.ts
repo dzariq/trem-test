@@ -91,23 +91,47 @@ export async function listAnnouncements(
     return [];
   }
 
-  const { data: readRows, error: readError } = await supabase
-    .from("announcement_reads")
-    .select("announcement_id")
-    .eq("user_id", profile.user_id)
-    .in("announcement_id", announcementIds as any[]);
+  // Fetch read status and attachments in parallel
+  const [readResult, attachmentResult] = await Promise.all([
+    supabase
+      .from("announcement_reads")
+      .select("announcement_id")
+      .eq("user_id", profile.user_id)
+      .in("announcement_id", announcementIds as any[]),
+    supabase
+      .from("announcement_attachments")
+      .select("*")
+      .in("announcement_id", announcementIds as any[]),
+  ]);
 
-  if (readError) {
-    throw new Error(readError.message);
+  if (readResult.error) {
+    throw new Error(readResult.error.message);
+  }
+
+  if (attachmentResult.error) {
+    // Non-critical: log but don't block
+    console.warn("[announcements] Failed to fetch attachments:", attachmentResult.error.message);
   }
 
   const readIds = new Set<AnnouncementId>(
-    (readRows ?? []).map((row: any) => row.announcement_id)
+    (readResult.data ?? []).map((row: any) => row.announcement_id)
   );
+
+  // Group attachments by announcement_id
+  const attachmentsByAnnouncementId = new Map<string, AnnouncementAttachment[]>();
+  (attachmentResult.data ?? []).forEach((row: any) => {
+    const aid = row.announcement_id;
+    if (!attachmentsByAnnouncementId.has(aid)) {
+      attachmentsByAnnouncementId.set(aid, []);
+    }
+    attachmentsByAnnouncementId.get(aid)!.push({
+      name: row.name ?? row.file_name ?? "Attachment",
+      url: row.url ?? row.file_url ?? "",
+    });
+  });
 
   return announcementRows.map((row: any) => ({
     id: row.id,
-    // Field mapping: prefer title/content, otherwise map common alternates.
     title: row.title ?? row.headline ?? "Announcement",
     content: row.content ?? row.body ?? row.message ?? "",
     snippet:
@@ -117,6 +141,7 @@ export async function listAnnouncements(
     date: row.created_at ?? row.updated_at ?? row.date ?? new Date().toISOString(),
     category: row.category ?? row.type ?? row.audience ?? "General",
     image: row.image_url ?? row.image ?? row.banner_url ?? null,
+    attachments: attachmentsByAnnouncementId.get(row.id) ?? [],
     is_read: readIds.has(row.id),
   }));
 }
