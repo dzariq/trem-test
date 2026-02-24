@@ -6,6 +6,37 @@ export type AnnouncementId = number | string;
 export type AnnouncementAttachment = {
   name: string;
   url: string;
+  file_type?: string;
+};
+
+const IMAGE_EXTENSIONS = ["png", "jpg", "jpeg", "webp", "gif", "bmp", "svg"];
+
+const isImageType = (fileType?: string, fileName?: string): boolean => {
+  if (fileType && IMAGE_EXTENSIONS.includes(fileType.toLowerCase())) return true;
+  if (fileName) {
+    const ext = fileName.split(".").pop()?.toLowerCase();
+    return IMAGE_EXTENSIONS.includes(ext ?? "");
+  }
+  return false;
+};
+
+const resolveAttachmentUrl = (fileUrl: string): string => {
+  if (!fileUrl) return "";
+  // Already a full URL
+  if (fileUrl.startsWith("http")) return fileUrl;
+  // Relative /uploads/ path → resolve via Supabase storage
+  if (fileUrl.startsWith("/uploads/")) {
+    const storagePath = fileUrl.replace(/^\/uploads\//, "");
+    const { data } = supabase.storage
+      .from("announcement-attachments")
+      .getPublicUrl(storagePath);
+    return data?.publicUrl ?? fileUrl;
+  }
+  // Treat as storage path directly
+  const { data } = supabase.storage
+    .from("announcement-attachments")
+    .getPublicUrl(fileUrl);
+  return data?.publicUrl ?? fileUrl;
 };
 
 export type Announcement = {
@@ -123,17 +154,29 @@ export async function listAnnouncements(
     });
   });
 
-  // Group attachments by announcement_id
+  // Group attachments by announcement_id and resolve URLs
   const attachmentsByAnnouncementId = new Map<string, AnnouncementAttachment[]>();
+  const heroImageByAnnouncementId = new Map<string, string>();
   (attachmentResult.data ?? []).forEach((row: any) => {
     const aid = row.announcement_id;
+    const rawUrl = row.url ?? row.file_url ?? "";
+    const resolvedUrl = resolveAttachmentUrl(rawUrl);
+    const fileType = row.file_type ?? "";
+    const fileName = row.name ?? row.file_name ?? "Attachment";
+
     if (!attachmentsByAnnouncementId.has(aid)) {
       attachmentsByAnnouncementId.set(aid, []);
     }
     attachmentsByAnnouncementId.get(aid)!.push({
-      name: row.name ?? row.file_name ?? "Attachment",
-      url: row.url ?? row.file_url ?? "",
+      name: fileName,
+      url: resolvedUrl,
+      file_type: fileType,
     });
+
+    // Track first image attachment as hero image
+    if (!heroImageByAnnouncementId.has(aid) && isImageType(fileType, fileName)) {
+      heroImageByAnnouncementId.set(aid, resolvedUrl);
+    }
   });
 
   return announcementRows.map((row: any) => {
@@ -148,7 +191,7 @@ export async function listAnnouncements(
         buildSnippet(row.content ?? row.body ?? row.message ?? ""),
       date: row.created_at ?? row.updated_at ?? row.date ?? new Date().toISOString(),
       category: row.category ?? row.type ?? row.audience ?? "General",
-      image: row.image_url ?? row.image ?? row.banner_url ?? null,
+      image: heroImageByAnnouncementId.get(row.id) ?? row.image_url ?? row.image ?? row.banner_url ?? null,
       attachments: attachmentsByAnnouncementId.get(row.id) ?? [],
       is_read: readStatus?.is_read ?? false,
       requires_acknowledgement: Boolean(row.requires_acknowledgement),
@@ -179,16 +222,39 @@ export async function getAnnouncementById(
     return null;
   }
 
-  const { data: readRow, error: readError } = await supabase
-    .from("announcement_reads")
-    .select("announcement_id, acknowledged")
-    .eq("user_id", profile.user_id)
-    .eq("announcement_id", announcementId)
-    .maybeSingle();
+  // Fetch read status and attachments in parallel
+  const [readResult, attachResult] = await Promise.all([
+    supabase
+      .from("announcement_reads")
+      .select("announcement_id, acknowledged")
+      .eq("user_id", profile.user_id)
+      .eq("announcement_id", announcementId)
+      .maybeSingle(),
+    supabase
+      .from("announcement_attachments")
+      .select("*")
+      .eq("announcement_id", announcementId),
+  ]);
 
-  if (readError) {
-    throw new Error(readError.message);
+  if (readResult.error) {
+    throw new Error(readResult.error.message);
   }
+
+  const readRow = readResult.data;
+
+  // Resolve attachments and find hero image
+  const resolvedAttachments: AnnouncementAttachment[] = [];
+  let heroImage: string | null = null;
+  (attachResult.data ?? []).forEach((row: any) => {
+    const rawUrl = row.url ?? row.file_url ?? "";
+    const resolvedUrl = resolveAttachmentUrl(rawUrl);
+    const fileType = row.file_type ?? "";
+    const fileName = row.name ?? row.file_name ?? "Attachment";
+    resolvedAttachments.push({ name: fileName, url: resolvedUrl, file_type: fileType });
+    if (!heroImage && isImageType(fileType, fileName)) {
+      heroImage = resolvedUrl;
+    }
+  });
 
   return {
     id: data.id,
@@ -200,7 +266,8 @@ export async function getAnnouncementById(
       buildSnippet(data.content ?? data.body ?? data.message ?? ""),
     date: data.created_at ?? data.updated_at ?? data.date ?? new Date().toISOString(),
     category: data.category ?? data.type ?? data.audience ?? "General",
-    image: data.image_url ?? data.image ?? data.banner_url ?? null,
+    image: heroImage ?? data.image_url ?? data.image ?? data.banner_url ?? null,
+    attachments: resolvedAttachments,
     is_read: Boolean(readRow?.announcement_id),
     requires_acknowledgement: Boolean(data.requires_acknowledgement),
     is_acknowledged: Boolean(readRow?.acknowledged),
@@ -273,6 +340,7 @@ export async function getAnnouncementAttachments(
 
   return (data ?? []).map((row: any) => ({
     name: row.name ?? row.file_name ?? "Attachment",
-    url: row.url ?? row.file_url ?? "",
+    url: resolveAttachmentUrl(row.url ?? row.file_url ?? ""),
+    file_type: row.file_type ?? "",
   }));
 }

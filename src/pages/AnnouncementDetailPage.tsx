@@ -40,18 +40,10 @@ export default function AnnouncementDetailPage() {
         const data = await getAnnouncementById(id);
         if (isMounted) {
           setAnnouncement(data);
+          // Use attachments from the announcement itself (already resolved)
+          setAttachments(data?.attachments ?? []);
         }
         if (data) {
-          try {
-            const fileRows = await getAnnouncementAttachments(data.id);
-            if (isMounted) {
-              setAttachments(fileRows);
-            }
-          } catch {
-            if (isMounted) {
-              setAttachments([]);
-            }
-          }
           void markAnnouncementRead(data.id);
         }
       } catch (err) {
