@@ -4,7 +4,8 @@ import { Drawer as DrawerPrimitive } from "vaul";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Calendar, Check, ChevronLeft, ChevronRight, Download, FileText, Megaphone, X, List } from "lucide-react";
+import { Calendar, Check, ChevronLeft, ChevronRight, Download, FileText, Megaphone, X, List, ShieldCheck } from "lucide-react";
+import { markAnnouncementRead, acknowledgeAnnouncement } from "@/data/announcements";
 
 type AnnouncementId = number | string;
 
@@ -38,6 +39,8 @@ interface Announcement {
   image: string | null;
   attachments?: { name: string; url: string }[];
   is_read?: boolean;
+  requires_acknowledgement?: boolean;
+  is_acknowledged?: boolean;
 }
 
 interface AnnouncementDrawerProps {
@@ -47,6 +50,7 @@ interface AnnouncementDrawerProps {
   onOpenChange: (open: boolean) => void;
   onNavigate: (index: number) => void;
   onSeeAll?: () => void;
+  onAnnouncementUpdated?: (id: AnnouncementId, updates: Partial<Announcement>) => void;
 }
 
 // Snap points: 95% screen height, 100% full screen
@@ -60,14 +64,17 @@ export function AnnouncementDrawer({
   onOpenChange,
   onNavigate,
   onSeeAll,
+  onAnnouncementUpdated,
 }: AnnouncementDrawerProps) {
-  // Use shared snap points for consistent drag behavior
   const [snap, setSnap] = useState<number | string | null>(DEFAULT_SNAP);
   const [slideDirection, setSlideDirection] = useState<"left" | "right" | null>(null);
   const [isRead, setIsRead] = useState(false);
+  const [isAcknowledged, setIsAcknowledged] = useState(false);
+  const [acknowledging, setAcknowledging] = useState(false);
   const touchStartX = useRef<number>(0);
   const touchEndX = useRef<number>(0);
   const contentRef = useRef<HTMLDivElement>(null);
+  const readMarkedRef = useRef<Set<string>>(new Set());
 
   const handleSeeAll = () => {
     onOpenChange(false);
@@ -78,33 +85,55 @@ export function AnnouncementDrawer({
 
   const currentAnnouncement = announcements[currentIndex];
 
-  // Mark as read when drawer opens or announcement changes
+  // Mark as read when drawer opens or announcement changes - only once per announcement
   useEffect(() => {
     if (isOpen && currentAnnouncement) {
-      markAnnouncementAsRead(currentAnnouncement.id);
-      setIsRead(true);
-    }
-  }, [isOpen, currentAnnouncement]);
-
-  // Check read status when announcement changes
-  useEffect(() => {
-    if (currentAnnouncement) {
-      if (currentAnnouncement.is_read !== undefined) {
-        setIsRead(currentAnnouncement.is_read);
-      } else {
-        const readIds = getReadAnnouncementIds();
-        setIsRead(readIds.includes(currentAnnouncement.id));
+      const idStr = String(currentAnnouncement.id);
+      if (!readMarkedRef.current.has(idStr)) {
+        readMarkedRef.current.add(idStr);
+        markAnnouncementAsRead(currentAnnouncement.id);
+        setIsRead(true);
+        // Fire Supabase upsert (fire and forget)
+        void markAnnouncementRead(currentAnnouncement.id).catch(() => {});
+        onAnnouncementUpdated?.(currentAnnouncement.id, { is_read: true });
       }
     }
-  }, [currentAnnouncement]);
+  }, [isOpen, currentAnnouncement?.id]);
 
-  // Set default snap only when drawer first opens, NOT when navigating between announcements
+  // Sync acknowledged state from announcement data
+  useEffect(() => {
+    if (currentAnnouncement) {
+      setIsRead(currentAnnouncement.is_read ?? getReadAnnouncementIds().includes(currentAnnouncement.id));
+      setIsAcknowledged(currentAnnouncement.is_acknowledged ?? false);
+    }
+  }, [currentAnnouncement?.id]);
+
+  // Clear tracked read set when drawer closes
+  useEffect(() => {
+    if (!isOpen) {
+      readMarkedRef.current.clear();
+    }
+  }, [isOpen]);
+
   useEffect(() => {
     if (isOpen) {
       setSnap(DEFAULT_SNAP);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isOpen]); // Intentionally exclude currentIndex to preserve snap when navigating
+  }, [isOpen]);
+
+  const handleAcknowledge = async () => {
+    if (!currentAnnouncement || isAcknowledged || acknowledging) return;
+    setAcknowledging(true);
+    try {
+      await acknowledgeAnnouncement(currentAnnouncement.id);
+      setIsAcknowledged(true);
+      onAnnouncementUpdated?.(currentAnnouncement.id, { is_acknowledged: true });
+    } catch (err) {
+      console.error("[announcements] Failed to acknowledge:", err);
+    } finally {
+      setAcknowledging(false);
+    }
+  };
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
@@ -195,11 +224,8 @@ export function AnnouncementDrawer({
   if (!currentAnnouncement) return null;
 
   const attachmentCount = currentAnnouncement.attachments?.length || 0;
-
-  // Use the first image attachment as the hero image, falling back to the announcement's own image
   const firstImageAttachment = currentAnnouncement.attachments?.find(a => isImageUrl(a.url));
   const heroImage = firstImageAttachment?.url ?? currentAnnouncement.image;
-  // Filter out the image used as hero from the attachments list
   const nonHeroAttachments = currentAnnouncement.attachments?.filter(a => a !== firstImageAttachment) ?? [];
 
   return (
@@ -240,7 +266,15 @@ export function AnnouncementDrawer({
                   {attachmentCount}
                 </Badge>
               )}
-              {isRead && (
+              {isAcknowledged ? (
+                <Badge 
+                  variant="outline" 
+                  className="text-xs gap-1 text-blue-600 border-blue-600/30 bg-blue-500/10 animate-in zoom-in-50 fade-in duration-300"
+                >
+                  <ShieldCheck className="h-3 w-3" />
+                  Acknowledged
+                </Badge>
+              ) : isRead ? (
                 <Badge 
                   variant="outline" 
                   className="text-xs gap-1 text-green-600 border-green-600/30 bg-green-500/10 animate-in zoom-in-50 fade-in duration-300"
@@ -248,7 +282,7 @@ export function AnnouncementDrawer({
                   <Check className="h-3 w-3 animate-in spin-in-180 duration-500" />
                   Read
                 </Badge>
-              )}
+              ) : null}
             </div>
             <div className="flex items-center gap-2">
               {onSeeAll && (
@@ -323,7 +357,31 @@ export function AnnouncementDrawer({
                     {formatDate(currentAnnouncement.date)}
                   </div>
 
-                  {/* Attachments - Moved Up */}
+                  {/* Acknowledge Button */}
+                  {currentAnnouncement.requires_acknowledgement && (
+                    <div className="mb-5">
+                      {isAcknowledged ? (
+                        <div className="flex items-center gap-2 px-4 py-3 rounded-xl bg-blue-500/10 border border-blue-500/20">
+                          <ShieldCheck className="h-5 w-5 text-blue-600" />
+                          <span className="text-sm font-medium text-blue-700 dark:text-blue-400">
+                            Acknowledged ✅
+                          </span>
+                        </div>
+                      ) : (
+                        <Button
+                          onClick={handleAcknowledge}
+                          disabled={acknowledging}
+                          className="w-full gap-2"
+                          variant="default"
+                        >
+                          <ShieldCheck className="h-4 w-4" />
+                          {acknowledging ? "Acknowledging..." : "Acknowledge"}
+                        </Button>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Attachments */}
                   {nonHeroAttachments.length > 0 && (
                     <div className="mb-6">
                       <div className="flex flex-wrap gap-2">
@@ -374,7 +432,6 @@ export function AnnouncementDrawer({
           {/* Navigation Footer */}
           <div className="absolute bottom-0 left-0 right-0 bg-background/98 backdrop-blur-md border-t border-border/50 px-5 py-4 pb-[calc(2.5rem+var(--safe-bottom))]">
             <div className="flex items-center justify-between gap-4">
-              {/* Previous Button */}
               <Button
                 variant="outline"
                 size="sm"
@@ -386,7 +443,6 @@ export function AnnouncementDrawer({
                 Prev
               </Button>
 
-              {/* Dots Indicator */}
               <div className="flex items-center gap-1.5 flex-wrap justify-center overflow-hidden">
                 {announcements.map((_, idx) => (
                   <button
@@ -402,7 +458,6 @@ export function AnnouncementDrawer({
                 ))}
               </div>
 
-              {/* Next Button */}
               <Button
                 variant="outline"
                 size="sm"
@@ -420,4 +475,3 @@ export function AnnouncementDrawer({
     </DrawerPrimitive.Root>
   );
 }
-

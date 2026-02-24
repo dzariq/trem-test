@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Check, ChevronRight, Megaphone } from "lucide-react";
+import { Check, ChevronRight, Megaphone, ShieldCheck } from "lucide-react";
 import {
   Carousel,
   CarouselContent,
@@ -52,6 +52,15 @@ export function AnnouncementCarousel({
   const isRead = (announcement: Announcement) => {
     if (announcement.is_read !== undefined) return announcement.is_read;
     return readIds.includes(announcement.id);
+  };
+
+  const isAcknowledged = (announcement: Announcement) => {
+    return announcement.is_acknowledged ?? false;
+  };
+
+  const handleAnnouncementUpdated = (id: AnnouncementId, updates: Partial<Announcement>) => {
+    // This allows local state to update without a full refresh
+    // The parent can optionally handle this
   };
 
   const formatDate = (dateString: string) => {
@@ -133,13 +142,19 @@ export function AnnouncementCarousel({
               <Badge className="bg-primary text-primary-foreground text-xs">
                 Featured
               </Badge>
-              {!isRead(mainAnnouncement) && (
-                <span className="h-2 w-2 rounded-full bg-primary" />
-              )}
-              {isRead(mainAnnouncement) && (
+              {isAcknowledged(mainAnnouncement) ? (
+                <Badge variant="outline" className="text-xs gap-1 text-blue-600 border-blue-600/30 bg-blue-500/10 backdrop-blur-sm">
+                  <ShieldCheck className="h-3 w-3" />
+                  Acknowledged
+                </Badge>
+              ) : isRead(mainAnnouncement) ? (
                 <Badge variant="outline" className="text-xs gap-1 text-green-600 border-green-600/30 bg-green-500/10 backdrop-blur-sm">
                   <Check className="h-3 w-3" />
                   Read
+                </Badge>
+              ) : (
+                <Badge variant="destructive" className="text-xs backdrop-blur-sm">
+                  New
                 </Badge>
               )}
             </div>
@@ -148,7 +163,7 @@ export function AnnouncementCarousel({
                 <Badge variant="secondary" className="text-xs">
                   {mainAnnouncement.category}
                 </Badge>
-                {!isRead(mainAnnouncement) && (
+                {!isRead(mainAnnouncement) && !isAcknowledged(mainAnnouncement) && (
                   <span className="h-1.5 w-1.5 rounded-full bg-primary" />
                 )}
                 <Badge variant="outline" className="text-xs bg-card/80 backdrop-blur-sm">
@@ -210,13 +225,19 @@ export function AnnouncementCarousel({
                         <Badge variant="secondary" className="text-[10px]">
                           {announcement.category}
                         </Badge>
-                        {!isRead(announcement) && (
-                          <span className="h-1.5 w-1.5 rounded-full bg-primary" />
-                        )}
-                        {isRead(announcement) && (
+                        {isAcknowledged(announcement) ? (
+                          <Badge variant="outline" className="text-[10px] gap-0.5 text-blue-600 border-blue-600/30 bg-blue-500/10 backdrop-blur-sm px-1.5">
+                            <ShieldCheck className="h-2.5 w-2.5" />
+                            Ack'd
+                          </Badge>
+                        ) : isRead(announcement) ? (
                           <Badge variant="outline" className="text-[10px] gap-0.5 text-green-600 border-green-600/30 bg-green-500/10 backdrop-blur-sm px-1.5">
                             <Check className="h-2.5 w-2.5" />
                             Read
+                          </Badge>
+                        ) : (
+                          <Badge variant="destructive" className="text-[10px] px-1.5">
+                            New
                           </Badge>
                         )}
                       </div>
@@ -247,6 +268,7 @@ export function AnnouncementCarousel({
         onOpenChange={setDrawerOpen}
         onNavigate={setCurrentAnnouncementIndex}
         onSeeAll={onSeeAll ?? (() => setListDrawerOpen(true))}
+        onAnnouncementUpdated={handleAnnouncementUpdated}
       />
 
       {/* Announcements List Drawer */}

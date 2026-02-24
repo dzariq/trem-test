@@ -10,10 +10,11 @@ import {
   Calendar, 
   Megaphone, 
   FileText,
-  Eye
+  Eye,
+  ShieldCheck
 } from "lucide-react";
 import { PDFViewerDialog } from "@/components/PDFViewerDialog";
-import { getAnnouncementAttachments, getAnnouncementById, markAnnouncementRead, type Announcement, type AnnouncementAttachment } from "@/data/announcements";
+import { getAnnouncementAttachments, getAnnouncementById, markAnnouncementRead, acknowledgeAnnouncement, type Announcement, type AnnouncementAttachment } from "@/data/announcements";
 
 export default function AnnouncementDetailPage() {
   const { id } = useParams();
@@ -27,6 +28,7 @@ export default function AnnouncementDetailPage() {
   const [attachments, setAttachments] = useState<AnnouncementAttachment[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [acknowledging, setAcknowledging] = useState(false);
 
   useEffect(() => {
     let isMounted = true;
@@ -208,6 +210,41 @@ export default function AnnouncementDetailPage() {
           <h1 className="text-2xl font-bold text-foreground mb-4">
             {announcement.title}
           </h1>
+
+          {/* Acknowledge Button */}
+          {announcement.requires_acknowledgement && (
+            <div className="mb-5">
+              {announcement.is_acknowledged ? (
+                <div className="flex items-center gap-2 px-4 py-3 rounded-xl bg-blue-500/10 border border-blue-500/20">
+                  <ShieldCheck className="h-5 w-5 text-blue-600" />
+                  <span className="text-sm font-medium text-blue-700 dark:text-blue-400">
+                    Acknowledged ✅
+                  </span>
+                </div>
+              ) : (
+                <Button
+                  onClick={async () => {
+                    if (acknowledging) return;
+                    setAcknowledging(true);
+                    try {
+                      await acknowledgeAnnouncement(announcement.id);
+                      setAnnouncement(prev => prev ? { ...prev, is_acknowledged: true } : prev);
+                    } catch (err) {
+                      console.error("[announcements] Failed to acknowledge:", err);
+                    } finally {
+                      setAcknowledging(false);
+                    }
+                  }}
+                  disabled={acknowledging}
+                  className="w-full gap-2"
+                  variant="default"
+                >
+                  <ShieldCheck className="h-4 w-4" />
+                  {acknowledging ? "Acknowledging..." : "Acknowledge"}
+                </Button>
+              )}
+            </div>
+          )}
 
           {/* PDF Attachments - Prominent Section */}
           {attachments.length > 0 && (
