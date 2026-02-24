@@ -283,6 +283,20 @@ export type Database = {
             referencedRelation: "announcements"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "announcement_reads_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "user_profiles"
+            referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "announcement_reads_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "v_teacher_public"
+            referencedColumns: ["user_id"]
+          },
         ]
       }
       announcement_targets: {
