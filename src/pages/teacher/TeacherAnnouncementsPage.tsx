@@ -3,6 +3,7 @@ import { TeacherAppLayout } from "@/components/layout/TeacherAppLayout";
 import { AppHeader } from "@/components/layout/AppHeader";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Check, ShieldCheck } from "lucide-react";
 import { listAnnouncements, type Announcement } from "@/data/announcements";
 
 export default function TeacherAnnouncementsPage() {
@@ -84,8 +85,20 @@ export default function TeacherAnnouncementsPage() {
                 <h3 className="font-semibold text-foreground text-base">
                   {announcement.title}
                 </h3>
-                {!announcement.is_read && (
-                  <span className="h-2 w-2 rounded-full bg-primary" />
+                {announcement.is_acknowledged ? (
+                  <Badge variant="outline" className="text-xs gap-1 text-blue-600 border-blue-600/30 bg-blue-500/10">
+                    <ShieldCheck className="h-3 w-3" />
+                    Acknowledged
+                  </Badge>
+                ) : announcement.is_read ? (
+                  <Badge variant="outline" className="text-xs gap-1 text-green-600 border-green-600/30 bg-green-500/10">
+                    <Check className="h-3 w-3" />
+                    Read
+                  </Badge>
+                ) : (
+                  <Badge variant="destructive" className="text-xs">
+                    New
+                  </Badge>
                 )}
               </div>
               <div className="flex items-center justify-between text-xs text-muted-foreground">

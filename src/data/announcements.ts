@@ -18,6 +18,8 @@ export type Announcement = {
   image: string | null;
   attachments?: AnnouncementAttachment[];
   is_read?: boolean;
+  requires_acknowledgement?: boolean;
+  is_acknowledged?: boolean;
 };
 
 export type ListAnnouncementsParams = {
@@ -91,11 +93,11 @@ export async function listAnnouncements(
     return [];
   }
 
-  // Fetch read status and attachments in parallel
+  // Fetch read status (with acknowledged) and attachments in parallel
   const [readResult, attachmentResult] = await Promise.all([
     supabase
       .from("announcement_reads")
-      .select("announcement_id")
+      .select("announcement_id, acknowledged")
       .eq("user_id", profile.user_id)
       .in("announcement_id", announcementIds as any[]),
     supabase
@@ -113,9 +115,13 @@ export async function listAnnouncements(
     console.warn("[announcements] Failed to fetch attachments:", attachmentResult.error.message);
   }
 
-  const readIds = new Set<AnnouncementId>(
-    (readResult.data ?? []).map((row: any) => row.announcement_id)
-  );
+  const readMap = new Map<AnnouncementId, { is_read: boolean; is_acknowledged: boolean }>();
+  (readResult.data ?? []).forEach((row: any) => {
+    readMap.set(row.announcement_id, {
+      is_read: true,
+      is_acknowledged: Boolean(row.acknowledged),
+    });
+  });
 
   // Group attachments by announcement_id
   const attachmentsByAnnouncementId = new Map<string, AnnouncementAttachment[]>();
@@ -130,20 +136,25 @@ export async function listAnnouncements(
     });
   });
 
-  return announcementRows.map((row: any) => ({
-    id: row.id,
-    title: row.title ?? row.headline ?? "Announcement",
-    content: row.content ?? row.body ?? row.message ?? "",
-    snippet:
-      row.snippet ??
-      row.summary ??
-      buildSnippet(row.content ?? row.body ?? row.message ?? ""),
-    date: row.created_at ?? row.updated_at ?? row.date ?? new Date().toISOString(),
-    category: row.category ?? row.type ?? row.audience ?? "General",
-    image: row.image_url ?? row.image ?? row.banner_url ?? null,
-    attachments: attachmentsByAnnouncementId.get(row.id) ?? [],
-    is_read: readIds.has(row.id),
-  }));
+  return announcementRows.map((row: any) => {
+    const readStatus = readMap.get(row.id);
+    return {
+      id: row.id,
+      title: row.title ?? row.headline ?? "Announcement",
+      content: row.content ?? row.body ?? row.message ?? "",
+      snippet:
+        row.snippet ??
+        row.summary ??
+        buildSnippet(row.content ?? row.body ?? row.message ?? ""),
+      date: row.created_at ?? row.updated_at ?? row.date ?? new Date().toISOString(),
+      category: row.category ?? row.type ?? row.audience ?? "General",
+      image: row.image_url ?? row.image ?? row.banner_url ?? null,
+      attachments: attachmentsByAnnouncementId.get(row.id) ?? [],
+      is_read: readStatus?.is_read ?? false,
+      requires_acknowledgement: Boolean(row.requires_acknowledgement),
+      is_acknowledged: readStatus?.is_acknowledged ?? false,
+    };
+  });
 }
 
 export async function getAnnouncementById(
@@ -168,9 +179,9 @@ export async function getAnnouncementById(
     return null;
   }
 
-  const { data: readRows, error: readError } = await supabase
+  const { data: readRow, error: readError } = await supabase
     .from("announcement_reads")
-    .select("announcement_id")
+    .select("announcement_id, acknowledged")
     .eq("user_id", profile.user_id)
     .eq("announcement_id", announcementId)
     .maybeSingle();
@@ -190,7 +201,9 @@ export async function getAnnouncementById(
     date: data.created_at ?? data.updated_at ?? data.date ?? new Date().toISOString(),
     category: data.category ?? data.type ?? data.audience ?? "General",
     image: data.image_url ?? data.image ?? data.banner_url ?? null,
-    is_read: Boolean(readRows?.announcement_id),
+    is_read: Boolean(readRow?.announcement_id),
+    requires_acknowledgement: Boolean(data.requires_acknowledgement),
+    is_acknowledged: Boolean(readRow?.acknowledged),
   };
 }
 
@@ -203,13 +216,43 @@ export async function markAnnouncementRead(announcementId: AnnouncementId): Prom
     throw new Error("No authenticated user found.");
   }
 
-  // Assumes announcement_reads has unique constraint on (announcement_id, user_id).
+  // Upsert but only set read_at if it's a new row (don't overwrite existing read_at)
   const { error } = await supabase
     .from("announcement_reads")
     .upsert(
       [{ announcement_id: announcementId, user_id: userData.user.id }],
-      { onConflict: "announcement_id,user_id" }
+      { onConflict: "announcement_id,user_id", ignoreDuplicates: true }
     );
+
+  if (error) {
+    throw new Error(error.message);
+  }
+}
+
+export async function acknowledgeAnnouncement(announcementId: AnnouncementId): Promise<void> {
+  const { data: userData, error: userError } = await supabase.auth.getUser();
+  if (userError) {
+    throw new Error(userError.message);
+  }
+  if (!userData.user) {
+    throw new Error("No authenticated user found.");
+  }
+
+  // First ensure a read row exists
+  await supabase
+    .from("announcement_reads")
+    .upsert(
+      [{ announcement_id: announcementId, user_id: userData.user.id }],
+      { onConflict: "announcement_id,user_id", ignoreDuplicates: true }
+    );
+
+  // Then set acknowledged = true, acknowledged_at = now() only if not already acknowledged
+  const { error } = await supabase
+    .from("announcement_reads")
+    .update({ acknowledged: true, acknowledged_at: new Date().toISOString() })
+    .eq("announcement_id", announcementId)
+    .eq("user_id", userData.user.id)
+    .eq("acknowledged", false);
 
   if (error) {
     throw new Error(error.message);
@@ -219,7 +262,6 @@ export async function markAnnouncementRead(announcementId: AnnouncementId): Prom
 export async function getAnnouncementAttachments(
   announcementId: AnnouncementId
 ): Promise<AnnouncementAttachment[]> {
-  // Assumes announcement_attachments has announcement_id + file_name/file_url columns.
   const { data, error } = await supabase
     .from("announcement_attachments")
     .select("*")

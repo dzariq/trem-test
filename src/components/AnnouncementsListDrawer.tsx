@@ -1,9 +1,9 @@
 import { useState, useEffect, useRef, useCallback } from "react";
-import { listAnnouncements, markAnnouncementRead, type Announcement } from "@/data/announcements";
+import { listAnnouncements, markAnnouncementRead, acknowledgeAnnouncement, type Announcement } from "@/data/announcements";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Megaphone, Calendar, X, Check, ChevronLeft, ChevronRight, Download, FileText, ArrowLeft } from "lucide-react";
+import { Megaphone, Calendar, X, Check, ChevronLeft, ChevronRight, Download, FileText, ArrowLeft, ShieldCheck } from "lucide-react";
 import { getReadAnnouncementIds, markAnnouncementAsRead } from "@/components/AnnouncementDrawer";
 import { Drawer as DrawerPrimitive } from "vaul";
 import { cn } from "@/lib/utils";
@@ -27,6 +27,7 @@ export function AnnouncementsListDrawer({ isOpen, onOpenChange }: AnnouncementsL
   const [announcements, setAnnouncements] = useState<Announcement[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [acknowledging, setAcknowledging] = useState(false);
 
   const touchStartX = useRef<number>(0);
   const touchEndX = useRef<number>(0);
@@ -340,10 +341,19 @@ export function AnnouncementsListDrawer({ isOpen, onOpenChange }: AnnouncementsL
                           <Badge className={getCategoryColor(announcement.category)}>
                             {announcement.category}
                           </Badge>
-                          {isRead(announcement) && (
+                          {announcement.is_acknowledged ? (
+                            <Badge variant="outline" className="text-xs gap-1 text-blue-600 border-blue-600/30 bg-blue-500/10 backdrop-blur-sm">
+                              <ShieldCheck className="h-3 w-3" />
+                              Acknowledged
+                            </Badge>
+                          ) : isRead(announcement) ? (
                             <Badge variant="outline" className="text-xs gap-1 text-green-600 border-green-600/30 bg-green-500/10 backdrop-blur-sm">
                               <Check className="h-3 w-3" />
                               Read
+                            </Badge>
+                          ) : (
+                            <Badge variant="destructive" className="text-xs backdrop-blur-sm">
+                              New
                             </Badge>
                           )}
                         </div>
@@ -414,7 +424,15 @@ export function AnnouncementsListDrawer({ isOpen, onOpenChange }: AnnouncementsL
                       {attachmentCount}
                     </Badge>
                   )}
-                  {isRead(currentAnnouncement) && (
+                  {currentAnnouncement.is_acknowledged ? (
+                    <Badge 
+                      variant="outline" 
+                      className="text-xs gap-1 text-blue-600 border-blue-600/30 bg-blue-500/10"
+                    >
+                      <ShieldCheck className="h-3 w-3" />
+                      Acknowledged
+                    </Badge>
+                  ) : isRead(currentAnnouncement) ? (
                     <Badge 
                       variant="outline" 
                       className="text-xs gap-1 text-green-600 border-green-600/30 bg-green-500/10"
@@ -422,7 +440,7 @@ export function AnnouncementsListDrawer({ isOpen, onOpenChange }: AnnouncementsL
                       <Check className="h-3 w-3" />
                       Read
                     </Badge>
-                  )}
+                  ) : null}
                 </div>
                 <Button
                   variant="ghost"
@@ -482,6 +500,43 @@ export function AnnouncementsListDrawer({ isOpen, onOpenChange }: AnnouncementsL
                         <Calendar className="h-3.5 w-3.5" />
                         {formatDate(currentAnnouncement.date)}
                       </div>
+
+                      {/* Acknowledge Button */}
+                      {currentAnnouncement.requires_acknowledgement && (
+                        <div className="mb-5">
+                          {currentAnnouncement.is_acknowledged ? (
+                            <div className="flex items-center gap-2 px-4 py-3 rounded-xl bg-blue-500/10 border border-blue-500/20">
+                              <ShieldCheck className="h-5 w-5 text-blue-600" />
+                              <span className="text-sm font-medium text-blue-700 dark:text-blue-400">
+                                Acknowledged ✅
+                              </span>
+                            </div>
+                          ) : (
+                            <Button
+                              onClick={async () => {
+                                if (acknowledging) return;
+                                setAcknowledging(true);
+                                try {
+                                  await acknowledgeAnnouncement(currentAnnouncement.id);
+                                  setAnnouncements(prev =>
+                                    prev.map(item => item.id === currentAnnouncement.id ? { ...item, is_acknowledged: true } : item)
+                                  );
+                                } catch (err) {
+                                  console.error("[announcements] Failed to acknowledge:", err);
+                                } finally {
+                                  setAcknowledging(false);
+                                }
+                              }}
+                              disabled={acknowledging}
+                              className="w-full gap-2"
+                              variant="default"
+                            >
+                              <ShieldCheck className="h-4 w-4" />
+                              {acknowledging ? "Acknowledging..." : "Acknowledge"}
+                            </Button>
+                          )}
+                        </div>
+                      )}
 
                       {/* Attachments */}
                       {nonHeroAttachments.length > 0 && (
