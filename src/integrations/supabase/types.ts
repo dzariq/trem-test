@@ -354,11 +354,13 @@ export type Database = {
           created_at: string
           created_by: string
           expires_at: string | null
+          featured_at: string | null
           id: string
           is_active: boolean
           is_featured: boolean
           is_pinned: boolean
           pin_order: number | null
+          pinned_at: string | null
           priority: string
           published_at: string | null
           requires_acknowledgement: boolean
@@ -374,11 +376,13 @@ export type Database = {
           created_at?: string
           created_by: string
           expires_at?: string | null
+          featured_at?: string | null
           id?: string
           is_active?: boolean
           is_featured?: boolean
           is_pinned?: boolean
           pin_order?: number | null
+          pinned_at?: string | null
           priority?: string
           published_at?: string | null
           requires_acknowledgement?: boolean
@@ -394,11 +398,13 @@ export type Database = {
           created_at?: string
           created_by?: string
           expires_at?: string | null
+          featured_at?: string | null
           id?: string
           is_active?: boolean
           is_featured?: boolean
           is_pinned?: boolean
           pin_order?: number | null
+          pinned_at?: string | null
           priority?: string
           published_at?: string | null
           requires_acknowledgement?: boolean

@@ -1,14 +1,17 @@
 import { useEffect, useState } from "react";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { AppHeader } from "@/components/layout/AppHeader";
-import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Megaphone, Calendar, ChevronLeft } from "lucide-react";
+import { Megaphone, ChevronLeft, Pin } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { AnnouncementDrawer } from "@/components/AnnouncementDrawer";
 import { listAnnouncements, markAnnouncementRead, type Announcement } from "@/data/announcements";
 import { useStudentSelection } from "@/hooks/useStudentSelection";
+import { categorizeAnnouncements } from "@/lib/announcements/categorize";
+import { FeaturedAnnouncementCard } from "@/components/announcements/FeaturedAnnouncementCard";
+import { PinnedAnnouncementCard } from "@/components/announcements/PinnedAnnouncementCard";
+import { AnnouncementListCard } from "@/components/announcements/AnnouncementListCard";
 
 type CategoryFilter = "all" | "Event" | "Academic" | "General";
 
@@ -29,77 +32,52 @@ export default function AnnouncementsPage() {
       setError(null);
       try {
         const data = await listAnnouncements({ limit: 50, studentId: selectedStudentId });
-        if (isMounted) {
-          setAnnouncements(data);
-        }
+        if (isMounted) setAnnouncements(data);
       } catch (err) {
         const message = err instanceof Error ? err.message : "Failed to load announcements.";
-        if (isMounted) {
-          setError(message);
-          setAnnouncements([]);
-        }
+        if (isMounted) { setError(message); setAnnouncements([]); }
       } finally {
-        if (isMounted) {
-          setLoading(false);
-        }
+        if (isMounted) setLoading(false);
       }
     };
-
     loadAnnouncements();
-    return () => {
-      isMounted = false;
-    };
+    return () => { isMounted = false; };
   }, [selectedStudentId]);
-
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString("en-US", { 
-      month: "long", 
-      day: "numeric",
-      year: "numeric"
-    });
-  };
 
   const categories: CategoryFilter[] = ["all", "Event", "Academic", "General"];
 
-  const matchesCategory = (category: string, filter: CategoryFilter) => {
-    if (filter === "all") return true;
-    return category.toLowerCase() === filter.toLowerCase();
-  };
-
   const filteredAnnouncements = announcements.filter(a =>
-    matchesCategory(a.category, categoryFilter)
+    categoryFilter === "all" || a.category.toLowerCase() === categoryFilter.toLowerCase()
   );
 
-  const getCategoryColor = (category: string) => {
-    const normalized = category.toLowerCase();
-    switch (normalized) {
-      case "event":
-        return "bg-blue-500 text-white";
-      case "academic":
-        return "bg-amber-500 text-white";
-      case "general":
-        return "bg-primary text-primary-foreground";
-      default:
-        return "bg-muted text-muted-foreground";
-    }
+  const { featured, pinned, regular } = categorizeAnnouncements(filteredAnnouncements);
+
+  // Build a flat list for the drawer navigation (featured first, then pinned, then regular)
+  const drawerList = [
+    ...(featured ? [featured] : []),
+    ...pinned,
+    ...regular,
+  ];
+
+  const handleAnnouncementClick = (announcement: Announcement) => {
+    const idx = drawerList.findIndex(a => a.id === announcement.id);
+    setCurrentAnnouncementIndex(idx >= 0 ? idx : 0);
+    setDrawerOpen(true);
+    void markAnnouncementRead(announcement.id).catch(() => {});
+    setAnnouncements(prev =>
+      prev.map(item => (item.id === announcement.id ? { ...item, is_read: true } : item))
+    );
   };
 
-  const handleAnnouncementClick = (index: number) => {
-    setCurrentAnnouncementIndex(index);
-    setDrawerOpen(true);
-    const announcement = filteredAnnouncements[index];
-    if (announcement) {
-      void markAnnouncementRead(announcement.id);
-      setAnnouncements(prev =>
-        prev.map(item => (item.id === announcement.id ? { ...item, is_read: true } : item))
-      );
-    }
+  const handleAnnouncementUpdated = (id: number | string, updates: Partial<Announcement>) => {
+    setAnnouncements(prev =>
+      prev.map(item => (item.id === id ? { ...item, ...updates } : item))
+    );
   };
 
   return (
     <AppLayout>
-      <AppHeader 
+      <AppHeader
         leftContent={
           <div className="flex items-center gap-2">
             <Button variant="ghost" size="icon" onClick={() => navigate(-1)}>
@@ -125,99 +103,73 @@ export default function AnnouncementsPage() {
           ))}
         </div>
 
-        {/* Announcements List */}
-        <div className="space-y-4">
-          {loading && (
-            <div className="text-center py-12">
-              <Megaphone className="h-12 w-12 mx-auto text-muted-foreground/50 mb-3" />
-              <p className="text-muted-foreground">Loading announcements...</p>
-            </div>
-          )}
+        {loading && (
+          <div className="text-center py-12">
+            <Megaphone className="h-12 w-12 mx-auto text-muted-foreground/50 mb-3" />
+            <p className="text-muted-foreground">Loading announcements...</p>
+          </div>
+        )}
 
-          {!loading && error && (
-            <div className="text-center py-12">
-              <Megaphone className="h-12 w-12 mx-auto text-muted-foreground/50 mb-3" />
-              <p className="text-destructive">{error}</p>
-            </div>
-          )}
+        {!loading && error && (
+          <div className="text-center py-12">
+            <Megaphone className="h-12 w-12 mx-auto text-muted-foreground/50 mb-3" />
+            <p className="text-destructive">{error}</p>
+          </div>
+        )}
 
-          {!loading && !error && filteredAnnouncements.map((announcement, index) => (
-            <Card 
-              key={announcement.id} 
-              className="bg-card border-border shadow-sm overflow-hidden cursor-pointer active:scale-[0.98] transition-transform"
-              onClick={() => handleAnnouncementClick(index)}
-            >
-              {/* Image header or default pattern */}
-              <div className="relative h-32 overflow-hidden">
-                {announcement.image ? (
-                  <img 
-                    src={announcement.image} 
-                    alt={announcement.title}
-                    className="w-full h-full object-cover"
+        {!loading && !error && (
+          <div className="space-y-4">
+            {/* Featured */}
+            {featured && (
+              <FeaturedAnnouncementCard
+                announcement={featured}
+                onClick={() => handleAnnouncementClick(featured)}
+              />
+            )}
+
+            {/* Pinned */}
+            {pinned.length > 0 && (
+              <div className="space-y-2">
+                <div className="flex items-center gap-2 text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                  <Pin className="h-3 w-3 rotate-45" />
+                  Pinned
+                </div>
+                {pinned.map((a) => (
+                  <PinnedAnnouncementCard
+                    key={a.id}
+                    announcement={a}
+                    onClick={() => handleAnnouncementClick(a)}
                   />
-                ) : (
-                  <div className="w-full h-full bg-gradient-to-br from-primary/20 via-primary/10 to-secondary/20 flex items-center justify-center">
-                    <div className="absolute inset-0 opacity-10">
-                      <div className="absolute top-2 left-4 w-8 h-8 rounded-full bg-primary/30" />
-                      <div className="absolute top-6 right-8 w-12 h-12 rounded-full bg-secondary/30" />
-                      <div className="absolute bottom-4 left-1/3 w-6 h-6 rounded-full bg-primary/20" />
-                    </div>
-                    <Megaphone className="h-12 w-12 text-primary/40" />
-                  </div>
-                )}
-                {/* Overlay gradient */}
-                <div className="absolute inset-0 bg-gradient-to-t from-card via-card/30 to-transparent" />
-                {/* Category badge */}
-                <div className="absolute top-3 left-3">
-                  <Badge className={getCategoryColor(announcement.category)}>
-                    {announcement.category}
-                  </Badge>
-                </div>
+                ))}
               </div>
+            )}
 
-              <CardContent className="p-4">
-                <h3 className="font-semibold text-foreground text-lg mb-2">
-                  {announcement.title}
-                </h3>
-                <p className="text-sm text-muted-foreground mb-3">
-                  {announcement.snippet}
-                </p>
-                <div className="flex items-center justify-between">
-                  <span className="text-xs text-muted-foreground flex items-center gap-1">
-                    <Calendar className="h-3 w-3" />
-                    {formatDate(announcement.date)}
-                  </span>
-                  <Button 
-                    variant="outline" 
-                    size="sm"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleAnnouncementClick(index);
-                    }}
-                  >
-                    Read More
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
+            {/* Regular */}
+            {regular.map((a) => (
+              <AnnouncementListCard
+                key={a.id}
+                announcement={a}
+                onClick={() => handleAnnouncementClick(a)}
+              />
+            ))}
 
-          {!loading && !error && filteredAnnouncements.length === 0 && (
-            <div className="text-center py-12">
-              <Megaphone className="h-12 w-12 mx-auto text-muted-foreground/50 mb-3" />
-              <p className="text-muted-foreground">No announcements in this category</p>
-            </div>
-          )}
-        </div>
+            {filteredAnnouncements.length === 0 && (
+              <div className="text-center py-12">
+                <Megaphone className="h-12 w-12 mx-auto text-muted-foreground/50 mb-3" />
+                <p className="text-muted-foreground">No announcements in this category</p>
+              </div>
+            )}
+          </div>
+        )}
       </section>
 
-      {/* Announcement Drawer */}
       <AnnouncementDrawer
-        announcements={filteredAnnouncements}
+        announcements={drawerList}
         currentIndex={currentAnnouncementIndex}
         isOpen={drawerOpen}
         onOpenChange={setDrawerOpen}
         onNavigate={setCurrentAnnouncementIndex}
+        onAnnouncementUpdated={handleAnnouncementUpdated}
       />
     </AppLayout>
   );

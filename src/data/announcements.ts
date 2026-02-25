@@ -51,6 +51,10 @@ export type Announcement = {
   is_read?: boolean;
   requires_acknowledgement?: boolean;
   is_acknowledged?: boolean;
+  is_featured?: boolean;
+  featured_at?: string | null;
+  is_pinned?: boolean;
+  pinned_at?: string | null;
 };
 
 export type ListAnnouncementsParams = {
@@ -196,6 +200,10 @@ export async function listAnnouncements(
       is_read: readStatus?.is_read ?? false,
       requires_acknowledgement: Boolean(row.requires_acknowledgement),
       is_acknowledged: readStatus?.is_acknowledged ?? false,
+      is_featured: Boolean(row.is_featured),
+      featured_at: row.featured_at ?? null,
+      is_pinned: Boolean(row.is_pinned),
+      pinned_at: row.pinned_at ?? null,
     };
   });
 }
@@ -271,6 +279,10 @@ export async function getAnnouncementById(
     is_read: Boolean(readRow?.announcement_id),
     requires_acknowledgement: Boolean(data.requires_acknowledgement),
     is_acknowledged: Boolean(readRow?.acknowledged),
+    is_featured: Boolean(data.is_featured),
+    featured_at: data.featured_at ?? null,
+    is_pinned: Boolean(data.is_pinned),
+    pinned_at: data.pinned_at ?? null,
   };
 }
 
