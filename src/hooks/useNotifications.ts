@@ -1,4 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useEffect, useRef, useCallback } from "react";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/contexts/AuthContext";
 import { useMyProfile } from "@/hooks/useMyProfile";
@@ -16,12 +17,10 @@ export interface Notification {
   created_at: string;
   updated_at: string;
   source_key: string | null;
-  event_date?: string | null; // For sorting by upcoming date
+  event_date?: string | null;
 }
 
-// Format time relative to now or as upcoming date
 function formatTimeDisplay(dateString: string, eventDate?: string | null): string {
-  // If there's an event date in the future, show "in X days" or "Tomorrow"
   if (eventDate) {
     const event = new Date(eventDate);
     const now = new Date();
@@ -35,7 +34,6 @@ function formatTimeDisplay(dateString: string, eventDate?: string | null): strin
     if (diffDays > 7 && diffDays <= 14) return `In ${Math.ceil(diffDays / 7)} week${diffDays > 7 ? 's' : ''}`;
   }
   
-  // Fallback to "time ago" for past items
   const date = new Date(dateString);
   const now = new Date();
   const diffMs = now.getTime() - date.getTime();
@@ -51,7 +49,6 @@ function formatTimeDisplay(dateString: string, eventDate?: string | null): strin
   return `${Math.floor(diffDays / 7)} weeks ago`;
 }
 
-// Format date for display
 function formatEventDate(dateString: string): string {
   const date = new Date(dateString);
   return date.toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" });
@@ -65,10 +62,10 @@ export function useNotifications() {
   
   const userRole = profile?.role || "parent";
   const studentIds = linkedStudents?.map(s => s.id) || [];
+  const queryKey = ["notifications", user?.id, userRole, studentIds.join(",")];
 
-  // Fetch all notification sources in parallel
   const { data: notifications = [], isLoading, error } = useQuery({
-    queryKey: ["notifications", user?.id, userRole, studentIds.join(",")],
+    queryKey,
     queryFn: async () => {
       if (!user?.id) return [];
       
@@ -79,7 +76,6 @@ export function useNotifications() {
       
       const allNotifications: Notification[] = [];
       
-      // 1. Fetch stored notifications from DB (legacy/manual)
       const allowedAudiences = userRole === "teacher" 
         ? ["teacher", "all"]
         : ["parent", "all"];
@@ -110,7 +106,6 @@ export function useNotifications() {
         }
       }
       
-      // 2. For PARENTS: Fetch upcoming CCA sessions for enrolled children
       if (userRole === "parent" && studentIds.length > 0) {
         const { data: ccaSessions } = await supabase
           .from("cca_session_enrollments")
@@ -151,14 +146,13 @@ export function useNotifications() {
               created_at: now.toISOString(),
               updated_at: now.toISOString(),
               source_key: `cca-session:${session.id}`,
-              is_read: false, // Dynamic items are always "unread" until dismissed
+              is_read: false,
               event_date: session.session_date,
             });
           }
         }
       }
       
-      // 3. Fetch upcoming calendar events (holidays, exams, school events)
       const { data: calendarEvents } = await supabase
         .from("calendar_events")
         .select("id, title, start_date, event_category, description")
@@ -171,7 +165,6 @@ export function useNotifications() {
       if (calendarEvents) {
         const seenEvents = new Set<string>();
         for (const event of calendarEvents) {
-          // Deduplicate by title + date (some events have duplicates)
           const eventKey = `${event.title}-${event.start_date.split("T")[0]}`;
           if (seenEvents.has(eventKey)) continue;
           seenEvents.add(eventKey);
@@ -210,9 +203,7 @@ export function useNotifications() {
         }
       }
       
-      // 4. For TEACHERS: Add teacher-specific reminders
       if (userRole === "teacher") {
-        // Fetch upcoming CCA sessions where teacher is PIC
         const { data: teacherSessions } = await supabase
           .from("cca_session_pics")
           .select(`
@@ -253,19 +244,15 @@ export function useNotifications() {
         }
       }
       
-      // Sort: upcoming events first (by event_date), then by created_at desc
       allNotifications.sort((a, b) => {
-        // Prioritize items with event_date (upcoming)
         if (a.event_date && !b.event_date) return -1;
         if (!a.event_date && b.event_date) return 1;
         if (a.event_date && b.event_date) {
           return new Date(a.event_date).getTime() - new Date(b.event_date).getTime();
         }
-        // For items without event_date, sort by created_at desc
         return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
       });
       
-      // Deduplicate by source_key
       const seen = new Set<string>();
       const deduped: Notification[] = [];
       for (const n of allNotifications) {
@@ -276,11 +263,94 @@ export function useNotifications() {
         }
       }
       
-      return deduped.slice(0, 30); // Limit total
+      return deduped.slice(0, 30);
     },
     enabled: !!user?.id && !!profile,
-    staleTime: 1000 * 60 * 2, // Cache for 2 minutes
+    staleTime: 1000 * 60 * 2,
   });
+
+  // ── Realtime subscription for notifications table ──
+  useEffect(() => {
+    if (!user?.id || !profile) return;
+
+    const allowedAudiences = userRole === "teacher"
+      ? ["teacher", "all"]
+      : ["parent", "all"];
+
+    const channel = supabase
+      .channel(`notifications-realtime-${user.id}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "INSERT",
+          schema: "public",
+          table: "notifications",
+        },
+        (payload) => {
+          const row = payload.new as any;
+          // Only process if target_audience matches this user's role
+          if (!allowedAudiences.includes(row.target_audience)) return;
+          // Invalidate to refetch with full join (notification_reads etc.)
+          queryClient.invalidateQueries({ queryKey: ["notifications", user.id] });
+        }
+      )
+      .on(
+        "postgres_changes",
+        {
+          event: "UPDATE",
+          schema: "public",
+          table: "notifications",
+        },
+        (payload) => {
+          const row = payload.new as any;
+          if (!allowedAudiences.includes(row.target_audience)) return;
+          queryClient.invalidateQueries({ queryKey: ["notifications", user.id] });
+        }
+      )
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "notification_reads",
+          filter: `user_id=eq.${user.id}`,
+        },
+        () => {
+          // Read state changed for this user → refresh
+          queryClient.invalidateQueries({ queryKey: ["notifications", user.id] });
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [user?.id, profile, userRole, queryClient]);
+
+  // ── Polling fallback: refetch every 60s ──
+  useEffect(() => {
+    if (!user?.id || !profile) return;
+
+    const interval = setInterval(() => {
+      queryClient.invalidateQueries({ queryKey: ["notifications", user.id] });
+    }, 60_000);
+
+    return () => clearInterval(interval);
+  }, [user?.id, profile, queryClient]);
+
+  // ── App lifecycle: refetch on foreground resume ──
+  useEffect(() => {
+    if (!user?.id || !profile) return;
+
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === "visible") {
+        queryClient.invalidateQueries({ queryKey: ["notifications", user.id] });
+      }
+    };
+
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    return () => document.removeEventListener("visibilitychange", handleVisibilityChange);
+  }, [user?.id, profile, queryClient]);
 
   const unreadCount = notifications.filter(n => !n.is_read).length;
   
@@ -294,7 +364,6 @@ export function useNotifications() {
     mutationFn: async (notificationId: string) => {
       if (!user?.id) return;
       
-      // Only persist to DB for actual DB notifications (not dynamic ones)
       if (!notificationId.startsWith("cca-") && !notificationId.startsWith("event-") && !notificationId.startsWith("teacher-")) {
         const { error } = await supabase
           .from("notification_reads")
@@ -319,7 +388,6 @@ export function useNotifications() {
     mutationFn: async () => {
       if (!user?.id) return;
       
-      // Only mark DB notifications as read
       const dbNotifications = notifications.filter(n => 
         !n.is_read && 
         !n.id.startsWith("cca-") && 
@@ -348,7 +416,7 @@ export function useNotifications() {
       const previous = queryClient.getQueryData<Notification[]>(["notifications", user?.id, userRole]);
       
       queryClient.setQueryData<Notification[]>(
-        ["notifications", user?.id, userRole, studentIds.join(",")],
+        queryKey,
         (old) => old?.map(n => ({ ...n, is_read: true })) || []
       );
       
@@ -356,7 +424,7 @@ export function useNotifications() {
     },
     onError: (_err, _vars, context) => {
       if (context?.previous) {
-        queryClient.setQueryData(["notifications", user?.id, userRole, studentIds.join(",")], context.previous);
+        queryClient.setQueryData(queryKey, context.previous);
       }
     },
     onSettled: () => {
@@ -368,7 +436,6 @@ export function useNotifications() {
     mutationFn: async (notificationId: string) => {
       if (!user?.id) return;
       
-      // For dynamic notifications, just mark locally
       if (!notificationId.startsWith("cca-") && !notificationId.startsWith("event-") && !notificationId.startsWith("teacher-")) {
         const { error } = await supabase
           .from("notification_reads")
@@ -385,10 +452,10 @@ export function useNotifications() {
     },
     onMutate: async (notificationId) => {
       await queryClient.cancelQueries({ queryKey: ["notifications", user?.id] });
-      const previous = queryClient.getQueryData<Notification[]>(["notifications", user?.id, userRole, studentIds.join(",")]);
+      const previous = queryClient.getQueryData<Notification[]>(queryKey);
       
       queryClient.setQueryData<Notification[]>(
-        ["notifications", user?.id, userRole, studentIds.join(",")],
+        queryKey,
         (old) => old?.filter(n => n.id !== notificationId) || []
       );
       
@@ -396,7 +463,7 @@ export function useNotifications() {
     },
     onError: (_err, _vars, context) => {
       if (context?.previous) {
-        queryClient.setQueryData(["notifications", user?.id, userRole, studentIds.join(",")], context.previous);
+        queryClient.setQueryData(queryKey, context.previous);
       }
     },
     onSettled: () => {
@@ -406,7 +473,7 @@ export function useNotifications() {
 
   const seedNotificationsMutation = useMutation({
     mutationFn: async () => {
-      // No-op - notifications are now generated dynamically
+      // No-op
     },
   });
 

@@ -1836,24 +1836,34 @@ export type Database = {
       }
       lesson_plan_teacher_assignments: {
         Row: {
+          class_year_id: number | null
           created_at: string
           id: string
           lesson_plan_id: string
           teacher_user_id: string
         }
         Insert: {
+          class_year_id?: number | null
           created_at?: string
           id?: string
           lesson_plan_id: string
           teacher_user_id: string
         }
         Update: {
+          class_year_id?: number | null
           created_at?: string
           id?: string
           lesson_plan_id?: string
           teacher_user_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "lesson_plan_teacher_assignments_class_year_id_fkey"
+            columns: ["class_year_id"]
+            isOneToOne: false
+            referencedRelation: "class_years"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "lesson_plan_teacher_assignments_lesson_plan_id_fkey"
             columns: ["lesson_plan_id"]
