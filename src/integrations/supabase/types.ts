@@ -2689,6 +2689,38 @@ export type Database = {
           },
         ]
       }
+      student_sport_houses: {
+        Row: {
+          assigned_at: string
+          assigned_by: string | null
+          id: string
+          sport_house: string
+          student_id: string
+        }
+        Insert: {
+          assigned_at?: string
+          assigned_by?: string | null
+          id?: string
+          sport_house: string
+          student_id: string
+        }
+        Update: {
+          assigned_at?: string
+          assigned_by?: string | null
+          id?: string
+          sport_house?: string
+          student_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "student_sport_houses_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: true
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       students: {
         Row: {
           address: string | null
