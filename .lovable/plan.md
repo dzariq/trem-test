@@ -1,40 +1,84 @@
 
-# Fix Inconsistent Subject Filter Groups
+# Fix Notification Read/Unread/Dismiss Bugs
 
-## Problem
-When switching between students, the subject filter pills show different layouts because many database subject names don't match the names defined in `subjectsConfig.ts`. Unmatched subjects appear as standalone pills instead of being grouped, causing an inconsistent UI.
+## Root Cause Analysis
 
-For example, the database has "First Language Malay" but the config expects "Malay (First Language)". The database has "Chinese as a Second Language" but the config expects "Chinese (Second Language)".
+**Bug 1: "Mark all read" doesn't work**
+In `useNotifications.ts` line 433, the optimistic update's `getQueryData` uses a 3-element key `["notifications", user?.id, userRole]` but the actual `queryKey` is 4 elements `["notifications", user?.id, userRole, studentIds]`. The previous state snapshot is never found, so rollback silently fails. More importantly, the `setQueryData` on line 435 correctly uses `queryKey`, so "mark all read" does visually update -- but `onSettled` immediately fires `invalidateQueries` which refetches from the server. Since the upsert may not have completed yet (race condition), the refetch brings back the old unread state.
 
-## Solution
-Update `src/data/subjectsConfig.ts` to add all actual database subject names as variants in the appropriate groups. This ensures every subject falls into one of the 7 categories: **English, Chinese, Malay, Mathematics, Science, Humanities, Others**.
+**Bug 2: Swipe delete doesn't persist**
+The `deleteNotificationMutation` (line 452) only upserts into `notification_reads` (marks as read). It removes the item from local state optimistically, but `onSettled` refetches from the server where the notification still exists and is not filtered out. It reappears immediately.
 
-## Database Subjects to Map
+**Bug 3: No dismissal tracking**
+There is no `notification_dismissals` table. Swipe-to-delete has no persistent storage, so dismissed notifications always return on refresh.
 
-| Group | Database Subject Names |
-|-------|----------------------|
-| English | English, English as a Second Language, First Language English |
-| Chinese | Chinese Language (Advanced), Chinese Language (Intermediate), Chinese Language (Beginner), Chinese as a Second Language, Foreign Language Mandarin Chinese, Mandarin Chinese Beginner |
-| Malay | First Language Malay, Foreign Language Malay, Malay Language (KSSR), Malay Language (KSSR-Advanced), Malay Language (KSSR-Intermediate) |
-| Mathematics | Mathematics, Additional Mathematics, Mathematics (Extended) |
-| Science | Science, Biology, Chemistry, Physics, Science (Biology, Chemistry & Physics) |
-| Humanities | Business Studies, Accounting, Economics, Geography, History, History & Geography, Global Perspectives |
-| Others | Information Communications & Technology (ICT), ICT, Islamic Studies, Moral, Music, Art, Arts, Living Skills & Arts, Physical Education, *Computer Science (To be offered) |
+---
 
-## Changes
+## Implementation Plan
 
-### File: `src/data/subjectsConfig.ts`
-- Add all missing database subject names as variants in the appropriate `subjectGroups` entries
-- Add corresponding entries to `allSubjects`, `subjectShortNames`, `subjectTinyCodes`, and `subjectColors` for each new subject name
-- This will make `groupedSubjectNames` include all DB subjects, so `analysisStandaloneSubjects` will be empty -- every subject will appear inside a group pill
+### Step 1: Create `notification_dismissals` table (SQL migration)
 
-### No other files need changes
-The `AcademicPage.tsx` logic already correctly filters `subjectGroups` by assigned subjects and renders standalone subjects separately. Once all subjects are mapped into groups, the standalone list will naturally be empty and the layout will be consistent across all students.
+```sql
+CREATE TABLE public.notification_dismissals (
+  notification_id UUID NOT NULL REFERENCES public.notifications(id) ON DELETE CASCADE,
+  user_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  dismissed_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  PRIMARY KEY (notification_id, user_id)
+);
 
-## Technical Details
+ALTER TABLE public.notification_dismissals ENABLE ROW LEVEL SECURITY;
 
-The key mechanism:
-1. `groupedSubjectNames` is built from all variant names across all `subjectGroups`
-2. `analysisSubjectGroups` filters groups to only show variants the student is assigned to
-3. `analysisStandaloneSubjects` shows subjects NOT in any group -- this is what causes the inconsistency
-4. By adding all DB subject names to the groups, standalone subjects disappear and every student sees the same grouped pill layout
+CREATE POLICY "Users can view own dismissals"
+  ON public.notification_dismissals FOR SELECT USING (user_id = auth.uid());
+CREATE POLICY "Users can insert own dismissals"
+  ON public.notification_dismissals FOR INSERT WITH CHECK (user_id = auth.uid());
+
+ALTER PUBLICATION supabase_realtime ADD TABLE public.notification_dismissals;
+```
+
+### Step 2: Update fetch query in `useNotifications.ts`
+
+Change the notifications fetch to also left-join `notification_dismissals` and filter out dismissed ones:
+
+```
+.select(`*, notification_reads!left(read_at), notification_dismissals!left(dismissed_at)`)
+.eq("notification_reads.user_id", user.id)
+.eq("notification_dismissals.user_id", user.id)
+```
+
+Then when processing results, skip any notification where `notification_dismissals` has a row (i.e., `dismissed_at` is set).
+
+### Step 3: Fix swipe-delete to upsert into `notification_dismissals`
+
+Replace the current `deleteNotificationMutation.mutationFn` to upsert into `notification_dismissals` instead of `notification_reads`. Keep the optimistic removal from local state.
+
+### Step 4: Fix "Mark all read" optimistic update
+
+- Fix the `getQueryData` key on line 433 to use the correct 4-element `queryKey`
+- Keep `onSettled` invalidation but it will now work correctly since the upsert completes before or during refetch
+
+### Step 5: Subscribe to `notification_dismissals` in realtime
+
+Add a realtime listener for `notification_dismissals` filtered by `user_id`, so cross-device dismissals sync.
+
+### Step 6: Update Supabase types
+
+Regenerate/update `src/integrations/supabase/types.ts` to include the new `notification_dismissals` table.
+
+---
+
+## Files Changed
+
+| File | Change |
+|------|--------|
+| `supabase/migrations/...` | New migration: create `notification_dismissals` table + RLS + realtime |
+| `src/hooks/useNotifications.ts` | Fix fetch query, fix mark-all-read key bug, fix delete to use dismissals table, add realtime for dismissals |
+| `src/integrations/supabase/types.ts` | Add `notification_dismissals` type definitions |
+
+## Acceptance Criteria
+
+- Swipe delete removes notification permanently (persists after refresh)
+- "Mark all read" clears all unread badges instantly and persistently
+- Tap notification marks it as read instantly
+- Badge count stays consistent across all actions
+- Works for both Teacher and Parent accounts
