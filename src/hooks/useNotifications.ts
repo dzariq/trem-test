@@ -82,14 +82,19 @@ export function useNotifications() {
       
       const { data: dbNotifications } = await supabase
         .from("notifications")
-        .select(`*, notification_reads!left(read_at)`)
+        .select(`*, notification_reads!left(read_at), notification_dismissals!left(dismissed_at)`)
         .in("target_audience", allowedAudiences)
         .eq("notification_reads.user_id", user.id)
+        .eq("notification_dismissals.user_id", user.id)
         .order("created_at", { ascending: false })
         .limit(20);
       
       if (dbNotifications) {
         for (const n of dbNotifications) {
+          // Skip dismissed notifications
+          const isDismissed = Array.isArray((n as any).notification_dismissals) && (n as any).notification_dismissals.length > 0;
+          if (isDismissed) continue;
+          
           allNotifications.push({
             id: n.id,
             user_id: n.user_id,
@@ -317,7 +322,18 @@ export function useNotifications() {
           filter: `user_id=eq.${user.id}`,
         },
         () => {
-          // Read state changed for this user → refresh
+          queryClient.invalidateQueries({ queryKey: ["notifications", user.id] });
+        }
+      )
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "notification_dismissals",
+          filter: `user_id=eq.${user.id}`,
+        },
+        () => {
           queryClient.invalidateQueries({ queryKey: ["notifications", user.id] });
         }
       )
@@ -430,7 +446,7 @@ export function useNotifications() {
     },
     onMutate: async () => {
       await queryClient.cancelQueries({ queryKey: ["notifications", user?.id] });
-      const previous = queryClient.getQueryData<Notification[]>(["notifications", user?.id, userRole]);
+      const previous = queryClient.getQueryData<Notification[]>(queryKey);
       
       queryClient.setQueryData<Notification[]>(
         queryKey,
@@ -455,11 +471,11 @@ export function useNotifications() {
       
       if (!notificationId.startsWith("cca-") && !notificationId.startsWith("event-") && !notificationId.startsWith("teacher-")) {
         const { error } = await supabase
-          .from("notification_reads")
+          .from("notification_dismissals" as any)
           .upsert({
             notification_id: notificationId,
             user_id: user.id,
-            read_at: new Date().toISOString(),
+            dismissed_at: new Date().toISOString(),
           }, {
             onConflict: "notification_id,user_id",
           });
