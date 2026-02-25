@@ -12,6 +12,8 @@ interface CcaActivityImageProps {
   typeName?: string | null;
   variant?: "card" | "details";
   isEnrolled?: boolean;
+  /** ISO timestamp for cache-busting (e.g. activity.updatedAt) */
+  updatedAt?: string | null;
   className?: string;
 }
 
@@ -77,6 +79,7 @@ export function CcaActivityImage({
   typeName,
   variant = "card",
   isEnrolled = false,
+  updatedAt,
   className,
 }: CcaActivityImageProps) {
   const categoryKey = typeName || category;
@@ -90,13 +93,19 @@ export function CcaActivityImage({
   
   const iconSize = variant === "card" ? "h-8 w-8" : "h-12 w-12";
 
-  if (imageUrl) {
+  // Cache-busted image URL
+  const resolvedUrl = imageUrl
+    ? `${imageUrl}${imageUrl.includes('?') ? '&' : '?'}v=${updatedAt || '1'}`
+    : null;
+
+  if (resolvedUrl) {
     return (
       <div className={cn(sizeClasses, "overflow-hidden flex-shrink-0", className)}>
         <img
-          src={imageUrl}
+          src={resolvedUrl}
           alt={activityName}
           className="w-full h-full object-cover"
+          loading="lazy"
           onError={(e) => {
             // Hide broken image - parent will re-render with fallback
             e.currentTarget.style.display = 'none';
