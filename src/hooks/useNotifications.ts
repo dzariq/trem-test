@@ -84,6 +84,7 @@ export function useNotifications() {
         .from("notifications")
         .select(`*, notification_reads!left(read_at)`)
         .in("target_audience", allowedAudiences)
+        .eq("notification_reads.user_id", user.id)
         .order("created_at", { ascending: false })
         .limit(20);
       
@@ -378,7 +379,23 @@ export function useNotifications() {
         if (error) throw error;
       }
     },
-    onSuccess: () => {
+    onMutate: async (notificationId) => {
+      await queryClient.cancelQueries({ queryKey: ["notifications", user?.id] });
+      const previous = queryClient.getQueryData<Notification[]>(queryKey);
+      
+      queryClient.setQueryData<Notification[]>(
+        queryKey,
+        (old) => old?.map(n => n.id === notificationId ? { ...n, is_read: true } : n) || []
+      );
+      
+      return { previous };
+    },
+    onError: (_err, _vars, context) => {
+      if (context?.previous) {
+        queryClient.setQueryData(queryKey, context.previous);
+      }
+    },
+    onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ["notifications", user?.id] });
     },
   });
