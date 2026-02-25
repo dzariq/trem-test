@@ -246,26 +246,7 @@ export default function AcademicPage() {
       setSelectedSubjectIds([]);
       return;
     }
-    const storageKey = `grade_analysis_selected_subjects_${selectedStudentId}`;
-    const stored = localStorage.getItem(storageKey);
-    if (stored) {
-      try {
-        const parsed = JSON.parse(stored) as unknown;
-        if (Array.isArray(parsed)) {
-          const filtered = parsed
-            .map((id) => Number(id))
-            .filter((id) => assignedSubjectIds.includes(id));
-          setSelectedSubjectIds(
-            filtered.length > 0 ? filtered : assignedSubjectIds
-          );
-          initRef.current = selectedStudentId;
-          initCompleteRef.current = selectedStudentId;
-          return;
-        }
-      } catch {
-        // Fall through to default selection.
-      }
-    }
+    // Always default to all subjects selected
     setSelectedSubjectIds(assignedSubjectIds);
     initRef.current = selectedStudentId;
     initCompleteRef.current = selectedStudentId;
