@@ -2120,16 +2120,19 @@ export type Database = {
       notification_dismissals: {
         Row: {
           dismissed_at: string
+          id: string | null
           notification_id: string
           user_id: string
         }
         Insert: {
           dismissed_at?: string
+          id?: string | null
           notification_id: string
           user_id: string
         }
         Update: {
           dismissed_at?: string
+          id?: string | null
           notification_id?: string
           user_id?: string
         }
@@ -2173,6 +2176,7 @@ export type Database = {
         Row: {
           body: string | null
           created_at: string
+          dedupe_key: string | null
           id: string
           is_read: boolean
           link_to: string | null
@@ -2187,6 +2191,7 @@ export type Database = {
         Insert: {
           body?: string | null
           created_at?: string
+          dedupe_key?: string | null
           id?: string
           is_read?: boolean
           link_to?: string | null
@@ -2201,6 +2206,7 @@ export type Database = {
         Update: {
           body?: string | null
           created_at?: string
+          dedupe_key?: string | null
           id?: string
           is_read?: boolean
           link_to?: string | null

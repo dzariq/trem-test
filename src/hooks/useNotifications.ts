@@ -1,9 +1,10 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { useEffect, useRef, useCallback } from "react";
+import { useEffect } from "react";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/contexts/AuthContext";
 import { useMyProfile } from "@/hooks/useMyProfile";
 import { useStudentSelection } from "@/hooks/useStudentSelection";
+import { toast } from "@/hooks/use-toast";
 
 export interface Notification {
   id: string;
@@ -19,6 +20,56 @@ export interface Notification {
   source_key: string | null;
   event_date?: string | null;
 }
+
+type SyntheticNotificationState = {
+  read: string[];
+  dismissed: string[];
+};
+
+const SYNTHETIC_NOTIFICATION_STORAGE_PREFIX = "synthetic-notification-state";
+
+const emptySyntheticState = (): SyntheticNotificationState => ({
+  read: [],
+  dismissed: [],
+});
+
+const isSyntheticNotificationId = (notificationId: string) =>
+  notificationId.startsWith("cca-") ||
+  notificationId.startsWith("event-") ||
+  notificationId.startsWith("teacher-");
+
+const getNotificationTrackingKey = (notification: Pick<Notification, "id" | "source_key">) =>
+  notification.source_key || notification.id;
+
+const getSyntheticStateStorageKey = (userId: string) =>
+  `${SYNTHETIC_NOTIFICATION_STORAGE_PREFIX}:${userId}`;
+
+const getSyntheticNotificationState = (userId: string): SyntheticNotificationState => {
+  if (typeof window === "undefined") return emptySyntheticState();
+
+  try {
+    const raw = window.localStorage.getItem(getSyntheticStateStorageKey(userId));
+    if (!raw) return emptySyntheticState();
+
+    const parsed = JSON.parse(raw) as Partial<SyntheticNotificationState>;
+    return {
+      read: Array.isArray(parsed.read) ? parsed.read : [],
+      dismissed: Array.isArray(parsed.dismissed) ? parsed.dismissed : [],
+    };
+  } catch {
+    return emptySyntheticState();
+  }
+};
+
+const updateSyntheticNotificationState = (
+  userId: string,
+  updater: (state: SyntheticNotificationState) => SyntheticNotificationState,
+) => {
+  if (typeof window === "undefined") return;
+
+  const next = updater(getSyntheticNotificationState(userId));
+  window.localStorage.setItem(getSyntheticStateStorageKey(userId), JSON.stringify(next));
+};
 
 function formatTimeDisplay(dateString: string, eventDate?: string | null): string {
   if (eventDate) {
@@ -73,6 +124,9 @@ export function useNotifications() {
       const today = now.toISOString().split("T")[0];
       const in14Days = new Date(now.getTime() + 14 * 24 * 60 * 60 * 1000).toISOString().split("T")[0];
       const in7Days = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000).toISOString().split("T")[0];
+      const syntheticState = getSyntheticNotificationState(user.id);
+      const readSyntheticKeys = new Set(syntheticState.read);
+      const dismissedSyntheticKeys = new Set(syntheticState.dismissed);
       
       const allNotifications: Notification[] = [];
       
@@ -83,6 +137,7 @@ export function useNotifications() {
       const { data: dbNotifications } = await supabase
         .from("notifications")
         .select(`*, notification_reads!left(read_at), notification_dismissals!left(dismissed_at)`)
+        .eq("user_id", user.id)
         .in("target_audience", allowedAudiences)
         .eq("notification_reads.user_id", user.id)
         .eq("notification_dismissals.user_id", user.id)
@@ -91,7 +146,6 @@ export function useNotifications() {
       
       if (dbNotifications) {
         for (const n of dbNotifications) {
-          // Skip dismissed notifications
           const isDismissed = Array.isArray((n as any).notification_dismissals) && (n as any).notification_dismissals.length > 0;
           if (isDismissed) continue;
           
@@ -140,7 +194,9 @@ export function useNotifications() {
             
             const activityName = session.activity?.name || session.custom_title || "CCA Session";
             const startTime = session.start_time ? ` at ${session.start_time.slice(0, 5)}` : "";
-            
+            const sourceKey = `cca-session:${session.id}`;
+            if (dismissedSyntheticKeys.has(sourceKey)) continue;
+
             allNotifications.push({
               id: `cca-session-${session.id}`,
               user_id: null,
@@ -151,8 +207,8 @@ export function useNotifications() {
               target_audience: "parent",
               created_at: now.toISOString(),
               updated_at: now.toISOString(),
-              source_key: `cca-session:${session.id}`,
-              is_read: false,
+              source_key: sourceKey,
+              is_read: readSyntheticKeys.has(sourceKey),
               event_date: session.session_date,
             });
           }
@@ -191,7 +247,9 @@ export function useNotifications() {
           }
           
           const eventDate = event.start_date.split("T")[0];
-          
+          const sourceKey = `event:${event.id}`;
+          if (dismissedSyntheticKeys.has(sourceKey)) continue;
+
           allNotifications.push({
             id: `event-${event.id}`,
             user_id: null,
@@ -202,8 +260,8 @@ export function useNotifications() {
             target_audience: "all",
             created_at: now.toISOString(),
             updated_at: now.toISOString(),
-            source_key: `event:${event.id}`,
-            is_read: false,
+            source_key: sourceKey,
+            is_read: readSyntheticKeys.has(sourceKey),
             event_date: eventDate,
           });
         }
@@ -231,7 +289,9 @@ export function useNotifications() {
             
             const activityName = session.activity?.name || session.custom_title || "CCA Session";
             const startTime = session.start_time ? ` at ${session.start_time.slice(0, 5)}` : "";
-            
+            const sourceKey = `teacher-cca:${session.id}`;
+            if (dismissedSyntheticKeys.has(sourceKey)) continue;
+
             allNotifications.push({
               id: `teacher-cca-${session.id}`,
               user_id: null,
@@ -242,8 +302,8 @@ export function useNotifications() {
               target_audience: "teacher",
               created_at: now.toISOString(),
               updated_at: now.toISOString(),
-              source_key: `teacher-cca:${session.id}`,
-              is_read: false,
+              source_key: sourceKey,
+              is_read: readSyntheticKeys.has(sourceKey),
               event_date: session.session_date,
             });
           }
@@ -380,39 +440,55 @@ export function useNotifications() {
   const markAsReadMutation = useMutation({
     mutationFn: async (notificationId: string) => {
       if (!user?.id) return;
-      
-      if (!notificationId.startsWith("cca-") && !notificationId.startsWith("event-") && !notificationId.startsWith("teacher-")) {
-        const { error } = await supabase
-          .from("notification_reads")
-          .upsert({
-            notification_id: notificationId,
-            user_id: user.id,
-            read_at: new Date().toISOString(),
-          }, {
-            onConflict: "notification_id,user_id",
-          });
-        
-        if (error) throw error;
+
+      const matchedNotification = notifications.find((item) => item.id === notificationId);
+      const trackingKey = getNotificationTrackingKey(
+        matchedNotification ?? { id: notificationId, source_key: null }
+      );
+
+      if (isSyntheticNotificationId(notificationId)) {
+        updateSyntheticNotificationState(user.id, (state) => ({
+          ...state,
+          read: Array.from(new Set([...state.read, trackingKey])),
+        }));
+        return;
       }
+
+      const { error } = await supabase
+        .from("notification_reads")
+        .upsert({
+          notification_id: notificationId,
+          user_id: user.id,
+          read_at: new Date().toISOString(),
+        }, {
+          onConflict: "notification_id,user_id",
+        });
+
+      if (error) throw error;
     },
     onMutate: async (notificationId) => {
-      await queryClient.cancelQueries({ queryKey: ["notifications", user?.id] });
+      await queryClient.cancelQueries({ queryKey });
       const previous = queryClient.getQueryData<Notification[]>(queryKey);
-      
+
       queryClient.setQueryData<Notification[]>(
         queryKey,
         (old) => old?.map(n => n.id === notificationId ? { ...n, is_read: true } : n) || []
       );
-      
+
       return { previous };
     },
     onError: (_err, _vars, context) => {
       if (context?.previous) {
         queryClient.setQueryData(queryKey, context.previous);
       }
+      toast({
+        title: "Failed to update notification status",
+        description: "Please try again.",
+        variant: "destructive",
+      });
     },
     onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: ["notifications", user?.id] });
+      queryClient.invalidateQueries({ queryKey });
     },
   });
 
@@ -420,87 +496,117 @@ export function useNotifications() {
   const markAllAsReadMutation = useMutation({
     mutationFn: async () => {
       if (!user?.id) return;
-      
-      const dbNotifications = notifications.filter(n => 
-        !n.is_read && 
-        !n.id.startsWith("cca-") && 
-        !n.id.startsWith("event-") && 
-        !n.id.startsWith("teacher-")
+
+      const unreadNotifications = notifications.filter((notification) => !notification.is_read);
+      const syntheticTrackingKeys = unreadNotifications
+        .filter((notification) => isSyntheticNotificationId(notification.id))
+        .map((notification) => getNotificationTrackingKey(notification));
+
+      if (syntheticTrackingKeys.length > 0) {
+        updateSyntheticNotificationState(user.id, (state) => ({
+          ...state,
+          read: Array.from(new Set([...state.read, ...syntheticTrackingKeys])),
+        }));
+      }
+
+      const dbNotifications = unreadNotifications.filter(
+        (notification) => !isSyntheticNotificationId(notification.id)
       );
-      
+
       if (dbNotifications.length === 0) return;
-      
-      const reads = dbNotifications.map(n => ({
-        notification_id: n.id,
+
+      const reads = dbNotifications.map((notification) => ({
+        notification_id: notification.id,
         user_id: user.id,
         read_at: new Date().toISOString(),
       }));
-      
+
       const { error } = await supabase
         .from("notification_reads")
         .upsert(reads, {
           onConflict: "notification_id,user_id",
         });
-      
+
       if (error) throw error;
     },
     onMutate: async () => {
-      await queryClient.cancelQueries({ queryKey: ["notifications", user?.id] });
+      await queryClient.cancelQueries({ queryKey });
       const previous = queryClient.getQueryData<Notification[]>(queryKey);
-      
+
       queryClient.setQueryData<Notification[]>(
         queryKey,
-        (old) => old?.map(n => ({ ...n, is_read: true })) || []
+        (old) => old?.map((notification) => ({ ...notification, is_read: true })) || []
       );
-      
+
       return { previous };
     },
     onError: (_err, _vars, context) => {
       if (context?.previous) {
         queryClient.setQueryData(queryKey, context.previous);
       }
+      toast({
+        title: "Failed to update notification status",
+        description: "Please try again.",
+        variant: "destructive",
+      });
     },
     onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: ["notifications", user?.id] });
+      queryClient.invalidateQueries({ queryKey });
     },
   });
 
   const deleteNotificationMutation = useMutation({
     mutationFn: async (notificationId: string) => {
       if (!user?.id) return;
-      
-      if (!notificationId.startsWith("cca-") && !notificationId.startsWith("event-") && !notificationId.startsWith("teacher-")) {
-        const { error } = await supabase
-          .from("notification_dismissals" as any)
-          .upsert({
-            notification_id: notificationId,
-            user_id: user.id,
-            dismissed_at: new Date().toISOString(),
-          }, {
-            onConflict: "notification_id,user_id",
-          });
-        
-        if (error) throw error;
+
+      const matchedNotification = notifications.find((item) => item.id === notificationId);
+      const trackingKey = getNotificationTrackingKey(
+        matchedNotification ?? { id: notificationId, source_key: null }
+      );
+
+      if (isSyntheticNotificationId(notificationId)) {
+        updateSyntheticNotificationState(user.id, (state) => ({
+          ...state,
+          dismissed: Array.from(new Set([...state.dismissed, trackingKey])),
+        }));
+        return;
       }
+
+      const { error } = await supabase
+        .from("notification_dismissals")
+        .upsert({
+          notification_id: notificationId,
+          user_id: user.id,
+          dismissed_at: new Date().toISOString(),
+        }, {
+          onConflict: "notification_id,user_id",
+        });
+
+      if (error) throw error;
     },
     onMutate: async (notificationId) => {
-      await queryClient.cancelQueries({ queryKey: ["notifications", user?.id] });
+      await queryClient.cancelQueries({ queryKey });
       const previous = queryClient.getQueryData<Notification[]>(queryKey);
-      
+
       queryClient.setQueryData<Notification[]>(
         queryKey,
-        (old) => old?.filter(n => n.id !== notificationId) || []
+        (old) => old?.filter((notification) => notification.id !== notificationId) || []
       );
-      
+
       return { previous };
     },
     onError: (_err, _vars, context) => {
       if (context?.previous) {
         queryClient.setQueryData(queryKey, context.previous);
       }
+      toast({
+        title: "Failed to update notification status",
+        description: "Please try again.",
+        variant: "destructive",
+      });
     },
     onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: ["notifications", user?.id] });
+      queryClient.invalidateQueries({ queryKey });
     },
   });
 
