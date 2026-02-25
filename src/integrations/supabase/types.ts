@@ -221,6 +221,8 @@ export type Database = {
           file_type: string
           file_url: string
           id: string
+          is_primary: boolean
+          storage_path: string | null
         }
         Insert: {
           announcement_id: string
@@ -230,6 +232,8 @@ export type Database = {
           file_type: string
           file_url: string
           id?: string
+          is_primary?: boolean
+          storage_path?: string | null
         }
         Update: {
           announcement_id?: string
@@ -239,6 +243,8 @@ export type Database = {
           file_type?: string
           file_url?: string
           id?: string
+          is_primary?: boolean
+          storage_path?: string | null
         }
         Relationships: [
           {
