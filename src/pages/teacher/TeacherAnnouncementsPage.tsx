@@ -2,14 +2,20 @@ import { useEffect, useState } from "react";
 import { TeacherAppLayout } from "@/components/layout/TeacherAppLayout";
 import { AppHeader } from "@/components/layout/AppHeader";
 import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Check, ShieldCheck } from "lucide-react";
-import { listAnnouncements, type Announcement } from "@/data/announcements";
+import { Megaphone, Pin } from "lucide-react";
+import { listAnnouncements, markAnnouncementRead, type Announcement } from "@/data/announcements";
+import { AnnouncementDrawer } from "@/components/AnnouncementDrawer";
+import { categorizeAnnouncements } from "@/lib/announcements/categorize";
+import { FeaturedAnnouncementCard } from "@/components/announcements/FeaturedAnnouncementCard";
+import { PinnedAnnouncementCard } from "@/components/announcements/PinnedAnnouncementCard";
+import { AnnouncementListCard } from "@/components/announcements/AnnouncementListCard";
 
 export default function TeacherAnnouncementsPage() {
   const [announcements, setAnnouncements] = useState<Announcement[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [drawerOpen, setDrawerOpen] = useState(false);
+  const [currentAnnouncementIndex, setCurrentAnnouncementIndex] = useState(0);
 
   useEffect(() => {
     let isMounted = true;
@@ -18,42 +24,49 @@ export default function TeacherAnnouncementsPage() {
       setError(null);
       try {
         const data = await listAnnouncements({ limit: 50 });
-        if (isMounted) {
-          setAnnouncements(data);
-        }
+        if (isMounted) setAnnouncements(data);
       } catch (err) {
         if (isMounted) {
           const message = err instanceof Error ? err.message : "Failed to load announcements.";
           setError(message);
         }
       } finally {
-        if (isMounted) {
-          setLoading(false);
-        }
+        if (isMounted) setLoading(false);
       }
     };
-
     loadAnnouncements();
-    return () => {
-      isMounted = false;
-    };
+    return () => { isMounted = false; };
   }, []);
 
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString("en-US", {
-      weekday: "short",
-      month: "short",
-      day: "numeric",
-      year: "numeric",
-    });
+  const { featured, pinned, regular } = categorizeAnnouncements(announcements);
+
+  const drawerList = [
+    ...(featured ? [featured] : []),
+    ...pinned,
+    ...regular,
+  ];
+
+  const handleAnnouncementClick = (announcement: Announcement) => {
+    const idx = drawerList.findIndex(a => a.id === announcement.id);
+    setCurrentAnnouncementIndex(idx >= 0 ? idx : 0);
+    setDrawerOpen(true);
+    void markAnnouncementRead(announcement.id).catch(() => {});
+    setAnnouncements(prev =>
+      prev.map(item => (item.id === announcement.id ? { ...item, is_read: true } : item))
+    );
+  };
+
+  const handleAnnouncementUpdated = (id: number | string, updates: Partial<Announcement>) => {
+    setAnnouncements(prev =>
+      prev.map(item => (item.id === id ? { ...item, ...updates } : item))
+    );
   };
 
   return (
     <TeacherAppLayout>
       <AppHeader title="Announcements" showBack />
 
-      <section className="px-4 pt-4 pb-6 space-y-3">
+      <section className="px-4 pt-4 pb-6 space-y-4">
         {loading && (
           <Card className="bg-card border-border shadow-sm">
             <CardContent className="p-6 text-center text-sm text-muted-foreground">
@@ -78,39 +91,53 @@ export default function TeacherAnnouncementsPage() {
           </Card>
         )}
 
-        {!loading && !error && announcements.map((announcement) => (
-          <Card key={announcement.id} className="bg-card border-border shadow-sm">
-            <CardContent className="p-4 space-y-2">
-              <div className="flex items-center justify-between gap-3">
-                <h3 className="font-semibold text-foreground text-base">
-                  {announcement.title}
-                </h3>
-                {announcement.is_acknowledged ? (
-                  <Badge variant="outline" className="text-xs gap-1 text-blue-600 border-blue-600/30 bg-blue-500/10">
-                    <ShieldCheck className="h-3 w-3" />
-                    Acknowledged
-                  </Badge>
-                ) : announcement.is_read ? (
-                  <Badge variant="outline" className="text-xs gap-1 text-green-600 border-green-600/30 bg-green-500/10">
-                    <Check className="h-3 w-3" />
-                    Read
-                  </Badge>
-                ) : (
-                  <Badge variant="destructive" className="text-xs">
-                    New
-                  </Badge>
-                )}
+        {!loading && !error && announcements.length > 0 && (
+          <>
+            {/* Featured */}
+            {featured && (
+              <FeaturedAnnouncementCard
+                announcement={featured}
+                onClick={() => handleAnnouncementClick(featured)}
+              />
+            )}
+
+            {/* Pinned */}
+            {pinned.length > 0 && (
+              <div className="space-y-2">
+                <div className="flex items-center gap-2 text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                  <Pin className="h-3 w-3 rotate-45" />
+                  Pinned
+                </div>
+                {pinned.map((a) => (
+                  <PinnedAnnouncementCard
+                    key={a.id}
+                    announcement={a}
+                    onClick={() => handleAnnouncementClick(a)}
+                  />
+                ))}
               </div>
-              <div className="flex items-center justify-between text-xs text-muted-foreground">
-                <span>{formatDate(announcement.date)}</span>
-                <Badge variant="outline" className="text-[10px]">
-                  {announcement.category}
-                </Badge>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
+            )}
+
+            {/* Regular */}
+            {regular.map((a) => (
+              <AnnouncementListCard
+                key={a.id}
+                announcement={a}
+                onClick={() => handleAnnouncementClick(a)}
+              />
+            ))}
+          </>
+        )}
       </section>
+
+      <AnnouncementDrawer
+        announcements={drawerList}
+        currentIndex={currentAnnouncementIndex}
+        isOpen={drawerOpen}
+        onOpenChange={setDrawerOpen}
+        onNavigate={setCurrentAnnouncementIndex}
+        onAnnouncementUpdated={handleAnnouncementUpdated}
+      />
     </TeacherAppLayout>
   );
 }
