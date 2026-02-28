@@ -220,7 +220,7 @@ export function ReportCardDialog({
       const result = await exportSectionBasedPdf({
         element: reportRef.current,
         filename: `ReportCard_${safeName || "student"}_${safeYear}_${safePeriod}`,
-        sectionsPerPage: 2,
+        sectionsPerPage: 3,
         scale: 2,
       });
       if (result?.savedToDevice) {
