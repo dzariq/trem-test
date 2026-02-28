@@ -627,7 +627,7 @@ export default function ProfilePage() {
 
               <Separator />
 
-              {/* Student Options - Meal Plan, Sports House, Outdoor CCA */}
+              {/* Student Options - Meal Plan, Sports House */}
               {(typeof selectedStudent.mealPlan === "boolean" || selectedStudent.sportsHouse) && (
                 <div className="space-y-3">
                   <span className="font-medium text-foreground">Student Options</span>
@@ -650,30 +650,62 @@ export default function ProfilePage() {
                       </div>
                     )}
                     
-                    {/* Sports House */}
-                    {selectedStudent.sportsHouse && sportsHouseColors[selectedStudent.sportsHouse.toLowerCase()] && (
+                    {/* Sports House - always show if available */}
+                    {selectedStudent.sportsHouse && (
                       <div className="flex flex-col items-center gap-1.5 p-3 rounded-lg bg-muted/50 border border-border">
                         <Flag className="w-5 h-5 text-muted-foreground" />
                         <span className="text-xs font-medium text-muted-foreground text-center">Sports House</span>
-                        <Badge className={cn(
-                          "text-xs px-2",
-                          sportsHouseColors[selectedStudent.sportsHouse.toLowerCase()].bg,
-                          sportsHouseColors[selectedStudent.sportsHouse.toLowerCase()].text
-                        )}>
-                          {sportsHouseColors[selectedStudent.sportsHouse.toLowerCase()].label.split(" ")[0]}
-                        </Badge>
+                        {sportsHouseColors[selectedStudent.sportsHouse.toLowerCase()] ? (
+                          <Badge className={cn(
+                            "text-xs px-2",
+                            sportsHouseColors[selectedStudent.sportsHouse.toLowerCase()].bg,
+                            sportsHouseColors[selectedStudent.sportsHouse.toLowerCase()].text
+                          )}>
+                            {sportsHouseColors[selectedStudent.sportsHouse.toLowerCase()].label.split(" ")[0]}
+                          </Badge>
+                        ) : (
+                          <Badge variant="secondary" className="text-xs px-2">
+                            {selectedStudent.sportsHouse}
+                          </Badge>
+                        )}
                       </div>
                     )}
                   </div>
                 </div>
               )}
 
+              {/* Sports House fallback when no meal plan but has sport house */}
+              {typeof selectedStudent.mealPlan !== "boolean" && selectedStudent.sportsHouse && !(typeof selectedStudent.mealPlan === "boolean" || selectedStudent.sportsHouse) && null}
+
+              <Separator />
+
+              {/* Clubs & Activities */}
+              <div className="space-y-3">
+                <div className="flex items-center gap-2">
+                  <BookOpen className="h-4 w-4 text-muted-foreground" />
+                  <span className="font-medium text-foreground">Clubs & Activities</span>
+                </div>
+                {selectedStudent.ccaActivities && selectedStudent.ccaActivities.length > 0 ? (
+                  <div className="flex flex-wrap gap-2">
+                    {selectedStudent.ccaActivities.map((cca, idx) => (
+                      <Badge key={idx} variant="secondary" className="text-sm">
+                        {cca.name}
+                      </Badge>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-sm text-muted-foreground">-</p>
+                )}
+              </div>
+
               <Separator />
 
               {/* Student ID */}
               <div className="p-3 rounded-lg bg-muted/50">
                 <p className="text-xs text-muted-foreground">Student ID</p>
-                <p className="text-sm font-medium text-foreground">{selectedStudent.id}</p>
+                <p className="text-sm font-medium text-foreground">
+                  {selectedStudent.studentCode || "-"}
+                </p>
               </div>
             </div>
           )}
