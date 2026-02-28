@@ -6,6 +6,7 @@ import collinzLogo from "@/assets/collinz-school-logo.png";
 import schoolBadge from "@/assets/school-badge.png";
 import cambridgeLogo from "@/assets/cambridge-logo.jpg";
 import { exportElementToPdf } from "@/lib/pdf/exportToPdf";
+import { exportSectionBasedPdf } from "@/lib/pdf/exportSectionBasedPdf";
 import { toast } from "@/hooks/use-toast";
 
 // SVG Icon components for print compatibility
@@ -216,37 +217,12 @@ export function ReportCardDialog({
       const safeName = studentName.trim().replace(/\s+/g, "_");
       const safeYear = year ? year.trim().replace(/\s+/g, "_") : "year";
       const safePeriod = examType.trim().replace(/\s+/g, "_");
-      const exportHost = document.createElement("div");
-      exportHost.style.position = "fixed";
-      exportHost.style.left = "-100000px";
-      exportHost.style.top = "0";
-      exportHost.style.width = "210mm";
-      exportHost.style.background = "#ffffff";
-      exportHost.style.pointerEvents = "none";
-      exportHost.style.zIndex = "-1";
-
-      const cloned = reportRef.current.cloneNode(true) as HTMLElement;
-      cloned.style.width = "210mm";
-      cloned.style.maxWidth = "none";
-      cloned.style.height = "auto";
-      cloned.style.maxHeight = "none";
-      cloned.style.contain = "none";
-      cloned.style.overflow = "visible";
-      cloned.classList.add("pdf-print-root", "pdf-export-root", "pdf-exporting");
-      exportHost.appendChild(cloned);
-      document.body.appendChild(exportHost);
-
-      let result: Awaited<ReturnType<typeof exportElementToPdf>> | undefined;
-      try {
-        result = await exportElementToPdf({
-          element: cloned,
-          filename: `ReportCard_${safeName || "student"}_${safeYear}_${safePeriod}`,
-          marginMm: 0,
-          pdfContentScale: 1,
-        });
-      } finally {
-        exportHost.remove();
-      }
+      const result = await exportSectionBasedPdf({
+        element: reportRef.current,
+        filename: `ReportCard_${safeName || "student"}_${safeYear}_${safePeriod}`,
+        sectionsPerPage: 2,
+        scale: 2,
+      });
       if (result?.savedToDevice) {
         toast.success("Saved to Downloads");
       }
@@ -294,6 +270,8 @@ export function ReportCardDialog({
               }}
             >
             
+            {/* === PDF SECTION 1: Header + Student Info + Behaviour === */}
+            <div className="pdf-section" data-section="header-info">
             {/* Header with both logos */}
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid #d1d5db', paddingBottom: '10px', marginBottom: '10px', gap: '8px', flexWrap: 'wrap' }}>
               <img src={collinzLogo} alt="Collinz School" crossOrigin="anonymous" style={{ height: '40px', objectFit: 'contain' }} />
@@ -421,7 +399,10 @@ export function ReportCardDialog({
                 </div>
               </div>
             </div>
+            </div>{/* end pdf-section header-info */}
 
+            {/* === PDF SECTION 2: Academic Grades === */}
+            <div className="pdf-section" data-section="academic-grades">
             {/* Academic Grades - Table Layout */}
             <div style={{ marginBottom: '12px' }}>
               {/* Header with Grading Key */}
@@ -537,7 +518,10 @@ export function ReportCardDialog({
                 </tbody>
               </table>
             </div>
+            </div>{/* end pdf-section academic-grades */}
 
+            {/* === PDF SECTION 3: Subject Performance === */}
+            <div className="pdf-section" data-section="subject-performance">
             {/* Subject Performance Chart - Static for Print */}
             <div style={{ marginBottom: '12px' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '8px', paddingBottom: '6px', borderBottom: '1px solid #065f46' }}>
@@ -600,10 +584,11 @@ export function ReportCardDialog({
                 </div>
               </div>
             </div>
+            </div>{/* end pdf-section subject-performance */}
 
-            {/* Study Recommendations - Separate Table */}
+            {/* === PDF SECTION 4: Study Recommendations === */}
             {displayedSubjects.some(s => (s.studyRecommendation || s.classStudyRecommendation)) && (
-              <div style={{ marginBottom: '12px' }}>
+              <div className="pdf-section" data-section="study-recommendations" style={{ marginBottom: '12px' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '8px', paddingBottom: '6px', borderBottom: '1px solid #065f46' }}>
                   <span style={{ color: '#065f46' }}><IconBookMarked /></span>
                   <h3 style={{ fontSize: '14px', fontWeight: '700', color: '#065f46' }}>Study Recommendations</h3>
@@ -636,6 +621,8 @@ export function ReportCardDialog({
               </div>
             )}
 
+            {/* === PDF SECTION 5: Homeroom Comment + Achievements + Signatures === */}
+            <div className="pdf-section" data-section="homeroom-footer">
             {/* Homeroom Comment */}
             <div style={{ marginBottom: '12px' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '8px', paddingBottom: '6px', borderBottom: '1px solid #065f46' }}>
@@ -722,9 +709,10 @@ export function ReportCardDialog({
             <div style={{ marginTop: '12px', textAlign: 'center', fontSize: '8px', color: '#9ca3af', paddingTop: '8px', borderTop: '1px solid #d1d5db' }}>
               This is a computer-generated report. Generated on {new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}.
             </div>
-          </div>
-          </div>
-        </div>
+            </div>{/* end pdf-section homeroom-footer */}
+          </div>{/* end reportRef */}
+          </div>{/* end flex justify-center */}
+        </div>{/* end flex-1 overflow */}
       </DialogContent>
     </Dialog>
   );

@@ -1903,6 +1903,7 @@ export type Database = {
           is_master: boolean | null
           subject: string
           teacher_id: string
+          term_configuration_id: string | null
           title: string | null
           updated_at: string | null
           year_level: string | null
@@ -1916,6 +1917,7 @@ export type Database = {
           is_master?: boolean | null
           subject: string
           teacher_id: string
+          term_configuration_id?: string | null
           title?: string | null
           updated_at?: string | null
           year_level?: string | null
@@ -1929,11 +1931,20 @@ export type Database = {
           is_master?: boolean | null
           subject?: string
           teacher_id?: string
+          term_configuration_id?: string | null
           title?: string | null
           updated_at?: string | null
           year_level?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "lesson_plans_term_configuration_id_fkey"
+            columns: ["term_configuration_id"]
+            isOneToOne: false
+            referencedRelation: "term_configurations"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       lesson_reflections: {
         Row: {
