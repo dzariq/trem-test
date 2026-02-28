@@ -4,6 +4,7 @@ import { getMyProfile } from "@/data/profile";
 export type LinkedStudent = {
   id: string;
   studentId?: string;
+  studentCode?: string | null;
   name: string;
   classLabel?: string | null;
   className?: string | null;
@@ -14,6 +15,7 @@ export type LinkedStudent = {
   subjects?: string[] | null;
   relationship?: string | null;
   isPrimary?: boolean | null;
+  ccaActivities?: { name: string; category: string | null }[];
 };
 
 const isMissingResource = (error: { message?: string } | null, keyword: string) => {
@@ -30,6 +32,7 @@ const mapStudentRow = (row: any): LinkedStudent => {
 
   return {
     id: String(row.id ?? row.student_id ?? row.user_id ?? ""),
+    studentCode: row.student_code ?? null,
     name: name || "Student",
     className: row.class_name ?? row.class ?? row.classroom ?? null,
     grade: row.grade ?? row.year_group ?? row.level ?? null,
@@ -37,6 +40,7 @@ const mapStudentRow = (row: any): LinkedStudent => {
     sportsHouse: row.sports_house ?? row.house ?? null,
     mealPlan: row.meal_plan ?? row.has_meal_plan ?? null,
     subjects: row.subjects ?? row.subject_list ?? null,
+    ccaActivities: [],
   };
 };
 
@@ -83,11 +87,54 @@ const listViaStudentGuardians = async (guardianUserId: string) => {
 
   const { data: students, error: studentsError } = await supabase
     .from("students")
-    .select("id, name, year_level, class, campus_id, family_id")
+    .select("id, name, year_level, class, campus_id, family_id, student_code")
     .in("id", studentIds as any[]);
 
   if (studentsError) {
     throw new Error(studentsError.message);
+  }
+
+  // Fetch sport houses for all students
+  let sportHouseMap: Record<string, string> = {};
+  try {
+    const { data: sportData } = await supabase
+      .from("student_sport_houses")
+      .select("student_id, sport_house, assigned_at")
+      .in("student_id", studentIds as any[])
+      .order("assigned_at", { ascending: false });
+    if (sportData) {
+      for (const row of sportData) {
+        // Take the first (latest) per student
+        if (!sportHouseMap[String(row.student_id)]) {
+          sportHouseMap[String(row.student_id)] = row.sport_house;
+        }
+      }
+    }
+  } catch {
+    // Silently ignore if table doesn't exist or RLS blocks
+  }
+
+  // Fetch CCA enrollments for all students
+  let ccaMap: Record<string, { name: string; category: string | null }[]> = {};
+  try {
+    const { data: ccaData } = await supabase
+      .from("student_cca_enrollments")
+      .select("student_id, status, cca_activities(name, category, is_active)")
+      .in("student_id", studentIds as any[])
+      .eq("status", "active");
+    if (ccaData) {
+      for (const row of ccaData as any[]) {
+        if (row.cca_activities?.is_active === false) continue;
+        const sid = String(row.student_id);
+        if (!ccaMap[sid]) ccaMap[sid] = [];
+        ccaMap[sid].push({
+          name: row.cca_activities?.name || "Unknown",
+          category: row.cca_activities?.category || null,
+        });
+      }
+    }
+  } catch {
+    // Silently ignore
   }
 
   const studentMap = new Map(
@@ -112,13 +159,16 @@ const listViaStudentGuardians = async (guardianUserId: string) => {
       return {
         id: String(student.id),
         studentId: String(student.id),
+        studentCode: student.student_code ?? null,
         name: name || "Student",
         classLabel: classLabel || null,
         className: student.class ?? null,
         grade: student.year_level ?? null,
         campus: student.campus_id ?? null,
+        sportsHouse: sportHouseMap[String(student.id)] ?? null,
         relationship: link.relationship ?? null,
         isPrimary: link.is_primary ?? null,
+        ccaActivities: ccaMap[String(student.id)] ?? [],
       } as LinkedStudent;
     })
     .filter((student): student is LinkedStudent => Boolean(student));
