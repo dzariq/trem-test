@@ -2712,6 +2712,24 @@ export type Database = {
           },
         ]
       }
+      student_id_counters: {
+        Row: {
+          campus_code: string
+          graduation_year: number
+          last_number: number
+        }
+        Insert: {
+          campus_code: string
+          graduation_year: number
+          last_number?: number
+        }
+        Update: {
+          campus_code?: string
+          graduation_year?: number
+          last_number?: number
+        }
+        Relationships: []
+      }
       student_siblings: {
         Row: {
           created_at: string
@@ -2785,6 +2803,7 @@ export type Database = {
           address: string | null
           allergy_notes: string | null
           archived: boolean
+          campus_code: string | null
           campus_id: string | null
           class: string
           class_year_id: number | null
@@ -2801,6 +2820,7 @@ export type Database = {
           family_id: string | null
           first_school_day: string | null
           gender: string | null
+          graduation_year: number | null
           id: string
           info: Json | null
           insurance: string | null
@@ -2820,6 +2840,7 @@ export type Database = {
           relationship_type: string | null
           remarks: string | null
           sibling_discount: boolean | null
+          student_code: string | null
           student_ic: string | null
           updated_at: string
           user_id: string | null
@@ -2829,6 +2850,7 @@ export type Database = {
           address?: string | null
           allergy_notes?: string | null
           archived?: boolean
+          campus_code?: string | null
           campus_id?: string | null
           class: string
           class_year_id?: number | null
@@ -2845,6 +2867,7 @@ export type Database = {
           family_id?: string | null
           first_school_day?: string | null
           gender?: string | null
+          graduation_year?: number | null
           id?: string
           info?: Json | null
           insurance?: string | null
@@ -2864,6 +2887,7 @@ export type Database = {
           relationship_type?: string | null
           remarks?: string | null
           sibling_discount?: boolean | null
+          student_code?: string | null
           student_ic?: string | null
           updated_at?: string
           user_id?: string | null
@@ -2873,6 +2897,7 @@ export type Database = {
           address?: string | null
           allergy_notes?: string | null
           archived?: boolean
+          campus_code?: string | null
           campus_id?: string | null
           class?: string
           class_year_id?: number | null
@@ -2889,6 +2914,7 @@ export type Database = {
           family_id?: string | null
           first_school_day?: string | null
           gender?: string | null
+          graduation_year?: number | null
           id?: string
           info?: Json | null
           insurance?: string | null
@@ -2908,6 +2934,7 @@ export type Database = {
           relationship_type?: string | null
           remarks?: string | null
           sibling_discount?: boolean | null
+          student_code?: string | null
           student_ic?: string | null
           updated_at?: string
           user_id?: string | null
@@ -3268,6 +3295,11 @@ export type Database = {
       can_write_grades: { Args: { p_period_id: string }; Returns: boolean }
       check_phone_exists: { Args: { phone_number: string }; Returns: Json }
       current_user_role: { Args: never; Returns: string }
+      generate_student_code: {
+        Args: { p_campus_code: string; p_graduation_year: number }
+        Returns: string
+      }
+      get_campus_code: { Args: { p_campus_id: string }; Returns: string }
       get_cohort_averages_by_year_level_and_period: {
         Args: { p_academic_period_id: string; p_year_level: string }
         Returns: {

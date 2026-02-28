@@ -218,9 +218,29 @@ export default function AcademicPage() {
     return new Map(assignedSubjects.map((subject) => [subject.name, subject.id]));
   }, [assignedSubjects]);
 
-  const initRef = useRef<string | null>(null);
-  const initCompleteRef = useRef<string | null>(null);
   const [selectedSubjectIds, setSelectedSubjectIds] = useState<number[]>([]);
+
+  // Build a context key that changes whenever we should reset subject selection to ALL
+  const subjectContextKey = useMemo(() => {
+    const idsKey = assignedSubjectIds.length > 0 ? assignedSubjectIds.slice().sort((a, b) => a - b).join(",") : "";
+    return `${selectedStudentId || ""}-${idsKey}`;
+  }, [selectedStudentId, assignedSubjectIds]);
+
+  const lastSubjectContextKeyRef = useRef<string>("");
+
+  useEffect(() => {
+    if (!selectedStudentId || assignedSubjectIds.length === 0) {
+      setSelectedSubjectIds([]);
+      lastSubjectContextKeyRef.current = "";
+      return;
+    }
+    // When context changes (student or available subjects), reset to ALL
+    if (subjectContextKey !== lastSubjectContextKeyRef.current) {
+      setSelectedSubjectIds(assignedSubjectIds);
+      lastSubjectContextKeyRef.current = subjectContextKey;
+    }
+  }, [subjectContextKey, selectedStudentId, assignedSubjectIds]);
+
   const toggleSubject = useCallback((subjectId: number) => {
     setSelectedSubjectIds((prev) =>
       prev.includes(subjectId)
@@ -234,34 +254,6 @@ export default function AcademicPage() {
   const clearAllSubjects = useCallback(() => {
     setSelectedSubjectIds([]);
   }, []);
-
-  useEffect(() => {
-    if (!selectedStudentId || typeof window === "undefined") {
-      return;
-    }
-    if (initRef.current === selectedStudentId) {
-      return;
-    }
-    if (assignedSubjectIds.length === 0) {
-      setSelectedSubjectIds([]);
-      return;
-    }
-    // Always default to all subjects selected
-    setSelectedSubjectIds(assignedSubjectIds);
-    initRef.current = selectedStudentId;
-    initCompleteRef.current = selectedStudentId;
-  }, [selectedStudentId, assignedSubjectIds.join(",")]);
-
-  useEffect(() => {
-    if (!selectedStudentId || typeof window === "undefined") {
-      return;
-    }
-    if (initCompleteRef.current !== selectedStudentId) {
-      return;
-    }
-    const storageKey = `grade_analysis_selected_subjects_${selectedStudentId}`;
-    localStorage.setItem(storageKey, JSON.stringify(selectedSubjectIds));
-  }, [selectedStudentId, selectedSubjectIds]);
 
   const selectedSubjects = useMemo(() => {
     return assignedSubjects.filter((subject) =>
