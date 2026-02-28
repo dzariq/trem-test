@@ -55,6 +55,18 @@
   max-height: none !important;
 }
 
+/* Section-based pagination: never split a section */
+.pdf-section {
+  break-inside: avoid;
+  page-break-inside: avoid;
+}
+
+.pdf-section table {
+  max-width: 100%;
+  table-layout: fixed;
+  word-wrap: break-word;
+}
+
 .pdf-export-root .sticky,
 .pdf-export-root [style*="position: sticky"] {
   position: static !important;
