@@ -1,9 +1,7 @@
 import { createClient } from "@supabase/supabase-js";
 import { Capacitor } from "@capacitor/core";
 import { Preferences } from "@capacitor/preferences";
-
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
+import { supabaseUrl, supabaseAnonKey } from "@/config/environment";
 
 const isNativeApp = Capacitor.isNativePlatform();
 
