@@ -54,8 +54,8 @@ interface AnnouncementDrawerProps {
 }
 
 // Snap points: 95% screen height, 100% full screen
-const SNAP_POINTS = [0.95, 1] as const;
-const DEFAULT_SNAP = 0.95;
+const SNAP_POINTS = [0.75, 1] as const;
+const DEFAULT_SNAP = 0.75;
 
 export function AnnouncementDrawer({
   announcements,
