@@ -28,6 +28,7 @@ import { useNavigate } from "react-router-dom";
 import { getUpcomingEvents, listUpcomingEvents, type UpcomingEvent } from "@/data/calendar";
 import { useMyProfile } from "@/hooks/useMyProfile";
 import { useTeacherScope } from "@/hooks/useTeacherScope";
+import { useCampus } from "@/contexts/CampusContext";
 import { supabase } from "@/lib/supabase";
 import { toast } from "@/hooks/use-toast";
 import {
@@ -63,6 +64,7 @@ const getDaysLeftBadge = (daysLeft: number) => {
 export default function TeacherHomePage() {
   const navigate = useNavigate();
   const { profile, loading: profileLoading } = useMyProfile();
+  const { activeCampus } = useCampus();
   const teacherScope = useTeacherScope();
   const [selectedClass, setSelectedClass] = useState(teacherProfile.classes[0]);
   const [showPendingGrades, setShowPendingGrades] = useState(false);
@@ -290,7 +292,7 @@ export default function TeacherHomePage() {
       setAnnouncementsLoading(true);
       setAnnouncementsError(null);
       try {
-        const data = await listAnnouncements({ limit: 10 });
+        const data = await listAnnouncements({ limit: 10, campusCode: activeCampus });
         if (isMounted) {
           setAnnouncements(data);
         }
@@ -310,7 +312,7 @@ export default function TeacherHomePage() {
     return () => {
       isMounted = false;
     };
-  }, []);
+  }, [activeCampus]);
 
   useEffect(() => {
     let isMounted = true;
@@ -318,7 +320,7 @@ export default function TeacherHomePage() {
       setEventsLoading(true);
       setEventsError(null);
       try {
-        const data = await listUpcomingEvents({ role: "teacher", limit: 10 });
+        const data = await listUpcomingEvents({ role: "teacher", limit: 10, campusCode: activeCampus });
         if (isMounted) {
           setEvents(data);
         }
@@ -338,7 +340,7 @@ export default function TeacherHomePage() {
     return () => {
       isMounted = false;
     };
-  }, []);
+  }, [activeCampus]);
 
   const handleMarkAnnouncementRead = async (id: Announcement["id"]) => {
     try {

@@ -76,6 +76,7 @@ export default function CalendarPage() {
     error: studentsError,
     selectedStudentId,
     setSelectedStudentId,
+    selectedStudent,
   } = useStudentSelection();
 
   useEffect(() => {
@@ -277,7 +278,7 @@ export default function CalendarPage() {
       try {
         const year = currentMonth.getFullYear();
         const month = currentMonth.getMonth() + 1;
-        const data = await listCalendarEvents(year, month, { role: profile?.role });
+        const data = await listCalendarEvents(year, month, { role: profile?.role, campusCode: selectedStudent?.campus_code ?? null });
         if (isMounted) {
           setEvents(data);
         }

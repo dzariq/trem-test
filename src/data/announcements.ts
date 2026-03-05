@@ -60,6 +60,7 @@ export type Announcement = {
 export type ListAnnouncementsParams = {
   limit?: number;
   studentId?: string | null;
+  campusCode?: string | null;
 };
 
 const DEFAULT_LIMIT = 10;
@@ -93,6 +94,11 @@ export async function listAnnouncements(
   };
 
   let baseQuery = supabase.from("announcements").select("*");
+
+  // Apply campus filter if provided
+  if (params.campusCode) {
+    baseQuery = baseQuery.or(`campus_code.eq.${params.campusCode},campus_code.is.null`);
+  }
 
   const applyOrder = (query: any, column: "created_at" | "updated_at") =>
     query.order(column, { ascending: false }).limit(limit);

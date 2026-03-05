@@ -23,7 +23,8 @@ export default function AnnouncementsPage() {
   const [announcements, setAnnouncements] = useState<Announcement[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const { selectedStudentId } = useStudentSelection();
+  const { selectedStudentId, selectedStudent } = useStudentSelection();
+  const parentCampusCode = selectedStudent?.campus_code ?? null;
 
   useEffect(() => {
     let isMounted = true;
@@ -31,7 +32,7 @@ export default function AnnouncementsPage() {
       setLoading(true);
       setError(null);
       try {
-        const data = await listAnnouncements({ limit: 50, studentId: selectedStudentId });
+        const data = await listAnnouncements({ limit: 50, studentId: selectedStudentId, campusCode: parentCampusCode });
         if (isMounted) setAnnouncements(data);
       } catch (err) {
         const message = err instanceof Error ? err.message : "Failed to load announcements.";
@@ -42,7 +43,7 @@ export default function AnnouncementsPage() {
     };
     loadAnnouncements();
     return () => { isMounted = false; };
-  }, [selectedStudentId]);
+  }, [selectedStudentId, parentCampusCode]);
 
   const categories: CategoryFilter[] = ["all", "Event", "Academic", "General"];
 

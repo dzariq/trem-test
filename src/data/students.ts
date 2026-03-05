@@ -10,6 +10,7 @@ export type LinkedStudent = {
   className?: string | null;
   grade?: string | null;
   campus?: string | null;
+  campus_code?: string | null;
   sportsHouse?: string | null;
   mealPlan?: boolean | null;
   subjects?: string[] | null;
@@ -87,7 +88,7 @@ const listViaStudentGuardians = async (guardianUserId: string) => {
 
   const { data: students, error: studentsError } = await supabase
     .from("students")
-    .select("id, name, year_level, class, campus_id, family_id, student_code")
+    .select("id, name, year_level, class, campus_id, campus_code, family_id, student_code")
     .in("id", studentIds as any[]);
 
   if (studentsError) {
@@ -165,6 +166,7 @@ const listViaStudentGuardians = async (guardianUserId: string) => {
         className: student.class ?? null,
         grade: student.year_level ?? null,
         campus: student.campus_id ?? null,
+        campus_code: student.campus_code ?? null,
         sportsHouse: sportHouseMap[String(student.id)] ?? null,
         relationship: link.relationship ?? null,
         isPrimary: link.is_primary ?? null,

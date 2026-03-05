@@ -3,6 +3,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
+import { CampusProvider } from "@/contexts/CampusContext";
 import { StudentSelectionProvider } from "@/contexts/StudentSelectionContext";
 
 // Role Selection
@@ -50,6 +51,7 @@ const queryClient = new QueryClient();
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <AuthProvider>
+      <CampusProvider>
       <StudentSelectionProvider>
         <TooltipProvider>
           <Toaster />
@@ -126,6 +128,7 @@ const App = () => (
           </div>
         </TooltipProvider>
       </StudentSelectionProvider>
+      </CampusProvider>
     </AuthProvider>
   </QueryClientProvider>
 );

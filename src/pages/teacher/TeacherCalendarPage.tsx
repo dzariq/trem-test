@@ -1,4 +1,5 @@
 import { useEffect, useState, useMemo, type KeyboardEvent } from "react";
+import { useCampus } from "@/contexts/CampusContext";
 import { TeacherAppLayout } from "@/components/layout/TeacherAppLayout";
 import { AppHeader } from "@/components/layout/AppHeader";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -32,6 +33,7 @@ import { cn } from "@/lib/utils";
 
 export default function TeacherCalendarPage() {
   const { user } = useAuth();
+  const { activeCampus } = useCampus();
   const today = new Date();
   const todayYmd = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
   const [selectedDay, setSelectedDay] = useState<string>(todayYmd);
@@ -226,7 +228,7 @@ export default function TeacherCalendarPage() {
       try {
         const year = currentMonth.getFullYear();
         const month = currentMonth.getMonth() + 1;
-        const data = await listCalendarEvents(year, month, { role: "teacher" });
+        const data = await listCalendarEvents(year, month, { role: "teacher", campusCode: activeCampus });
         if (isMounted) {
           setEvents(data);
         }
@@ -241,7 +243,7 @@ export default function TeacherCalendarPage() {
     return () => {
       isMounted = false;
     };
-  }, [currentMonth]);
+  }, [currentMonth, activeCampus]);
 
   const filteredCCA = filterByTypeId(ccaTypeFilter);
 

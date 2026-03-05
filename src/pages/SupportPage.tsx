@@ -212,6 +212,7 @@ export default function SupportPage() {
       student_name: selectedStudent.name ?? null,
       student_class: selectedStudent.className ?? selectedStudent.grade ?? null,
       campus: selectedStudent.campus ?? null,
+      campus_code: selectedStudent.campus_code ?? null,
       status: "new",
     };
 

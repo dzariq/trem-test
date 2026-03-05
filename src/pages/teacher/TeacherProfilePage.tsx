@@ -1,4 +1,6 @@
 import { useEffect, useState, useCallback } from "react";
+import { useCampus } from "@/contexts/CampusContext";
+import { CampusSwitcher } from "@/components/campus/CampusSwitcher";
 import { useAuth } from "@/contexts/AuthContext";
 import { useQueryClient } from "@tanstack/react-query";
 import { TeacherAppLayout } from "@/components/layout/TeacherAppLayout";
@@ -74,6 +76,7 @@ export default function TeacherProfilePage() {
   const queryClient = useQueryClient();
   const { signOut } = useAuth();
   const { profile, loading: profileLoading, error: profileError, refetch } = useMyProfile();
+  const { isMultiCampus } = useCampus();
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [isAccountsOpen, setIsAccountsOpen] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
@@ -192,6 +195,9 @@ export default function TeacherProfilePage() {
             </div>
           </CardContent>
         </Card>
+
+        {/* Campus Switcher - only for multi-campus teachers */}
+        {isMultiCampus && <CampusSwitcher />}
 
         {/* Subjects Taught */}
         <Card className="bg-card border-border shadow-sm">
