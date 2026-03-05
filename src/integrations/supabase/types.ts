@@ -17,6 +17,7 @@ export type Database = {
       academic_periods: {
         Row: {
           academic_year: number | null
+          campus_code: string | null
           code: string
           created_at: string
           end_date: string | null
@@ -31,6 +32,7 @@ export type Database = {
         }
         Insert: {
           academic_year?: number | null
+          campus_code?: string | null
           code: string
           created_at?: string
           end_date?: string | null
@@ -45,6 +47,7 @@ export type Database = {
         }
         Update: {
           academic_year?: number | null
+          campus_code?: string | null
           code?: string
           created_at?: string
           end_date?: string | null
@@ -308,6 +311,7 @@ export type Database = {
       announcement_targets: {
         Row: {
           announcement_id: string
+          campus_code: string | null
           campus_id: string | null
           created_at: string
           id: string
@@ -316,6 +320,7 @@ export type Database = {
         }
         Insert: {
           announcement_id: string
+          campus_code?: string | null
           campus_id?: string | null
           created_at?: string
           id?: string
@@ -324,6 +329,7 @@ export type Database = {
         }
         Update: {
           announcement_id?: string
+          campus_code?: string | null
           campus_id?: string | null
           created_at?: string
           id?: string
@@ -349,6 +355,7 @@ export type Database = {
       }
       announcements: {
         Row: {
+          campus_code: string | null
           campus_id: string | null
           content: string
           created_at: string
@@ -371,6 +378,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          campus_code?: string | null
           campus_id?: string | null
           content: string
           created_at?: string
@@ -393,6 +401,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          campus_code?: string | null
           campus_id?: string | null
           content?: string
           created_at?: string
@@ -426,6 +435,7 @@ export type Database = {
       }
       attendance: {
         Row: {
+          campus_code: string | null
           class: string
           created_at: string | null
           date: string
@@ -437,6 +447,7 @@ export type Database = {
           updated_at: string | null
         }
         Insert: {
+          campus_code?: string | null
           class: string
           created_at?: string | null
           date: string
@@ -448,6 +459,7 @@ export type Database = {
           updated_at?: string | null
         }
         Update: {
+          campus_code?: string | null
           class?: string
           created_at?: string | null
           date?: string
@@ -685,6 +697,7 @@ export type Database = {
       }
       calendar_events: {
         Row: {
+          campus_code: string | null
           campus_id: string | null
           color: string | null
           created_at: string
@@ -709,6 +722,7 @@ export type Database = {
           visible_user_ids: string[]
         }
         Insert: {
+          campus_code?: string | null
           campus_id?: string | null
           color?: string | null
           created_at?: string
@@ -733,6 +747,7 @@ export type Database = {
           visible_user_ids?: string[]
         }
         Update: {
+          campus_code?: string | null
           campus_id?: string | null
           color?: string | null
           created_at?: string
@@ -761,6 +776,7 @@ export type Database = {
       campuses: {
         Row: {
           address: string | null
+          campus_code: string
           contact_email: string | null
           contact_phone: string | null
           created_at: string
@@ -772,6 +788,7 @@ export type Database = {
         }
         Insert: {
           address?: string | null
+          campus_code: string
           contact_email?: string | null
           contact_phone?: string | null
           created_at?: string
@@ -783,6 +800,7 @@ export type Database = {
         }
         Update: {
           address?: string | null
+          campus_code?: string
           contact_email?: string | null
           contact_phone?: string | null
           created_at?: string
@@ -1216,6 +1234,7 @@ export type Database = {
       class_years: {
         Row: {
           active: boolean
+          campus_code: string | null
           class_name: string
           color: string | null
           created_at: string
@@ -1225,6 +1244,7 @@ export type Database = {
         }
         Insert: {
           active?: boolean
+          campus_code?: string | null
           class_name: string
           color?: string | null
           created_at?: string
@@ -1234,6 +1254,7 @@ export type Database = {
         }
         Update: {
           active?: boolean
+          campus_code?: string | null
           class_name?: string
           color?: string | null
           created_at?: string
@@ -1614,6 +1635,7 @@ export type Database = {
       }
       homework_assignments: {
         Row: {
+          campus_code: string | null
           class_year_id: number
           created_at: string
           created_by: string
@@ -1626,6 +1648,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          campus_code?: string | null
           class_year_id: number
           created_at?: string
           created_by: string
@@ -1638,6 +1661,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          campus_code?: string | null
           class_year_id?: number
           created_at?: string
           created_by?: string
@@ -1896,6 +1920,7 @@ export type Database = {
       lesson_plans: {
         Row: {
           academic_year: number
+          campus_code: string | null
           class: string
           created_at: string | null
           description: string | null
@@ -1910,6 +1935,7 @@ export type Database = {
         }
         Insert: {
           academic_year: number
+          campus_code?: string | null
           class: string
           created_at?: string | null
           description?: string | null
@@ -1924,6 +1950,7 @@ export type Database = {
         }
         Update: {
           academic_year?: number
+          campus_code?: string | null
           class?: string
           created_at?: string | null
           description?: string | null
@@ -2236,6 +2263,7 @@ export type Database = {
           assigned_to: string | null
           attachments: Json | null
           campus: string | null
+          campus_code: string | null
           contact_number: string | null
           created_at: string
           description: string
@@ -2259,6 +2287,7 @@ export type Database = {
           assigned_to?: string | null
           attachments?: Json | null
           campus?: string | null
+          campus_code?: string | null
           contact_number?: string | null
           created_at?: string
           description: string
@@ -2282,6 +2311,7 @@ export type Database = {
           assigned_to?: string | null
           attachments?: Json | null
           campus?: string | null
+          campus_code?: string | null
           contact_number?: string | null
           created_at?: string
           description?: string
@@ -2959,6 +2989,7 @@ export type Database = {
       }
       subject_selections: {
         Row: {
+          campus_code: string | null
           class: string
           created_at: string
           id: string
@@ -2971,6 +3002,7 @@ export type Database = {
           year_level: string
         }
         Insert: {
+          campus_code?: string | null
           class: string
           created_at?: string
           id?: string
@@ -2983,6 +3015,7 @@ export type Database = {
           year_level: string
         }
         Update: {
+          campus_code?: string | null
           class?: string
           created_at?: string
           id?: string
@@ -3007,6 +3040,7 @@ export type Database = {
       subjects: {
         Row: {
           alternative_to: number | null
+          campus_code: string | null
           category: string | null
           class_groups: number[] | null
           code: string | null
@@ -3019,6 +3053,7 @@ export type Database = {
         }
         Insert: {
           alternative_to?: number | null
+          campus_code?: string | null
           category?: string | null
           class_groups?: number[] | null
           code?: string | null
@@ -3031,6 +3066,7 @@ export type Database = {
         }
         Update: {
           alternative_to?: number | null
+          campus_code?: string | null
           category?: string | null
           class_groups?: number[] | null
           code?: string | null
@@ -3196,10 +3232,79 @@ export type Database = {
           },
         ]
       }
+      user_campuses: {
+        Row: {
+          campus_code: string
+          campus_id: string
+          created_at: string | null
+          id: string
+          is_primary: boolean
+          user_id: string
+        }
+        Insert: {
+          campus_code: string
+          campus_id: string
+          created_at?: string | null
+          id?: string
+          is_primary?: boolean
+          user_id: string
+        }
+        Update: {
+          campus_code?: string
+          campus_id?: string
+          created_at?: string | null
+          id?: string
+          is_primary?: boolean
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_campuses_campus_id_fkey"
+            columns: ["campus_id"]
+            isOneToOne: false
+            referencedRelation: "campuses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_module_access: {
+        Row: {
+          can_edit: boolean
+          can_manage: boolean
+          can_view: boolean
+          created_at: string
+          id: string
+          module_key: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          can_edit?: boolean
+          can_manage?: boolean
+          can_view?: boolean
+          created_at?: string
+          id?: string
+          module_key: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          can_edit?: boolean
+          can_manage?: boolean
+          can_view?: boolean
+          created_at?: string
+          id?: string
+          module_key?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_profiles: {
         Row: {
           assigned_campus_id: string | null
           can_access_all_campuses: boolean
+          can_create_users: boolean
           can_manage_lesson_plans: boolean | null
           created_at: string
           departments: string[]
@@ -3218,6 +3323,7 @@ export type Database = {
         Insert: {
           assigned_campus_id?: string | null
           can_access_all_campuses?: boolean
+          can_create_users?: boolean
           can_manage_lesson_plans?: boolean | null
           created_at?: string
           departments?: string[]
@@ -3236,6 +3342,7 @@ export type Database = {
         Update: {
           assigned_campus_id?: string | null
           can_access_all_campuses?: boolean
+          can_create_users?: boolean
           can_manage_lesson_plans?: boolean | null
           created_at?: string
           departments?: string[]
@@ -3361,12 +3468,14 @@ export type Database = {
         }[]
       }
       get_user_campus_id: { Args: never; Returns: string }
+      get_user_campuses: { Args: never; Returns: string[] }
       has_role: { Args: { _role: string; _user_id: string }; Returns: boolean }
       is_admin: { Args: never; Returns: boolean }
       is_admin_like: { Args: never; Returns: boolean }
       is_cca_session_full: { Args: { p_session_id: string }; Returns: boolean }
       is_parent: { Args: never; Returns: boolean }
       is_parent_of_student: { Args: { p_student_id: string }; Returns: boolean }
+      is_super_admin: { Args: never; Returns: boolean }
       is_teacher: { Args: never; Returns: boolean }
       is_teacher_assigned_to_cca: {
         Args: { p_activity_id: string }
