@@ -29,6 +29,7 @@ export type UpcomingEvent = {
 export type ListUpcomingEventsParams = {
   role?: string;
   limit?: number;
+  campusCode?: string | null;
 };
 
 export type GetUpcomingEventsParams = {
@@ -42,6 +43,7 @@ export type GetUpcomingEventsParams = {
 
 export type ListCalendarEventsParams = {
   role?: string;
+  campusCode?: string | null;
 };
 
 const DEFAULT_LIMIT = 10;
@@ -277,12 +279,19 @@ export async function listCalendarEvents(
   const nextMonthStart = nextMonthDate.toISOString().slice(0, 19) + "Z";
 
   // Fetch all events for the month range (same approach as web admin portal)
-  const { data: rows, error } = await supabase
+  let calQuery = supabase
     .from("calendar_events")
     .select("*")
     .lt("start_date", nextMonthStart)
     .gte("end_date", monthStart)
     .order("start_date", { ascending: true });
+
+  // Apply campus filter if provided
+  if (params.campusCode) {
+    calQuery = calQuery.or(`campus_code.eq.${params.campusCode},campus_code.is.null`);
+  }
+
+  const { data: rows, error } = await calQuery;
 
   if (error) {
     logSupabaseError(`listCalendarEvents role=${role ?? "unknown"}`, error);
@@ -322,11 +331,18 @@ export async function listUpcomingEvents(
   const { profile, role, studentIds } = await resolveCalendarScope(params.role);
 
   // Fetch all upcoming events (same approach as web admin portal)
-  const { data: rows, error } = await supabase
+  let upQuery = supabase
     .from("calendar_events")
     .select("*")
     .gte("start_date", fromIso)
     .order("start_date", { ascending: true });
+
+  // Apply campus filter if provided
+  if (params.campusCode) {
+    upQuery = upQuery.or(`campus_code.eq.${params.campusCode},campus_code.is.null`);
+  }
+
+  const { data: rows, error } = await upQuery;
 
   if (error) {
     logSupabaseError(`listUpcomingEvents role=${role ?? "unknown"}`, error);

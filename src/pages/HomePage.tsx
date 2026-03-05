@@ -15,10 +15,13 @@ import { getUpcomingEvents, listUpcomingEvents, type UpcomingEvent } from "@/dat
 import { useNavigate } from "react-router-dom";
 import { useMyProfile } from "@/hooks/useMyProfile";
 import { useUpcomingCcaSessions } from "@/hooks/useUpcomingCcaSessions";
+import { useStudentSelection } from "@/hooks/useStudentSelection";
 
 export default function HomePage() {
   const navigate = useNavigate();
   const { profile, loading: profileLoading } = useMyProfile();
+  const { selectedStudent } = useStudentSelection();
+  const parentCampusCode = selectedStudent?.campus_code ?? null;
   const [announcements, setAnnouncements] = useState<Announcement[]>([]);
   const [announcementsLoading, setAnnouncementsLoading] = useState(true);
   const [announcementsError, setAnnouncementsError] = useState<string | null>(null);
@@ -38,7 +41,7 @@ export default function HomePage() {
       setAnnouncementsLoading(true);
       setAnnouncementsError(null);
       try {
-        const data = await listAnnouncements({ limit: 10 });
+        const data = await listAnnouncements({ limit: 10, campusCode: parentCampusCode });
         if (isMounted) {
           setAnnouncements(data);
         }
@@ -58,7 +61,7 @@ export default function HomePage() {
     return () => {
       isMounted = false;
     };
-  }, []);
+  }, [parentCampusCode]);
 
   useEffect(() => {
     let isMounted = true;
@@ -69,6 +72,7 @@ export default function HomePage() {
         const data = await listUpcomingEvents({
           role: profile?.role,
           limit: 10,
+          campusCode: parentCampusCode,
         });
         if (isMounted) {
           setEvents(data);

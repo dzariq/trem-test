@@ -145,6 +145,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       
       // Clear any other auth-related localStorage keys
       localStorage.removeItem("supabase.auth.token");
+      localStorage.removeItem("active_campus_code");
     } catch (error) {
       console.error("Sign out error:", error);
     }

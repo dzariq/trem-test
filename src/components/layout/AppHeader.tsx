@@ -6,6 +6,8 @@ import { Badge } from "@/components/ui/badge";
 import { NotificationsDrawer } from "@/components/NotificationsDrawer";
 import { useNotifications } from "@/hooks/useNotifications";
 import { ChildSelectorDropdown } from "@/components/home/ChildSelectorDropdown";
+import { CampusBadge } from "@/components/campus/CampusBadge";
+import { useCampus } from "@/contexts/CampusContext";
 
 interface AppHeaderProps {
   title?: string;
@@ -31,6 +33,7 @@ export function AppHeader({
   const location = useLocation();
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
   const { unreadCount } = useNotifications();
+  const { activeCampus, isMultiCampus } = useCampus();
   
   const isTeacherPortal = location.pathname.startsWith("/teacher");
   const basePath = isTeacherPortal ? "/teacher" : "/parent";
@@ -49,6 +52,11 @@ export function AppHeader({
           </div>
           
           <div className="flex items-center gap-2">
+            {/* Campus badge pill for multi-campus teachers */}
+            {isTeacherPortal && isMultiCampus && activeCampus && (
+              <CampusBadge code={activeCampus} size="sm" />
+            )}
+
             {/* Child selector dropdown for parent routes */}
             {showChildSelector && !isTeacherPortal && (
               <ChildSelectorDropdown />

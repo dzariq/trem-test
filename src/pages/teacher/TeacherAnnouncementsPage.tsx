@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { TeacherAppLayout } from "@/components/layout/TeacherAppLayout";
+import { useCampus } from "@/contexts/CampusContext";
 import { AppHeader } from "@/components/layout/AppHeader";
 import { Card, CardContent } from "@/components/ui/card";
 import { Megaphone, Pin } from "lucide-react";
@@ -11,6 +12,7 @@ import { PinnedAnnouncementCard } from "@/components/announcements/PinnedAnnounc
 import { AnnouncementListCard } from "@/components/announcements/AnnouncementListCard";
 
 export default function TeacherAnnouncementsPage() {
+  const { activeCampus } = useCampus();
   const [announcements, setAnnouncements] = useState<Announcement[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -23,7 +25,7 @@ export default function TeacherAnnouncementsPage() {
       setLoading(true);
       setError(null);
       try {
-        const data = await listAnnouncements({ limit: 50 });
+        const data = await listAnnouncements({ limit: 50, campusCode: activeCampus });
         if (isMounted) setAnnouncements(data);
       } catch (err) {
         if (isMounted) {
@@ -36,7 +38,7 @@ export default function TeacherAnnouncementsPage() {
     };
     loadAnnouncements();
     return () => { isMounted = false; };
-  }, []);
+  }, [activeCampus]);
 
   const { featured, pinned, regular } = categorizeAnnouncements(announcements);
 

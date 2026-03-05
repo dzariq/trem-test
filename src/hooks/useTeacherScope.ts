@@ -12,6 +12,7 @@ type ClassYear = {
   class_name: string;
   year_level: string;
   active: boolean;
+  campus_code: string | null;
 };
 
 type SubjectInfo = {
@@ -127,7 +128,7 @@ export function useTeacherScope() {
       const fetchPromise = (async () => {
         const { data, error: queryError } = await supabase
           .from("class_years")
-          .select("id, class_name, year_level, active, teacher_assignments!inner(teacher_id)")
+          .select("id, class_name, year_level, active, campus_code, teacher_assignments!inner(teacher_id)")
           .eq("teacher_assignments.teacher_id", userId)
           .eq("active", true)
           .order("year_level", { ascending: true })
@@ -146,6 +147,7 @@ export function useTeacherScope() {
               class_name: row.class_name,
               year_level: row.year_level,
               active: row.active,
+              campus_code: (row as any).campus_code ?? null,
             });
           }
         });

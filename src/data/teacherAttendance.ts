@@ -33,13 +33,19 @@ const logSupabaseError = (
 /**
  * Fetch students for a given class
  */
-export async function fetchStudentsByClass(className: string): Promise<StudentForAttendance[]> {
-  const { data, error } = await supabase
+export async function fetchStudentsByClass(className: string, campusCode?: string | null): Promise<StudentForAttendance[]> {
+  let query = supabase
     .from("students")
     .select("id, name, class")
     .eq("class", className)
     .eq("archived", false)
     .order("name", { ascending: true });
+
+  if (campusCode) {
+    query = query.eq("campus_code", campusCode);
+  }
+
+  const { data, error } = await query;
 
   if (error) {
     logSupabaseError("teacherAttendance/fetchStudentsByClass", error);
@@ -58,13 +64,20 @@ export async function fetchStudentsByClass(className: string): Promise<StudentFo
  */
 export async function fetchAttendanceForClassDate(
   className: string,
-  date: string
+  date: string,
+  campusCode?: string | null
 ): Promise<AttendanceRecord[]> {
-  const { data, error } = await supabase
+  let query = supabase
     .from("attendance")
     .select("*")
     .eq("class", className)
     .eq("date", date);
+
+  if (campusCode) {
+    query = query.eq("campus_code", campusCode);
+  }
+
+  const { data, error } = await query;
 
   if (error) {
     logSupabaseError("teacherAttendance/fetchAttendanceForClassDate", error);
@@ -89,16 +102,17 @@ export async function fetchAttendanceForClassDate(
 export async function saveAttendance(
   className: string,
   date: string,
-  records: { student_id: string; student_name: string; status: AttendanceStatus; remarks?: string }[]
+  records: { student_id: string; student_name: string; status: AttendanceStatus; remarks?: string }[],
+  campusCode?: string | null
 ): Promise<void> {
   if (records.length === 0) return;
 
   // Fetch existing records to determine which to update vs insert
-  const existing = await fetchAttendanceForClassDate(className, date);
+  const existing = await fetchAttendanceForClassDate(className, date, campusCode);
   const existingMap = new Map(existing.map((r) => [r.student_id, r]));
 
   const toUpdate: { id: string; status: AttendanceStatus; remarks: string | null; student_name: string }[] = [];
-  const toInsert: { student_id: string; class: string; date: string; status: AttendanceStatus; remarks: string | null; student_name: string }[] = [];
+  const toInsert: { student_id: string; class: string; date: string; status: AttendanceStatus; remarks: string | null; student_name: string; campus_code?: string | null }[] = [];
 
   for (const record of records) {
     const existingRecord = existingMap.get(record.student_id);
@@ -119,6 +133,7 @@ export async function saveAttendance(
         status: record.status,
         remarks: record.remarks ?? null,
         student_name: record.student_name,
+        ...(campusCode ? { campus_code: campusCode } : {}),
       });
     }
   }
@@ -155,11 +170,17 @@ export async function saveAttendance(
  * Fetch unique classes from students table (for teacher class selection)
  * In production, this should be filtered by teacher's assigned classes
  */
-export async function fetchAvailableClasses(): Promise<string[]> {
-  const { data, error } = await supabase
+export async function fetchAvailableClasses(campusCode?: string | null): Promise<string[]> {
+  let query = supabase
     .from("students")
     .select("class")
     .eq("archived", false);
+
+  if (campusCode) {
+    query = query.eq("campus_code", campusCode);
+  }
+
+  const { data, error } = await query;
 
   if (error) {
     logSupabaseError("teacherAttendance/fetchAvailableClasses", error);
