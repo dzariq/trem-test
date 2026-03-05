@@ -1,22 +1,23 @@
 
 
-## Problem
+## Regenerate Supabase Database Types
 
-The `AnnouncementDrawer` uses `h-auto` for its content height (line 244), causing it to size based on content rather than respecting the 75% snap point. The standardized `BottomSheet` component uses `h-[100dvh]` which lets vaul's snap points control the visible portion.
+This is a straightforward task: regenerate the TypeScript types from the current Supabase schema so the frontend reflects the latest database migrations.
 
-## Fix
+### What will happen
 
-**File: `src/components/AnnouncementDrawer.tsx` (line 244)**
+The Supabase types file at `src/integrations/supabase/types.ts` will be regenerated from the live database schema. This is an automated process — no manual code changes needed.
 
-Change the non-fullscreen height from `h-auto` to `h-[100dvh]` to match the `BottomSheet` pattern:
+### Expected new types to appear
 
-```
-// Before
-snap === 1 ? "h-[calc(100dvh-var(--safe-top))] rounded-none pt-[var(--safe-top)]" : "h-auto max-h-[calc(100vh-var(--safe-top)-var(--safe-bottom))]"
+After regeneration, the types file should include:
 
-// After  
-snap === 1 ? "h-[calc(100dvh-var(--safe-top))] rounded-none pt-[var(--safe-top)]" : "h-[100dvh] max-h-[calc(100dvh-var(--safe-top))]"
-```
+1. **`user_campuses` table** — with `id`, `user_id`, `campus_id`, `campus_code`, `is_primary`, `created_at`
+2. **`campus_code` column** on: `students`, `lesson_plans`, `homework_assignments`, `attendance`, `announcements`, `calendar_events`, `class_years`, `parent_tickets`, `academic_periods`, `subjects`, `subject_selections`, `campuses`
+3. **`app_role` enum** including `super_admin`
+4. **`campuses.campus_code`** column
 
-This single change makes the drawer always render at full viewport height internally, while vaul's snap point system controls how much of it is visible — exactly how the Events bottom sheet works. The drawer will open at 75%, drag up to 95%, then to 100%.
+### Verification
+
+After regeneration, I will read the updated types file and confirm each of the four items above is present. No other changes will be made.
 
