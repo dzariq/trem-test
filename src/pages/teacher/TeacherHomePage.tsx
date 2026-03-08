@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { stripCampusPrefix } from "@/lib/utils";
 import { TeacherAppLayout } from "@/components/layout/TeacherAppLayout";
 import { AppHeader } from "@/components/layout/AppHeader";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
