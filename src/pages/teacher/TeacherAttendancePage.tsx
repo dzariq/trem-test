@@ -12,7 +12,7 @@ import schoolLogo from "@/assets/school-badge.png";
 import collinzLogo from "@/assets/collinz-school-logo.png";
 import cambridgeLogo from "@/assets/cambridge-logo.jpg";
 import { format, startOfWeek, endOfWeek, isToday, parseISO, addWeeks, subWeeks, isSameWeek, startOfMonth, endOfMonth, startOfYear, endOfYear, subMonths } from "date-fns";
-import { cn } from "@/lib/utils";
+import { cn, stripCampusPrefix } from "@/lib/utils";
 import { toast } from "@/hooks/use-toast";
 import { Input } from "@/components/ui/input";
 
