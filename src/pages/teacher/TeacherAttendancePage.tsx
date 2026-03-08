@@ -1230,7 +1230,7 @@ export default function TeacherAttendancePage() {
                     <div style={{ fontSize: '14px', fontWeight: '700', color: '#374151' }}>
                       {format(weeklyAbsentData.weekStart, "MMM d")} - {format(weeklyAbsentData.weekEnd, "MMM d, yyyy")}
                     </div>
-                    <div style={{ fontSize: '11px', color: '#6b7280' }}>Class {selectedClass}</div>
+                    <div style={{ fontSize: '11px', color: '#6b7280' }}>Class {stripCampusPrefix(selectedClass)}</div>
                   </div>
                   <img src={cambridgeLogo} alt="Cambridge Assessment" style={{ height: '40px', objectFit: 'contain' }} />
                 </div>
