@@ -1,4 +1,5 @@
 import { useState, useMemo, useCallback } from "react";
+import { stripCampusPrefix } from "@/lib/utils";
 import { useTeacherScope } from "@/hooks/useTeacherScope";
 import { useAuth } from "@/contexts/AuthContext";
 
