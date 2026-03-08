@@ -85,7 +85,7 @@ export function useAttendanceScopeFilter(): AttendanceScopeFilterState {
     if (scope === "school") return "Whole School";
     if (scope === "cohort" && selectedCohort) return `Cohort ${selectedCohort}`;
     if (scope === "class" && selectedClassNames.length > 0) {
-      if (selectedClassNames.length <= 2) return selectedClassNames.join(", ");
+      if (selectedClassNames.length <= 2) return selectedClassNames.map(stripCampusPrefix).join(", ");
       return `${selectedClassNames.length} classes`;
     }
     return "Whole School";
