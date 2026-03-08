@@ -50,6 +50,8 @@ interface UseEligibleCcaActivitiesOptions {
   studentId: string | null;
   /** Include inactive activities (default false) */
   includeInactive?: boolean;
+  /** Filter by campus_code (for parent app) */
+  campusCode?: string | null;
 }
 
 /**
