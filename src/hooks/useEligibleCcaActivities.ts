@@ -268,7 +268,7 @@ export function useEligibleCcaActivities(options: UseEligibleCcaActivitiesOption
     } finally {
       setLoading(false);
     }
-  }, [studentId, includeInactive]);
+  }, [studentId, includeInactive, campusCode]);
 
   useEffect(() => {
     fetchActivities();
