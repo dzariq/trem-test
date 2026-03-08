@@ -110,6 +110,7 @@ export default function CalendarPage() {
   } = useEligibleCcaActivities({
     studentId: selectedStudentId,
     includeInactive: false,
+    campusCode: selectedStudent?.campus_code ?? null,
   });
 
   const {
