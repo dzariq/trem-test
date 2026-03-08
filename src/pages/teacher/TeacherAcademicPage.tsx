@@ -6310,7 +6310,7 @@ export default function TeacherAcademicPage() {
                 <img src={collinzLogo} alt="Collinz School" crossOrigin="anonymous" style={{ height: '40px', objectFit: 'contain' }} />
                 <div style={{ textAlign: 'center' }}>
                   <div style={{ fontSize: '10px', fontWeight: 600, color: '#374151', letterSpacing: '0.5px', textTransform: 'uppercase' }}>Class Performance Report</div>
-                  <div style={{ fontSize: '13px', fontWeight: 700, color: '#374151' }}>Class {selectedClass} - {selectedYear} {selectedPeriod === 'midYear' ? 'Mid-Year' : 'Year-End'}</div>
+                  <div style={{ fontSize: '13px', fontWeight: 700, color: '#374151' }}>Class {stripCampusPrefix(selectedClass)} - {selectedYear} {selectedPeriod === 'midYear' ? 'Mid-Year' : 'Year-End'}</div>
                   <div style={{ fontSize: '9px', color: '#6b7280', marginTop: '2px' }}>
                     Generated on {new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}
                   </div>
