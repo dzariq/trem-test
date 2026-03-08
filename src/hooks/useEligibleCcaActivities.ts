@@ -60,7 +60,7 @@ interface UseEligibleCcaActivitiesOptions {
  * Uses the get_eligible_cca_activities RPC function.
  */
 export function useEligibleCcaActivities(options: UseEligibleCcaActivitiesOptions) {
-  const { studentId, includeInactive = false } = options;
+  const { studentId, includeInactive = false, campusCode } = options;
 
   const [activities, setActivities] = useState<CcaActivity[]>([]);
   const [loading, setLoading] = useState(false);
