@@ -3502,6 +3502,18 @@ export type Database = {
       }
       teacher_allowed_class_year_ids: { Args: never; Returns: number[] }
       teacher_assigned_to_cca: { Args: { _cca_id: string }; Returns: boolean }
+      transfer_student_campus: {
+        Args: {
+          p_clear_class?: boolean
+          p_created_by?: string
+          p_from_campus_id: string
+          p_reason?: string
+          p_student_id: string
+          p_to_campus_id: string
+          p_transfer_date: string
+        }
+        Returns: Json
+      }
       user_has_role: { Args: { check_role: string }; Returns: boolean }
       validate_cca_enrollment_eligibility: {
         Args: { p_activity_id: string; p_student_id: string }
