@@ -36,7 +36,7 @@ const mapStudentRow = (row: any): LinkedStudent => {
     id: String(row.id ?? row.student_id ?? row.user_id ?? ""),
     studentCode: row.student_code ?? null,
     name: name || "Student",
-    className: row.class_name ?? row.class ?? row.classroom ?? null,
+    className: stripCampusPrefix(row.class_name ?? row.class ?? row.classroom ?? ''),
     grade: row.grade ?? row.year_group ?? row.level ?? null,
     campus: row.campus ?? row.campus_id ?? null,
     sportsHouse: row.sports_house ?? row.house ?? null,
