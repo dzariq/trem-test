@@ -815,6 +815,7 @@ export type Database = {
       cca_activities: {
         Row: {
           allow_free_text: boolean
+          campus_code: string | null
           category: string
           classes_involved: string[] | null
           coordinator_email: string | null
@@ -838,6 +839,7 @@ export type Database = {
         }
         Insert: {
           allow_free_text?: boolean
+          campus_code?: string | null
           category?: string
           classes_involved?: string[] | null
           coordinator_email?: string | null
@@ -861,6 +863,7 @@ export type Database = {
         }
         Update: {
           allow_free_text?: boolean
+          campus_code?: string | null
           category?: string
           classes_involved?: string[] | null
           coordinator_email?: string | null
