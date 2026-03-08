@@ -1,4 +1,5 @@
 import { useEffect, useState, useMemo } from "react";
+import { stripCampusPrefix } from "@/lib/utils";
 import { BottomSheet } from "@/components/ui/bottom-sheet";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
