@@ -164,7 +164,7 @@ const listViaStudentGuardians = async (guardianUserId: string) => {
         studentCode: student.student_code ?? null,
         name: name || "Student",
         classLabel: classLabel || null,
-        className: student.class ?? null,
+        className: student.class ? stripCampusPrefix(student.class) : null,
         grade: student.year_level ?? null,
         campus: student.campus_id ?? null,
         campus_code: student.campus_code ?? null,
