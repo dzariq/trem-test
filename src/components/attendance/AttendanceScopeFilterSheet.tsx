@@ -171,7 +171,7 @@ export function AttendanceScopeFilterSheet({
                     className="text-xs cursor-pointer"
                     onClick={() => toggleClass(name)}
                   >
-                    {name} ×
+                    {stripCampusPrefix(name)} ×
                   </Badge>
                 ))}
               </div>
