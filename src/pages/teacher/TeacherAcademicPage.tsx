@@ -3483,7 +3483,7 @@ export default function TeacherAcademicPage() {
                           <div style={{ textAlign: 'center' }}>
                             <div style={{ fontSize: '10px', fontWeight: 600, color: '#374151', letterSpacing: '0.5px', textTransform: 'uppercase' }}>Grade Distribution Report</div>
                             <div style={{ fontSize: '13px', fontWeight: 700, color: '#374151' }}>
-                              {bandsCompareMode ? "Class Comparison Analysis" : `Class ${selectedClass} - ${bandsSelectedSubject}`}
+                              {bandsCompareMode ? "Class Comparison Analysis" : `Class ${stripCampusPrefix(selectedClass)} - ${bandsSelectedSubject}`}
                             </div>
                             <div style={{ fontSize: '9px', color: '#6b7280', marginTop: '2px' }}>
                               Generated on {new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}
