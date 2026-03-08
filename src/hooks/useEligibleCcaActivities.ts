@@ -50,6 +50,8 @@ interface UseEligibleCcaActivitiesOptions {
   studentId: string | null;
   /** Include inactive activities (default false) */
   includeInactive?: boolean;
+  /** Filter by campus_code (for parent app) */
+  campusCode?: string | null;
 }
 
 /**
@@ -58,7 +60,7 @@ interface UseEligibleCcaActivitiesOptions {
  * Uses the get_eligible_cca_activities RPC function.
  */
 export function useEligibleCcaActivities(options: UseEligibleCcaActivitiesOptions) {
-  const { studentId, includeInactive = false } = options;
+  const { studentId, includeInactive = false, campusCode } = options;
 
   const [activities, setActivities] = useState<CcaActivity[]>([]);
   const [loading, setLoading] = useState(false);
@@ -115,6 +117,10 @@ export function useEligibleCcaActivities(options: UseEligibleCcaActivitiesOption
           image_url
         `)
         .in("id", eligibleIds);
+
+      if (campusCode) {
+        activitiesQuery = activitiesQuery.eq("campus_code", campusCode);
+      }
 
       if (!includeInactive) {
         activitiesQuery = activitiesQuery.eq("is_active", true);
@@ -262,7 +268,7 @@ export function useEligibleCcaActivities(options: UseEligibleCcaActivitiesOption
     } finally {
       setLoading(false);
     }
-  }, [studentId, includeInactive]);
+  }, [studentId, includeInactive, campusCode]);
 
   useEffect(() => {
     fetchActivities();

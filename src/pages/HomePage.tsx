@@ -95,7 +95,7 @@ export default function HomePage() {
     return () => {
       isMounted = false;
     };
-  }, [profileLoading, profile?.role]);
+  }, [profileLoading, profile?.role, parentCampusCode]);
 
   const handleMarkAnnouncementRead = async (id: Announcement["id"]) => {
     try {

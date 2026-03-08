@@ -110,6 +110,7 @@ export default function CalendarPage() {
   } = useEligibleCcaActivities({
     studentId: selectedStudentId,
     includeInactive: false,
+    campusCode: selectedStudent?.campus_code ?? null,
   });
 
   const {
@@ -293,7 +294,7 @@ export default function CalendarPage() {
     return () => {
       isMounted = false;
     };
-  }, [currentMonth, profile?.role]);
+  }, [currentMonth, profile?.role, selectedStudent?.campus_code]);
 
   const filteredCCA = useMemo(() => {
     // Filter by type, then exclude already-enrolled activities
