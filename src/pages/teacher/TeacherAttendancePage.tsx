@@ -1178,7 +1178,7 @@ export default function TeacherAttendancePage() {
             </div>
             
             <div className="text-center text-sm text-muted-foreground">
-              Class: <span className="font-semibold text-foreground">{selectedClass}</span>
+              Class: <span className="font-semibold text-foreground">{stripCampusPrefix(selectedClass)}</span>
             </div>
             
             <Button 
