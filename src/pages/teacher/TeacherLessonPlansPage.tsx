@@ -513,7 +513,7 @@ const TeacherLessonPlansPage = () => {
                   <SelectContent>
                     {dbClasses.map((cls) => (
                       <SelectItem key={cls} value={cls}>
-                        {cls}
+                        {stripCampusPrefix(cls)}
                       </SelectItem>
                     ))}
                   </SelectContent>

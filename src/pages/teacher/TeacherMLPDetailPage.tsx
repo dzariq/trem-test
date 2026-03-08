@@ -329,7 +329,7 @@ const TeacherMLPDetailPage = () => {
             <SelectContent>
               {assignedClasses.map((cls) => (
                 <SelectItem key={cls.classYearId} value={cls.classYearId.toString()}>
-                  {cls.className}
+                  {stripCampusPrefix(cls.className)}
                 </SelectItem>
               ))}
             </SelectContent>

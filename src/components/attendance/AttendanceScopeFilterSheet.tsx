@@ -196,7 +196,7 @@ export function AttendanceScopeFilterSheet({
                               checked={draftClasses.includes(cls.class_name)}
                               onCheckedChange={() => toggleClass(cls.class_name)}
                             />
-                            <span className="text-sm font-medium">{cls.class_name}</span>
+                            <span className="text-sm font-medium">{stripCampusPrefix(cls.class_name)}</span>
                           </label>
                         ))}
                       </div>

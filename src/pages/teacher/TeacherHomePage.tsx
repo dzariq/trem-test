@@ -495,7 +495,7 @@ export default function TeacherHomePage() {
                         >
                           <div className="flex items-center gap-2">
                             <Badge variant="outline" className="text-xs">
-                              {item.class}
+                              {stripCampusPrefix(item.class)}
                             </Badge>
                             <span className="text-sm text-foreground">{item.subject}</span>
                           </div>
