@@ -1681,7 +1681,7 @@ export default function TeacherAcademicPage() {
                     <div className="flex items-center justify-between">
                       <div>
                         <p className="font-semibold text-foreground">Homeroom Behavior</p>
-                        <p className="text-sm text-muted-foreground">Class {selectedClass} • {students.length} students</p>
+                        <p className="text-sm text-muted-foreground">Class {stripCampusPrefix(selectedClass)} • {students.length} students</p>
                       </div>
                       <Badge variant="outline" className="bg-purple-100 border-purple-300 text-purple-600">
                         <UserCheck className="h-3 w-3 mr-1" />
