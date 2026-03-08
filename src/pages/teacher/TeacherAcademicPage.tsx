@@ -1809,7 +1809,7 @@ export default function TeacherAcademicPage() {
                   onClick={() => {
                     toast.success(
                       "Behavior saved",
-                      `Homeroom behavior for ${selectedClass} has been saved.`
+                      `Homeroom behavior for ${stripCampusPrefix(selectedClass)} has been saved.`
                     );
                   }}
                 >
