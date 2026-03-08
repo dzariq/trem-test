@@ -4238,7 +4238,7 @@ export default function TeacherAcademicPage() {
                     <span className="font-medium">Insight:</span>{" "}
                     {risingSubjects.length > 0 && <>{risingSubjects[0].name} shows great improvement (+{risingSubjects[0].improvement}%). </>}
                     {fallingSubjects.length > 0 && <>Focus more on {fallingSubjects[0].name} which dropped {fallingSubjects[0].decline}%. </>}
-                    {risingSubjects.length === 0 && fallingSubjects.length === 0 && <>Performance is stable across all subjects for Class {selectedClass}.</>}
+                    {risingSubjects.length === 0 && fallingSubjects.length === 0 && <>Performance is stable across all subjects for Class {stripCampusPrefix(selectedClass)}.</>}
                   </p>
                 </div>
 
