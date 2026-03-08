@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { stripCampusPrefix } from "@/lib/utils";
 import { TeacherAppLayout } from "@/components/layout/TeacherAppLayout";
 import { AppHeader } from "@/components/layout/AppHeader";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -425,12 +426,12 @@ export default function TeacherHomePage() {
                   {teacherScope.isTeacher
                     ? teacherScope.allowedClassYears.map((cls) => (
                         <SelectItem key={cls.id} value={cls.id.toString()}>
-                          Class {cls.class_name}
+                          Class {stripCampusPrefix(cls.class_name)}
                         </SelectItem>
                       ))
                     : teacherProfile.classes.map((cls) => (
                         <SelectItem key={cls} value={cls}>
-                          Class {cls}
+                          Class {stripCampusPrefix(cls)}
                         </SelectItem>
                       ))}
                 </SelectContent>
@@ -494,7 +495,7 @@ export default function TeacherHomePage() {
                         >
                           <div className="flex items-center gap-2">
                             <Badge variant="outline" className="text-xs">
-                              {item.class}
+                              {stripCampusPrefix(item.class)}
                             </Badge>
                             <span className="text-sm text-foreground">{item.subject}</span>
                           </div>

@@ -7,7 +7,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Filter, RotateCcw } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { cn, stripCampusPrefix } from "@/lib/utils";
 import {
   type AttendanceScope,
   type AttendanceScopeFilterState,
@@ -171,7 +171,7 @@ export function AttendanceScopeFilterSheet({
                     className="text-xs cursor-pointer"
                     onClick={() => toggleClass(name)}
                   >
-                    {name} ×
+                    {stripCampusPrefix(name)} ×
                   </Badge>
                 ))}
               </div>
@@ -196,7 +196,7 @@ export function AttendanceScopeFilterSheet({
                               checked={draftClasses.includes(cls.class_name)}
                               onCheckedChange={() => toggleClass(cls.class_name)}
                             />
-                            <span className="text-sm font-medium">{cls.class_name}</span>
+                            <span className="text-sm font-medium">{stripCampusPrefix(cls.class_name)}</span>
                           </label>
                         ))}
                       </div>

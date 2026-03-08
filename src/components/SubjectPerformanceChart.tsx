@@ -1,4 +1,5 @@
 import { useState, useRef, useMemo, TouchEvent, useCallback, useEffect } from "react";
+import { stripCampusPrefix } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { getTinySubjectCode } from "@/data/subjectsConfig";
 import { Maximize2, Target } from "lucide-react";
@@ -181,7 +182,7 @@ export function SubjectPerformanceChart({
   const cohortLabelText = cohortLabel
     ? `Cohort Avg (${cohortLabel})`
     : "Cohort Avg";
-  const classLabelText = classLabel ? `Class Avg (${classLabel})` : "Class Avg";
+  const classLabelText = classLabel ? `Class Avg (${stripCampusPrefix(classLabel)})` : "Class Avg";
 
   // Touch handlers
   const handleTouchStart = useCallback((e: TouchEvent<HTMLDivElement>) => {

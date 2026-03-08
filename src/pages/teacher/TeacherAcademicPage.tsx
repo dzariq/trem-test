@@ -26,7 +26,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, LineChart, Line, Legend, AreaChart, Area, RadarChart, Radar, PolarGrid, PolarAngleAxis, PolarRadiusAxis, ReferenceLine, ReferenceDot } from "recharts";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { cn } from "@/lib/utils";
+import { cn, stripCampusPrefix } from "@/lib/utils";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { BoxPlotStats, calculateStudentBoxPlotData, calculateSubjectBoxPlotData, generateInsights, Insight, getAvailableYears } from "@/utils/boxPlotCalculations";
 import { BoxPlotChart } from "@/components/BoxPlotChart";
@@ -851,7 +851,7 @@ export default function TeacherAcademicPage() {
     const categoryLabels = { grades: "Grades", behavior: "Behavior", awards: "Awards" };
     toast.success(
       `${categoryLabels[entryCategory]} saved`,
-      `${categoryLabels[entryCategory]} saved for ${students.find(s => s.id === selectedStudent)?.name} in Class ${selectedClass}.`
+      `${categoryLabels[entryCategory]} saved for ${students.find(s => s.id === selectedStudent)?.name} in Class ${stripCampusPrefix(selectedClass)}.`
     );
   };
 
@@ -1561,7 +1561,7 @@ export default function TeacherAcademicPage() {
                 </SelectTrigger>
                 <SelectContent>
                   {gradeEntry.classes.map(cls => (
-                    <SelectItem key={cls} value={cls}>{cls}</SelectItem>
+                    <SelectItem key={cls} value={cls}>{stripCampusPrefix(cls)}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
@@ -1681,7 +1681,7 @@ export default function TeacherAcademicPage() {
                     <div className="flex items-center justify-between">
                       <div>
                         <p className="font-semibold text-foreground">Homeroom Behavior</p>
-                        <p className="text-sm text-muted-foreground">Class {selectedClass} • {students.length} students</p>
+                        <p className="text-sm text-muted-foreground">Class {stripCampusPrefix(selectedClass)} • {students.length} students</p>
                       </div>
                       <Badge variant="outline" className="bg-purple-100 border-purple-300 text-purple-600">
                         <UserCheck className="h-3 w-3 mr-1" />
@@ -1809,7 +1809,7 @@ export default function TeacherAcademicPage() {
                   onClick={() => {
                     toast.success(
                       "Behavior saved",
-                      `Homeroom behavior for ${selectedClass} has been saved.`
+                      `Homeroom behavior for ${stripCampusPrefix(selectedClass)} has been saved.`
                     );
                   }}
                 >
@@ -1843,7 +1843,7 @@ export default function TeacherAcademicPage() {
                           <div>
                             <p className="font-semibold text-foreground">{gradeEntry.selectedSubject.name}</p>
                             <p className="text-sm text-muted-foreground">
-                              Class {gradeEntry.selectedClass} • {gradeEntry.students.length} students • {gradeEntry.selectedPeriod.name}
+                              Class {stripCampusPrefix(gradeEntry.selectedClass)} • {gradeEntry.students.length} students • {gradeEntry.selectedPeriod.name}
                             </p>
                           </div>
                           <Badge variant="outline" className="bg-primary/10 border-primary/30 text-primary">
@@ -2360,7 +2360,7 @@ export default function TeacherAcademicPage() {
                             <SelectItem value="_none" disabled>No classes found</SelectItem>
                           ) : (
                             classAnalysis.classes.map((cls) => (
-                              <SelectItem key={cls} value={cls}>{cls}</SelectItem>
+                              <SelectItem key={cls} value={cls}>{stripCampusPrefix(cls)}</SelectItem>
                             ))
                           )}
                         </SelectContent>
@@ -2817,7 +2817,7 @@ export default function TeacherAcademicPage() {
                         </SelectTrigger>
                         <SelectContent className="bg-card">
                           {classAnalysis.classes.map((cls) => (
-                            <SelectItem key={cls} value={cls}>{cls}</SelectItem>
+                            <SelectItem key={cls} value={cls}>{stripCampusPrefix(cls)}</SelectItem>
                           ))}
                         </SelectContent>
                       </Select>
@@ -2895,7 +2895,7 @@ export default function TeacherAcademicPage() {
                             </SelectTrigger>
                             <SelectContent className="bg-card">
                               {classAnalysis.classes.map((cls) => (
-                                <SelectItem key={cls} value={cls}>{cls}</SelectItem>
+                                <SelectItem key={cls} value={cls}>{stripCampusPrefix(cls)}</SelectItem>
                               ))}
                             </SelectContent>
                           </Select>
@@ -3483,7 +3483,7 @@ export default function TeacherAcademicPage() {
                           <div style={{ textAlign: 'center' }}>
                             <div style={{ fontSize: '10px', fontWeight: 600, color: '#374151', letterSpacing: '0.5px', textTransform: 'uppercase' }}>Grade Distribution Report</div>
                             <div style={{ fontSize: '13px', fontWeight: 700, color: '#374151' }}>
-                              {bandsCompareMode ? "Class Comparison Analysis" : `Class ${selectedClass} - ${bandsSelectedSubject}`}
+                              {bandsCompareMode ? "Class Comparison Analysis" : `Class ${stripCampusPrefix(selectedClass)} - ${bandsSelectedSubject}`}
                             </div>
                             <div style={{ fontSize: '9px', color: '#6b7280', marginTop: '2px' }}>
                               Generated on {new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}
@@ -3854,7 +3854,7 @@ export default function TeacherAcademicPage() {
                   <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0 flex-1">
                       <p className="text-xs text-muted-foreground mb-0.5 truncate">
-                        {trendsSelectedSubjects.length === subjects.length ? `Class ${selectedClass} Average` : `${trendsSelectedSubjects.length} Subject${trendsSelectedSubjects.length > 1 ? 's' : ''} Selected`}
+                        {trendsSelectedSubjects.length === subjects.length ? `Class ${stripCampusPrefix(selectedClass)} Average` : `${trendsSelectedSubjects.length} Subject${trendsSelectedSubjects.length > 1 ? 's' : ''} Selected`}
                       </p>
                       <div className="flex items-baseline gap-2 flex-wrap">
                         <span className="text-3xl font-bold text-foreground">
@@ -3872,7 +3872,7 @@ export default function TeacherAcademicPage() {
                         <SelectValue placeholder="Class" />
                       </SelectTrigger>
                       <SelectContent>
-                        {classAnalysis.classes.map(cls => <SelectItem key={cls} value={cls}>{cls}</SelectItem>)}
+                        {classAnalysis.classes.map(cls => <SelectItem key={cls} value={cls}>{stripCampusPrefix(cls)}</SelectItem>)}
                       </SelectContent>
                     </Select>
                   </div>
@@ -4238,7 +4238,7 @@ export default function TeacherAcademicPage() {
                     <span className="font-medium">Insight:</span>{" "}
                     {risingSubjects.length > 0 && <>{risingSubjects[0].name} shows great improvement (+{risingSubjects[0].improvement}%). </>}
                     {fallingSubjects.length > 0 && <>Focus more on {fallingSubjects[0].name} which dropped {fallingSubjects[0].decline}%. </>}
-                    {risingSubjects.length === 0 && fallingSubjects.length === 0 && <>Performance is stable across all subjects for Class {selectedClass}.</>}
+                    {risingSubjects.length === 0 && fallingSubjects.length === 0 && <>Performance is stable across all subjects for Class {stripCampusPrefix(selectedClass)}.</>}
                   </p>
                 </div>
 
@@ -4414,7 +4414,7 @@ export default function TeacherAcademicPage() {
                               <SelectValue placeholder="Class" />
                             </SelectTrigger>
                             <SelectContent className="bg-card">
-                              {classAnalysis.classes.map(cls => <SelectItem key={cls} value={cls}>{cls}</SelectItem>)}
+                              {classAnalysis.classes.map(cls => <SelectItem key={cls} value={cls}>{stripCampusPrefix(cls)}</SelectItem>)}
                             </SelectContent>
                           </Select>
                             <Select 
@@ -5213,7 +5213,7 @@ export default function TeacherAcademicPage() {
                             </SelectTrigger>
                             <SelectContent>
                               {boxPlotClassesForGrade.map(cls => (
-                                <SelectItem key={cls} value={cls}>{cls}</SelectItem>
+                                <SelectItem key={cls} value={cls}>{stripCampusPrefix(cls)}</SelectItem>
                               ))}
                             </SelectContent>
                           </Select>
@@ -6310,7 +6310,7 @@ export default function TeacherAcademicPage() {
                 <img src={collinzLogo} alt="Collinz School" crossOrigin="anonymous" style={{ height: '40px', objectFit: 'contain' }} />
                 <div style={{ textAlign: 'center' }}>
                   <div style={{ fontSize: '10px', fontWeight: 600, color: '#374151', letterSpacing: '0.5px', textTransform: 'uppercase' }}>Class Performance Report</div>
-                  <div style={{ fontSize: '13px', fontWeight: 700, color: '#374151' }}>Class {selectedClass} - {selectedYear} {selectedPeriod === 'midYear' ? 'Mid-Year' : 'Year-End'}</div>
+                  <div style={{ fontSize: '13px', fontWeight: 700, color: '#374151' }}>Class {stripCampusPrefix(selectedClass)} - {selectedYear} {selectedPeriod === 'midYear' ? 'Mid-Year' : 'Year-End'}</div>
                   <div style={{ fontSize: '9px', color: '#6b7280', marginTop: '2px' }}>
                     Generated on {new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}
                   </div>

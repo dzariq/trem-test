@@ -12,7 +12,7 @@ import schoolLogo from "@/assets/school-badge.png";
 import collinzLogo from "@/assets/collinz-school-logo.png";
 import cambridgeLogo from "@/assets/cambridge-logo.jpg";
 import { format, startOfWeek, endOfWeek, isToday, parseISO, addWeeks, subWeeks, isSameWeek, startOfMonth, endOfMonth, startOfYear, endOfYear, subMonths } from "date-fns";
-import { cn } from "@/lib/utils";
+import { cn, stripCampusPrefix } from "@/lib/utils";
 import { toast } from "@/hooks/use-toast";
 import { Input } from "@/components/ui/input";
 
@@ -395,7 +395,7 @@ export default function TeacherAttendancePage() {
               </SelectTrigger>
               <SelectContent>
                 {classes.map((cls) => (
-                  <SelectItem key={cls} value={cls}>Class {cls}</SelectItem>
+                  <SelectItem key={cls} value={cls}>Class {stripCampusPrefix(cls)}</SelectItem>
                 ))}
               </SelectContent>
             </Select>
@@ -443,7 +443,7 @@ export default function TeacherAttendancePage() {
           <Card>
             <CardHeader className="pb-2">
               <CardTitle className="text-base flex items-center justify-between">
-                <span>Class {selectedClass} ({students.length} students)</span>
+                <span>Class {stripCampusPrefix(selectedClass)} ({students.length} students)</span>
                 {(loadingStudents || loadingAttendance) && (
                   <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
                 )}
@@ -1178,7 +1178,7 @@ export default function TeacherAttendancePage() {
             </div>
             
             <div className="text-center text-sm text-muted-foreground">
-              Class: <span className="font-semibold text-foreground">{selectedClass}</span>
+              Class: <span className="font-semibold text-foreground">{stripCampusPrefix(selectedClass)}</span>
             </div>
             
             <Button 
@@ -1230,7 +1230,7 @@ export default function TeacherAttendancePage() {
                     <div style={{ fontSize: '14px', fontWeight: '700', color: '#374151' }}>
                       {format(weeklyAbsentData.weekStart, "MMM d")} - {format(weeklyAbsentData.weekEnd, "MMM d, yyyy")}
                     </div>
-                    <div style={{ fontSize: '11px', color: '#6b7280' }}>Class {selectedClass}</div>
+                    <div style={{ fontSize: '11px', color: '#6b7280' }}>Class {stripCampusPrefix(selectedClass)}</div>
                   </div>
                   <img src={cambridgeLogo} alt="Cambridge Assessment" style={{ height: '40px', objectFit: 'contain' }} />
                 </div>
@@ -1425,7 +1425,7 @@ export default function TeacherAttendancePage() {
             </div>
 
             <div className="text-center text-sm text-muted-foreground">
-              Class: <span className="font-semibold text-foreground">{selectedClass}</span>
+              Class: <span className="font-semibold text-foreground">{stripCampusPrefix(selectedClass)}</span>
             </div>
             
             <Button 
@@ -1474,7 +1474,7 @@ export default function TeacherAttendancePage() {
                   <img src={collinzLogo} alt="Collinz School" style={{ height: '45px', objectFit: 'contain' }} />
                   <div style={{ textAlign: 'center' }}>
                     <div style={{ fontSize: '10px', fontWeight: '600', color: '#065f46', letterSpacing: '0.5px', textTransform: 'uppercase' }}>Attendance Concerns Report</div>
-                    <div style={{ fontSize: '14px', fontWeight: '700', color: '#374151' }}>Class {selectedClass}</div>
+                    <div style={{ fontSize: '14px', fontWeight: '700', color: '#374151' }}>Class {stripCampusPrefix(selectedClass)}</div>
                     <div style={{ fontSize: '11px', color: '#6b7280' }}>
                       {format(frequentReportStartDate, "MMM d, yyyy")} - {format(frequentReportEndDate, "MMM d, yyyy")}
                     </div>
