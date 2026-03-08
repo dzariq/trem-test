@@ -443,7 +443,7 @@ export default function TeacherAttendancePage() {
           <Card>
             <CardHeader className="pb-2">
               <CardTitle className="text-base flex items-center justify-between">
-                <span>Class {selectedClass} ({students.length} students)</span>
+                <span>Class {stripCampusPrefix(selectedClass)} ({students.length} students)</span>
                 {(loadingStudents || loadingAttendance) && (
                   <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
                 )}
