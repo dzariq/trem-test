@@ -153,7 +153,7 @@ const listViaStudentGuardians = async (guardianUserId: string) => {
         student.name ??
         student.full_name ??
         [student.first_name, student.last_name].filter(Boolean).join(" ").trim();
-      const classLabel = [student.class, student.year_level]
+      const classLabel = [student.class ? stripCampusPrefix(student.class) : null, student.year_level]
         .filter(Boolean)
         .map(String)
         .join(" - ");
