@@ -3854,7 +3854,7 @@ export default function TeacherAcademicPage() {
                   <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0 flex-1">
                       <p className="text-xs text-muted-foreground mb-0.5 truncate">
-                        {trendsSelectedSubjects.length === subjects.length ? `Class ${selectedClass} Average` : `${trendsSelectedSubjects.length} Subject${trendsSelectedSubjects.length > 1 ? 's' : ''} Selected`}
+                        {trendsSelectedSubjects.length === subjects.length ? `Class ${stripCampusPrefix(selectedClass)} Average` : `${trendsSelectedSubjects.length} Subject${trendsSelectedSubjects.length > 1 ? 's' : ''} Selected`}
                       </p>
                       <div className="flex items-baseline gap-2 flex-wrap">
                         <span className="text-3xl font-bold text-foreground">
