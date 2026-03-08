@@ -7,7 +7,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Filter, RotateCcw } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { cn, stripCampusPrefix } from "@/lib/utils";
 import {
   type AttendanceScope,
   type AttendanceScopeFilterState,
