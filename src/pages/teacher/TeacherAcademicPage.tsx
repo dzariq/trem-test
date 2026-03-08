@@ -851,7 +851,7 @@ export default function TeacherAcademicPage() {
     const categoryLabels = { grades: "Grades", behavior: "Behavior", awards: "Awards" };
     toast.success(
       `${categoryLabels[entryCategory]} saved`,
-      `${categoryLabels[entryCategory]} saved for ${students.find(s => s.id === selectedStudent)?.name} in Class ${selectedClass}.`
+      `${categoryLabels[entryCategory]} saved for ${students.find(s => s.id === selectedStudent)?.name} in Class ${stripCampusPrefix(selectedClass)}.`
     );
   };
 
