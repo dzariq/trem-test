@@ -164,7 +164,7 @@ export function ManageStudentsSheet({
             <SelectItem value="all">All Classes</SelectItem>
             {availableClasses.map((cls) => (
               <SelectItem key={cls} value={cls}>
-                {cls}
+                {stripCampusPrefix(cls)}
               </SelectItem>
             ))}
           </SelectContent>
