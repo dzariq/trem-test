@@ -2895,7 +2895,7 @@ export default function TeacherAcademicPage() {
                             </SelectTrigger>
                             <SelectContent className="bg-card">
                               {classAnalysis.classes.map((cls) => (
-                                <SelectItem key={cls} value={cls}>{cls}</SelectItem>
+                                <SelectItem key={cls} value={cls}>{stripCampusPrefix(cls)}</SelectItem>
                               ))}
                             </SelectContent>
                           </Select>
