@@ -431,7 +431,7 @@ export default function TeacherHomePage() {
                       ))
                     : teacherProfile.classes.map((cls) => (
                         <SelectItem key={cls} value={cls}>
-                          Class {cls}
+                          Class {stripCampusPrefix(cls)}
                         </SelectItem>
                       ))}
                 </SelectContent>
