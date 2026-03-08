@@ -1843,7 +1843,7 @@ export default function TeacherAcademicPage() {
                           <div>
                             <p className="font-semibold text-foreground">{gradeEntry.selectedSubject.name}</p>
                             <p className="text-sm text-muted-foreground">
-                              Class {gradeEntry.selectedClass} • {gradeEntry.students.length} students • {gradeEntry.selectedPeriod.name}
+                              Class {stripCampusPrefix(gradeEntry.selectedClass)} • {gradeEntry.students.length} students • {gradeEntry.selectedPeriod.name}
                             </p>
                           </div>
                           <Badge variant="outline" className="bg-primary/10 border-primary/30 text-primary">
