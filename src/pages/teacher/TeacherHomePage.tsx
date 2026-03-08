@@ -426,7 +426,7 @@ export default function TeacherHomePage() {
                   {teacherScope.isTeacher
                     ? teacherScope.allowedClassYears.map((cls) => (
                         <SelectItem key={cls.id} value={cls.id.toString()}>
-                          Class {cls.class_name}
+                          Class {stripCampusPrefix(cls.class_name)}
                         </SelectItem>
                       ))
                     : teacherProfile.classes.map((cls) => (
