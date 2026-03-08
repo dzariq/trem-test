@@ -5213,7 +5213,7 @@ export default function TeacherAcademicPage() {
                             </SelectTrigger>
                             <SelectContent>
                               {boxPlotClassesForGrade.map(cls => (
-                                <SelectItem key={cls} value={cls}>{cls}</SelectItem>
+                                <SelectItem key={cls} value={cls}>{stripCampusPrefix(cls)}</SelectItem>
                               ))}
                             </SelectContent>
                           </Select>
