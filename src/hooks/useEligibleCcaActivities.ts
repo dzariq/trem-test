@@ -118,6 +118,10 @@ export function useEligibleCcaActivities(options: UseEligibleCcaActivitiesOption
         `)
         .in("id", eligibleIds);
 
+      if (campusCode) {
+        activitiesQuery = activitiesQuery.eq("campus_code", campusCode);
+      }
+
       if (!includeInactive) {
         activitiesQuery = activitiesQuery.eq("is_active", true);
       }
