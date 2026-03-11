@@ -10,6 +10,7 @@ import {
   Calendar
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { FEATURES } from "@/config/featureFlags";
 import {
   Dialog,
   DialogContent,
@@ -23,7 +24,7 @@ const quickLinks = [
   { icon: HeadphonesIcon, label: "Support", path: "/parent/support", bgColor: "bg-blue-100", iconColor: "text-blue-600" },
   { icon: Award, label: "Student Awards", path: "/parent/awards", bgColor: "bg-purple-100", iconColor: "text-purple-600" },
   { icon: Dumbbell, label: "CCA Activities", path: "/parent/calendar?tab=cca", bgColor: "bg-amber-100", iconColor: "text-amber-600" },
-  { icon: BarChart3, label: "Grade Analysis", path: "/parent/academic?section=analysis", bgColor: "bg-rose-100", iconColor: "text-rose-600" },
+  ...(FEATURES.gradeAnalysisParent ? [{ icon: BarChart3, label: "Grade Analysis", path: "/parent/academic?section=analysis", bgColor: "bg-rose-100", iconColor: "text-rose-600" }] : []),
 ];
 
 export function QuickLinks() {
