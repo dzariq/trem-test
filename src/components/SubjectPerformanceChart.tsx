@@ -74,7 +74,7 @@ export function SubjectPerformanceChart({
   const initialZoomLevel = useRef<number>(totalSubjects);
   const chartContainerRef = useRef<HTMLDivElement>(null);
   const animationRef = useRef<number | null>(null);
-  const feedbackTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const feedbackTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const swipeStartX = useRef<number | null>(null);
 
   // Spring animation for smooth zoom transitions
