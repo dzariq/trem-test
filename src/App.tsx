@@ -88,7 +88,12 @@ const App = () => (
                   <Route path="/parent/contact" element={<ContactPage />} />
                   <Route path="/parent/awards" element={<AwardsPage />} />
                   <Route path="/parent/handbook" element={<StudentHandbookPage />} />
-                  <Route path="/parent/homework" element={<HomeworkPage />} />
+                  {FEATURES.homeworkParent && (
+                    <Route path="/parent/homework" element={<HomeworkPage />} />
+                  )}
+                  {FEATURES.lessonPlanParent && (
+                    <Route path="/parent/lesson-plans" element={<NotFound />} />
+                  )}
                 </Route>
                 <Route path="/privacy-policy" element={<PrivacyPolicyPage />} />
 
