@@ -1488,9 +1488,9 @@ export default function AcademicPage() {
       {/* Main Tab Switcher - Report Card / Grade Analysis */}
       <section className="px-4 pt-4">
         <Tabs value={mainSection} onValueChange={v => setMainSection(v as "report" | "analysis")} className="w-full">
-          <TabsList className="grid w-full grid-cols-2 bg-muted/50">
+          <TabsList className={cn("grid w-full bg-muted/50", FEATURES.gradeAnalysisParent ? "grid-cols-2" : "grid-cols-1")}>
             <TabsTrigger value="report">Report Card</TabsTrigger>
-            <TabsTrigger value="analysis">Grade Analysis</TabsTrigger>
+            {FEATURES.gradeAnalysisParent && <TabsTrigger value="analysis">Grade Analysis</TabsTrigger>}
           </TabsList>
         </Tabs>
       </section>
