@@ -301,7 +301,7 @@ export function AnnouncementDrawer({
               <Button
                 variant="outline"
                 size="icon"
-                className="h-8 w-8 rounded-md"
+                className="h-9 w-9 rounded-lg mr-1"
                 onClick={() => onOpenChange(false)}
               >
                 <X className="h-4 w-4" />

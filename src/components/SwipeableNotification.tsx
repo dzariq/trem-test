@@ -90,7 +90,7 @@ export function SwipeableNotification({
       
       {/* Notification content */}
       <div
-        className={`relative flex items-center gap-3 p-3 rounded-xl bg-card ${
+        className={`relative flex items-center gap-3 p-3 rounded-xl bg-card w-full max-w-full box-border ${
           isDeleting ? "opacity-0 scale-95" : ""
         } ${
           !isRead 
