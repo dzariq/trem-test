@@ -186,7 +186,7 @@ export function NotificationsDrawer({ open, onOpenChange }: NotificationsDrawerP
         </p>
       </div>
 
-      <ScrollArea className="flex-1 px-4">
+      <ScrollArea className="flex-1 px-4 overflow-x-hidden">
         {isLoading ? (
           <div className="flex items-center justify-center py-12">
             <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
