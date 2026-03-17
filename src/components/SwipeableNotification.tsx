@@ -78,7 +78,7 @@ export function SwipeableNotification({
   const showDeleteBackground = translateX < -5;
 
   return (
-    <div className="relative overflow-hidden rounded-xl">
+    <div className="relative overflow-hidden rounded-xl w-full max-w-full box-border">
       {/* Delete background - only visible when swiping */}
       <div 
         className={`absolute inset-y-0 right-0 w-24 bg-destructive flex items-center justify-center rounded-r-xl transition-opacity duration-150 ${
@@ -90,7 +90,7 @@ export function SwipeableNotification({
       
       {/* Notification content */}
       <div
-        className={`relative flex items-center gap-3 p-3 rounded-xl bg-card ${
+        className={`relative flex items-center gap-3 p-3 rounded-xl bg-card w-full max-w-full box-border ${
           isDeleting ? "opacity-0 scale-95" : ""
         } ${
           !isRead 

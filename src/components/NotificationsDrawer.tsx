@@ -186,13 +186,13 @@ export function NotificationsDrawer({ open, onOpenChange }: NotificationsDrawerP
         </p>
       </div>
 
-      <ScrollArea className="flex-1 px-4">
+      <ScrollArea className="flex-1 px-4 overflow-x-hidden">
         {isLoading ? (
           <div className="flex items-center justify-center py-12">
             <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
           </div>
         ) : (
-          <div className="space-y-2 pb-6">
+          <div className="space-y-2 pb-6 overflow-x-hidden">
             {filteredNotifications.map((notification) => {
               const Icon = getTypeIcon(notification.type);
               const hasLink = !!notification.link_to;

@@ -240,8 +240,10 @@ export function AnnouncementDrawer({
         <DrawerPrimitive.Overlay className="fixed inset-0 z-50 bg-black/50" />
         <DrawerPrimitive.Content
           className={cn(
-            "fixed inset-x-0 bottom-0 z-50 flex flex-col rounded-t-[24px] border-t bg-background shadow-2xl outline-none pb-[var(--safe-bottom)]",
-            snap === 1 ? "h-[calc(100dvh-var(--safe-top))] rounded-none pt-[var(--safe-top)]" : "h-[100dvh] max-h-[calc(100dvh-var(--safe-top))]"
+            "fixed inset-x-0 bottom-0 z-50 flex flex-col rounded-t-[24px] border-t shadow-2xl outline-none pb-[var(--safe-bottom)]",
+            snap === 1
+              ? "h-[100dvh] rounded-none pt-[env(safe-area-inset-top)] bg-card"
+              : "h-[100dvh] max-h-[calc(100dvh-var(--safe-top))] bg-background"
           )}
           style={{ left: 0, right: 0 }}
         >
@@ -299,7 +301,7 @@ export function AnnouncementDrawer({
               <Button
                 variant="outline"
                 size="icon"
-                className="h-8 w-8 rounded-md"
+                className="h-9 w-9 rounded-lg mr-1"
                 onClick={() => onOpenChange(false)}
               >
                 <X className="h-4 w-4" />
