@@ -192,7 +192,7 @@ export function NotificationsDrawer({ open, onOpenChange }: NotificationsDrawerP
             <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
           </div>
         ) : (
-          <div className="space-y-2 pb-6">
+          <div className="space-y-2 pb-6 overflow-x-hidden">
             {filteredNotifications.map((notification) => {
               const Icon = getTypeIcon(notification.type);
               const hasLink = !!notification.link_to;
