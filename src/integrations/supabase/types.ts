@@ -547,22 +547,31 @@ export type Database = {
           bug_id: string
           created_at: string
           file_name: string
+          file_size: number | null
+          file_type: string | null
           file_url: string
           id: string
+          mime_type: string | null
         }
         Insert: {
           bug_id: string
           created_at?: string
           file_name: string
+          file_size?: number | null
+          file_type?: string | null
           file_url: string
           id?: string
+          mime_type?: string | null
         }
         Update: {
           bug_id?: string
           created_at?: string
           file_name?: string
+          file_size?: number | null
+          file_type?: string | null
           file_url?: string
           id?: string
+          mime_type?: string | null
         }
         Relationships: [
           {
@@ -3305,6 +3314,7 @@ export type Database = {
       }
       user_profiles: {
         Row: {
+          account_status: string
           assigned_campus_id: string | null
           can_access_all_campuses: boolean
           can_create_users: boolean
@@ -3324,6 +3334,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          account_status?: string
           assigned_campus_id?: string | null
           can_access_all_campuses?: boolean
           can_create_users?: boolean
@@ -3343,6 +3354,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          account_status?: string
           assigned_campus_id?: string | null
           can_access_all_campuses?: boolean
           can_create_users?: boolean
@@ -3393,6 +3405,7 @@ export type Database = {
       }
     }
     Functions: {
+      activate_own_account: { Args: never; Returns: undefined }
       calculate_current_headcount: {
         Args: { target_campus_id?: string; target_month_start: string }
         Returns: number
