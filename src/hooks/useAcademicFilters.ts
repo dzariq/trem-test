@@ -3,6 +3,33 @@ import { supabase } from "@/lib/supabase";
 import { toast } from "@/hooks/use-toast";
 import { sortYearLevels, sortClasses } from "@/lib/classSorting";
 
+export interface Student {
+  id: string;
+  name: string;
+  class: string;
+  year_level: string;
+}
+
+interface UseAcademicFiltersReturn {
+  yearLevels: string[];
+  classes: string[];
+  students: Student[];
+  selectedYearLevel: string | null;
+  selectedClass: string | null;
+  loadingYearLevels: boolean;
+  loadingClasses: boolean;
+  loadingStudents: boolean;
+  error: string | null;
+  setSelectedYearLevel: (yearLevel: string | null) => void;
+  setSelectedClass: (className: string | null) => void;
+  getClassesForYearLevel: (yearLevel: string) => string[];
+  getStudentsForClass: (className: string) => Student[];
+}
+
+interface UseAcademicFiltersOptions {
+  allowedClasses?: string[];
+}
+
 // Filter out null/empty values
 const filterValidValues = (values: (string | null | undefined)[]): string[] => {
   return values
