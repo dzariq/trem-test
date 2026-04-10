@@ -1,8 +1,9 @@
 /**
- * Mapping between student year levels (Y1-Y11) and Key Stage codes (KS1-KS4)
+ * Mapping between student year levels and Key Stage codes
  * Used for CCA year eligibility filtering.
  *
  * Key Stage Definitions:
+ * - EYFS: Nursery & Reception (Early Years Foundation Stage)
  * - KS1: Years 1-2 (Primary Lower)
  * - KS2: Years 3-6 (Primary Upper)
  * - KS3: Years 7-9 (Secondary Lower)
@@ -10,10 +11,12 @@
  * - "All": Eligible for all year levels
  */
 
-export type KeyStage = "KS1" | "KS2" | "KS3" | "KS4" | "All";
-export type YearLevel = "Y1" | "Y2" | "Y3" | "Y4" | "Y5" | "Y6" | "Y7" | "Y8" | "Y9" | "Y10" | "Y11";
+export type KeyStage = "EYFS" | "KS1" | "KS2" | "KS3" | "KS4" | "All";
+export type YearLevel = "Nursery" | "Reception" | "Y1" | "Y2" | "Y3" | "Y4" | "Y5" | "Y6" | "Y7" | "Y8" | "Y9" | "Y10" | "Y11";
 
 const YEAR_TO_KEY_STAGE: Record<YearLevel, KeyStage> = {
+  Nursery: "EYFS",
+  Reception: "EYFS",
   Y1: "KS1",
   Y2: "KS1",
   Y3: "KS2",
@@ -28,59 +31,84 @@ const YEAR_TO_KEY_STAGE: Record<YearLevel, KeyStage> = {
 };
 
 const KEY_STAGE_YEAR_LEVELS: Record<KeyStage, YearLevel[]> = {
+  EYFS: ["Nursery", "Reception"],
   KS1: ["Y1", "Y2"],
   KS2: ["Y3", "Y4", "Y5", "Y6"],
   KS3: ["Y7", "Y8", "Y9"],
   KS4: ["Y10", "Y11"],
-  All: ["Y1", "Y2", "Y3", "Y4", "Y5", "Y6", "Y7", "Y8", "Y9", "Y10", "Y11"],
+  All: ["Nursery", "Reception", "Y1", "Y2", "Y3", "Y4", "Y5", "Y6", "Y7", "Y8", "Y9", "Y10", "Y11"],
 };
 
 /**
- * Convert a student's year level (Y1-Y11) to Key Stage code (KS1-KS4).
- * @param yearLevel - Student's year level (e.g., "Y5")
- * @returns The corresponding Key Stage code or null if invalid
+ * Canonical year level ordering used for consistent sorting.
+ * Nursery → Reception → Y1 → ... → Y11
+ */
+export const YEAR_LEVEL_ORDER: readonly string[] = [
+  "Nursery", "Reception",
+  "Y1", "Y2", "Y3", "Y4", "Y5", "Y6",
+  "Y7", "Y8", "Y9", "Y10", "Y11",
+] as const;
+
+/**
+ * Canonical class-suffix ordering: C → I → S → A → B
+ */
+export const CLASS_SUFFIX_ORDER = ["C", "I", "S", "A", "B"] as const;
+
+/**
+ * Get the sort rank for a year level string.
+ * Returns a large number for unknown values so they sort last.
+ */
+export function getYearLevelRank(yearLevel: string): number {
+  const normalized = yearLevel.trim();
+  const idx = YEAR_LEVEL_ORDER.indexOf(normalized);
+  return idx >= 0 ? idx : 999;
+}
+
+/**
+ * Get the sort rank for a class suffix (last letter of class name).
+ * Enforces C → I → S → A → B ordering.
+ */
+export function getClassSuffixRank(suffix: string): number {
+  const idx = CLASS_SUFFIX_ORDER.indexOf(suffix.toUpperCase() as typeof CLASS_SUFFIX_ORDER[number]);
+  return idx >= 0 ? idx : 999;
+}
+
+/**
+ * Convert a student's year level to Key Stage code.
+ * Handles Nursery, Reception, and Y1-Y11.
  */
 export function yearLevelToKeyStage(yearLevel: string | null | undefined): KeyStage | null {
   if (!yearLevel) return null;
-  const normalized = yearLevel.toUpperCase().trim() as YearLevel;
+  const trimmed = yearLevel.trim();
+  // Handle case-insensitive match for Nursery/Reception
+  if (trimmed.toLowerCase() === "nursery") return "EYFS";
+  if (trimmed.toLowerCase() === "reception") return "EYFS";
+  const normalized = trimmed.toUpperCase() as YearLevel;
   return YEAR_TO_KEY_STAGE[normalized] ?? null;
 }
 
 /**
  * Check if a student is eligible for a CCA activity based on year level.
- * @param studentYearLevel - Student's year level (e.g., "Y5")
- * @param activityYearLevels - Array of Key Stage codes from the CCA activity (e.g., ["KS1", "KS2"])
- * @returns true if the student is eligible
  */
 export function isStudentEligibleForCca(
   studentYearLevel: string | null | undefined,
   activityYearLevels: string[] | null | undefined
 ): boolean {
-  // If no activity year levels defined, consider it open to all (fallback)
   if (!activityYearLevels || activityYearLevels.length === 0) {
     return true;
   }
-
-  // If activity includes "All", everyone is eligible
   if (activityYearLevels.includes("All")) {
     return true;
   }
-
-  // Get the student's Key Stage
   const studentKeyStage = yearLevelToKeyStage(studentYearLevel);
   if (!studentKeyStage) {
-    // If student has no valid year level, they're not eligible
     return false;
   }
-
-  // Check if any of the activity's year levels match the student's Key Stage
   return activityYearLevels.includes(studentKeyStage);
 }
 
 /**
  * Get all year levels that belong to given Key Stages.
- * @param keyStages - Array of Key Stage codes
- * @returns Array of year levels
  */
 export function getYearLevelsForKeyStages(keyStages: string[]): YearLevel[] {
   const yearLevels = new Set<YearLevel>();
@@ -95,8 +123,6 @@ export function getYearLevelsForKeyStages(keyStages: string[]): YearLevel[] {
 
 /**
  * Format Key Stage codes for display.
- * @param keyStages - Array of Key Stage codes
- * @returns Human-readable string
  */
 export function formatKeyStages(keyStages: string[] | null | undefined): string {
   if (!keyStages || keyStages.length === 0) return "All Years";
