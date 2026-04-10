@@ -2852,6 +2852,9 @@ export type Database = {
           created_at: string
           departure_date: string | null
           departure_reason: string | null
+          deposit_amount_collected: number | null
+          deposit_payment_date: string | null
+          deposit_refund_date: string | null
           discount_type: string | null
           dob: string | null
           early_lockin_amount: string | null
@@ -2866,18 +2869,25 @@ export type Database = {
           id: string
           info: Json | null
           insurance: string | null
+          languages: string[] | null
           main_student_id: string | null
           malaysian_citizen: boolean | null
           name: string
           nationality: string | null
+          parent1_email: string | null
           parent1_ic: string | null
           parent1_name: string | null
           parent1_phone: string | null
+          parent1_relationship: string | null
           parent1_user_id: string | null
+          parent2_email: string | null
           parent2_ic: string | null
           parent2_name: string | null
           parent2_phone: string | null
+          parent2_relationship: string | null
           parent2_user_id: string | null
+          passport_expiry_date: string | null
+          payment_type: string | null
           previous: string | null
           relationship_type: string | null
           remarks: string | null
@@ -2886,6 +2896,7 @@ export type Database = {
           student_ic: string | null
           updated_at: string
           user_id: string | null
+          visa_expiry_date: string | null
           year_level: string
         }
         Insert: {
@@ -2899,6 +2910,9 @@ export type Database = {
           created_at?: string
           departure_date?: string | null
           departure_reason?: string | null
+          deposit_amount_collected?: number | null
+          deposit_payment_date?: string | null
+          deposit_refund_date?: string | null
           discount_type?: string | null
           dob?: string | null
           early_lockin_amount?: string | null
@@ -2913,18 +2927,25 @@ export type Database = {
           id?: string
           info?: Json | null
           insurance?: string | null
+          languages?: string[] | null
           main_student_id?: string | null
           malaysian_citizen?: boolean | null
           name: string
           nationality?: string | null
+          parent1_email?: string | null
           parent1_ic?: string | null
           parent1_name?: string | null
           parent1_phone?: string | null
+          parent1_relationship?: string | null
           parent1_user_id?: string | null
+          parent2_email?: string | null
           parent2_ic?: string | null
           parent2_name?: string | null
           parent2_phone?: string | null
+          parent2_relationship?: string | null
           parent2_user_id?: string | null
+          passport_expiry_date?: string | null
+          payment_type?: string | null
           previous?: string | null
           relationship_type?: string | null
           remarks?: string | null
@@ -2933,6 +2954,7 @@ export type Database = {
           student_ic?: string | null
           updated_at?: string
           user_id?: string | null
+          visa_expiry_date?: string | null
           year_level: string
         }
         Update: {
@@ -2946,6 +2968,9 @@ export type Database = {
           created_at?: string
           departure_date?: string | null
           departure_reason?: string | null
+          deposit_amount_collected?: number | null
+          deposit_payment_date?: string | null
+          deposit_refund_date?: string | null
           discount_type?: string | null
           dob?: string | null
           early_lockin_amount?: string | null
@@ -2960,18 +2985,25 @@ export type Database = {
           id?: string
           info?: Json | null
           insurance?: string | null
+          languages?: string[] | null
           main_student_id?: string | null
           malaysian_citizen?: boolean | null
           name?: string
           nationality?: string | null
+          parent1_email?: string | null
           parent1_ic?: string | null
           parent1_name?: string | null
           parent1_phone?: string | null
+          parent1_relationship?: string | null
           parent1_user_id?: string | null
+          parent2_email?: string | null
           parent2_ic?: string | null
           parent2_name?: string | null
           parent2_phone?: string | null
+          parent2_relationship?: string | null
           parent2_user_id?: string | null
+          passport_expiry_date?: string | null
+          payment_type?: string | null
           previous?: string | null
           relationship_type?: string | null
           remarks?: string | null
@@ -2980,6 +3012,7 @@ export type Database = {
           student_ic?: string | null
           updated_at?: string
           user_id?: string | null
+          visa_expiry_date?: string | null
           year_level?: string
         }
         Relationships: [
@@ -3326,12 +3359,18 @@ export type Database = {
           ic_number: string | null
           id: string
           is_active: boolean
+          last_sign_in_at: string | null
+          login_count: number | null
+          malaysian_citizen: boolean | null
+          nationality: string | null
           parent_relationship: string | null
           parent_relationship_other: string | null
+          passport_expiry_date: string | null
           phone: string | null
           role: string
           updated_at: string
           user_id: string
+          visa_expiry_date: string | null
         }
         Insert: {
           account_status?: string
@@ -3346,12 +3385,18 @@ export type Database = {
           ic_number?: string | null
           id?: string
           is_active?: boolean
+          last_sign_in_at?: string | null
+          login_count?: number | null
+          malaysian_citizen?: boolean | null
+          nationality?: string | null
           parent_relationship?: string | null
           parent_relationship_other?: string | null
+          passport_expiry_date?: string | null
           phone?: string | null
           role?: string
           updated_at?: string
           user_id: string
+          visa_expiry_date?: string | null
         }
         Update: {
           account_status?: string
@@ -3366,12 +3411,18 @@ export type Database = {
           ic_number?: string | null
           id?: string
           is_active?: boolean
+          last_sign_in_at?: string | null
+          login_count?: number | null
+          malaysian_citizen?: boolean | null
+          nationality?: string | null
           parent_relationship?: string | null
           parent_relationship_other?: string | null
+          passport_expiry_date?: string | null
           phone?: string | null
           role?: string
           updated_at?: string
           user_id?: string
+          visa_expiry_date?: string | null
         }
         Relationships: [
           {
@@ -3515,6 +3566,7 @@ export type Database = {
       }
       teacher_allowed_class_year_ids: { Args: never; Returns: number[] }
       teacher_assigned_to_cca: { Args: { _cca_id: string }; Returns: boolean }
+      track_user_login: { Args: never; Returns: undefined }
       transfer_student_campus: {
         Args: {
           p_clear_class?: boolean
