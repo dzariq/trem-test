@@ -1,71 +1,7 @@
 import { useState, useEffect, useMemo, useCallback } from "react";
 import { supabase } from "@/lib/supabase";
 import { toast } from "@/hooks/use-toast";
-
-export interface Student {
-  id: string;
-  name: string;
-  class: string;
-  year_level: string;
-}
-
-interface UseAcademicFiltersReturn {
-  // Data
-  yearLevels: string[];
-  classes: string[];
-  students: Student[];
-  
-  // Selection state
-  selectedYearLevel: string | null;
-  selectedClass: string | null;
-  
-  // Loading states
-  loadingYearLevels: boolean;
-  loadingClasses: boolean;
-  loadingStudents: boolean;
-  error: string | null;
-  
-  // Actions
-  setSelectedYearLevel: (yearLevel: string | null) => void;
-  setSelectedClass: (className: string | null) => void;
-  
-  // Computed
-  getClassesForYearLevel: (yearLevel: string) => string[];
-  getStudentsForClass: (className: string) => Student[];
-}
-
-interface UseAcademicFiltersOptions {
-  allowedClasses?: string[];
-}
-
-// Sort year levels numerically (Y1, Y2, ... Y10, Y11)
-const sortYearLevels = (levels: string[]): string[] => {
-  return levels.sort((a, b) => {
-    // Extract numeric part: "Y11" -> 11, "Year 5" -> 5
-    const aMatch = a.match(/(\d+)/);
-    const bMatch = b.match(/(\d+)/);
-    const aNum = aMatch ? parseInt(aMatch[1]) : 0;
-    const bNum = bMatch ? parseInt(bMatch[1]) : 0;
-    return aNum - bNum;
-  });
-};
-
-// Sort classes alphabetically (Y1A, Y1B, Y10A, etc)
-const sortClasses = (classes: string[]): string[] => {
-  return classes.sort((a, b) => {
-    // Extract year and suffix: "Y11A" -> {year: 11, suffix: "A"}
-    const aMatch = a.match(/^Y?(\d+)(.*)$/);
-    const bMatch = b.match(/^Y?(\d+)(.*)$/);
-    
-    if (!aMatch || !bMatch) return a.localeCompare(b);
-    
-    const aYear = parseInt(aMatch[1]);
-    const bYear = parseInt(bMatch[1]);
-    
-    if (aYear !== bYear) return aYear - bYear;
-    return (aMatch[2] || "").localeCompare(bMatch[2] || "");
-  });
-};
+import { sortYearLevels, sortClasses } from "@/lib/classSorting";
 
 // Filter out null/empty values
 const filterValidValues = (values: (string | null | undefined)[]): string[] => {
