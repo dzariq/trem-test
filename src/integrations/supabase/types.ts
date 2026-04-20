@@ -704,6 +704,172 @@ export type Database = {
         }
         Relationships: []
       }
+      bukku_contacts: {
+        Row: {
+          bukku_contact_id: string | null
+          id: string
+          student_id: string
+          synced_at: string | null
+        }
+        Insert: {
+          bukku_contact_id?: string | null
+          id?: string
+          student_id: string
+          synced_at?: string | null
+        }
+        Update: {
+          bukku_contact_id?: string | null
+          id?: string
+          student_id?: string
+          synced_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bukku_contacts_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: true
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      bukku_contacts_ic_mismatched: {
+        Row: {
+          bukku_contact_id: string | null
+          id: string
+          student_id: string
+          synced_at: string | null
+        }
+        Insert: {
+          bukku_contact_id?: string | null
+          id?: string
+          student_id: string
+          synced_at?: string | null
+        }
+        Update: {
+          bukku_contact_id?: string | null
+          id?: string
+          student_id?: string
+          synced_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bukku_contacts_not_synced_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      bukku_products: {
+        Row: {
+          barcode: string | null
+          bin_location: string | null
+          bukku_created_at: string | null
+          bukku_product_id: number | null
+          bukku_updated_at: string | null
+          classification_code: string | null
+          created_at: string
+          group_ids: string | null
+          id: string
+          inventory_account_id: number | null
+          is_archived: boolean | null
+          is_buying: boolean | null
+          is_selling: boolean | null
+          name: string
+          picture_id: number | null
+          picture_url: string | null
+          purchase_account_id: number | null
+          purchase_description: string | null
+          purchase_prices: string | null
+          purchase_tax_code_id: number | null
+          quantity: number | null
+          quantity_low_alert: number | null
+          remarks: string | null
+          sale_account_id: number | null
+          sale_description: string | null
+          sale_prices: string | null
+          sale_tax_code_id: number | null
+          sku: string | null
+          synced_at: string | null
+          track_inventory: boolean | null
+          type: string | null
+          units: string | null
+          updated_at: string
+        }
+        Insert: {
+          barcode?: string | null
+          bin_location?: string | null
+          bukku_created_at?: string | null
+          bukku_product_id?: number | null
+          bukku_updated_at?: string | null
+          classification_code?: string | null
+          created_at?: string
+          group_ids?: string | null
+          id?: string
+          inventory_account_id?: number | null
+          is_archived?: boolean | null
+          is_buying?: boolean | null
+          is_selling?: boolean | null
+          name: string
+          picture_id?: number | null
+          picture_url?: string | null
+          purchase_account_id?: number | null
+          purchase_description?: string | null
+          purchase_prices?: string | null
+          purchase_tax_code_id?: number | null
+          quantity?: number | null
+          quantity_low_alert?: number | null
+          remarks?: string | null
+          sale_account_id?: number | null
+          sale_description?: string | null
+          sale_prices?: string | null
+          sale_tax_code_id?: number | null
+          sku?: string | null
+          synced_at?: string | null
+          track_inventory?: boolean | null
+          type?: string | null
+          units?: string | null
+          updated_at?: string
+        }
+        Update: {
+          barcode?: string | null
+          bin_location?: string | null
+          bukku_created_at?: string | null
+          bukku_product_id?: number | null
+          bukku_updated_at?: string | null
+          classification_code?: string | null
+          created_at?: string
+          group_ids?: string | null
+          id?: string
+          inventory_account_id?: number | null
+          is_archived?: boolean | null
+          is_buying?: boolean | null
+          is_selling?: boolean | null
+          name?: string
+          picture_id?: number | null
+          picture_url?: string | null
+          purchase_account_id?: number | null
+          purchase_description?: string | null
+          purchase_prices?: string | null
+          purchase_tax_code_id?: number | null
+          quantity?: number | null
+          quantity_low_alert?: number | null
+          remarks?: string | null
+          sale_account_id?: number | null
+          sale_description?: string | null
+          sale_prices?: string | null
+          sale_tax_code_id?: number | null
+          sku?: string | null
+          synced_at?: string | null
+          track_inventory?: boolean | null
+          type?: string | null
+          units?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       calendar_events: {
         Row: {
           campus_code: string | null
@@ -1332,6 +1498,41 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      discounts: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+          payment_term_id: string | null
+          product_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+          payment_term_id?: string | null
+          product_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+          payment_term_id?: string | null
+          product_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "discounts_payment_term_id_fkey"
+            columns: ["payment_term_id"]
+            isOneToOne: false
+            referencedRelation: "payment_terms"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       enquiries: {
         Row: {
@@ -2345,6 +2546,86 @@ export type Database = {
         }
         Relationships: []
       }
+      payment_terms: {
+        Row: {
+          code: string
+          created_at: string
+          example: string | null
+          frequency: string
+          id: string
+          is_active: boolean
+          name: string
+          period_key_format: string
+          sort_order: number | null
+          updated_at: string
+        }
+        Insert: {
+          code: string
+          created_at?: string
+          example?: string | null
+          frequency: string
+          id?: string
+          is_active?: boolean
+          name: string
+          period_key_format: string
+          sort_order?: number | null
+          updated_at?: string
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          example?: string | null
+          frequency?: string
+          id?: string
+          is_active?: boolean
+          name?: string
+          period_key_format?: string
+          sort_order?: number | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      product_mapping: {
+        Row: {
+          campus_code: string | null
+          created_at: string
+          early_lockin_discount: boolean
+          frequency: string | null
+          id: string
+          product_id: string
+          updated_at: string
+          year_level: string
+        }
+        Insert: {
+          campus_code?: string | null
+          created_at?: string
+          early_lockin_discount?: boolean
+          frequency?: string | null
+          id?: string
+          product_id: string
+          updated_at?: string
+          year_level?: string
+        }
+        Update: {
+          campus_code?: string | null
+          created_at?: string
+          early_lockin_discount?: boolean
+          frequency?: string | null
+          id?: string
+          product_id?: string
+          updated_at?: string
+          year_level?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "config_term_year_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: true
+            referencedRelation: "bukku_products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       school_holidays: {
         Row: {
           academic_year: number
@@ -2422,6 +2703,86 @@ export type Database = {
           updated_at?: string | null
         }
         Relationships: []
+      }
+      stock_catalogue: {
+        Row: {
+          category: string | null
+          created_at: string
+          id: string
+          low_stock_threshold: number | null
+          name: string
+          quantity_on_hand: number
+          size_variant: string | null
+          sku: string | null
+          unit_price: number
+          updated_at: string
+        }
+        Insert: {
+          category?: string | null
+          created_at?: string
+          id?: string
+          low_stock_threshold?: number | null
+          name: string
+          quantity_on_hand?: number
+          size_variant?: string | null
+          sku?: string | null
+          unit_price?: number
+          updated_at?: string
+        }
+        Update: {
+          category?: string | null
+          created_at?: string
+          id?: string
+          low_stock_threshold?: number | null
+          name?: string
+          quantity_on_hand?: number
+          size_variant?: string | null
+          sku?: string | null
+          unit_price?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      stock_movements: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          id: string
+          movement_type: string
+          note: string | null
+          quantity_after: number
+          quantity_change: number
+          stock_item_id: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          movement_type: string
+          note?: string | null
+          quantity_after?: number
+          quantity_change?: number
+          stock_item_id: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          movement_type?: string
+          note?: string | null
+          quantity_after?: number
+          quantity_change?: number
+          stock_item_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "stock_movements_stock_item_id_fkey"
+            columns: ["stock_item_id"]
+            isOneToOne: false
+            referencedRelation: "stock_catalogue"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       student_campus_transfers: {
         Row: {
@@ -2771,6 +3132,110 @@ export type Database = {
           last_number?: number
         }
         Relationships: []
+      }
+      student_invoice_period: {
+        Row: {
+          bukku_contact_id: string | null
+          created_at: string
+          fee: number | null
+          id: string
+          invoice_amount: number
+          invoice_balance: number
+          invoice_date: string | null
+          invoice_id: string | null
+          link: string | null
+          period_key: string | null
+          product_id: string | null
+          quantity: number | null
+          status: Database["public"]["Enums"]["invoice_status"]
+          title: string | null
+          updated_at: string
+        }
+        Insert: {
+          bukku_contact_id?: string | null
+          created_at?: string
+          fee?: number | null
+          id?: string
+          invoice_amount?: number
+          invoice_balance?: number
+          invoice_date?: string | null
+          invoice_id?: string | null
+          link?: string | null
+          period_key?: string | null
+          product_id?: string | null
+          quantity?: number | null
+          status?: Database["public"]["Enums"]["invoice_status"]
+          title?: string | null
+          updated_at?: string
+        }
+        Update: {
+          bukku_contact_id?: string | null
+          created_at?: string
+          fee?: number | null
+          id?: string
+          invoice_amount?: number
+          invoice_balance?: number
+          invoice_date?: string | null
+          invoice_id?: string | null
+          link?: string | null
+          period_key?: string | null
+          product_id?: string | null
+          quantity?: number | null
+          status?: Database["public"]["Enums"]["invoice_status"]
+          title?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "student_invoice_period_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "bukku_products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      student_payment_terms: {
+        Row: {
+          created_at: string
+          effective_at: string
+          id: string
+          payment_term_id: string
+          student_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          effective_at: string
+          id?: string
+          payment_term_id: string
+          student_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          effective_at?: string
+          id?: string
+          payment_term_id?: string
+          student_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "student_payment_terms_payment_term_id_fkey"
+            columns: ["payment_term_id"]
+            isOneToOne: false
+            referencedRelation: "payment_terms"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "student_payment_terms_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       student_siblings: {
         Row: {
@@ -3564,6 +4029,8 @@ export type Database = {
         Args: { p_period_id: string; p_status: string }
         Returns: undefined
       }
+      show_limit: { Args: never; Returns: number }
+      show_trgm: { Args: { "": string }; Returns: string[] }
       teacher_allowed_class_year_ids: { Args: never; Returns: number[] }
       teacher_assigned_to_cca: { Args: { _cca_id: string }; Returns: boolean }
       track_user_login: { Args: never; Returns: undefined }
@@ -3593,6 +4060,7 @@ export type Database = {
     }
     Enums: {
       cca_pic_role: "lead" | "sub"
+      invoice_status: "pending_payment" | "paid"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -3721,6 +4189,7 @@ export const Constants = {
   public: {
     Enums: {
       cca_pic_role: ["lead", "sub"],
+      invoice_status: ["pending_payment", "paid"],
     },
   },
 } as const
