@@ -14,7 +14,7 @@ import {
 import schoolBadge from "@/assets/school-badge.png";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/contexts/AuthContext";
-import { Loader2, Phone } from "lucide-react";
+import { Loader2, Phone, ArrowLeft } from "lucide-react";
 import { allCountries } from "country-telephone-data";
 
 // Build a clean country list: { iso2, name, dialCode }
@@ -32,6 +32,10 @@ const COUNTRIES = (() => {
 })();
 
 const DEFAULT_ISO2 = "my"; // Malaysia
+
+const OTP_REQUEST_URL = "https://collinz.app.n8n.cloud/webhook/login-otp";
+const OTP_VERIFY_URL = "https://collinz.app.n8n.cloud/webhook/verify-otp";
+const OTP_TTL_SECONDS = 30;
 
 // Convert iso2 -> flag emoji
 const isoToFlag = (iso2: string) =>
@@ -76,6 +80,12 @@ export default function Login() {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
+  // OTP state
+  const [step, setStep] = useState<"phone" | "otp">("phone");
+  const [otp, setOtp] = useState("");
+  const [otpExpiresAt, setOtpExpiresAt] = useState<number | null>(null);
+  const [secondsLeft, setSecondsLeft] = useState(0);
+
   const selectedCountry =
     COUNTRIES.find((c) => c.iso2 === countryIso2) ?? COUNTRIES[0];
 
@@ -113,8 +123,25 @@ export default function Login() {
     setPhone(sanitizePhone(e.target.value));
   };
 
-  // UI-only login handler (auth wiring deferred)
-  const handleLogin = async () => {
+  // Countdown ticker for OTP TTL
+  useEffect(() => {
+    if (step !== "otp" || !otpExpiresAt) return;
+    const tick = () => {
+      const remaining = Math.max(
+        0,
+        Math.ceil((otpExpiresAt - Date.now()) / 1000),
+      );
+      setSecondsLeft(remaining);
+    };
+    tick();
+    const id = window.setInterval(tick, 250);
+    return () => window.clearInterval(id);
+  }, [step, otpExpiresAt]);
+
+  const fullNumber = `+${selectedCountry.dialCode}${phone}`;
+
+  // Step 1: request OTP
+  const handleRequestOtp = async () => {
     if (!portal) {
       setError("Please select a portal to continue.");
       return;
@@ -143,11 +170,91 @@ export default function Login() {
     setError(null);
     setLoading(true);
 
-    // UI-only: backend wiring will be added later.
-    const fullNumber = `+${selectedCountry.dialCode}${phone}`;
-    console.log("[Login] Phone submit (UI-only):", { portal, fullNumber });
+    try {
+      const res = await fetch(OTP_REQUEST_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ phone: fullNumber }),
+      });
 
-    setTimeout(() => setLoading(false), 600);
+      if (!res.ok) {
+        const text = await res.text().catch(() => "");
+        throw new Error(text || `Request failed (${res.status})`);
+      }
+
+      setOtp("");
+      setOtpExpiresAt(Date.now() + OTP_TTL_SECONDS * 1000);
+      setStep("otp");
+    } catch (err) {
+      console.error("[Login] OTP request failed:", err);
+      setError(
+        err instanceof Error
+          ? `Failed to send OTP: ${err.message}`
+          : "Failed to send OTP. Please try again.",
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Step 2: verify OTP
+  const handleVerifyOtp = async () => {
+    if (!otp || otp.length < 4) {
+      setError("Please enter the OTP code.");
+      return;
+    }
+
+    if (secondsLeft <= 0) {
+      setError("OTP has expired. Please request a new one.");
+      return;
+    }
+
+    setError(null);
+    setLoading(true);
+
+    try {
+      const res = await fetch(OTP_VERIFY_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ phone: fullNumber, otp }),
+      });
+
+      const text = await res.text();
+      let data: any = null;
+      try {
+        data = text ? JSON.parse(text) : null;
+      } catch {
+        // non-JSON response
+      }
+
+      if (!res.ok) {
+        throw new Error(
+          (data && (data.message || data.error)) ||
+            text ||
+            `Verification failed (${res.status})`,
+        );
+      }
+
+      console.log("[Login] OTP verified:", { portal, fullNumber, data });
+      // Auth wiring (Supabase session) will be added later.
+    } catch (err) {
+      console.error("[Login] OTP verify failed:", err);
+      setError(
+        err instanceof Error
+          ? err.message
+          : "Invalid OTP. Please try again.",
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleBackToPhone = () => {
+    setStep("phone");
+    setOtp("");
+    setOtpExpiresAt(null);
+    setSecondsLeft(0);
+    setError(null);
   };
 
   // Show loading while checking auth
@@ -179,6 +286,8 @@ export default function Login() {
       <div className="grid gap-6 w-full max-w-md">
         <Card className="border-2 border-border">
           <CardContent className="p-6 space-y-4">
+            {step === "phone" && (
+            <>
             <div className="space-y-2">
               <Label htmlFor="phone">Phone number</Label>
               <div className="flex gap-2">
@@ -220,7 +329,7 @@ export default function Login() {
                     value={phone}
                     onChange={handlePhoneChange}
                     onKeyDown={(e) => {
-                      if (e.key === "Enter") handleLogin();
+                      if (e.key === "Enter") handleRequestOtp();
                     }}
                     placeholder="Phone number"
                     className="pl-10"
@@ -231,20 +340,20 @@ export default function Login() {
                 Digits only. Do not include a leading 0.
               </p>
             </div>
-            
+
             {error && <p className="text-sm text-destructive">{error}</p>}
-            
-            <Button className="w-full" onClick={handleLogin} disabled={loading}>
+
+            <Button className="w-full" onClick={handleRequestOtp} disabled={loading}>
               {loading ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Continuing...
+                  Sending OTP...
                 </>
               ) : (
-                "Continue"
+                "Send OTP"
               )}
             </Button>
-            
+
             <Button
               variant="outline"
               className="w-full"
@@ -252,6 +361,83 @@ export default function Login() {
             >
               Back to Portal Selection
             </Button>
+            </>
+            )}
+
+            {step === "otp" && (
+            <>
+              <div className="space-y-2">
+                <Label htmlFor="otp">Enter OTP</Label>
+                <p className="text-xs text-muted-foreground">
+                  Sent to <span className="font-medium text-foreground">{fullNumber}</span>
+                </p>
+                <Input
+                  id="otp"
+                  type="text"
+                  inputMode="numeric"
+                  autoComplete="one-time-code"
+                  value={otp}
+                  onChange={(e) =>
+                    setOtp(e.target.value.replace(/\D+/g, "").slice(0, 8))
+                  }
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") handleVerifyOtp();
+                  }}
+                  placeholder="123456"
+                  className="text-center tracking-[0.4em] text-lg"
+                  disabled={secondsLeft <= 0}
+                />
+                <div className="flex items-center justify-between text-xs">
+                  <span
+                    className={
+                      secondsLeft > 0
+                        ? "text-muted-foreground"
+                        : "text-destructive font-medium"
+                    }
+                  >
+                    {secondsLeft > 0
+                      ? `Expires in ${secondsLeft}s`
+                      : "OTP expired"}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={handleRequestOtp}
+                    disabled={loading || secondsLeft > 0}
+                    className="text-primary disabled:text-muted-foreground disabled:cursor-not-allowed hover:underline"
+                  >
+                    Resend OTP
+                  </button>
+                </div>
+              </div>
+
+              {error && <p className="text-sm text-destructive">{error}</p>}
+
+              <Button
+                className="w-full"
+                onClick={handleVerifyOtp}
+                disabled={loading || secondsLeft <= 0 || otp.length < 4}
+              >
+                {loading ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Verifying...
+                  </>
+                ) : (
+                  "Verify OTP"
+                )}
+              </Button>
+
+              <Button
+                variant="outline"
+                className="w-full"
+                onClick={handleBackToPhone}
+                disabled={loading}
+              >
+                <ArrowLeft className="mr-2 h-4 w-4" />
+                Change phone number
+              </Button>
+            </>
+            )}
           </CardContent>
         </Card>
       </div>
