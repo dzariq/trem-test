@@ -4,13 +4,40 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import schoolBadge from "@/assets/school-badge.png";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/contexts/AuthContext";
-import { Loader2, Mail, Lock } from "lucide-react";
+import { Loader2, Phone } from "lucide-react";
+import { allCountries } from "country-telephone-data";
 
-// Feature flag for phone OTP login (disabled for now)
-const ENABLE_PHONE_LOGIN = false;
+// Build a clean country list: { iso2, name, dialCode }
+// Deduplicate by iso2 and sort alphabetically by name.
+const COUNTRIES = (() => {
+  const seen = new Set<string>();
+  const list: { iso2: string; name: string; dialCode: string }[] = [];
+  for (const c of allCountries as Array<{ iso2: string; name: string; dialCode: string }>) {
+    if (seen.has(c.iso2)) continue;
+    seen.add(c.iso2);
+    list.push({ iso2: c.iso2, name: c.name, dialCode: c.dialCode });
+  }
+  list.sort((a, b) => a.name.localeCompare(b.name));
+  return list;
+})();
+
+const DEFAULT_ISO2 = "my"; // Malaysia
+
+// Convert iso2 -> flag emoji
+const isoToFlag = (iso2: string) =>
+  iso2
+    .toUpperCase()
+    .replace(/./g, (ch) => String.fromCodePoint(127397 + ch.charCodeAt(0)));
 
 type PortalType = "teacher" | "family";
 
@@ -44,10 +71,13 @@ export default function Login() {
     portal === "teacher" ? "Teacher Portal" : "Parent / Student Portal";
 
   // Login state
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const [countryIso2, setCountryIso2] = useState<string>(DEFAULT_ISO2);
+  const [phone, setPhone] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+
+  const selectedCountry =
+    COUNTRIES.find((c) => c.iso2 === countryIso2) ?? COUNTRIES[0];
 
   // Redirect if already authenticated
   useEffect(() => {
@@ -71,82 +101,53 @@ export default function Login() {
     }
   }, [user, portal, authLoading, navigate]);
 
-  // Email + Password login
+  // Phone-only sanitizer: digits only, must not start with 0,
+  // strips spaces, dashes, parentheses, plus signs, and any other non-digits.
+  const sanitizePhone = (raw: string): string => {
+    let digits = raw.replace(/\D+/g, "");
+    while (digits.startsWith("0")) digits = digits.slice(1);
+    return digits;
+  };
+
+  const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setPhone(sanitizePhone(e.target.value));
+  };
+
+  // UI-only login handler (auth wiring deferred)
   const handleLogin = async () => {
     if (!portal) {
       setError("Please select a portal to continue.");
       return;
     }
-    
-    if (!email.trim()) {
-      setError("Please enter your email.");
+
+    if (!phone) {
+      setError("Please enter your phone number.");
       return;
     }
 
-    if (!password.trim()) {
-      setError("Please enter your password.");
+    if (phone.startsWith("0")) {
+      setError("Phone number must not start with 0.");
+      return;
+    }
+
+    if (!/^\d+$/.test(phone)) {
+      setError("Phone number must contain digits only.");
+      return;
+    }
+
+    if (phone.length < 6 || phone.length > 15) {
+      setError("Please enter a valid phone number.");
       return;
     }
 
     setError(null);
     setLoading(true);
 
-    try {
-      const { data: authData, error: signInError } = await supabase.auth.signInWithPassword({
-        email: email.trim(),
-        password: password,
-      });
+    // UI-only: backend wiring will be added later.
+    const fullNumber = `+${selectedCountry.dialCode}${phone}`;
+    console.log("[Login] Phone submit (UI-only):", { portal, fullNumber });
 
-      if (signInError || !authData.user) {
-        setError(signInError?.message || "Invalid email or password.");
-        setLoading(false);
-        return;
-      }
-
-      // Fetch profile to verify and get role
-      const { data: profileData, error: profileError } = await supabase
-        .from("user_profiles")
-        .select("*")
-        .eq("user_id", authData.user.id)
-        .maybeSingle();
-
-      if (profileError || !profileData) {
-        await supabase.auth.signOut();
-        setError("Account profile not found. Contact admin.");
-        setLoading(false);
-        return;
-      }
-
-      if (!profileData.is_active) {
-        await supabase.auth.signOut();
-        setError("Account disabled. Contact admin.");
-        setLoading(false);
-        return;
-      }
-
-      // Verify portal matches role
-      const isTeacherPortalOk = portal === "teacher" && profileData.role === "teacher";
-      const isFamilyPortalOk = portal === "family" && (profileData.role === "parent" || profileData.role === "student" || profileData.role === "user");
-
-      if (!isTeacherPortalOk && !isFamilyPortalOk) {
-        await supabase.auth.signOut();
-        setError("Wrong portal for this account.");
-        setLoading(false);
-        return;
-      }
-
-      // Redirect based on role
-      if (profileData.role === "teacher") {
-        navigate("/teacher", { replace: true });
-      } else {
-        navigate("/portal", { replace: true });
-      }
-    } catch (err) {
-      console.error("Login error:", err);
-      setError("An unexpected error occurred. Please try again.");
-    } finally {
-      setLoading(false);
-    }
+    setTimeout(() => setLoading(false), 600);
   };
 
   // Show loading while checking auth
@@ -179,43 +180,56 @@ export default function Login() {
         <Card className="border-2 border-border">
           <CardContent className="p-6 space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
-              <div className="relative">
-                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input
-                  id="email"
-                  type="email"
-                  autoComplete="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="Enter your email"
-                  className="pl-10"
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter") {
-                      document.getElementById("password")?.focus();
-                    }
-                  }}
-                />
-              </div>
-            </div>
+              <Label htmlFor="phone">Phone number</Label>
+              <div className="flex gap-2">
+                <Select value={countryIso2} onValueChange={setCountryIso2}>
+                  <SelectTrigger className="w-[130px] shrink-0" aria-label="Country code">
+                    <SelectValue>
+                      <span className="flex items-center gap-1.5">
+                        <span className="text-base leading-none">
+                          {isoToFlag(selectedCountry.iso2)}
+                        </span>
+                        <span className="text-sm">+{selectedCountry.dialCode}</span>
+                      </span>
+                    </SelectValue>
+                  </SelectTrigger>
+                  <SelectContent className="max-h-72">
+                    {COUNTRIES.map((c) => (
+                      <SelectItem key={c.iso2} value={c.iso2}>
+                        <span className="flex items-center gap-2">
+                          <span className="text-base leading-none">
+                            {isoToFlag(c.iso2)}
+                          </span>
+                          <span className="truncate">{c.name}</span>
+                          <span className="text-muted-foreground ml-auto">
+                            +{c.dialCode}
+                          </span>
+                        </span>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
 
-            <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
-              <div className="relative">
-                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input
-                  id="password"
-                  type="password"
-                  autoComplete="current-password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="Enter your password"
-                  className="pl-10"
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter") handleLogin();
-                  }}
-                />
+                <div className="relative flex-1">
+                  <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    id="phone"
+                    type="tel"
+                    inputMode="numeric"
+                    autoComplete="tel-national"
+                    value={phone}
+                    onChange={handlePhoneChange}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") handleLogin();
+                    }}
+                    placeholder="Phone number"
+                    className="pl-10"
+                  />
+                </div>
               </div>
+              <p className="text-xs text-muted-foreground">
+                Digits only. Do not include a leading 0.
+              </p>
             </div>
             
             {error && <p className="text-sm text-destructive">{error}</p>}
@@ -224,19 +238,12 @@ export default function Login() {
               {loading ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Logging in...
+                  Continuing...
                 </>
               ) : (
-                "Login"
+                "Continue"
               )}
             </Button>
-
-            {/* Phone OTP login - Coming Soon */}
-            {!ENABLE_PHONE_LOGIN && (
-              <p className="text-xs text-center text-muted-foreground">
-                Phone login coming soon
-              </p>
-            )}
             
             <Button
               variant="outline"
