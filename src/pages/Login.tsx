@@ -229,7 +229,7 @@ export default function Login() {
       const res = await fetch(OTP_VERIFY_URL, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ phone: fullNumber, otp }),
+        body: JSON.stringify({ phone, otp }),
       });
 
       const text = await res.text();
