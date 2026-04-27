@@ -704,6 +704,83 @@ export type Database = {
         }
         Relationships: []
       }
+      bukku_accounts_cache: {
+        Row: {
+          data: Json
+          fetched_at: string
+          id: number
+        }
+        Insert: {
+          data: Json
+          fetched_at?: string
+          id?: number
+        }
+        Update: {
+          data?: Json
+          fetched_at?: string
+          id?: number
+        }
+        Relationships: []
+      }
+      bukku_contact_sync_queue: {
+        Row: {
+          attempts: number
+          bukku_contact_id: string | null
+          created_at: string
+          enqueued_at: string
+          enqueued_by: string | null
+          finished_at: string | null
+          id: string
+          last_error: string | null
+          payload: Json
+          started_at: string | null
+          status: string
+          student_id: string
+          updated_at: string
+          webhook_response: Json | null
+        }
+        Insert: {
+          attempts?: number
+          bukku_contact_id?: string | null
+          created_at?: string
+          enqueued_at?: string
+          enqueued_by?: string | null
+          finished_at?: string | null
+          id?: string
+          last_error?: string | null
+          payload: Json
+          started_at?: string | null
+          status?: string
+          student_id: string
+          updated_at?: string
+          webhook_response?: Json | null
+        }
+        Update: {
+          attempts?: number
+          bukku_contact_id?: string | null
+          created_at?: string
+          enqueued_at?: string
+          enqueued_by?: string | null
+          finished_at?: string | null
+          id?: string
+          last_error?: string | null
+          payload?: Json
+          started_at?: string | null
+          status?: string
+          student_id?: string
+          updated_at?: string
+          webhook_response?: Json | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bukku_contact_sync_queue_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       bukku_contacts: {
         Row: {
           bukku_contact_id: string | null
@@ -869,6 +946,113 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      bukku_push_logs: {
+        Row: {
+          created_at: string
+          details: Json | null
+          id: string
+          level: string
+          message: string
+          queue_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          details?: Json | null
+          id?: string
+          level?: string
+          message: string
+          queue_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          details?: Json | null
+          id?: string
+          level?: string
+          message?: string
+          queue_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bukku_push_logs_queue_id_fkey"
+            columns: ["queue_id"]
+            isOneToOne: false
+            referencedRelation: "bukku_push_queue"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      bukku_push_queue: {
+        Row: {
+          attempts: number
+          bukku_contact_id: string | null
+          bukku_response: Json | null
+          bukku_transaction_id: string | null
+          created_at: string
+          draft_id: string | null
+          enqueued_at: string
+          enqueued_by: string | null
+          finished_at: string | null
+          id: string
+          last_error: string | null
+          payload: Json
+          started_at: string | null
+          status: string
+          student_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          attempts?: number
+          bukku_contact_id?: string | null
+          bukku_response?: Json | null
+          bukku_transaction_id?: string | null
+          created_at?: string
+          draft_id?: string | null
+          enqueued_at?: string
+          enqueued_by?: string | null
+          finished_at?: string | null
+          id?: string
+          last_error?: string | null
+          payload: Json
+          started_at?: string | null
+          status?: string
+          student_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          attempts?: number
+          bukku_contact_id?: string | null
+          bukku_response?: Json | null
+          bukku_transaction_id?: string | null
+          created_at?: string
+          draft_id?: string | null
+          enqueued_at?: string
+          enqueued_by?: string | null
+          finished_at?: string | null
+          id?: string
+          last_error?: string | null
+          payload?: Json
+          started_at?: string | null
+          status?: string
+          student_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bukku_push_queue_draft_id_fkey"
+            columns: ["draft_id"]
+            isOneToOne: false
+            referencedRelation: "student_invoice_draft"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bukku_push_queue_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       calendar_events: {
         Row: {
@@ -1501,27 +1685,33 @@ export type Database = {
       }
       discounts: {
         Row: {
+          account_id: number | null
           created_at: string
           id: string
           name: string
           payment_term_id: string | null
           product_id: string | null
+          sku: string | null
           updated_at: string
         }
         Insert: {
+          account_id?: number | null
           created_at?: string
           id?: string
           name: string
           payment_term_id?: string | null
           product_id?: string | null
+          sku?: string | null
           updated_at?: string
         }
         Update: {
+          account_id?: number | null
           created_at?: string
           id?: string
           name?: string
           payment_term_id?: string | null
           product_id?: string | null
+          sku?: string | null
           updated_at?: string
         }
         Relationships: [
@@ -2546,6 +2736,45 @@ export type Database = {
         }
         Relationships: []
       }
+      parents: {
+        Row: {
+          created_at: string
+          ic_number: string | null
+          id: string
+          is_malaysian: boolean
+          name: string | null
+          parent_email: string | null
+          parent_user_id: string | null
+          phone: string | null
+          relationship: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          ic_number?: string | null
+          id?: string
+          is_malaysian?: boolean
+          name?: string | null
+          parent_email?: string | null
+          parent_user_id?: string | null
+          phone?: string | null
+          relationship?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          ic_number?: string | null
+          id?: string
+          is_malaysian?: boolean
+          name?: string | null
+          parent_email?: string | null
+          parent_user_id?: string | null
+          phone?: string | null
+          relationship?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       payment_terms: {
         Row: {
           code: string
@@ -2587,34 +2816,40 @@ export type Database = {
       }
       product_mapping: {
         Row: {
+          account_id: number | null
           campus_code: string | null
           created_at: string
           early_lockin_discount: boolean
           frequency: string | null
           id: string
           product_id: string
+          type: string
           updated_at: string
-          year_level: string
+          year_levels: string[]
         }
         Insert: {
+          account_id?: number | null
           campus_code?: string | null
           created_at?: string
           early_lockin_discount?: boolean
           frequency?: string | null
           id?: string
           product_id: string
+          type?: string
           updated_at?: string
-          year_level?: string
+          year_levels?: string[]
         }
         Update: {
+          account_id?: number | null
           campus_code?: string | null
           created_at?: string
           early_lockin_discount?: boolean
           frequency?: string | null
           id?: string
           product_id?: string
+          type?: string
           updated_at?: string
-          year_level?: string
+          year_levels?: string[]
         }
         Relationships: [
           {
@@ -3133,64 +3368,231 @@ export type Database = {
         }
         Relationships: []
       }
-      student_invoice_period: {
+      student_invoice_draft: {
         Row: {
-          bukku_contact_id: string | null
+          billing_party: string | null
+          bukku_error: string | null
+          bukku_invoice_id: string | null
+          bukku_invoice_number: string | null
+          bukku_status: string
+          bukku_transaction_id: string | null
+          cca_product_id: string | null
           created_at: string
-          fee: number | null
+          created_by: string | null
+          currency_code: string | null
+          description: string | null
+          discount_name_overrides: Json | null
+          discount_overrides: Json | null
+          discount_product_ids: string[] | null
+          due_date: string | null
+          email_cc: string[] | null
+          email_message: string | null
+          email_subject: string | null
+          email_to: string[] | null
+          extra_product_ids: string[]
           id: string
-          invoice_amount: number
-          invoice_balance: number
           invoice_date: string | null
-          invoice_id: string | null
-          link: string | null
+          invoice_number: string | null
+          payload: Json | null
+          payment_mode: string | null
           period_key: string | null
           product_id: string | null
+          pushed_at: string | null
           quantity: number | null
-          status: Database["public"]["Enums"]["invoice_status"]
+          reference_number: string | null
+          remarks: string | null
+          send_email: boolean | null
+          status: string
+          student_id: string
+          tax_code: string | null
+          tax_mode: string | null
           title: string | null
+          total_amount: number | null
+          unit_price: number | null
           updated_at: string
         }
         Insert: {
-          bukku_contact_id?: string | null
+          billing_party?: string | null
+          bukku_error?: string | null
+          bukku_invoice_id?: string | null
+          bukku_invoice_number?: string | null
+          bukku_status?: string
+          bukku_transaction_id?: string | null
+          cca_product_id?: string | null
           created_at?: string
-          fee?: number | null
+          created_by?: string | null
+          currency_code?: string | null
+          description?: string | null
+          discount_name_overrides?: Json | null
+          discount_overrides?: Json | null
+          discount_product_ids?: string[] | null
+          due_date?: string | null
+          email_cc?: string[] | null
+          email_message?: string | null
+          email_subject?: string | null
+          email_to?: string[] | null
+          extra_product_ids?: string[]
           id?: string
-          invoice_amount?: number
-          invoice_balance?: number
           invoice_date?: string | null
-          invoice_id?: string | null
-          link?: string | null
+          invoice_number?: string | null
+          payload?: Json | null
+          payment_mode?: string | null
           period_key?: string | null
           product_id?: string | null
+          pushed_at?: string | null
           quantity?: number | null
-          status?: Database["public"]["Enums"]["invoice_status"]
+          reference_number?: string | null
+          remarks?: string | null
+          send_email?: boolean | null
+          status?: string
+          student_id: string
+          tax_code?: string | null
+          tax_mode?: string | null
           title?: string | null
+          total_amount?: number | null
+          unit_price?: number | null
           updated_at?: string
         }
         Update: {
-          bukku_contact_id?: string | null
+          billing_party?: string | null
+          bukku_error?: string | null
+          bukku_invoice_id?: string | null
+          bukku_invoice_number?: string | null
+          bukku_status?: string
+          bukku_transaction_id?: string | null
+          cca_product_id?: string | null
           created_at?: string
-          fee?: number | null
+          created_by?: string | null
+          currency_code?: string | null
+          description?: string | null
+          discount_name_overrides?: Json | null
+          discount_overrides?: Json | null
+          discount_product_ids?: string[] | null
+          due_date?: string | null
+          email_cc?: string[] | null
+          email_message?: string | null
+          email_subject?: string | null
+          email_to?: string[] | null
+          extra_product_ids?: string[]
           id?: string
-          invoice_amount?: number
-          invoice_balance?: number
           invoice_date?: string | null
-          invoice_id?: string | null
-          link?: string | null
+          invoice_number?: string | null
+          payload?: Json | null
+          payment_mode?: string | null
           period_key?: string | null
           product_id?: string | null
+          pushed_at?: string | null
           quantity?: number | null
-          status?: Database["public"]["Enums"]["invoice_status"]
+          reference_number?: string | null
+          remarks?: string | null
+          send_email?: boolean | null
+          status?: string
+          student_id?: string
+          tax_code?: string | null
+          tax_mode?: string | null
           title?: string | null
+          total_amount?: number | null
+          unit_price?: number | null
           updated_at?: string
         }
         Relationships: [
           {
-            foreignKeyName: "student_invoice_period_product_id_fkey"
+            foreignKeyName: "student_invoice_draft_cca_product_id_fkey"
+            columns: ["cca_product_id"]
+            isOneToOne: false
+            referencedRelation: "bukku_products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "student_invoice_draft_product_id_fkey"
             columns: ["product_id"]
             isOneToOne: false
             referencedRelation: "bukku_products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "student_invoice_draft_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      student_invoices: {
+        Row: {
+          bukku_contact_id: number
+          bukku_invoice_id: string | null
+          content: Json
+          created_at: string
+          id: string
+          invoice_date: string | null
+          period_key: string | null
+          status: string
+          type: Database["public"]["Enums"]["student_invoice_type"]
+          updated_at: string
+          url: string | null
+        }
+        Insert: {
+          bukku_contact_id: number
+          bukku_invoice_id?: string | null
+          content?: Json
+          created_at?: string
+          id?: string
+          invoice_date?: string | null
+          period_key?: string | null
+          status: string
+          type?: Database["public"]["Enums"]["student_invoice_type"]
+          updated_at?: string
+          url?: string | null
+        }
+        Update: {
+          bukku_contact_id?: number
+          bukku_invoice_id?: string | null
+          content?: Json
+          created_at?: string
+          id?: string
+          invoice_date?: string | null
+          period_key?: string | null
+          status?: string
+          type?: Database["public"]["Enums"]["student_invoice_type"]
+          updated_at?: string
+          url?: string | null
+        }
+        Relationships: []
+      }
+      student_parent: {
+        Row: {
+          created_at: string
+          id: string
+          parent_id: string
+          student_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          parent_id: string
+          student_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          parent_id?: string
+          student_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "student_parent_parent_id_fkey"
+            columns: ["parent_id"]
+            isOneToOne: false
+            referencedRelation: "parents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "student_parent_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
             referencedColumns: ["id"]
           },
         ]
@@ -3312,8 +3714,10 @@ export type Database = {
           archived: boolean
           campus_code: string | null
           campus_id: string | null
+          city: string | null
           class: string
           class_year_id: number | null
+          country: string | null
           created_at: string
           departure_date: string | null
           departure_reason: string | null
@@ -3353,10 +3757,12 @@ export type Database = {
           parent2_user_id: string | null
           passport_expiry_date: string | null
           payment_type: string | null
+          postcode: string | null
           previous: string | null
           relationship_type: string | null
           remarks: string | null
           sibling_discount: boolean | null
+          state: string | null
           student_code: string | null
           student_ic: string | null
           updated_at: string
@@ -3370,8 +3776,10 @@ export type Database = {
           archived?: boolean
           campus_code?: string | null
           campus_id?: string | null
+          city?: string | null
           class: string
           class_year_id?: number | null
+          country?: string | null
           created_at?: string
           departure_date?: string | null
           departure_reason?: string | null
@@ -3411,10 +3819,12 @@ export type Database = {
           parent2_user_id?: string | null
           passport_expiry_date?: string | null
           payment_type?: string | null
+          postcode?: string | null
           previous?: string | null
           relationship_type?: string | null
           remarks?: string | null
           sibling_discount?: boolean | null
+          state?: string | null
           student_code?: string | null
           student_ic?: string | null
           updated_at?: string
@@ -3428,8 +3838,10 @@ export type Database = {
           archived?: boolean
           campus_code?: string | null
           campus_id?: string | null
+          city?: string | null
           class?: string
           class_year_id?: number | null
+          country?: string | null
           created_at?: string
           departure_date?: string | null
           departure_reason?: string | null
@@ -3469,10 +3881,12 @@ export type Database = {
           parent2_user_id?: string | null
           passport_expiry_date?: string | null
           payment_type?: string | null
+          postcode?: string | null
           previous?: string | null
           relationship_type?: string | null
           remarks?: string | null
           sibling_discount?: boolean | null
+          state?: string | null
           student_code?: string | null
           student_ic?: string | null
           updated_at?: string
@@ -3819,7 +4233,7 @@ export type Database = {
           can_manage_lesson_plans: boolean | null
           created_at: string
           departments: string[]
-          email: string
+          email: string | null
           full_name: string | null
           ic_number: string | null
           id: string
@@ -3845,7 +4259,7 @@ export type Database = {
           can_manage_lesson_plans?: boolean | null
           created_at?: string
           departments?: string[]
-          email: string
+          email?: string | null
           full_name?: string | null
           ic_number?: string | null
           id?: string
@@ -3871,7 +4285,7 @@ export type Database = {
           can_manage_lesson_plans?: boolean | null
           created_at?: string
           departments?: string[]
-          email?: string
+          email?: string | null
           full_name?: string | null
           ic_number?: string | null
           id?: string
@@ -4061,6 +4475,8 @@ export type Database = {
     Enums: {
       cca_pic_role: "lead" | "sub"
       invoice_status: "pending_payment" | "paid"
+      student_invoice_status: "pending_payment" | "paid" | "draft"
+      student_invoice_type: "enrolment" | "fees" | "others"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -4190,6 +4606,8 @@ export const Constants = {
     Enums: {
       cca_pic_role: ["lead", "sub"],
       invoice_status: ["pending_payment", "paid"],
+      student_invoice_status: ["pending_payment", "paid", "draft"],
+      student_invoice_type: ["enrolment", "fees", "others"],
     },
   },
 } as const
