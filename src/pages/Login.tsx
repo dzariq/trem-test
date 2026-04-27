@@ -85,6 +85,7 @@ export default function Login() {
   const [otp, setOtp] = useState("");
   const [otpExpiresAt, setOtpExpiresAt] = useState<number | null>(null);
   const [secondsLeft, setSecondsLeft] = useState(0);
+  const [generatedOtp, setGeneratedOtp] = useState<string>("");
 
   const selectedCountry =
     COUNTRIES.find((c) => c.iso2 === countryIso2) ?? COUNTRIES[0];
@@ -140,6 +141,11 @@ export default function Login() {
 
   const fullNumber = `+${selectedCountry.dialCode}${phone}`;
 
+  // Generate a 6-digit OTP code
+  const generateOtpCode = (): string => {
+    return Math.floor(100000 + Math.random() * 900000).toString();
+  };
+
   // Step 1: request OTP
   const handleRequestOtp = async () => {
     if (!portal) {
@@ -171,10 +177,16 @@ export default function Login() {
     setLoading(true);
 
     try {
+      const otpCode = generateOtpCode();
+
       const res = await fetch(OTP_REQUEST_URL, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ phone: fullNumber }),
+        body: JSON.stringify({
+          phone,
+          country_code: `+${selectedCountry.dialCode}`,
+          message: otpCode,
+        }),
       });
 
       if (!res.ok) {
@@ -182,6 +194,7 @@ export default function Login() {
         throw new Error(text || `Request failed (${res.status})`);
       }
 
+      setGeneratedOtp(otpCode);
       setOtp("");
       setOtpExpiresAt(Date.now() + OTP_TTL_SECONDS * 1000);
       setStep("otp");
