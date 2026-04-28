@@ -72,8 +72,8 @@ function DebugPanel({
 }
 
 export default function AttendancePage() {
-  const [selectedMonth, setSelectedMonth] = useState("January");
-  const [currentMonthIndex, setCurrentMonthIndex] = useState(0); // January = 0
+  const [selectedMonth, setSelectedMonth] = useState(months[new Date().getMonth()]);
+  const [currentMonthIndex, setCurrentMonthIndex] = useState(new Date().getMonth());
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
   const [selectedYear, setSelectedYear] = useState("2026");
   const [zoomLevel, setZoomLevel] = useState<ZoomLevel>(12); // Default to yearly view
