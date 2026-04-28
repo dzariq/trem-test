@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useStudentSelection } from "@/hooks/useStudentSelection";
 import { cn } from "@/lib/utils";
 import { ChevronRight, ChevronDown, Utensils, Flag, Check, X } from "lucide-react";
@@ -40,6 +40,30 @@ export function StudentPillSelector({ onStudentChange }: StudentPillSelectorProp
     setSelectedStudentId,
   } = useStudentSelection();
 
+  const [studentPhotos, setStudentPhotos] = useState<Record<string, string | null>>({});
+
+  // Load saved photos from localStorage
+  useEffect(() => {
+    const loaded: Record<string, string | null> = {};
+    students.forEach((s) => {
+      const saved = localStorage.getItem(`student_photo_${s.id}`);
+      if (saved) loaded[s.id] = saved;
+    });
+    setStudentPhotos(loaded);
+  }, [students]);
+
+  // Listen for storage changes (e.g., updates from other tabs/components)
+  useEffect(() => {
+    const handler = (e: StorageEvent) => {
+      if (e.key && e.key.startsWith("student_photo_")) {
+        const id = e.key.replace("student_photo_", "");
+        setStudentPhotos((prev) => ({ ...prev, [id]: e.newValue }));
+      }
+    };
+    window.addEventListener("storage", handler);
+    return () => window.removeEventListener("storage", handler);
+  }, []);
+
   const handleToggleExpand = (studentId: string) => {
     setExpandedId(expandedId === studentId ? null : studentId);
     setSelectedStudentId(studentId);
@@ -72,13 +96,22 @@ export function StudentPillSelector({ onStudentChange }: StudentPillSelectorProp
               key={student.id}
               className={cn(
                 "w-8 h-8 rounded-full flex items-center justify-center ring-2 ring-background",
-                avatarColors[index % avatarColors.length]
+                !studentPhotos[student.id] && avatarColors[index % avatarColors.length],
+                "overflow-hidden"
               )}
               style={{ zIndex: visibleStudents.length - index }}
             >
-              <span className="text-xs font-semibold text-white">
-                {getInitials(student.name)}
-              </span>
+              {studentPhotos[student.id] ? (
+                <img
+                  src={studentPhotos[student.id]!}
+                  alt={student.name}
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <span className="text-xs font-semibold text-white">
+                  {getInitials(student.name)}
+                </span>
+              )}
             </div>
           ))}
           {!loading && overflowCount > 0 && (
@@ -133,12 +166,21 @@ export function StudentPillSelector({ onStudentChange }: StudentPillSelectorProp
                   <div
                     className={cn(
                       "w-12 h-12 rounded-full flex items-center justify-center shrink-0",
-                      avatarColors[index % avatarColors.length]
+                      !studentPhotos[student.id] && avatarColors[index % avatarColors.length],
+                      "overflow-hidden"
                     )}
                   >
-                    <span className="text-base font-semibold text-white">
-                      {getInitials(student.name)}
-                    </span>
+                    {studentPhotos[student.id] ? (
+                      <img
+                        src={studentPhotos[student.id]!}
+                        alt={student.name}
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <span className="text-base font-semibold text-white">
+                        {getInitials(student.name)}
+                      </span>
+                    )}
                   </div>
                   <div className="text-left flex-1 min-w-0">
                     <p className="font-medium text-foreground">{student.name}</p>
