@@ -44,7 +44,7 @@ export function QuickLinks() {
     <>
       <section className="px-4 mt-3 relative z-10">
         <div className="bg-background/20 backdrop-blur-md rounded-2xl px-3 py-2.5 shadow-lg border border-white/20">
-          <div className="grid grid-cols-5 gap-0.5">
+          <div className="flex justify-around items-start gap-0.5">
             {quickLinks.map((link) => (
               <button
                 key={link.label}
