@@ -140,15 +140,26 @@ export default function ProfilePage() {
   }, [profile, profileLoading]);
 
   const handlePhotoChange = (studentId: string, photoUrl: string | null) => {
-    if (photoUrl) {
-      localStorage.setItem(`student_photo_${studentId}`, photoUrl);
-    } else {
-      localStorage.removeItem(`student_photo_${studentId}`);
+    try {
+      if (photoUrl) {
+        localStorage.setItem(`student_photo_${studentId}`, photoUrl);
+      } else {
+        localStorage.removeItem(`student_photo_${studentId}`);
+      }
+      setStudentPhotos((prev) => ({
+        ...prev,
+        [studentId]: photoUrl,
+      }));
+      // Notify other components (e.g. StudentPillSelector) in the same tab
+      window.dispatchEvent(
+        new CustomEvent("student-photo-changed", {
+          detail: { studentId, photoUrl },
+        })
+      );
+    } catch (err) {
+      console.error("Failed to save student photo", err);
+      toast.error("Image is too large to save. Please try a smaller photo.");
     }
-    setStudentPhotos((prev) => ({
-      ...prev,
-      [studentId]: photoUrl,
-    }));
   };
 
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -165,9 +176,30 @@ export default function ProfilePage() {
       return;
     }
 
+    // Compress image to keep it well under localStorage quota
     const reader = new FileReader();
     reader.onloadend = () => {
-      setPreviewUrl(reader.result as string);
+      const dataUrl = reader.result as string;
+      const img = new Image();
+      img.onload = () => {
+        const MAX_DIM = 512;
+        const scale = Math.min(1, MAX_DIM / Math.max(img.width, img.height));
+        const w = Math.round(img.width * scale);
+        const h = Math.round(img.height * scale);
+        const canvas = document.createElement("canvas");
+        canvas.width = w;
+        canvas.height = h;
+        const ctx = canvas.getContext("2d");
+        if (!ctx) {
+          setPreviewUrl(dataUrl);
+          return;
+        }
+        ctx.drawImage(img, 0, 0, w, h);
+        const compressed = canvas.toDataURL("image/jpeg", 0.85);
+        setPreviewUrl(compressed);
+      };
+      img.onerror = () => setPreviewUrl(dataUrl);
+      img.src = dataUrl;
     };
     reader.readAsDataURL(file);
   };
