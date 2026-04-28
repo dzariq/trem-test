@@ -4,6 +4,8 @@ import { supabase } from "@/lib/supabase";
 import { useQueryClient } from "@tanstack/react-query";
 
 const PORTAL_KEY = "selected_portal";
+const SESSION_START_KEY = "session_started_at";
+const SESSION_MAX_AGE_MS = 48 * 60 * 60 * 1000; // 48 hours
 
 export type PortalType = "teacher" | "family" | null;
 
@@ -71,6 +73,36 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     let isMounted = true;
+    let expiryTimer: ReturnType<typeof setTimeout> | null = null;
+
+    const forceSignOut = async () => {
+      try {
+        await supabase.auth.signOut();
+      } catch (e) {
+        console.error("Forced sign-out error:", e);
+      }
+      localStorage.removeItem(SESSION_START_KEY);
+      localStorage.removeItem(PORTAL_KEY);
+      if (isMounted) {
+        setUser(null);
+        setSession(null);
+        setProfile(null);
+        setPortalState(null);
+      }
+    };
+
+    const scheduleExpiry = () => {
+      if (expiryTimer) clearTimeout(expiryTimer);
+      const startedAt = Number(localStorage.getItem(SESSION_START_KEY) || 0);
+      if (!startedAt) return;
+      const remaining = startedAt + SESSION_MAX_AGE_MS - Date.now();
+      if (remaining <= 0) {
+        forceSignOut();
+      } else {
+        // setTimeout max ~24.8 days, 48h is fine
+        expiryTimer = setTimeout(forceSignOut, remaining);
+      }
+    };
 
     // Set up auth state listener FIRST
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
@@ -83,8 +115,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         // When user signs out, clear profile
         if (event === "SIGNED_OUT") {
           setProfile(null);
+          localStorage.removeItem(SESSION_START_KEY);
+          if (expiryTimer) clearTimeout(expiryTimer);
           setLoading(false);
           return;
+        }
+
+        // Stamp session start on fresh sign-in (not on token refresh)
+        if (event === "SIGNED_IN" && currentSession?.user) {
+          if (!localStorage.getItem(SESSION_START_KEY)) {
+            localStorage.setItem(SESSION_START_KEY, String(Date.now()));
+          }
+          scheduleExpiry();
         }
 
         // When user signs in, fetch profile (using setTimeout to avoid deadlock)
@@ -111,6 +153,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setUser(currentSession?.user ?? null);
 
       if (currentSession?.user) {
+        // Enforce 48h absolute expiry on existing session
+        const startedAt = Number(localStorage.getItem(SESSION_START_KEY) || 0);
+        if (!startedAt) {
+          // No stamp (legacy session) — stamp now so policy applies going forward
+          localStorage.setItem(SESSION_START_KEY, String(Date.now()));
+        } else if (Date.now() - startedAt >= SESSION_MAX_AGE_MS) {
+          forceSignOut();
+          return;
+        }
+        scheduleExpiry();
+
         fetchProfile(currentSession.user.id).then((p) => {
           if (isMounted) {
             setProfile(p);
@@ -126,6 +179,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => {
       isMounted = false;
       subscription.unsubscribe();
+      if (expiryTimer) clearTimeout(expiryTimer);
     };
   }, [fetchProfile]);
 
@@ -146,6 +200,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // Clear any other auth-related localStorage keys
       localStorage.removeItem("supabase.auth.token");
       localStorage.removeItem("active_campus_code");
+      localStorage.removeItem(SESSION_START_KEY);
     } catch (error) {
       console.error("Sign out error:", error);
     }
