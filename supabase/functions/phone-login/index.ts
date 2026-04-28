@@ -46,7 +46,6 @@ Deno.serve(async (req) => {
       .from("user_profiles")
       .select("user_id, email, phone, role, is_active")
       .eq("role", "parent")
-      .eq("is_active", true)
       .not("phone", "is", null);
 
     if (profilesErr) {
@@ -69,6 +68,13 @@ Deno.serve(async (req) => {
       return new Response(
         JSON.stringify({ error: "No parent account found for this phone number." }),
         { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+      );
+    }
+
+    if (match.is_active === false) {
+      return new Response(
+        JSON.stringify({ error: "This parent account is inactive. Please contact the school." }),
+        { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } },
       );
     }
 
