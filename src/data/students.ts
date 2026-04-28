@@ -175,6 +175,9 @@ const listViaStudentGuardians = async (guardianUserId: string) => {
         relationship: link.relationship ?? null,
         isPrimary: link.is_primary ?? null,
         ccaActivities: ccaMap[String(student.id)] ?? [],
+        dob: student.dob ?? null,
+        enrollmentDate: student.enrollment_date ?? null,
+        graduationYear: student.graduation_year ?? null,
       } as LinkedStudent;
     })
     .filter((student): student is LinkedStudent => Boolean(student));
