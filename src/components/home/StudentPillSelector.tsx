@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { useStudentSelection } from "@/hooks/useStudentSelection";
 import { cn } from "@/lib/utils";
 import { ChevronRight, ChevronDown, Utensils, Flag, Check, X } from "lucide-react";
@@ -32,7 +33,7 @@ const sportsHouseColors: Record<string, { bg: string; text: string; label: strin
 
 export function StudentPillSelector({ onStudentChange }: StudentPillSelectorProps) {
   const [open, setOpen] = useState(false);
-  const [expandedId, setExpandedId] = useState<string | null>(null);
+  const navigate = useNavigate();
   const {
     linkedStudents: students,
     loading,
@@ -64,10 +65,11 @@ export function StudentPillSelector({ onStudentChange }: StudentPillSelectorProp
     return () => window.removeEventListener("storage", handler);
   }, []);
 
-  const handleToggleExpand = (studentId: string) => {
-    setExpandedId(expandedId === studentId ? null : studentId);
+  const handleSelectStudent = (studentId: string) => {
     setSelectedStudentId(studentId);
     onStudentChange?.(studentId);
+    setOpen(false);
+    navigate(`/parent/profile?studentId=${encodeURIComponent(studentId)}`);
   };
 
   const getInitials = (name: string) =>
@@ -147,21 +149,14 @@ export function StudentPillSelector({ onStudentChange }: StudentPillSelectorProp
             </p>
           )}
           {!loading && !error && students.map((student, index) => {
-            const isExpanded = student.id === expandedId;
-            const houseKey = (student.sportsHouse ?? "").toString().toLowerCase();
-            const houseInfo = houseKey ? sportsHouseColors[houseKey] : null;
-
             return (
               <div
                 key={student.id}
                 className="rounded-xl border border-border overflow-hidden"
               >
                 <button
-                  onClick={() => handleToggleExpand(student.id)}
-                  className={cn(
-                    "w-full flex items-center gap-3 p-3 transition-colors",
-                    isExpanded ? "bg-muted/50" : "hover:bg-muted/30"
-                  )}
+                  onClick={() => handleSelectStudent(student.id)}
+                  className="w-full flex items-center gap-3 p-3 transition-colors hover:bg-muted/30"
                 >
                   <div
                     className={cn(
@@ -190,66 +185,8 @@ export function StudentPillSelector({ onStudentChange }: StudentPillSelectorProp
                       </p>
                     )}
                   </div>
-                  {isExpanded ? (
-                    <ChevronDown className="w-5 h-5 text-muted-foreground shrink-0" />
-                  ) : (
-                    <ChevronRight className="w-5 h-5 text-muted-foreground shrink-0" />
-                  )}
+                  <ChevronRight className="w-5 h-5 text-muted-foreground shrink-0" />
                 </button>
-
-                {isExpanded && (
-                  <div className="px-4 pb-4 pt-2 border-t border-border bg-muted/20">
-                    <div className="space-y-4">
-                      {(typeof student.mealPlan === "boolean" || houseInfo) && (
-                        <div className="grid grid-cols-2 gap-2">
-                          {typeof student.mealPlan === "boolean" && (
-                            <div className="flex flex-col items-center gap-1.5 p-2 rounded-lg bg-background border border-border">
-                              <Utensils className="w-5 h-5 text-muted-foreground" />
-                              <span className="text-xs font-medium text-muted-foreground">Meal Plan</span>
-                              <div className={cn(
-                                "w-6 h-6 rounded-full flex items-center justify-center",
-                                student.mealPlan ? "bg-green-500" : "bg-muted"
-                              )}>
-                                {student.mealPlan ? (
-                                  <Check className="w-4 h-4 text-white" />
-                                ) : (
-                                  <X className="w-4 h-4 text-muted-foreground" />
-                                )}
-                              </div>
-                            </div>
-                          )}
-
-                          {houseInfo && (
-                            <div className="flex flex-col items-center gap-1.5 p-2 rounded-lg bg-background border border-border">
-                              <Flag className="w-5 h-5 text-muted-foreground" />
-                              <span className="text-xs font-medium text-muted-foreground">Sports House</span>
-                              <Badge className={cn("text-xs px-2", houseInfo.bg, houseInfo.text)}>
-                                {houseInfo.label.split(" ")[0]}
-                              </Badge>
-                            </div>
-                          )}
-                        </div>
-                      )}
-
-                      {Array.isArray(student.subjects) && student.subjects.length > 0 && (
-                        <div>
-                          <p className="text-xs font-medium text-muted-foreground mb-2">Subjects</p>
-                          <div className="flex flex-wrap gap-2">
-                            {student.subjects.map((subject) => (
-                              <Badge
-                                key={subject}
-                                variant="secondary"
-                                className="text-xs"
-                              >
-                                {subject}
-                              </Badge>
-                            ))}
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                )}
               </div>
             );
           })}
