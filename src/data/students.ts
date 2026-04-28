@@ -18,6 +18,9 @@ export type LinkedStudent = {
   relationship?: string | null;
   isPrimary?: boolean | null;
   ccaActivities?: { name: string; category: string | null }[];
+  dob?: string | null;
+  enrollmentDate?: string | null;
+  graduationYear?: number | null;
 };
 
 const isMissingResource = (error: { message?: string } | null, keyword: string) => {
