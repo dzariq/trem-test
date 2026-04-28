@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useStudentSelection } from "@/hooks/useStudentSelection";
 import { cn } from "@/lib/utils";
-import { ChevronRight, ChevronDown, Utensils, Flag, Check, X } from "lucide-react";
+import { ChevronRight } from "lucide-react";
 import {
   Drawer,
   DrawerContent,
@@ -10,7 +10,6 @@ import {
   DrawerTitle,
   DrawerTrigger,
 } from "@/components/ui/drawer";
-import { Badge } from "@/components/ui/badge";
 
 interface StudentPillSelectorProps {
   onStudentChange?: (studentId: string) => void;
@@ -23,13 +22,6 @@ const avatarColors = [
   "bg-gradient-to-br from-pink-400 to-pink-600",
   "bg-gradient-to-br from-orange-400 to-orange-600",
 ];
-
-const sportsHouseColors: Record<string, { bg: string; text: string; label: string }> = {
-  red: { bg: "bg-red-500", text: "text-white", label: "Red House" },
-  blue: { bg: "bg-blue-500", text: "text-white", label: "Blue House" },
-  green: { bg: "bg-green-500", text: "text-white", label: "Green House" },
-  yellow: { bg: "bg-yellow-400", text: "text-yellow-900", label: "Yellow House" },
-};
 
 export function StudentPillSelector({ onStudentChange }: StudentPillSelectorProps) {
   const [open, setOpen] = useState(false);
