@@ -18,6 +18,9 @@ export type LinkedStudent = {
   relationship?: string | null;
   isPrimary?: boolean | null;
   ccaActivities?: { name: string; category: string | null }[];
+  dob?: string | null;
+  enrollmentDate?: string | null;
+  graduationYear?: number | null;
 };
 
 const isMissingResource = (error: { message?: string } | null, keyword: string) => {
@@ -89,7 +92,7 @@ const listViaStudentGuardians = async (guardianUserId: string) => {
 
   const { data: students, error: studentsError } = await supabase
     .from("students")
-    .select("id, name, year_level, class, campus_id, campus_code, family_id, student_code")
+    .select("id, name, year_level, class, campus_id, campus_code, family_id, student_code, dob, enrollment_date, graduation_year")
     .in("id", studentIds as any[]);
 
   if (studentsError) {
@@ -172,6 +175,9 @@ const listViaStudentGuardians = async (guardianUserId: string) => {
         relationship: link.relationship ?? null,
         isPrimary: link.is_primary ?? null,
         ccaActivities: ccaMap[String(student.id)] ?? [],
+        dob: student.dob ?? null,
+        enrollmentDate: student.enrollment_date ?? null,
+        graduationYear: student.graduation_year ?? null,
       } as LinkedStudent;
     })
     .filter((student): student is LinkedStudent => Boolean(student));

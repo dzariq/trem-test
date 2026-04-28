@@ -44,7 +44,9 @@ import {
   BookOpen,
   Utensils,
   Flag,
-  
+  CalendarDays,
+  Cake,
+  GraduationCap,
   Check,
   X
 } from "lucide-react";
@@ -676,6 +678,51 @@ export default function ProfilePage() {
               )}
 
               <Separator />
+
+              {/* Key Dates - Enrollment, DOB, Graduation */}
+              {(selectedStudent.enrollmentDate || selectedStudent.dob || selectedStudent.graduationYear) && (
+                <>
+                  <div className="space-y-3">
+                    <span className="font-medium text-foreground">Key Dates</span>
+                    <div className="grid grid-cols-3 gap-3">
+                      <div className="flex flex-col items-center gap-1.5 p-3 rounded-lg bg-muted/50 border border-border">
+                        <CalendarDays className="w-5 h-5 text-muted-foreground" />
+                        <span className="text-xs font-medium text-muted-foreground text-center">Enrolled</span>
+                        <span className="text-sm font-semibold text-foreground text-center">
+                          {selectedStudent.enrollmentDate
+                            ? new Date(selectedStudent.enrollmentDate).toLocaleDateString("en-GB", {
+                                day: "2-digit",
+                                month: "short",
+                                year: "numeric",
+                              })
+                            : "—"}
+                        </span>
+                      </div>
+                      <div className="flex flex-col items-center gap-1.5 p-3 rounded-lg bg-muted/50 border border-border">
+                        <Cake className="w-5 h-5 text-muted-foreground" />
+                        <span className="text-xs font-medium text-muted-foreground text-center">Date of Birth</span>
+                        <span className="text-sm font-semibold text-foreground text-center">
+                          {selectedStudent.dob
+                            ? new Date(selectedStudent.dob).toLocaleDateString("en-GB", {
+                                day: "2-digit",
+                                month: "short",
+                                year: "numeric",
+                              })
+                            : "—"}
+                        </span>
+                      </div>
+                      <div className="flex flex-col items-center gap-1.5 p-3 rounded-lg bg-muted/50 border border-border">
+                        <GraduationCap className="w-5 h-5 text-muted-foreground" />
+                        <span className="text-xs font-medium text-muted-foreground text-center">Graduation</span>
+                        <span className="text-sm font-semibold text-foreground text-center">
+                          {selectedStudent.graduationYear ?? "—"}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                  <Separator />
+                </>
+              )}
 
               {/* Student Options - Meal Plan, Sports House */}
               {(typeof selectedStudent.mealPlan === "boolean" || selectedStudent.sportsHouse) && (
