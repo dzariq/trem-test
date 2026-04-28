@@ -67,6 +67,7 @@ const sportsHouseColors: Record<string, { bg: string; text: string; label: strin
 
 export default function ProfilePage() {
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const queryClient = useQueryClient();
   const { signOut } = useAuth();
   const { profile, loading: profileLoading, error: profileError, refetch } = useMyProfile();
