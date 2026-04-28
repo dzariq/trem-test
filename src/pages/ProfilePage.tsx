@@ -44,7 +44,9 @@ import {
   BookOpen,
   Utensils,
   Flag,
-  
+  CalendarDays,
+  Cake,
+  GraduationCap,
   Check,
   X
 } from "lucide-react";
