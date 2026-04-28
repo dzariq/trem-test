@@ -262,7 +262,7 @@ export async function getAnnouncementById(
     const fileType = row.file_type ?? "";
     const fileName = row.name ?? row.file_name ?? "Attachment";
     resolvedAttachments.push({ name: fileName, url: resolvedUrl, file_type: fileType });
-    if (!heroImage && isImageType(fileType, fileName)) {
+    if (!heroImage && resolvedUrl && isImageType(fileType, fileName)) {
       heroImage = resolvedUrl;
     }
   });
