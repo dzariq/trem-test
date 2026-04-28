@@ -300,7 +300,6 @@ export default function Login() {
       const { error: verifyErr } = await supabase.auth.verifyOtp({
         type: "magiclink",
         token_hash: loginData.token_hash,
-        email: loginData.email,
       });
 
       if (verifyErr) {
