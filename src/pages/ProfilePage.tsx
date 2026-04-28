@@ -48,7 +48,7 @@ import {
   Check,
   X
 } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { toast } from "@/hooks/use-toast";
 import { HandbookReportDialog } from "@/components/HandbookReportDialog";
 import { studentHandbookData } from "@/data/studentHandbookData";
@@ -67,6 +67,7 @@ const sportsHouseColors: Record<string, { bg: string; text: string; label: strin
 
 export default function ProfilePage() {
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const queryClient = useQueryClient();
   const { signOut } = useAuth();
   const { profile, loading: profileLoading, error: profileError, refetch } = useMyProfile();
@@ -110,6 +111,23 @@ export default function ProfilePage() {
     });
     setStudentPhotos(loadedPhotos);
   }, [linkedStudents]);
+
+  // Auto-open the student details drawer when navigated with ?studentId=
+  useEffect(() => {
+    const targetId = searchParams.get("studentId");
+    if (!targetId || linkedStudents.length === 0) return;
+    const match = linkedStudents.find((s) => s.id === targetId);
+    if (match) {
+      setSelectedStudent(match);
+      if (match.id !== selectedStudentId) {
+        setSelectedStudentId(match.id);
+      }
+      // Clear the param so the drawer can be closed normally
+      const next = new URLSearchParams(searchParams);
+      next.delete("studentId");
+      setSearchParams(next, { replace: true });
+    }
+  }, [searchParams, linkedStudents, selectedStudentId, setSelectedStudentId, setSearchParams]);
 
   useEffect(() => {
     if (profileLoading) return;
