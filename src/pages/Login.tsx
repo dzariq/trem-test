@@ -248,8 +248,49 @@ export default function Login() {
         );
       }
 
-      console.log("[Login] OTP verified:", { portal, fullNumber, data });
-      // Auth wiring (Supabase session) will be added later.
+      // n8n may return an array or object; normalize to find status
+      const payload = Array.isArray(data) ? data[0] : data;
+      const statusVal = payload?.status;
+      const statusOk =
+        statusVal === 1 || statusVal === "1" || statusVal === true;
+
+      if (!statusOk) {
+        throw new Error(
+          (payload && (payload.message || payload.error)) ||
+            "Invalid OTP. Please try again.",
+        );
+      }
+
+      // Look up the parent by phone via edge function and mint a session token
+      const { data: loginData, error: loginErr } = await supabase.functions.invoke(
+        "phone-login",
+        {
+          body: {
+            phone,
+            country_code: `+${selectedCountry.dialCode}`,
+          },
+        },
+      );
+
+      if (loginErr || !loginData?.token_hash || !loginData?.email) {
+        throw new Error(
+          (loginData as any)?.error ||
+            loginErr?.message ||
+            "No parent account found for this phone number.",
+        );
+      }
+
+      const { error: verifyErr } = await supabase.auth.verifyOtp({
+        type: "magiclink",
+        token_hash: loginData.token_hash,
+        email: loginData.email,
+      });
+
+      if (verifyErr) {
+        throw new Error(verifyErr.message || "Failed to create session.");
+      }
+
+      // AuthContext will pick up the new session and redirect via useEffect.
     } catch (err) {
       console.error("[Login] OTP verify failed:", err);
       setError(

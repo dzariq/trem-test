@@ -1,1 +1,4 @@
 project_id = "slrbsuubxsyatwoawoxb"
+
+[functions.phone-login]
+verify_jwt = false
