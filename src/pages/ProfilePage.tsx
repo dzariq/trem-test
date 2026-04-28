@@ -112,6 +112,23 @@ export default function ProfilePage() {
     setStudentPhotos(loadedPhotos);
   }, [linkedStudents]);
 
+  // Auto-open the student details drawer when navigated with ?studentId=
+  useEffect(() => {
+    const targetId = searchParams.get("studentId");
+    if (!targetId || linkedStudents.length === 0) return;
+    const match = linkedStudents.find((s) => s.id === targetId);
+    if (match) {
+      setSelectedStudent(match);
+      if (match.id !== selectedStudentId) {
+        setSelectedStudentId(match.id);
+      }
+      // Clear the param so the drawer can be closed normally
+      const next = new URLSearchParams(searchParams);
+      next.delete("studentId");
+      setSearchParams(next, { replace: true });
+    }
+  }, [searchParams, linkedStudents, selectedStudentId, setSelectedStudentId, setSearchParams]);
+
   useEffect(() => {
     if (profileLoading) return;
     if (!profile) return;
