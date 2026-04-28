@@ -92,7 +92,7 @@ const listViaStudentGuardians = async (guardianUserId: string) => {
 
   const { data: students, error: studentsError } = await supabase
     .from("students")
-    .select("id, name, year_level, class, campus_id, campus_code, family_id, student_code")
+    .select("id, name, year_level, class, campus_id, campus_code, family_id, student_code, dob, enrollment_date, graduation_year")
     .in("id", studentIds as any[]);
 
   if (studentsError) {
