@@ -181,7 +181,7 @@ export async function listAnnouncements(
     });
 
     // Track first image attachment as hero image
-    if (!heroImageByAnnouncementId.has(aid) && isImageType(fileType, fileName)) {
+    if (!heroImageByAnnouncementId.has(aid) && resolvedUrl && isImageType(fileType, fileName)) {
       heroImageByAnnouncementId.set(aid, resolvedUrl);
     }
   });
