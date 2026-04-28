@@ -4,6 +4,8 @@ import { supabase } from "@/lib/supabase";
 import { useQueryClient } from "@tanstack/react-query";
 
 const PORTAL_KEY = "selected_portal";
+const SESSION_START_KEY = "session_started_at";
+const SESSION_MAX_AGE_MS = 48 * 60 * 60 * 1000; // 48 hours
 
 export type PortalType = "teacher" | "family" | null;
 
@@ -146,6 +148,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // Clear any other auth-related localStorage keys
       localStorage.removeItem("supabase.auth.token");
       localStorage.removeItem("active_campus_code");
+      localStorage.removeItem(SESSION_START_KEY);
     } catch (error) {
       console.error("Sign out error:", error);
     }
