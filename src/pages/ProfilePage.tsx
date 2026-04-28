@@ -48,7 +48,7 @@ import {
   Check,
   X
 } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { toast } from "@/hooks/use-toast";
 import { HandbookReportDialog } from "@/components/HandbookReportDialog";
 import { studentHandbookData } from "@/data/studentHandbookData";
