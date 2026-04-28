@@ -273,8 +273,25 @@ export default function Login() {
       );
 
       if (loginErr || !loginData?.token_hash || !loginData?.email) {
+        // supabase.functions.invoke wraps non-2xx as FunctionsHttpError and
+        // does NOT parse the body — read it from the underlying Response.
+        let serverMsg: string | undefined;
+        const ctx = (loginErr as any)?.context;
+        if (ctx && typeof ctx.json === "function") {
+          try {
+            const body = await ctx.json();
+            serverMsg = body?.error || body?.message;
+          } catch {
+            try {
+              serverMsg = await ctx.text();
+            } catch {
+              /* ignore */
+            }
+          }
+        }
         throw new Error(
-          (loginData as any)?.error ||
+          serverMsg ||
+            (loginData as any)?.error ||
             loginErr?.message ||
             "No parent account found for this phone number.",
         );
