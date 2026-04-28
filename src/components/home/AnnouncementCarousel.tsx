@@ -124,6 +124,9 @@ export function AnnouncementCarousel({
                 src={mainAnnouncement.image} 
                 alt={mainAnnouncement.title}
                 className="w-full h-full object-cover"
+                onError={(e) => {
+                  (e.currentTarget as HTMLImageElement).style.display = "none";
+                }}
               />
             ) : (
               <div className="w-full h-full bg-gradient-to-br from-primary/30 via-primary/20 to-secondary/30 flex items-center justify-center">
@@ -214,6 +217,9 @@ export function AnnouncementCarousel({
                           src={announcement.image} 
                           alt={announcement.title}
                           className="w-full h-full object-cover"
+                          onError={(e) => {
+                            (e.currentTarget as HTMLImageElement).style.display = "none";
+                          }}
                         />
                       ) : (
                         <div className="w-full h-full bg-gradient-to-br from-primary/20 via-primary/10 to-secondary/20 flex items-center justify-center">

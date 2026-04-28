@@ -24,13 +24,10 @@ const resolveAttachmentUrl = (fileUrl: string): string => {
   if (!fileUrl) return "";
   // Already a full URL
   if (fileUrl.startsWith("http")) return fileUrl;
-  // Relative /uploads/ path → resolve via Supabase storage
+  // Legacy /uploads/ paths point to files that were never uploaded to storage.
+  // Returning an empty string lets callers fall back to a placeholder.
   if (fileUrl.startsWith("/uploads/")) {
-    const storagePath = fileUrl.replace(/^\/uploads\//, "");
-    const { data } = supabase.storage
-      .from("announcement-attachments")
-      .getPublicUrl(storagePath);
-    return data?.publicUrl ?? fileUrl;
+    return "";
   }
   // Treat as storage path directly
   const { data } = supabase.storage
@@ -184,7 +181,7 @@ export async function listAnnouncements(
     });
 
     // Track first image attachment as hero image
-    if (!heroImageByAnnouncementId.has(aid) && isImageType(fileType, fileName)) {
+    if (!heroImageByAnnouncementId.has(aid) && resolvedUrl && isImageType(fileType, fileName)) {
       heroImageByAnnouncementId.set(aid, resolvedUrl);
     }
   });
@@ -265,7 +262,7 @@ export async function getAnnouncementById(
     const fileType = row.file_type ?? "";
     const fileName = row.name ?? row.file_name ?? "Attachment";
     resolvedAttachments.push({ name: fileName, url: resolvedUrl, file_type: fileType });
-    if (!heroImage && isImageType(fileType, fileName)) {
+    if (!heroImage && resolvedUrl && isImageType(fileType, fileName)) {
       heroImage = resolvedUrl;
     }
   });
