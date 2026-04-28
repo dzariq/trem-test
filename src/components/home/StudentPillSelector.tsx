@@ -53,8 +53,19 @@ export function StudentPillSelector({ onStudentChange }: StudentPillSelectorProp
         setStudentPhotos((prev) => ({ ...prev, [id]: e.newValue }));
       }
     };
+    const sameTabHandler = (e: Event) => {
+      const detail = (e as CustomEvent).detail as
+        | { studentId: string; photoUrl: string | null }
+        | undefined;
+      if (!detail) return;
+      setStudentPhotos((prev) => ({ ...prev, [detail.studentId]: detail.photoUrl }));
+    };
     window.addEventListener("storage", handler);
-    return () => window.removeEventListener("storage", handler);
+    window.addEventListener("student-photo-changed", sameTabHandler);
+    return () => {
+      window.removeEventListener("storage", handler);
+      window.removeEventListener("student-photo-changed", sameTabHandler);
+    };
   }, []);
 
   const handleSelectStudent = (studentId: string) => {
