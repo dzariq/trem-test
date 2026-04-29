@@ -190,27 +190,25 @@ export function filterByUpcomingTab(
   tab: UpcomingTab,
   limit?: number
 ): UpcomingEvent[] {
-  const future = getEventsWithinDays(events, 30);
+  const within30 = getEventsWithinDays(events, 30);
+  const allFuture = getFutureEvents(events).sort((a, b) => a.startDay.localeCompare(b.startDay));
   const cap = (arr: UpcomingEvent[]) => (typeof limit === "number" ? arr.slice(0, limit) : arr);
+  // Fallback: if no items in 30 days, show all upcoming for that category
+  const withFallback = (filtered: UpcomingEvent[], allFiltered: UpcomingEvent[]) =>
+    filtered.length > 0 ? filtered : allFiltered;
 
   switch (tab) {
     case "events":
-      return cap(future.filter(isEventsEvent));
+      return cap(withFallback(within30.filter(isEventsEvent), allFuture.filter(isEventsEvent)));
 
     case "exams":
-      return cap(future.filter(isExamEvent));
+      return cap(withFallback(within30.filter(isExamEvent), allFuture.filter(isExamEvent)));
 
-    case "holidays": {
-      // Holidays - prefer multi-day but show single-day if none multi-day exist
-      const holidays = future.filter(isHolidayEvent);
-      const multiDay = holidays.filter((e) => e.startDay !== e.endDay);
-      // If we have multi-day holidays, show those; otherwise show all holidays
-      const toShow = multiDay.length > 0 ? multiDay : holidays;
-      return cap(toShow);
-    }
+    case "holidays":
+      return cap(withFallback(within30.filter(isHolidayEvent), allFuture.filter(isHolidayEvent)));
 
     default:
-      return cap(future);
+      return cap(within30.length > 0 ? within30 : allFuture);
   }
 }
 
