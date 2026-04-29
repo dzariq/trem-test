@@ -2743,11 +2743,14 @@ export type Database = {
           id: string
           is_malaysian: boolean
           name: string | null
+          nationality: string | null
           parent_email: string | null
           parent_user_id: string | null
+          passport_expiry_date: string | null
           phone: string | null
           relationship: string | null
           updated_at: string
+          visa_expiry_date: string | null
         }
         Insert: {
           created_at?: string
@@ -2755,11 +2758,14 @@ export type Database = {
           id?: string
           is_malaysian?: boolean
           name?: string | null
+          nationality?: string | null
           parent_email?: string | null
           parent_user_id?: string | null
+          passport_expiry_date?: string | null
           phone?: string | null
           relationship?: string | null
           updated_at?: string
+          visa_expiry_date?: string | null
         }
         Update: {
           created_at?: string
@@ -2767,11 +2773,14 @@ export type Database = {
           id?: string
           is_malaysian?: boolean
           name?: string | null
+          nationality?: string | null
           parent_email?: string | null
           parent_user_id?: string | null
+          passport_expiry_date?: string | null
           phone?: string | null
           relationship?: string | null
           updated_at?: string
+          visa_expiry_date?: string | null
         }
         Relationships: []
       }
