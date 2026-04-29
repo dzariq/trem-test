@@ -117,6 +117,18 @@ export function getFutureEvents(events: UpcomingEvent[]): UpcomingEvent[] {
   return events.filter((e) => e.endDay >= todayYmd);
 }
 
+// Get events within the next N days (starts on or before today+N and ends on or after today)
+export function getEventsWithinDays(events: UpcomingEvent[], days: number): UpcomingEvent[] {
+  const today = new Date();
+  const todayYmd = toYmd(today);
+  const end = new Date(today);
+  end.setDate(end.getDate() + days);
+  const endYmd = toYmd(end);
+  return events
+    .filter((e) => e.endDay >= todayYmd && e.startDay <= endYmd)
+    .sort((a, b) => a.startDay.localeCompare(b.startDay));
+}
+
 /**
  * Check if event is an exam based on tags, category, or event type.
  * This matches the web admin portal logic which checks event_type.
@@ -176,16 +188,17 @@ const isEventsEvent = (event: UpcomingEvent): boolean => {
 export function filterByUpcomingTab(
   events: UpcomingEvent[],
   tab: UpcomingTab,
-  limit = 5
+  limit?: number
 ): UpcomingEvent[] {
-  const future = getFutureEvents(events);
+  const future = getEventsWithinDays(events, 30);
+  const cap = (arr: UpcomingEvent[]) => (typeof limit === "number" ? arr.slice(0, limit) : arr);
 
   switch (tab) {
     case "events":
-      return future.filter(isEventsEvent).slice(0, limit);
+      return cap(future.filter(isEventsEvent));
 
     case "exams":
-      return future.filter(isExamEvent).slice(0, limit);
+      return cap(future.filter(isExamEvent));
 
     case "holidays": {
       // Holidays - prefer multi-day but show single-day if none multi-day exist
@@ -193,11 +206,11 @@ export function filterByUpcomingTab(
       const multiDay = holidays.filter((e) => e.startDay !== e.endDay);
       // If we have multi-day holidays, show those; otherwise show all holidays
       const toShow = multiDay.length > 0 ? multiDay : holidays;
-      return toShow.slice(0, limit);
+      return cap(toShow);
     }
 
     default:
-      return future.slice(0, limit);
+      return cap(future);
   }
 }
 
