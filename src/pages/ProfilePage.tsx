@@ -655,22 +655,24 @@ export default function ProfilePage() {
 
               <Separator />
 
-              {/* Subjects */}
-              {Array.isArray(selectedStudent.subjects) && selectedStudent.subjects.length > 0 && (
-                <div className="space-y-3">
-                  <div className="flex items-center gap-2">
-                    <BookOpen className="h-4 w-4 text-muted-foreground" />
-                    <span className="font-medium text-foreground">Subjects</span>
-                  </div>
+              {/* CCA Clubs */}
+              <div className="space-y-3">
+                <div className="flex items-center gap-2">
+                  <BookOpen className="h-4 w-4 text-muted-foreground" />
+                  <span className="font-medium text-foreground">CCA Clubs</span>
+                </div>
+                {Array.isArray(selectedStudent.ccaActivities) && selectedStudent.ccaActivities.length > 0 ? (
                   <div className="flex flex-wrap gap-2">
-                    {selectedStudent.subjects.map((subject) => (
-                      <Badge key={subject} variant="secondary" className="text-sm">
-                        {subject}
+                    {selectedStudent.ccaActivities.map((cca, idx) => (
+                      <Badge key={`${cca.name}-${idx}`} variant="secondary" className="text-sm">
+                        {cca.name}
                       </Badge>
                     ))}
                   </div>
-                </div>
-              )}
+                ) : (
+                  <p className="text-sm text-muted-foreground">No clubs joined</p>
+                )}
+              </div>
 
               <Separator />
 
