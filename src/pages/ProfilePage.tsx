@@ -59,6 +59,12 @@ import { useMyProfile } from "@/hooks/useMyProfile";
 import { type LinkedStudent } from "@/data/students";
 import { updateMyProfile } from "@/data/profile";
 import { useStudentSelection } from "@/hooks/useStudentSelection";
+import {
+  resolveStudentAvatars,
+  uploadStudentAvatar,
+  deleteStudentAvatar,
+  compressImageFile,
+} from "@/lib/studentAvatars";
 
 const sportsHouseColors: Record<string, { bg: string; text: string; label: string }> = {
   red: { bg: "bg-red-500", text: "text-white", label: "Red House" },
@@ -101,17 +107,23 @@ export default function ProfilePage() {
   
   // State for student photos
   const [studentPhotos, setStudentPhotos] = useState<Record<string, string | null>>({});
+  const [pendingFile, setPendingFile] = useState<File | null>(null);
+  const [isSavingPhoto, setIsSavingPhoto] = useState(false);
 
-  // Load saved photos from localStorage when students load
+  // Load saved photos from Supabase storage when students load
   useEffect(() => {
-    const loadedPhotos: Record<string, string | null> = {};
-    linkedStudents.forEach((student) => {
-      const savedPhoto = localStorage.getItem(`student_photo_${student.id}`);
-      if (savedPhoto) {
-        loadedPhotos[student.id] = savedPhoto;
-      }
-    });
-    setStudentPhotos(loadedPhotos);
+    if (linkedStudents.length === 0) return;
+    let cancelled = false;
+    resolveStudentAvatars(linkedStudents.map((s) => s.id))
+      .then((map) => {
+        if (!cancelled) setStudentPhotos(map);
+      })
+      .catch(() => {
+        // ignore — fall back to initials
+      });
+    return () => {
+      cancelled = true;
+    };
   }, [linkedStudents]);
 
   // Auto-open the student details drawer when navigated with ?studentId=
@@ -141,29 +153,6 @@ export default function ProfilePage() {
     setEditForm({ name, email, phone });
   }, [profile, profileLoading]);
 
-  const handlePhotoChange = (studentId: string, photoUrl: string | null) => {
-    try {
-      if (photoUrl) {
-        localStorage.setItem(`student_photo_${studentId}`, photoUrl);
-      } else {
-        localStorage.removeItem(`student_photo_${studentId}`);
-      }
-      setStudentPhotos((prev) => ({
-        ...prev,
-        [studentId]: photoUrl,
-      }));
-      // Notify other components (e.g. StudentPillSelector) in the same tab
-      window.dispatchEvent(
-        new CustomEvent("student-photo-changed", {
-          detail: { studentId, photoUrl },
-        })
-      );
-    } catch (err) {
-      console.error("Failed to save student photo", err);
-      toast.error("Image is too large to save. Please try a smaller photo.");
-    }
-  };
-
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
@@ -178,53 +167,59 @@ export default function ProfilePage() {
       return;
     }
 
-    // Compress image to keep it well under localStorage quota
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      const dataUrl = reader.result as string;
-      const img = new Image();
-      img.onload = () => {
-        const MAX_DIM = 512;
-        const scale = Math.min(1, MAX_DIM / Math.max(img.width, img.height));
-        const w = Math.round(img.width * scale);
-        const h = Math.round(img.height * scale);
-        const canvas = document.createElement("canvas");
-        canvas.width = w;
-        canvas.height = h;
-        const ctx = canvas.getContext("2d");
-        if (!ctx) {
-          setPreviewUrl(dataUrl);
-          return;
-        }
-        ctx.drawImage(img, 0, 0, w, h);
-        const compressed = canvas.toDataURL("image/jpeg", 0.85);
-        setPreviewUrl(compressed);
-      };
-      img.onerror = () => setPreviewUrl(dataUrl);
-      img.src = dataUrl;
-    };
-    reader.readAsDataURL(file);
+    // Compress for upload, show local preview from the compressed file
+    compressImageFile(file)
+      .then((compressed) => {
+        setPendingFile(compressed);
+        const objectUrl = URL.createObjectURL(compressed);
+        setPreviewUrl(objectUrl);
+      })
+      .catch(() => {
+        setPendingFile(file);
+        setPreviewUrl(URL.createObjectURL(file));
+      });
   };
 
-  const handleSavePhoto = () => {
-    if (!selectedStudent || !previewUrl) return;
-    handlePhotoChange(selectedStudent.id, previewUrl);
-    toast.success("Photo updated successfully");
-    setIsPhotoEditOpen(false);
-    setPreviewUrl(null);
+  const handleSavePhoto = async () => {
+    if (!selectedStudent || !pendingFile) return;
+    setIsSavingPhoto(true);
+    try {
+      const url = await uploadStudentAvatar(selectedStudent.id, pendingFile);
+      setStudentPhotos((prev) => ({ ...prev, [selectedStudent.id]: url }));
+      toast.success("Photo updated successfully");
+      setIsPhotoEditOpen(false);
+      setPreviewUrl(null);
+      setPendingFile(null);
+    } catch (err) {
+      console.error("Failed to upload student photo", err);
+      toast.error("Could not upload photo. Please try again.");
+    } finally {
+      setIsSavingPhoto(false);
+    }
   };
 
-  const handleRemovePhoto = () => {
+  const handleRemovePhoto = async () => {
     if (!selectedStudent) return;
-    handlePhotoChange(selectedStudent.id, null);
-    setPreviewUrl(null);
-    toast.success("Photo removed");
-    setIsPhotoEditOpen(false);
+    setIsSavingPhoto(true);
+    try {
+      await deleteStudentAvatar(selectedStudent.id);
+      setStudentPhotos((prev) => ({ ...prev, [selectedStudent.id]: null }));
+      setPreviewUrl(null);
+      setPendingFile(null);
+      toast.success("Photo removed");
+      setIsPhotoEditOpen(false);
+    } catch (err) {
+      console.error("Failed to remove student photo", err);
+      toast.error("Could not remove photo. Please try again.");
+    } finally {
+      setIsSavingPhoto(false);
+    }
   };
 
   const handleOpenPhotoEdit = () => {
     if (selectedStudent) {
       setPreviewUrl(studentPhotos[selectedStudent.id] || null);
+      setPendingFile(null);
       setIsPhotoEditOpen(true);
     }
   };
@@ -885,10 +880,10 @@ export default function ProfilePage() {
               Cancel
             </Button>
             <Button 
-              onClick={handleSavePhoto} 
-              disabled={!previewUrl}
+              onClick={handleSavePhoto}
+              disabled={!pendingFile || isSavingPhoto}
             >
-              Save Photo
+              {isSavingPhoto ? "Saving..." : "Save Photo"}
             </Button>
           </DialogFooter>
         </DialogContent>
