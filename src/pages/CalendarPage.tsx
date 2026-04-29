@@ -16,7 +16,7 @@ import {
   getTagColor,
   getTagDisplayName,
 } from "@/lib/calendarUtils";
-import { listCalendarEvents, type UpcomingEvent } from "@/data/calendar";
+import { listCalendarEvents, listUpcomingEvents, type UpcomingEvent } from "@/data/calendar";
 import { useMyProfile } from "@/hooks/useMyProfile";
 import { useStudentSelection } from "@/hooks/useStudentSelection";
 import { useEligibleCcaActivities, type CcaActivity } from "@/hooks/useEligibleCcaActivities";
@@ -55,6 +55,7 @@ export default function CalendarPage() {
   const [selectedEventDetails, setSelectedEventDetails] = useState<UpcomingEvent | null>(null);
   const [eventDetailsOpen, setEventDetailsOpen] = useState(false);
   const [events, setEvents] = useState<UpcomingEvent[]>([]);
+  const [upcomingEvents, setUpcomingEvents] = useState<UpcomingEvent[]>([]);
   const [studentYearLevel, setStudentYearLevel] = useState<string | null>(null);
 
   // Club switching state
@@ -295,6 +296,31 @@ export default function CalendarPage() {
       isMounted = false;
     };
   }, [currentMonth, profile?.role, selectedStudent?.campus_code]);
+
+  useEffect(() => {
+    let isMounted = true;
+    const loadUpcomingEvents = async () => {
+      try {
+        const data = await listUpcomingEvents({
+          role: profile?.role,
+          limit: 50,
+          campusCode: selectedStudent?.campus_code ?? null,
+        });
+        if (isMounted) {
+          setUpcomingEvents(data);
+        }
+      } catch {
+        if (isMounted) {
+          setUpcomingEvents([]);
+        }
+      }
+    };
+
+    loadUpcomingEvents();
+    return () => {
+      isMounted = false;
+    };
+  }, [profile?.role, selectedStudent?.campus_code]);
 
   const filteredCCA = useMemo(() => {
     // Filter by type, then exclude already-enrolled activities
@@ -601,7 +627,7 @@ export default function CalendarPage() {
 
             {/* Upcoming Events with tab switcher */}
             <UpcomingEventsSection
-              events={filteredEvents}
+              events={upcomingEvents}
               onEventClick={openEventDetails}
             />
           </TabsContent>
