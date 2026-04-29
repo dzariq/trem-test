@@ -45,7 +45,7 @@ import {
   Utensils,
   Flag,
   CalendarDays,
-  Cake,
+  School,
   GraduationCap,
   Check,
   X
@@ -674,8 +674,8 @@ export default function ProfilePage() {
 
               <Separator />
 
-              {/* Key Dates - Enrollment, DOB, Graduation */}
-              {(selectedStudent.enrollmentDate || selectedStudent.dob || selectedStudent.graduationYear) && (
+              {/* Key Dates - Enrollment, Class, Graduation */}
+              {(selectedStudent.enrollmentDate || selectedStudent.className || selectedStudent.graduationYear) && (
                 <>
                   <div className="space-y-3">
                     <span className="font-medium text-foreground">Key Dates</span>
@@ -697,17 +697,11 @@ export default function ProfilePage() {
                       </div>
                       <div className="relative flex flex-col items-center gap-1.5 p-3 rounded-xl bg-gradient-to-br from-pink-50 to-rose-100 dark:from-pink-950/40 dark:to-rose-900/30 border border-pink-200/60 dark:border-pink-800/40 shadow-sm overflow-hidden">
                         <div className="w-9 h-9 rounded-full bg-gradient-to-br from-pink-400 to-rose-500 flex items-center justify-center shadow-md ring-2 ring-white/60 dark:ring-white/10">
-                          <Cake className="w-5 h-5 text-white" />
+                          <School className="w-5 h-5 text-white" />
                         </div>
-                        <span className="text-[11px] font-semibold uppercase tracking-wide text-rose-700 dark:text-rose-300 text-center">Date of Birth</span>
+                        <span className="text-[11px] font-semibold uppercase tracking-wide text-rose-700 dark:text-rose-300 text-center">Class</span>
                         <span className="text-sm font-bold text-foreground text-center">
-                          {selectedStudent.dob
-                            ? new Date(selectedStudent.dob).toLocaleDateString("en-GB", {
-                                day: "2-digit",
-                                month: "short",
-                                year: "numeric",
-                              })
-                            : "—"}
+                          {selectedStudent.className ?? "—"}
                         </span>
                       </div>
                       <div className="relative flex flex-col items-center gap-1.5 p-3 rounded-xl bg-gradient-to-br from-amber-50 to-orange-100 dark:from-amber-950/40 dark:to-orange-900/30 border border-amber-200/60 dark:border-amber-800/40 shadow-sm overflow-hidden">
