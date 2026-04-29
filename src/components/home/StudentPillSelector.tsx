@@ -10,6 +10,7 @@ import {
   DrawerTitle,
   DrawerTrigger,
 } from "@/components/ui/drawer";
+import { resolveStudentAvatars } from "@/lib/studentAvatars";
 
 interface StudentPillSelectorProps {
   onStudentChange?: (studentId: string) => void;
@@ -35,24 +36,24 @@ export function StudentPillSelector({ onStudentChange }: StudentPillSelectorProp
 
   const [studentPhotos, setStudentPhotos] = useState<Record<string, string | null>>({});
 
-  // Load saved photos from localStorage
+  // Load saved photos from Supabase storage
   useEffect(() => {
-    const loaded: Record<string, string | null> = {};
-    students.forEach((s) => {
-      const saved = localStorage.getItem(`student_photo_${s.id}`);
-      if (saved) loaded[s.id] = saved;
-    });
-    setStudentPhotos(loaded);
+    if (students.length === 0) return;
+    let cancelled = false;
+    resolveStudentAvatars(students.map((s) => s.id))
+      .then((map) => {
+        if (!cancelled) setStudentPhotos(map);
+      })
+      .catch(() => {
+        // ignore
+      });
+    return () => {
+      cancelled = true;
+    };
   }, [students]);
 
-  // Listen for storage changes (e.g., updates from other tabs/components)
+  // Listen for in-tab photo change events fired by the profile page
   useEffect(() => {
-    const handler = (e: StorageEvent) => {
-      if (e.key && e.key.startsWith("student_photo_")) {
-        const id = e.key.replace("student_photo_", "");
-        setStudentPhotos((prev) => ({ ...prev, [id]: e.newValue }));
-      }
-    };
     const sameTabHandler = (e: Event) => {
       const detail = (e as CustomEvent).detail as
         | { studentId: string; photoUrl: string | null }
@@ -60,10 +61,8 @@ export function StudentPillSelector({ onStudentChange }: StudentPillSelectorProp
       if (!detail) return;
       setStudentPhotos((prev) => ({ ...prev, [detail.studentId]: detail.photoUrl }));
     };
-    window.addEventListener("storage", handler);
     window.addEventListener("student-photo-changed", sameTabHandler);
     return () => {
-      window.removeEventListener("storage", handler);
       window.removeEventListener("student-photo-changed", sameTabHandler);
     };
   }, []);

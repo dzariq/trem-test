@@ -880,10 +880,10 @@ export default function ProfilePage() {
               Cancel
             </Button>
             <Button 
-              onClick={handleSavePhoto} 
-              disabled={!previewUrl}
+              onClick={handleSavePhoto}
+              disabled={!pendingFile || isSavingPhoto}
             >
-              Save Photo
+              {isSavingPhoto ? "Saving..." : "Save Photo"}
             </Button>
           </DialogFooter>
         </DialogContent>
