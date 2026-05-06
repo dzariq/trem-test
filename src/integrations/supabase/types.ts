@@ -839,6 +839,93 @@ export type Database = {
           },
         ]
       }
+      bukku_fields: {
+        Row: {
+          created_at: string
+          field_id: string | null
+          id: string
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          field_id?: string | null
+          id?: string
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          field_id?: string | null
+          id?: string
+          name?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      bukku_numbers: {
+        Row: {
+          campus: string
+          created_at: string
+          id: string
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          campus: string
+          created_at?: string
+          id?: string
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          campus?: string
+          created_at?: string
+          id?: string
+          name?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      bukku_payment_method: {
+        Row: {
+          account_id: number | null
+          bukku_id: number
+          created_at: string
+          fee_account_id: number | null
+          fee_text: string | null
+          id: string
+          is_archived: boolean
+          name: string
+          slug: string
+          updated_at: string
+        }
+        Insert: {
+          account_id?: number | null
+          bukku_id: number
+          created_at?: string
+          fee_account_id?: number | null
+          fee_text?: string | null
+          id?: string
+          is_archived?: boolean
+          name: string
+          slug: string
+          updated_at?: string
+        }
+        Update: {
+          account_id?: number | null
+          bukku_id?: number
+          created_at?: string
+          fee_account_id?: number | null
+          fee_text?: string | null
+          id?: string
+          is_archived?: boolean
+          name?: string
+          slug?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       bukku_products: {
         Row: {
           barcode: string | null
@@ -1053,6 +1140,30 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      bukku_terms: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+          term_id: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+          term_id: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+          term_id?: number
+          updated_at?: string
+        }
+        Relationships: []
       }
       calendar_events: {
         Row: {
@@ -2742,6 +2853,7 @@ export type Database = {
           ic_number: string | null
           id: string
           is_malaysian: boolean
+          is_primary_contact: boolean
           name: string | null
           nationality: string | null
           parent_email: string | null
@@ -2757,6 +2869,7 @@ export type Database = {
           ic_number?: string | null
           id?: string
           is_malaysian?: boolean
+          is_primary_contact?: boolean
           name?: string | null
           nationality?: string | null
           parent_email?: string | null
@@ -2772,6 +2885,7 @@ export type Database = {
           ic_number?: string | null
           id?: string
           is_malaysian?: boolean
+          is_primary_contact?: boolean
           name?: string | null
           nationality?: string | null
           parent_email?: string | null
@@ -3920,6 +4034,47 @@ export type Database = {
           },
         ]
       }
+      subject_categories: {
+        Row: {
+          color: string | null
+          created_at: string
+          id: string
+          is_grouped: boolean
+          name: string
+          parent_id: string | null
+          sort_order: number
+          updated_at: string
+        }
+        Insert: {
+          color?: string | null
+          created_at?: string
+          id?: string
+          is_grouped?: boolean
+          name: string
+          parent_id?: string | null
+          sort_order?: number
+          updated_at?: string
+        }
+        Update: {
+          color?: string | null
+          created_at?: string
+          id?: string
+          is_grouped?: boolean
+          name?: string
+          parent_id?: string | null
+          sort_order?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "subject_categories_parent_id_fkey"
+            columns: ["parent_id"]
+            isOneToOne: false
+            referencedRelation: "subject_categories"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       subject_selections: {
         Row: {
           campus_code: string | null
@@ -3975,12 +4130,15 @@ export type Database = {
           alternative_to: number | null
           campus_code: string | null
           category: string | null
+          category_id: string | null
           class_groups: number[] | null
           code: string | null
           created_at: string
           id: number
           is_compulsory: boolean | null
           name: string
+          selection_group: string | null
+          sub_category_id: string | null
           updated_at: string
           year_levels: string[] | null
         }
@@ -3988,12 +4146,15 @@ export type Database = {
           alternative_to?: number | null
           campus_code?: string | null
           category?: string | null
+          category_id?: string | null
           class_groups?: number[] | null
           code?: string | null
           created_at?: string
           id?: number
           is_compulsory?: boolean | null
           name: string
+          selection_group?: string | null
+          sub_category_id?: string | null
           updated_at?: string
           year_levels?: string[] | null
         }
@@ -4001,12 +4162,15 @@ export type Database = {
           alternative_to?: number | null
           campus_code?: string | null
           category?: string | null
+          category_id?: string | null
           class_groups?: number[] | null
           code?: string | null
           created_at?: string
           id?: number
           is_compulsory?: boolean | null
           name?: string
+          selection_group?: string | null
+          sub_category_id?: string | null
           updated_at?: string
           year_levels?: string[] | null
         }
@@ -4018,7 +4182,48 @@ export type Database = {
             referencedRelation: "subjects"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "subjects_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "subject_categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "subjects_sub_category_id_fkey"
+            columns: ["sub_category_id"]
+            isOneToOne: false
+            referencedRelation: "subject_categories"
+            referencedColumns: ["id"]
+          },
         ]
+      }
+      tags: {
+        Row: {
+          campus: string | null
+          created_at: string
+          id: string
+          tag_id: string
+          tag_name: string
+          updated_at: string
+        }
+        Insert: {
+          campus?: string | null
+          created_at?: string
+          id?: string
+          tag_id: string
+          tag_name: string
+          updated_at?: string
+        }
+        Update: {
+          campus?: string | null
+          created_at?: string
+          id?: string
+          tag_id?: string
+          tag_name?: string
+          updated_at?: string
+        }
+        Relationships: []
       }
       teacher_assignments: {
         Row: {
