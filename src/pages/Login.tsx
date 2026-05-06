@@ -14,7 +14,8 @@ import {
 import schoolBadge from "@/assets/school-badge.png";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/contexts/AuthContext";
-import { Loader2, Phone, ArrowLeft } from "lucide-react";
+import { Loader2, Phone, ArrowLeft, Mail } from "lucide-react";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { allCountries } from "country-telephone-data";
 
 // Build a clean country list: { iso2, name, dialCode }
@@ -77,6 +78,8 @@ export default function Login() {
   // Login state
   const [countryIso2, setCountryIso2] = useState<string>(DEFAULT_ISO2);
   const [phone, setPhone] = useState("");
+  const [email, setEmail] = useState("");
+  const [method, setMethod] = useState<"email" | "phone">("email");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -140,6 +143,7 @@ export default function Login() {
   }, [step, otpExpiresAt]);
 
   const fullNumber = `+${selectedCountry.dialCode}${phone}`;
+  const otpDestination = method === "email" ? email : fullNumber;
 
   // Generate a 6-digit OTP code
   const generateOtpCode = (): string => {
@@ -153,24 +157,28 @@ export default function Login() {
       return;
     }
 
-    if (!phone) {
-      setError("Please enter your phone number.");
-      return;
-    }
-
-    if (phone.startsWith("0")) {
-      setError("Phone number must not start with 0.");
-      return;
-    }
-
-    if (!/^\d+$/.test(phone)) {
-      setError("Phone number must contain digits only.");
-      return;
-    }
-
-    if (phone.length < 6 || phone.length > 15) {
-      setError("Please enter a valid phone number.");
-      return;
+    if (method === "phone") {
+      if (!phone) {
+        setError("Please enter your phone number.");
+        return;
+      }
+      if (phone.startsWith("0")) {
+        setError("Phone number must not start with 0.");
+        return;
+      }
+      if (!/^\d+$/.test(phone)) {
+        setError("Phone number must contain digits only.");
+        return;
+      }
+      if (phone.length < 6 || phone.length > 15) {
+        setError("Please enter a valid phone number.");
+        return;
+      }
+    } else {
+      if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+        setError("Please enter a valid email address.");
+        return;
+      }
     }
 
     setError(null);
@@ -183,8 +191,9 @@ export default function Login() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          phone,
-          country_code: `+${selectedCountry.dialCode}`,
+          source: method,
+          phone: method === "email" ? email : phone,
+          country_code: method === "email" ? "" : `+${selectedCountry.dialCode}`,
           message: otpCode,
         }),
       });
@@ -229,7 +238,11 @@ export default function Login() {
       const res = await fetch(OTP_VERIFY_URL, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ phone, otp }),
+        body: JSON.stringify({
+          source: method,
+          phone: method === "email" ? email : phone,
+          otp,
+        }),
       });
 
       const text = await res.text();
@@ -265,10 +278,13 @@ export default function Login() {
       const { data: loginData, error: loginErr } = await supabase.functions.invoke(
         "phone-login",
         {
-          body: {
-            phone,
-            country_code: `+${selectedCountry.dialCode}`,
-          },
+          body:
+            method === "email"
+              ? { email }
+              : {
+                  phone,
+                  country_code: `+${selectedCountry.dialCode}`,
+                },
         },
       );
 
@@ -358,7 +374,37 @@ export default function Login() {
           <CardContent className="p-6 space-y-4">
             {step === "phone" && (
             <>
-            <div className="space-y-2">
+            <Tabs value={method} onValueChange={(v) => { setMethod(v as "email" | "phone"); setError(null); }}>
+              <TabsList className="grid w-full grid-cols-2">
+                <TabsTrigger value="email">
+                  <Mail className="mr-2 h-4 w-4" /> Email
+                </TabsTrigger>
+                <TabsTrigger value="phone">
+                  <Phone className="mr-2 h-4 w-4" /> Phone
+                </TabsTrigger>
+              </TabsList>
+              <TabsContent value="email" className="space-y-2 mt-4">
+                <Label htmlFor="email">Email address</Label>
+                <div className="relative">
+                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    id="email"
+                    type="email"
+                    autoComplete="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value.trim())}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") handleRequestOtp();
+                    }}
+                    placeholder="you@example.com"
+                    className="pl-10"
+                  />
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  We'll send a one-time code to your email.
+                </p>
+              </TabsContent>
+              <TabsContent value="phone" className="space-y-2 mt-4">
               <Label htmlFor="phone">Phone number</Label>
               <div className="flex gap-2">
                 <Select value={countryIso2} onValueChange={setCountryIso2}>
@@ -409,7 +455,8 @@ export default function Login() {
               <p className="text-xs text-muted-foreground">
                 Digits only. Do not include a leading 0.
               </p>
-            </div>
+              </TabsContent>
+            </Tabs>
 
             {error && <p className="text-sm text-destructive">{error}</p>}
 
@@ -439,7 +486,7 @@ export default function Login() {
               <div className="space-y-2">
                 <Label htmlFor="otp">Enter OTP</Label>
                 <p className="text-xs text-muted-foreground">
-                  Sent to <span className="font-medium text-foreground">{fullNumber}</span>
+                  Sent to <span className="font-medium text-foreground">{otpDestination}</span>
                 </p>
                 <Input
                   id="otp"

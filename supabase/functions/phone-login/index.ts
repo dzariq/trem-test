@@ -21,12 +21,13 @@ Deno.serve(async (req) => {
 
   try {
     const body = await req.json().catch(() => ({}));
+    const emailInput = String(body?.email ?? "").trim().toLowerCase();
     const phone = String(body?.phone ?? "").trim();
     const countryCodeRaw = String(body?.country_code ?? "").trim();
 
-    if (!phone || !countryCodeRaw) {
+    if (!emailInput && (!phone || !countryCodeRaw)) {
       return new Response(
-        JSON.stringify({ error: "phone and country_code are required" }),
+        JSON.stringify({ error: "email or (phone + country_code) is required" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } },
       );
     }
@@ -42,11 +43,16 @@ Deno.serve(async (req) => {
     });
 
     // Pull active parent profiles. RLS bypassed via service role.
-    const { data: profiles, error: profilesErr } = await admin
+    let query = admin
       .from("user_profiles")
       .select("user_id, email, phone, role, is_active")
-      .eq("role", "parent")
-      .not("phone", "is", null);
+      .eq("role", "parent");
+    if (emailInput) {
+      query = query.ilike("email", emailInput);
+    } else {
+      query = query.not("phone", "is", null);
+    }
+    const { data: profiles, error: profilesErr } = await query;
 
     if (profilesErr) {
       console.error("[phone-login] profiles query failed", profilesErr);
@@ -56,17 +62,23 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Match by normalized digits. We try exact full match (countrycode+phone)
-    // and also fallback to plain phone digits (in case stored with country code already).
-    const match = (profiles ?? []).find((p: any) => {
-      const stored = normalizeDigits(p.phone);
-      if (!stored) return false;
-      return stored === fullDigits || stored === phoneDigits;
-    });
+    const match = emailInput
+      ? (profiles ?? []).find((p: any) =>
+          (p.email ?? "").toLowerCase() === emailInput,
+        )
+      : (profiles ?? []).find((p: any) => {
+          const stored = normalizeDigits(p.phone);
+          if (!stored) return false;
+          return stored === fullDigits || stored === phoneDigits;
+        });
 
     if (!match) {
       return new Response(
-        JSON.stringify({ error: "No parent account found for this phone number." }),
+        JSON.stringify({
+          error: emailInput
+            ? "No parent account found for this email."
+            : "No parent account found for this phone number.",
+        }),
         { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } },
       );
     }
