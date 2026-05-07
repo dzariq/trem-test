@@ -373,11 +373,6 @@ export default function TeacherCalendarPage() {
                       backgroundColor: "hsl(var(--primary) / 0.1)",
                       fontWeight: "bold"
                     },
-                    selected: {
-                      backgroundColor: "hsl(var(--primary))",
-                      color: "hsl(var(--primary-foreground))",
-                      fontWeight: "bold",
-                    },
                   }}
                 />
               </CardContent>
