@@ -69,6 +69,7 @@ export default function TeacherHomePage() {
   const teacherScope = useTeacherScope();
   const [selectedClass, setSelectedClass] = useState(teacherProfile.classes[0]);
   const [showPendingGrades, setShowPendingGrades] = useState(false);
+  const [showDeadlines, setShowDeadlines] = useState(false);
   const [timetablePdfOpen, setTimetablePdfOpen] = useState(false);
   const [announcements, setAnnouncements] = useState<Announcement[]>([]);
   const [announcementsLoading, setAnnouncementsLoading] = useState(true);
@@ -511,10 +512,22 @@ export default function TeacherHomePage() {
 
               {/* Upcoming Deadlines Section */}
               <div>
-                <h3 className="text-sm font-semibold flex items-center gap-2 mb-3 text-foreground">
-                  <Clock className="h-4 w-4 text-primary" />
-                  Upcoming Deadlines
-                </h3>
+                <button
+                  type="button"
+                  onClick={() => setShowDeadlines((v) => !v)}
+                  className="w-full flex items-center justify-between mb-3"
+                  aria-expanded={showDeadlines}
+                >
+                  <h3 className="text-sm font-semibold flex items-center gap-2 text-foreground">
+                    <Clock className="h-4 w-4 text-primary" />
+                    Upcoming Deadlines
+                    {!deadlinesLoading && upcomingDeadlines.length > 0 && (
+                      <Badge variant="secondary" className="text-xs">{upcomingDeadlines.length}</Badge>
+                    )}
+                  </h3>
+                  <ChevronDown className={cn("h-4 w-4 text-muted-foreground transition-transform", showDeadlines && "rotate-180")} />
+                </button>
+                {showDeadlines && (
                 <div className="space-y-2">
                   {deadlinesLoading ? (
                     <p className="text-sm text-muted-foreground text-center py-4">
@@ -567,6 +580,7 @@ export default function TeacherHomePage() {
                     })
                   )}
                 </div>
+                )}
               </div>
             </div>
           </div>
