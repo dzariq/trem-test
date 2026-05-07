@@ -548,8 +548,8 @@ export default function TeacherHomePage() {
                   <h3 className="text-sm font-semibold flex items-center gap-2 text-foreground">
                     <Clock className="h-4 w-4 text-primary" />
                     Upcoming Deadlines
-                    {!deadlinesLoading && upcomingDeadlines.length > 0 && (
-                      <Badge variant="secondary" className="text-xs">{upcomingDeadlines.length}</Badge>
+                    {!deadlinesLoading && activeDeadlines.length > 0 && (
+                      <Badge variant="secondary" className="text-xs">{activeDeadlines.length}</Badge>
                     )}
                   </h3>
                   <ChevronDown className={cn("h-4 w-4 text-muted-foreground transition-transform", showDeadlines && "rotate-180")} />
@@ -564,8 +564,12 @@ export default function TeacherHomePage() {
                     <p className="text-sm text-muted-foreground text-center py-4">
                       No upcoming deadlines
                     </p>
+                  ) : activeDeadlines.length === 0 ? (
+                    <p className="text-sm text-muted-foreground text-center py-4">
+                      All caught up! 🎉
+                    </p>
                   ) : (
-                    upcomingDeadlines.map((deadline) => {
+                    activeDeadlines.map((deadline) => {
                       const Icon = getDeadlineIcon(deadline.source);
                       const badgeInfo = getDaysLeftBadge(deadline.daysLeft);
 
@@ -578,6 +582,12 @@ export default function TeacherHomePage() {
                           )}
                         >
                           <div className="flex items-center gap-3 p-3">
+                            <Checkbox
+                              checked={false}
+                              onCheckedChange={() => toggleDeadlineDone(deadline.id)}
+                              aria-label="Mark deadline done"
+                              className="flex-shrink-0"
+                            />
                             <div className="h-6 w-6 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
                               <Icon className="h-3.5 w-3.5 text-primary" />
                             </div>
@@ -608,9 +618,9 @@ export default function TeacherHomePage() {
                   )}
                 </div>
                 )}
-                {!showDeadlines && !deadlinesLoading && upcomingDeadlines.length > 0 && (
+                {!showDeadlines && !deadlinesLoading && activeDeadlines.length > 0 && (
                   <div className="space-y-1.5">
-                    {upcomingDeadlines.slice(0, 3).map((deadline) => {
+                    {activeDeadlines.slice(0, 3).map((deadline) => {
                       const badgeInfo = getDaysLeftBadge(deadline.daysLeft);
                       return (
                         <div
@@ -620,6 +630,12 @@ export default function TeacherHomePage() {
                             getDeadlineColor(deadline.daysLeft)
                           )}
                         >
+                          <Checkbox
+                            checked={false}
+                            onCheckedChange={() => toggleDeadlineDone(deadline.id)}
+                            aria-label="Mark deadline done"
+                            className="h-3.5 w-3.5 flex-shrink-0"
+                          />
                           <span className="flex-1 min-w-0 truncate font-medium">{deadline.title}</span>
                           <Badge variant={badgeInfo.variant} className="text-[10px] px-1.5 py-0 shrink-0">
                             {badgeInfo.text}
@@ -627,14 +643,50 @@ export default function TeacherHomePage() {
                         </div>
                       );
                     })}
-                    {upcomingDeadlines.length > 3 && (
+                    {activeDeadlines.length > 3 && (
                       <button
                         type="button"
                         onClick={() => setShowDeadlines(true)}
                         className="text-xs text-primary hover:underline w-full text-center pt-1"
                       >
-                        +{upcomingDeadlines.length - 3} more
+                        +{activeDeadlines.length - 3} more
                       </button>
+                    )}
+                  </div>
+                )}
+                {doneDeadlines.length > 0 && (
+                  <div className="mt-3">
+                    <button
+                      type="button"
+                      onClick={() => setShowDoneDeadlines((v) => !v)}
+                      className="w-full flex items-center justify-between mb-2"
+                      aria-expanded={showDoneDeadlines}
+                    >
+                      <span className="text-xs font-medium text-muted-foreground flex items-center gap-2">
+                        Done
+                        <Badge variant="secondary" className="text-[10px] px-1.5 py-0">{doneDeadlines.length}</Badge>
+                      </span>
+                      <ChevronDown className={cn("h-3.5 w-3.5 text-muted-foreground transition-transform", showDoneDeadlines && "rotate-180")} />
+                    </button>
+                    {showDoneDeadlines && (
+                      <div className="space-y-1.5">
+                        {doneDeadlines.map((deadline) => (
+                          <div
+                            key={`done-${deadline.id}`}
+                            className="flex items-center gap-2 rounded-md border border-border bg-muted/40 px-2.5 py-1.5 text-xs"
+                          >
+                            <Checkbox
+                              checked={true}
+                              onCheckedChange={() => toggleDeadlineDone(deadline.id)}
+                              aria-label="Mark deadline not done"
+                              className="h-3.5 w-3.5 flex-shrink-0"
+                            />
+                            <span className="flex-1 min-w-0 truncate text-muted-foreground line-through">
+                              {deadline.title}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
                     )}
                   </div>
                 )}
