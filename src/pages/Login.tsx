@@ -280,10 +280,11 @@ export default function Login() {
         {
           body:
             method === "email"
-              ? { email }
+              ? { email, portal }
               : {
                   phone,
                   country_code: `+${selectedCountry.dialCode}`,
+                  portal,
                 },
         },
       );

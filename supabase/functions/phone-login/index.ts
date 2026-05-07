@@ -24,6 +24,10 @@ Deno.serve(async (req) => {
     const emailInput = String(body?.email ?? "").trim().toLowerCase();
     const phone = String(body?.phone ?? "").trim();
     const countryCodeRaw = String(body?.country_code ?? "").trim();
+    const portal = String(body?.portal ?? "family").trim().toLowerCase();
+    const allowedRoles = portal === "teacher"
+      ? ["teacher", "admin", "super_admin"]
+      : ["parent"];
 
     if (!emailInput && (!phone || !countryCodeRaw)) {
       return new Response(
@@ -49,7 +53,7 @@ Deno.serve(async (req) => {
     if (emailInput) {
       query = query.ilike("email", emailInput);
     } else {
-      query = query.eq("role", "parent").not("phone", "is", null);
+      query = query.in("role", allowedRoles).not("phone", "is", null);
     }
     const { data: profiles, error: profilesErr } = await query;
 
@@ -63,7 +67,8 @@ Deno.serve(async (req) => {
 
     const match = emailInput
       ? (profiles ?? []).find((p: any) =>
-          (p.email ?? "").toLowerCase() === emailInput,
+          (p.email ?? "").toLowerCase() === emailInput &&
+          allowedRoles.includes(p.role),
         )
       : (profiles ?? []).find((p: any) => {
           const stored = normalizeDigits(p.phone);
@@ -75,8 +80,8 @@ Deno.serve(async (req) => {
       return new Response(
         JSON.stringify({
           error: emailInput
-            ? "No parent account found for this email."
-            : "No parent account found for this phone number.",
+            ? `No ${portal === "teacher" ? "teacher" : "parent"} account found for this email.`
+            : `No ${portal === "teacher" ? "teacher" : "parent"} account found for this phone number.`,
         }),
         { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } },
       );
@@ -84,7 +89,7 @@ Deno.serve(async (req) => {
 
     if (match.is_active === false) {
       return new Response(
-        JSON.stringify({ error: "This parent account is inactive. Please contact the school." }),
+        JSON.stringify({ error: "This account is inactive. Please contact the school." }),
         { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } },
       );
     }
