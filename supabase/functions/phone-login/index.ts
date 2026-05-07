@@ -53,7 +53,7 @@ Deno.serve(async (req) => {
     if (emailInput) {
       query = query.ilike("email", emailInput);
     } else {
-      query = query.in("role", allowedRoles).not("phone", "is", null);
+      query = query.in("role", allowedRoles).not("phone", "is", null).eq("is_active", true);
     }
     const { data: profiles, error: profilesErr } = await query;
 
