@@ -204,6 +204,16 @@ All colors MUST be HSL.
 
 /* Custom scrollbar for dialog/drawer content */
 @layer utilities {
+  .rdp-day_today,
+  .rdp-day_today:hover,
+  .rdp-day_today:focus-visible {
+    background-color: transparent !important;
+  }
+
+  .rdp-day_today::before {
+    background-color: transparent !important;
+  }
+
   .px-compact {
     padding-left: 0.4rem;
     padding-right: 0.4rem;
