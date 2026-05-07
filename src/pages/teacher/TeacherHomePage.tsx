@@ -300,6 +300,9 @@ export default function TeacherHomePage() {
     }))
     .sort((a, b) => a.daysLeft - b.daysLeft);
 
+  const activeDeadlines = upcomingDeadlines.filter((d) => !doneDeadlineIds.has(d.id));
+  const doneDeadlines = upcomingDeadlines.filter((d) => doneDeadlineIds.has(d.id));
+
   const upcomingEvents = useMemo(
     () =>
       getUpcomingEvents({
