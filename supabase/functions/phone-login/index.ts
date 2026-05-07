@@ -103,6 +103,19 @@ Deno.serve(async (req) => {
 
     // Generate a magic-link token; we return the hashed_token so the client
     // can call supabase.auth.verifyOtp({ type: 'magiclink', token_hash, email }).
+    // Ensure the auth user exists and is confirmed so magiclink works even when
+    // the invitation has not been accepted yet.
+    try {
+      const { data: authUser } = await admin.auth.admin.getUserById(match.user_id);
+      if (authUser?.user && !authUser.user.email_confirmed_at) {
+        await admin.auth.admin.updateUserById(match.user_id, {
+          email_confirm: true,
+        });
+      }
+    } catch (e) {
+      console.warn("[phone-login] confirm user failed (continuing)", e);
+    }
+
     const { data: linkData, error: linkErr } = await admin.auth.admin.generateLink({
       type: "magiclink",
       email: match.email,
