@@ -551,7 +551,7 @@ export default function Login() {
                 disabled={loading}
               >
                 <ArrowLeft className="mr-2 h-4 w-4" />
-                Change phone number
+                Back
               </Button>
             </>
             )}
