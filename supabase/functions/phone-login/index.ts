@@ -46,11 +46,10 @@ Deno.serve(async (req) => {
     let query = admin
       .from("user_profiles")
       .select("user_id, email, phone, role, is_active")
-      .eq("role", "parent");
     if (emailInput) {
       query = query.ilike("email", emailInput);
     } else {
-      query = query.not("phone", "is", null);
+      query = query.eq("role", "parent").not("phone", "is", null);
     }
     const { data: profiles, error: profilesErr } = await query;
 
