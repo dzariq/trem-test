@@ -69,6 +69,7 @@ export default function TeacherHomePage() {
   const teacherScope = useTeacherScope();
   const [selectedClass, setSelectedClass] = useState(teacherProfile.classes[0]);
   const [showPendingGrades, setShowPendingGrades] = useState(false);
+  const [showDeadlines, setShowDeadlines] = useState(false);
   const [timetablePdfOpen, setTimetablePdfOpen] = useState(false);
   const [announcements, setAnnouncements] = useState<Announcement[]>([]);
   const [announcementsLoading, setAnnouncementsLoading] = useState(true);
