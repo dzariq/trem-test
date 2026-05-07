@@ -12,6 +12,7 @@ import TeacherWelcomeQuote from "@/components/home/TeacherWelcomeQuote";
 import { PDFViewerDialog } from "@/components/PDFViewerDialog";
 import { GeometricBackgroundPattern } from "@/components/home/GeometricBackgroundPattern";
 import { BookOpen, Users, Clock, FileText, Calendar, AlertTriangle, ClipboardList, ChevronDown, ChevronUp } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
 import schoolBadge from "@/assets/school-badge.png";
 import heroBanner from "@/assets/teacher-hero-banner.png";
 import { teacherProfile } from "@/data/teacherMockData";
@@ -70,6 +71,29 @@ export default function TeacherHomePage() {
   const [selectedClass, setSelectedClass] = useState(teacherProfile.classes[0]);
   const [showPendingGrades, setShowPendingGrades] = useState(false);
   const [showDeadlines, setShowDeadlines] = useState(false);
+  const [showDoneDeadlines, setShowDoneDeadlines] = useState(false);
+  const [doneDeadlineIds, setDoneDeadlineIds] = useState<Set<string>>(() => {
+    try {
+      const raw = localStorage.getItem("teacher_done_deadlines");
+      return new Set<string>(raw ? JSON.parse(raw) : []);
+    } catch {
+      return new Set<string>();
+    }
+  });
+
+  const toggleDeadlineDone = (id: string) => {
+    setDoneDeadlineIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      try {
+        localStorage.setItem("teacher_done_deadlines", JSON.stringify([...next]));
+      } catch {
+        /* ignore */
+      }
+      return next;
+    });
+  };
   const [timetablePdfOpen, setTimetablePdfOpen] = useState(false);
   const [announcements, setAnnouncements] = useState<Announcement[]>([]);
   const [announcementsLoading, setAnnouncementsLoading] = useState(true);
