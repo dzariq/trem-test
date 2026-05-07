@@ -581,6 +581,36 @@ export default function TeacherHomePage() {
                   )}
                 </div>
                 )}
+                {!showDeadlines && !deadlinesLoading && upcomingDeadlines.length > 0 && (
+                  <div className="space-y-1.5">
+                    {upcomingDeadlines.slice(0, 3).map((deadline) => {
+                      const badgeInfo = getDaysLeftBadge(deadline.daysLeft);
+                      return (
+                        <div
+                          key={`sum-${deadline.id}`}
+                          className={cn(
+                            "flex items-center gap-2 rounded-md border px-2.5 py-1.5 text-xs",
+                            getDeadlineColor(deadline.daysLeft)
+                          )}
+                        >
+                          <span className="flex-1 min-w-0 truncate font-medium">{deadline.title}</span>
+                          <Badge variant={badgeInfo.variant} className="text-[10px] px-1.5 py-0 shrink-0">
+                            {badgeInfo.text}
+                          </Badge>
+                        </div>
+                      );
+                    })}
+                    {upcomingDeadlines.length > 3 && (
+                      <button
+                        type="button"
+                        onClick={() => setShowDeadlines(true)}
+                        className="text-xs text-primary hover:underline w-full text-center pt-1"
+                      >
+                        +{upcomingDeadlines.length - 3} more
+                      </button>
+                    )}
+                  </div>
+                )}
               </div>
             </div>
           </div>
