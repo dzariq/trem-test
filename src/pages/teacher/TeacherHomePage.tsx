@@ -139,7 +139,7 @@ export default function TeacherHomePage() {
           .select("id")
           .eq("class", selectedClassName)
           .eq("date", today)
-          .eq("status", "present");
+          .in("status", ["present", "late"]);
 
         if (attendanceError) {
           logSupabaseError("teacherHome/attendance", attendanceError);
