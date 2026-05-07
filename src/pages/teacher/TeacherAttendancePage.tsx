@@ -425,13 +425,13 @@ export default function TeacherAttendancePage() {
               <span className="text-xs font-medium text-emerald-700">Present</span>
               <span className="text-lg font-bold text-emerald-700">{presentCount}</span>
             </div>
-            <div className="flex flex-col items-center rounded-md border bg-red-50 border-red-200 py-2 px-1">
-              <span className="text-xs font-medium text-red-700">Absent</span>
-              <span className="text-lg font-bold text-red-700">{absentCount}</span>
-            </div>
             <div className="flex flex-col items-center rounded-md border bg-amber-50 border-amber-200 py-2 px-1">
               <span className="text-xs font-medium text-amber-700">Late</span>
               <span className="text-lg font-bold text-amber-700">{lateCount}</span>
+            </div>
+            <div className="flex flex-col items-center rounded-md border bg-red-50 border-red-200 py-2 px-1">
+              <span className="text-xs font-medium text-red-700">Absent</span>
+              <span className="text-lg font-bold text-red-700">{absentCount}</span>
             </div>
             <div className="flex flex-col items-center rounded-md border bg-purple-50 border-purple-200 py-2 px-1">
               <span className="text-xs font-medium text-purple-700">Excused</span>
