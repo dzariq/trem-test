@@ -1177,12 +1177,27 @@ export default function TeacherAttendancePage() {
               </button>
             </div>
             
-            <div className="text-center text-sm text-muted-foreground">
-              Class: <span className="font-semibold text-foreground">{stripCampusPrefix(selectedClass)}</span>
+            <div className="flex items-center justify-between gap-2 p-3 rounded-lg bg-muted/50">
+              <div className="text-sm">
+                <span className="text-muted-foreground">Scope: </span>
+                <span className="font-semibold text-foreground">{scopeFilter.filterLabel}</span>
+              </div>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  setWeeklyAbsentDialogOpen(false);
+                  setScopeFilterOpen(true);
+                }}
+              >
+                <Filter className="h-3.5 w-3.5 mr-1.5" />
+                Change
+              </Button>
             </div>
-            
-            <Button 
-              className="w-full" 
+
+            <Button
+              className="w-full"
+              disabled={scopeFilter.resolvedClassNames.length === 0 && scopeFilter.scope !== "school"}
               onClick={() => {
                 setWeeklyAbsentDialogOpen(false);
                 setWeeklyAbsentReportOpen(true);
@@ -1230,7 +1245,7 @@ export default function TeacherAttendancePage() {
                     <div style={{ fontSize: '14px', fontWeight: '700', color: '#374151' }}>
                       {format(weeklyAbsentData.weekStart, "MMM d")} - {format(weeklyAbsentData.weekEnd, "MMM d, yyyy")}
                     </div>
-                    <div style={{ fontSize: '11px', color: '#6b7280' }}>Class {stripCampusPrefix(selectedClass)}</div>
+                    <div style={{ fontSize: '11px', color: '#6b7280' }}>{scopeFilter.filterLabel}</div>
                   </div>
                   <img src={cambridgeLogo} alt="Cambridge Assessment" style={{ height: '40px', objectFit: 'contain' }} />
                 </div>
@@ -1424,12 +1439,27 @@ export default function TeacherAttendancePage() {
               </p>
             </div>
 
-            <div className="text-center text-sm text-muted-foreground">
-              Class: <span className="font-semibold text-foreground">{stripCampusPrefix(selectedClass)}</span>
+            <div className="flex items-center justify-between gap-2 p-3 rounded-lg bg-muted/50">
+              <div className="text-sm">
+                <span className="text-muted-foreground">Scope: </span>
+                <span className="font-semibold text-foreground">{scopeFilter.filterLabel}</span>
+              </div>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  setFrequentReportDialogOpen(false);
+                  setScopeFilterOpen(true);
+                }}
+              >
+                <Filter className="h-3.5 w-3.5 mr-1.5" />
+                Change
+              </Button>
             </div>
-            
-            <Button 
-              className="w-full" 
+
+            <Button
+              className="w-full"
+              disabled={scopeFilter.resolvedClassNames.length === 0 && scopeFilter.scope !== "school"}
               onClick={() => {
                 setFrequentReportDialogOpen(false);
                 setFrequentAbsentReportOpen(true);
@@ -1474,7 +1504,7 @@ export default function TeacherAttendancePage() {
                   <img src={collinzLogo} alt="Collinz School" style={{ height: '45px', objectFit: 'contain' }} />
                   <div style={{ textAlign: 'center' }}>
                     <div style={{ fontSize: '10px', fontWeight: '600', color: '#065f46', letterSpacing: '0.5px', textTransform: 'uppercase' }}>Attendance Concerns Report</div>
-                    <div style={{ fontSize: '14px', fontWeight: '700', color: '#374151' }}>Class {stripCampusPrefix(selectedClass)}</div>
+                    <div style={{ fontSize: '14px', fontWeight: '700', color: '#374151' }}>{scopeFilter.filterLabel}</div>
                     <div style={{ fontSize: '11px', color: '#6b7280' }}>
                       {format(frequentReportStartDate, "MMM d, yyyy")} - {format(frequentReportEndDate, "MMM d, yyyy")}
                     </div>
