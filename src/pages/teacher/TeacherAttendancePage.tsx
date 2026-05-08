@@ -450,23 +450,26 @@ export default function TeacherAttendancePage() {
                   initialFocus
                   className="w-full"
                   modifiers={{
-                    hasPresent: (date) => presentDates.has(format(date, "yyyy-MM-dd")),
-                    hasAbsent: (date) => absentDates.has(format(date, "yyyy-MM-dd")),
-                    hasBoth: (date) => {
+                    presentOnly: (date) => {
+                      const k = format(date, "yyyy-MM-dd");
+                      return presentDates.has(k) && !absentDates.has(k);
+                    },
+                    absentOnly: (date) => {
+                      const k = format(date, "yyyy-MM-dd");
+                      return absentDates.has(k) && !presentDates.has(k);
+                    },
+                    bothMarks: (date) => {
                       const k = format(date, "yyyy-MM-dd");
                       return presentDates.has(k) && absentDates.has(k);
                     },
                   }}
                   modifiersClassNames={{
-                    // Single green dot (present/late only)
-                    hasPresent:
-                      "after:content-[''] after:absolute after:bottom-1 after:left-1/2 after:-translate-x-1/2 after:h-1.5 after:w-1.5 after:rounded-full after:bg-emerald-500",
-                    // Single red dot (absent/excused only) — overrides green via :before
-                    hasAbsent:
-                      "before:content-[''] before:absolute before:bottom-1 before:left-1/2 before:-translate-x-1/2 before:h-1.5 before:w-1.5 before:rounded-full before:bg-red-500 before:z-10",
-                    // Both: shift dots side by side
-                    hasBoth:
-                      "after:!translate-x-0.5 before:!-translate-x-2.5",
+                    presentOnly:
+                      "after:content-[''] after:absolute after:bottom-1 after:left-1/2 after:-translate-x-1/2 after:h-1.5 after:w-1.5 after:rounded-full after:bg-emerald-500 aria-selected:after:bg-white",
+                    absentOnly:
+                      "after:content-[''] after:absolute after:bottom-1 after:left-1/2 after:-translate-x-1/2 after:h-1.5 after:w-1.5 after:rounded-full after:bg-red-500 aria-selected:after:bg-white",
+                    bothMarks:
+                      "after:content-[''] after:absolute after:bottom-1 after:left-[calc(50%-4px)] after:-translate-x-1/2 after:h-1.5 after:w-1.5 after:rounded-full after:bg-emerald-500 after:shadow-[8px_0_0_0_hsl(0,84%,60%)]",
                   }}
                 />
               </PopoverContent>
