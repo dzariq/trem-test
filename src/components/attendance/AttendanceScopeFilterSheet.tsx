@@ -81,9 +81,11 @@ export function AttendanceScopeFilterSheet({
   // Classes available for the selected cohort
   const cohortClasses = useMemo(() => {
     if (!draftCohort) return [];
-    return filter.availableClasses
-      .filter((c) => c.year_level === draftCohort)
-      .sort((a, b) => sortClasses([a.class_name, b.class_name])[0] === a.class_name ? -1 : 1);
+    const list = filter.availableClasses.filter((c) => c.year_level === draftCohort);
+    const order = sortClasses(list.map((c) => c.class_name));
+    return [...list].sort(
+      (a, b) => order.indexOf(a.class_name) - order.indexOf(b.class_name)
+    );
   }, [draftCohort, filter.availableClasses]);
 
   const selectAllCohort = () => {
