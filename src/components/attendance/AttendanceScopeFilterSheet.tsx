@@ -82,14 +82,27 @@ export function AttendanceScopeFilterSheet({
   const cohortClasses = useMemo(() => {
     if (!draftCohort) return [];
     const list = filter.availableClasses.filter((c) => c.year_level === draftCohort);
-    const order = sortClasses(list.map((c) => c.class_name));
-    return [...list].sort(
-      (a, b) => order.indexOf(a.class_name) - order.indexOf(b.class_name)
+    // Dedupe by display name (stripped of campus prefix) so cross-campus
+    // duplicates collapse into one row. Keep all underlying class_names so
+    // toggling selects every campus variant.
+    const grouped = new Map<string, { id: number; class_names: string[]; display: string }>();
+    for (const c of list) {
+      const display = stripCampusPrefix(c.class_name);
+      const existing = grouped.get(display);
+      if (existing) {
+        existing.class_names.push(c.class_name);
+      } else {
+        grouped.set(display, { id: c.id, class_names: [c.class_name], display });
+      }
+    }
+    const order = sortClasses(Array.from(grouped.keys()));
+    return Array.from(grouped.values()).sort(
+      (a, b) => order.indexOf(a.display) - order.indexOf(b.display)
     );
   }, [draftCohort, filter.availableClasses]);
 
   const selectAllCohort = () => {
-    setDraftClasses(cohortClasses.map((c) => c.class_name));
+    setDraftClasses(cohortClasses.flatMap((c) => c.class_names));
   };
 
   const clearAll = () => {
@@ -193,14 +206,18 @@ export function AttendanceScopeFilterSheet({
 
             {draftClasses.length > 0 && (
               <div className="flex flex-wrap gap-1.5 mb-2">
-                {draftClasses.map((name) => (
+                {Array.from(new Set(draftClasses.map(stripCampusPrefix))).map((display) => (
                   <Badge
-                    key={name}
+                    key={display}
                     variant="secondary"
                     className="text-xs cursor-pointer"
-                    onClick={() => toggleClass(name)}
+                    onClick={() =>
+                      setDraftClasses((prev) =>
+                        prev.filter((n) => stripCampusPrefix(n) !== display)
+                      )
+                    }
                   >
-                    {stripCampusPrefix(name)} ×
+                    {display} ×
                   </Badge>
                 ))}
               </div>
@@ -213,10 +230,17 @@ export function AttendanceScopeFilterSheet({
                   className="flex items-center gap-3 p-2.5 rounded-lg border border-border/50 hover:bg-muted/50 cursor-pointer transition-colors"
                 >
                   <Checkbox
-                    checked={draftClasses.includes(cls.class_name)}
-                    onCheckedChange={() => toggleClass(cls.class_name)}
+                    checked={cls.class_names.every((n) => draftClasses.includes(n))}
+                    onCheckedChange={() => {
+                      const allSelected = cls.class_names.every((n) => draftClasses.includes(n));
+                      setDraftClasses((prev) =>
+                        allSelected
+                          ? prev.filter((n) => !cls.class_names.includes(n))
+                          : Array.from(new Set([...prev, ...cls.class_names]))
+                      );
+                    }}
                   />
-                  <span className="text-sm font-medium">{stripCampusPrefix(cls.class_name)}</span>
+                  <span className="text-sm font-medium">{cls.display}</span>
                 </label>
               ))}
             </div>
