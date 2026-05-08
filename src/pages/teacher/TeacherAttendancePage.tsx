@@ -18,6 +18,7 @@ import { Input } from "@/components/ui/input";
 
 import { teacherProfile, classRosters, DailyAttendanceDetail } from "@/data/teacherMockData";
 import { useTeacherAttendance } from "@/hooks/useTeacherAttendance";
+import { supabase } from "@/lib/supabase";
 import { useAttendanceStatistics, type DailyBreakdown } from "@/hooks/useAttendanceStatistics";
 import { type AttendanceStatus } from "@/data/teacherAttendance";
 import { useTeacherScope } from "@/hooks/useTeacherScope";
@@ -81,6 +82,31 @@ export default function TeacherAttendancePage() {
     setStudentRemarks,
     save,
   } = useTeacherAttendance();
+
+  // Dates that already have attendance records for the selected class
+  const [markedDates, setMarkedDates] = useState<Set<string>>(new Set());
+  useEffect(() => {
+    if (!selectedClass) {
+      setMarkedDates(new Set());
+      return;
+    }
+    let mounted = true;
+    (async () => {
+      const { data, error } = await supabase
+        .from("attendance")
+        .select("date")
+        .eq("class", selectedClass);
+      if (!mounted) return;
+      if (error) {
+        console.error("[TeacherAttendancePage] markedDates fetch failed", error);
+        return;
+      }
+      setMarkedDates(new Set((data ?? []).map((r: any) => r.date)));
+    })();
+    return () => {
+      mounted = false;
+    };
+  }, [selectedClass, saving]);
   
   // Statistics state - now using Supabase data
   const [statsSelectedClass, setStatsSelectedClass] = useState("");
@@ -414,6 +440,13 @@ export default function TeacherAttendancePage() {
                   onSelect={(date) => date && setSelectedDate(date)}
                   initialFocus
                   className="w-full"
+                  modifiers={{
+                    taken: (date) => markedDates.has(format(date, "yyyy-MM-dd")),
+                  }}
+                  modifiersClassNames={{
+                    taken:
+                      "after:content-[''] after:absolute after:bottom-1 after:left-1/2 after:-translate-x-1/2 after:h-1.5 after:w-1.5 after:rounded-full after:bg-emerald-500 aria-selected:after:bg-white",
+                  }}
                 />
               </PopoverContent>
             </Popover>
