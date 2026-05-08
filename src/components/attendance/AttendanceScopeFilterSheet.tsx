@@ -5,9 +5,9 @@ import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { Filter, RotateCcw } from "lucide-react";
 import { cn, stripCampusPrefix } from "@/lib/utils";
+import { sortYearLevels } from "@/lib/classSorting";
 import {
   type AttendanceScope,
   type AttendanceScopeFilterState,
@@ -177,11 +177,10 @@ export function AttendanceScopeFilterSheet({
               </div>
             )}
 
-            <ScrollArea className="max-h-[200px]">
-              <div className="space-y-3">
-                {Object.entries(classesByCohort)
-                  .sort(([a], [b]) => a.localeCompare(b))
-                  .map(([yearLevel, classes]) => (
+            <div className="space-y-3">
+              {sortYearLevels(Object.keys(classesByCohort)).map((yearLevel) => {
+                const classes = classesByCohort[yearLevel];
+                return (
                     <div key={yearLevel}>
                       <p className="text-xs font-semibold text-muted-foreground mb-1.5 uppercase tracking-wider">
                         {yearLevel}
@@ -201,9 +200,9 @@ export function AttendanceScopeFilterSheet({
                         ))}
                       </div>
                     </div>
-                  ))}
-              </div>
-            </ScrollArea>
+                );
+              })}
+            </div>
           </div>
         )}
 
