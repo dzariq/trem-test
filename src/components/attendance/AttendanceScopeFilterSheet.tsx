@@ -1,13 +1,12 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { BottomSheet } from "@/components/ui/bottom-sheet";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { Filter, RotateCcw } from "lucide-react";
 import { cn, stripCampusPrefix } from "@/lib/utils";
-import { sortYearLevels } from "@/lib/classSorting";
+import { sortYearLevels, sortClasses } from "@/lib/classSorting";
 import {
   type AttendanceScope,
   type AttendanceScopeFilterState,
@@ -32,14 +31,14 @@ export function AttendanceScopeFilterSheet({
   filter,
 }: AttendanceScopeFilterSheetProps) {
   // Local draft state so changes only apply on "Apply"
-  const [draftScope, setDraftScope] = useState<AttendanceScope>(filter.scope);
+  const [wholeSchool, setWholeSchool] = useState<boolean>(filter.scope === "school");
   const [draftCohort, setDraftCohort] = useState<string | null>(filter.selectedCohort);
   const [draftClasses, setDraftClasses] = useState<string[]>(filter.selectedClassNames);
 
   // Sync draft with current filter when sheet opens
   const handleOpenChange = (open: boolean) => {
     if (open) {
-      setDraftScope(filter.scope);
+      setWholeSchool(filter.scope === "school");
       setDraftCohort(filter.selectedCohort);
       setDraftClasses(filter.selectedClassNames);
     }
@@ -47,14 +46,28 @@ export function AttendanceScopeFilterSheet({
   };
 
   const handleApply = () => {
-    filter.setScope(draftScope);
-    filter.setSelectedCohort(draftCohort);
-    filter.setSelectedClassNames(draftClasses);
+    if (wholeSchool) {
+      filter.setScope("school");
+      filter.setSelectedCohort(null);
+      filter.setSelectedClassNames([]);
+    } else if (draftClasses.length > 0) {
+      filter.setScope("class");
+      filter.setSelectedCohort(draftCohort);
+      filter.setSelectedClassNames(draftClasses);
+    } else if (draftCohort) {
+      filter.setScope("cohort");
+      filter.setSelectedCohort(draftCohort);
+      filter.setSelectedClassNames([]);
+    } else {
+      filter.setScope("school");
+      filter.setSelectedCohort(null);
+      filter.setSelectedClassNames([]);
+    }
     onOpenChange(false);
   };
 
   const handleReset = () => {
-    setDraftScope("school");
+    setWholeSchool(true);
     setDraftCohort(null);
     setDraftClasses([]);
   };
@@ -65,22 +78,21 @@ export function AttendanceScopeFilterSheet({
     );
   };
 
-  const selectAll = () => {
-    setDraftClasses(filter.availableClasses.map((c) => c.class_name));
+  // Classes available for the selected cohort
+  const cohortClasses = useMemo(() => {
+    if (!draftCohort) return [];
+    return filter.availableClasses
+      .filter((c) => c.year_level === draftCohort)
+      .sort((a, b) => sortClasses([a.class_name, b.class_name])[0] === a.class_name ? -1 : 1);
+  }, [draftCohort, filter.availableClasses]);
+
+  const selectAllCohort = () => {
+    setDraftClasses(cohortClasses.map((c) => c.class_name));
   };
 
   const clearAll = () => {
     setDraftClasses([]);
   };
-
-  // Group classes by year_level for better display
-  const classesByCohort = filter.availableClasses.reduce<
-    Record<string, { id: number; class_name: string }[]>
-  >((acc, cls) => {
-    if (!acc[cls.year_level]) acc[cls.year_level] = [];
-    acc[cls.year_level].push(cls);
-    return acc;
-  }, {});
 
   return (
     <BottomSheet
@@ -97,57 +109,72 @@ export function AttendanceScopeFilterSheet({
       defaultSnapPoint={0.65}
     >
       <div className="px-4 py-3 space-y-5">
-        {/* Scope Selector */}
+        {/* Whole School Yes/No */}
         <div className="space-y-2">
-          <Label className="text-sm font-semibold">Scope</Label>
+          <Label className="text-sm font-semibold">Whole School</Label>
           <div className="flex gap-1 p-1 bg-muted/50 rounded-lg">
-            {(["school", "cohort", "class"] as const).map((s) => (
+            {[
+              { value: true, label: "Yes" },
+              { value: false, label: "No" },
+            ].map((opt) => (
               <button
-                key={s}
-                onClick={() => setDraftScope(s)}
+                key={String(opt.value)}
+                onClick={() => {
+                  setWholeSchool(opt.value);
+                  if (opt.value) {
+                    setDraftCohort(null);
+                    setDraftClasses([]);
+                  }
+                }}
                 className={cn(
-                  "flex-1 py-2 px-3 rounded-md text-xs font-medium transition-all capitalize",
-                  draftScope === s
+                  "flex-1 py-2 px-3 rounded-md text-xs font-medium transition-all",
+                  wholeSchool === opt.value
                     ? "bg-background text-foreground shadow-sm"
                     : "text-muted-foreground hover:text-foreground"
                 )}
               >
-                {s === "school" ? "Whole School" : s === "cohort" ? "Cohort" : "Class"}
+                {opt.label}
               </button>
             ))}
           </div>
         </div>
 
-        {/* Cohort Selector */}
-        {draftScope === "cohort" && (
+        {/* Cohort Selector — visible when not whole-school */}
+        {!wholeSchool && (
           <div className="space-y-2">
-            <Label className="text-sm font-semibold">Select Cohort</Label>
+            <Label className="text-sm font-semibold">Cohort</Label>
             <Select
               value={draftCohort ?? ""}
-              onValueChange={(v) => setDraftCohort(v || null)}
+              onValueChange={(v) => {
+                setDraftCohort(v || null);
+                setDraftClasses([]); // reset classes when cohort changes
+              }}
             >
               <SelectTrigger>
                 <SelectValue placeholder="Choose a year group" />
               </SelectTrigger>
               <SelectContent>
-                {filter.availableCohorts.map((cohort) => (
+                {sortYearLevels(filter.availableCohorts).map((cohort) => (
                   <SelectItem key={cohort} value={cohort}>
                     {cohort}
                   </SelectItem>
                 ))}
               </SelectContent>
             </Select>
+            <p className="text-xs text-muted-foreground">
+              Leave classes empty to include the whole cohort.
+            </p>
           </div>
         )}
 
-        {/* Class Multi-Select */}
-        {draftScope === "class" && (
+        {/* Class Multi-Select — visible when a cohort is chosen */}
+        {!wholeSchool && draftCohort && cohortClasses.length > 0 && (
           <div className="space-y-2">
             <div className="flex items-center justify-between">
-              <Label className="text-sm font-semibold">Select Classes</Label>
+              <Label className="text-sm font-semibold">Classes (optional)</Label>
               <div className="flex gap-2">
                 <button
-                  onClick={selectAll}
+                  onClick={selectAllCohort}
                   className="text-xs text-primary font-medium hover:underline"
                 >
                   Select all
@@ -177,31 +204,19 @@ export function AttendanceScopeFilterSheet({
               </div>
             )}
 
-            <div className="space-y-3">
-              {sortYearLevels(Object.keys(classesByCohort)).map((yearLevel) => {
-                const classes = classesByCohort[yearLevel];
-                return (
-                    <div key={yearLevel}>
-                      <p className="text-xs font-semibold text-muted-foreground mb-1.5 uppercase tracking-wider">
-                        {yearLevel}
-                      </p>
-                      <div className="space-y-1">
-                        {classes.map((cls) => (
-                          <label
-                            key={cls.id}
-                            className="flex items-center gap-3 p-2.5 rounded-lg border border-border/50 hover:bg-muted/50 cursor-pointer transition-colors"
-                          >
-                            <Checkbox
-                              checked={draftClasses.includes(cls.class_name)}
-                              onCheckedChange={() => toggleClass(cls.class_name)}
-                            />
-                            <span className="text-sm font-medium">{stripCampusPrefix(cls.class_name)}</span>
-                          </label>
-                        ))}
-                      </div>
-                    </div>
-                );
-              })}
+            <div className="space-y-1">
+              {cohortClasses.map((cls) => (
+                <label
+                  key={cls.id}
+                  className="flex items-center gap-3 p-2.5 rounded-lg border border-border/50 hover:bg-muted/50 cursor-pointer transition-colors"
+                >
+                  <Checkbox
+                    checked={draftClasses.includes(cls.class_name)}
+                    onCheckedChange={() => toggleClass(cls.class_name)}
+                  />
+                  <span className="text-sm font-medium">{stripCampusPrefix(cls.class_name)}</span>
+                </label>
+              ))}
             </div>
           </div>
         )}
