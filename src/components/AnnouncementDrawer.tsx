@@ -353,11 +353,10 @@ export function AnnouncementDrawer({
                       <Megaphone className="h-20 w-20 text-primary/40" />
                     </div>
                   )}
-                  <div className="absolute inset-0 bg-gradient-to-t from-background via-background/50 to-transparent" />
                 </div>
 
                 {/* Content */}
-                <div className="px-5 -mt-6 relative">
+                <div className="px-5 mt-4 relative">
                   {/* Title */}
                   <h2 className="text-2xl font-bold text-foreground mb-3 leading-tight">
                     {currentAnnouncement.title}
