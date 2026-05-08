@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Calendar, Check, ChevronLeft, ChevronRight, Download, FileText, Megaphone, X, List, ShieldCheck } from "lucide-react";
 import { markAnnouncementRead, acknowledgeAnnouncement } from "@/data/announcements";
+import { PDFViewerDialog } from "@/components/PDFViewerDialog";
 
 type AnnouncementId = number | string;
 
@@ -71,6 +72,11 @@ export function AnnouncementDrawer({
   const [isRead, setIsRead] = useState(false);
   const [isAcknowledged, setIsAcknowledged] = useState(false);
   const [acknowledging, setAcknowledging] = useState(false);
+  const [pdfDialog, setPdfDialog] = useState<{ open: boolean; url: string; title: string }>({
+    open: false,
+    url: "",
+    title: "",
+  });
   const touchStartX = useRef<number>(0);
   const touchEndX = useRef<number>(0);
   const contentRef = useRef<HTMLDivElement>(null);
@@ -162,6 +168,20 @@ export function AnnouncementDrawer({
   const isImageUrl = (url: string) => {
     const ext = url.split('?')[0].split('.').pop()?.toLowerCase();
     return ['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg', 'bmp'].includes(ext ?? '');
+  };
+
+  const isPdfUrl = (url: string, name?: string) => {
+    const fromUrl = url.split('?')[0].split('.').pop()?.toLowerCase();
+    const fromName = name?.split('.').pop()?.toLowerCase();
+    return fromUrl === 'pdf' || fromName === 'pdf';
+  };
+
+  const openPdf = (attachment: { name: string; url: string }) => {
+    setPdfDialog({
+      open: true,
+      url: attachment.url,
+      title: attachment.name.replace(/\.pdf$/i, ''),
+    });
   };
 
   const getFileIcon = (fileName: string) => {
@@ -361,13 +381,19 @@ export function AnnouncementDrawer({
                     </div>
                     {(currentAnnouncement.attachments ?? []).map((attachment, idx) => {
                       const isImg = isImageUrl(attachment.url);
+                      const isPdf = isPdfUrl(attachment.url, attachment.name);
                       const { icon: Icon, color, bg } = getFileIcon(attachment.name);
                       return (
-                        <a
+                        <button
                           key={`quick-${idx}`}
-                          href={attachment.url}
-                          target="_blank"
-                          rel="noopener noreferrer"
+                          type="button"
+                          onClick={() => {
+                            if (isPdf) {
+                              openPdf(attachment);
+                            } else {
+                              window.open(attachment.url, "_blank", "noopener,noreferrer");
+                            }
+                          }}
                           className={cn(
                             "inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-border/60 bg-card hover:border-primary/40 hover:bg-primary/5 transition-colors text-xs font-medium text-foreground max-w-[180px]"
                           )}
@@ -379,7 +405,7 @@ export function AnnouncementDrawer({
                           <span className="truncate">
                             {isImg ? "View image" : attachment.name}
                           </span>
-                        </a>
+                        </button>
                       );
                     })}
                   </div>
@@ -414,16 +440,22 @@ export function AnnouncementDrawer({
                       <div className="flex flex-wrap gap-2">
                         {nonHeroAttachments.map((attachment, idx) => {
                           const { icon: Icon, color, bg } = getFileIcon(attachment.name);
+                          const isPdf = isPdfUrl(attachment.url, attachment.name);
                           return (
-                            <a
+                            <button
                               key={idx}
-                              href={attachment.url}
-                              target="_blank"
-                              rel="noopener noreferrer"
+                              type="button"
+                              onClick={() => {
+                                if (isPdf) {
+                                  openPdf(attachment);
+                                } else {
+                                  window.open(attachment.url, "_blank", "noopener,noreferrer");
+                                }
+                              }}
                               className={cn(
                                 "flex items-center gap-3 px-4 py-3 rounded-xl border border-border/60",
                                 "bg-card shadow-sm hover:shadow-md transition-all hover:border-primary/30",
-                                "group"
+                                "group text-left"
                               )}
                             >
                               <div className={cn("p-2 rounded-lg", bg)}>
@@ -433,10 +465,12 @@ export function AnnouncementDrawer({
                                 <p className="text-sm font-medium text-foreground truncate max-w-[160px]">
                                   {attachment.name}
                                 </p>
-                                <p className="text-xs text-muted-foreground">Tap to open</p>
+                                <p className="text-xs text-muted-foreground">
+                                  {isPdf ? "Tap to read" : "Tap to open"}
+                                </p>
                               </div>
                               <Download className="h-4 w-4 text-muted-foreground group-hover:text-primary transition-colors" />
-                            </a>
+                            </button>
                           );
                         })}
                       </div>
@@ -499,6 +533,13 @@ export function AnnouncementDrawer({
           </div>
         </DrawerPrimitive.Content>
       </DrawerPrimitive.Portal>
+      <PDFViewerDialog
+        open={pdfDialog.open}
+        onOpenChange={(open) => setPdfDialog((prev) => ({ ...prev, open }))}
+        pdfUrl={pdfDialog.url}
+        title={pdfDialog.title}
+        downloadFileName={`${pdfDialog.title}.pdf`}
+      />
     </DrawerPrimitive.Root>
   );
 }
