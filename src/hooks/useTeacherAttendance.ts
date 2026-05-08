@@ -11,6 +11,7 @@ import {
   type AttendanceRecord,
 } from "@/data/teacherAttendance";
 import { useTeacherScope } from "@/hooks/useTeacherScope";
+import { sortClasses } from "@/lib/classSorting";
 
 export type StudentAttendanceState = {
   student_id: string;
@@ -23,7 +24,7 @@ export function useTeacherAttendance() {
   const teacherScope = useTeacherScope();
   const isTeacher = teacherScope.isTeacher;
   const allowedClassNames = useMemo(
-    () => teacherScope.allowedClassYears.map((cls) => cls.class_name),
+    () => sortClasses(teacherScope.allowedClassYears.map((cls) => cls.class_name)),
     [teacherScope.allowedClassYears]
   );
 
