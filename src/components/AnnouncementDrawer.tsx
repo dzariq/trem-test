@@ -54,9 +54,9 @@ interface AnnouncementDrawerProps {
   onAnnouncementUpdated?: (id: AnnouncementId, updates: Partial<Announcement>) => void;
 }
 
-// Snap points: default opens taller so the Prev/Next footer is visible without dragging
-const SNAP_POINTS = [0.85, 0.95, 1] as const;
-const DEFAULT_SNAP = 0.85;
+// Snap points: default opens tall and keeps navigation within the visible drawer area
+const SNAP_POINTS = [0.9, 0.98, 1] as const;
+const DEFAULT_SNAP = 0.9;
 
 export function AnnouncementDrawer({
   announcements,
@@ -247,6 +247,7 @@ export function AnnouncementDrawer({
   const firstImageAttachment = currentAnnouncement.attachments?.find(a => isImageUrl(a.url));
   const heroImage = firstImageAttachment?.url ?? currentAnnouncement.image;
   const nonHeroAttachments = currentAnnouncement.attachments?.filter(a => a !== firstImageAttachment) ?? [];
+  const footerLift = typeof snap === "number" && snap < 1 ? `${(1 - snap) * 100}dvh` : "0px";
 
   return (
     <DrawerPrimitive.Root
@@ -491,7 +492,10 @@ export function AnnouncementDrawer({
           </div>
 
           {/* Navigation Footer */}
-          <div className="absolute bottom-0 left-0 right-0 bg-background/98 backdrop-blur-md border-t border-border/50 px-5 py-4 pb-[calc(2.5rem+var(--safe-bottom))]">
+          <div
+            className="absolute left-0 right-0 bg-background/98 backdrop-blur-md border-t border-border/50 px-5 py-4 pb-[calc(2.5rem+var(--safe-bottom))]"
+            style={{ bottom: footerLift }}
+          >
             <div className="flex items-center justify-between gap-4">
               <Button
                 variant="outline"
