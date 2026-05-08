@@ -85,8 +85,9 @@ export function useAttendanceScopeFilter(): AttendanceScopeFilterState {
     if (scope === "school") return "Whole School";
     if (scope === "cohort" && selectedCohort) return `Cohort ${selectedCohort}`;
     if (scope === "class" && selectedClassNames.length > 0) {
-      if (selectedClassNames.length <= 2) return selectedClassNames.map(stripCampusPrefix).join(", ");
-      return `${selectedClassNames.length} classes`;
+      const unique = Array.from(new Set(selectedClassNames.map(stripCampusPrefix)));
+      if (unique.length <= 2) return unique.join(", ");
+      return `${unique.length} classes`;
     }
     return "Whole School";
   }, [scope, selectedCohort, selectedClassNames]);
