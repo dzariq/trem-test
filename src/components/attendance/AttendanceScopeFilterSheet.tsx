@@ -206,14 +206,18 @@ export function AttendanceScopeFilterSheet({
 
             {draftClasses.length > 0 && (
               <div className="flex flex-wrap gap-1.5 mb-2">
-                {draftClasses.map((name) => (
+                {Array.from(new Set(draftClasses.map(stripCampusPrefix))).map((display) => (
                   <Badge
-                    key={name}
+                    key={display}
                     variant="secondary"
                     className="text-xs cursor-pointer"
-                    onClick={() => toggleClass(name)}
+                    onClick={() =>
+                      setDraftClasses((prev) =>
+                        prev.filter((n) => stripCampusPrefix(n) !== display)
+                      )
+                    }
                   >
-                    {stripCampusPrefix(name)} ×
+                    {display} ×
                   </Badge>
                 ))}
               </div>
