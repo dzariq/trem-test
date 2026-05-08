@@ -440,6 +440,13 @@ export default function TeacherAttendancePage() {
                   onSelect={(date) => date && setSelectedDate(date)}
                   initialFocus
                   className="w-full"
+                  modifiers={{
+                    taken: (date) => markedDates.has(format(date, "yyyy-MM-dd")),
+                  }}
+                  modifiersClassNames={{
+                    taken:
+                      "after:content-[''] after:absolute after:bottom-1 after:left-1/2 after:-translate-x-1/2 after:h-1.5 after:w-1.5 after:rounded-full after:bg-emerald-500 aria-selected:after:bg-white",
+                  }}
                 />
               </PopoverContent>
             </Popover>
