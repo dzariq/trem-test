@@ -1177,12 +1177,27 @@ export default function TeacherAttendancePage() {
               </button>
             </div>
             
-            <div className="text-center text-sm text-muted-foreground">
-              Class: <span className="font-semibold text-foreground">{stripCampusPrefix(selectedClass)}</span>
+            <div className="flex items-center justify-between gap-2 p-3 rounded-lg bg-muted/50">
+              <div className="text-sm">
+                <span className="text-muted-foreground">Scope: </span>
+                <span className="font-semibold text-foreground">{scopeFilter.filterLabel}</span>
+              </div>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  setWeeklyAbsentDialogOpen(false);
+                  setScopeFilterOpen(true);
+                }}
+              >
+                <Filter className="h-3.5 w-3.5 mr-1.5" />
+                Change
+              </Button>
             </div>
-            
-            <Button 
-              className="w-full" 
+
+            <Button
+              className="w-full"
+              disabled={scopeFilter.resolvedClassNames.length === 0 && scopeFilter.scope !== "school"}
               onClick={() => {
                 setWeeklyAbsentDialogOpen(false);
                 setWeeklyAbsentReportOpen(true);
@@ -1424,12 +1439,27 @@ export default function TeacherAttendancePage() {
               </p>
             </div>
 
-            <div className="text-center text-sm text-muted-foreground">
-              Class: <span className="font-semibold text-foreground">{stripCampusPrefix(selectedClass)}</span>
+            <div className="flex items-center justify-between gap-2 p-3 rounded-lg bg-muted/50">
+              <div className="text-sm">
+                <span className="text-muted-foreground">Scope: </span>
+                <span className="font-semibold text-foreground">{scopeFilter.filterLabel}</span>
+              </div>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  setFrequentReportDialogOpen(false);
+                  setScopeFilterOpen(true);
+                }}
+              >
+                <Filter className="h-3.5 w-3.5 mr-1.5" />
+                Change
+              </Button>
             </div>
-            
-            <Button 
-              className="w-full" 
+
+            <Button
+              className="w-full"
+              disabled={scopeFilter.resolvedClassNames.length === 0 && scopeFilter.scope !== "school"}
               onClick={() => {
                 setFrequentReportDialogOpen(false);
                 setFrequentAbsentReportOpen(true);
