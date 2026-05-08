@@ -83,25 +83,34 @@ export default function TeacherAttendancePage() {
     save,
   } = useTeacherAttendance();
 
-  // Dates that already have attendance records for the selected class
-  const [markedDates, setMarkedDates] = useState<Set<string>>(new Set());
+  // Dates with attendance records for the selected class, split by indicator color
+  const [presentDates, setPresentDates] = useState<Set<string>>(new Set());
+  const [absentDates, setAbsentDates] = useState<Set<string>>(new Set());
   useEffect(() => {
     if (!selectedClass) {
-      setMarkedDates(new Set());
+      setPresentDates(new Set());
+      setAbsentDates(new Set());
       return;
     }
     let mounted = true;
     (async () => {
       const { data, error } = await supabase
         .from("attendance")
-        .select("date")
+        .select("date,status")
         .eq("class", selectedClass);
       if (!mounted) return;
       if (error) {
         console.error("[TeacherAttendancePage] markedDates fetch failed", error);
         return;
       }
-      setMarkedDates(new Set((data ?? []).map((r: any) => r.date)));
+      const green = new Set<string>();
+      const red = new Set<string>();
+      (data ?? []).forEach((r: any) => {
+        if (r.status === "present" || r.status === "late") green.add(r.date);
+        if (r.status === "absent" || r.status === "excused") red.add(r.date);
+      });
+      setPresentDates(green);
+      setAbsentDates(red);
     })();
     return () => {
       mounted = false;
@@ -441,11 +450,23 @@ export default function TeacherAttendancePage() {
                   initialFocus
                   className="w-full"
                   modifiers={{
-                    taken: (date) => markedDates.has(format(date, "yyyy-MM-dd")),
+                    hasPresent: (date) => presentDates.has(format(date, "yyyy-MM-dd")),
+                    hasAbsent: (date) => absentDates.has(format(date, "yyyy-MM-dd")),
+                    hasBoth: (date) => {
+                      const k = format(date, "yyyy-MM-dd");
+                      return presentDates.has(k) && absentDates.has(k);
+                    },
                   }}
                   modifiersClassNames={{
-                    taken:
-                      "after:content-[''] after:absolute after:bottom-1 after:left-1/2 after:-translate-x-1/2 after:h-1.5 after:w-1.5 after:rounded-full after:bg-emerald-500 aria-selected:after:bg-white",
+                    // Single green dot (present/late only)
+                    hasPresent:
+                      "after:content-[''] after:absolute after:bottom-1 after:left-1/2 after:-translate-x-1/2 after:h-1.5 after:w-1.5 after:rounded-full after:bg-emerald-500",
+                    // Single red dot (absent/excused only) — overrides green via :before
+                    hasAbsent:
+                      "before:content-[''] before:absolute before:bottom-1 before:left-1/2 before:-translate-x-1/2 before:h-1.5 before:w-1.5 before:rounded-full before:bg-red-500 before:z-10",
+                    // Both: shift dots side by side
+                    hasBoth:
+                      "after:!translate-x-0.5 before:!-translate-x-2.5",
                   }}
                 />
               </PopoverContent>
