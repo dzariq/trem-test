@@ -1,4 +1,5 @@
 import { supabase } from "@/lib/supabase";
+import { sortClasses } from "@/lib/classSorting";
 
 export type AttendanceStatus = "present" | "absent" | "late" | "excused";
 
@@ -195,5 +196,5 @@ export async function fetchAvailableClasses(campusCode?: string | null): Promise
     }
   });
 
-  return Array.from(classSet).sort();
+  return sortClasses(Array.from(classSet));
 }

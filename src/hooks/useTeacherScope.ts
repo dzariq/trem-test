@@ -4,6 +4,7 @@ import { Preferences } from "@capacitor/preferences";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "@/hooks/use-toast";
+import { sortClasses } from "@/lib/classSorting";
 
 const STORAGE_KEY = "teacher_selected_class_year_id";
 
@@ -147,11 +148,14 @@ export function useTeacherScope() {
               class_name: row.class_name,
               year_level: row.year_level,
               active: row.active,
-              campus_code: (row as any).campus_code ?? null,
+              campus_code: row.campus_code ?? null,
             });
           }
         });
-        return Array.from(unique.values());
+        const classOrder = sortClasses(Array.from(unique.values()).map((cls) => cls.class_name));
+        return Array.from(unique.values()).sort(
+          (a, b) => classOrder.indexOf(a.class_name) - classOrder.indexOf(b.class_name)
+        );
       })();
 
       inFlightClassYears.set(userId, fetchPromise);
