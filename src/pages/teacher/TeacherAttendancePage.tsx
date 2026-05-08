@@ -106,7 +106,7 @@ export default function TeacherAttendancePage() {
     return () => {
       mounted = false;
     };
-  }, [selectedClass, dateString => undefined as never]);
+  }, [selectedClass, saving]);
   
   // Statistics state - now using Supabase data
   const [statsSelectedClass, setStatsSelectedClass] = useState("");
