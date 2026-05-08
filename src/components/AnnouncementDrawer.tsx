@@ -1,10 +1,9 @@
 import * as React from "react";
 import { useState, useRef, useCallback, useEffect } from "react";
-import { Drawer as DrawerPrimitive } from "vaul";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Calendar, Check, ChevronLeft, ChevronRight, Download, FileText, Megaphone, X, List, ShieldCheck } from "lucide-react";
+import { Calendar, Check, ChevronLeft, ChevronRight, Download, FileText, Megaphone, Inbox, ShieldCheck } from "lucide-react";
 import { markAnnouncementRead, acknowledgeAnnouncement } from "@/data/announcements";
 import { PDFViewerDialog } from "@/components/PDFViewerDialog";
 
@@ -54,10 +53,6 @@ interface AnnouncementDrawerProps {
   onAnnouncementUpdated?: (id: AnnouncementId, updates: Partial<Announcement>) => void;
 }
 
-// Snap points: default opens tall and keeps navigation within the visible drawer area
-const SNAP_POINTS = [0.9, 0.98, 1] as const;
-const DEFAULT_SNAP = 0.9;
-
 export function AnnouncementDrawer({
   announcements,
   currentIndex,
@@ -67,7 +62,6 @@ export function AnnouncementDrawer({
   onSeeAll,
   onAnnouncementUpdated,
 }: AnnouncementDrawerProps) {
-  const [snap, setSnap] = useState<number | string | null>(DEFAULT_SNAP);
   const [slideDirection, setSlideDirection] = useState<"left" | "right" | null>(null);
   const [isRead, setIsRead] = useState(false);
   const [isAcknowledged, setIsAcknowledged] = useState(false);
@@ -121,10 +115,14 @@ export function AnnouncementDrawer({
     }
   }, [isOpen]);
 
+  // Lock body scroll while full-screen view is open
   useEffect(() => {
-    if (isOpen) {
-      setSnap(DEFAULT_SNAP);
-    }
+    if (!isOpen) return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = prev;
+    };
   }, [isOpen]);
 
   const handleAcknowledge = async () => {
@@ -242,44 +240,43 @@ export function AnnouncementDrawer({
   };
 
   if (!currentAnnouncement) return null;
+  if (!isOpen) {
+    return (
+      <PDFViewerDialog
+        open={pdfDialog.open}
+        onOpenChange={(open) => setPdfDialog((prev) => ({ ...prev, open }))}
+        pdfUrl={pdfDialog.url}
+        title={pdfDialog.title}
+        downloadFileName={`${pdfDialog.title}.pdf`}
+      />
+    );
+  }
 
   const attachmentCount = currentAnnouncement.attachments?.length || 0;
   const firstImageAttachment = currentAnnouncement.attachments?.find(a => isImageUrl(a.url));
   const heroImage = firstImageAttachment?.url ?? currentAnnouncement.image;
   const nonHeroAttachments = currentAnnouncement.attachments?.filter(a => a !== firstImageAttachment) ?? [];
-  const footerLift = typeof snap === "number" && snap < 1 ? `${(1 - snap) * 100}dvh` : "0px";
 
   return (
-    <DrawerPrimitive.Root
-      open={isOpen}
-      onOpenChange={onOpenChange}
-      snapPoints={SNAP_POINTS as unknown as (number | string)[]}
-      activeSnapPoint={snap}
-      setActiveSnapPoint={setSnap}
-    >
-      <DrawerPrimitive.Portal>
-        <DrawerPrimitive.Overlay className="fixed inset-0 z-50 bg-black/50" />
-        <DrawerPrimitive.Content
-          className={cn(
-            "fixed inset-x-0 bottom-0 z-50 flex flex-col rounded-t-[24px] border-t shadow-2xl outline-none pb-[var(--safe-bottom)]",
-            snap === 1
-              ? "h-[100dvh] rounded-none pt-[env(safe-area-inset-top)] bg-card"
-              : "h-[100dvh] max-h-[calc(100dvh-var(--safe-top))] bg-background"
-          )}
-          style={{ left: 0, right: 0 }}
-        >
-          <DrawerPrimitive.Title className="sr-only">
-            {currentAnnouncement.title}
-          </DrawerPrimitive.Title>
-          <DrawerPrimitive.Description className="sr-only">
-            Announcement details
-          </DrawerPrimitive.Description>
-          {/* Drag Handle */}
-          <div className="mx-auto mt-3 h-1.5 w-14 rounded-full bg-muted-foreground/30 flex-shrink-0" />
-
+    <>
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-label={currentAnnouncement.title}
+        className="fixed inset-0 z-[100] flex flex-col bg-background pt-[env(safe-area-inset-top)] pb-[var(--safe-bottom)] animate-in fade-in slide-in-from-right-2 duration-200"
+      >
           {/* Header Bar */}
-          <div className="flex items-center justify-between px-5 py-3 border-b border-border/50">
-            <div className="flex items-center gap-2">
+          <div className="flex items-center justify-between px-3 py-3 border-b border-border/50">
+            <div className="flex items-center gap-2 min-w-0">
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-9 w-9 rounded-lg flex-shrink-0"
+                onClick={() => onOpenChange(false)}
+                aria-label="Back"
+              >
+                <ChevronLeft className="h-5 w-5" />
+              </Button>
               <Badge className={cn("text-xs font-semibold px-3 py-1", getCategoryColor(currentAnnouncement.category))}>
                 {currentAnnouncement.category}
               </Badge>
@@ -307,7 +304,7 @@ export function AnnouncementDrawer({
                 </Badge>
               ) : null}
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 flex-shrink-0">
               {onSeeAll && (
                 <Button
                   variant="ghost"
@@ -315,18 +312,10 @@ export function AnnouncementDrawer({
                   className="text-xs text-primary hover:bg-primary/10 rounded-full px-3 gap-1"
                   onClick={handleSeeAll}
                 >
-                  <List className="h-3.5 w-3.5" />
-                  See All
+                  <Inbox className="h-3.5 w-3.5" />
+                  Inbox
                 </Button>
               )}
-              <Button
-                variant="outline"
-                size="icon"
-                className="h-9 w-9 rounded-lg mr-1"
-                onClick={() => onOpenChange(false)}
-              >
-                <X className="h-4 w-4" />
-              </Button>
             </div>
           </div>
 
@@ -493,8 +482,7 @@ export function AnnouncementDrawer({
 
           {/* Navigation Footer */}
           <div
-            className="absolute left-0 right-0 bg-background/98 backdrop-blur-md border-t border-border/50 px-5 py-4 pb-[calc(2.5rem+var(--safe-bottom))]"
-            style={{ bottom: footerLift }}
+            className="absolute left-0 right-0 bottom-0 bg-background/98 backdrop-blur-md border-t border-border/50 px-5 py-4 pb-[calc(1rem+var(--safe-bottom))]"
           >
             <div className="flex items-center justify-between gap-4">
               <Button
@@ -535,8 +523,7 @@ export function AnnouncementDrawer({
               </Button>
             </div>
           </div>
-        </DrawerPrimitive.Content>
-      </DrawerPrimitive.Portal>
+      </div>
       <PDFViewerDialog
         open={pdfDialog.open}
         onOpenChange={(open) => setPdfDialog((prev) => ({ ...prev, open }))}
@@ -544,6 +531,6 @@ export function AnnouncementDrawer({
         title={pdfDialog.title}
         downloadFileName={`${pdfDialog.title}.pdf`}
       />
-    </DrawerPrimitive.Root>
+    </>
   );
 }
