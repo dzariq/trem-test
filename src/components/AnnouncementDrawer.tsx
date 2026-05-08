@@ -53,9 +53,9 @@ interface AnnouncementDrawerProps {
   onAnnouncementUpdated?: (id: AnnouncementId, updates: Partial<Announcement>) => void;
 }
 
-// Snap points: 95% screen height, 100% full screen
-const SNAP_POINTS = [0.75, 0.95, 1] as const;
-const DEFAULT_SNAP = 0.75;
+// Snap points: default opens taller so the Prev/Next footer is visible without dragging
+const SNAP_POINTS = [0.85, 0.95, 1] as const;
+const DEFAULT_SNAP = 0.85;
 
 export function AnnouncementDrawer({
   announcements,
