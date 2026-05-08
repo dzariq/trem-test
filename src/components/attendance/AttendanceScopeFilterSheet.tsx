@@ -114,10 +114,15 @@ export function AttendanceScopeFilterSheet({
       open={open}
       onOpenChange={handleOpenChange}
       title={
-        <>
-          <Filter className="h-4 w-4" />
-          Attendance Scope
-        </>
+        <div className="flex items-center justify-between gap-3 w-full">
+          <span className="flex items-center gap-2">
+            <Filter className="h-4 w-4" />
+            Attendance Scope
+          </span>
+          <Button size="sm" className="h-8 px-4" onClick={handleApply}>
+            Apply
+          </Button>
+        </div>
       }
       description="Filter attendance data by scope"
       snapPoints={[0, 0.65, 1]}
@@ -247,18 +252,11 @@ export function AttendanceScopeFilterSheet({
           </div>
         )}
 
-        {/* Actions */}
-        <div className="flex gap-3 pt-2">
-          <Button
-            variant="outline"
-            className="flex-1"
-            onClick={handleReset}
-          >
+        {/* Reset action */}
+        <div className="pt-2">
+          <Button variant="outline" className="w-full" onClick={handleReset}>
             <RotateCcw className="h-4 w-4 mr-2" />
             Reset
-          </Button>
-          <Button className="flex-1" onClick={handleApply}>
-            Apply
           </Button>
         </div>
       </div>
