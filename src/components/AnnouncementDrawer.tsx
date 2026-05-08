@@ -353,10 +353,35 @@ export function AnnouncementDrawer({
                     {currentAnnouncement.title}
                   </h2>
 
-                  {/* Date Pill */}
-                  <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-muted/60 text-muted-foreground text-sm mb-5">
-                    <Calendar className="h-3.5 w-3.5" />
-                    {formatDate(currentAnnouncement.date)}
+                  {/* Date Pill + Attachment Quick Links */}
+                  <div className="flex flex-wrap items-center gap-2 mb-5">
+                    <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-muted/60 text-muted-foreground text-sm">
+                      <Calendar className="h-3.5 w-3.5" />
+                      {formatDate(currentAnnouncement.date)}
+                    </div>
+                    {(currentAnnouncement.attachments ?? []).map((attachment, idx) => {
+                      const isImg = isImageUrl(attachment.url);
+                      const { icon: Icon, color, bg } = getFileIcon(attachment.name);
+                      return (
+                        <a
+                          key={`quick-${idx}`}
+                          href={attachment.url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className={cn(
+                            "inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-border/60 bg-card hover:border-primary/40 hover:bg-primary/5 transition-colors text-xs font-medium text-foreground max-w-[180px]"
+                          )}
+                          title={attachment.name}
+                        >
+                          <span className={cn("p-1 rounded-md", bg)}>
+                            <Icon className={cn("h-3 w-3", color)} />
+                          </span>
+                          <span className="truncate">
+                            {isImg ? "View image" : attachment.name}
+                          </span>
+                        </a>
+                      );
+                    })}
                   </div>
 
                   {/* Acknowledge Button */}
