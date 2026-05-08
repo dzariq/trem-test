@@ -148,7 +148,7 @@ export function useTeacherScope() {
               class_name: row.class_name,
               year_level: row.year_level,
               active: row.active,
-              campus_code: (row as any).campus_code ?? null,
+              campus_code: row.campus_code ?? null,
             });
           }
         });
