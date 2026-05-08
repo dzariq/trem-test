@@ -1245,7 +1245,7 @@ export default function TeacherAttendancePage() {
                     <div style={{ fontSize: '14px', fontWeight: '700', color: '#374151' }}>
                       {format(weeklyAbsentData.weekStart, "MMM d")} - {format(weeklyAbsentData.weekEnd, "MMM d, yyyy")}
                     </div>
-                    <div style={{ fontSize: '11px', color: '#6b7280' }}>Class {stripCampusPrefix(selectedClass)}</div>
+                    <div style={{ fontSize: '11px', color: '#6b7280' }}>{scopeFilter.filterLabel}</div>
                   </div>
                   <img src={cambridgeLogo} alt="Cambridge Assessment" style={{ height: '40px', objectFit: 'contain' }} />
                 </div>
@@ -1504,7 +1504,7 @@ export default function TeacherAttendancePage() {
                   <img src={collinzLogo} alt="Collinz School" style={{ height: '45px', objectFit: 'contain' }} />
                   <div style={{ textAlign: 'center' }}>
                     <div style={{ fontSize: '10px', fontWeight: '600', color: '#065f46', letterSpacing: '0.5px', textTransform: 'uppercase' }}>Attendance Concerns Report</div>
-                    <div style={{ fontSize: '14px', fontWeight: '700', color: '#374151' }}>Class {stripCampusPrefix(selectedClass)}</div>
+                    <div style={{ fontSize: '14px', fontWeight: '700', color: '#374151' }}>{scopeFilter.filterLabel}</div>
                     <div style={{ fontSize: '11px', color: '#6b7280' }}>
                       {format(frequentReportStartDate, "MMM d, yyyy")} - {format(frequentReportEndDate, "MMM d, yyyy")}
                     </div>
