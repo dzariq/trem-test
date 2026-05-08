@@ -83,25 +83,34 @@ export default function TeacherAttendancePage() {
     save,
   } = useTeacherAttendance();
 
-  // Dates that already have attendance records for the selected class
-  const [markedDates, setMarkedDates] = useState<Set<string>>(new Set());
+  // Dates with attendance records for the selected class, split by indicator color
+  const [presentDates, setPresentDates] = useState<Set<string>>(new Set());
+  const [absentDates, setAbsentDates] = useState<Set<string>>(new Set());
   useEffect(() => {
     if (!selectedClass) {
-      setMarkedDates(new Set());
+      setPresentDates(new Set());
+      setAbsentDates(new Set());
       return;
     }
     let mounted = true;
     (async () => {
       const { data, error } = await supabase
         .from("attendance")
-        .select("date")
+        .select("date,status")
         .eq("class", selectedClass);
       if (!mounted) return;
       if (error) {
         console.error("[TeacherAttendancePage] markedDates fetch failed", error);
         return;
       }
-      setMarkedDates(new Set((data ?? []).map((r: any) => r.date)));
+      const green = new Set<string>();
+      const red = new Set<string>();
+      (data ?? []).forEach((r: any) => {
+        if (r.status === "present" || r.status === "late") green.add(r.date);
+        if (r.status === "absent" || r.status === "excused") red.add(r.date);
+      });
+      setPresentDates(green);
+      setAbsentDates(red);
     })();
     return () => {
       mounted = false;
@@ -441,11 +450,26 @@ export default function TeacherAttendancePage() {
                   initialFocus
                   className="w-full"
                   modifiers={{
-                    taken: (date) => markedDates.has(format(date, "yyyy-MM-dd")),
+                    presentOnly: (date) => {
+                      const k = format(date, "yyyy-MM-dd");
+                      return presentDates.has(k) && !absentDates.has(k);
+                    },
+                    absentOnly: (date) => {
+                      const k = format(date, "yyyy-MM-dd");
+                      return absentDates.has(k) && !presentDates.has(k);
+                    },
+                    bothMarks: (date) => {
+                      const k = format(date, "yyyy-MM-dd");
+                      return presentDates.has(k) && absentDates.has(k);
+                    },
                   }}
                   modifiersClassNames={{
-                    taken:
+                    presentOnly:
                       "after:content-[''] after:absolute after:bottom-1 after:left-1/2 after:-translate-x-1/2 after:h-1.5 after:w-1.5 after:rounded-full after:bg-emerald-500 aria-selected:after:bg-white",
+                    absentOnly:
+                      "after:content-[''] after:absolute after:bottom-1 after:left-1/2 after:-translate-x-1/2 after:h-1.5 after:w-1.5 after:rounded-full after:bg-red-500 aria-selected:after:bg-white",
+                    bothMarks:
+                      "after:content-[''] after:absolute after:bottom-1 after:left-[calc(50%-4px)] after:-translate-x-1/2 after:h-1.5 after:w-1.5 after:rounded-full after:bg-emerald-500 after:shadow-[8px_0_0_0_hsl(0,84%,60%)]",
                   }}
                 />
               </PopoverContent>
