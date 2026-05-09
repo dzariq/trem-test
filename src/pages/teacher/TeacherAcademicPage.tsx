@@ -1941,7 +1941,7 @@ export default function TeacherAcademicPage() {
                     </div>
 
                     {/* Class Study Recommendation - Master Field */}
-                    <Card className="border-amber-300 bg-amber-50/50 dark:bg-amber-950/20">
+                    <Card className="border-border bg-card">
                       <CardContent className="p-3">
                         <div className="flex items-center gap-2 mb-2">
                           <div className="w-6 h-6 rounded-full bg-amber-100 dark:bg-amber-900/50 flex items-center justify-center flex-shrink-0">
@@ -1965,7 +1965,7 @@ export default function TeacherAcademicPage() {
                       }} 
                       disabled={!gradeEntry.selectedPeriod?.is_open_for_grading}
                       className={cn(
-                        "min-h-[60px] text-sm resize-none border-amber-200 bg-background",
+                        "min-h-[60px] text-sm resize-none border-border bg-background",
                         !gradeEntry.selectedPeriod?.is_open_for_grading && "opacity-60 cursor-not-allowed"
                       )}
                     />
