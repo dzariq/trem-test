@@ -2030,7 +2030,7 @@ export default function TeacherAcademicPage() {
                                         </span>
                                       </div>
                                       <div className="min-w-0 flex-1">
-                                        <p className="text-sm font-semibold text-foreground truncate">{student.name}</p>
+                                        <p className={cn("font-semibold text-foreground truncate", isExpanded ? "text-lg" : "text-sm")}>{student.name}</p>
                                         {hasData && !isExpanded && (
                                           <div className="flex items-center gap-2 mt-0.5">
                                             <span className="text-xs text-muted-foreground">Total: {total}</span>
