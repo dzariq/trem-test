@@ -125,7 +125,7 @@ export function AnnouncementsListDrawer({ isOpen, onOpenChange }: AnnouncementsL
       case "academic":
         return "bg-violet-200 text-violet-900 hover:bg-violet-200";
       case "general":
-        return "bg-amber-200 text-amber-900 hover:bg-amber-200";
+        return "bg-white text-foreground border border-border hover:bg-white";
       default:
         return "bg-muted text-muted-foreground";
     }

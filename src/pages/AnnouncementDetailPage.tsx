@@ -133,7 +133,7 @@ export default function AnnouncementDetailPage() {
       case "academic":
         return "bg-amber-500 text-white";
       case "general":
-        return "bg-primary text-primary-foreground";
+        return "bg-white text-foreground border border-border hover:bg-white";
       default:
         return "bg-muted text-muted-foreground";
     }

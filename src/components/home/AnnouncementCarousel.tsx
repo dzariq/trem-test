@@ -71,7 +71,7 @@ export function AnnouncementCarousel({
 
   const getCategoryBadgeClass = (category: string) => {
     const c = (category ?? "").toLowerCase();
-    if (c === "general") return "bg-amber-200 text-amber-900 border-transparent hover:bg-amber-200";
+    if (c === "general") return "bg-white text-foreground border border-border hover:bg-white";
     if (c === "event") return "bg-sky-200 text-sky-900 border-transparent hover:bg-sky-200";
     if (c === "academic") return "bg-violet-200 text-violet-900 border-transparent hover:bg-violet-200";
     return "bg-muted text-muted-foreground border-transparent";
