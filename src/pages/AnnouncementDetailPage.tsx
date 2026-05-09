@@ -13,17 +13,13 @@ import {
   Eye,
   ShieldCheck
 } from "lucide-react";
-import { PDFViewerDialog } from "@/components/PDFViewerDialog";
-import { getAnnouncementAttachments, getAnnouncementById, markAnnouncementRead, acknowledgeAnnouncement, type Announcement, type AnnouncementAttachment } from "@/data/announcements";
+import { getAnnouncementById, markAnnouncementRead, acknowledgeAnnouncement, type Announcement, type AnnouncementAttachment } from "@/data/announcements";
+import { AnnouncementHtmlContent } from "@/components/announcements/AnnouncementHtmlContent";
+import { AnnouncementPdfBanner, isPdfAttachment } from "@/components/announcements/AnnouncementPdfBanner";
 
 export default function AnnouncementDetailPage() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const [pdfDialog, setPdfDialog] = useState<{ open: boolean; url: string; title: string }>({
-    open: false,
-    url: "",
-    title: ""
-  });
   const [announcement, setAnnouncement] = useState<Announcement | null>(null);
   const [attachments, setAttachments] = useState<AnnouncementAttachment[]>([]);
   const [loading, setLoading] = useState(true);
@@ -141,13 +137,10 @@ export default function AnnouncementDetailPage() {
     }
   };
 
-  const handleViewPdf = (attachment: { name: string; url: string }) => {
-    setPdfDialog({
-      open: true,
-      url: attachment.url,
-      title: attachment.name.replace(".pdf", "")
-    });
-  };
+  const coverUrl = announcement.image;
+  const otherAttachments = attachments.filter(
+    (a) => !isPdfAttachment(a) && a.url !== coverUrl,
+  );
 
   return (
     <AppLayout>
@@ -163,30 +156,11 @@ export default function AnnouncementDetailPage() {
       />
 
       <section className="pb-6">
-        {/* Hero Image */}
-        <div className="relative h-56 overflow-hidden">
-          {announcement.image ? (
-            <img 
-              src={announcement.image} 
-              alt={announcement.title}
-              className="w-full h-full object-cover"
-            />
-          ) : (
-            <div className="w-full h-full bg-gradient-to-br from-primary/30 via-primary/20 to-secondary/30 flex items-center justify-center">
-              <div className="absolute inset-0 opacity-20">
-                <div className="absolute top-4 left-8 w-16 h-16 rounded-full bg-primary/30" />
-                <div className="absolute top-12 right-12 w-24 h-24 rounded-full bg-secondary/30" />
-                <div className="absolute bottom-8 left-1/4 w-12 h-12 rounded-full bg-primary/20" />
-              </div>
-              <Megaphone className="h-20 w-20 text-primary/50" />
-            </div>
-          )}
-          {/* Gradient overlay */}
-          <div className="absolute inset-0 bg-gradient-to-t from-background via-background/50 to-transparent" />
-        </div>
+        {/* PDF Banner */}
+        <AnnouncementPdfBanner attachments={attachments} />
 
         {/* Content */}
-        <div className="px-4 -mt-8 relative z-10">
+        <div className="px-4 pt-4 relative z-10">
           {/* Category and Date */}
           <div className="flex items-center gap-2 mb-3">
             <Badge className={getCategoryColor(announcement.category)}>
@@ -202,6 +176,60 @@ export default function AnnouncementDetailPage() {
           <h1 className="text-2xl font-bold text-foreground mb-4">
             {announcement.title}
           </h1>
+
+          {/* Cover Image */}
+          {coverUrl && (
+            <div className="rounded-xl overflow-hidden mb-5">
+              <img
+                src={coverUrl}
+                alt={announcement.title}
+                className="w-full h-56 object-cover"
+              />
+            </div>
+          )}
+
+          {/* Rich HTML Body */}
+          <Card className="bg-card border-border mb-6">
+            <CardContent className="p-4">
+              <AnnouncementHtmlContent
+                html={announcement.content}
+                coverUrl={coverUrl}
+              />
+            </CardContent>
+          </Card>
+
+          {/* Other (non-PDF, non-cover) attachments */}
+          {otherAttachments.length > 0 && (
+            <Card className="bg-card border-border mb-6">
+              <CardContent className="p-4">
+                <h3 className="font-semibold text-foreground flex items-center gap-2 mb-3">
+                  <FileText className="h-5 w-5 text-primary" />
+                  Attachments ({otherAttachments.length})
+                </h3>
+                <div className="space-y-2">
+                  {otherAttachments.map((attachment, index) => (
+                    <a
+                      key={index}
+                      href={attachment.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center justify-between p-3 bg-background rounded-lg border border-border hover:border-primary/40 transition-colors"
+                    >
+                      <div className="flex items-center gap-3 min-w-0">
+                        <div className="p-2 bg-primary/10 rounded-lg flex-shrink-0">
+                          <FileText className="h-5 w-5 text-primary" />
+                        </div>
+                        <p className="font-medium text-foreground text-sm truncate">
+                          {attachment.name}
+                        </p>
+                      </div>
+                      <Eye className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                    </a>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          )}
 
           {/* Acknowledge Button */}
           {announcement.requires_acknowledgement && (
@@ -237,77 +265,8 @@ export default function AnnouncementDetailPage() {
               )}
             </div>
           )}
-
-          {/* PDF Attachments - Prominent Section */}
-          {attachments.length > 0 && (
-            <Card className="bg-primary/5 border-primary/20 mb-6">
-              <CardContent className="p-4">
-                <h3 className="font-semibold text-foreground flex items-center gap-2 mb-3">
-                  <FileText className="h-5 w-5 text-primary" />
-                  Attachments ({attachments.length})
-                </h3>
-                <div className="space-y-2">
-                  {attachments.map((attachment, index) => (
-                    <div 
-                      key={index}
-                      className="flex items-center justify-between p-3 bg-background rounded-lg border border-border"
-                    >
-                      <div className="flex items-center gap-3">
-                        <div className="p-2 bg-destructive/10 rounded-lg">
-                          <FileText className="h-5 w-5 text-destructive" />
-                        </div>
-                        <div>
-                          <p className="font-medium text-foreground text-sm">
-                            {attachment.name}
-                          </p>
-                          <p className="text-xs text-muted-foreground">PDF Document</p>
-                        </div>
-                      </div>
-                      <Button 
-                        variant="outline" 
-                        size="sm"
-                        onClick={() => handleViewPdf(attachment)}
-                        className="gap-1.5"
-                      >
-                        <Eye className="h-4 w-4" />
-                        View
-                      </Button>
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-          )}
-
-          {/* Full Content */}
-          <Card className="bg-card border-border">
-            <CardContent className="p-4">
-              <div className="prose prose-sm max-w-none text-foreground">
-                {announcement.content.split('\n\n').map((paragraph, index) => (
-                  <p key={index} className="mb-4 text-foreground whitespace-pre-line">
-                    {paragraph.split('**').map((text, i) => 
-                      i % 2 === 1 ? (
-                        <strong key={i} className="font-semibold">{text}</strong>
-                      ) : (
-                        <span key={i}>{text}</span>
-                      )
-                    )}
-                  </p>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
         </div>
       </section>
-
-      {/* PDF Viewer Dialog */}
-      <PDFViewerDialog
-        open={pdfDialog.open}
-        onOpenChange={(open) => setPdfDialog(prev => ({ ...prev, open }))}
-        pdfUrl={pdfDialog.url}
-        title={pdfDialog.title}
-        downloadFileName={`${pdfDialog.title}.pdf`}
-      />
     </AppLayout>
   );
 }
