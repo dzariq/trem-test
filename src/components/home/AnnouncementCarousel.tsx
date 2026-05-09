@@ -3,6 +3,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Check, ChevronRight, Megaphone, ShieldCheck } from "lucide-react";
+import { cn } from "@/lib/utils";
 import {
   Carousel,
   CarouselContent,
@@ -66,6 +67,12 @@ export function AnnouncementCarousel({
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
     return date.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+  };
+
+  const getCategoryBadgeClass = (category: string) => {
+    const c = (category ?? "").toLowerCase();
+    if (c === "general") return "bg-amber-800 text-amber-50 border-transparent hover:bg-amber-800";
+    return "";
   };
 
   const mainAnnouncement = resolvedAnnouncements[0];
@@ -138,11 +145,9 @@ export function AnnouncementCarousel({
                 <Megaphone className="h-16 w-16 text-primary/50" />
               </div>
             )}
-            {/* Overlay gradient */}
-            <div className="absolute inset-0 bg-gradient-to-t from-card via-card/60 to-transparent" />
             {/* Featured Badge & Read Status */}
             <div className="absolute top-3 left-3 right-3 flex items-center justify-between">
-              <Badge className="bg-primary text-primary-foreground text-xs">
+              <Badge className="bg-yellow-400 text-yellow-950 hover:bg-yellow-400 text-xs">
                 Featured
               </Badge>
               {isAcknowledged(mainAnnouncement) ? (
@@ -156,14 +161,14 @@ export function AnnouncementCarousel({
                   Read
                 </Badge>
               ) : (
-                <Badge variant="destructive" className="text-xs backdrop-blur-sm">
+                <Badge className="bg-yellow-400 text-yellow-950 hover:bg-yellow-400 text-xs backdrop-blur-sm">
                   New
                 </Badge>
               )}
             </div>
             {/* Category and Date */}
             <div className="absolute bottom-3 left-4 flex items-center gap-2">
-                <Badge variant="secondary" className="text-xs">
+                <Badge variant="secondary" className={cn("text-xs", getCategoryBadgeClass(mainAnnouncement.category))}>
                   {mainAnnouncement.category}
                 </Badge>
                 {!isRead(mainAnnouncement) && !isAcknowledged(mainAnnouncement) && (
@@ -226,9 +231,8 @@ export function AnnouncementCarousel({
                           <Megaphone className="h-8 w-8 text-primary/40" />
                         </div>
                       )}
-                      <div className="absolute inset-0 bg-gradient-to-t from-card via-card/50 to-transparent" />
                       <div className="absolute bottom-2 left-3 right-3 flex items-center justify-between">
-                        <Badge variant="secondary" className="text-[10px]">
+                        <Badge variant="secondary" className={cn("text-[10px]", getCategoryBadgeClass(announcement.category))}>
                           {announcement.category}
                         </Badge>
                         {isAcknowledged(announcement) ? (
@@ -242,7 +246,7 @@ export function AnnouncementCarousel({
                             Read
                           </Badge>
                         ) : (
-                          <Badge variant="destructive" className="text-[10px] px-1.5">
+                          <Badge className="bg-yellow-400 text-yellow-950 hover:bg-yellow-400 text-[10px] px-1.5">
                             New
                           </Badge>
                         )}
