@@ -346,17 +346,21 @@ export function AnnouncementDrawer({
                   slideDirection === "right" && "opacity-0 translate-x-4"
                 )}
               >
-                {/* PDF Banner */}
-                <AnnouncementPdfBanner attachments={allAttachments as any} />
-
                 {/* Image Header */}
                 <div className="relative h-52 overflow-hidden">
                   {heroImage ? (
-                    <img
-                      src={heroImage}
-                      alt={currentAnnouncement.title}
-                      className="w-full h-full object-cover"
-                    />
+                    <button
+                      type="button"
+                      className="h-full w-full"
+                      onClick={() => setImagePreviewOpen(true)}
+                      aria-label="Preview cover image"
+                    >
+                      <img
+                        src={heroImage}
+                        alt={currentAnnouncement.title}
+                        className="w-full h-full object-cover"
+                      />
+                    </button>
                   ) : (
                     <div className="w-full h-full bg-gradient-to-br from-primary/20 via-primary/10 to-secondary/20 flex items-center justify-center">
                       <div className="absolute inset-0 opacity-30">
@@ -412,6 +416,9 @@ export function AnnouncementDrawer({
                       );
                     })}
                   </div>
+
+                  {/* PDF Banner */}
+                  <AnnouncementPdfBanner attachments={allAttachments as any} className="mb-5" />
 
                   {/* Acknowledge Button */}
                   {currentAnnouncement.requires_acknowledgement && (
