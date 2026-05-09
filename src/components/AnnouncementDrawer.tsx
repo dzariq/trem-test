@@ -347,6 +347,22 @@ export function AnnouncementDrawer({
                 )}
               >
                 {/* Content */}
+                {/* Cover Image (landscape hero) */}
+                {heroImage && (
+                  <button
+                    type="button"
+                    className="block w-full"
+                    onClick={() => setImagePreviewOpen(true)}
+                    aria-label="Preview cover image"
+                  >
+                    <img
+                      src={heroImage}
+                      alt={currentAnnouncement.title}
+                      className="w-full aspect-[16/9] object-cover"
+                    />
+                  </button>
+                )}
+
                 <div className="px-5 pt-4 relative">
                   {/* Title */}
                   <h2 className="text-2xl font-bold text-foreground mb-3 leading-tight">
@@ -392,24 +408,6 @@ export function AnnouncementDrawer({
 
                   {/* PDF Banner */}
                   <AnnouncementPdfBanner attachments={allAttachments} className="mb-5" />
-
-                  {/* Cover Image */}
-                  {heroImage && (
-                    <div className="mb-5 overflow-hidden rounded-xl">
-                      <button
-                        type="button"
-                        className="w-full"
-                        onClick={() => setImagePreviewOpen(true)}
-                        aria-label="Preview cover image"
-                      >
-                        <img
-                          src={heroImage}
-                          alt={currentAnnouncement.title}
-                          className="w-full h-auto object-contain"
-                        />
-                      </button>
-                    </div>
-                  )}
 
                   {/* Acknowledge Button */}
                   {currentAnnouncement.requires_acknowledgement && (
