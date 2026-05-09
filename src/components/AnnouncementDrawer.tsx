@@ -548,6 +548,12 @@ export function AnnouncementDrawer({
         title={pdfDialog.title}
         downloadFileName={`${pdfDialog.title}.pdf`}
       />
+      <ImagePreviewDialog
+        open={imagePreviewOpen}
+        onOpenChange={setImagePreviewOpen}
+        src={heroImage}
+        alt={currentAnnouncement.title}
+      />
     </>
   );
 }
