@@ -26,9 +26,14 @@ export function ImagePreviewDialog({ open, onOpenChange, src, alt }: ImagePrevie
       role="dialog"
       aria-modal="true"
       aria-label={alt}
-      className="fixed inset-0 z-[100] flex flex-col bg-foreground/90 pt-[calc(0.75rem+var(--safe-top))] pb-[calc(0.75rem+var(--safe-bottom))] px-3 animate-in fade-in duration-150"
+      className="fixed inset-0 z-[100] bg-black animate-in fade-in duration-150"
+      onClick={() => onOpenChange(false)}
     >
-      <div className="flex items-center justify-end gap-2 pb-3">
+      <div
+        className="absolute right-3 z-10 flex items-center gap-2"
+        style={{ top: "calc(0.75rem + var(--safe-top))" }}
+        onClick={(e) => e.stopPropagation()}
+      >
         <Button
           type="button"
           variant="secondary"
@@ -50,18 +55,14 @@ export function ImagePreviewDialog({ open, onOpenChange, src, alt }: ImagePrevie
           <X className="h-5 w-5" />
         </Button>
       </div>
-      <button
-        type="button"
-        className="flex-1 min-h-0"
-        onClick={() => onOpenChange(false)}
-        aria-label="Close image preview"
-      >
+      <div className="absolute inset-0 flex items-center justify-center p-4">
         <img
           src={src}
           alt={alt}
-          className="h-full w-full object-contain"
+          className="max-h-full max-w-full object-contain"
+          onClick={(e) => e.stopPropagation()}
         />
-      </button>
+      </div>
     </div>
   );
 }
