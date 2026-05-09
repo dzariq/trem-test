@@ -307,7 +307,7 @@ export function AnnouncementDrawer({
                   onClick={handleSeeAll}
                 >
                   <Inbox className="h-3.5 w-3.5" />
-                  Inbox
+                  See All
                 </Button>
               )}
             </div>
