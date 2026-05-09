@@ -4,7 +4,7 @@ import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Calendar, Check, ChevronLeft, ChevronRight, Download, FileText, Megaphone, Inbox, ShieldCheck } from "lucide-react";
-import { markAnnouncementRead, acknowledgeAnnouncement } from "@/data/announcements";
+import { markAnnouncementRead, acknowledgeAnnouncement, type AnnouncementAttachment } from "@/data/announcements";
 import { PDFViewerDialog } from "@/components/PDFViewerDialog";
 import { AnnouncementHtmlContent } from "@/components/announcements/AnnouncementHtmlContent";
 import { AnnouncementPdfBanner, isPdfAttachment } from "@/components/announcements/AnnouncementPdfBanner";
@@ -40,7 +40,7 @@ interface Announcement {
   date: string;
   category: string;
   image: string | null;
-  attachments?: { name: string; url: string; file_type?: string; is_primary?: boolean }[];
+  attachments?: AnnouncementAttachment[];
   is_read?: boolean;
   requires_acknowledgement?: boolean;
   is_acknowledged?: boolean;
@@ -263,7 +263,7 @@ export function AnnouncementDrawer({
   const heroImage = firstImageAttachment?.url ?? currentAnnouncement.image;
   // Quick-link chips: exclude PDFs (shown in banner) and cover image
   const quickLinkAttachments = allAttachments.filter(
-    a => !isPdfAttachment(a as any) && a.url !== heroImage,
+    a => !isPdfAttachment(a) && a.url !== heroImage,
   );
   // Other attachments below body: same exclusion
   const nonHeroAttachments = quickLinkAttachments;
