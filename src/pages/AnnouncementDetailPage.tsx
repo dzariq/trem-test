@@ -191,7 +191,7 @@ export default function AnnouncementDetailPage() {
                 <img
                   src={coverUrl}
                   alt={announcement.title}
-                  className="w-full h-56 object-cover"
+                  className="w-full h-auto object-contain"
                 />
               </button>
             </div>
