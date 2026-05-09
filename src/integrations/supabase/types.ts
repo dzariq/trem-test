@@ -1241,7 +1241,15 @@ export type Database = {
           visible_departments?: string[] | null
           visible_user_ids?: string[] | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "calendar_events_backup_event_category_fkey"
+            columns: ["event_category"]
+            isOneToOne: false
+            referencedRelation: "event_categories"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       calendar_events_old: {
         Row: {
