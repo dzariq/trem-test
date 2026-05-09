@@ -158,6 +158,22 @@ export default function AnnouncementDetailPage() {
       />
 
       <section className="pb-6">
+        {/* Cover Image (landscape hero) */}
+        {coverUrl && (
+          <button
+            type="button"
+            className="block w-full"
+            onClick={() => setImagePreviewOpen(true)}
+            aria-label="Preview cover image"
+          >
+            <img
+              src={coverUrl}
+              alt={announcement.title}
+              className="w-full aspect-[16/9] object-cover"
+            />
+          </button>
+        )}
+
         {/* Content */}
         <div className="px-4 pt-4 relative z-10">
           {/* Title */}
@@ -178,24 +194,6 @@ export default function AnnouncementDetailPage() {
 
           {/* PDF Banner */}
           <AnnouncementPdfBanner attachments={attachments} className="mb-5" />
-
-          {/* Cover Image */}
-          {coverUrl && (
-            <div className="rounded-xl overflow-hidden mb-5">
-              <button
-                type="button"
-                className="w-full"
-                onClick={() => setImagePreviewOpen(true)}
-                aria-label="Preview cover image"
-              >
-                <img
-                  src={coverUrl}
-                  alt={announcement.title}
-                  className="w-full h-auto object-contain"
-                />
-              </button>
-            </div>
-          )}
 
           {/* Rich HTML Body */}
           <Card className="bg-card border-border mb-6">
