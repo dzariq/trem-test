@@ -7,6 +7,7 @@ export type AnnouncementAttachment = {
   name: string;
   url: string;
   file_type?: string;
+  is_primary?: boolean;
 };
 
 const IMAGE_EXTENSIONS = ["png", "jpg", "jpeg", "webp", "gif", "bmp", "svg"];
@@ -19,6 +20,16 @@ const isImageType = (fileType?: string, fileName?: string): boolean => {
   }
   return false;
 };
+
+export const stripHtml = (html: string): string =>
+  (html ?? "")
+    .replace(/<[^>]*>/g, "")
+    .replace(/&nbsp;/gi, " ")
+    .replace(/&amp;/gi, "&")
+    .replace(/&lt;/gi, "<")
+    .replace(/&gt;/gi, ">")
+    .replace(/\s+/g, " ")
+    .trim();
 
 const resolveAttachmentUrl = (fileUrl: string): string => {
   if (!fileUrl) return "";
@@ -63,7 +74,7 @@ export type ListAnnouncementsParams = {
 const DEFAULT_LIMIT = 10;
 
 const buildSnippet = (content: string, fallback = "") => {
-  const base = content || fallback;
+  const base = stripHtml(content || fallback);
   return base.length > 140 ? `${base.slice(0, 140).trim()}...` : base;
 };
 
