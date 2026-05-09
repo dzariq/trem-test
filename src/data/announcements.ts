@@ -175,12 +175,14 @@ export async function listAnnouncements(
   // Group attachments by announcement_id and resolve URLs
   const attachmentsByAnnouncementId = new Map<string, AnnouncementAttachment[]>();
   const heroImageByAnnouncementId = new Map<string, string>();
+  const primaryImageByAnnouncementId = new Map<string, string>();
   (attachmentResult.data ?? []).forEach((row: any) => {
     const aid = row.announcement_id;
     const rawUrl = row.url ?? row.file_url ?? "";
     const resolvedUrl = resolveAttachmentUrl(rawUrl);
     const fileType = row.file_type ?? "";
     const fileName = row.name ?? row.file_name ?? "Attachment";
+    const isPrimary = Boolean(row.is_primary);
 
     if (!attachmentsByAnnouncementId.has(aid)) {
       attachmentsByAnnouncementId.set(aid, []);
@@ -189,16 +191,21 @@ export async function listAnnouncements(
       name: fileName,
       url: resolvedUrl,
       file_type: fileType,
+      is_primary: isPrimary,
     });
 
     // Track first image attachment as hero image
     if (!heroImageByAnnouncementId.has(aid) && resolvedUrl && isImageType(fileType, fileName)) {
       heroImageByAnnouncementId.set(aid, resolvedUrl);
     }
+    if (isPrimary && resolvedUrl && isImageType(fileType, fileName)) {
+      primaryImageByAnnouncementId.set(aid, resolvedUrl);
+    }
   });
 
   return announcementRows.map((row: any) => {
     const readStatus = readMap.get(row.id);
+    const cover = primaryImageByAnnouncementId.get(row.id) ?? heroImageByAnnouncementId.get(row.id);
     return {
       id: row.id,
       title: row.title ?? row.headline ?? "Announcement",
@@ -209,7 +216,7 @@ export async function listAnnouncements(
         buildSnippet(row.content ?? row.body ?? row.message ?? ""),
       date: row.created_at ?? row.updated_at ?? row.date ?? new Date().toISOString(),
       category: row.category ?? row.type ?? row.audience ?? "General",
-      image: heroImageByAnnouncementId.get(row.id) ?? row.image_url ?? row.image ?? row.banner_url ?? null,
+      image: cover ?? row.image_url ?? row.image ?? row.banner_url ?? null,
       attachments: attachmentsByAnnouncementId.get(row.id) ?? [],
       is_read: readStatus?.is_read ?? false,
       requires_acknowledgement: Boolean(row.requires_acknowledgement),
@@ -267,14 +274,19 @@ export async function getAnnouncementById(
   // Resolve attachments and find hero image
   const resolvedAttachments: AnnouncementAttachment[] = [];
   let heroImage: string | null = null;
+  let primaryImage: string | null = null;
   (attachResult.data ?? []).forEach((row: any) => {
     const rawUrl = row.url ?? row.file_url ?? "";
     const resolvedUrl = resolveAttachmentUrl(rawUrl);
     const fileType = row.file_type ?? "";
     const fileName = row.name ?? row.file_name ?? "Attachment";
-    resolvedAttachments.push({ name: fileName, url: resolvedUrl, file_type: fileType });
+    const isPrimary = Boolean(row.is_primary);
+    resolvedAttachments.push({ name: fileName, url: resolvedUrl, file_type: fileType, is_primary: isPrimary });
     if (!heroImage && resolvedUrl && isImageType(fileType, fileName)) {
       heroImage = resolvedUrl;
+    }
+    if (isPrimary && resolvedUrl && isImageType(fileType, fileName)) {
+      primaryImage = resolvedUrl;
     }
   });
 
@@ -288,7 +300,7 @@ export async function getAnnouncementById(
       buildSnippet(data.content ?? data.body ?? data.message ?? ""),
     date: data.created_at ?? data.updated_at ?? data.date ?? new Date().toISOString(),
     category: data.category ?? data.type ?? data.audience ?? "General",
-    image: heroImage ?? data.image_url ?? data.image ?? data.banner_url ?? null,
+    image: primaryImage ?? heroImage ?? data.image_url ?? data.image ?? data.banner_url ?? null,
     attachments: resolvedAttachments,
     is_read: Boolean(readRow?.announcement_id),
     requires_acknowledgement: Boolean(data.requires_acknowledgement),
