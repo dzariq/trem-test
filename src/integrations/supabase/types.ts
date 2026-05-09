@@ -1165,7 +1165,7 @@ export type Database = {
         }
         Relationships: []
       }
-      calendar_events_backup: {
+      calendar_events: {
         Row: {
           campus_code: string | null
           campus_id: string | null
