@@ -125,7 +125,7 @@ export function AnnouncementsListDrawer({ isOpen, onOpenChange }: AnnouncementsL
       case "academic":
         return "bg-amber-500 text-white";
       case "general":
-        return "bg-primary text-primary-foreground";
+        return "bg-amber-800 text-amber-50 hover:bg-amber-800";
       default:
         return "bg-muted text-muted-foreground";
     }
@@ -334,8 +334,6 @@ export function AnnouncementsListDrawer({ isOpen, onOpenChange }: AnnouncementsL
                             <Megaphone className="h-12 w-12 text-primary/40" />
                           </div>
                         )}
-                        {/* Overlay gradient */}
-                        <div className="absolute inset-0 bg-gradient-to-t from-card via-card/30 to-transparent" />
                         {/* Category badge & Read status */}
                         <div className="absolute top-3 left-3 right-3 flex items-center justify-between">
                           <Badge className={getCategoryColor(announcement.category)}>
@@ -352,7 +350,7 @@ export function AnnouncementsListDrawer({ isOpen, onOpenChange }: AnnouncementsL
                               Read
                             </Badge>
                           ) : (
-                            <Badge variant="destructive" className="text-xs backdrop-blur-sm">
+                            <Badge className="bg-yellow-400 text-yellow-950 hover:bg-yellow-400 text-xs backdrop-blur-sm">
                               New
                             </Badge>
                           )}
