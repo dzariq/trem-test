@@ -8,6 +8,7 @@ import { markAnnouncementRead, acknowledgeAnnouncement } from "@/data/announceme
 import { PDFViewerDialog } from "@/components/PDFViewerDialog";
 import { AnnouncementHtmlContent } from "@/components/announcements/AnnouncementHtmlContent";
 import { AnnouncementPdfBanner, isPdfAttachment } from "@/components/announcements/AnnouncementPdfBanner";
+import { ImagePreviewDialog } from "@/components/announcements/ImagePreviewDialog";
 
 type AnnouncementId = number | string;
 
@@ -73,6 +74,7 @@ export function AnnouncementDrawer({
     url: "",
     title: "",
   });
+  const [imagePreviewOpen, setImagePreviewOpen] = useState(false);
   const touchStartX = useRef<number>(0);
   const touchEndX = useRef<number>(0);
   const contentRef = useRef<HTMLDivElement>(null);
