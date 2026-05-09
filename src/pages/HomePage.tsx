@@ -6,6 +6,7 @@ import { UpcomingEvents } from "@/components/home/UpcomingEvents";
 import { QuickLinks } from "@/components/home/QuickLinks";
 import { AttendanceSummary } from "@/components/home/AttendanceSummary";
 import { WelcomeTypingAnimation } from "@/components/home/WelcomeTypingAnimation";
+import ParentWelcomeQuote from "@/components/home/ParentWelcomeQuote";
 import { StudentPillSelector } from "@/components/home/StudentPillSelector";
 import { Card, CardContent } from "@/components/ui/card";
 import schoolBadge from "@/assets/school-badge.png";
@@ -142,7 +143,7 @@ export default function HomePage() {
       
       <div className="w-full relative">
         <img src={heroBanner} alt="School banner" className="w-full h-auto" />
-        <WelcomeTypingAnimation name={greetingName} />
+        <ParentWelcomeQuote />
       </div>
       
       <QuickLinks />
