@@ -434,12 +434,12 @@ export default function CalendarPage() {
 
           <TabsContent value="calendar" className="mt-3 space-y-4">
             {/* Filter pills */}
-            <div className="flex flex-wrap gap-2 pb-2">
+            <div className="flex flex-wrap gap-1.5 pb-2">
               {/* All button */}
               <button
                 type="button"
                 className={cn(
-                  "inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium border transition-colors",
+                  "inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-medium border transition-colors",
                   isAllSelected
                     ? "bg-foreground text-background border-foreground"
                     : "bg-muted/40 text-muted-foreground border-border"
