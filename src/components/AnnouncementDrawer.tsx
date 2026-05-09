@@ -346,35 +346,8 @@ export function AnnouncementDrawer({
                   slideDirection === "right" && "opacity-0 translate-x-4"
                 )}
               >
-                {/* Image Header */}
-                <div className="relative h-52 overflow-hidden">
-                  {heroImage ? (
-                    <button
-                      type="button"
-                      className="h-full w-full"
-                      onClick={() => setImagePreviewOpen(true)}
-                      aria-label="Preview cover image"
-                    >
-                      <img
-                        src={heroImage}
-                        alt={currentAnnouncement.title}
-                        className="w-full h-full object-cover"
-                      />
-                    </button>
-                  ) : (
-                    <div className="w-full h-full bg-gradient-to-br from-primary/20 via-primary/10 to-secondary/20 flex items-center justify-center">
-                      <div className="absolute inset-0 opacity-30">
-                        <div className="absolute top-6 left-10 w-20 h-20 rounded-full bg-primary/20 blur-xl" />
-                        <div className="absolute top-16 right-16 w-28 h-28 rounded-full bg-secondary/20 blur-xl" />
-                        <div className="absolute bottom-10 left-1/3 w-16 h-16 rounded-full bg-primary/15 blur-xl" />
-                      </div>
-                      <Megaphone className="h-20 w-20 text-primary/40" />
-                    </div>
-                  )}
-                </div>
-
                 {/* Content */}
-                <div className="px-5 mt-4 relative">
+                <div className="px-5 pt-4 relative">
                   {/* Title */}
                   <h2 className="text-2xl font-bold text-foreground mb-3 leading-tight">
                     {currentAnnouncement.title}
@@ -419,6 +392,24 @@ export function AnnouncementDrawer({
 
                   {/* PDF Banner */}
                   <AnnouncementPdfBanner attachments={allAttachments} className="mb-5" />
+
+                  {/* Cover Image */}
+                  {heroImage && (
+                    <div className="mb-5 overflow-hidden rounded-xl">
+                      <button
+                        type="button"
+                        className="w-full"
+                        onClick={() => setImagePreviewOpen(true)}
+                        aria-label="Preview cover image"
+                      >
+                        <img
+                          src={heroImage}
+                          alt={currentAnnouncement.title}
+                          className="w-full h-auto object-contain"
+                        />
+                      </button>
+                    </div>
+                  )}
 
                   {/* Acknowledge Button */}
                   {currentAnnouncement.requires_acknowledgement && (
