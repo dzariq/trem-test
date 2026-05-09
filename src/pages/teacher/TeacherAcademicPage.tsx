@@ -2058,6 +2058,17 @@ export default function TeacherAcademicPage() {
                               
                               <CollapsibleContent>
                                 <CardContent className="p-3 pt-0 space-y-3">
+                                  {/* Total & Grade Display */}
+                                  <div className="flex items-center justify-between p-3 rounded-lg border border-border bg-card">
+                                    <div>
+                                      <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wide">Total Score</p>
+                                      <p className="text-2xl font-bold text-foreground">{total}<span className="text-sm text-muted-foreground">/100</span></p>
+                                    </div>
+                                    <div className={cn("w-12 h-12 rounded-full border flex items-center justify-center text-lg font-bold", letterGrade.color)}>
+                                      {letterGrade.grade}
+                                    </div>
+                                  </div>
+
                                   {/* Score Inputs - 2x2 Grid for Mobile */}
                                   <div className="grid grid-cols-2 gap-2">
                                     {gradeCategories.map(cat => (
@@ -2087,17 +2098,6 @@ export default function TeacherAcademicPage() {
                                         />
                                       </div>
                                     ))}
-                                  </div>
-
-                                  {/* Total & Grade Display */}
-                                  <div className="flex items-center justify-between p-3 rounded-lg border border-border bg-card">
-                                    <div>
-                                      <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wide">Total Score</p>
-                                      <p className="text-2xl font-bold text-foreground">{total}<span className="text-sm text-muted-foreground">/100</span></p>
-                                    </div>
-                                    <div className={cn("w-12 h-12 rounded-full border flex items-center justify-center text-lg font-bold", letterGrade.color)}>
-                                      {letterGrade.grade}
-                                    </div>
                                   </div>
 
                                   {/* Comments Section */}
