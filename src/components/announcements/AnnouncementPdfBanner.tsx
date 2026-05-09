@@ -28,11 +28,11 @@ export function AnnouncementPdfBanner({ attachments, className }: Props) {
     <>
       <div
         className={cn(
-          "px-4 py-3 bg-red-500/10 border-y border-red-500/20",
+          "rounded-xl border border-attachment-border bg-attachment/70 px-3 py-3",
           className,
         )}
       >
-        <div className="flex items-center gap-2 mb-2 text-xs font-semibold uppercase tracking-wider text-red-700 dark:text-red-400">
+        <div className="flex items-center gap-2 mb-2 text-xs font-semibold uppercase tracking-normal text-attachment-foreground">
           <FileText className="h-3.5 w-3.5" />
           PDF Attachments
         </div>
@@ -48,10 +48,10 @@ export function AnnouncementPdfBanner({ attachments, className }: Props) {
                   title: pdf.name.replace(/\.pdf$/i, ""),
                 })
               }
-              className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-card border border-red-500/30 hover:border-red-500/60 transition-colors text-xs font-medium text-foreground max-w-full"
+              className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-card border border-attachment-border hover:bg-background transition-colors text-xs font-medium text-foreground max-w-full"
               title={pdf.name}
             >
-              <FileText className="h-3.5 w-3.5 text-red-500 flex-shrink-0" />
+              <FileText className="h-3.5 w-3.5 text-attachment-foreground flex-shrink-0" />
               <span className="truncate max-w-[180px]">{pdf.name}</span>
               <Download className="h-3 w-3 text-muted-foreground flex-shrink-0" />
             </button>
