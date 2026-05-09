@@ -87,7 +87,7 @@ export function CategoryFilterPill({
           <button
             type="button"
             className={cn(
-              "inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium border transition-colors",
+              "inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-medium border transition-colors",
               pillStyle,
               isSelected ? "ring-2 ring-primary/30" : "opacity-60"
             )}
@@ -100,8 +100,8 @@ export function CategoryFilterPill({
               // If already selected, let the dropdown open
             }}
           >
-            <span className="truncate max-w-[120px]">{getDisplayLabel()}</span>
-            <ChevronDown className="h-3.5 w-3.5 shrink-0" />
+            <span className="truncate max-w-[90px]">{getDisplayLabel()}</span>
+            <ChevronDown className="h-3 w-3 shrink-0" />
           </button>
         </DropdownMenuTrigger>
         <DropdownMenuContent 
@@ -140,7 +140,7 @@ export function CategoryFilterPill({
     <button
       type="button"
       className={cn(
-        "inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium border transition-colors",
+        "inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-medium border transition-colors",
         pillStyle,
         isSelected ? "ring-2 ring-primary/30" : "opacity-60"
       )}
