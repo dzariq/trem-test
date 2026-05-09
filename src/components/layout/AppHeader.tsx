@@ -33,7 +33,7 @@ export function AppHeader({
   const location = useLocation();
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
   const { unreadCount } = useNotifications();
-  const { activeCampus, isMultiCampus } = useCampus();
+  const { activeCampus, isMultiCampus, campuses } = useCampus();
   
   const isTeacherPortal = location.pathname.startsWith("/teacher");
   const basePath = isTeacherPortal ? "/teacher" : "/parent";
@@ -52,9 +52,12 @@ export function AppHeader({
           </div>
           
           <div className="flex items-center gap-2">
-            {/* Campus badge pill for multi-campus teachers */}
-            {isTeacherPortal && isMultiCampus && activeCampus && (
-              <CampusBadge code={activeCampus} size="sm" />
+            {/* Campus badge pill — shows all assigned campuses for teachers */}
+            {isTeacherPortal && campuses.length > 0 && (
+              <CampusBadge
+                codes={campuses.map((c) => c.campus_code)}
+                size="sm"
+              />
             )}
 
             {/* Child selector dropdown for parent routes */}
