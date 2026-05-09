@@ -288,26 +288,17 @@ export function AnnouncementDrawer({
               >
                 <ChevronLeft className="h-5 w-5" />
               </Button>
-              <Badge className={cn("text-xs font-semibold px-3 py-1", getCategoryColor(currentAnnouncement.category))}>
-                {currentAnnouncement.category}
-              </Badge>
-              {attachmentCount > 0 && (
-                <Badge variant="secondary" className="text-xs gap-1">
-                  <FileText className="h-3 w-3" />
-                  {attachmentCount}
-                </Badge>
-              )}
               {isAcknowledged ? (
-                <Badge 
-                  variant="outline" 
+                <Badge
+                  variant="outline"
                   className="text-xs gap-1 text-blue-600 border-blue-600/30 bg-blue-500/10 animate-in zoom-in-50 fade-in duration-300"
                 >
                   <ShieldCheck className="h-3 w-3" />
                   Acknowledged
                 </Badge>
               ) : isRead ? (
-                <Badge 
-                  variant="outline" 
+                <Badge
+                  variant="outline"
                   className="text-xs gap-1 text-green-600 border-green-600/30 bg-green-500/10 animate-in zoom-in-50 fade-in duration-300"
                 >
                   <Check className="h-3 w-3 animate-in spin-in-180 duration-500" />
@@ -318,9 +309,9 @@ export function AnnouncementDrawer({
             <div className="flex items-center gap-2 flex-shrink-0">
               {onSeeAll && (
                 <Button
-                  variant="ghost"
+                  variant="default"
                   size="sm"
-                  className="text-xs text-primary hover:bg-primary/10 rounded-full px-3 gap-1"
+                  className="text-xs rounded-full px-4 gap-1.5 shadow-sm"
                   onClick={handleSeeAll}
                 >
                   <Inbox className="h-3.5 w-3.5" />
@@ -349,18 +340,25 @@ export function AnnouncementDrawer({
                 {/* Content */}
                 {/* Cover Image (landscape hero) */}
                 {heroImage && (
-                  <button
-                    type="button"
-                    className="block w-full"
-                    onClick={() => setImagePreviewOpen(true)}
-                    aria-label="Preview cover image"
-                  >
-                    <img
-                      src={heroImage}
-                      alt={currentAnnouncement.title}
-                      className="w-full aspect-[16/9] object-cover"
-                    />
-                  </button>
+                  <div className="relative">
+                    <button
+                      type="button"
+                      className="block w-full"
+                      onClick={() => setImagePreviewOpen(true)}
+                      aria-label="Preview cover image"
+                    >
+                      <img
+                        src={heroImage}
+                        alt={currentAnnouncement.title}
+                        className="w-full aspect-[16/9] object-cover"
+                      />
+                    </button>
+                    <div className="absolute bottom-3 left-3 z-10 pointer-events-none">
+                      <Badge className="text-xs font-semibold px-3 py-1 bg-white text-foreground border border-border hover:bg-white capitalize shadow-sm">
+                        {currentAnnouncement.category}
+                      </Badge>
+                    </div>
+                  </div>
                 )}
 
                 <div className="px-5 pt-4 relative">
@@ -369,12 +367,18 @@ export function AnnouncementDrawer({
                     {currentAnnouncement.title}
                   </h2>
 
-                  {/* Date Pill + Attachment Quick Links */}
+                  {/* Date Pill + Attachment Count + Quick Links */}
                   <div className="flex flex-wrap items-center gap-2 mb-5">
-                    <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-muted/60 text-muted-foreground text-sm">
+                    <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white border border-border text-foreground text-sm">
                       <Calendar className="h-3.5 w-3.5" />
                       {formatDate(currentAnnouncement.date)}
                     </div>
+                    {attachmentCount > 0 && (
+                      <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white border border-border text-foreground text-sm">
+                        <FileText className="h-3.5 w-3.5" />
+                        {attachmentCount}
+                      </div>
+                    )}
                     {quickLinkAttachments.map((attachment, idx) => {
                       const isImg = isImageUrl(attachment.url);
                       const isPdf = isPdfUrl(attachment.url, attachment.name);
