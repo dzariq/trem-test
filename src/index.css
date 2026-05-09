@@ -38,6 +38,10 @@ All colors MUST be HSL.
     --accent: 166 76% 96%;
     --accent-foreground: 173 80% 40%;
 
+    --attachment: 35 42% 90%;
+    --attachment-foreground: 29 46% 24%;
+    --attachment-border: 31 34% 76%;
+
     --destructive: 0 72% 50%;
     --destructive-foreground: 0 85% 97%;
 
@@ -123,6 +127,10 @@ All colors MUST be HSL.
 
     --accent: 178 84% 10%;
     --accent-foreground: 172 66% 50%;
+
+    --attachment: 31 24% 24%;
+    --attachment-foreground: 35 42% 86%;
+    --attachment-border: 31 26% 38%;
 
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 85% 97%;
