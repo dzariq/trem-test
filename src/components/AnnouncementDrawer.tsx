@@ -3,7 +3,7 @@ import { useState, useRef, useCallback, useEffect } from "react";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Calendar, Check, ChevronLeft, ChevronRight, Download, FileText, Megaphone, Inbox, ShieldCheck } from "lucide-react";
+import { Calendar, Check, ChevronLeft, ChevronRight, Download, FileText, Inbox, ShieldCheck } from "lucide-react";
 import { markAnnouncementRead, acknowledgeAnnouncement, type AnnouncementAttachment } from "@/data/announcements";
 import { PDFViewerDialog } from "@/components/PDFViewerDialog";
 import { AnnouncementHtmlContent } from "@/components/announcements/AnnouncementHtmlContent";
