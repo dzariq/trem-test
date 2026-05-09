@@ -11,11 +11,11 @@ interface Props {
 export function FeaturedAnnouncementCard({ announcement, onClick }: Props) {
   return (
     <div
-      className="relative rounded-2xl overflow-hidden cursor-pointer active:scale-[0.98] transition-transform shadow-md"
+      className="relative rounded-2xl overflow-hidden cursor-pointer active:scale-[0.98] transition-transform shadow-md bg-card border border-border"
       onClick={onClick}
     >
       {/* Hero image or gradient */}
-      <div className="relative h-48">
+      <div className="relative h-40">
         {announcement.image ? (
           <img
             src={announcement.image}
@@ -50,9 +50,9 @@ export function FeaturedAnnouncementCard({ announcement, onClick }: Props) {
         )}
       </div>
 
-      {/* Content overlay */}
-      <div className="px-4 pb-4 -mt-8 relative">
-        <h3 className="font-bold text-foreground text-xl mb-1 leading-tight">
+      {/* Content */}
+      <div className="px-4 py-4">
+        <h3 className="font-bold text-foreground text-lg mb-1 leading-tight">
           {announcement.title}
         </h3>
         <p className="text-sm text-muted-foreground line-clamp-2">
