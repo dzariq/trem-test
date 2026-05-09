@@ -27,9 +27,8 @@ export function FeaturedAnnouncementCard({ announcement, onClick }: Props) {
             <Megaphone className="h-16 w-16 text-primary/30" />
           </div>
         )}
-        <div className="absolute inset-0 bg-gradient-to-t from-card via-card/60 to-transparent" />
         <div className="absolute top-3 left-3 flex gap-2">
-          <Badge className="bg-amber-500 text-white gap-1">
+          <Badge className="bg-yellow-400 text-yellow-950 hover:bg-yellow-400 gap-1">
             <Star className="h-3 w-3" />
             Featured
           </Badge>
