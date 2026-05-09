@@ -71,9 +71,17 @@ export function AnnouncementCarousel({
 
   const getCategoryBadgeClass = (category: string) => {
     const c = (category ?? "").toLowerCase();
-    if (c === "general") return "bg-amber-800 text-amber-50 border-transparent hover:bg-amber-800";
-    return "";
+    if (c === "general") return "bg-amber-200 text-amber-900 border-transparent hover:bg-amber-200";
+    if (c === "event") return "bg-sky-200 text-sky-900 border-transparent hover:bg-sky-200";
+    if (c === "academic") return "bg-violet-200 text-violet-900 border-transparent hover:bg-violet-200";
+    return "bg-muted text-muted-foreground border-transparent";
   };
+
+  const badgeBase = "text-xs font-semibold rounded-full px-2.5 py-0.5 border-transparent";
+  const readBadgeClass = `${badgeBase} bg-green-600 text-white hover:bg-green-600 gap-1`;
+  const ackBadgeClass = `${badgeBase} bg-blue-600 text-white hover:bg-blue-600 gap-1`;
+  const newBadgeClass = `${badgeBase} bg-yellow-400 text-yellow-950 hover:bg-yellow-400`;
+  const featuredBadgeClass = `${badgeBase} bg-yellow-400 text-yellow-950 hover:bg-yellow-400`;
 
   const mainAnnouncement = resolvedAnnouncements[0];
   const otherAnnouncements = resolvedAnnouncements.slice(1, 4);
@@ -147,34 +155,34 @@ export function AnnouncementCarousel({
             )}
             {/* Featured Badge & Read Status */}
             <div className="absolute top-3 left-3 right-3 flex items-center justify-between">
-              <Badge className="bg-yellow-400 text-yellow-950 hover:bg-yellow-400 text-xs">
+              <Badge className={featuredBadgeClass}>
                 Featured
               </Badge>
               {isAcknowledged(mainAnnouncement) ? (
-                <Badge variant="outline" className="text-xs gap-1 text-blue-600 border-blue-600/30 bg-blue-500/10 backdrop-blur-sm">
+                <Badge className={ackBadgeClass}>
                   <ShieldCheck className="h-3 w-3" />
                   Acknowledged
                 </Badge>
               ) : isRead(mainAnnouncement) ? (
-                <Badge variant="outline" className="text-xs gap-1 text-green-600 border-green-600/30 bg-green-500/10 backdrop-blur-sm">
+                <Badge className={readBadgeClass}>
                   <Check className="h-3 w-3" />
                   Read
                 </Badge>
               ) : (
-                <Badge className="bg-yellow-400 text-yellow-950 hover:bg-yellow-400 text-xs backdrop-blur-sm">
+                <Badge className={newBadgeClass}>
                   New
                 </Badge>
               )}
             </div>
             {/* Category and Date */}
             <div className="absolute bottom-3 left-4 flex items-center gap-2">
-                <Badge variant="secondary" className={cn("text-xs", getCategoryBadgeClass(mainAnnouncement.category))}>
+                <Badge className={cn(badgeBase, getCategoryBadgeClass(mainAnnouncement.category))}>
                   {mainAnnouncement.category}
                 </Badge>
                 {!isRead(mainAnnouncement) && !isAcknowledged(mainAnnouncement) && (
                   <span className="h-1.5 w-1.5 rounded-full bg-primary" />
                 )}
-                <Badge variant="outline" className="text-xs bg-card/80 backdrop-blur-sm">
+                <Badge className={cn(badgeBase, "bg-white/95 text-foreground border border-border/40")}>
                   {formatDate(mainAnnouncement.date)}
                 </Badge>
               </div>
@@ -232,21 +240,21 @@ export function AnnouncementCarousel({
                         </div>
                       )}
                       <div className="absolute bottom-2 left-3 right-3 flex items-center justify-between">
-                        <Badge variant="secondary" className={cn("text-[10px]", getCategoryBadgeClass(announcement.category))}>
+                        <Badge className={cn("text-[10px] font-semibold rounded-full px-2 py-0.5 border-transparent", getCategoryBadgeClass(announcement.category))}>
                           {announcement.category}
                         </Badge>
                         {isAcknowledged(announcement) ? (
-                          <Badge variant="outline" className="text-[10px] gap-0.5 text-blue-600 border-blue-600/30 bg-blue-500/10 backdrop-blur-sm px-1.5">
+                          <Badge className="text-[10px] font-semibold rounded-full px-2 py-0.5 border-transparent bg-blue-600 text-white hover:bg-blue-600 gap-0.5">
                             <ShieldCheck className="h-2.5 w-2.5" />
                             Ack'd
                           </Badge>
                         ) : isRead(announcement) ? (
-                          <Badge variant="outline" className="text-[10px] gap-0.5 text-green-600 border-green-600/30 bg-green-500/10 backdrop-blur-sm px-1.5">
+                          <Badge className="text-[10px] font-semibold rounded-full px-2 py-0.5 border-transparent bg-green-600 text-white hover:bg-green-600 gap-0.5">
                             <Check className="h-2.5 w-2.5" />
                             Read
                           </Badge>
                         ) : (
-                          <Badge className="bg-yellow-400 text-yellow-950 hover:bg-yellow-400 text-[10px] px-1.5">
+                          <Badge className="text-[10px] font-semibold rounded-full px-2 py-0.5 border-transparent bg-yellow-400 text-yellow-950 hover:bg-yellow-400">
                             New
                           </Badge>
                         )}

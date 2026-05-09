@@ -121,11 +121,11 @@ export function AnnouncementsListDrawer({ isOpen, onOpenChange }: AnnouncementsL
     const normalized = category.toLowerCase();
     switch (normalized) {
       case "event":
-        return "bg-blue-500 text-white";
+        return "bg-sky-200 text-sky-900 hover:bg-sky-200";
       case "academic":
-        return "bg-amber-500 text-white";
+        return "bg-violet-200 text-violet-900 hover:bg-violet-200";
       case "general":
-        return "bg-amber-800 text-amber-50 hover:bg-amber-800";
+        return "bg-amber-200 text-amber-900 hover:bg-amber-200";
       default:
         return "bg-muted text-muted-foreground";
     }
@@ -336,21 +336,21 @@ export function AnnouncementsListDrawer({ isOpen, onOpenChange }: AnnouncementsL
                         )}
                         {/* Category badge & Read status */}
                         <div className="absolute top-3 left-3 right-3 flex items-center justify-between">
-                          <Badge className={getCategoryColor(announcement.category)}>
+                          <Badge className={cn("text-xs font-semibold rounded-full px-2.5 py-0.5 border-transparent", getCategoryColor(announcement.category))}>
                             {announcement.category}
                           </Badge>
                           {announcement.is_acknowledged ? (
-                            <Badge variant="outline" className="text-xs gap-1 text-blue-600 border-blue-600/30 bg-blue-500/10 backdrop-blur-sm">
+                            <Badge className="text-xs font-semibold rounded-full px-2.5 py-0.5 border-transparent bg-blue-600 text-white hover:bg-blue-600 gap-1">
                               <ShieldCheck className="h-3 w-3" />
                               Acknowledged
                             </Badge>
                           ) : isRead(announcement) ? (
-                            <Badge variant="outline" className="text-xs gap-1 text-green-600 border-green-600/30 bg-green-500/10 backdrop-blur-sm">
+                            <Badge className="text-xs font-semibold rounded-full px-2.5 py-0.5 border-transparent bg-green-600 text-white hover:bg-green-600 gap-1">
                               <Check className="h-3 w-3" />
                               Read
                             </Badge>
                           ) : (
-                            <Badge className="bg-yellow-400 text-yellow-950 hover:bg-yellow-400 text-xs backdrop-blur-sm">
+                            <Badge className="text-xs font-semibold rounded-full px-2.5 py-0.5 border-transparent bg-yellow-400 text-yellow-950 hover:bg-yellow-400">
                               New
                             </Badge>
                           )}
