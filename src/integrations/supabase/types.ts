@@ -1177,7 +1177,7 @@ export type Database = {
           event_category: string | null
           event_tags: string[] | null
           event_type: string | null
-          id: string | null
+          id: string
           is_all_day: boolean | null
           is_recurring: boolean | null
           location: string | null
@@ -1202,7 +1202,7 @@ export type Database = {
           event_category?: string | null
           event_tags?: string[] | null
           event_type?: string | null
-          id?: string | null
+          id?: string
           is_all_day?: boolean | null
           is_recurring?: boolean | null
           location?: string | null
@@ -1227,7 +1227,7 @@ export type Database = {
           event_category?: string | null
           event_tags?: string[] | null
           event_type?: string | null
-          id?: string | null
+          id?: string
           is_all_day?: boolean | null
           is_recurring?: boolean | null
           location?: string | null
@@ -1243,7 +1243,7 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "calendar_events_backup_event_category_fkey"
+            foreignKeyName: "calendar_events_event_category_fkey"
             columns: ["event_category"]
             isOneToOne: false
             referencedRelation: "event_categories"
