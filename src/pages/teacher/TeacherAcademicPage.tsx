@@ -2127,25 +2127,6 @@ export default function TeacherAcademicPage() {
                                       </p>
                                     </div>
                                     
-                                    {/* Authentic Comments (Internal) */}
-                                    <div>
-                                      <label className="text-sm font-semibold text-foreground mb-1 flex items-center gap-1">
-                                        Authentic Comments <span className="text-[10px] font-normal text-muted-foreground">(Internal)</span>
-                                      </label>
-                                      <Textarea 
-                                        placeholder="Internal notes - not visible to parents..." 
-                                        value={input.comment} 
-                                        onChange={e => gradeEntry.updateGradeInput(student.id, "comment", e.target.value.slice(0, 300))} 
-                                        maxLength={300}
-                                        disabled={!gradeEntry.selectedPeriod?.is_open_for_grading}
-                                        className={cn(
-                                          "min-h-[70px] text-sm resize-none border-border bg-background",
-                                          !gradeEntry.selectedPeriod?.is_open_for_grading && "opacity-60 cursor-not-allowed"
-                                        )}
-                                      />
-                                      <p className="text-[10px] text-muted-foreground text-right mt-0.5">{(input.comment || "").length}/300</p>
-                                    </div>
-
                                     {/* Individual Study Recommendation */}
                                     <div>
                                       <div className="flex items-center gap-2 mb-1">
@@ -2190,6 +2171,30 @@ export default function TeacherAcademicPage() {
                                           {(input.studyRecommendation || "").length}/300
                                         </p>
                                       </div>
+                                    </div>
+
+                                    {/* Authentic Comments (Internal) - last */}
+                                    <div>
+                                      <div className="flex items-center gap-2 mb-1">
+                                        <label className="text-sm font-semibold text-foreground">
+                                          Authentic Comments
+                                        </label>
+                                        <Badge variant="outline" className="text-[10px] px-1.5 py-0 border-red-300 text-red-600">
+                                          Internal
+                                        </Badge>
+                                      </div>
+                                      <Textarea 
+                                        placeholder="Internal notes - not visible to parents..." 
+                                        value={input.comment} 
+                                        onChange={e => gradeEntry.updateGradeInput(student.id, "comment", e.target.value.slice(0, 300))} 
+                                        maxLength={300}
+                                        disabled={!gradeEntry.selectedPeriod?.is_open_for_grading}
+                                        className={cn(
+                                          "min-h-[70px] text-sm resize-none border-border bg-background",
+                                          !gradeEntry.selectedPeriod?.is_open_for_grading && "opacity-60 cursor-not-allowed"
+                                        )}
+                                      />
+                                      <p className="text-[10px] text-muted-foreground text-right mt-0.5">{(input.comment || "").length}/300</p>
                                     </div>
                                   </div>
                                 </CardContent>
