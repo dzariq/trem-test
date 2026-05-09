@@ -380,5 +380,6 @@ export async function getAnnouncementAttachments(
     name: row.name ?? row.file_name ?? "Attachment",
     url: resolveAttachmentUrl(row.url ?? row.file_url ?? ""),
     file_type: row.file_type ?? "",
+    is_primary: Boolean(row.is_primary),
   }));
 }
