@@ -6,6 +6,8 @@ import { Button } from "@/components/ui/button";
 import { Calendar, Check, ChevronLeft, ChevronRight, Download, FileText, Megaphone, Inbox, ShieldCheck } from "lucide-react";
 import { markAnnouncementRead, acknowledgeAnnouncement } from "@/data/announcements";
 import { PDFViewerDialog } from "@/components/PDFViewerDialog";
+import { AnnouncementHtmlContent } from "@/components/announcements/AnnouncementHtmlContent";
+import { AnnouncementPdfBanner, isPdfAttachment } from "@/components/announcements/AnnouncementPdfBanner";
 
 type AnnouncementId = number | string;
 
@@ -37,7 +39,7 @@ interface Announcement {
   date: string;
   category: string;
   image: string | null;
-  attachments?: { name: string; url: string }[];
+  attachments?: { name: string; url: string; file_type?: string; is_primary?: boolean }[];
   is_read?: boolean;
   requires_acknowledgement?: boolean;
   is_acknowledged?: boolean;
@@ -253,9 +255,16 @@ export function AnnouncementDrawer({
   }
 
   const attachmentCount = currentAnnouncement.attachments?.length || 0;
-  const firstImageAttachment = currentAnnouncement.attachments?.find(a => isImageUrl(a.url));
+  const allAttachments = currentAnnouncement.attachments ?? [];
+  const primaryImage = allAttachments.find(a => a.is_primary && isImageUrl(a.url));
+  const firstImageAttachment = primaryImage ?? allAttachments.find(a => isImageUrl(a.url));
   const heroImage = firstImageAttachment?.url ?? currentAnnouncement.image;
-  const nonHeroAttachments = currentAnnouncement.attachments?.filter(a => a !== firstImageAttachment) ?? [];
+  // Quick-link chips: exclude PDFs (shown in banner) and cover image
+  const quickLinkAttachments = allAttachments.filter(
+    a => !isPdfAttachment(a as any) && a.url !== heroImage,
+  );
+  // Other attachments below body: same exclusion
+  const nonHeroAttachments = quickLinkAttachments;
 
   return (
     <>
@@ -335,6 +344,9 @@ export function AnnouncementDrawer({
                   slideDirection === "right" && "opacity-0 translate-x-4"
                 )}
               >
+                {/* PDF Banner */}
+                <AnnouncementPdfBanner attachments={allAttachments as any} />
+
                 {/* Image Header */}
                 <div className="relative h-52 overflow-hidden">
                   {heroImage ? (
@@ -368,7 +380,7 @@ export function AnnouncementDrawer({
                       <Calendar className="h-3.5 w-3.5" />
                       {formatDate(currentAnnouncement.date)}
                     </div>
-                    {(currentAnnouncement.attachments ?? []).map((attachment, idx) => {
+                    {quickLinkAttachments.map((attachment, idx) => {
                       const isImg = isImageUrl(attachment.url);
                       const isPdf = isPdfUrl(attachment.url, attachment.name);
                       const { icon: Icon, color, bg } = getFileIcon(attachment.name);
@@ -466,14 +478,11 @@ export function AnnouncementDrawer({
                     </div>
                   )}
 
-                  {/* Full Content */}
-                  <div className="prose prose-sm max-w-none">
-                    {currentAnnouncement.content.split("\n").map((paragraph, idx) => (
-                      <p key={idx} className="mb-4 text-[15px] leading-relaxed text-foreground/85">
-                        {paragraph}
-                      </p>
-                    ))}
-                  </div>
+                  {/* Full Content (sanitized HTML) */}
+                  <AnnouncementHtmlContent
+                    html={currentAnnouncement.content}
+                    coverUrl={heroImage}
+                  />
                 </div>
               </div>
             </ScrollArea>
