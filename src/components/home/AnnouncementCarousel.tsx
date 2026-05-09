@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Check, ChevronRight, Megaphone, ShieldCheck } from "lucide-react";
+import { Check, ChevronRight, Megaphone, ShieldCheck, Star } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
   Carousel,
@@ -78,10 +78,10 @@ export function AnnouncementCarousel({
   };
 
   const badgeBase = "text-xs font-semibold rounded-full px-2.5 py-0.5 border-transparent";
-  const readBadgeClass = `${badgeBase} bg-green-600 text-white hover:bg-green-600 gap-1`;
-  const ackBadgeClass = `${badgeBase} bg-blue-600 text-white hover:bg-blue-600 gap-1`;
+  const readBadgeClass = `${badgeBase} bg-green-100 text-green-800 border border-green-500 hover:bg-green-100 gap-1`;
+  const ackBadgeClass = `${badgeBase} bg-blue-100 text-blue-800 border border-blue-500 hover:bg-blue-100 gap-1`;
   const newBadgeClass = `${badgeBase} bg-yellow-400 text-yellow-950 hover:bg-yellow-400`;
-  const featuredBadgeClass = `${badgeBase} bg-yellow-400 text-yellow-950 hover:bg-yellow-400`;
+  const featuredBadgeClass = "rounded-full p-1.5 bg-yellow-400 text-yellow-950 hover:bg-yellow-400 inline-flex items-center justify-center border-transparent";
 
   const mainAnnouncement = resolvedAnnouncements[0];
   const otherAnnouncements = resolvedAnnouncements.slice(1, 4);
@@ -133,7 +133,7 @@ export function AnnouncementCarousel({
           onClick={() => handleAnnouncementClick(0)}
         >
           {/* Large Image Header */}
-          <div className="relative h-48 overflow-hidden">
+          <div className="relative h-36 overflow-hidden">
             {mainAnnouncement.image ? (
               <img 
                 src={mainAnnouncement.image} 
@@ -155,8 +155,8 @@ export function AnnouncementCarousel({
             )}
             {/* Featured Badge & Read Status */}
             <div className="absolute top-3 left-3 right-3 flex items-center justify-between">
-              <Badge className={featuredBadgeClass}>
-                Featured
+              <Badge className={featuredBadgeClass} aria-label="Featured">
+                <Star className="h-3.5 w-3.5 fill-current" />
               </Badge>
               {isAcknowledged(mainAnnouncement) ? (
                 <Badge className={ackBadgeClass}>
@@ -174,19 +174,15 @@ export function AnnouncementCarousel({
                 </Badge>
               )}
             </div>
-            {/* Category and Date */}
+            {/* Combined Category + Date */}
             <div className="absolute bottom-3 left-4 flex items-center gap-2">
-                <Badge className={cn(badgeBase, getCategoryBadgeClass(mainAnnouncement.category))}>
-                  {mainAnnouncement.category}
-                </Badge>
-                {!isRead(mainAnnouncement) && !isAcknowledged(mainAnnouncement) && (
-                  <span className="h-1.5 w-1.5 rounded-full bg-primary" />
-                )}
-                <Badge className={cn(badgeBase, "bg-white/95 text-foreground border border-border/40")}>
-                  {formatDate(mainAnnouncement.date)}
-                </Badge>
-              </div>
+              <Badge className={cn(badgeBase, getCategoryBadgeClass(mainAnnouncement.category), "flex items-center gap-1.5")}>
+                <span>{mainAnnouncement.category}</span>
+                <span className="opacity-50">·</span>
+                <span className="font-medium">{formatDate(mainAnnouncement.date)}</span>
+              </Badge>
             </div>
+          </div>
           <CardContent className="p-4">
               <h3 className="font-bold text-foreground text-lg mb-2">
                 {mainAnnouncement.title}
@@ -240,16 +236,18 @@ export function AnnouncementCarousel({
                         </div>
                       )}
                       <div className="absolute bottom-2 left-3 right-3 flex items-center justify-between">
-                        <Badge className={cn("text-[10px] font-semibold rounded-full px-2 py-0.5 border-transparent", getCategoryBadgeClass(announcement.category))}>
-                          {announcement.category}
+                        <Badge className={cn("text-[10px] font-semibold rounded-full px-2 py-0.5 border-transparent flex items-center gap-1", getCategoryBadgeClass(announcement.category))}>
+                          <span>{announcement.category}</span>
+                          <span className="opacity-50">·</span>
+                          <span>{formatDate(announcement.date)}</span>
                         </Badge>
                         {isAcknowledged(announcement) ? (
-                          <Badge className="text-[10px] font-semibold rounded-full px-2 py-0.5 border-transparent bg-blue-600 text-white hover:bg-blue-600 gap-0.5">
+                          <Badge className="text-[10px] font-semibold rounded-full px-2 py-0.5 bg-blue-100 text-blue-800 border border-blue-500 hover:bg-blue-100 gap-0.5">
                             <ShieldCheck className="h-2.5 w-2.5" />
                             Ack'd
                           </Badge>
                         ) : isRead(announcement) ? (
-                          <Badge className="text-[10px] font-semibold rounded-full px-2 py-0.5 border-transparent bg-green-600 text-white hover:bg-green-600 gap-0.5">
+                          <Badge className="text-[10px] font-semibold rounded-full px-2 py-0.5 bg-green-100 text-green-800 border border-green-500 hover:bg-green-100 gap-0.5">
                             <Check className="h-2.5 w-2.5" />
                             Read
                           </Badge>

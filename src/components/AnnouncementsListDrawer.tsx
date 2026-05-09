@@ -334,18 +334,20 @@ export function AnnouncementsListDrawer({ isOpen, onOpenChange }: AnnouncementsL
                             <Megaphone className="h-12 w-12 text-primary/40" />
                           </div>
                         )}
-                        {/* Category badge & Read status */}
+                        {/* Combined Category + Date and Read status */}
                         <div className="absolute top-3 left-3 right-3 flex items-center justify-between">
-                          <Badge className={cn("text-xs font-semibold rounded-full px-2.5 py-0.5 border-transparent", getCategoryColor(announcement.category))}>
-                            {announcement.category}
+                          <Badge className={cn("text-xs font-semibold rounded-full px-2.5 py-0.5 border-transparent flex items-center gap-1.5", getCategoryColor(announcement.category))}>
+                            <span>{announcement.category}</span>
+                            <span className="opacity-50">·</span>
+                            <span className="font-medium">{formatDate(announcement.date)}</span>
                           </Badge>
                           {announcement.is_acknowledged ? (
-                            <Badge className="text-xs font-semibold rounded-full px-2.5 py-0.5 border-transparent bg-blue-600 text-white hover:bg-blue-600 gap-1">
+                            <Badge className="text-xs font-semibold rounded-full px-2.5 py-0.5 bg-blue-100 text-blue-800 border border-blue-500 hover:bg-blue-100 gap-1">
                               <ShieldCheck className="h-3 w-3" />
                               Acknowledged
                             </Badge>
                           ) : isRead(announcement) ? (
-                            <Badge className="text-xs font-semibold rounded-full px-2.5 py-0.5 border-transparent bg-green-600 text-white hover:bg-green-600 gap-1">
+                            <Badge className="text-xs font-semibold rounded-full px-2.5 py-0.5 bg-green-100 text-green-800 border border-green-500 hover:bg-green-100 gap-1">
                               <Check className="h-3 w-3" />
                               Read
                             </Badge>
@@ -364,11 +366,7 @@ export function AnnouncementsListDrawer({ isOpen, onOpenChange }: AnnouncementsL
                         <p className="text-sm text-muted-foreground mb-3">
                           {announcement.snippet}
                         </p>
-                        <div className="flex items-center justify-between">
-                          <span className="text-xs text-muted-foreground flex items-center gap-1">
-                            <Calendar className="h-3 w-3" />
-                            {formatDate(announcement.date)}
-                          </span>
+                        <div className="flex items-center justify-end">
                           <Button
                             variant="outline"
                             size="sm"

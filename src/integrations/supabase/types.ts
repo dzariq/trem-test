@@ -1165,7 +1165,85 @@ export type Database = {
         }
         Relationships: []
       }
-      calendar_events: {
+      calendar_events_backup: {
+        Row: {
+          campus_code: string | null
+          campus_id: string | null
+          color: string | null
+          created_at: string | null
+          created_by: string | null
+          description: string | null
+          end_date: string | null
+          event_category: string | null
+          event_tags: string[] | null
+          event_type: string | null
+          id: string | null
+          is_all_day: boolean | null
+          is_recurring: boolean | null
+          location: string | null
+          recurrence_pattern: Json | null
+          school_level: string | null
+          start_date: string | null
+          student_id: string | null
+          title: string | null
+          updated_at: string | null
+          visibility: string | null
+          visible_departments: string[] | null
+          visible_user_ids: string[] | null
+        }
+        Insert: {
+          campus_code?: string | null
+          campus_id?: string | null
+          color?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          end_date?: string | null
+          event_category?: string | null
+          event_tags?: string[] | null
+          event_type?: string | null
+          id?: string | null
+          is_all_day?: boolean | null
+          is_recurring?: boolean | null
+          location?: string | null
+          recurrence_pattern?: Json | null
+          school_level?: string | null
+          start_date?: string | null
+          student_id?: string | null
+          title?: string | null
+          updated_at?: string | null
+          visibility?: string | null
+          visible_departments?: string[] | null
+          visible_user_ids?: string[] | null
+        }
+        Update: {
+          campus_code?: string | null
+          campus_id?: string | null
+          color?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          end_date?: string | null
+          event_category?: string | null
+          event_tags?: string[] | null
+          event_type?: string | null
+          id?: string | null
+          is_all_day?: boolean | null
+          is_recurring?: boolean | null
+          location?: string | null
+          recurrence_pattern?: Json | null
+          school_level?: string | null
+          start_date?: string | null
+          student_id?: string | null
+          title?: string | null
+          updated_at?: string | null
+          visibility?: string | null
+          visible_departments?: string[] | null
+          visible_user_ids?: string[] | null
+        }
+        Relationships: []
+      }
+      calendar_events_old: {
         Row: {
           campus_code: string | null
           campus_id: string | null
