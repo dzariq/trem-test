@@ -276,6 +276,12 @@ export default function AnnouncementDetailPage() {
           )}
         </div>
       </section>
+      <ImagePreviewDialog
+        open={imagePreviewOpen}
+        onOpenChange={setImagePreviewOpen}
+        src={coverUrl}
+        alt={announcement.title}
+      />
     </AppLayout>
   );
 }
