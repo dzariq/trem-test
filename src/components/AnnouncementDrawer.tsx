@@ -296,22 +296,14 @@ export function AnnouncementDrawer({
                   <ShieldCheck className="h-3 w-3" />
                   Acknowledged
                 </Badge>
-              ) : isRead ? (
-                <Badge
-                  variant="outline"
-                  className="text-xs gap-1 text-green-600 border-green-600/30 bg-green-500/10 animate-in zoom-in-50 fade-in duration-300"
-                >
-                  <Check className="h-3 w-3 animate-in spin-in-180 duration-500" />
-                  Read
-                </Badge>
               ) : null}
             </div>
             <div className="flex items-center gap-2 flex-shrink-0">
               {onSeeAll && (
                 <Button
-                  variant="default"
+                  variant="outline"
                   size="sm"
-                  className="text-xs rounded-full px-4 gap-1.5 shadow-sm"
+                  className="text-xs rounded-full px-4 gap-1.5"
                   onClick={handleSeeAll}
                 >
                   <Inbox className="h-3.5 w-3.5" />
