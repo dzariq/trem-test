@@ -1,81 +1,52 @@
-## Goal
+# Teacher Academic Page – Typography & Color Cleanup
 
-Update the announcement detail/preview screens to handle the new admin authoring format:
-- `announcements.content` is now sanitized HTML (TipTap output), not plain text.
-- `announcement_attachments.is_primary = true` marks the cover image.
-- PDF attachments should appear as a banner above the title.
-- List/card snippets must strip HTML tags.
+Tighten the visual design of the grading entry view: standardize the type scale, neutralize colored backgrounds, and replace the green Total Score panel with a clean container.
 
-No DB changes. Existing data hooks are reused.
+## Scope
+File: `src/pages/teacher/TeacherAcademicPage.tsx` (grading entry UI block, ~lines 1943–2200).
 
-## Changes
+## 1. Study Recommendation card
+- Title "Study Recommendation": change from `text-xs font-semibold text-amber-700` → `text-sm font-semibold text-foreground` (black). Keep amber icon circle as the only accent.
+- Placeholder text in textarea: keep size `text-sm` but remove italic styling override if any (placeholder is italic globally — leave default; just ensure copy is consistent).
+- "Class-wide" badge: keep amber outline (already standardized accent).
+- Counter `0/300` and "Save" button: leave structurally, just align to the new type scale (`text-xs` muted).
 
-### 1. Add sanitizer dependency
+## 2. Student row header (collapsed state)
+- Student name: keep `text-sm font-semibold text-foreground` ✓ (already consistent).
+- "Not graded": already red ✓. Keep `text-xs`, remove any italic.
+- Total badge on right: keep.
 
-- Install `dompurify` and `@types/dompurify`.
+## 3. Expanded student card — Total Score panel (the light-green block)
+Replace the `bg-accent/50` (which renders light green in this theme) with a neutral container:
+- Container: `rounded-lg border border-border bg-card p-3` (no tinted background).
+- "Total Score" label: `text-xs font-medium text-muted-foreground uppercase tracking-wide`.
+- Score value: keep `text-2xl font-bold text-foreground`, "/100" muted.
+- Letter grade: render as a circular chip on the right with the grade's accent color as a soft tint (not a heavy badge). Use `w-12 h-12 rounded-full` with `bg-{grade}-50 text-{grade}-700 border border-{grade}-200` style (matches the C-circle look in the screenshot but inside a clean white container).
 
-### 2. Extend data layer (`src/data/announcements.ts`)
+## 4. Comment sections (Report Card / Authentic / Individual Study Recommendation)
+Standardize the three section headers to one rule:
+- Label: `text-sm font-semibold text-foreground` (black, not colored).
+- Optional small meta tag (e.g. "(Internal)", "Individual", "Class-wide"): `text-[10px]` muted or kept as outline badge — one style only.
+- Textareas: remove tinted backgrounds (`bg-emerald-50/50`, `bg-red-50/50`, `bg-amber-50/50`) and colored borders → use neutral `border-border bg-background`. Keep placeholder default (no italic override).
+- Character counters: unify to `text-[10px] text-muted-foreground` right-aligned.
 
-- Add `is_primary?: boolean` to `AnnouncementAttachment` type.
-- In `listAnnouncements` and `getAnnouncementById`:
-  - Pass `is_primary` through from the attachment row.
-  - Cover-image resolution order:
-    1. attachment with `is_primary = true` and image type
-    2. else: first image attachment (current fallback)
-  - Keep the resolved cover URL on `announcement.image` (already used by all cards).
-- Add a helper `stripHtml(content: string): string` and use it inside `buildSnippet` so existing snippets are HTML-safe.
+The "Class recommendation (shown to all)" inline preview box stays amber-tinted (it's a callout, not a field) but text drops to `text-[11px] text-foreground` with a muted label.
 
-### 3. New shared HTML renderer
+## 5. Type scale (applied across the section)
+Single, consistent scale:
+- Section/field title: `text-sm font-semibold text-foreground`
+- Body / input text: `text-sm text-foreground`
+- Meta / counters / hints: `text-[10px]` or `text-xs` `text-muted-foreground`
+- No italics anywhere except the default placeholder italic from the Textarea component (already global).
 
-- New file `src/components/announcements/AnnouncementHtmlContent.tsx`:
-  - Props: `html: string`, `coverUrl?: string | null`.
-  - Sanitizes with DOMPurify, allowlist exactly: `p, br, strong, em, u, s, b, i, ul, ol, li, h1, h2, h3, h4, blockquote, code, pre, a, img, span, div`. Allowed attrs: `href, target, rel, src, alt, title, class, data-cover`. Force `target="_blank"` + `rel="noopener noreferrer"` on `<a>`.
-  - Before render, removes any `<img>` whose `src === coverUrl` OR `data-cover="true"` to avoid duplicate cover.
-  - Uses `dangerouslySetInnerHTML` inside a `prose prose-sm` themed wrapper (semantic tokens).
-
-### 4. New PDF banner component
-
-- New file `src/components/announcements/AnnouncementPdfBanner.tsx`:
-  - Accepts `attachments` and filters by `file_type` matching `/pdf/i` (with filename fallback).
-  - Renders a red-tinted strip with one chip per PDF (filename + download icon). Tap opens the existing `PDFViewerDialog`.
-  - Returns `null` if no PDFs.
-
-### 5. Update `AnnouncementDetailPage` (`src/pages/AnnouncementDetailPage.tsx`)
-
-Reorder to: PDF banner → Title + badges → Cover image → HTML body → Other attachments → Acknowledge button.
-
-- Replace the manual paragraph/`**bold**` parsing with `<AnnouncementHtmlContent>`.
-- Render `<AnnouncementPdfBanner>` at the top.
-- Cover image still uses `announcement.image` (now driven by `is_primary`).
-- "Other attachments" list = attachments where not PDF AND url !== cover URL.
-
-### 6. Update `AnnouncementDrawer` (`src/components/AnnouncementDrawer.tsx`)
-
-- Same reordering: PDF banner row at the top of the scroll area, above the hero image.
-- Replace the existing body rendering (currently just shows attachments / no body text) — add `<AnnouncementHtmlContent html={currentAnnouncement.content} coverUrl={heroImage} />` below the title/date/quick-links.
-- Cover image continues to come from `firstImageAttachment` / `announcement.image`, but resolution now respects `is_primary` via the data layer.
-- Quick-link chips: exclude PDFs (handled by banner) and exclude the cover image.
-
-### 7. Snippet stripping in cards
-
-Already covered centrally by updating `buildSnippet` in step 2, so:
-- `AnnouncementListCard`, `PinnedAnnouncementCard`, `FeaturedAnnouncementCard`, `AnnouncementCarousel`, notification aggregation — all read `snippet` and need no per-component change.
-- Spot-check any place that reads `content` directly for previews and switch it to `snippet` or `stripHtml(content)`.
+## 6. Color discipline
+- Headings & labels → black (`text-foreground`).
+- Accent color reserved only for: the small icon chip next to "Study Recommendation", outline badges (Class-wide / Individual / Internal), letter-grade chip, and "Not graded" red.
+- No colored fills on textareas or score panel.
 
 ## Out of scope
-
-- No database migration.
-- No changes to admin authoring or storage rules.
-- No change to acknowledgement / read-tracking logic.
+- No logic changes (state, save handlers, validation untouched).
+- Other page sections (Behavior, Awards, Analysis tabs) are not modified.
 
 ## Technical notes
-
-- DOMPurify config:
-  ```ts
-  DOMPurify.sanitize(html, {
-    ALLOWED_TAGS: ["p","br","strong","em","u","s","b","i","ul","ol","li","h1","h2","h3","h4","blockquote","code","pre","a","img","span","div"],
-    ALLOWED_ATTR: ["href","target","rel","src","alt","title","class","data-cover"],
-  });
-  ```
-- Use a DOMPurify `afterSanitizeAttributes` hook to force `target=_blank` + `rel=noopener noreferrer` on links.
-- Cover de-dupe: parse sanitized HTML in a `DOMParser`, drop matching `<img>`, serialize back — done inside `AnnouncementHtmlContent`.
+All edits are className/markup adjustments inside `TeacherAcademicPage.tsx`. No new dependencies, no schema changes, no new components.

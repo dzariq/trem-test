@@ -1947,7 +1947,7 @@ export default function TeacherAcademicPage() {
                           <div className="w-6 h-6 rounded-full bg-amber-100 dark:bg-amber-900/50 flex items-center justify-center flex-shrink-0">
                             <Users className="h-3.5 w-3.5 text-amber-600" />
                           </div>
-                          <label className="text-xs font-semibold text-amber-700 dark:text-amber-400 flex-1">
+                          <label className="text-sm font-semibold text-foreground flex-1">
                             Study Recommendation
                           </label>
                           <Badge variant="outline" className="text-[10px] border-amber-300 text-amber-600 whitespace-nowrap">
@@ -2090,21 +2090,21 @@ export default function TeacherAcademicPage() {
                                   </div>
 
                                   {/* Total & Grade Display */}
-                                  <div className="flex items-center justify-between p-3 rounded-lg bg-accent/50">
+                                  <div className="flex items-center justify-between p-3 rounded-lg border border-border bg-card">
                                     <div>
-                                      <p className="text-xs text-muted-foreground">Total Score</p>
+                                      <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wide">Total Score</p>
                                       <p className="text-2xl font-bold text-foreground">{total}<span className="text-sm text-muted-foreground">/100</span></p>
                                     </div>
-                                    <Badge className={cn("text-xl px-4 py-2 font-bold", letterGrade.color)}>
+                                    <div className={cn("w-12 h-12 rounded-full border flex items-center justify-center text-lg font-bold", letterGrade.color)}>
                                       {letterGrade.grade}
-                                    </Badge>
+                                    </div>
                                   </div>
 
                                   {/* Comments Section */}
                                   <div className="space-y-3">
                                     {/* Report Card Comments */}
                                     <div>
-                                      <label className="text-xs font-medium text-emerald-600 mb-1 block">
+                                      <label className="text-sm font-semibold text-foreground mb-1 block">
                                         Report Card Comments
                                       </label>
                                       <Textarea 
@@ -2118,7 +2118,7 @@ export default function TeacherAcademicPage() {
                                         }} 
                                         disabled={!gradeEntry.selectedPeriod?.is_open_for_grading}
                                         className={cn(
-                                          "min-h-[70px] text-sm resize-none border-emerald-200 bg-emerald-50/50 dark:bg-emerald-950/20",
+                                          "min-h-[70px] text-sm resize-none border-border bg-background",
                                           !gradeEntry.selectedPeriod?.is_open_for_grading && "opacity-60 cursor-not-allowed"
                                         )}
                                       />
@@ -2129,8 +2129,8 @@ export default function TeacherAcademicPage() {
                                     
                                     {/* Authentic Comments (Internal) */}
                                     <div>
-                                      <label className="text-xs font-medium text-red-600 mb-1 flex items-center gap-1">
-                                        Authentic Comments <span className="text-[10px] text-red-400">(Internal)</span>
+                                      <label className="text-sm font-semibold text-foreground mb-1 flex items-center gap-1">
+                                        Authentic Comments <span className="text-[10px] font-normal text-muted-foreground">(Internal)</span>
                                       </label>
                                       <Textarea 
                                         placeholder="Internal notes - not visible to parents..." 
@@ -2139,7 +2139,7 @@ export default function TeacherAcademicPage() {
                                         maxLength={300}
                                         disabled={!gradeEntry.selectedPeriod?.is_open_for_grading}
                                         className={cn(
-                                          "min-h-[70px] text-sm resize-none border-red-200 bg-red-50/50 dark:bg-red-950/20",
+                                          "min-h-[70px] text-sm resize-none border-border bg-background",
                                           !gradeEntry.selectedPeriod?.is_open_for_grading && "opacity-60 cursor-not-allowed"
                                         )}
                                       />
@@ -2149,20 +2149,20 @@ export default function TeacherAcademicPage() {
                                     {/* Individual Study Recommendation */}
                                     <div>
                                       <div className="flex items-center gap-2 mb-1">
-                                        <label className="text-xs font-medium text-amber-600">
+                                        <label className="text-sm font-semibold text-foreground">
                                           Study Recommendation
                                         </label>
-                                        <Badge variant="outline" className="text-[9px] px-1.5 py-0 border-blue-200 text-blue-500">
+                                        <Badge variant="outline" className="text-[10px] px-1.5 py-0 border-blue-300 text-blue-600">
                                           Individual
                                         </Badge>
                                       </div>
                                       {gradeEntry.classRecommendation.trim() && (
-                                        <div className="mb-2 rounded-md border border-amber-200 bg-amber-50/70 px-2 py-1">
+                                        <div className="mb-2 rounded-md border border-amber-200 bg-amber-50/70 px-2 py-1.5">
                                           <div className="flex items-center gap-1 mb-0.5">
                                             <Users className="h-3 w-3 text-amber-600" />
-                                            <span className="text-[10px] font-medium text-amber-700">Class recommendation (shown to all):</span>
+                                            <span className="text-[10px] font-medium text-muted-foreground">Class recommendation (shown to all):</span>
                                           </div>
-                                          <p className="text-[11px] text-amber-800">{gradeEntry.classRecommendation}</p>
+                                          <p className="text-[11px] text-foreground">{gradeEntry.classRecommendation}</p>
                                         </div>
                                       )}
                                       <Textarea 
@@ -2176,7 +2176,7 @@ export default function TeacherAcademicPage() {
                                         }} 
                                         disabled={!gradeEntry.selectedPeriod?.is_open_for_grading}
                                         className={cn(
-                                          "min-h-[70px] text-sm resize-none border-amber-200 bg-amber-50/50 dark:bg-amber-950/20",
+                                          "min-h-[70px] text-sm resize-none border-border bg-background",
                                           !gradeEntry.selectedPeriod?.is_open_for_grading && "opacity-60 cursor-not-allowed"
                                         )}
                                       />
