@@ -344,6 +344,9 @@ export function AnnouncementDrawer({
                   slideDirection === "right" && "opacity-0 translate-x-4"
                 )}
               >
+                {/* PDF Banner */}
+                <AnnouncementPdfBanner attachments={allAttachments as any} />
+
                 {/* Image Header */}
                 <div className="relative h-52 overflow-hidden">
                   {heroImage ? (
@@ -377,7 +380,7 @@ export function AnnouncementDrawer({
                       <Calendar className="h-3.5 w-3.5" />
                       {formatDate(currentAnnouncement.date)}
                     </div>
-                    {(currentAnnouncement.attachments ?? []).map((attachment, idx) => {
+                    {quickLinkAttachments.map((attachment, idx) => {
                       const isImg = isImageUrl(attachment.url);
                       const isPdf = isPdfUrl(attachment.url, attachment.name);
                       const { icon: Icon, color, bg } = getFileIcon(attachment.name);
@@ -475,14 +478,11 @@ export function AnnouncementDrawer({
                     </div>
                   )}
 
-                  {/* Full Content */}
-                  <div className="prose prose-sm max-w-none">
-                    {currentAnnouncement.content.split("\n").map((paragraph, idx) => (
-                      <p key={idx} className="mb-4 text-[15px] leading-relaxed text-foreground/85">
-                        {paragraph}
-                      </p>
-                    ))}
-                  </div>
+                  {/* Full Content (sanitized HTML) */}
+                  <AnnouncementHtmlContent
+                    html={currentAnnouncement.content}
+                    coverUrl={heroImage}
+                  />
                 </div>
               </div>
             </ScrollArea>
