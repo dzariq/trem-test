@@ -39,6 +39,11 @@ export default {
   				DEFAULT: 'hsl(var(--accent))',
   				foreground: 'hsl(var(--accent-foreground))'
   			},
+			attachment: {
+				DEFAULT: 'hsl(var(--attachment))',
+				foreground: 'hsl(var(--attachment-foreground))',
+				border: 'hsl(var(--attachment-border))'
+			},
   			popover: {
   				DEFAULT: 'hsl(var(--popover))',
   				foreground: 'hsl(var(--popover-foreground))'

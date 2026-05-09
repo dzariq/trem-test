@@ -3,11 +3,12 @@ import { useState, useRef, useCallback, useEffect } from "react";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Calendar, Check, ChevronLeft, ChevronRight, Download, FileText, Megaphone, Inbox, ShieldCheck } from "lucide-react";
-import { markAnnouncementRead, acknowledgeAnnouncement } from "@/data/announcements";
+import { Calendar, Check, ChevronLeft, ChevronRight, Download, FileText, Inbox, ShieldCheck } from "lucide-react";
+import { markAnnouncementRead, acknowledgeAnnouncement, type AnnouncementAttachment } from "@/data/announcements";
 import { PDFViewerDialog } from "@/components/PDFViewerDialog";
 import { AnnouncementHtmlContent } from "@/components/announcements/AnnouncementHtmlContent";
 import { AnnouncementPdfBanner, isPdfAttachment } from "@/components/announcements/AnnouncementPdfBanner";
+import { ImagePreviewDialog } from "@/components/announcements/ImagePreviewDialog";
 
 type AnnouncementId = number | string;
 
@@ -39,7 +40,7 @@ interface Announcement {
   date: string;
   category: string;
   image: string | null;
-  attachments?: { name: string; url: string; file_type?: string; is_primary?: boolean }[];
+  attachments?: AnnouncementAttachment[];
   is_read?: boolean;
   requires_acknowledgement?: boolean;
   is_acknowledged?: boolean;
@@ -73,6 +74,7 @@ export function AnnouncementDrawer({
     url: "",
     title: "",
   });
+  const [imagePreviewOpen, setImagePreviewOpen] = useState(false);
   const touchStartX = useRef<number>(0);
   const touchEndX = useRef<number>(0);
   const contentRef = useRef<HTMLDivElement>(null);
@@ -261,7 +263,7 @@ export function AnnouncementDrawer({
   const heroImage = firstImageAttachment?.url ?? currentAnnouncement.image;
   // Quick-link chips: exclude PDFs (shown in banner) and cover image
   const quickLinkAttachments = allAttachments.filter(
-    a => !isPdfAttachment(a as any) && a.url !== heroImage,
+    a => !isPdfAttachment(a) && a.url !== heroImage,
   );
   // Other attachments below body: same exclusion
   const nonHeroAttachments = quickLinkAttachments;
@@ -344,31 +346,8 @@ export function AnnouncementDrawer({
                   slideDirection === "right" && "opacity-0 translate-x-4"
                 )}
               >
-                {/* PDF Banner */}
-                <AnnouncementPdfBanner attachments={allAttachments as any} />
-
-                {/* Image Header */}
-                <div className="relative h-52 overflow-hidden">
-                  {heroImage ? (
-                    <img
-                      src={heroImage}
-                      alt={currentAnnouncement.title}
-                      className="w-full h-full object-cover"
-                    />
-                  ) : (
-                    <div className="w-full h-full bg-gradient-to-br from-primary/20 via-primary/10 to-secondary/20 flex items-center justify-center">
-                      <div className="absolute inset-0 opacity-30">
-                        <div className="absolute top-6 left-10 w-20 h-20 rounded-full bg-primary/20 blur-xl" />
-                        <div className="absolute top-16 right-16 w-28 h-28 rounded-full bg-secondary/20 blur-xl" />
-                        <div className="absolute bottom-10 left-1/3 w-16 h-16 rounded-full bg-primary/15 blur-xl" />
-                      </div>
-                      <Megaphone className="h-20 w-20 text-primary/40" />
-                    </div>
-                  )}
-                </div>
-
                 {/* Content */}
-                <div className="px-5 mt-4 relative">
+                <div className="px-5 pt-4 relative">
                   {/* Title */}
                   <h2 className="text-2xl font-bold text-foreground mb-3 leading-tight">
                     {currentAnnouncement.title}
@@ -410,6 +389,27 @@ export function AnnouncementDrawer({
                       );
                     })}
                   </div>
+
+                  {/* PDF Banner */}
+                  <AnnouncementPdfBanner attachments={allAttachments} className="mb-5" />
+
+                  {/* Cover Image */}
+                  {heroImage && (
+                    <div className="mb-5 overflow-hidden rounded-xl">
+                      <button
+                        type="button"
+                        className="w-full"
+                        onClick={() => setImagePreviewOpen(true)}
+                        aria-label="Preview cover image"
+                      >
+                        <img
+                          src={heroImage}
+                          alt={currentAnnouncement.title}
+                          className="w-full h-auto object-contain"
+                        />
+                      </button>
+                    </div>
+                  )}
 
                   {/* Acknowledge Button */}
                   {currentAnnouncement.requires_acknowledgement && (
@@ -538,6 +538,12 @@ export function AnnouncementDrawer({
         pdfUrl={pdfDialog.url}
         title={pdfDialog.title}
         downloadFileName={`${pdfDialog.title}.pdf`}
+      />
+      <ImagePreviewDialog
+        open={imagePreviewOpen}
+        onOpenChange={setImagePreviewOpen}
+        src={heroImage}
+        alt={currentAnnouncement.title}
       />
     </>
   );
