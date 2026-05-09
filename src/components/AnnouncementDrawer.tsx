@@ -418,7 +418,7 @@ export function AnnouncementDrawer({
                   </div>
 
                   {/* PDF Banner */}
-                  <AnnouncementPdfBanner attachments={allAttachments as any} className="mb-5" />
+                  <AnnouncementPdfBanner attachments={allAttachments} className="mb-5" />
 
                   {/* Acknowledge Button */}
                   {currentAnnouncement.requires_acknowledgement && (
