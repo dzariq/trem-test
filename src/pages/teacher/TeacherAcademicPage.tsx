@@ -1719,7 +1719,7 @@ export default function TeacherAcademicPage() {
                                       <p className="text-xs text-purple-600">{filledCount}/7 traits graded</p>
                                     )}
                                     {!hasData && !isExpanded && (
-                                      <p className="text-xs text-amber-500">Not graded</p>
+                                      <p className="text-xs text-red-500">Not graded</p>
                                     )}
                                   </div>
                                 </div>
@@ -2040,7 +2040,7 @@ export default function TeacherAcademicPage() {
                                           </div>
                                         )}
                                         {!hasData && !isExpanded && (
-                                          <p className="text-xs text-amber-500">Not graded</p>
+                                          <p className="text-xs text-red-500">Not graded</p>
                                         )}
                                       </div>
                                     </div>
