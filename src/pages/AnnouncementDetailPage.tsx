@@ -16,6 +16,7 @@ import {
 import { getAnnouncementById, markAnnouncementRead, acknowledgeAnnouncement, type Announcement, type AnnouncementAttachment } from "@/data/announcements";
 import { AnnouncementHtmlContent } from "@/components/announcements/AnnouncementHtmlContent";
 import { AnnouncementPdfBanner, isPdfAttachment } from "@/components/announcements/AnnouncementPdfBanner";
+import { ImagePreviewDialog } from "@/components/announcements/ImagePreviewDialog";
 
 export default function AnnouncementDetailPage() {
   const { id } = useParams();
@@ -25,6 +26,7 @@ export default function AnnouncementDetailPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [acknowledging, setAcknowledging] = useState(false);
+  const [imagePreviewOpen, setImagePreviewOpen] = useState(false);
 
   useEffect(() => {
     let isMounted = true;
@@ -156,13 +158,15 @@ export default function AnnouncementDetailPage() {
       />
 
       <section className="pb-6">
-        {/* PDF Banner */}
-        <AnnouncementPdfBanner attachments={attachments} />
-
         {/* Content */}
         <div className="px-4 pt-4 relative z-10">
+          {/* Title */}
+          <h1 className="text-2xl font-bold text-foreground mb-3">
+            {announcement.title}
+          </h1>
+
           {/* Category and Date */}
-          <div className="flex items-center gap-2 mb-3">
+          <div className="flex items-center gap-2 mb-4">
             <Badge className={getCategoryColor(announcement.category)}>
               {announcement.category}
             </Badge>
@@ -172,19 +176,24 @@ export default function AnnouncementDetailPage() {
             </span>
           </div>
 
-          {/* Title */}
-          <h1 className="text-2xl font-bold text-foreground mb-4">
-            {announcement.title}
-          </h1>
+          {/* PDF Banner */}
+          <AnnouncementPdfBanner attachments={attachments} className="mb-5" />
 
           {/* Cover Image */}
           {coverUrl && (
             <div className="rounded-xl overflow-hidden mb-5">
-              <img
-                src={coverUrl}
-                alt={announcement.title}
-                className="w-full h-56 object-cover"
-              />
+              <button
+                type="button"
+                className="w-full"
+                onClick={() => setImagePreviewOpen(true)}
+                aria-label="Preview cover image"
+              >
+                <img
+                  src={coverUrl}
+                  alt={announcement.title}
+                  className="w-full h-56 object-cover"
+                />
+              </button>
             </div>
           )}
 
