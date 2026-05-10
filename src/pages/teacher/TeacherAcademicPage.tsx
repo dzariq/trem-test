@@ -1962,15 +1962,17 @@ export default function TeacherAcademicPage() {
                       if (inViewMode) {
                         return (
                           <div>
-                            <div className="min-h-[60px] text-sm rounded-md border border-border bg-muted/30 p-2.5 whitespace-pre-wrap text-foreground">
-                              {gradeEntry.classRecommendation}
+                            <div className="relative rounded-md border-l-2 border-amber-400 bg-amber-50/60 dark:bg-amber-950/20 pl-3 pr-2 py-2">
+                              <p className="text-sm text-foreground whitespace-pre-wrap leading-relaxed">
+                                {gradeEntry.classRecommendation}
+                              </p>
                             </div>
                             <div className="flex items-center justify-between mt-2">
                               <div className="flex items-center gap-2">
                                 <Button
                                   size="sm"
                                   variant="outline"
-                                  className="text-xs h-7 px-3"
+                                  className="text-xs h-7 px-3 border-amber-300 text-amber-700 hover:bg-amber-50 hover:text-amber-800 dark:hover:bg-amber-950/30"
                                   disabled={!isOpen}
                                   onClick={() => setClassRecEditing(true)}
                                 >
