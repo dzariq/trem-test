@@ -11,6 +11,13 @@ import {
 } from "@/types/calendarTags";
 import { mapDbToCategory } from "@/lib/calendarCategorySubtypes";
 
+// Reverse lookup: display name (e.g. "Internal Event") -> tag slug (e.g. "internal-event")
+const DISPLAY_NAME_TO_TAG: Record<string, CalendarTag> = Object.entries(TAG_DISPLAY_NAMES)
+  .reduce((acc, [tag, label]) => {
+    acc[(label as string).toLowerCase()] = tag as CalendarTag;
+    return acc;
+  }, {} as Record<string, CalendarTag>);
+
 // Get display name for a tag
 export function getTagDisplayName(tag: CalendarTag): string {
   return TAG_DISPLAY_NAMES[tag] || tag;
@@ -63,6 +70,16 @@ export function resolveBadgeCategory(
 ): TagCategory | null {
   if (tag && (TAG_CATEGORIES as Record<string, TagCategory>)[tag]) {
     return (TAG_CATEGORIES as Record<string, TagCategory>)[tag];
+  }
+  // Try reverse-lookup against display names ("Internal Event", "Field Trip", ...)
+  if (tag) {
+    const slug = DISPLAY_NAME_TO_TAG[tag.toLowerCase()];
+    if (slug) return TAG_CATEGORIES[slug];
+    // Try slugified form: "Internal Event" -> "internal-event"
+    const slugified = tag.toLowerCase().trim().replace(/\s+/g, "-");
+    if ((TAG_CATEGORIES as Record<string, TagCategory>)[slugified]) {
+      return (TAG_CATEGORIES as Record<string, TagCategory>)[slugified];
+    }
   }
   return mapDbToCategory(eventCategory || "", eventType || undefined);
 }
