@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import { addDays } from "date-fns";
 import { supabase } from "@/lib/supabase";
-import { toast } from "@/hooks/use-toast";
 import { listUpcomingEvents } from "@/data/calendar";
 
 export type UpcomingDeadlineItem = {
@@ -47,9 +46,6 @@ export function useUpcomingDeadlines(limit: number = 5, campusCode?: string | nu
           .gte("start_date", startIso)
           .lte("start_date", endIso)
           .order("start_date", { ascending: true });
-        if (campusCode) {
-          examsQuery = examsQuery.or(`campus_code.eq.${campusCode},campus_code.is.null`);
-        }
         const { data: exams, error: examsError } = await examsQuery;
 
         if (examsError) {
@@ -99,11 +95,6 @@ export function useUpcomingDeadlines(limit: number = 5, campusCode?: string | nu
         if (isMounted) {
           setError(message);
           setItems([]);
-          toast({
-            title: "Deadlines unavailable",
-            description: "Unable to load upcoming deadlines.",
-            variant: "destructive",
-          });
         }
       } finally {
         if (isMounted) {
