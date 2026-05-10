@@ -3,7 +3,7 @@ import { Badge } from "@/components/ui/badge";
 import { CalendarDays, Clock, MapPin } from "lucide-react";
 import type { UpcomingEvent } from "@/data/calendar";
 import type { UpcomingCcaSession } from "@/hooks/useUpcomingCcaSessions";
-import { getTagColor, getTagDisplayName } from "@/lib/calendarUtils";
+import { getEventBadgeColor, getEventBadgeLabel } from "@/lib/calendarUtils";
 
 type EventLike = UpcomingEvent | UpcomingCcaSession;
 
@@ -118,11 +118,14 @@ export function EventDetailsSheet({ open, onOpenChange, event }: EventDetailsShe
         </div>
       </div>
 
-      {!cca && event.tags.length > 0 && (
+      {!cca && (event.tags.length > 0 || event.category) && (
         <div className="flex flex-wrap gap-2">
-          {event.tags.map((tag) => (
-            <Badge key={tag} className={`text-xs shrink-0 w-fit ${getTagColor(tag)}`}>
-              {getTagDisplayName(tag)}
+          {(event.tags.length > 0 ? event.tags : [event.category as any]).map((tag, idx) => (
+            <Badge
+              key={`${tag}-${idx}`}
+              className={`text-xs shrink-0 w-fit border-transparent ${getEventBadgeColor(tag, event.category, (event as any).eventType)}`}
+            >
+              {getEventBadgeLabel(tag, event.category)}
             </Badge>
           ))}
         </div>

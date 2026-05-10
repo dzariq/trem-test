@@ -13,8 +13,8 @@ import schoolLogo from "@/assets/school-badge.png";
 import { TAG_CATEGORIES, type TagCategory, type CalendarTag } from "@/types/calendarTags";
 import {
   filterEventsByRole,
-  getTagColor,
-  getTagDisplayName,
+  getEventBadgeColor,
+  getEventBadgeLabel,
 } from "@/lib/calendarUtils";
 import { listCalendarEvents, listUpcomingEvents, type UpcomingEvent } from "@/data/calendar";
 import { useMyProfile } from "@/hooks/useMyProfile";
@@ -544,9 +544,17 @@ export default function CalendarPage() {
                       <h3 className="font-medium text-foreground">{event.title}</h3>
                     </div>
                     <div className="flex flex-wrap gap-1 mb-2">
-                      {event.tags.map((tag) => (
-                        <Badge key={tag} className={`text-xs ${getTagColor(tag)}`}>
-                          {getTagDisplayName(tag)}
+                      {(event.tags && event.tags.length > 0
+                        ? event.tags
+                        : event.category
+                          ? [event.category as any]
+                          : []
+                      ).map((tag, idx) => (
+                        <Badge
+                          key={`${tag}-${idx}`}
+                          className={`text-xs border-transparent ${getEventBadgeColor(tag, event.category, (event as any).eventType)}`}
+                        >
+                          {getEventBadgeLabel(tag, event.category)}
                         </Badge>
                       ))}
                     </div>
