@@ -279,17 +279,16 @@ export async function fetchExistingGrades(
 }
 
 // Calculate letter grade from total.
-// MUST mirror the GENERATED ALWAYS expression on public.student_grades.letter_grade
-// so teacher (computed) and parent (DB) views never disagree.
+// MUST stay in sync with the GENERATED expression on
+// public.student_grades.letter_grade (A*/A/B/C/D/E scale, used everywhere
+// in the UI: pill colors, badges, ReportCardDialog, ResultsSummary, etc.).
 export function calculateLetterGrade(total: number): string {
-  if (total >= 90) return "A+";
+  if (total >= 90) return "A*";
   if (total >= 80) return "A";
-  if (total >= 75) return "B+";
   if (total >= 70) return "B";
-  if (total >= 65) return "C+";
   if (total >= 60) return "C";
   if (total >= 50) return "D";
-  return "F";
+  return "E";
 }
 
 // Save grades (upsert behavior)
