@@ -2045,7 +2045,7 @@ export default function TeacherAcademicPage() {
                                       </div>
                                     </div>
                                     <div className="flex items-center gap-2">
-                                      {hasData && (
+                                      {hasData && !isExpanded && (
                                         <Badge className={cn("text-xs px-2 py-0.5", letterGrade.color)}>
                                           {total}
                                         </Badge>
@@ -2104,9 +2104,14 @@ export default function TeacherAcademicPage() {
                                   <div className="space-y-3">
                                     {/* Report Card Comments */}
                                     <div>
-                                      <label className="text-sm font-semibold text-foreground mb-1 block">
-                                        Report Card Comments
-                                      </label>
+                                      <div className="flex items-center gap-2 mb-1">
+                                        <div className="w-6 h-6 rounded-full bg-blue-100 dark:bg-blue-900/50 flex items-center justify-center flex-shrink-0">
+                                          <FileText className="h-3.5 w-3.5 text-blue-600" />
+                                        </div>
+                                        <label className="text-sm font-semibold text-foreground">
+                                          Report Card Comments
+                                        </label>
+                                      </div>
                                       <Textarea 
                                         placeholder="Comments visible on report card..." 
                                         value={input.reportComment} 
@@ -2130,6 +2135,9 @@ export default function TeacherAcademicPage() {
                                     {/* Individual Study Recommendation */}
                                     <div>
                                       <div className="flex items-center gap-2 mb-1">
+                                        <div className="w-6 h-6 rounded-full bg-amber-100 dark:bg-amber-900/50 flex items-center justify-center flex-shrink-0">
+                                          <Lightbulb className="h-3.5 w-3.5 text-amber-600" />
+                                        </div>
                                         <label className="text-sm font-semibold text-foreground">
                                           Study Recommendation
                                         </label>
@@ -2176,6 +2184,9 @@ export default function TeacherAcademicPage() {
                                     {/* Authentic Comments (Internal) - last */}
                                     <div>
                                       <div className="flex items-center gap-2 mb-1">
+                                        <div className="w-6 h-6 rounded-full bg-red-100 dark:bg-red-900/50 flex items-center justify-center flex-shrink-0">
+                                          <Lock className="h-3.5 w-3.5 text-red-600" />
+                                        </div>
                                         <label className="text-sm font-semibold text-foreground">
                                           Authentic Comments
                                         </label>
