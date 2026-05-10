@@ -9,7 +9,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Download, X, Maximize2, Minimize2, ExternalLink, ChevronLeft, ChevronRight } from "lucide-react";
+import { Download, X, Maximize2, Minimize2, ExternalLink, ChevronLeft, ChevronRight, ZoomIn, ZoomOut } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { Capacitor } from "@capacitor/core";
 
@@ -41,6 +41,7 @@ export function PDFViewerDialog({
   const [pageNumber, setPageNumber] = useState(1);
   const [viewerWidth, setViewerWidth] = useState(320);
   const [loadError, setLoadError] = useState(false);
+  const [scale, setScale] = useState(1);
   const viewerRef = useRef<HTMLDivElement>(null);
   const isNative = Capacitor.isNativePlatform();
 
@@ -57,6 +58,7 @@ export function PDFViewerDialog({
     setPageNumber(1);
     setNumPages(0);
     setLoadError(false);
+    setScale(1);
   }, [open, pdfUrl]);
 
   useEffect(() => {
@@ -165,7 +167,7 @@ export function PDFViewerDialog({
             >
               <Page
                 pageNumber={pageNumber}
-                width={viewerWidth}
+                width={viewerWidth * scale}
                 renderAnnotationLayer
                 renderTextLayer
                 className="overflow-hidden rounded-lg bg-background shadow-sm"
@@ -204,9 +206,33 @@ export function PDFViewerDialog({
               <ChevronLeft className="h-4 w-4" />
               Prev
             </Button>
-            <span className="text-sm font-medium text-muted-foreground">
-              {pageNumber} / {numPages}
-            </span>
+            <div className="flex items-center gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                size="icon"
+                className="h-8 w-8 rounded-full"
+                onClick={() => setScale((s) => Math.max(0.5, +(s - 0.25).toFixed(2)))}
+                disabled={scale <= 0.5}
+                aria-label="Zoom out"
+              >
+                <ZoomOut className="h-4 w-4" />
+              </Button>
+              <span className="text-sm font-medium text-muted-foreground tabular-nums min-w-[5.5rem] text-center">
+                {pageNumber}/{numPages} · {Math.round(scale * 100)}%
+              </span>
+              <Button
+                type="button"
+                variant="outline"
+                size="icon"
+                className="h-8 w-8 rounded-full"
+                onClick={() => setScale((s) => Math.min(3, +(s + 0.25).toFixed(2)))}
+                disabled={scale >= 3}
+                aria-label="Zoom in"
+              >
+                <ZoomIn className="h-4 w-4" />
+              </Button>
+            </div>
             <Button
               type="button"
               variant="outline"
@@ -217,6 +243,36 @@ export function PDFViewerDialog({
             >
               Next
               <ChevronRight className="h-4 w-4" />
+            </Button>
+          </div>
+        )}
+
+        {numPages === 1 && !loadError && (
+          <div className="flex items-center justify-center gap-2 border-t border-border bg-background px-4 py-2">
+            <Button
+              type="button"
+              variant="outline"
+              size="icon"
+              className="h-8 w-8 rounded-full"
+              onClick={() => setScale((s) => Math.max(0.5, +(s - 0.25).toFixed(2)))}
+              disabled={scale <= 0.5}
+              aria-label="Zoom out"
+            >
+              <ZoomOut className="h-4 w-4" />
+            </Button>
+            <span className="text-sm font-medium text-muted-foreground tabular-nums min-w-[3rem] text-center">
+              {Math.round(scale * 100)}%
+            </span>
+            <Button
+              type="button"
+              variant="outline"
+              size="icon"
+              className="h-8 w-8 rounded-full"
+              onClick={() => setScale((s) => Math.min(3, +(s + 0.25).toFixed(2)))}
+              disabled={scale >= 3}
+              aria-label="Zoom in"
+            >
+              <ZoomIn className="h-4 w-4" />
             </Button>
           </div>
         )}
