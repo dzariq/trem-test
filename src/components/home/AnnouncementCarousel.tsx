@@ -83,8 +83,18 @@ export function AnnouncementCarousel({
   const newBadgeClass = `${badgeBase} bg-yellow-400 text-yellow-950 hover:bg-yellow-400`;
   const featuredBadgeClass = "rounded-full p-1.5 bg-yellow-400 text-yellow-950 hover:bg-yellow-400 inline-flex items-center justify-center border-transparent";
 
-  const mainAnnouncement = resolvedAnnouncements[0];
-  const otherAnnouncements = resolvedAnnouncements.slice(1, 4);
+  // Featured: first announcement flagged as featured, else first overall
+  const mainAnnouncement =
+    resolvedAnnouncements.find((a) => a.is_featured) ?? resolvedAnnouncements[0];
+
+  // Below: pinned posts excluding the featured one. If none, fall back to latest.
+  const remaining = resolvedAnnouncements.filter((a) => a.id !== mainAnnouncement?.id);
+  const pinned = remaining.filter((a) => a.is_pinned);
+  const otherAnnouncements = (pinned.length > 0 ? pinned : remaining).slice(0, 3);
+
+  // Build the index map so click handlers open the correct announcement in the drawer
+  const indexOf = (id: AnnouncementId) =>
+    resolvedAnnouncements.findIndex((a) => a.id === id);
 
   const handleAnnouncementClick = (index: number) => {
     setCurrentAnnouncementIndex(index);
