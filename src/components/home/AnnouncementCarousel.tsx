@@ -83,8 +83,18 @@ export function AnnouncementCarousel({
   const newBadgeClass = `${badgeBase} bg-yellow-400 text-yellow-950 hover:bg-yellow-400`;
   const featuredBadgeClass = "rounded-full p-1.5 bg-yellow-400 text-yellow-950 hover:bg-yellow-400 inline-flex items-center justify-center border-transparent";
 
-  const mainAnnouncement = resolvedAnnouncements[0];
-  const otherAnnouncements = resolvedAnnouncements.slice(1, 4);
+  // Featured: first announcement flagged as featured, else first overall
+  const mainAnnouncement =
+    resolvedAnnouncements.find((a) => a.is_featured) ?? resolvedAnnouncements[0];
+
+  // Below: pinned posts excluding the featured one. If none, fall back to latest.
+  const remaining = resolvedAnnouncements.filter((a) => a.id !== mainAnnouncement?.id);
+  const pinned = remaining.filter((a) => a.is_pinned);
+  const otherAnnouncements = (pinned.length > 0 ? pinned : remaining).slice(0, 3);
+
+  // Build the index map so click handlers open the correct announcement in the drawer
+  const indexOf = (id: AnnouncementId) =>
+    resolvedAnnouncements.findIndex((a) => a.id === id);
 
   const handleAnnouncementClick = (index: number) => {
     setCurrentAnnouncementIndex(index);
@@ -130,7 +140,7 @@ export function AnnouncementCarousel({
       <div className="px-4 mb-4">
         <Card 
           className="bg-card border-border shadow-md overflow-hidden cursor-pointer active:scale-[0.98] transition-transform"
-          onClick={() => handleAnnouncementClick(0)}
+          onClick={() => handleAnnouncementClick(indexOf(mainAnnouncement.id))}
         >
           {/* Large Image Header */}
           <div className="relative h-36 overflow-hidden">
@@ -194,7 +204,7 @@ export function AnnouncementCarousel({
               className="w-full"
               onClick={(e) => {
                 e.stopPropagation();
-                handleAnnouncementClick(0);
+                handleAnnouncementClick(indexOf(mainAnnouncement.id));
               }}
             >
               Read More
@@ -214,11 +224,11 @@ export function AnnouncementCarousel({
             className="w-full"
           >
             <CarouselContent className="-ml-2">
-              {otherAnnouncements.map((announcement, idx) => (
+              {otherAnnouncements.map((announcement) => (
                 <CarouselItem key={announcement.id} className="pl-2 basis-[75%]">
                   <Card 
                     className="bg-card border-border shadow-sm overflow-hidden cursor-pointer active:scale-[0.98] transition-transform"
-                    onClick={() => handleAnnouncementClick(idx + 1)}
+                    onClick={() => handleAnnouncementClick(indexOf(announcement.id))}
                   >
                     <div className="relative h-20 overflow-hidden">
                       {announcement.image ? (

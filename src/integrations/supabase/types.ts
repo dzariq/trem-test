@@ -4745,6 +4745,15 @@ export type Database = {
         Args: { ticket_parent_email: string }
         Returns: boolean
       }
+      reset_subject_grade_configs: {
+        Args: {
+          p_academic_period_id: string
+          p_class: string
+          p_subject_ids: number[]
+          p_year_level: string
+        }
+        Returns: undefined
+      }
       set_academic_period_status: {
         Args: { p_period_id: string; p_status: string }
         Returns: undefined
@@ -4765,6 +4774,25 @@ export type Database = {
           p_transfer_date: string
         }
         Returns: Json
+      }
+      upsert_default_grade_config: {
+        Args: {
+          p_academic_period_id: string
+          p_class: string
+          p_mark_types: Json
+          p_year_level: string
+        }
+        Returns: string
+      }
+      upsert_subject_grade_configs: {
+        Args: {
+          p_academic_period_id: string
+          p_class: string
+          p_mark_types: Json
+          p_subject_ids: number[]
+          p_year_level: string
+        }
+        Returns: undefined
       }
       user_has_role: { Args: { check_role: string }; Returns: boolean }
       validate_cca_enrollment_eligibility: {
