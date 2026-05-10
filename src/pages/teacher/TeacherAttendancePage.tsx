@@ -136,7 +136,7 @@ export default function TeacherAttendancePage() {
     [currentYear]
   );
   const [selectedYear, setSelectedYear] = useState(String(currentYear));
-  const [selectedMonth, setSelectedMonth] = useState(0); // January
+  const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth());
   const [selectedDayStats, setSelectedDayStats] = useState<DailyBreakdown | null>(null);
   
   // Scope filter for statistics
