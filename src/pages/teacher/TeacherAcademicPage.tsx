@@ -2032,11 +2032,21 @@ export default function TeacherAcademicPage() {
                                       <div className="min-w-0 flex-1">
                                         <p className={cn("font-semibold text-foreground truncate", isExpanded ? "text-lg" : "text-sm")}>{student.name}</p>
                                         {hasData && !isExpanded && (
-                                          <div className="flex items-center gap-2 mt-0.5">
-                                            <span className="text-xs text-muted-foreground">Total: {total}</span>
-                                            <Badge className={cn("text-[10px] px-1.5 py-0", letterGrade.color)}>
-                                              {letterGrade.grade}
-                                            </Badge>
+                                          <div className="flex items-center gap-2 mt-1">
+                                            {[
+                                              { label: "Report", filled: !!(input.reportComment || "").trim() },
+                                              { label: "Study", filled: !!(input.studyRecommendation || "").trim() },
+                                              { label: "Internal", filled: !!(input.comment || "").trim() },
+                                            ].map(item => (
+                                              <div key={item.label} className="flex items-center gap-1">
+                                                {item.filled ? (
+                                                  <CheckCircle className="h-3 w-3 text-green-600" />
+                                                ) : (
+                                                  <XCircle className="h-3 w-3 text-muted-foreground/40" />
+                                                )}
+                                                <span className={cn("text-[10px]", item.filled ? "text-foreground" : "text-muted-foreground/60")}>{item.label}</span>
+                                              </div>
+                                            ))}
                                           </div>
                                         )}
                                         {!hasData && !isExpanded && (
@@ -2046,8 +2056,10 @@ export default function TeacherAcademicPage() {
                                     </div>
                                     <div className="flex items-center gap-2">
                                       {hasData && !isExpanded && (
-                                        <Badge className={cn("text-xs px-2 py-0.5", letterGrade.color)}>
-                                          {total}
+                                        <Badge className={cn("text-xs px-2 py-0.5 gap-1", letterGrade.color)}>
+                                          <span>{total}</span>
+                                          <span className="opacity-60">·</span>
+                                          <span>{letterGrade.grade}</span>
                                         </Badge>
                                       )}
                                       {isExpanded ? <ChevronUp className="h-4 w-4 text-muted-foreground" /> : <ChevronDown className="h-4 w-4 text-muted-foreground" />}
