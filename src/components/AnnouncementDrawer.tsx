@@ -1,5 +1,6 @@
 import * as React from "react";
 import { useState, useRef, useCallback, useEffect } from "react";
+import { createPortal } from "react-dom";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -268,25 +269,25 @@ export function AnnouncementDrawer({
   // Other attachments below body: same exclusion
   const nonHeroAttachments = quickLinkAttachments;
 
-  return (
+  const drawerNode = (
     <>
       <div
         role="dialog"
         aria-modal="true"
         aria-label={currentAnnouncement.title}
-        className="fixed inset-0 z-[100] flex flex-col bg-background pt-[env(safe-area-inset-top)] pb-[var(--safe-bottom)] animate-in fade-in slide-in-from-right-2 duration-200"
+        className="fixed inset-0 z-[200] flex flex-col bg-background pt-[env(safe-area-inset-top)] pb-[var(--safe-bottom)] animate-in fade-in slide-in-from-right-2 duration-200"
       >
           {/* Header Bar */}
           <div className="flex items-center justify-between px-3 py-3 border-b border-border/50">
             <div className="flex items-center gap-2 min-w-0">
               <Button
-                variant="ghost"
+                variant="outline"
                 size="icon"
-                className="h-9 w-9 rounded-lg flex-shrink-0"
+                className="h-10 w-10 rounded-full flex-shrink-0 border-2 border-primary/40 bg-primary/10 text-primary hover:bg-primary/20 hover:text-primary shadow-sm"
                 onClick={() => onOpenChange(false)}
                 aria-label="Back"
               >
-                <ChevronLeft className="h-5 w-5" />
+                <ChevronLeft className="h-5 w-5" strokeWidth={2.5} />
               </Button>
               {isAcknowledged ? (
                 <Badge
@@ -303,7 +304,7 @@ export function AnnouncementDrawer({
                 <Button
                   variant="outline"
                   size="sm"
-                  className="text-xs rounded-full px-4 gap-1.5"
+                  className="text-xs rounded-full px-4 gap-1.5 border-2 border-primary/60 bg-primary/10 text-primary hover:bg-primary/20 hover:text-primary shadow-sm font-semibold"
                   onClick={handleSeeAll}
                 >
                   <Inbox className="h-3.5 w-3.5" />
