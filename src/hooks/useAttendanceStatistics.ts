@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo } from "react";
 import { supabase } from "@/lib/supabase";
 import { format, startOfMonth, endOfMonth, startOfWeek, endOfWeek, parseISO } from "date-fns";
 import { toast } from "@/hooks/use-toast";
+import { useCampus } from "@/contexts/CampusContext";
 
 export type AttendanceStatus = "present" | "absent" | "late" | "excused";
 
@@ -75,6 +76,7 @@ export function useAttendanceStatistics({
   concernsCustomStartDate,
   concernsCustomEndDate,
 }: UseAttendanceStatisticsProps) {
+  const { activeCampus } = useCampus();
   // Resolve the class filter: prefer selectedClasses, fallback to selectedClass
   const effectiveClasses = useMemo(() => {
     if (selectedClasses && selectedClasses.length > 0) return selectedClasses;
@@ -105,13 +107,15 @@ export function useAttendanceStatistics({
         const startDate = `${selectedYear}-01-01`;
         const endDate = `${selectedYear}-12-31`;
 
-        const { data, error: queryError } = await supabase
+        let yearlyQuery = supabase
           .from("attendance")
           .select("*")
           .in("class", effectiveClasses)
           .gte("date", startDate)
           .lte("date", endDate)
           .order("date", { ascending: true });
+        if (activeCampus) yearlyQuery = yearlyQuery.eq("campus_code", activeCampus);
+        const { data, error: queryError } = await yearlyQuery;
 
         if (queryError) {
           logSupabaseError("useAttendanceStatistics/yearly", queryError);
@@ -129,7 +133,7 @@ export function useAttendanceStatistics({
           student_id: row.student_id,
           class: row.class,
           date: row.date,
-          status: row.status as AttendanceStatus,
+          status: (row.status?.toLowerCase() ?? row.status) as AttendanceStatus,
           remarks: row.remarks,
           student_name: row.student_name,
         })));
@@ -147,7 +151,7 @@ export function useAttendanceStatistics({
     };
 
     fetchYearlyData();
-  }, [effectiveClasses, selectedYear]);
+  }, [effectiveClasses, selectedYear, activeCampus]);
 
   // Fetch monthly data for daily breakdown
   useEffect(() => {
@@ -165,13 +169,15 @@ export function useAttendanceStatistics({
         const startDateStr = format(monthStart, "yyyy-MM-dd");
         const endDateStr = format(monthEnd, "yyyy-MM-dd");
 
-        const { data, error: queryError } = await supabase
+        let monthlyQuery = supabase
           .from("attendance")
           .select("*")
           .in("class", effectiveClasses)
           .gte("date", startDateStr)
           .lte("date", endDateStr)
           .order("date", { ascending: false });
+        if (activeCampus) monthlyQuery = monthlyQuery.eq("campus_code", activeCampus);
+        const { data, error: queryError } = await monthlyQuery;
 
         if (queryError) {
           logSupabaseError("useAttendanceStatistics/monthly", queryError);
@@ -189,7 +195,7 @@ export function useAttendanceStatistics({
           student_id: row.student_id,
           class: row.class,
           date: row.date,
-          status: row.status as AttendanceStatus,
+          status: (row.status?.toLowerCase() ?? row.status) as AttendanceStatus,
           remarks: row.remarks,
           student_name: row.student_name,
         }));
@@ -236,7 +242,7 @@ export function useAttendanceStatistics({
     };
 
     fetchMonthlyData();
-  }, [effectiveClasses, selectedYear, selectedMonth]);
+  }, [effectiveClasses, selectedYear, selectedMonth, activeCampus]);
 
   // Fetch concerns data based on time range
   useEffect(() => {
@@ -267,12 +273,14 @@ export function useAttendanceStatistics({
         const startDateStr = format(startDate, "yyyy-MM-dd");
         const endDateStr = format(endDate, "yyyy-MM-dd");
 
-        const { data, error: queryError } = await supabase
+        let concernsQuery = supabase
           .from("attendance")
           .select("*")
           .in("class", effectiveClasses)
           .gte("date", startDateStr)
           .lte("date", endDateStr);
+        if (activeCampus) concernsQuery = concernsQuery.eq("campus_code", activeCampus);
+        const { data, error: queryError } = await concernsQuery;
 
         if (queryError) {
           logSupabaseError("useAttendanceStatistics/concerns", queryError);
@@ -289,7 +297,7 @@ export function useAttendanceStatistics({
           student_id: row.student_id,
           class: row.class,
           date: row.date,
-          status: row.status as AttendanceStatus,
+          status: (row.status?.toLowerCase() ?? row.status) as AttendanceStatus,
           remarks: row.remarks,
           student_name: row.student_name,
         }));
@@ -333,7 +341,7 @@ export function useAttendanceStatistics({
     };
 
     fetchConcernsData();
-  }, [effectiveClasses, concernsTimeRange, concernsCustomStartDate, concernsCustomEndDate]);
+  }, [effectiveClasses, concernsTimeRange, concernsCustomStartDate, concernsCustomEndDate, activeCampus]);
 
   // Compute yearly chart data (grouped by month)
   const chartData = useMemo<MonthlyChartData[]>(() => {
