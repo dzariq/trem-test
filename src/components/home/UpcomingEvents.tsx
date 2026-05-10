@@ -7,8 +7,16 @@ import { useNavigate } from "react-router-dom";
 import type { UpcomingEvent } from "@/data/calendar";
 import type { UpcomingCcaSession } from "@/hooks/useUpcomingCcaSessions";
 import { EventDetailsSheet } from "@/components/events/EventDetailsSheet";
+import {
+  PARENT_CATEGORY_ORDER,
+  TEACHER_CATEGORY_ORDER,
+  CATEGORY_PILL_STYLES,
+  mapDbToCategory,
+} from "@/lib/calendarCategorySubtypes";
+import { CATEGORY_DISPLAY_NAMES, type TagCategory } from "@/types/calendarTags";
+import { cn } from "@/lib/utils";
 
-type EventCategory = "all" | "academic" | "sports" | "arts" | "meeting" | "cca";
+type EventCategory = "all" | TagCategory;
 
 type MergedEvent = (UpcomingEvent | UpcomingCcaSession) & { isCca?: boolean };
 
@@ -23,6 +31,9 @@ export function UpcomingEvents({ events, ccaSessions, seeAllPath = "/parent/cale
   const [activeFilter, setActiveFilter] = useState<EventCategory>("all");
   const [detailsOpen, setDetailsOpen] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState<MergedEvent | null>(null);
+
+  const isTeacher = seeAllPath.includes("/teacher");
+  const categoryOrder: TagCategory[] = isTeacher ? TEACHER_CATEGORY_ORDER : PARENT_CATEGORY_ORDER;
 
   // Merge calendar events and CCA sessions, sorted by date
   const mergedEvents = useMemo<MergedEvent[]>(() => {
@@ -78,26 +89,23 @@ export function UpcomingEvents({ events, ccaSessions, seeAllPath = "/parent/cale
     }
   };
 
-  const filters: { value: EventCategory; label: string }[] = [
+  const filters: { value: EventCategory; label: string; pillStyle?: string }[] = [
     { value: "all", label: "All" },
-    { value: "cca", label: "CCA" },
-    { value: "academic", label: "Academic" },
-    { value: "sports", label: "Sports" },
-    { value: "arts", label: "Arts" },
-    { value: "meeting", label: "Meeting" },
+    ...categoryOrder.map((c) => ({
+      value: c,
+      label: CATEGORY_DISPLAY_NAMES[c],
+      pillStyle: CATEGORY_PILL_STYLES[c],
+    })),
   ];
 
   const filteredEvents = useMemo(() => {
     if (activeFilter === "all") return mergedEvents;
-    if (activeFilter === "cca") return mergedEvents.filter(e => e.isCca);
-    
-    return mergedEvents.filter(e => {
-      if (e.isCca) {
-        const ccaSession = e as UpcomingCcaSession;
-        return ccaSession.category?.toLowerCase() === activeFilter;
-      }
+
+    return mergedEvents.filter((e) => {
+      if (e.isCca) return false; // CCA sessions only shown under "All"
       const calEvent = e as UpcomingEvent;
-      return calEvent.category?.toLowerCase() === activeFilter;
+      const mapped = mapDbToCategory(calEvent.category || "", (calEvent as any).eventType);
+      return mapped === activeFilter;
     });
   }, [mergedEvents, activeFilter]);
 
@@ -140,8 +148,14 @@ export function UpcomingEvents({ events, ccaSessions, seeAllPath = "/parent/cale
         {filters.map((filter) => (
           <Badge
             key={filter.value}
-            variant={activeFilter === filter.value ? "default" : "outline"}
-            className="cursor-pointer w-fit shrink-0 px-compact py-1"
+            variant="outline"
+            className={cn(
+              "cursor-pointer w-fit shrink-0 px-compact py-1 border transition-colors",
+              filter.pillStyle,
+              activeFilter === filter.value
+                ? "ring-2 ring-primary/40"
+                : "opacity-60"
+            )}
             onClick={() => setActiveFilter(filter.value)}
           >
             {filter.label}
