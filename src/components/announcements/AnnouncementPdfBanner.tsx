@@ -7,6 +7,7 @@ import type { AnnouncementAttachment } from "@/data/announcements";
 interface Props {
   attachments: AnnouncementAttachment[];
   className?: string;
+  onOpenPdf?: (pdf: AnnouncementAttachment) => void;
 }
 
 export const isPdfAttachment = (a: AnnouncementAttachment): boolean => {
@@ -14,7 +15,7 @@ export const isPdfAttachment = (a: AnnouncementAttachment): boolean => {
   return /\.pdf(\?|$)/i.test(a.url ?? "") || /\.pdf$/i.test(a.name ?? "");
 };
 
-export function AnnouncementPdfBanner({ attachments, className }: Props) {
+export function AnnouncementPdfBanner({ attachments, className, onOpenPdf }: Props) {
   const [pdfDialog, setPdfDialog] = useState<{ open: boolean; url: string; title: string }>({
     open: false,
     url: "",
@@ -41,13 +42,17 @@ export function AnnouncementPdfBanner({ attachments, className }: Props) {
             <button
               key={idx}
               type="button"
-              onClick={() =>
-                setPdfDialog({
-                  open: true,
-                  url: pdf.url,
-                  title: pdf.name.replace(/\.pdf$/i, ""),
-                })
-              }
+              onClick={() => {
+                if (onOpenPdf) {
+                  onOpenPdf(pdf);
+                } else {
+                  setPdfDialog({
+                    open: true,
+                    url: pdf.url,
+                    title: pdf.name.replace(/\.pdf$/i, ""),
+                  });
+                }
+              }}
               className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-card border border-attachment-border hover:bg-background transition-colors text-xs font-medium text-foreground max-w-full"
               title={pdf.name}
             >
@@ -58,13 +63,15 @@ export function AnnouncementPdfBanner({ attachments, className }: Props) {
           ))}
         </div>
       </div>
-      <PDFViewerDialog
-        open={pdfDialog.open}
-        onOpenChange={(open) => setPdfDialog((p) => ({ ...p, open }))}
-        pdfUrl={pdfDialog.url}
-        title={pdfDialog.title}
-        downloadFileName={`${pdfDialog.title}.pdf`}
-      />
+      {!onOpenPdf && (
+        <PDFViewerDialog
+          open={pdfDialog.open}
+          onOpenChange={(open) => setPdfDialog((p) => ({ ...p, open }))}
+          pdfUrl={pdfDialog.url}
+          title={pdfDialog.title}
+          downloadFileName={`${pdfDialog.title}.pdf`}
+        />
+      )}
     </>
   );
 }
