@@ -70,16 +70,16 @@ export function filterEventsByTypes(
     const category = (event.category || "").toLowerCase();
 
     // Map category strings to our filter types
-    if (selectedTypes.includes("exam") && (category.includes("exam") || category.includes("test") || category.includes("assessment"))) {
+    if (selectedTypes.includes("exam") && (category.includes("exam") || category.includes("test") || category.includes("assessment") || category.includes("checkpoint") || category.includes("igcse") || category.includes("mye"))) {
       return true;
     }
-    if (selectedTypes.includes("holiday") && category.includes("holiday")) {
+    if (selectedTypes.includes("holiday") && (category.includes("holiday") || category.includes("term break"))) {
       return true;
     }
-    if (selectedTypes.includes("academic") && (category.includes("academic") || category.includes("school") || category.includes("class"))) {
+    if (selectedTypes.includes("academic") && (category.includes("academic") || category.includes("school") || category.includes("class") || category.includes("extra class") || category.includes("enrichment") || category.includes("due date"))) {
       return true;
     }
-    if (selectedTypes.includes("event") && (category.includes("event") || category.includes("activity") || category.includes("meeting"))) {
+    if (selectedTypes.includes("event") && (category.includes("event") || category.includes("activity") || category.includes("meeting") || category.includes("field trip") || category.includes("open day") || category.includes("workshop") || category.includes("conference") || category.includes("ptc") || category.includes("family") || category.includes("team building") || category.includes("back to school") || category.includes("celebration"))) {
       return true;
     }
 
@@ -140,7 +140,7 @@ const isExamEvent = (event: UpcomingEvent): boolean => {
   }
   // Check category (matches web admin's event_category field)
   const category = (event.category || "").toLowerCase();
-  if (category.includes("exam") || category.includes("test") || category.includes("assessment")) {
+  if (category.includes("exam") || category.includes("test") || category.includes("assessment") || category.includes("checkpoint") || category.includes("igcse") || category.includes("mye")) {
     return true;
   }
   return false;
@@ -157,7 +157,7 @@ const isHolidayEvent = (event: UpcomingEvent): boolean => {
   }
   // Check category (matches web admin's event_category or event_type field)
   const category = (event.category || "").toLowerCase();
-  if (category.includes("holiday")) {
+  if (category.includes("holiday") || category.includes("term break")) {
     return true;
   }
   return false;
@@ -177,11 +177,18 @@ const isEventsEvent = (event: UpcomingEvent): boolean => {
   }
   // Also check category string field
   const category = (event.category || "").toLowerCase();
-  return category.includes("event") || 
-         category.includes("student") || 
+  return category.includes("event") ||
+         category.includes("student") ||
          category.includes("parent") ||
          category.includes("family") ||
-         category.includes("conference");
+         category.includes("conference") ||
+         category.includes("field trip") ||
+         category.includes("open day") ||
+         category.includes("workshop") ||
+         category.includes("ptc") ||
+         category.includes("team building") ||
+         category.includes("back to school") ||
+         category.includes("celebration");
 };
 
 // Filter for a specific tab
