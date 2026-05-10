@@ -389,15 +389,14 @@ export default function TeacherHomePage() {
         showNotifications 
         showProfile 
         leftContent={
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 min-w-0 flex-1">
             <img 
               src={schoolBadge} 
               alt="School Badge" 
               className="h-16 w-auto -my-3 drop-shadow-md" 
             />
-            <div>
-              <p className="text-xs text-muted-foreground">Welcome back,</p>
-              <p className="text-sm font-semibold text-foreground">
+            <div className="min-w-0 flex-1">
+              <p className="text-sm font-semibold text-foreground truncate">
                 {profileLoading
                   ? "Loading..."
                   : profile?.full_name ?? profile?.email ?? "Teacher"}
