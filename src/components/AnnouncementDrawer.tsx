@@ -253,6 +253,7 @@ export function AnnouncementDrawer({
         pdfUrl={pdfDialog.url}
         title={pdfDialog.title}
         downloadFileName={`${pdfDialog.title}.pdf`}
+        contentClassName="!z-[300]"
       />
     );
   }
@@ -404,7 +405,11 @@ export function AnnouncementDrawer({
                   </div>
 
                   {/* PDF Banner */}
-                  <AnnouncementPdfBanner attachments={allAttachments} className="mb-5" />
+                  <AnnouncementPdfBanner
+                    attachments={allAttachments}
+                    className="mb-5"
+                    onOpenPdf={(pdf) => openPdf(pdf)}
+                  />
 
                   {/* Acknowledge Button */}
                   {currentAnnouncement.requires_acknowledgement && (
@@ -533,6 +538,7 @@ export function AnnouncementDrawer({
         pdfUrl={pdfDialog.url}
         title={pdfDialog.title}
         downloadFileName={`${pdfDialog.title}.pdf`}
+        contentClassName="!z-[300]"
       />
       <ImagePreviewDialog
         open={imagePreviewOpen}
