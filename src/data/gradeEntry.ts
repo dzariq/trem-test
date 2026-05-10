@@ -278,7 +278,10 @@ export async function fetchExistingGrades(
   return gradesMap;
 }
 
-// Calculate letter grade from total
+// Calculate letter grade from total.
+// MUST stay in sync with the GENERATED expression on
+// public.student_grades.letter_grade (A*/A/B/C/D/E scale, used everywhere
+// in the UI: pill colors, badges, ReportCardDialog, ResultsSummary, etc.).
 export function calculateLetterGrade(total: number): string {
   if (total >= 90) return "A*";
   if (total >= 80) return "A";
