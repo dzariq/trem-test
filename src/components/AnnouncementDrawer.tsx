@@ -542,4 +542,8 @@ export function AnnouncementDrawer({
       />
     </>
   );
+
+  return typeof document !== "undefined"
+    ? createPortal(drawerNode, document.body)
+    : drawerNode;
 }
