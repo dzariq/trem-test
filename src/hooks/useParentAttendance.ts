@@ -1,5 +1,6 @@
 import { useState, useEffect, useMemo, useCallback } from "react";
 import { supabase } from "@/lib/supabase";
+import { format } from "date-fns";
 
 type AttendanceStatus = "present" | "absent" | "late" | "excused";
 
@@ -57,8 +58,8 @@ function getRollingMonthsRange(months: number): { start: string; end: string } {
   const start = new Date(today.getFullYear(), today.getMonth() - months + 1, 1); // Start of N months ago
 
   return {
-    start: start.toISOString().split("T")[0],
-    end: end.toISOString().split("T")[0],
+    start: format(start, "yyyy-MM-dd"),
+    end: format(end, "yyyy-MM-dd"),
   };
 }
 

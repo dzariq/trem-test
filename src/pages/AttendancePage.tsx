@@ -75,7 +75,8 @@ export default function AttendancePage() {
   const [selectedMonth, setSelectedMonth] = useState(months[new Date().getMonth()]);
   const [currentMonthIndex, setCurrentMonthIndex] = useState(new Date().getMonth());
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
-  const [selectedYear, setSelectedYear] = useState("2026");
+  const currentYear = new Date().getFullYear();
+  const [selectedYear, setSelectedYear] = useState(String(currentYear));
   const [zoomLevel, setZoomLevel] = useState<ZoomLevel>(12); // Default to yearly view
   const chartContainerRef = useRef<HTMLDivElement>(null);
   const [isPinching, setIsPinching] = useState(false);
@@ -115,7 +116,7 @@ export default function AttendancePage() {
   const swipeDirectionRef = useRef<'horizontal' | 'vertical' | null>(null);
   const swipeDistanceRef = useRef(0);
 
-  const yearOptions = ["2026", "2025", "2024"];
+  const yearOptions = [currentYear, currentYear - 1, currentYear - 2].map(String);
   const zoomOptions: { value: ZoomLevel; label: string }[] = [
     { value: 3, label: "3 Months" },
     { value: 6, label: "6 Months" },

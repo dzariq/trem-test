@@ -12,6 +12,7 @@ import {
 } from "@/data/teacherAttendance";
 import { useTeacherScope } from "@/hooks/useTeacherScope";
 import { sortClasses } from "@/lib/classSorting";
+import { useCampus } from "@/contexts/CampusContext";
 
 export type StudentAttendanceState = {
   student_id: string;
@@ -22,6 +23,7 @@ export type StudentAttendanceState = {
 
 export function useTeacherAttendance() {
   const teacherScope = useTeacherScope();
+  const { activeCampus } = useCampus();
   const isTeacher = teacherScope.isTeacher;
   const allowedClassNames = useMemo(
     () => sortClasses(teacherScope.allowedClassYears.map((cls) => cls.class_name)),
@@ -81,7 +83,7 @@ export function useTeacherAttendance() {
       try {
         setLoadingClasses(true);
         setError(null);
-        const classList = await fetchAvailableClasses();
+        const classList = await fetchAvailableClasses(activeCampus);
         if (mounted) {
           setClasses(classList);
           if (classList.length > 0 && !selectedClass) {
@@ -105,7 +107,7 @@ export function useTeacherAttendance() {
     };
     loadClasses();
     return () => { mounted = false; };
-  }, [allowedClassNames, isTeacher, teacherScope.loading]);
+  }, [allowedClassNames, isTeacher, teacherScope.loading, activeCampus]);
 
   // Load students when class changes
   useEffect(() => {
@@ -120,7 +122,7 @@ export function useTeacherAttendance() {
       try {
         setLoadingStudents(true);
         setError(null);
-        const studentList = await fetchStudentsByClass(selectedClass);
+        const studentList = await fetchStudentsByClass(selectedClass, activeCampus);
         if (mounted) {
           setStudents(studentList);
           // Initialize attendance state for each student
@@ -152,7 +154,7 @@ export function useTeacherAttendance() {
     };
     loadStudents();
     return () => { mounted = false; };
-  }, [selectedClass]);
+  }, [selectedClass, activeCampus]);
 
   // Load existing attendance when class or date changes
   useEffect(() => {
@@ -163,7 +165,7 @@ export function useTeacherAttendance() {
       try {
         setLoadingAttendance(true);
         setError(null);
-        const records = await fetchAttendanceForClassDate(selectedClass, dateString);
+        const records = await fetchAttendanceForClassDate(selectedClass, dateString, activeCampus);
         if (mounted) {
           // Map records by student_id
           const recordMap = new Map<string, AttendanceRecord>();
@@ -201,7 +203,7 @@ export function useTeacherAttendance() {
     };
     loadAttendance();
     return () => { mounted = false; };
-  }, [selectedClass, dateString, students]);
+  }, [selectedClass, dateString, students, activeCampus]);
 
   // Update status for a student
   const setStudentStatus = useCallback((studentId: string, status: AttendanceStatus) => {
@@ -253,7 +255,7 @@ export function useTeacherAttendance() {
           remarks: attendanceState[s.id].remarks || undefined,
         }));
 
-      await saveAttendance(selectedClass, dateString, records);
+      await saveAttendance(selectedClass, dateString, records, activeCampus);
 
       return {
         success: true,
@@ -266,7 +268,7 @@ export function useTeacherAttendance() {
     } finally {
       setSaving(false);
     }
-  }, [selectedClass, dateString, selectedDate, students, attendanceState]);
+  }, [selectedClass, dateString, selectedDate, students, attendanceState, activeCampus]);
 
   // Calculate summary counts
   const summary = {
