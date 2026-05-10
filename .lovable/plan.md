@@ -1,46 +1,60 @@
-## Problem
+# Calendar ↔ Supabase Campus Audit
 
-The shared Supabase schema changed: `calendar_events.event_category` used to be a text label (e.g. `"exam"`, `"holiday"`); it is now a **uuid foreign key** into a new `event_categories` table. The other Lovable project (web admin) was updated to match, but the mobile app still treats `event_category` as a string. Result: events fetch correctly, but every tab/filter that runs `category.includes("exam"/"holiday"/"event"/...)` matches against a UUID string and silently fails — the calendar looks broken / empty / mis-bucketed.
+## What's already correct
 
-Fix is purely client-side. No Supabase changes, so the other project is untouched.
+- `calendar_events` is fetched with the new `event_categories` join (UUID → name) — re-linking from the previous fix is intact.
+- Teacher Calendar page (`TeacherCalendarPage`) passes `activeCampus` from `useCampus()` into `listCalendarEvents` and re-fetches when toggled.
+- Parent Calendar page passes `selectedStudent.campus_code` (parents don't toggle — they follow the selected child's campus, which is correct).
+- Teacher Home (`TeacherHomePage`) passes `activeCampus` into `listUpcomingEvents`.
+- Parent Home (`HomePage`) passes `parentCampusCode` into `listUpcomingEvents`.
+- Server filter uses `.or(campus_code.eq.X, campus_code.is.null)` — correctly includes school-wide events that have no campus.
+- DB sanity: `calendar_events` currently has 184 rows tagged `GL`, 0 rows tagged `BO`. So toggling BO legitimately shows an empty calendar (no bug — just no data on that side).
 
-## Scope
+## Gaps to fix
 
-Files to update (3):
-- `src/data/calendar.ts` — fetch the category name via join, expose it as the event's `category`.
-- `src/lib/calendarFilters.ts` — small refinement to the keyword buckets so the new full names ("Mid-Year Exam", "Public Holiday", "Field Trip", "Internal Event", "Parent–Teacher Conference", etc.) classify into the right tab.
-- `src/hooks/useNotifications.ts` — same join (it also reads `calendar_events`) so notifications keep working.
+### 1. `useUpcomingDeadlines` ignores the campus toggle
+File: `src/hooks/useUpcomingDeadlines.ts`
 
-Out of scope: BO has 0 calendar rows in the DB — that's a content gap on the other project's side. The app will simply show its empty state when toggled to BO.
+- The `examinations` query has no campus filter.
+- The fallback `listUpcomingEvents({ role: "teacher", limit: 20 })` call hardcodes role and omits `campusCode`.
+- Result: the "Upcoming Deadlines" widget on Teacher Home shows GL exams/events even after toggling to BO.
 
-## Steps
+Fix: accept an optional `campusCode` arg (default from `useCampus().activeCampus` at the call site), apply `.or(campus_code.eq.X, campus_code.is.null)` to the examinations query (only if that column exists — otherwise leave examinations unscoped and just scope the events fallback), and forward `campusCode` to `listUpcomingEvents`. Re-run when `activeCampus` changes.
 
-1. **Resolve the category name (data layer)**
-   - In `listCalendarEvents` and `listUpcomingEvents`, change the select to:
-     `select("*, event_categories:event_category(name, color, sort_order)")`.
-   - In `mapCalendarRow`, derive `category` from, in order:
-     `row.event_categories?.name` → `row.event_type` → `"general"`, then lowercased.
-   - Keep `eventType` populated from `row.event_type` (subtype mapping still uses it).
-   - Optionally surface the category color so cards/badges can use the admin-defined hue later (no UI change required now).
+### 2. CCA sessions on the calendar are not campus-scoped
+File: `src/hooks/useCcaSessionsCalendar.ts`
 
-2. **Tighten filter keyword matching (`calendarFilters.ts`)**
-   - Extend the `isExamEvent` / `isHolidayEvent` / `isEventsEvent` keyword lists to cover the names actually used in `event_categories`:
-     - exam: `exam`, `test`, `assessment`, `checkpoint`, `igcse`, `mye`
-     - holiday: `holiday`, `term break`
-     - event: `event`, `field trip`, `open day`, `workshop`, `conference`, `ptc`, `family`, `team building`, `back to school`, `celebration`
-     - academic: `extra class`, `enrichment`, `due date`
-   - Same additions inside `filterEventsByTypes`.
-   - No UI change to filter chips.
+- `cca_sessions` is fetched globally; sessions from the other campus appear on the toggled view.
 
-3. **Notifications hook**
-   - In `src/hooks/useNotifications.ts`, update the calendar fetch to also join `event_categories(name)` and use the resolved name where the previous code used `event_category` as text (so notification routing and labels stay correct).
+Fix: join `cca_activities.campus_code` (or join via `school_locations`) and filter by `activeCampus` (with `is.null` fallback). Add `activeCampus` to the hook's dep list.
 
-4. **Smoke test in preview**
-   - Toggle to GL: confirm events appear in the month grid, exam dates land in the Exam tab, public holidays land in the Holidays tab, field trips/PTC land in the Events tab.
-   - Toggle to BO: confirm graceful empty state (no errors).
-   - Confirm notifications still surface upcoming events.
+### 3. Single-campus accounts still see the toggle pill
+File: `src/components/campus/CampusToggle.tsx`
 
-## Risk / Compatibility
+- The pill renders when `campuses.length > 0`, so standalone-campus teachers see a one-button "toggle" that does nothing useful.
+- `CampusSwitcher` (the bigger card) already correctly hides when `!isMultiCampus`.
 
-- No DB writes, no migrations, no RLS changes → other Lovable project is unaffected.
-- The new `select(..., event_categories:event_category(...))` requires the FK to exist (it does). If a future row has `event_category = NULL`, we still fall back to `event_type`, so nothing breaks.
+Fix: change the early-return in `CampusToggle` from `campuses.length === 0` to `campuses.length < 2` so single-campus accounts simply don't see a toggle. Their `activeCampus` is still set (to their one campus), so all scoped queries continue to work.
+
+### 4. Notification calendar resolution (sanity check)
+File: `src/hooks/useNotifications.ts`
+
+- Already uses the `event_categories` join after the previous fix. Verify the calendar-events fetch inside the hook also accepts/passes `campusCode` so cross-campus event notifications don't leak. Add the same `.or(eq, is.null)` filter when a campus is active.
+
+## Out of scope / no DB changes
+
+- No Supabase migrations. The other Lovable project sharing this Supabase is unaffected.
+- No changes to RLS, triggers, or `event_categories` mapping.
+- BO having 0 events is a content/seeding question for the admin portal, not an app bug — the empty state is correct behaviour.
+
+## Smoke test after the fix
+
+1. As a multi-campus teacher: toggle GL → events, exams, CCA sessions, deadlines all show GL. Toggle BO → all four surfaces become empty (or show only school-wide rows). No GL leakage.
+2. As a single-campus teacher: no toggle pill in the header; calendar still loads their campus.
+3. As a parent: switch child between campuses — calendar updates to that child's campus.
+
+## Technical summary
+
+- 4 frontend files touched: `useUpcomingDeadlines.ts`, `useCcaSessionsCalendar.ts`, `CampusToggle.tsx`, `useNotifications.ts`.
+- New optional `campusCode` parameter pattern, mirroring the existing `listCalendarEvents` / `listUpcomingEvents` signature.
+- All new filters use the same `.or(campus_code.eq.X, campus_code.is.null)` pattern already proven elsewhere in `src/data/calendar.ts`.

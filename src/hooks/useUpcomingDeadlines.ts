@@ -24,7 +24,7 @@ const logSupabaseError = (
   });
 };
 
-export function useUpcomingDeadlines(limit: number = 5) {
+export function useUpcomingDeadlines(limit: number = 5, campusCode?: string | null) {
   const [items, setItems] = useState<UpcomingDeadlineItem[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -41,12 +41,16 @@ export function useUpcomingDeadlines(limit: number = 5) {
       const endIso = end.toISOString();
 
       try {
-        const { data: exams, error: examsError } = await supabase
+        let examsQuery = supabase
           .from("examinations")
           .select("id, exam_name, start_date, end_date")
           .gte("start_date", startIso)
           .lte("start_date", endIso)
           .order("start_date", { ascending: true });
+        if (campusCode) {
+          examsQuery = examsQuery.or(`campus_code.eq.${campusCode},campus_code.is.null`);
+        }
+        const { data: exams, error: examsError } = await examsQuery;
 
         if (examsError) {
           logSupabaseError("useUpcomingDeadlines/examinations", examsError);
@@ -70,7 +74,7 @@ export function useUpcomingDeadlines(limit: number = 5) {
           return;
         }
 
-        const events = await listUpcomingEvents({ role: "teacher", limit: 20 });
+        const events = await listUpcomingEvents({ role: "teacher", limit: 20, campusCode });
         const filtered = events.filter((event) => {
           const category = event.category?.toLowerCase() || "";
           const title = event.title?.toLowerCase() || "";
@@ -112,7 +116,7 @@ export function useUpcomingDeadlines(limit: number = 5) {
     return () => {
       isMounted = false;
     };
-  }, [limit]);
+  }, [limit, campusCode]);
 
   return { items, loading, error };
 }
