@@ -412,7 +412,7 @@ export async function saveGrades(
   }
 }
 
-// Fetch class recommendation (using grade_configurations additional_columns or a simple approach)
+// Fetch class recommendation for a given class/subject/period.
 export async function fetchClassStudyRecommendation(
   className: string,
   subjectId: number,
