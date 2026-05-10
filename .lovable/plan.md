@@ -1,52 +1,46 @@
-# Teacher Academic Page – Typography & Color Cleanup
+## Problem
 
-Tighten the visual design of the grading entry view: standardize the type scale, neutralize colored backgrounds, and replace the green Total Score panel with a clean container.
+The shared Supabase schema changed: `calendar_events.event_category` used to be a text label (e.g. `"exam"`, `"holiday"`); it is now a **uuid foreign key** into a new `event_categories` table. The other Lovable project (web admin) was updated to match, but the mobile app still treats `event_category` as a string. Result: events fetch correctly, but every tab/filter that runs `category.includes("exam"/"holiday"/"event"/...)` matches against a UUID string and silently fails — the calendar looks broken / empty / mis-bucketed.
+
+Fix is purely client-side. No Supabase changes, so the other project is untouched.
 
 ## Scope
-File: `src/pages/teacher/TeacherAcademicPage.tsx` (grading entry UI block, ~lines 1943–2200).
 
-## 1. Study Recommendation card
-- Title "Study Recommendation": change from `text-xs font-semibold text-amber-700` → `text-sm font-semibold text-foreground` (black). Keep amber icon circle as the only accent.
-- Placeholder text in textarea: keep size `text-sm` but remove italic styling override if any (placeholder is italic globally — leave default; just ensure copy is consistent).
-- "Class-wide" badge: keep amber outline (already standardized accent).
-- Counter `0/300` and "Save" button: leave structurally, just align to the new type scale (`text-xs` muted).
+Files to update (3):
+- `src/data/calendar.ts` — fetch the category name via join, expose it as the event's `category`.
+- `src/lib/calendarFilters.ts` — small refinement to the keyword buckets so the new full names ("Mid-Year Exam", "Public Holiday", "Field Trip", "Internal Event", "Parent–Teacher Conference", etc.) classify into the right tab.
+- `src/hooks/useNotifications.ts` — same join (it also reads `calendar_events`) so notifications keep working.
 
-## 2. Student row header (collapsed state)
-- Student name: keep `text-sm font-semibold text-foreground` ✓ (already consistent).
-- "Not graded": already red ✓. Keep `text-xs`, remove any italic.
-- Total badge on right: keep.
+Out of scope: BO has 0 calendar rows in the DB — that's a content gap on the other project's side. The app will simply show its empty state when toggled to BO.
 
-## 3. Expanded student card — Total Score panel (the light-green block)
-Replace the `bg-accent/50` (which renders light green in this theme) with a neutral container:
-- Container: `rounded-lg border border-border bg-card p-3` (no tinted background).
-- "Total Score" label: `text-xs font-medium text-muted-foreground uppercase tracking-wide`.
-- Score value: keep `text-2xl font-bold text-foreground`, "/100" muted.
-- Letter grade: render as a circular chip on the right with the grade's accent color as a soft tint (not a heavy badge). Use `w-12 h-12 rounded-full` with `bg-{grade}-50 text-{grade}-700 border border-{grade}-200` style (matches the C-circle look in the screenshot but inside a clean white container).
+## Steps
 
-## 4. Comment sections (Report Card / Authentic / Individual Study Recommendation)
-Standardize the three section headers to one rule:
-- Label: `text-sm font-semibold text-foreground` (black, not colored).
-- Optional small meta tag (e.g. "(Internal)", "Individual", "Class-wide"): `text-[10px]` muted or kept as outline badge — one style only.
-- Textareas: remove tinted backgrounds (`bg-emerald-50/50`, `bg-red-50/50`, `bg-amber-50/50`) and colored borders → use neutral `border-border bg-background`. Keep placeholder default (no italic override).
-- Character counters: unify to `text-[10px] text-muted-foreground` right-aligned.
+1. **Resolve the category name (data layer)**
+   - In `listCalendarEvents` and `listUpcomingEvents`, change the select to:
+     `select("*, event_categories:event_category(name, color, sort_order)")`.
+   - In `mapCalendarRow`, derive `category` from, in order:
+     `row.event_categories?.name` → `row.event_type` → `"general"`, then lowercased.
+   - Keep `eventType` populated from `row.event_type` (subtype mapping still uses it).
+   - Optionally surface the category color so cards/badges can use the admin-defined hue later (no UI change required now).
 
-The "Class recommendation (shown to all)" inline preview box stays amber-tinted (it's a callout, not a field) but text drops to `text-[11px] text-foreground` with a muted label.
+2. **Tighten filter keyword matching (`calendarFilters.ts`)**
+   - Extend the `isExamEvent` / `isHolidayEvent` / `isEventsEvent` keyword lists to cover the names actually used in `event_categories`:
+     - exam: `exam`, `test`, `assessment`, `checkpoint`, `igcse`, `mye`
+     - holiday: `holiday`, `term break`
+     - event: `event`, `field trip`, `open day`, `workshop`, `conference`, `ptc`, `family`, `team building`, `back to school`, `celebration`
+     - academic: `extra class`, `enrichment`, `due date`
+   - Same additions inside `filterEventsByTypes`.
+   - No UI change to filter chips.
 
-## 5. Type scale (applied across the section)
-Single, consistent scale:
-- Section/field title: `text-sm font-semibold text-foreground`
-- Body / input text: `text-sm text-foreground`
-- Meta / counters / hints: `text-[10px]` or `text-xs` `text-muted-foreground`
-- No italics anywhere except the default placeholder italic from the Textarea component (already global).
+3. **Notifications hook**
+   - In `src/hooks/useNotifications.ts`, update the calendar fetch to also join `event_categories(name)` and use the resolved name where the previous code used `event_category` as text (so notification routing and labels stay correct).
 
-## 6. Color discipline
-- Headings & labels → black (`text-foreground`).
-- Accent color reserved only for: the small icon chip next to "Study Recommendation", outline badges (Class-wide / Individual / Internal), letter-grade chip, and "Not graded" red.
-- No colored fills on textareas or score panel.
+4. **Smoke test in preview**
+   - Toggle to GL: confirm events appear in the month grid, exam dates land in the Exam tab, public holidays land in the Holidays tab, field trips/PTC land in the Events tab.
+   - Toggle to BO: confirm graceful empty state (no errors).
+   - Confirm notifications still surface upcoming events.
 
-## Out of scope
-- No logic changes (state, save handlers, validation untouched).
-- Other page sections (Behavior, Awards, Analysis tabs) are not modified.
+## Risk / Compatibility
 
-## Technical notes
-All edits are className/markup adjustments inside `TeacherAcademicPage.tsx`. No new dependencies, no schema changes, no new components.
+- No DB writes, no migrations, no RLS changes → other Lovable project is unaffected.
+- The new `select(..., event_categories:event_category(...))` requires the FK to exist (it does). If a future row has `event_category = NULL`, we still fall back to `event_type`, so nothing breaks.
