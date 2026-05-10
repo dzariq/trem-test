@@ -13,8 +13,8 @@ import schoolLogo from "@/assets/school-badge.png";
 import { TAG_CATEGORIES, type TagCategory, type CalendarTag } from "@/types/calendarTags";
 import {
   filterEventsByRole,
-  getTagColor,
-  getTagDisplayName,
+  getEventBadgeColor,
+  getEventBadgeLabel,
 } from "@/lib/calendarUtils";
 import { listCalendarEvents, listUpcomingEvents, type UpcomingEvent } from "@/data/calendar";
 import { useMyProfile } from "@/hooks/useMyProfile";
