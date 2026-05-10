@@ -16,7 +16,6 @@ import { cn, stripCampusPrefix } from "@/lib/utils";
 import { toast } from "@/hooks/use-toast";
 import { Input } from "@/components/ui/input";
 
-import { teacherProfile, DailyAttendanceDetail } from "@/data/teacherMockData";
 import { useTeacherAttendance } from "@/hooks/useTeacherAttendance";
 import { supabase } from "@/lib/supabase";
 import { useAttendanceStatistics, type DailyBreakdown } from "@/hooks/useAttendanceStatistics";
