@@ -4220,6 +4220,7 @@ export type Database = {
           class_groups: number[] | null
           code: string | null
           created_at: string
+          display_order: number
           id: number
           is_compulsory: boolean | null
           name: string
@@ -4236,6 +4237,7 @@ export type Database = {
           class_groups?: number[] | null
           code?: string | null
           created_at?: string
+          display_order?: number
           id?: number
           is_compulsory?: boolean | null
           name: string
@@ -4252,6 +4254,7 @@ export type Database = {
           class_groups?: number[] | null
           code?: string | null
           created_at?: string
+          display_order?: number
           id?: number
           is_compulsory?: boolean | null
           name?: string
