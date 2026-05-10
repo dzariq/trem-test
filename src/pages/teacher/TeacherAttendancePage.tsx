@@ -77,6 +77,7 @@ export default function TeacherAttendancePage() {
     loadingStudents,
     loadingAttendance,
     saving,
+    lastSavedAt,
     isLoading,
     error,
     setStudentStatus,
@@ -125,8 +126,8 @@ export default function TeacherAttendancePage() {
     return () => {
       mounted = false;
     };
-    // Refetch when class, campus, or a save completes (saving flips true→false)
-  }, [selectedClass, activeCampus, saving]);
+    // Refetch when class, campus, or a successful save occurs (lastSavedAt only changes on success)
+  }, [selectedClass, activeCampus, lastSavedAt]);
   
   // Statistics state - now using Supabase data
   const currentYear = new Date().getFullYear();
