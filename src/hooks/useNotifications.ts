@@ -217,7 +217,7 @@ export function useNotifications() {
       
       const { data: calendarEvents } = await supabase
         .from("calendar_events")
-        .select("id, title, start_date, event_category, description")
+        .select("id, title, start_date, event_category, description, event_categories:event_category(name)")
         .gte("start_date", today)
         .lte("start_date", in14Days)
         .in("visibility", ["public", "all"])
@@ -231,7 +231,9 @@ export function useNotifications() {
           if (seenEvents.has(eventKey)) continue;
           seenEvents.add(eventKey);
           
-          const category = (event.event_category || "").toLowerCase();
+          const categoryName =
+            (event as any).event_categories?.name ?? "";
+          const category = String(categoryName).toLowerCase();
           let type = "event";
           let icon = "📅";
           
