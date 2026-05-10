@@ -88,10 +88,15 @@ const logSupabaseError = (
 };
 
 const fetchClassYearId = async (className: string): Promise<number | null> => {
+  // Strip campus prefix (BO-/GL-) so we match class_years.class_name regardless of
+  // whether the source string carries a campus prefix.
+  const normalized = (className || "").replace(/^(BO|GL)-/i, "").trim();
+  if (!normalized) return null;
+
   const { data, error } = await supabase
     .from("class_years")
     .select("id")
-    .eq("class_name", className)
+    .eq("class_name", normalized)
     .maybeSingle();
 
   if (error) {
