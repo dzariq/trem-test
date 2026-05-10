@@ -1962,7 +1962,7 @@ export default function TeacherAcademicPage() {
                       if (inViewMode) {
                         return (
                           <div>
-                            <div className="min-h-[60px] text-sm rounded-md border border-border bg-muted/30 p-2.5 whitespace-pre-wrap text-foreground">
+                             <div className="min-h-[60px] text-sm rounded-md border border-border bg-muted/30 p-2.5 whitespace-pre-wrap break-words text-foreground">
                               {gradeEntry.classRecommendation}
                             </div>
                             <div className="flex items-center justify-between mt-2">
@@ -2198,15 +2198,12 @@ export default function TeacherAcademicPage() {
                                           Individual
                                         </Badge>
                                       </div>
-                                      {gradeEntry.classRecommendation.trim() && (
-                                        <div className="mb-2 rounded-md border border-amber-200 bg-amber-50/70 px-2 py-1.5">
-                                          <div className="flex items-center gap-1 mb-0.5">
-                                            <Users className="h-3 w-3 text-amber-600" />
-                                            <span className="text-[10px] font-medium text-muted-foreground">Class recommendation (shown to all):</span>
-                                          </div>
-                                          <p className="text-[11px] text-foreground">{gradeEntry.classRecommendation}</p>
-                                        </div>
-                                      )}
+                                       {gradeEntry.classRecommendation.trim() && (
+                                         <div className="mb-2 inline-flex items-center gap-1 rounded-full border border-amber-200 bg-amber-50/70 px-2 py-0.5">
+                                           <CheckCircle className="h-3 w-3 text-amber-600" />
+                                           <span className="text-[10px] font-medium text-amber-700">Class recommendation active</span>
+                                         </div>
+                                       )}
                                       <Textarea 
                                         placeholder="Enter individual study tips for this student..." 
                                         value={input.studyRecommendation}
