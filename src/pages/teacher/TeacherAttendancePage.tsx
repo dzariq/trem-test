@@ -654,8 +654,9 @@ export default function TeacherAttendancePage() {
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="2026">2026</SelectItem>
-                          <SelectItem value="2025">2025</SelectItem>
+                          {yearOptions.map((y) => (
+                            <SelectItem key={y} value={y}>{y}</SelectItem>
+                          ))}
                         </SelectContent>
                       </Select>
                     </div>
