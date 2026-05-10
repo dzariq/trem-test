@@ -236,8 +236,8 @@ export function UpcomingEvents({ events, ccaSessions, seeAllPath = "/parent/cale
                   <span className="text-xs uppercase">{month}</span>
                 </div>
                 <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 mb-0.5">
-                    <h3 className="font-medium text-foreground truncate">{calEvent.title}</h3>
+                  <div className="flex items-start justify-between gap-2 mb-0.5">
+                    <h3 className="font-medium text-foreground truncate flex-1 min-w-0">{calEvent.title}</h3>
                     {(() => {
                       const cat = mapDbToCategory(calEvent.category || "", (calEvent as any).eventType);
                       if (!cat) return null;
