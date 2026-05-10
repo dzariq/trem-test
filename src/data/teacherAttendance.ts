@@ -173,9 +173,14 @@ export async function saveAttendance(
  */
 export async function fetchAvailableClasses(campusCode?: string | null): Promise<string[]> {
   let query = supabase
-    .from("students")
+    .from("class_years")
     .select("class")
-    .eq("archived", false);
+    .eq("active", true);
+  // class_years uses column "class_name", students uses "class" — switch to class_years for an authoritative bounded list
+  query = supabase
+    .from("class_years")
+    .select("class_name")
+    .eq("active", true);
 
   if (campusCode) {
     query = query.eq("campus_code", campusCode);
@@ -190,9 +195,9 @@ export async function fetchAvailableClasses(campusCode?: string | null): Promise
 
   // Get unique classes
   const classSet = new Set<string>();
-  (data ?? []).forEach((row) => {
-    if (row.class) {
-      classSet.add(row.class);
+  (data ?? []).forEach((row: any) => {
+    if (row.class_name) {
+      classSet.add(row.class_name);
     }
   });
 
