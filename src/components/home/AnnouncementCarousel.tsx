@@ -140,7 +140,7 @@ export function AnnouncementCarousel({
       <div className="px-4 mb-4">
         <Card 
           className="bg-card border-border shadow-md overflow-hidden cursor-pointer active:scale-[0.98] transition-transform"
-          onClick={() => handleAnnouncementClick(0)}
+          onClick={() => handleAnnouncementClick(indexOf(mainAnnouncement.id))}
         >
           {/* Large Image Header */}
           <div className="relative h-36 overflow-hidden">
@@ -204,7 +204,7 @@ export function AnnouncementCarousel({
               className="w-full"
               onClick={(e) => {
                 e.stopPropagation();
-                handleAnnouncementClick(0);
+                handleAnnouncementClick(indexOf(mainAnnouncement.id));
               }}
             >
               Read More
@@ -224,11 +224,11 @@ export function AnnouncementCarousel({
             className="w-full"
           >
             <CarouselContent className="-ml-2">
-              {otherAnnouncements.map((announcement, idx) => (
+              {otherAnnouncements.map((announcement) => (
                 <CarouselItem key={announcement.id} className="pl-2 basis-[75%]">
                   <Card 
                     className="bg-card border-border shadow-sm overflow-hidden cursor-pointer active:scale-[0.98] transition-transform"
-                    onClick={() => handleAnnouncementClick(idx + 1)}
+                    onClick={() => handleAnnouncementClick(indexOf(announcement.id))}
                   >
                     <div className="relative h-20 overflow-hidden">
                       {announcement.image ? (
