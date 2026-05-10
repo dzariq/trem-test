@@ -22,7 +22,7 @@ interface CampusToggleProps {
 export function CampusToggle({ size = "sm", className }: CampusToggleProps) {
   const { campuses, activeCampus, setActiveCampus } = useCampus();
 
-  if (campuses.length === 0) return null;
+  if (campuses.length < 2) return null;
 
   const sizeClasses =
     size === "sm" ? "px-2 py-0.5 text-[11px]" : "px-3 py-1 text-xs";

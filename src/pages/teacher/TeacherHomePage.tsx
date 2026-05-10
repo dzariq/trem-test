@@ -105,7 +105,8 @@ export default function TeacherHomePage() {
   const [attendanceLoading, setAttendanceLoading] = useState(false);
   const [pendingGrades, setPendingGrades] = useState<PendingGradeSummary[]>([]);
   const [pendingGradesLoading, setPendingGradesLoading] = useState(false);
-  const { items: deadlines, loading: deadlinesLoading } = useUpcomingDeadlines(5);
+  const { activeCampus: _activeCampusForDeadlines } = useCampus();
+  const { items: deadlines, loading: deadlinesLoading } = useUpcomingDeadlines(5, _activeCampusForDeadlines);
   
   // Fetch upcoming CCA sessions for teachers (PIC activities)
   const { sessions: ccaSessions, loading: ccaLoading } = useUpcomingCcaSessions({
