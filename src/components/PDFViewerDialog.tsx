@@ -24,6 +24,7 @@ interface PDFViewerDialogProps {
   pdfUrl: string;
   title: string;
   downloadFileName: string;
+  contentClassName?: string;
 }
 
 export function PDFViewerDialog({
@@ -32,6 +33,7 @@ export function PDFViewerDialog({
   pdfUrl,
   title,
   downloadFileName,
+  contentClassName,
 }: PDFViewerDialogProps) {
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
@@ -119,7 +121,7 @@ export function PDFViewerDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
         hideClose
-        className={`${isFullscreen ? "h-[95vh]" : "h-[82vh]"} flex flex-col p-0 gap-0`}
+        className={`${isFullscreen ? "h-[95vh]" : "h-[82vh]"} flex flex-col p-0 gap-0 ${contentClassName ?? ""}`}
       >
         <DialogHeader className="px-4 py-3 border-b border-border flex flex-row items-center justify-between gap-3 space-y-0 bg-background">
           <DialogTitle className="text-base font-semibold leading-tight line-clamp-2 text-left min-w-0 flex-1">{title}</DialogTitle>
