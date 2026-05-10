@@ -123,21 +123,37 @@ export function PDFViewerDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
         hideClose
-        className={`${isFullscreen ? "h-[95vh]" : "h-[82vh]"} flex flex-col p-0 gap-0 ${contentClassName ?? ""}`}
+        className={`${
+          isFullscreen
+            ? "!h-[100dvh] !max-h-[100dvh] !inset-0 !top-0 !rounded-none pt-[env(safe-area-inset-top)]"
+            : "h-[92vh]"
+        } flex flex-col p-0 gap-0 ${contentClassName ?? ""}`}
       >
         <DialogHeader className="px-4 py-3 border-b border-border flex flex-row items-center justify-between gap-3 space-y-0 bg-background">
-          <DialogTitle className="text-base font-semibold leading-tight line-clamp-2 text-left min-w-0 flex-1">{title}</DialogTitle>
-          <div className="flex items-center gap-1.5 flex-shrink-0">
-            {!isNative && !isMobile && (
+          <div className="flex items-center gap-2 min-w-0 flex-1">
+            {isFullscreen && (
               <Button
-                variant="ghost"
+                variant="outline"
                 size="icon"
-                onClick={() => setIsFullscreen(!isFullscreen)}
-                className="h-8 w-8"
+                onClick={() => setIsFullscreen(false)}
+                className="h-9 w-9 rounded-full flex-shrink-0 border-2 border-primary/40 bg-primary/10 text-primary hover:bg-primary/20 hover:text-primary shadow-sm"
+                aria-label="Exit fullscreen"
               >
-                {isFullscreen ? <Minimize2 className="h-4 w-4" /> : <Maximize2 className="h-4 w-4" />}
+                <ChevronLeft className="h-5 w-5" strokeWidth={2.5} />
               </Button>
             )}
+            <DialogTitle className="text-base font-semibold leading-tight line-clamp-2 text-left min-w-0 flex-1">{title}</DialogTitle>
+          </div>
+          <div className="flex items-center gap-1.5 flex-shrink-0">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setIsFullscreen(!isFullscreen)}
+              className="h-8 w-8"
+              aria-label={isFullscreen ? "Exit fullscreen" : "Enter fullscreen"}
+            >
+              {isFullscreen ? <Minimize2 className="h-4 w-4" /> : <Maximize2 className="h-4 w-4" />}
+            </Button>
             <Button variant="outline" size="sm" onClick={handleOpenInBrowser} className="gap-2 px-3">
               <ExternalLink className="h-4 w-4" />
               <span className="hidden min-[420px]:inline">Open</span>
