@@ -89,16 +89,28 @@ const logSupabaseError = (
 };
 
 const fetchClassYearId = async (className: string): Promise<number | null> => {
-  // Strip campus prefix (BO-/GL-) so we match class_years.class_name regardless of
-  // whether the source string carries a campus prefix.
-  const normalized = (className || "").replace(/^(BO|GL)-/i, "").trim();
-  if (!normalized) return null;
+  const raw = (className || "").trim();
+  if (!raw) return null;
 
-  const { data, error } = await supabase
+  // class_years.class_name stores the campus-prefixed name (e.g. "BO-Y9I").
+  // Try the raw value first; if the caller passed a stripped/display name
+  // (e.g. "Y9I"), fall back to matching the suffix across campuses.
+  let { data, error } = await supabase
     .from("class_years")
-    .select("id")
-    .eq("class_name", normalized)
+    .select("id, class_name")
+    .eq("class_name", raw)
     .maybeSingle();
+
+  if (!error && !data && !/^(BO|GL)-/i.test(raw)) {
+    const res = await supabase
+      .from("class_years")
+      .select("id, class_name")
+      .or(`class_name.eq.BO-${raw},class_name.eq.GL-${raw}`)
+      .limit(1)
+      .maybeSingle();
+    data = res.data as any;
+    error = res.error;
+  }
 
   if (error) {
     logSupabaseError("gradeEntry/fetchClassYearId", error);
