@@ -3,8 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import type { UpcomingEvent } from "@/data/calendar";
-import { getTagDisplayName } from "@/lib/calendarUtils";
-import { TAG_CATEGORIES } from "@/types/calendarTags";
+import { getEventBadgeColor, getEventBadgeLabel } from "@/lib/calendarUtils";
 import {
   UPCOMING_TABS,
   UPCOMING_TAB_COLORS,
@@ -118,37 +117,24 @@ export function UpcomingEventsSection({ events, onEventClick }: UpcomingEventsSe
                 )}
 
                 <div className="flex flex-wrap gap-1">
-                  {event.tags.slice(0, 2).map((tag) => {
-                    // Match colors to the top calendar filter colors
-                    const tagCategory = TAG_CATEGORIES[tag];
-                    const category = (event.category || "").toLowerCase();
-                    
-                    // Determine badge color based on tag category or event.category
-                    let badgeColor = "bg-purple-100 text-purple-800"; // default events color
-                    let displayText = getTagDisplayName(tag);
-                    
-                    // Normalize "HOLIDAY" to "Holidays" for display
-                    if (displayText.toUpperCase() === "HOLIDAY" || displayText.toUpperCase() === "HOLIDAYS") {
-                      displayText = "Holidays";
-                    }
-                    
-                    if (tagCategory === "exams" || category.includes("exam")) {
-                      badgeColor = "bg-red-100 text-red-800"; // red like Exams filter
-                    } else if (tagCategory === "holidays" || category.includes("holiday")) {
-                      badgeColor = "bg-emerald-100 text-emerald-800"; // green like Holidays filter
-                    } else if (tagCategory === "students" || category.includes("student")) {
-                      badgeColor = "bg-teal-100 text-teal-800"; // teal like Students filter
-                    } else if (tagCategory === "parents" || category.includes("parent")) {
-                      badgeColor = "bg-pink-100 text-pink-800"; // pink like Parents filter
-                    }
-                    
+                  {(event.tags && event.tags.length > 0
+                    ? event.tags.slice(0, 2)
+                    : event.category
+                      ? [event.category as any]
+                      : []
+                  ).map((tag, idx) => {
+                    let displayText = getEventBadgeLabel(tag, event.category);
+                    if (displayText.toUpperCase() === "HOLIDAY") displayText = "Holidays";
                     return (
-                      <Badge key={tag} className={`text-xs ${badgeColor}`}>
+                      <Badge
+                        key={`${tag}-${idx}`}
+                        className={`text-xs border-transparent ${getEventBadgeColor(tag, event.category, (event as any).eventType)}`}
+                      >
                         {displayText}
                       </Badge>
                     );
                   })}
-                  {event.tags.length > 2 && (
+                  {event.tags && event.tags.length > 2 && (
                     <Badge variant="outline" className="text-xs">
                       +{event.tags.length - 2}
                     </Badge>
