@@ -71,12 +71,17 @@ const isMidnightUtc = (value?: string | null) =>
   Boolean(value && String(value).includes("T00:00:00"));
 
 const mapCalendarRow = (row: any): UpcomingEvent => {
-  const categorySource =
-    row.event_category ??
+  // event_category was migrated to a uuid FK -> event_categories(id).
+  // Resolve the human-readable name via the joined relation; fall back to event_type.
+  const categoryName =
+    row.event_categories?.name ??
+    (typeof row.event_category === "string" && !/^[0-9a-f-]{36}$/i.test(row.event_category)
+      ? row.event_category
+      : null) ??
     row.event_type ??
     "general";
   const category =
-    typeof categorySource === "string" ? categorySource.toLowerCase() : "general";
+    typeof categoryName === "string" ? categoryName.toLowerCase() : "general";
 
   const startDateTime = row.start_date ?? null;
   const endDateTime = row.end_date ?? null;
@@ -281,7 +286,7 @@ export async function listCalendarEvents(
   // Fetch all events for the month range (same approach as web admin portal)
   let calQuery = supabase
     .from("calendar_events")
-    .select("*")
+    .select("*, event_categories:event_category(name, color, sort_order)")
     .lt("start_date", nextMonthStart)
     .gte("end_date", monthStart)
     .order("start_date", { ascending: true });
@@ -333,7 +338,7 @@ export async function listUpcomingEvents(
   // Fetch all upcoming events (same approach as web admin portal)
   let upQuery = supabase
     .from("calendar_events")
-    .select("*")
+    .select("*, event_categories:event_category(name, color, sort_order)")
     .gte("start_date", fromIso)
     .order("start_date", { ascending: true });
 
