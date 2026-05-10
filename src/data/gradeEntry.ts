@@ -278,14 +278,18 @@ export async function fetchExistingGrades(
   return gradesMap;
 }
 
-// Calculate letter grade from total
+// Calculate letter grade from total.
+// MUST mirror the GENERATED ALWAYS expression on public.student_grades.letter_grade
+// so teacher (computed) and parent (DB) views never disagree.
 export function calculateLetterGrade(total: number): string {
-  if (total >= 90) return "A*";
+  if (total >= 90) return "A+";
   if (total >= 80) return "A";
+  if (total >= 75) return "B+";
   if (total >= 70) return "B";
+  if (total >= 65) return "C+";
   if (total >= 60) return "C";
   if (total >= 50) return "D";
-  return "E";
+  return "F";
 }
 
 // Save grades (upsert behavior)
