@@ -37,6 +37,7 @@ export interface StudentGradeRecord {
   letter_grade: string | null;
   teacher_comment: string | null;
   subject_comment: string | null;
+  study_recommendation: string | null;
   updated_at: string;
 }
 
@@ -115,14 +116,23 @@ export function buildGradeInputsFromExistingGrades(
   students.forEach((student) => {
     const existing = existingGrades.get(student.id);
     if (existing) {
+      // Backward-compat: legacy rows stored study recommendation in subject_comment
+      // because the dedicated study_recommendation column was not being written to.
+      // - If study_recommendation is set: use it; subject_comment becomes the general comment.
+      // - If study_recommendation is NULL: treat subject_comment as the legacy study recommendation
+      //   to avoid losing existing data, and leave general comment blank.
+      const hasNewStudyRec =
+        existing.study_recommendation !== null && existing.study_recommendation !== undefined;
       inputs[student.id] = {
         attitude: existing.attitude_marks?.toString() || "",
         homework: existing.homework_marks?.toString() || "",
         quiz: existing.quiz_marks?.toString() || "",
         exam: existing.exam_marks?.toString() || "",
         reportComment: existing.teacher_comment || "",
-        studyRecommendation: existing.subject_comment || "",
-        comment: existing.teacher_comment || "",
+        studyRecommendation: hasNewStudyRec
+          ? (existing.study_recommendation as string)
+          : (existing.subject_comment || ""),
+        comment: hasNewStudyRec ? (existing.subject_comment || "") : "",
       };
     } else {
       inputs[student.id] = { ...emptyGradeInput };
@@ -301,7 +311,38 @@ export async function saveGrades(
     exam_marks: number;
     teacher_comment: string | null;
     subject_comment: string | null;
+    study_recommendation: string | null;
   }> = [];
+
+  // ---- Validation: catch invalid marks before hitting the network ----
+  const invalidRows: string[] = [];
+  const isValidMark = (raw: string): boolean => {
+    if (raw === "" || raw === null || raw === undefined) return true;
+    if (!/^\d+$/.test(raw.trim())) return false;
+    const n = parseInt(raw, 10);
+    return Number.isFinite(n) && n >= 0 && n <= 100;
+  };
+
+  for (const grade of grades) {
+    const checks: Array<[string, string]> = [
+      ["attitude", grade.gradeInput.attitude],
+      ["homework", grade.gradeInput.homework],
+      ["quiz", grade.gradeInput.quiz],
+      ["exam", grade.gradeInput.exam],
+    ];
+    for (const [label, raw] of checks) {
+      if (!isValidMark(raw)) {
+        invalidRows.push(`Invalid ${label} mark: "${raw}" (must be 0-100)`);
+      }
+    }
+  }
+
+  if (invalidRows.length > 0) {
+    return {
+      success: false,
+      error: invalidRows.slice(0, 3).join("; "),
+    };
+  }
 
   for (const grade of grades) {
     const attitude = parseInt(grade.gradeInput.attitude) || 0;
@@ -324,8 +365,10 @@ export async function saveGrades(
       homework_marks: homework,
       quiz_marks: quiz,
       exam_marks: exam,
-      teacher_comment: grade.gradeInput.reportComment || grade.gradeInput.comment || null,
-      subject_comment: grade.gradeInput.studyRecommendation || null,
+      // Map each UI field to its dedicated column (no more overloading).
+      teacher_comment: grade.gradeInput.reportComment || null,
+      study_recommendation: grade.gradeInput.studyRecommendation || null,
+      subject_comment: grade.gradeInput.comment || null,
     });
   }
 
