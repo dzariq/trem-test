@@ -2275,7 +2275,7 @@ export default function TeacherAcademicPage() {
                             "fixed z-50 shadow-xl bottom-24 right-4",
                             isGradingClosed 
                               ? "h-12 px-4 rounded-full gap-2" 
-                              : "h-14 w-14 rounded-full p-0"
+                              : "h-14 px-5 rounded-full gap-2"
                           )}
                           variant={isGradingClosed ? "secondary" : "default"}
                           disabled={gradeEntry.saving || isGradingClosed}
@@ -2303,14 +2303,20 @@ export default function TeacherAcademicPage() {
                           }}
                         >
                           {gradeEntry.saving ? (
-                            <Loader2 className="h-6 w-6 animate-spin" />
+                            <>
+                              <Loader2 className="h-5 w-5 animate-spin" />
+                              <span className="text-sm font-semibold">Saving...</span>
+                            </>
                           ) : isGradingClosed ? (
                             <>
                               <Lock className="h-4 w-4" />
                               <span className="text-sm font-medium">Grading Closed</span>
                             </>
                           ) : (
-                            <Save className="h-6 w-6" />
+                            <>
+                              <Save className="h-5 w-5" />
+                              <span className="text-sm font-semibold">Save Grades</span>
+                            </>
                           )}
                         </Button>
                       );
