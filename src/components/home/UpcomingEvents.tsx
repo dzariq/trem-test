@@ -236,7 +236,24 @@ export function UpcomingEvents({ events, ccaSessions, seeAllPath = "/parent/cale
                   <span className="text-xs uppercase">{month}</span>
                 </div>
                 <div className="flex-1 min-w-0">
-                  <h3 className="font-medium text-foreground truncate">{calEvent.title}</h3>
+                  <div className="flex items-center gap-2 mb-0.5">
+                    <h3 className="font-medium text-foreground truncate">{calEvent.title}</h3>
+                    {(() => {
+                      const cat = mapDbToCategory(calEvent.category || "", (calEvent as any).eventType);
+                      if (!cat) return null;
+                      return (
+                        <Badge
+                          variant="outline"
+                          className={cn(
+                            "text-[10px] px-1.5 py-0 shrink-0 border",
+                            CATEGORY_PILL_STYLES[cat]
+                          )}
+                        >
+                          {CATEGORY_DISPLAY_NAMES[cat]}
+                        </Badge>
+                      );
+                    })()}
+                  </div>
                   <div className="flex items-center gap-3 text-sm text-muted-foreground mt-1">
                     <span className="flex items-center gap-1">
                       <Clock className="h-3 w-3" />
