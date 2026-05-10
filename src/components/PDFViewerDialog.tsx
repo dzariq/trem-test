@@ -135,9 +135,12 @@ export function PDFViewerDialog({
               <Button
                 variant="outline"
                 size="icon"
-                onClick={() => setIsFullscreen(false)}
+                onClick={() => {
+                  setIsFullscreen(false);
+                  onOpenChange(false);
+                }}
                 className="h-9 w-9 rounded-full flex-shrink-0 border-2 border-primary/40 bg-primary/10 text-primary hover:bg-primary/20 hover:text-primary shadow-sm"
-                aria-label="Exit fullscreen"
+                aria-label="Close PDF"
               >
                 <ChevronLeft className="h-5 w-5" strokeWidth={2.5} />
               </Button>
