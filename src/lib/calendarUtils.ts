@@ -9,6 +9,7 @@ import {
   TEACHER_HIDDEN_TAGS,
   PARENT_HIDDEN_TAGS,
 } from "@/types/calendarTags";
+import { mapDbToCategory } from "@/lib/calendarCategorySubtypes";
 
 // Get display name for a tag
 export function getTagDisplayName(tag: CalendarTag): string {
@@ -49,6 +50,44 @@ export function getTagColor(tag: CalendarTag): string {
     default:
       return "bg-muted text-muted-foreground";
   }
+}
+
+// Resolve a tag's display category by first checking TAG_CATEGORIES,
+// then falling back to the event's DB-side category/type. This keeps
+// badges consistent with the top filter pills even when a tag string
+// from the DB isn't in our enum.
+export function resolveBadgeCategory(
+  tag: string | null | undefined,
+  eventCategory?: string | null,
+  eventType?: string | null
+): TagCategory | null {
+  if (tag && (TAG_CATEGORIES as Record<string, TagCategory>)[tag]) {
+    return (TAG_CATEGORIES as Record<string, TagCategory>)[tag];
+  }
+  return mapDbToCategory(eventCategory || "", eventType || undefined);
+}
+
+// Returns Tailwind color classes matching the top filter pills.
+export function getEventBadgeColor(
+  tag: string | null | undefined,
+  eventCategory?: string | null,
+  eventType?: string | null
+): string {
+  const category = resolveBadgeCategory(tag, eventCategory, eventType);
+  if (!category) return "bg-muted text-muted-foreground";
+  return getCategoryColor(category);
+}
+
+// Returns a human label: known tag → display name, otherwise the raw tag/category text.
+export function getEventBadgeLabel(
+  tag: string | null | undefined,
+  eventCategory?: string | null
+): string {
+  if (tag && (TAG_DISPLAY_NAMES as Record<string, string>)[tag]) {
+    return (TAG_DISPLAY_NAMES as Record<string, string>)[tag];
+  }
+  if (tag) return tag;
+  return eventCategory || "";
 }
 
 // Get color classes for a category
