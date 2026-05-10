@@ -1,7 +1,8 @@
-import { useState, useMemo, useCallback } from "react";
+import { useState, useMemo, useCallback, useEffect } from "react";
 import { stripCampusPrefix } from "@/lib/utils";
 import { useTeacherScope } from "@/hooks/useTeacherScope";
 import { useAuth } from "@/contexts/AuthContext";
+import { useCampus } from "@/contexts/CampusContext";
 
 export type AttendanceScope = "school" | "cohort" | "class";
 
@@ -47,6 +48,7 @@ export interface AttendanceScopeFilterState {
 export function useAttendanceScopeFilter(): AttendanceScopeFilterState {
   const { profile } = useAuth();
   const teacherScope = useTeacherScope();
+  const { activeCampus } = useCampus();
   const isTeacher = teacherScope.isTeacher;
 
   const [scope, setScope] = useState<AttendanceScope>("school");
@@ -54,6 +56,19 @@ export function useAttendanceScopeFilter(): AttendanceScopeFilterState {
   const [selectedClassNames, setSelectedClassNames] = useState<string[]>([]);
 
   const availableClasses = teacherScope.allowedClassYears;
+
+  // When the active campus changes, drop any cohort/class selections that
+  // belonged to the previous campus so stats reflect the new campus only.
+  useEffect(() => {
+    setSelectedCohort((prev) =>
+      prev && availableClasses.some((c) => c.year_level === prev) ? prev : null
+    );
+    setSelectedClassNames((prev) => {
+      const allowed = new Set(availableClasses.map((c) => c.class_name));
+      const next = prev.filter((n) => allowed.has(n));
+      return next.length === prev.length ? prev : next;
+    });
+  }, [activeCampus, availableClasses]);
 
   const availableCohorts = useMemo(() => {
     const cohorts = new Set(availableClasses.map((c) => c.year_level));
