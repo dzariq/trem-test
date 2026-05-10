@@ -23,6 +23,7 @@ import { useAttendanceStatistics, type DailyBreakdown } from "@/hooks/useAttenda
 import { type AttendanceStatus } from "@/data/teacherAttendance";
 import { useTeacherScope } from "@/hooks/useTeacherScope";
 import { useAttendanceScopeFilter } from "@/hooks/useAttendanceScopeFilter";
+import { useCampus } from "@/contexts/CampusContext";
 import { AttendanceScopeFilterSheet, AttendanceScopeFilterPill } from "@/components/attendance/AttendanceScopeFilterSheet";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -60,6 +61,7 @@ const chartConfig = {
 
 export default function TeacherAttendancePage() {
   const teacherScope = useTeacherScope();
+  const { activeCampus } = useCampus();
   const [activeTab, setActiveTab] = useState<TabType>("take");
   
   // Use the new Supabase-connected hook for Take Attendance tab
@@ -94,10 +96,18 @@ export default function TeacherAttendancePage() {
     }
     let mounted = true;
     (async () => {
-      const { data, error } = await supabase
+      // Bound to a ±3 month window around today so this stays cheap as data grows
+      const today = new Date();
+      const start = format(subMonths(today, 3), "yyyy-MM-dd");
+      const end = format(addWeeks(today, 13), "yyyy-MM-dd");
+      let q = supabase
         .from("attendance")
         .select("date,status")
-        .eq("class", selectedClass);
+        .eq("class", selectedClass)
+        .gte("date", start)
+        .lte("date", end);
+      if (activeCampus) q = q.eq("campus_code", activeCampus);
+      const { data, error } = await q;
       if (!mounted) return;
       if (error) {
         console.error("[TeacherAttendancePage] markedDates fetch failed", error);
@@ -106,8 +116,9 @@ export default function TeacherAttendancePage() {
       const green = new Set<string>();
       const red = new Set<string>();
       (data ?? []).forEach((r: any) => {
-        if (r.status === "present" || r.status === "late") green.add(r.date);
-        if (r.status === "absent" || r.status === "excused") red.add(r.date);
+        const s = (r.status ?? "").toLowerCase();
+        if (s === "present" || s === "late") green.add(r.date);
+        if (s === "absent" || s === "excused") red.add(r.date);
       });
       setPresentDates(green);
       setAbsentDates(red);
@@ -115,11 +126,16 @@ export default function TeacherAttendancePage() {
     return () => {
       mounted = false;
     };
-  }, [selectedClass, saving]);
+    // Refetch when class, campus, or a save completes (saving flips true→false)
+  }, [selectedClass, activeCampus, saving]);
   
   // Statistics state - now using Supabase data
-  const [statsSelectedClass, setStatsSelectedClass] = useState("");
-  const [selectedYear, setSelectedYear] = useState("2026");
+  const currentYear = new Date().getFullYear();
+  const yearOptions = useMemo(
+    () => [currentYear, currentYear - 1, currentYear - 2].map(String),
+    [currentYear]
+  );
+  const [selectedYear, setSelectedYear] = useState(String(currentYear));
   const [selectedMonth, setSelectedMonth] = useState(0); // January
   const [selectedDayStats, setSelectedDayStats] = useState<DailyBreakdown | null>(null);
   
@@ -166,20 +182,9 @@ export default function TeacherAttendancePage() {
     concernsCustomEndDate,
   });
   
-  // For statistics tab - use classes from the Take Attendance tab
-  const statsClasses = classes;
-  const mockStudents = classRosters[statsSelectedClass as keyof typeof classRosters] || [];
-
   const hasTeacherClasses =
     !teacherScope.isTeacher ||
     (teacherScope.allowedClassYears.length > 0 && !teacherScope.loading);
-
-  useEffect(() => {
-    if (!selectedClass) return;
-    if (statsSelectedClass !== selectedClass) {
-      setStatsSelectedClass(selectedClass);
-    }
-  }, [selectedClass, statsSelectedClass]);
 
   const handleStatusChange = (studentId: string, status: AttendanceStatus) => {
     setStudentStatus(studentId, status);
