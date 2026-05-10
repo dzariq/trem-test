@@ -35,9 +35,9 @@ function Calendar({ className, classNames, showOutsideDays = true, ...props }: C
         ),
         day_range_end: "day-range-end",
         day_selected:
-          "rdp-day_selected text-primary-foreground hover:text-primary-foreground focus:text-primary-foreground [&::before]:content-[''] [&::before]:absolute [&::before]:h-8 [&::before]:w-8 [&::before]:rounded-full [&::before]:bg-primary [&::before]:z-[-1]",
+          "rdp-day_selected font-semibold !text-foreground !bg-transparent ring-2 ring-primary ring-offset-2 ring-offset-background [&::before]:!bg-transparent",
         day_today:
-          "rdp-day_today font-semibold !text-foreground !bg-transparent ring-2 ring-primary ring-offset-2 ring-offset-background [&::before]:!bg-transparent",
+          "rdp-day_today text-primary-foreground hover:text-primary-foreground focus:text-primary-foreground [&::before]:content-[''] [&::before]:absolute [&::before]:h-8 [&::before]:w-8 [&::before]:rounded-full [&::before]:bg-primary [&::before]:z-[-1]",
         day_outside:
           "day-outside text-muted-foreground opacity-40 aria-selected:text-muted-foreground aria-selected:opacity-30",
         day_disabled: "text-muted-foreground opacity-50",
