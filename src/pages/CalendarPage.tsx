@@ -148,6 +148,7 @@ export default function CalendarPage() {
   } = useCcaSessionsCalendar({
     year: currentMonth.getFullYear(),
     month: currentMonth.getMonth() + 1,
+    campusCode: selectedStudent?.campus_code ?? null,
   });
 
   const visibleEvents = filterEventsByRole(events, roleForFilters);

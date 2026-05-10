@@ -57,6 +57,7 @@ export default function TeacherCalendarPage() {
   } = useCcaSessionsCalendar({
     year: currentMonth.getFullYear(),
     month: currentMonth.getMonth() + 1,
+    campusCode: activeCampus,
   });
 
   const {
