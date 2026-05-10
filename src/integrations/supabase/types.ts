@@ -4169,6 +4169,7 @@ export type Database = {
           id: string
           remarks: string | null
           selected_subject_ids: number[] | null
+          stream: string | null
           student_id: string
           student_name: string
           subjects: Json
@@ -4182,6 +4183,7 @@ export type Database = {
           id?: string
           remarks?: string | null
           selected_subject_ids?: number[] | null
+          stream?: string | null
           student_id: string
           student_name: string
           subjects?: Json
@@ -4195,6 +4197,7 @@ export type Database = {
           id?: string
           remarks?: string | null
           selected_subject_ids?: number[] | null
+          stream?: string | null
           student_id?: string
           student_name?: string
           subjects?: Json
