@@ -19,9 +19,10 @@ export interface CcaCalendarSession {
 interface UseCcaSessionsCalendarOptions {
   year: number;
   month: number; // 1-12
+  campusCode?: string | null;
 }
 
-export function useCcaSessionsCalendar({ year, month }: UseCcaSessionsCalendarOptions) {
+export function useCcaSessionsCalendar({ year, month, campusCode }: UseCcaSessionsCalendarOptions) {
   const [sessions, setSessions] = useState<CcaCalendarSession[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -40,7 +41,7 @@ export function useCcaSessionsCalendar({ year, month }: UseCcaSessionsCalendarOp
       const startStr = startDate.toISOString().split("T")[0];
       const endStr = endDate.toISOString().split("T")[0];
 
-      const { data, error: fetchError } = await supabase
+      let query = supabase
         .from("cca_sessions")
         .select(`
           id,
@@ -56,7 +57,8 @@ export function useCcaSessionsCalendar({ year, month }: UseCcaSessionsCalendarOp
           is_cancelled,
           cca_activities!inner(
             name,
-            category
+            category,
+            campus_code
           ),
           school_locations(name)
         `)
@@ -64,6 +66,15 @@ export function useCcaSessionsCalendar({ year, month }: UseCcaSessionsCalendarOp
         .lte("session_date", endStr)
         .eq("is_cancelled", false)
         .order("session_date", { ascending: true });
+
+      if (campusCode) {
+        query = query.or(
+          `campus_code.eq.${campusCode},campus_code.is.null`,
+          { foreignTable: "cca_activities" }
+        );
+      }
+
+      const { data, error: fetchError } = await query;
 
       if (fetchError) throw fetchError;
 
@@ -89,7 +100,7 @@ export function useCcaSessionsCalendar({ year, month }: UseCcaSessionsCalendarOp
     } finally {
       setLoading(false);
     }
-  }, [year, month]);
+  }, [year, month, campusCode]);
 
   useEffect(() => {
     fetchSessions();
