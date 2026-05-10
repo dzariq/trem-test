@@ -244,6 +244,7 @@ export default function TeacherAcademicPage() {
   const [selectedClasses, setSelectedClasses] = useState<string[]>([]);
   const [selectedStudent, setSelectedStudent] = useState<string | null>(null);
   const [expandedStudents, setExpandedStudents] = useState<string[]>([]);
+  const [classRecEditing, setClassRecEditing] = useState(false);
   const [expandedSubjects, setExpandedSubjects] = useState<string[]>([]);
   const [isAtBottom, setIsAtBottom] = useState(false);
   const gradeEntryRef = useRef<HTMLDivElement>(null);
