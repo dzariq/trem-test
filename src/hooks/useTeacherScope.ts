@@ -3,6 +3,7 @@ import { Capacitor } from "@capacitor/core";
 import { Preferences } from "@capacitor/preferences";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/contexts/AuthContext";
+import { useCampus } from "@/contexts/CampusContext";
 import { toast } from "@/hooks/use-toast";
 import { sortClasses } from "@/lib/classSorting";
 
@@ -71,10 +72,11 @@ const logSupabaseError = (context: string, error: { code?: string; message?: str
 
 export function useTeacherScope() {
   const { user, profile, loading: authLoading } = useAuth();
+  const { activeCampus } = useCampus();
   const isTeacher = profile?.role === "teacher";
   const userId = user?.id ?? null;
 
-  const [allowedClassYears, setAllowedClassYears] = useState<ClassYear[]>([]);
+  const [allClassYears, setAllClassYears] = useState<ClassYear[]>([]);
   const [selectedClassYearId, setSelectedClassYearIdState] = useState<number | null>(null);
   const [subjectsByClassYearId, setSubjectsByClassYearId] = useState<Record<number, SubjectInfo[]>>({});
   const [subjectsLoadingByClassYearId, setSubjectsLoadingByClassYearId] = useState<Record<number, boolean>>({});
@@ -85,6 +87,13 @@ export function useTeacherScope() {
   const initializedSelectionRef = useRef(false);
   const lastSelectionRef = useRef<number | null>(null);
 
+  const allowedClassYears = useMemo(() => {
+    if (!activeCampus) return allClassYears;
+    return allClassYears.filter(
+      (cls) => !cls.campus_code || cls.campus_code === activeCampus
+    );
+  }, [allClassYears, activeCampus]);
+
   const selectedClassYear = useMemo(() => {
     if (!selectedClassYearId) return null;
     return allowedClassYears.find((cls) => cls.id === selectedClassYearId) ?? null;
@@ -93,7 +102,7 @@ export function useTeacherScope() {
   useEffect(() => {
     if (authLoading) return;
     if (!isTeacher || !userId) {
-      setAllowedClassYears([]);
+      setAllClassYears([]);
       setSelectedClassYearIdState(null);
       return;
     }
@@ -103,7 +112,7 @@ export function useTeacherScope() {
       const cached = classYearsCache.get(userId);
       if (cached) {
         if (isMounted) {
-          setAllowedClassYears(cached);
+          setAllClassYears(cached);
         }
         return;
       }
@@ -112,12 +121,12 @@ export function useTeacherScope() {
       if (inflight) {
         try {
           const data = await inflight;
-          if (isMounted) setAllowedClassYears(data);
+          if (isMounted) setAllClassYears(data);
         } catch (err) {
           const message = err instanceof Error ? err.message : "Failed to load classes.";
           if (isMounted) {
             setError(message);
-            setAllowedClassYears([]);
+            setAllClassYears([]);
           }
         }
         return;
@@ -163,12 +172,12 @@ export function useTeacherScope() {
       try {
         const result = await fetchPromise;
         classYearsCache.set(userId, result);
-        if (isMounted) setAllowedClassYears(result);
+        if (isMounted) setAllClassYears(result);
       } catch (err) {
         const message = err instanceof Error ? err.message : "Failed to load classes.";
         if (isMounted) {
           setError(message);
-          setAllowedClassYears([]);
+          setAllClassYears([]);
           toast({
             title: "Unable to load classes",
             description: "Please try again in a moment.",
