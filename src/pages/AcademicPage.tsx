@@ -2034,7 +2034,13 @@ export default function AcademicPage() {
         examType={reportCardExamLabel || "Report Period"}
         year={reportCardYearLabel}
         subjects={realGrades.map((grade) => {
-          const override = (grade.subjectComment || "").trim();
+          // Prefer the dedicated study_recommendation column; fall back to legacy
+          // subject_comment for rows saved before the field separation.
+          const override = (
+            (grade as any).studyRecommendation ||
+            grade.subjectComment ||
+            ""
+          ).trim();
           const classDefault = (grade.classStudyRecommendation || "").trim();
           return {
             name: grade.subjectName,

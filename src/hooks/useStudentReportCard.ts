@@ -24,6 +24,7 @@ export interface SubjectGrade {
   letterGrade: string | null;
   subjectComment: string | null;
   teacherComment: string | null;
+  studyRecommendation: string | null;
   classStudyRecommendation: string | null;
 }
 
@@ -278,6 +279,7 @@ export function useStudentReportCard(
           letter_grade,
           subject_comment,
           teacher_comment,
+          study_recommendation,
           subjects:subject_id (id, name, category)
         `)
         .eq("student_id", studentId)
@@ -374,6 +376,8 @@ export function useStudentReportCard(
         letterGrade: g.letter_grade || (g.total_marks ? getGradeFromScore(g.total_marks) : null),
         subjectComment: g.subject_comment,
         teacherComment: g.teacher_comment,
+        // Prefer the dedicated column; fall back to legacy subject_comment if not yet migrated.
+        studyRecommendation: g.study_recommendation ?? g.subject_comment ?? null,
         classStudyRecommendation: lookupValue,
       };
       });

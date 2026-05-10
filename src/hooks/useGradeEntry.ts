@@ -441,6 +441,13 @@ export function useGradeEntry(): UseGradeEntryReturn {
       if (result.success) {
         setClassRecommendationState(result.record?.recommendation ?? classRecommendation);
         setClassRecommendationUpdatedAt(result.record?.updated_at ?? null);
+      } else if (result.error) {
+        // Surface RLS / permission failures that previously failed silently.
+        toast({
+          title: "Couldn't save class recommendation",
+          description: result.error,
+          variant: "destructive",
+        });
       }
       return { success: result.success, error: result.error };
     } catch (err) {
