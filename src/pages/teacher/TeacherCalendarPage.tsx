@@ -14,8 +14,8 @@ import { format } from "date-fns";
 import { TAG_CATEGORIES, type TagCategory, type CalendarTag } from "@/types/calendarTags";
 import {
   filterEventsByRole,
-  getTagColor,
-  getTagDisplayName,
+  getEventBadgeColor,
+  getEventBadgeLabel,
 } from "@/lib/calendarUtils";
 import { listCalendarEvents, type UpcomingEvent } from "@/data/calendar";
 import { useCcaActivities, type CcaActivity } from "@/hooks/useCcaActivities";
