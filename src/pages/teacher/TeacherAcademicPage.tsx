@@ -244,6 +244,7 @@ export default function TeacherAcademicPage() {
   const [selectedClasses, setSelectedClasses] = useState<string[]>([]);
   const [selectedStudent, setSelectedStudent] = useState<string | null>(null);
   const [expandedStudents, setExpandedStudents] = useState<string[]>([]);
+  const [classRecEditing, setClassRecEditing] = useState(false);
   const [expandedSubjects, setExpandedSubjects] = useState<string[]>([]);
   const [isAtBottom, setIsAtBottom] = useState(false);
   const gradeEntryRef = useRef<HTMLDivElement>(null);
@@ -1954,51 +1955,91 @@ export default function TeacherAcademicPage() {
                             Class-wide
                           </Badge>
                         </div>
-                    <Textarea 
-                      placeholder="Enter a study recommendation for all students in this subject..." 
-                      value={gradeEntry.classRecommendation} 
-                      maxLength={300}
-                      onChange={e => {
-                        const value = e.target.value;
-                        if (value.length > 300) return;
-                        gradeEntry.setClassRecommendation(value);
-                      }} 
-                      disabled={!gradeEntry.selectedPeriod?.is_open_for_grading}
-                      className={cn(
-                        "min-h-[60px] text-sm resize-none border-border bg-background",
-                        !gradeEntry.selectedPeriod?.is_open_for_grading && "opacity-60 cursor-not-allowed"
-                      )}
-                    />
-                    <div className="flex items-center justify-between mt-2">
-                      <div className="flex items-center gap-2">
-                        <Button
-                          size="sm"
-                          className="text-xs h-7 px-3"
-                          disabled={gradeEntry.savingClassRecommendation || !gradeEntry.selectedPeriod?.is_open_for_grading}
-                          onClick={async () => {
-                            const result = await gradeEntry.saveClassRecommendation();
-                            if (result.success) {
-                              toast.success("Class recommendation saved", "Class default saved successfully.");
-                            } else {
-                              toast.error(
-                                "Save failed",
-                                result.error || "Unable to save class recommendation."
-                              );
-                            }
-                          }}
-                        >
-                          {gradeEntry.savingClassRecommendation ? "Saving..." : "Save"}
-                        </Button>
-                        {gradeEntry.classRecommendationUpdatedAt && (
-                          <p className="text-[10px] text-muted-foreground">
-                            Saved {formatSavedAt(gradeEntry.classRecommendationUpdatedAt)}
-                          </p>
-                        )}
-                      </div>
-                      <p className="text-[10px] text-muted-foreground">
-                        {gradeEntry.classRecommendation.length}/300
-                      </p>
-                    </div>
+                    {(() => {
+                      const isOpen = !!gradeEntry.selectedPeriod?.is_open_for_grading;
+                      const hasSaved = !!gradeEntry.classRecommendationUpdatedAt && !!gradeEntry.classRecommendation.trim();
+                      const inViewMode = hasSaved && !classRecEditing;
+                      if (inViewMode) {
+                        return (
+                          <div>
+                            <div className="min-h-[60px] text-sm rounded-md border border-border bg-muted/30 p-2.5 whitespace-pre-wrap text-foreground">
+                              {gradeEntry.classRecommendation}
+                            </div>
+                            <div className="flex items-center justify-between mt-2">
+                              <div className="flex items-center gap-2">
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  className="text-xs h-7 px-3"
+                                  disabled={!isOpen}
+                                  onClick={() => setClassRecEditing(true)}
+                                >
+                                  Edit
+                                </Button>
+                                <p className="text-[10px] text-muted-foreground">
+                                  Saved {formatSavedAt(gradeEntry.classRecommendationUpdatedAt)}
+                                </p>
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      }
+                      return (
+                        <>
+                          <Textarea
+                            placeholder="Enter a study recommendation for all students in this subject..."
+                            value={gradeEntry.classRecommendation}
+                            maxLength={300}
+                            onChange={e => {
+                              const value = e.target.value;
+                              if (value.length > 300) return;
+                              gradeEntry.setClassRecommendation(value);
+                            }}
+                            disabled={!isOpen}
+                            className={cn(
+                              "min-h-[60px] text-sm resize-none border-border bg-background",
+                              !isOpen && "opacity-60 cursor-not-allowed"
+                            )}
+                          />
+                          <div className="flex items-center justify-between mt-2">
+                            <div className="flex items-center gap-2">
+                              <Button
+                                size="sm"
+                                className="text-xs h-7 px-3"
+                                disabled={gradeEntry.savingClassRecommendation || !isOpen}
+                                onClick={async () => {
+                                  const result = await gradeEntry.saveClassRecommendation();
+                                  if (result.success) {
+                                    toast.success("Class recommendation saved", "Class default saved successfully.");
+                                    setClassRecEditing(false);
+                                  } else {
+                                    toast.error(
+                                      "Save failed",
+                                      result.error || "Unable to save class recommendation."
+                                    );
+                                  }
+                                }}
+                              >
+                                {gradeEntry.savingClassRecommendation ? "Saving..." : "Save"}
+                              </Button>
+                              {hasSaved && (
+                                <Button
+                                  size="sm"
+                                  variant="ghost"
+                                  className="text-xs h-7 px-2"
+                                  onClick={() => setClassRecEditing(false)}
+                                >
+                                  Cancel
+                                </Button>
+                              )}
+                            </div>
+                            <p className="text-[10px] text-muted-foreground">
+                              {gradeEntry.classRecommendation.length}/300
+                            </p>
+                          </div>
+                        </>
+                      );
+                    })()}
                       </CardContent>
                     </Card>
 
