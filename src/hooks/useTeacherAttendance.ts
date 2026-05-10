@@ -41,6 +41,7 @@ export function useTeacherAttendance() {
   const [loadingAttendance, setLoadingAttendance] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [lastSavedAt, setLastSavedAt] = useState<number>(0);
 
   const selectedClass = isTeacher
     ? teacherScope.selectedClassYear?.class_name ?? ""
@@ -257,6 +258,7 @@ export function useTeacherAttendance() {
 
       await saveAttendance(selectedClass, dateString, records, activeCampus);
 
+      setLastSavedAt(Date.now());
       return {
         success: true,
         message: `Attendance for Class ${selectedClass} on ${format(selectedDate, "PPP")} has been saved.`,
@@ -296,6 +298,7 @@ export function useTeacherAttendance() {
     loadingAttendance,
     saving,
     isLoading: loadingClasses || loadingStudents || loadingAttendance,
+    lastSavedAt,
     
     // Error
     error,

@@ -190,7 +190,8 @@ export function useParentAttendance(studentId: string | null, selectedYear: stri
         .map((r) => ({
           date: r.date,
           status: r.status.toLowerCase(),
-          reason: r.status.toLowerCase() !== "present" && r.remarks ? r.remarks.split(" - ")[0] : null,
+          // Use the full remarks as the reason when present; drop fragile " - " split parsing
+          reason: r.status.toLowerCase() !== "present" && r.remarks ? r.remarks : null,
           remarks: r.remarks,
         }))
         .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());

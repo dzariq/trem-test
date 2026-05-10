@@ -172,10 +172,11 @@ export async function saveAttendance(
  * In production, this should be filtered by teacher's assigned classes
  */
 export async function fetchAvailableClasses(campusCode?: string | null): Promise<string[]> {
+  // Use class_years (authoritative, small table) instead of students (subject to 1000-row default limit)
   let query = supabase
-    .from("students")
-    .select("class")
-    .eq("archived", false);
+    .from("class_years")
+    .select("class_name")
+    .eq("active", true);
 
   if (campusCode) {
     query = query.eq("campus_code", campusCode);
@@ -190,9 +191,9 @@ export async function fetchAvailableClasses(campusCode?: string | null): Promise
 
   // Get unique classes
   const classSet = new Set<string>();
-  (data ?? []).forEach((row) => {
-    if (row.class) {
-      classSet.add(row.class);
+  (data ?? []).forEach((row: any) => {
+    if (row.class_name) {
+      classSet.add(row.class_name);
     }
   });
 
