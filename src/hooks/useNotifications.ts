@@ -4,6 +4,7 @@ import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/contexts/AuthContext";
 import { useMyProfile } from "@/hooks/useMyProfile";
 import { useStudentSelection } from "@/hooks/useStudentSelection";
+import { useCampus } from "@/contexts/CampusContext";
 import { toast } from "@/hooks/use-toast";
 
 export interface Notification {
@@ -109,11 +110,16 @@ export function useNotifications() {
   const { user } = useAuth();
   const { profile } = useMyProfile();
   const { linkedStudents } = useStudentSelection();
+  const { activeCampus } = useCampus();
   const queryClient = useQueryClient();
   
   const userRole = profile?.role || "parent";
   const studentIds = linkedStudents?.map(s => s.id) || [];
-  const queryKey = ["notifications", user?.id, userRole, studentIds.join(",")];
+  const scopedCampusCode =
+    userRole === "teacher"
+      ? activeCampus
+      : (linkedStudents?.[0] as any)?.campus_code ?? null;
+  const queryKey = ["notifications", user?.id, userRole, studentIds.join(","), scopedCampusCode];
 
   const { data: notifications = [], isLoading, error } = useQuery({
     queryKey,
@@ -215,7 +221,7 @@ export function useNotifications() {
         }
       }
       
-      const { data: calendarEvents } = await supabase
+      let calendarEventsQuery = supabase
         .from("calendar_events")
         .select("id, title, start_date, event_category, description, event_categories:event_category(name)")
         .gte("start_date", today)
@@ -223,6 +229,12 @@ export function useNotifications() {
         .in("visibility", ["public", "all"])
         .order("start_date", { ascending: true })
         .limit(15);
+      if (scopedCampusCode) {
+        calendarEventsQuery = calendarEventsQuery.or(
+          `campus_code.eq.${scopedCampusCode},campus_code.is.null`
+        );
+      }
+      const { data: calendarEvents } = await calendarEventsQuery;
       
       if (calendarEvents) {
         const seenEvents = new Set<string>();
