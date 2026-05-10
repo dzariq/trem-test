@@ -289,10 +289,9 @@ export async function saveGrades(
   }>
 ): Promise<{ success: boolean; error?: string }> {
   // NOTE: We do NOT include total_marks or letter_grade in the payload
-  // because total_marks is a generated column in Supabase (computed automatically)
-  // and letter_grade may also be computed. Sending them causes a 400 error.
-  const updates: Array<{
-    id?: string;
+  // because they are computed by a BEFORE INSERT/UPDATE trigger
+  // (student_grades_compute_totals) on the database side.
+  const records: Array<{
     student_id: string;
     subject_id: number;
     academic_period_id: string;
@@ -316,8 +315,8 @@ export async function saveGrades(
       continue;
     }
 
-    // Record WITHOUT generated columns (total_marks, letter_grade)
-    const record = {
+    // Record WITHOUT auto-computed columns (total_marks, letter_grade)
+    records.push({
       student_id: grade.studentId,
       subject_id: grade.subjectId,
       academic_period_id: grade.academicPeriodId,
@@ -327,48 +326,25 @@ export async function saveGrades(
       exam_marks: exam,
       teacher_comment: grade.gradeInput.reportComment || grade.gradeInput.comment || null,
       subject_comment: grade.gradeInput.studyRecommendation || null,
-    };
-
-    if (grade.existingGradeId) {
-      updates.push({ id: grade.existingGradeId, ...record });
-    } else {
-      updates.push(record);
-    }
+    });
   }
 
-  if (updates.length === 0) {
+  if (records.length === 0) {
     return { success: true };
   }
 
-  // Separate updates and inserts
-  const toUpdate = updates.filter(u => u.id);
-  const toInsert = updates.filter(u => !u.id);
-
   try {
-    // Process updates
-    for (const update of toUpdate) {
-      const { id, ...data } = update;
-      const { error } = await supabase
-        .from("student_grades")
-        .update(data)
-        .eq("id", id);
+    // Single atomic upsert on the unique key (student_id, subject_id, academic_period_id).
+    // Replaces N round-trips and removes the race window that could create duplicates.
+    const { error } = await supabase
+      .from("student_grades")
+      .upsert(records, {
+        onConflict: "student_id,subject_id,academic_period_id",
+      });
 
-      if (error) {
-        logSupabaseError("gradeEntry/saveGrades/update", error);
-        return { success: false, error: error.message };
-      }
-    }
-
-    // Process inserts
-    if (toInsert.length > 0) {
-      const { error } = await supabase
-        .from("student_grades")
-        .insert(toInsert);
-
-      if (error) {
-        logSupabaseError("gradeEntry/saveGrades/insert", error);
-        return { success: false, error: error.message };
-      }
+    if (error) {
+      logSupabaseError("gradeEntry/saveGrades/upsert", error);
+      return { success: false, error: error.message };
     }
 
     return { success: true };
