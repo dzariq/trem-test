@@ -1541,9 +1541,56 @@ export default function TeacherAcademicPage() {
 
           <TabsContent value="entry" className="space-y-4">
             {/* Class, Subject & Academic Period Selection - FROM SUPABASE */}
-            <div className="grid grid-cols-4 gap-2">
-              <Select 
-                value={gradeEntry.selectedClass || ""} 
+            <div className="space-y-2">
+              <div className="grid grid-cols-2 gap-2">
+                <Select
+                value={
+                  gradeEntry.selectedAcademicYear
+                    ? String(gradeEntry.selectedAcademicYear)
+                    : ""
+                }
+                onValueChange={(v) =>
+                  gradeEntry.setSelectedAcademicYear(v ? Number(v) : null)
+                }
+                disabled={gradeEntry.availableAcademicYears.length === 0}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Year" />
+                </SelectTrigger>
+                <SelectContent>
+                  {gradeEntry.availableAcademicYears.map((year) => (
+                    <SelectItem key={year} value={String(year)}>
+                      {year}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+
+              <Select
+                value={gradeEntry.selectedPeriod?.id || ""}
+                onValueChange={v => {
+                  const period = gradeEntry.academicPeriodsForYear.find(p => p.id === v);
+                  gradeEntry.setSelectedPeriod(period || null);
+                }}
+                disabled={gradeEntry.academicPeriodsForYear.length === 0}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Period" />
+                </SelectTrigger>
+                <SelectContent>
+                  {gradeEntry.academicPeriodsForYear.map(period => (
+                    <SelectItem key={period.id} value={period.id}>
+                      {period.name}
+                      {!period.is_open_for_grading && " (Closed)"}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              </div>
+
+              <div className="grid grid-cols-2 gap-2">
+              <Select
+                value={gradeEntry.selectedClass || ""}
                 onValueChange={v => {
                   gradeEntry.setSelectedClass(v || null);
                   gradeEntry.setSelectedSubject(null);
@@ -1568,29 +1615,6 @@ export default function TeacherAcademicPage() {
               </Select>
 
               <Select
-                value={
-                  gradeEntry.selectedAcademicYear
-                    ? String(gradeEntry.selectedAcademicYear)
-                    : ""
-                }
-                onValueChange={(v) =>
-                  gradeEntry.setSelectedAcademicYear(v ? Number(v) : null)
-                }
-                disabled={gradeEntry.availableAcademicYears.length === 0}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Year" />
-                </SelectTrigger>
-                <SelectContent>
-                  {gradeEntry.availableAcademicYears.map((year) => (
-                    <SelectItem key={year} value={String(year)}>
-                      {year}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-
-              <Select 
                 value={gradeEntry.selectedSubject?.id?.toString() || ""} 
                 onValueChange={v => {
                   const subject = gradeEntry.subjects.find(s => s.id.toString() === v);
@@ -1617,27 +1641,7 @@ export default function TeacherAcademicPage() {
                   ))}
                 </SelectContent>
               </Select>
-
-              <Select 
-                value={gradeEntry.selectedPeriod?.id || ""} 
-                onValueChange={v => {
-                  const period = gradeEntry.academicPeriodsForYear.find(p => p.id === v);
-                  gradeEntry.setSelectedPeriod(period || null);
-                }}
-                disabled={gradeEntry.academicPeriodsForYear.length === 0}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Period" />
-                </SelectTrigger>
-                <SelectContent>
-                  {gradeEntry.academicPeriodsForYear.map(period => (
-                    <SelectItem key={period.id} value={period.id}>
-                      {period.name}
-                      {!period.is_open_for_grading && " (Closed)"}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              </div>
             </div>
 
             {/* Grading Closed Banner */}
