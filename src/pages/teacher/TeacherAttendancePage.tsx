@@ -505,9 +505,9 @@ export default function TeacherAttendancePage() {
           {/* Student List */}
           <Card>
             <CardHeader className="pb-2">
-              <CardTitle className="text-base flex items-center justify-between">
-                <span>Class {stripCampusPrefix(selectedClass)} ({students.length} students)</span>
-                <div className="flex items-center gap-2">
+              <CardTitle className="text-base flex items-center justify-between gap-2">
+                <span className="truncate">Class {stripCampusPrefix(selectedClass)} ({students.length} students)</span>
+                <div className="flex items-center gap-2 flex-shrink-0">
                   {(loadingStudents || loadingAttendance) && (
                     <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
                   )}
@@ -517,7 +517,7 @@ export default function TeacherAttendancePage() {
                       onClick={() => setShowUnmarkedOnly((v) => !v)}
                       title={showUnmarkedOnly ? "Show all students" : "Show only unmarked"}
                       className={cn(
-                        "inline-flex items-center gap-1 h-7 px-2 rounded-full border text-xs font-medium transition-colors",
+                        "inline-flex items-center gap-1 h-7 px-2 rounded-full border text-xs font-medium transition-colors whitespace-nowrap",
                         showUnmarkedOnly
                           ? "border-primary/40 bg-primary/10 text-primary"
                           : "border-border bg-background text-muted-foreground hover:text-foreground"
