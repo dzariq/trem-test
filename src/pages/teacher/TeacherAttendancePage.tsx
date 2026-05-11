@@ -63,6 +63,10 @@ export default function TeacherAttendancePage() {
   const { activeCampus } = useCampus();
   const [activeTab, setActiveTab] = useState<TabType>("take");
   const [showUnmarkedOnly, setShowUnmarkedOnly] = useState(false);
+  // Snapshot of student IDs that were unmarked at the moment the filter was
+  // turned on. We keep them visible even after the teacher marks them so the
+  // list doesn't shift/disappear underneath the user while they work.
+  const [unmarkedSnapshot, setUnmarkedSnapshot] = useState<string[] | null>(null);
   
   // Use the new Supabase-connected hook for Take Attendance tab
   const {
@@ -514,7 +518,21 @@ export default function TeacherAttendancePage() {
                   {students.length > 0 && (
                     <button
                       type="button"
-                      onClick={() => setShowUnmarkedOnly((v) => !v)}
+                      onClick={() => {
+                        setShowUnmarkedOnly((v) => {
+                          const next = !v;
+                          if (next) {
+                            setUnmarkedSnapshot(
+                              students
+                                .filter((s) => !attendanceState[s.id]?.status)
+                                .map((s) => s.id)
+                            );
+                          } else {
+                            setUnmarkedSnapshot(null);
+                          }
+                          return next;
+                        });
+                      }}
                       title={showUnmarkedOnly ? "Show all students" : "Show only unmarked"}
                       className={cn(
                         "inline-flex items-center gap-1 h-7 px-2 rounded-full border text-xs font-medium transition-colors whitespace-nowrap",
@@ -541,9 +559,10 @@ export default function TeacherAttendancePage() {
                   <p className="text-sm">No students found for this class.</p>
                 </div>
               ) : (() => {
-                const visible = showUnmarkedOnly
-                  ? students.filter((s) => !attendanceState[s.id]?.status)
-                  : students;
+                const visible =
+                  showUnmarkedOnly && unmarkedSnapshot
+                    ? students.filter((s) => unmarkedSnapshot.includes(s.id))
+                    : students;
                 if (visible.length === 0) {
                   return (
                     <div className="py-8 text-center text-muted-foreground">
