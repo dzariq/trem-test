@@ -562,7 +562,7 @@ export function AnnouncementsListDrawer({ isOpen, onOpenChange }: AnnouncementsL
                                     <p className="text-xs text-muted-foreground">Tap to open</p>
                                   </div>
                                   <Download className="h-4 w-4 text-muted-foreground group-hover:text-primary transition-colors" />
-                                </a>
+                                </button>
                               );
                             })}
                           </div>

@@ -17,6 +17,7 @@ import { getAnnouncementById, markAnnouncementRead, acknowledgeAnnouncement, typ
 import { AnnouncementHtmlContent } from "@/components/announcements/AnnouncementHtmlContent";
 import { AnnouncementPdfBanner, isPdfAttachment } from "@/components/announcements/AnnouncementPdfBanner";
 import { ImagePreviewDialog } from "@/components/announcements/ImagePreviewDialog";
+import { openExternal } from "@/lib/native/openExternal";
 
 export default function AnnouncementDetailPage() {
   const { id } = useParams();
