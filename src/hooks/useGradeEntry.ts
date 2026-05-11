@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { toast } from "@/hooks/use-toast";
 import { useTeacherScope } from "@/hooks/useTeacherScope";
+import { supabase } from "@/lib/supabase";
 import {
   fetchAvailableClasses,
   fetchStudentsByClass,
@@ -89,7 +90,10 @@ export function useGradeEntry(): UseGradeEntryReturn {
   // Data state
   const [classes, setClasses] = useState<string[]>([]);
   const [students, setStudents] = useState<GradeEntryStudent[]>([]);
-  const [subjects, setSubjects] = useState<SubjectInfo[]>([]);
+  const [rawSubjects, setRawSubjects] = useState<SubjectInfo[]>([]);
+  // Per-term subject restriction from grade_configurations.selected_subject_ids.
+  // null => no per-term filter (show all rawSubjects). [] => term explicitly has no subjects.
+  const [termSubjectIds, setTermSubjectIds] = useState<number[] | null>(null);
   const [academicPeriods, setAcademicPeriods] = useState<AcademicPeriod[]>([]);
   const [existingGrades, setExistingGrades] = useState<Map<string, StudentGradeRecord>>(new Map());
   const [gradeInputs, setGradeInputs] = useState<Record<string, GradeInput>>({});
@@ -226,7 +230,7 @@ export function useGradeEntry(): UseGradeEntryReturn {
   useEffect(() => {
     if (!selectedClass) {
       setStudents([]);
-      setSubjects([]);
+      setRawSubjects([]);
       setSelectedSubject(null);
       return;
     }
@@ -245,7 +249,7 @@ export function useGradeEntry(): UseGradeEntryReturn {
             teacherScope.allowedClassYears.find((cls) => cls.class_name === selectedClass)?.id ??
             teacherScope.selectedClassYearId;
           if (!classYearId) {
-            setSubjects([]);
+            setRawSubjects([]);
             setSelectedSubject(null);
             toast({
               title: "Class not available",
@@ -256,12 +260,12 @@ export function useGradeEntry(): UseGradeEntryReturn {
           }
           const allowedSubjects = await teacherScope.getAllowedSubjects(classYearId);
           // Map to SubjectInfo with code field
-          setSubjects(allowedSubjects.map(s => ({ ...s, code: null })));
+          setRawSubjects(allowedSubjects.map(s => ({ ...s, code: null })));
         } else {
           // Get year level from first student
           const yearLevel = fetchedStudents[0]?.year_level;
           const fetchedSubjects = await fetchSubjects(yearLevel);
-          setSubjects(fetchedSubjects);
+          setRawSubjects(fetchedSubjects);
         }
       } catch (err) {
         setError("Failed to load students or subjects");
@@ -316,6 +320,74 @@ export function useGradeEntry(): UseGradeEntryReturn {
     teacherScope.allowedClassYears,
     teacherScope.subjectsByClassYearId,
   ]);
+
+  // Fetch per-term selected_subject_ids from grade_configurations (teacher path only).
+  // Defines an explicit per-exam-term subject whitelist for the (year_level, class, period).
+  useEffect(() => {
+    if (!isTeacher) {
+      setTermSubjectIds(null);
+      return;
+    }
+    if (!selectedClass || !selectedPeriod) {
+      setTermSubjectIds(null);
+      return;
+    }
+    const yearLevel = teacherScope.selectedClassYear?.year_level ?? null;
+    if (!yearLevel) {
+      setTermSubjectIds(null);
+      return;
+    }
+
+    let cancelled = false;
+    (async () => {
+      const { data, error: cfgErr } = await supabase
+        .from("grade_configurations")
+        .select("selected_subject_ids")
+        .eq("year_level", yearLevel)
+        .eq("class", selectedClass)
+        .eq("academic_period_id", selectedPeriod.id)
+        .is("subject_id", null)
+        .maybeSingle();
+      if (cancelled) return;
+      if (cfgErr) {
+        console.warn("[useGradeEntry] grade_configurations lookup failed:", cfgErr.message);
+        setTermSubjectIds(null);
+        return;
+      }
+      const ids = (data?.selected_subject_ids ?? null) as number[] | null;
+      // Treat empty array as "no per-term restriction" so we don't hide everything
+      // for periods where the admin hasn't curated subjects.
+      if (!ids || ids.length === 0) {
+        setTermSubjectIds(null);
+      } else {
+        setTermSubjectIds(ids);
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [isTeacher, selectedClass, selectedPeriod, teacherScope.selectedClassYear?.year_level]);
+
+  // Final dropdown list = rawSubjects intersected with per-term whitelist (if any).
+  const subjects = useMemo<SubjectInfo[]>(() => {
+    if (!termSubjectIds) return rawSubjects;
+    const allow = new Set(termSubjectIds);
+    return rawSubjects.filter((s) => allow.has(s.id));
+  }, [rawSubjects, termSubjectIds]);
+
+  // If the currently selected subject was filtered out by the per-term whitelist,
+  // reset to the first available subject and notify.
+  useEffect(() => {
+    if (!selectedSubject) return;
+    if (subjects.length === 0) return;
+    if (subjects.some((s) => s.id === selectedSubject.id)) return;
+    setSelectedSubject(subjects[0]);
+    toast({
+      title: "Subject updated",
+      description: "Selected subject is no longer available for this term.",
+    });
+  }, [subjects, selectedSubject]);
 
   useEffect(() => {
     if (selectedSubject || subjects.length === 0) return;
