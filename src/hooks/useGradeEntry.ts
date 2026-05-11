@@ -321,6 +321,74 @@ export function useGradeEntry(): UseGradeEntryReturn {
     teacherScope.subjectsByClassYearId,
   ]);
 
+  // Fetch per-term selected_subject_ids from grade_configurations (teacher path only).
+  // Defines an explicit per-exam-term subject whitelist for the (year_level, class, period).
+  useEffect(() => {
+    if (!isTeacher) {
+      setTermSubjectIds(null);
+      return;
+    }
+    if (!selectedClass || !selectedPeriod) {
+      setTermSubjectIds(null);
+      return;
+    }
+    const yearLevel = teacherScope.selectedClassYear?.year_level ?? null;
+    if (!yearLevel) {
+      setTermSubjectIds(null);
+      return;
+    }
+
+    let cancelled = false;
+    (async () => {
+      const { data, error: cfgErr } = await supabase
+        .from("grade_configurations")
+        .select("selected_subject_ids")
+        .eq("year_level", yearLevel)
+        .eq("class", selectedClass)
+        .eq("academic_period_id", selectedPeriod.id)
+        .is("subject_id", null)
+        .maybeSingle();
+      if (cancelled) return;
+      if (cfgErr) {
+        console.warn("[useGradeEntry] grade_configurations lookup failed:", cfgErr.message);
+        setTermSubjectIds(null);
+        return;
+      }
+      const ids = (data?.selected_subject_ids ?? null) as number[] | null;
+      // Treat empty array as "no per-term restriction" so we don't hide everything
+      // for periods where the admin hasn't curated subjects.
+      if (!ids || ids.length === 0) {
+        setTermSubjectIds(null);
+      } else {
+        setTermSubjectIds(ids);
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [isTeacher, selectedClass, selectedPeriod, teacherScope.selectedClassYear?.year_level]);
+
+  // Final dropdown list = rawSubjects intersected with per-term whitelist (if any).
+  const subjects = useMemo<SubjectInfo[]>(() => {
+    if (!termSubjectIds) return rawSubjects;
+    const allow = new Set(termSubjectIds);
+    return rawSubjects.filter((s) => allow.has(s.id));
+  }, [rawSubjects, termSubjectIds]);
+
+  // If the currently selected subject was filtered out by the per-term whitelist,
+  // reset to the first available subject and notify.
+  useEffect(() => {
+    if (!selectedSubject) return;
+    if (subjects.length === 0) return;
+    if (subjects.some((s) => s.id === selectedSubject.id)) return;
+    setSelectedSubject(subjects[0]);
+    toast({
+      title: "Subject updated",
+      description: "Selected subject is no longer available for this term.",
+    });
+  }, [subjects, selectedSubject]);
+
   useEffect(() => {
     if (selectedSubject || subjects.length === 0) return;
     setSelectedSubject(subjects[0]);
