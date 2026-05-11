@@ -45,9 +45,16 @@ export function EventDetailsSheet({ open, onOpenChange, event }: EventDetailsShe
   if (!event) return null;
 
   const cca = isCcaSession(event);
-  const dateKey = cca ? event.sessionDate : event.startDay || event.date;
-  const hasValidDateKey = typeof dateKey === "string" && dateKey.length === 10;
-  const dateLabel = hasValidDateKey ? formatDateLabel(dateKey) : "-";
+  const startKey = cca ? event.sessionDate : event.startDay || event.date;
+  const endKey = cca ? event.sessionDate : event.endDay || event.startDay || event.date;
+  const hasValidStart = typeof startKey === "string" && startKey.length === 10;
+  const hasValidEnd = typeof endKey === "string" && endKey.length === 10;
+  const isMultiDay = hasValidStart && hasValidEnd && startKey !== endKey;
+  const dateLabel = hasValidStart
+    ? isMultiDay
+      ? `${formatDateLabel(startKey)} – ${formatDateLabel(endKey)}`
+      : formatDateLabel(startKey)
+    : "-";
   const timeLabel = cca
     ? formatTimeRange(event.startTime, event.endTime)
     : event.allDay
