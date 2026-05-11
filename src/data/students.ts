@@ -1,6 +1,6 @@
 import { supabase } from "@/lib/supabase";
 import { getMyProfile } from "@/data/profile";
-import { stripCampusPrefix } from "@/lib/utils";
+import { formatClassDisplay } from "@/lib/utils";
 
 export type LinkedStudent = {
   id: string;

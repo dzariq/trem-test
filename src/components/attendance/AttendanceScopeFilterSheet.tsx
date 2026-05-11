@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { Filter, RotateCcw } from "lucide-react";
-import { cn, stripCampusPrefix } from "@/lib/utils";
+import { cn, formatClassDisplay } from "@/lib/utils";
 import { sortYearLevels, sortClasses } from "@/lib/classSorting";
 import {
   type AttendanceScope,
@@ -211,7 +211,7 @@ export function AttendanceScopeFilterSheet({
 
             {draftClasses.length > 0 && (
               <div className="flex flex-wrap gap-1.5 mb-2">
-                {Array.from(new Set(draftClasses.map(stripCampusPrefix))).map((display) => (
+                {Array.from(new Set(draftClasses.map(formatClassDisplay))).map((display) => (
                   <Badge
                     key={display}
                     variant="secondary"

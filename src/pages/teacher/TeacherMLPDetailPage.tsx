@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect, useRef } from "react";
-import { stripCampusPrefix } from "@/lib/utils";
+import { formatClassDisplay } from "@/lib/utils";
 import { useNavigate, useParams } from "react-router-dom";
 import { format } from "date-fns";
 import { TeacherAppLayout } from "@/components/layout/TeacherAppLayout";
