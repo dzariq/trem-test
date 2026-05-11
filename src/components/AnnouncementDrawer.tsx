@@ -385,7 +385,7 @@ export function AnnouncementDrawer({
                             if (isPdf) {
                               openPdf(attachment);
                             } else {
-                              window.open(attachment.url, "_blank", "noopener,noreferrer");
+                              void openExternal(attachment.url);
                             }
                           }}
                           className={cn(
@@ -450,7 +450,7 @@ export function AnnouncementDrawer({
                                 if (isPdf) {
                                   openPdf(attachment);
                                 } else {
-                                  window.open(attachment.url, "_blank", "noopener,noreferrer");
+                                  void openExternal(attachment.url);
                                 }
                               }}
                               className={cn(
