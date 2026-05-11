@@ -442,7 +442,7 @@ export default function TeacherAttendancePage() {
               </SelectTrigger>
               <SelectContent>
                 {classes.map((cls) => (
-                  <SelectItem key={cls} value={cls}>Class {stripCampusPrefix(cls)}</SelectItem>
+                  <SelectItem key={cls} value={cls}>{cls}</SelectItem>
                 ))}
               </SelectContent>
             </Select>
@@ -512,7 +512,7 @@ export default function TeacherAttendancePage() {
           <Card>
             <CardHeader className="pb-2">
               <CardTitle className="text-base flex items-center justify-between gap-2">
-                <span className="truncate">Class {stripCampusPrefix(selectedClass)} ({students.length} students)</span>
+                <span className="truncate">{selectedClass} ({students.length} students)</span>
                 <div className="flex items-center gap-2 flex-shrink-0">
                   {(loadingStudents || loadingAttendance) && (
                     <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
