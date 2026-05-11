@@ -63,10 +63,6 @@ export default function TeacherAttendancePage() {
   const { activeCampus } = useCampus();
   const [activeTab, setActiveTab] = useState<TabType>("take");
   const [showUnmarkedOnly, setShowUnmarkedOnly] = useState(false);
-  // Snapshot of student IDs that were unmarked at the moment the filter was
-  // turned on. We keep them visible even after the teacher marks them so the
-  // list doesn't shift/disappear underneath the user while they work.
-  const [unmarkedSnapshot, setUnmarkedSnapshot] = useState<string[] | null>(null);
 
   // Use the new Supabase-connected hook for Take Attendance tab
   const {
@@ -78,6 +74,7 @@ export default function TeacherAttendancePage() {
     students,
     attendanceState,
     summary,
+    savedStudentIds,
     loadingClasses,
     loadingStudents,
     loadingAttendance,
@@ -90,11 +87,9 @@ export default function TeacherAttendancePage() {
     save,
   } = useTeacherAttendance();
 
-  // Reset the snapshot whenever the class or date changes so the filter
-  // doesn't carry stale IDs across contexts.
+  // Reset the filter toggle whenever the class or date changes.
   useEffect(() => {
     setShowUnmarkedOnly(false);
-    setUnmarkedSnapshot(null);
   }, [selectedClass, selectedDate]);
 
   // Dates with attendance records for the selected class, split by indicator color
@@ -525,22 +520,8 @@ export default function TeacherAttendancePage() {
                   {students.length > 0 && (
                     <button
                       type="button"
-                      onClick={() => {
-                        setShowUnmarkedOnly((v) => {
-                          const next = !v;
-                          if (next) {
-                            setUnmarkedSnapshot(
-                              students
-                                .filter((s) => !attendanceState[s.id]?.status)
-                                .map((s) => s.id)
-                            );
-                          } else {
-                            setUnmarkedSnapshot(null);
-                          }
-                          return next;
-                        });
-                      }}
-                      title={showUnmarkedOnly ? "Show all students" : "Show only unmarked"}
+                      onClick={() => setShowUnmarkedOnly((v) => !v)}
+                      title={showUnmarkedOnly ? "Show all students" : "Show only unsaved"}
                       className={cn(
                         "inline-flex items-center gap-1 h-7 px-2 rounded-full border text-xs font-medium transition-colors whitespace-nowrap",
                         showUnmarkedOnly
@@ -549,7 +530,12 @@ export default function TeacherAttendancePage() {
                       )}
                     >
                       <Filter className="h-3.5 w-3.5" />
-                      {summary.unmarked > 0 ? `${summary.unmarked} unmarked` : "Unmarked"}
+                      {(() => {
+                        const unsaved = students.filter(
+                          (s) => !savedStudentIds.has(s.id)
+                        ).length;
+                        return unsaved > 0 ? `${unsaved} unsaved` : "Unsaved";
+                      })()}
                     </button>
                   )}
                 </div>
@@ -567,13 +553,13 @@ export default function TeacherAttendancePage() {
                 </div>
               ) : (() => {
                 const visible =
-                  showUnmarkedOnly && unmarkedSnapshot
-                    ? students.filter((s) => unmarkedSnapshot.includes(s.id))
+                  showUnmarkedOnly
+                    ? students.filter((s) => !savedStudentIds.has(s.id))
                     : students;
                 if (visible.length === 0) {
                   return (
                     <div className="py-8 text-center text-muted-foreground">
-                      <p className="text-sm">All students are marked. 🎉</p>
+                      <p className="text-sm">All students are saved. 🎉</p>
                     </div>
                   );
                 }
