@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect, useRef } from "react";
-import { stripCampusPrefix } from "@/lib/utils";
+import { formatClassDisplay } from "@/lib/utils";
 import { useNavigate, useParams } from "react-router-dom";
 import { format } from "date-fns";
 import { TeacherAppLayout } from "@/components/layout/TeacherAppLayout";
@@ -329,7 +329,7 @@ const TeacherMLPDetailPage = () => {
             <SelectContent>
               {assignedClasses.map((cls) => (
                 <SelectItem key={cls.classYearId} value={cls.classYearId.toString()}>
-                  {stripCampusPrefix(cls.className)}
+                  {formatClassDisplay(cls.className)}
                 </SelectItem>
               ))}
             </SelectContent>

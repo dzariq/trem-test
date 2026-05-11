@@ -1,5 +1,5 @@
 import { useEffect, useState, useMemo } from "react";
-import { stripCampusPrefix } from "@/lib/utils";
+import { formatClassDisplay } from "@/lib/utils";
 import { BottomSheet } from "@/components/ui/bottom-sheet";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -164,7 +164,7 @@ export function ManageStudentsSheet({
             <SelectItem value="all">All Classes</SelectItem>
             {availableClasses.map((cls) => (
               <SelectItem key={cls} value={cls}>
-                {stripCampusPrefix(cls)}
+                {formatClassDisplay(cls)}
               </SelectItem>
             ))}
           </SelectContent>
@@ -209,7 +209,7 @@ export function ManageStudentsSheet({
                   <div className="flex-1 min-w-0">
                     <p className="font-medium text-foreground truncate">{student.name}</p>
                     <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                      <span>{stripCampusPrefix(student.class)}</span>
+                      <span>{formatClassDisplay(student.class)}</span>
                       <span>•</span>
                       <span>{student.yearLevel}</span>
                     </div>
@@ -252,7 +252,7 @@ export function ManageStudentsSheet({
                     <div className="flex-1 min-w-0">
                       <p className="font-medium text-foreground truncate">{student.name}</p>
                       <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                        <span>{stripCampusPrefix(student.class)}</span>
+                        <span>{formatClassDisplay(student.class)}</span>
                         <span>•</span>
                         <span>{student.yearLevel}</span>
                         {!isEligible && (

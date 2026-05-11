@@ -1,5 +1,5 @@
 import { useState, useMemo, useCallback, useEffect } from "react";
-import { stripCampusPrefix } from "@/lib/utils";
+import { formatClassDisplay } from "@/lib/utils";
 import { useTeacherScope } from "@/hooks/useTeacherScope";
 import { useAuth } from "@/contexts/AuthContext";
 import { useCampus } from "@/contexts/CampusContext";
@@ -133,7 +133,7 @@ export function useAttendanceScopeFilter(): AttendanceScopeFilterState {
     if (scope === "school") return "Whole School";
     if (scope === "cohort" && selectedCohort) return `Cohort ${selectedCohort}`;
     if (scope === "class" && selectedClassNames.length > 0) {
-      const unique = Array.from(new Set(selectedClassNames.map(stripCampusPrefix)));
+      const unique = Array.from(new Set(selectedClassNames.map(formatClassDisplay)));
       if (unique.length <= 2) return unique.join(", ");
       return `${unique.length} classes`;
     }
