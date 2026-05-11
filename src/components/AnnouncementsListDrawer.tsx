@@ -8,6 +8,7 @@ import { getReadAnnouncementIds, markAnnouncementAsRead } from "@/components/Ann
 import { Drawer as DrawerPrimitive } from "vaul";
 import { cn } from "@/lib/utils";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { openExternal } from "@/lib/native/openExternal";
 
 type CategoryFilter = "all" | "Event" | "Academic" | "General";
 
