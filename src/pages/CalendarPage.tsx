@@ -5,7 +5,7 @@ import { AppHeader } from "@/components/layout/AppHeader";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Calendar } from "@/components/ui/calendar";
+import { MonthGridCalendar } from "@/components/calendar/MonthGridCalendar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { BottomSheet } from "@/components/ui/bottom-sheet";
 import { MapPin, Clock, CalendarDays, User, Loader2, ArrowRightLeft } from "lucide-react";
@@ -245,35 +245,7 @@ export default function CalendarPage() {
     ? ccaSessions.filter((session) => session.sessionDate === selectedDay)
     : [];
 
-  const eventDaySet = new Set<string>();
-  const addRangeDays = (startDay: string, endDay: string) => {
-    const cursor = parseDayKey(startDay);
-    const end = parseDayKey(endDay);
-    if (Number.isNaN(cursor.getTime()) || Number.isNaN(end.getTime())) return;
-    while (cursor <= end) {
-      eventDaySet.add(toDayString(cursor));
-      cursor.setDate(cursor.getDate() + 1);
-    }
-  };
-
-  filteredEvents.forEach((event) => {
-    if (event.startDay && event.endDay) {
-      addRangeDays(event.startDay, event.endDay);
-    }
-  });
-
-  if (showCcaSessions) {
-    ccaSessions.forEach((session) => {
-      if (session.sessionDate) {
-        eventDaySet.add(session.sessionDate);
-      }
-    });
-  }
-
-  const visibleMonth = toMonthString(currentMonth);
-  const hasEventsSet = new Set(
-    Array.from(eventDaySet).filter((day) => day.startsWith(visibleMonth))
-  );
+  const gridCcaSessions = showCcaSessions ? ccaSessions : [];
 
   useEffect(() => {
     let isMounted = true;
@@ -496,32 +468,19 @@ export default function CalendarPage() {
             </div>
 
             {/* Calendar Component */}
-            <Card className="bg-card border-border shadow-sm overflow-hidden">
-              <CardContent className="p-3 sm:p-4 md:p-6">
-                <div className="flex justify-center">
-                  <Calendar
-                    mode="single"
-                    onSelect={(date) => date && setSelectedDay(toDayString(date))}
-                    onMonthChange={(date) => {
-                      setCurrentMonth(date);
-                      const month = String(date.getMonth() + 1).padStart(2, "0");
-                      setSelectedDay(`${date.getFullYear()}-${month}-01`);
-                    }}
-                    className="rounded-md w-full max-w-md mx-auto"
-                    modifiers={{
-                      hasEvent: (date) => hasEventsSet.has(toDayString(date)),
-                      selected: (date) => toDayString(date) === selectedDay,
-                    }}
-                    modifiersStyles={{
-                      hasEvent: {
-                        backgroundColor: "hsl(var(--primary) / 0.1)",
-                        fontWeight: "bold"
-                      },
-                    }}
-                  />
-                </div>
-              </CardContent>
-            </Card>
+            <MonthGridCalendar
+              month={currentMonth}
+              selectedDay={selectedDay}
+              onSelectDay={setSelectedDay}
+              onMonthChange={(date) => {
+                setCurrentMonth(date);
+                const month = String(date.getMonth() + 1).padStart(2, "0");
+                setSelectedDay(`${date.getFullYear()}-${month}-01`);
+              }}
+              events={filteredEvents}
+              ccaSessions={gridCcaSessions}
+              onEventClick={openEventDetails}
+            />
 
             {/* Events for Selected Date */}
             <Card className="bg-card border-border shadow-sm">
