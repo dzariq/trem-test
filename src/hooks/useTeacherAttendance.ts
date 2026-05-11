@@ -234,12 +234,15 @@ export function useTeacherAttendance() {
       return { success: false, message: "No class selected" };
     }
 
-    // Check if all students have a status
-    const unmarked = students.filter((s) => !attendanceState[s.id]?.status);
-    if (unmarked.length > 0) {
+    // Allow partial saves — teachers can mark students progressively as they
+    // arrive. Only persist students that have a status set.
+    const marked = students.filter((s) => attendanceState[s.id]?.status);
+    const unmarkedCount = students.length - marked.length;
+
+    if (marked.length === 0) {
       return {
         success: false,
-        message: `${unmarked.length} student(s) haven't been marked yet.`,
+        message: "Mark at least one student before submitting.",
       };
     }
 
@@ -247,9 +250,7 @@ export function useTeacherAttendance() {
       setSaving(true);
       setError(null);
 
-      const records = students
-        .filter((s) => attendanceState[s.id]?.status)
-        .map((s) => ({
+      const records = marked.map((s) => ({
           student_id: s.id,
           student_name: attendanceState[s.id].student_name,
           status: attendanceState[s.id].status!,
@@ -259,9 +260,13 @@ export function useTeacherAttendance() {
       await saveAttendance(selectedClass, dateString, records, activeCampus);
 
       setLastSavedAt(Date.now());
+      const suffix =
+        unmarkedCount > 0
+          ? ` ${unmarkedCount} student(s) still unmarked — you can update them later.`
+          : "";
       return {
         success: true,
-        message: `Attendance for Class ${selectedClass} on ${format(selectedDate, "PPP")} has been saved.`,
+        message: `Saved ${marked.length} student(s) for Class ${selectedClass} on ${format(selectedDate, "PPP")}.${suffix}`,
       };
     } catch (err) {
       const message = err instanceof Error ? err.message : "Failed to save attendance";
