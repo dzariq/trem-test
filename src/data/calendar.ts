@@ -110,31 +110,15 @@ const mapCalendarRow = (row: any): UpcomingEvent => {
   // on the correct calendar day regardless of how the admin portal stored them
   // (some rows use SGT-midnight-as-UTC, others use UTC midnight).
   const startDay = toLocalYmd(startDateTime);
-  let endDay = endDateTime ? toLocalYmd(endDateTime) : startDay;
+  const endDay = endDateTime ? toLocalYmd(endDateTime) : startDay;
   const allDay =
     row.is_all_day ??
     (isMidnightUtc(startDateTime) && (!endDateTime || isMidnightUtc(endDateTime)));
-  // For all-day events, the admin portal often stores end as the last
-  // millisecond of the local day (e.g. 15:59:59+00 = SGT 23:59:59).
-  // After local conversion this collapses naturally, but guard against rows
-  // where end_date sits 1ms into the next local day.
-  if (allDay && endDay > startDay) {
-    const endDateObj = endDateTime ? new Date(endDateTime) : null;
-    if (endDateObj) {
-      // If the end is at local 00:00:00 of the next day, treat it as same-day.
-      const endLocalHM = new Intl.DateTimeFormat("en-GB", {
-        timeZone: LOCAL_TZ,
-        hour: "2-digit",
-        minute: "2-digit",
-        second: "2-digit",
-        hour12: false,
-      }).format(endDateObj);
-      if (endLocalHM === "00:00:00") {
-        const prev = new Date(endDateObj.getTime() - 1000);
-        endDay = toLocalYmd(prev.toISOString());
-      }
-    }
-  }
+  // The admin portal uses two end-date conventions for all-day events:
+  //   - 23:59:59 of the last day (e.g. 15:59:59+00 SGT) → collapses to that day
+  //   - exactly 00:00:00 of the day AFTER the last day (e.g. 16:00:00+00 SGT)
+  //     → that next local day IS the inclusive last day of the event.
+  // toLocalYmd already handles both correctly, so no further adjustment needed.
   const timeLabel = allDay ? "All Day" : formatTimeLabel(startDateTime, endDateTime);
 
   return {
