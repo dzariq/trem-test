@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { toast } from "@/hooks/use-toast";
 import { useTeacherScope } from "@/hooks/useTeacherScope";
+import { supabase } from "@/lib/supabase";
 import {
   fetchAvailableClasses,
   fetchStudentsByClass,
@@ -89,7 +90,10 @@ export function useGradeEntry(): UseGradeEntryReturn {
   // Data state
   const [classes, setClasses] = useState<string[]>([]);
   const [students, setStudents] = useState<GradeEntryStudent[]>([]);
-  const [subjects, setSubjects] = useState<SubjectInfo[]>([]);
+  const [rawSubjects, setRawSubjects] = useState<SubjectInfo[]>([]);
+  // Per-term subject restriction from grade_configurations.selected_subject_ids.
+  // null => no per-term filter (show all rawSubjects). [] => term explicitly has no subjects.
+  const [termSubjectIds, setTermSubjectIds] = useState<number[] | null>(null);
   const [academicPeriods, setAcademicPeriods] = useState<AcademicPeriod[]>([]);
   const [existingGrades, setExistingGrades] = useState<Map<string, StudentGradeRecord>>(new Map());
   const [gradeInputs, setGradeInputs] = useState<Record<string, GradeInput>>({});
