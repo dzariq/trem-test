@@ -15,7 +15,7 @@ export default function RoleSelectionPage() {
 
     if (user && profile) {
       // User is logged in with a valid profile, redirect to their portal
-      if (profile.role === "teacher") {
+      if (["teacher", "admin", "super_admin"].includes(profile.role)) {
         navigate("/teacher", { replace: true });
       } else {
         navigate("/portal", { replace: true });
