@@ -86,6 +86,10 @@ export function useTeacherScope() {
 
   const initializedSelectionRef = useRef(false);
   const lastSelectionRef = useRef<number | null>(null);
+  const allClassYearsRef = useRef<ClassYear[]>([]);
+  useEffect(() => {
+    allClassYearsRef.current = allClassYears;
+  }, [allClassYears]);
 
   const allowedClassYears = useMemo(() => {
     if (!activeCampus) return allClassYears;
@@ -316,13 +320,26 @@ export function useTeacherScope() {
           throw queryError;
         }
 
+        const classYearLevel = allClassYearsRef.current.find((cy) => cy.id === classYearId)?.year_level ?? null;
+
         const unique = new Map<number, SubjectInfo>();
         (data ?? []).forEach((row) => {
           if (row && typeof row.id === "number") {
+            const yearLevels: string[] | null = row.year_levels ?? null;
+            // Filter out subjects whose year_levels do not include this class's year level.
+            // Empty/null year_levels => allow (treat as universal).
+            if (
+              classYearLevel &&
+              yearLevels &&
+              yearLevels.length > 0 &&
+              !yearLevels.includes(classYearLevel)
+            ) {
+              return;
+            }
             unique.set(row.id, {
               id: row.id,
               name: row.name,
-              year_levels: row.year_levels ?? null,
+              year_levels: yearLevels,
             });
           }
         });
