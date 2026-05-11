@@ -3,6 +3,7 @@ import { stripCampusPrefix } from "@/lib/utils";
 import { useTeacherScope } from "@/hooks/useTeacherScope";
 import { useAuth } from "@/contexts/AuthContext";
 import { useCampus } from "@/contexts/CampusContext";
+import { supabase } from "@/lib/supabase";
 
 export type AttendanceScope = "school" | "cohort" | "class";
 
@@ -54,8 +55,40 @@ export function useAttendanceScopeFilter(): AttendanceScopeFilterState {
   const [scope, setScope] = useState<AttendanceScope>("school");
   const [selectedCohort, setSelectedCohort] = useState<string | null>(null);
   const [selectedClassNames, setSelectedClassNames] = useState<string[]>([]);
+  const [adminClassYears, setAdminClassYears] = useState<ClassYear[]>([]);
+  const [adminLoading, setAdminLoading] = useState(false);
 
-  const availableClasses = teacherScope.allowedClassYears;
+  // For non-teachers (admin / super_admin), the teacherScope hook returns an
+  // empty allowedClassYears list (it only loads classes assigned to a teacher).
+  // Fetch all active class_years directly so admins can filter by cohort/class.
+  useEffect(() => {
+    if (isTeacher) return;
+    let mounted = true;
+    setAdminLoading(true);
+    (async () => {
+      let q = supabase
+        .from("class_years")
+        .select("id, class_name, year_level, active")
+        .eq("active", true)
+        .order("year_level", { ascending: true })
+        .order("class_name", { ascending: true });
+      if (activeCampus) q = q.eq("campus_code", activeCampus);
+      const { data, error } = await q;
+      if (!mounted) return;
+      if (error) {
+        console.error("[useAttendanceScopeFilter] admin class_years fetch failed", error);
+        setAdminClassYears([]);
+      } else {
+        setAdminClassYears((data ?? []) as ClassYear[]);
+      }
+      setAdminLoading(false);
+    })();
+    return () => {
+      mounted = false;
+    };
+  }, [isTeacher, activeCampus]);
+
+  const availableClasses = isTeacher ? teacherScope.allowedClassYears : adminClassYears;
 
   // When the active campus changes, drop any cohort/class selections that
   // belonged to the previous campus so stats reflect the new campus only.
@@ -136,7 +169,7 @@ export function useAttendanceScopeFilter(): AttendanceScopeFilterState {
     availableClasses,
     availableCohorts,
     isTeacher,
-    loading: teacherScope.loading,
+    loading: isTeacher ? teacherScope.loading : adminLoading,
     resolvedClassNames,
     filterLabel,
     isFiltered,
