@@ -17,6 +17,7 @@ import { getAnnouncementById, markAnnouncementRead, acknowledgeAnnouncement, typ
 import { AnnouncementHtmlContent } from "@/components/announcements/AnnouncementHtmlContent";
 import { AnnouncementPdfBanner, isPdfAttachment } from "@/components/announcements/AnnouncementPdfBanner";
 import { ImagePreviewDialog } from "@/components/announcements/ImagePreviewDialog";
+import { openExternal } from "@/lib/native/openExternal";
 
 export default function AnnouncementDetailPage() {
   const { id } = useParams();
@@ -215,11 +216,10 @@ export default function AnnouncementDetailPage() {
                 </h3>
                 <div className="space-y-2">
                   {otherAttachments.map((attachment, index) => (
-                    <a
+                    <button
                       key={index}
-                      href={attachment.url}
-                      target="_blank"
-                      rel="noopener noreferrer"
+                      type="button"
+                      onClick={() => void openExternal(attachment.url)}
                       className="flex items-center justify-between p-3 bg-background rounded-lg border border-border hover:border-primary/40 transition-colors"
                     >
                       <div className="flex items-center gap-3 min-w-0">
@@ -231,7 +231,7 @@ export default function AnnouncementDetailPage() {
                         </p>
                       </div>
                       <Eye className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-                    </a>
+                    </button>
                   ))}
                 </div>
               </CardContent>

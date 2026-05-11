@@ -8,6 +8,7 @@ import { getReadAnnouncementIds, markAnnouncementAsRead } from "@/components/Ann
 import { Drawer as DrawerPrimitive } from "vaul";
 import { cn } from "@/lib/utils";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { openExternal } from "@/lib/native/openExternal";
 
 type CategoryFilter = "all" | "Event" | "Academic" | "General";
 
@@ -541,15 +542,14 @@ export function AnnouncementsListDrawer({ isOpen, onOpenChange }: AnnouncementsL
                             {nonHeroAttachments.map((attachment, idx) => {
                               const { icon: Icon, color, bg } = getFileIcon(attachment.name);
                               return (
-                                <a
+                                <button
                                   key={idx}
-                                  href={attachment.url}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
+                                  type="button"
+                                  onClick={() => void openExternal(attachment.url)}
                                   className={cn(
                                     "flex items-center gap-3 px-4 py-3 rounded-xl border border-border/60",
                                     "bg-card shadow-sm hover:shadow-md transition-all hover:border-primary/30",
-                                    "group"
+                                    "group text-left"
                                   )}
                                 >
                                   <div className={cn("p-2 rounded-lg", bg)}>
@@ -562,7 +562,7 @@ export function AnnouncementsListDrawer({ isOpen, onOpenChange }: AnnouncementsL
                                     <p className="text-xs text-muted-foreground">Tap to open</p>
                                   </div>
                                   <Download className="h-4 w-4 text-muted-foreground group-hover:text-primary transition-colors" />
-                                </a>
+                                </button>
                               );
                             })}
                           </div>

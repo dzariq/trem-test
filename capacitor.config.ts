@@ -10,6 +10,21 @@ const config: CapacitorConfig = {
     // url: "http://10.0.2.2:8080",
     // cleartext: true,
   },
+  plugins: {
+    SplashScreen: {
+      launchShowDuration: 1500,
+      launchAutoHide: true,
+      backgroundColor: "#f5f5f5",
+      androidSplashResourceName: "splash",
+      androidScaleType: "CENTER_CROP",
+      showSpinner: false,
+      splashFullScreen: true,
+      splashImmersive: true,
+    },
+  },
+  ios: {
+    contentInset: "always",
+  },
 };
 
 export default config;

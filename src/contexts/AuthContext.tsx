@@ -2,6 +2,7 @@ import { createContext, useContext, useEffect, useState, ReactNode, useCallback 
 import { Session, User } from "@supabase/supabase-js";
 import { supabase } from "@/lib/supabase";
 import { useQueryClient } from "@tanstack/react-query";
+import { setMirrored, removeMirrored, restoreMirrored } from "@/lib/native/storage";
 
 const PORTAL_KEY = "selected_portal";
 const SESSION_START_KEY = "session_started_at";
@@ -40,6 +41,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return null;
   });
 
+  // Rehydrate persisted keys from native Preferences if WebView storage was evicted.
+  useEffect(() => {
+    restoreMirrored([PORTAL_KEY, SESSION_START_KEY]).then(() => {
+      const stored = localStorage.getItem(PORTAL_KEY);
+      if (stored === "teacher" || stored === "family") {
+        setPortalState((current) => current ?? stored);
+      }
+    });
+  }, []);
+
   // Function to fetch user profile
   const fetchProfile = useCallback(async (userId: string) => {
     try {
@@ -64,9 +75,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const setPortal = useCallback((newPortal: PortalType) => {
     setPortalState(newPortal);
     if (newPortal) {
-      localStorage.setItem(PORTAL_KEY, newPortal);
+      void setMirrored(PORTAL_KEY, newPortal);
     } else {
-      localStorage.removeItem(PORTAL_KEY);
+      void removeMirrored(PORTAL_KEY);
     }
   }, []);
 
@@ -84,7 +95,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         // When user signs out, clear profile
         if (event === "SIGNED_OUT") {
           setProfile(null);
-          localStorage.removeItem(SESSION_START_KEY);
+          void removeMirrored(SESSION_START_KEY);
           setLoading(false);
           return;
         }
@@ -145,12 +156,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       
       // Clear portal selection
       setPortalState(null);
-      localStorage.removeItem(PORTAL_KEY);
+      void removeMirrored(PORTAL_KEY);
       
       // Clear any other auth-related localStorage keys
       localStorage.removeItem("supabase.auth.token");
-      localStorage.removeItem("active_campus_code");
-      localStorage.removeItem(SESSION_START_KEY);
+      void removeMirrored("active_campus_code");
+      void removeMirrored(SESSION_START_KEY);
     } catch (error) {
       console.error("Sign out error:", error);
     }

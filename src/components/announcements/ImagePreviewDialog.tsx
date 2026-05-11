@@ -1,6 +1,7 @@
 import { useEffect } from "react";
 import { X, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { openExternal } from "@/lib/native/openExternal";
 
 interface ImagePreviewDialogProps {
   open: boolean;
@@ -39,7 +40,7 @@ export function ImagePreviewDialog({ open, onOpenChange, src, alt }: ImagePrevie
           variant="secondary"
           size="icon"
           className="h-10 w-10 rounded-full bg-background/90 text-foreground hover:bg-background"
-          onClick={() => window.open(src, "_blank", "noopener,noreferrer")}
+          onClick={() => void openExternal(src)}
           aria-label="Open image"
         >
           <ExternalLink className="h-5 w-5" />

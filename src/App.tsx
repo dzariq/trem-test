@@ -1,11 +1,13 @@
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, useLocation, useNavigate } from "react-router-dom";
+import { useEffect } from "react";
 import { FEATURES } from "@/config/featureFlags";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { CampusProvider } from "@/contexts/CampusContext";
 import { StudentSelectionProvider } from "@/contexts/StudentSelectionContext";
+import { useAndroidBackButton } from "@/hooks/useAndroidBackButton";
 
 // Role Selection
 import RoleSelectionPage from "./pages/RoleSelectionPage";
@@ -49,6 +51,11 @@ import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
 
+function NativeBindings() {
+  useAndroidBackButton();
+  return null;
+}
+
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <AuthProvider>
@@ -61,6 +68,7 @@ const App = () => (
             className="app-shell h-screen overflow-y-auto overflow-x-hidden"
           >
             <BrowserRouter>
+              <NativeBindings />
               <Routes>
                 {/* Role Selection - Landing Page */}
                 <Route path="/" element={<RoleSelectionPage />} />

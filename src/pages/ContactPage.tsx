@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import schoolLogo from "@/assets/school-badge.png";
 import { useScrollToTopOnMount } from "@/hooks/useScrollToTopOnMount";
+import { openExternal, callTel } from "@/lib/native/openExternal";
 
 const campuses = [
   {
@@ -38,9 +39,7 @@ export default function ContactPage() {
   const navigate = useNavigate();
   useScrollToTopOnMount();
   
-  const handleCall = (phone: string) => {
-    window.location.href = `tel:${phone.replace(/[^0-9+]/g, '')}`;
-  };
+  const handleCall = (phone: string) => callTel(phone);
 
   return (
     <AppLayout>
@@ -122,7 +121,7 @@ export default function ContactPage() {
                   variant="ghost"
                   size="sm"
                   className="text-muted-foreground hover:text-primary p-0 h-auto"
-                  onClick={() => window.open(campus.mapUrl, '_blank')}
+                  onClick={() => openExternal(campus.mapUrl)}
                 >
                   <ExternalLink className="h-3.5 w-3.5 mr-1.5" />
                   View on Google Maps
