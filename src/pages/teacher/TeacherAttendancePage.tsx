@@ -67,13 +67,7 @@ export default function TeacherAttendancePage() {
   // turned on. We keep them visible even after the teacher marks them so the
   // list doesn't shift/disappear underneath the user while they work.
   const [unmarkedSnapshot, setUnmarkedSnapshot] = useState<string[] | null>(null);
-  // Reset the snapshot whenever the class or date changes so the filter
-  // doesn't carry stale IDs across contexts.
-  useEffect(() => {
-    setShowUnmarkedOnly(false);
-    setUnmarkedSnapshot(null);
-  }, [selectedClass, selectedDate]);
-  
+
   // Use the new Supabase-connected hook for Take Attendance tab
   const {
     classes,
@@ -95,6 +89,13 @@ export default function TeacherAttendancePage() {
     setStudentRemarks,
     save,
   } = useTeacherAttendance();
+
+  // Reset the snapshot whenever the class or date changes so the filter
+  // doesn't carry stale IDs across contexts.
+  useEffect(() => {
+    setShowUnmarkedOnly(false);
+    setUnmarkedSnapshot(null);
+  }, [selectedClass, selectedDate]);
 
   // Dates with attendance records for the selected class, split by indicator color
   const [presentDates, setPresentDates] = useState<Set<string>>(new Set());
