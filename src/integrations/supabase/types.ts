@@ -3774,18 +3774,21 @@ export type Database = {
         Row: {
           created_at: string
           id: string
+          ordinal: number | null
           parent_id: string
           student_id: string
         }
         Insert: {
           created_at?: string
           id?: string
+          ordinal?: number | null
           parent_id: string
           student_id: string
         }
         Update: {
           created_at?: string
           id?: string
+          ordinal?: number | null
           parent_id?: string
           student_id?: string
         }
@@ -3937,7 +3940,7 @@ export type Database = {
           dob: string | null
           early_lockin_amount: string | null
           early_lockin_discount: boolean | null
-          email: string
+          email: string | null
           enrollment_date: string
           ethnicity: string | null
           family_id: string | null
@@ -3999,7 +4002,7 @@ export type Database = {
           dob?: string | null
           early_lockin_amount?: string | null
           early_lockin_discount?: boolean | null
-          email: string
+          email?: string | null
           enrollment_date?: string
           ethnicity?: string | null
           family_id?: string | null
@@ -4061,7 +4064,7 @@ export type Database = {
           dob?: string | null
           early_lockin_amount?: string | null
           early_lockin_discount?: boolean | null
-          email?: string
+          email?: string | null
           enrollment_date?: string
           ethnicity?: string | null
           family_id?: string | null
