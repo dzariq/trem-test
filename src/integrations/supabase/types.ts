@@ -4184,6 +4184,7 @@ export type Database = {
       subjects: {
         Row: {
           alternative_to: number | null
+          campus: string
           campus_code: string | null
           category: string | null
           category_id: string | null
@@ -4201,6 +4202,7 @@ export type Database = {
         }
         Insert: {
           alternative_to?: number | null
+          campus?: string
           campus_code?: string | null
           category?: string | null
           category_id?: string | null
@@ -4218,6 +4220,7 @@ export type Database = {
         }
         Update: {
           alternative_to?: number | null
+          campus?: string
           campus_code?: string | null
           category?: string | null
           category_id?: string | null
