@@ -42,6 +42,10 @@ export function useTeacherAttendance() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [lastSavedAt, setLastSavedAt] = useState<number>(0);
+  // IDs of students whose attendance has been persisted to the database for
+  // the current (class, date). Updated on initial fetch and after each
+  // successful save. Reset whenever class or date changes.
+  const [savedStudentIds, setSavedStudentIds] = useState<Set<string>>(new Set());
 
   const selectedClass = isTeacher
     ? teacherScope.selectedClassYear?.class_name ?? ""
@@ -171,6 +175,7 @@ export function useTeacherAttendance() {
           // Map records by student_id
           const recordMap = new Map<string, AttendanceRecord>();
           records.forEach((r) => recordMap.set(r.student_id, r));
+          setSavedStudentIds(new Set(recordMap.keys()));
 
           // Update attendance state with existing records
           setAttendanceState((prev) => {
@@ -260,6 +265,11 @@ export function useTeacherAttendance() {
       await saveAttendance(selectedClass, dateString, records, activeCampus);
 
       setLastSavedAt(Date.now());
+      setSavedStudentIds((prev) => {
+        const next = new Set(prev);
+        marked.forEach((s) => next.add(s.id));
+        return next;
+      });
       const suffix =
         unmarkedCount > 0
           ? ` ${unmarkedCount} student(s) still unmarked — you can update them later.`
@@ -296,6 +306,7 @@ export function useTeacherAttendance() {
     students,
     attendanceState,
     summary,
+    savedStudentIds,
     
     // Loading states
     loadingClasses,
