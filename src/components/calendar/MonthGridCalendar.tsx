@@ -74,7 +74,7 @@ export function MonthGridCalendar({
       while (cursor <= end) {
         push(toYmd(cursor), {
           kind: "event",
-          id: event.id,
+          id: String(event.id),
           title: event.title || "Event",
           colorClass: getEventBadgeColor(
             event.tags?.[0] != null ? String(event.tags[0]) : undefined,
