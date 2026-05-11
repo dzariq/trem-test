@@ -62,6 +62,7 @@ export default function TeacherAttendancePage() {
   const teacherScope = useTeacherScope();
   const { activeCampus } = useCampus();
   const [activeTab, setActiveTab] = useState<TabType>("take");
+  const [showUnmarkedOnly, setShowUnmarkedOnly] = useState(false);
   
   // Use the new Supabase-connected hook for Take Attendance tab
   const {
@@ -506,9 +507,27 @@ export default function TeacherAttendancePage() {
             <CardHeader className="pb-2">
               <CardTitle className="text-base flex items-center justify-between">
                 <span>Class {stripCampusPrefix(selectedClass)} ({students.length} students)</span>
-                {(loadingStudents || loadingAttendance) && (
-                  <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
-                )}
+                <div className="flex items-center gap-2">
+                  {(loadingStudents || loadingAttendance) && (
+                    <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+                  )}
+                  {students.length > 0 && (
+                    <button
+                      type="button"
+                      onClick={() => setShowUnmarkedOnly((v) => !v)}
+                      title={showUnmarkedOnly ? "Show all students" : "Show only unmarked"}
+                      className={cn(
+                        "inline-flex items-center gap-1 h-7 px-2 rounded-full border text-xs font-medium transition-colors",
+                        showUnmarkedOnly
+                          ? "border-primary/40 bg-primary/10 text-primary"
+                          : "border-border bg-background text-muted-foreground hover:text-foreground"
+                      )}
+                    >
+                      <Filter className="h-3.5 w-3.5" />
+                      {summary.unmarked > 0 ? `${summary.unmarked} unmarked` : "Unmarked"}
+                    </button>
+                  )}
+                </div>
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-2">
@@ -521,8 +540,20 @@ export default function TeacherAttendancePage() {
                 <div className="py-8 text-center text-muted-foreground">
                   <p className="text-sm">No students found for this class.</p>
                 </div>
-              ) : (
-                students.map((student, index) => (
+              ) : (() => {
+                const visible = showUnmarkedOnly
+                  ? students.filter((s) => !attendanceState[s.id]?.status)
+                  : students;
+                if (visible.length === 0) {
+                  return (
+                    <div className="py-8 text-center text-muted-foreground">
+                      <p className="text-sm">All students are marked. 🎉</p>
+                    </div>
+                  );
+                }
+                return visible.map((student) => {
+                  const index = students.findIndex((s) => s.id === student.id);
+                  return (
                   <div 
                     key={student.id} 
                     className="flex flex-col p-3 rounded-xl border border-border/50 bg-card hover:bg-muted/30 transition-colors gap-3"
@@ -570,8 +601,9 @@ export default function TeacherAttendancePage() {
                       disabled={saving}
                     />
                   </div>
-                ))
-              )}
+                  );
+                });
+              })()}
             </CardContent>
           </Card>
 
