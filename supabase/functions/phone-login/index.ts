@@ -77,6 +77,25 @@ Deno.serve(async (req) => {
         });
 
     if (!match) {
+      // If an account with this email exists but in a different role,
+      // tell the user to switch portals instead of "no account found".
+      if (emailInput) {
+        const wrongPortalMatch = (profiles ?? []).find(
+          (p: any) => (p.email ?? "").toLowerCase() === emailInput,
+        );
+        if (wrongPortalMatch) {
+          const isTeacherSide = ["teacher", "admin", "super_admin"].includes(
+            wrongPortalMatch.role,
+          );
+          const correctPortal = isTeacherSide ? "Teacher" : "Parent / Student";
+          return new Response(
+            JSON.stringify({
+              error: `This email belongs to a ${wrongPortalMatch.role} account. Please sign in via the ${correctPortal} portal.`,
+            }),
+            { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+          );
+        }
+      }
       return new Response(
         JSON.stringify({
           error: emailInput
