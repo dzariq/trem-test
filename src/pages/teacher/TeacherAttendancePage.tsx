@@ -612,19 +612,18 @@ export default function TeacherAttendancePage() {
           )}
 
           {/* Scope Filter */}
-          <div className="flex items-center gap-2">
-            <AttendanceScopeFilterPill
-              filter={scopeFilter}
-              onClick={() => setScopeFilterOpen(true)}
-            />
+          <div className="flex items-center">
             <Button
               variant="outline"
               size="sm"
-              className="h-8"
+              className={cn(
+                "h-9 rounded-full",
+                scopeFilter.isFiltered && "border-primary/30 bg-primary/10 text-primary hover:bg-primary/15"
+              )}
               onClick={() => setScopeFilterOpen(true)}
             >
               <Filter className="h-3.5 w-3.5 mr-1.5" />
-              Filter
+              {scopeFilter.filterLabel}
             </Button>
           </div>
 
