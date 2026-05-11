@@ -215,11 +215,10 @@ export default function AnnouncementDetailPage() {
                 </h3>
                 <div className="space-y-2">
                   {otherAttachments.map((attachment, index) => (
-                    <a
+                    <button
                       key={index}
-                      href={attachment.url}
-                      target="_blank"
-                      rel="noopener noreferrer"
+                      type="button"
+                      onClick={() => void openExternal(attachment.url)}
                       className="flex items-center justify-between p-3 bg-background rounded-lg border border-border hover:border-primary/40 transition-colors"
                     >
                       <div className="flex items-center gap-3 min-w-0">

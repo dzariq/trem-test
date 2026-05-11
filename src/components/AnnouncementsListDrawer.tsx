@@ -541,15 +541,14 @@ export function AnnouncementsListDrawer({ isOpen, onOpenChange }: AnnouncementsL
                             {nonHeroAttachments.map((attachment, idx) => {
                               const { icon: Icon, color, bg } = getFileIcon(attachment.name);
                               return (
-                                <a
+                                <button
                                   key={idx}
-                                  href={attachment.url}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
+                                  type="button"
+                                  onClick={() => void openExternal(attachment.url)}
                                   className={cn(
                                     "flex items-center gap-3 px-4 py-3 rounded-xl border border-border/60",
                                     "bg-card shadow-sm hover:shadow-md transition-all hover:border-primary/30",
-                                    "group"
+                                    "group text-left"
                                   )}
                                 >
                                   <div className={cn("p-2 rounded-lg", bg)}>

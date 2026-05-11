@@ -2,6 +2,7 @@ import * as React from "react";
 import { useState, useRef, useCallback, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { cn } from "@/lib/utils";
+import { openExternal } from "@/lib/native/openExternal";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Calendar, Check, ChevronLeft, ChevronRight, Download, FileText, Inbox, ShieldCheck } from "lucide-react";
