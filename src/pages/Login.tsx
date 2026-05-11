@@ -187,20 +187,58 @@ export default function Login() {
     try {
       const otpCode = generateOtpCode();
 
-      const res = await fetch(OTP_REQUEST_URL, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          source: method,
-          phone: method === "email" ? email : phone,
-          country_code: method === "email" ? "" : `+${selectedCountry.dialCode}`,
-          message: otpCode,
-        }),
-      });
+      if (method === "email") {
+        // Send OTP via Resend through our Supabase edge function.
+        const { data, error: fnErr } = await supabase.functions.invoke(
+          "send-email-otp",
+          {
+            body: {
+              email,
+              otp: otpCode,
+              ttl_seconds: OTP_TTL_SECONDS,
+            },
+          },
+        );
 
-      if (!res.ok) {
-        const text = await res.text().catch(() => "");
-        throw new Error(text || `Request failed (${res.status})`);
+        if (fnErr || !(data as any)?.success) {
+          let serverMsg: string | undefined;
+          const ctx = (fnErr as any)?.context;
+          if (ctx && typeof ctx.json === "function") {
+            try {
+              const body = await ctx.json();
+              serverMsg = body?.error || body?.message;
+            } catch {
+              try {
+                serverMsg = await ctx.text();
+              } catch {
+                /* ignore */
+              }
+            }
+          }
+          throw new Error(
+            serverMsg ||
+              (data as any)?.error ||
+              fnErr?.message ||
+              "Failed to send OTP email.",
+          );
+        }
+      } else {
+        // Phone OTP still goes through the existing n8n webhook (Twilio etc).
+        const res = await fetch(OTP_REQUEST_URL, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            source: method,
+            phone,
+            country_code: `+${selectedCountry.dialCode}`,
+            message: otpCode,
+          }),
+        });
+
+        if (!res.ok) {
+          const text = await res.text().catch(() => "");
+          throw new Error(text || `Request failed (${res.status})`);
+        }
       }
 
       setGeneratedOtp(otpCode);
