@@ -3955,18 +3955,6 @@ export type Database = {
           malaysian_citizen: boolean | null
           name: string
           nationality: string | null
-          parent1_email: string | null
-          parent1_ic: string | null
-          parent1_name: string | null
-          parent1_phone: string | null
-          parent1_relationship: string | null
-          parent1_user_id: string | null
-          parent2_email: string | null
-          parent2_ic: string | null
-          parent2_name: string | null
-          parent2_phone: string | null
-          parent2_relationship: string | null
-          parent2_user_id: string | null
           passport_expiry_date: string | null
           payment_type: string | null
           postcode: string | null
@@ -4017,18 +4005,6 @@ export type Database = {
           malaysian_citizen?: boolean | null
           name: string
           nationality?: string | null
-          parent1_email?: string | null
-          parent1_ic?: string | null
-          parent1_name?: string | null
-          parent1_phone?: string | null
-          parent1_relationship?: string | null
-          parent1_user_id?: string | null
-          parent2_email?: string | null
-          parent2_ic?: string | null
-          parent2_name?: string | null
-          parent2_phone?: string | null
-          parent2_relationship?: string | null
-          parent2_user_id?: string | null
           passport_expiry_date?: string | null
           payment_type?: string | null
           postcode?: string | null
@@ -4079,18 +4055,6 @@ export type Database = {
           malaysian_citizen?: boolean | null
           name?: string
           nationality?: string | null
-          parent1_email?: string | null
-          parent1_ic?: string | null
-          parent1_name?: string | null
-          parent1_phone?: string | null
-          parent1_relationship?: string | null
-          parent1_user_id?: string | null
-          parent2_email?: string | null
-          parent2_ic?: string | null
-          parent2_name?: string | null
-          parent2_phone?: string | null
-          parent2_relationship?: string | null
-          parent2_user_id?: string | null
           passport_expiry_date?: string | null
           payment_type?: string | null
           postcode?: string | null
@@ -4657,6 +4621,10 @@ export type Database = {
       can_write_grades: { Args: { p_period_id: string }; Returns: boolean }
       check_phone_exists: { Args: { phone_number: string }; Returns: Json }
       current_user_role: { Args: never; Returns: string }
+      delete_parent_cascade: {
+        Args: { p_parents_row_id: string; p_user_id: string }
+        Returns: undefined
+      }
       generate_student_code: {
         Args: { p_campus_code: string; p_graduation_year: number }
         Returns: string
