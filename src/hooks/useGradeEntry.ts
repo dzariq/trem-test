@@ -141,17 +141,20 @@ export function useGradeEntry(): UseGradeEntryReturn {
 
   // Load classes on mount
   useEffect(() => {
-    if (isTeacher) {
-      setClasses(allowedClassNames);
-      setLoadingClasses(teacherScope.loading);
-      return;
-    }
     const loadClasses = async () => {
       setLoadingClasses(true);
       setError(null);
       try {
-        const fetchedClasses = await fetchAvailableClasses();
-        setClasses(fetchedClasses);
+        // Always fetch the set of classes that actually have (non-archived)
+        // students enrolled. Empty classes are hidden from the dropdown
+        // even if the teacher has access to them.
+        const classesWithStudents = await fetchAvailableClasses();
+        const withStudentsSet = new Set(classesWithStudents);
+        if (isTeacher) {
+          setClasses(allowedClassNames.filter((c) => withStudentsSet.has(c)));
+        } else {
+          setClasses(classesWithStudents);
+        }
       } catch (err) {
         setError("Failed to load classes");
         console.error(err);
@@ -164,6 +167,10 @@ export function useGradeEntry(): UseGradeEntryReturn {
         setLoadingClasses(false);
       }
     };
+    if (isTeacher && teacherScope.loading) {
+      setLoadingClasses(true);
+      return;
+    }
     loadClasses();
   }, [allowedClassNames, isTeacher, teacherScope.loading]);
 
