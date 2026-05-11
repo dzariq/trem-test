@@ -1,22 +1,33 @@
-# Audit: Supabase student/parent changes vs. this mobile app
+# Fix Grade Entry subject dropdown (teacher view)
 
-## Findings
+## Problem
 
-### 1. `student_parent.ordinal` (smallint, 1 or 2)
-- This mobile app does **not** read or write the `student_parent` table anywhere.
-- All parent↔student linking in this codebase goes through `student_guardians` (joined by `guardian_user_id = auth.uid()`), with sorting already handled by `is_primary DESC, created_at ASC` in `src/data/students.ts`.
-- `student_parent` only appears in the auto-generated `src/integrations/supabase/types.ts` (read-only types file).
-- **Conclusion:** No code change required for the new `ordinal` column. The web project that owns `student_parent` is the one that needs to read/sort by `ordinal`.
+When a teacher selects **Y4C / 2026**, the subject dropdown lists Y10/Y11 subjects (Accounting, Add Math, Biology, Chemistry, Business Studies, etc.). Verified in DB: the teacher `Test.junhan` has `teacher_assignments` rows for `class_year_id = 71 (GL-Y4C)` pointing to subjects whose `subjects.year_levels` are `[Y10, Y11]` only. The current code in `useTeacherScope.getAllowedSubjects` blindly returns every assignment row without filtering by year level or by what's actually configured for the selected exam term.
 
-### 2. Stricter `is_parent_of_student` RLS (now requires `is_active = true`)
-- This RLS function gates all parent-scoped reads (students, attendance, grades, homework, CCAs, notifications, etc.).
-- This mobile app already assumes RLS will silently filter out unauthorized rows — it does not crash on empty results; pages render "no data" / loading states gracefully.
-- The `useAuth` / `ParentStudentGuard` flow does not check `is_active` on the parent profile itself, so a deactivated parent could still log in and land on parent routes but would simply see empty data everywhere. That matches the intended behaviour you described.
-- **Conclusion:** No required change. Optional follow-up (only if you want a nicer UX): add an `is_active` check in `AuthContext` / `ParentStudentGuard` to sign deactivated parents out or show a "Account inactive — contact school" screen instead of empty dashboards. Flag this as optional, not a bug.
+## Fix (teachers only — admin path is unchanged)
 
-## Plan
+### 1. Filter by class year level
+In `src/hooks/useTeacherScope.ts` → `getAllowedSubjects`, after fetching the teacher's assigned subjects for the class, drop any subject whose `subjects.year_levels` does not contain the class's `year_level` (e.g. `Y4`). Use exact array membership (`.includes("Y4")`), not a substring match — the existing `fetchSubjects` uses a buggy `yearLevel.includes(yl)` check that would let `Y1` match `Y10`. Pass the class's `year_level` into `getAllowedSubjects` (or look it up from `allClassYears` inside the function).
 
-1. **No code changes** — this project is fully compatible with both Supabase changes as-is.
-2. (Optional, only if you confirm) Add an "account inactive" guard so deactivated parents see an explanatory screen instead of empty pages.
+### 2. Further filter by selected exam term
+In `src/hooks/useGradeEntry.ts`, after subjects + period are known, narrow the dropdown to subjects configured for that period:
 
-Tell me if you want option 2; otherwise this audit is closed.
+- Query `grade_configurations` for the row matching `(year_level, class, academic_period_id)` where `subject_id IS NULL` (the class default), and read its `selected_subject_ids` array.
+- If `selected_subject_ids` is non-empty, intersect the subject list with it.
+- If no config row exists or `selected_subject_ids` is empty/null, fall back to the year-level filter only (so nothing breaks for un-configured periods).
+
+Re-run this filter whenever `selectedClass`, `selectedPeriod`, or the raw subjects list changes. Reset `selectedSubject` if it falls out of the filtered list (toast: "Selected subject is no longer available for this term").
+
+### 3. Cache invalidation
+The existing `subjectsCache` in `useTeacherScope` is keyed by `(userId, classYearId)`. Year-level filtering can stay inside that cached result (year level is stable per class). The exam-term filter is applied in `useGradeEntry` on top of the cached list — no cache changes needed.
+
+## Out of scope (per your answers)
+
+- Admin / non-teacher path (`fetchSubjects`) — left as-is.
+- No data cleanup of `teacher_assignments` rows — the UI just hides mismatches.
+- No DB migration; `grade_configurations.selected_subject_ids` already exists.
+
+## Files touched
+
+- `src/hooks/useTeacherScope.ts` — add year-level filter inside `getAllowedSubjects`.
+- `src/hooks/useGradeEntry.ts` — add exam-term filter layer + reset selected subject when filtered out.
