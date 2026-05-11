@@ -22,8 +22,10 @@ export default function TeacherGuard() {
       return;
     }
     
-    // Profile loaded but wrong role — redirect with error
-    if (profile && profile.role !== "teacher") {
+    // Profile loaded but wrong role — redirect with error.
+    // Treat admin-like roles (admin, super_admin) as teacher for portal access.
+    const teacherLike = new Set(["teacher", "admin", "super_admin"]);
+    if (profile && !teacherLike.has(profile.role)) {
       if (!didRedirect.current) {
         didRedirect.current = true;
         toast.error("This portal is only available to teacher accounts.");
@@ -41,7 +43,7 @@ export default function TeacherGuard() {
     );
   }
   
-  if (!user || !profile || profile.role !== "teacher") return null;
+  if (!user || !profile || !["teacher", "admin", "super_admin"].includes(profile.role)) return null;
 
   return <Outlet />;
 }
