@@ -87,7 +87,7 @@ export function AttendanceScopeFilterSheet({
     // toggling selects every campus variant.
     const grouped = new Map<string, { id: number; class_names: string[]; display: string }>();
     for (const c of list) {
-      const display = stripCampusPrefix(c.class_name);
+      const display = formatClassDisplay(c.class_name);
       const existing = grouped.get(display);
       if (existing) {
         existing.class_names.push(c.class_name);
@@ -218,7 +218,7 @@ export function AttendanceScopeFilterSheet({
                     className="text-xs cursor-pointer"
                     onClick={() =>
                       setDraftClasses((prev) =>
-                        prev.filter((n) => stripCampusPrefix(n) !== display)
+                        prev.filter((n) => formatClassDisplay(n) !== display)
                       )
                     }
                   >

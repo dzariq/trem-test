@@ -453,12 +453,12 @@ export default function TeacherHomePage() {
                   {teacherScope.isTeacher
                     ? teacherScope.allowedClassYears.map((cls) => (
                         <SelectItem key={cls.id} value={cls.id.toString()}>
-                          Class {stripCampusPrefix(cls.class_name)}
+                          {formatClassDisplay(cls.class_name)}
                         </SelectItem>
                       ))
                     : teacherProfile.classes.map((cls) => (
                         <SelectItem key={cls} value={cls}>
-                          Class {stripCampusPrefix(cls)}
+                          {formatClassDisplay(cls)}
                         </SelectItem>
                       ))}
                 </SelectContent>
@@ -522,7 +522,7 @@ export default function TeacherHomePage() {
                         >
                           <div className="flex items-center gap-2">
                             <Badge variant="outline" className="text-xs">
-                              {stripCampusPrefix(item.class)}
+                              {formatClassDisplay(item.class)}
                             </Badge>
                             <span className="text-sm text-foreground">{item.subject}</span>
                           </div>

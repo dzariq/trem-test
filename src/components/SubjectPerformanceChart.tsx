@@ -182,7 +182,7 @@ export function SubjectPerformanceChart({
   const cohortLabelText = cohortLabel
     ? `Cohort Avg (${cohortLabel})`
     : "Cohort Avg";
-  const classLabelText = classLabel ? `Class Avg (${stripCampusPrefix(classLabel)})` : "Class Avg";
+  const classLabelText = classLabel ? `Class Avg (${formatClassDisplay(classLabel)})` : "Class Avg";
 
   // Touch handlers
   const handleTouchStart = useCallback((e: TouchEvent<HTMLDivElement>) => {

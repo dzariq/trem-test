@@ -39,7 +39,7 @@ const mapStudentRow = (row: any): LinkedStudent => {
     id: String(row.id ?? row.student_id ?? row.user_id ?? ""),
     studentCode: row.student_code ?? null,
     name: name || "Student",
-    className: stripCampusPrefix(row.class_name ?? row.class ?? row.classroom ?? ''),
+    className: formatClassDisplay(row.class_name ?? row.class ?? row.classroom ?? ''),
     grade: row.grade ?? row.year_group ?? row.level ?? null,
     campus: row.campus ?? row.campus_id ?? null,
     sportsHouse: row.sports_house ?? row.house ?? null,
@@ -156,7 +156,7 @@ const listViaStudentGuardians = async (guardianUserId: string) => {
         student.name ??
         student.full_name ??
         [student.first_name, student.last_name].filter(Boolean).join(" ").trim();
-      const classLabel = [student.class ? stripCampusPrefix(student.class) : null, student.year_level]
+      const classLabel = [student.class ? formatClassDisplay(student.class) : null, student.year_level]
         .filter(Boolean)
         .map(String)
         .join(" - ");
@@ -167,7 +167,7 @@ const listViaStudentGuardians = async (guardianUserId: string) => {
         studentCode: student.student_code ?? null,
         name: name || "Student",
         classLabel: classLabel || null,
-        className: student.class ? stripCampusPrefix(student.class) : null,
+        className: student.class ? formatClassDisplay(student.class) : null,
         grade: student.year_level ?? null,
         campus: student.campus_id ?? null,
         campus_code: student.campus_code ?? null,
