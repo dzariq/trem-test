@@ -70,6 +70,27 @@ const formatTimeLabel = (startDateTime?: string | null, endDateTime?: string | n
 const isMidnightUtc = (value?: string | null) =>
   Boolean(value && String(value).includes("T00:00:00"));
 
+const LOCAL_TZ = "Asia/Singapore";
+
+const toLocalYmd = (iso: string | null | undefined, tz: string = LOCAL_TZ): string => {
+  if (!iso) return "";
+  const date = new Date(iso);
+  if (Number.isNaN(date.getTime())) {
+    return String(iso).slice(0, 10);
+  }
+  // en-CA gives YYYY-MM-DD format
+  try {
+    return new Intl.DateTimeFormat("en-CA", {
+      timeZone: tz,
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+    }).format(date);
+  } catch {
+    return String(iso).slice(0, 10);
+  }
+};
+
 const mapCalendarRow = (row: any): UpcomingEvent => {
   // event_category was migrated to a uuid FK -> event_categories(id).
   // Resolve the human-readable name via the joined relation; fall back to event_type.
@@ -85,11 +106,35 @@ const mapCalendarRow = (row: any): UpcomingEvent => {
 
   const startDateTime = row.start_date ?? null;
   const endDateTime = row.end_date ?? null;
-  const startDay = startDateTime ? String(startDateTime).slice(0, 10) : "";
-  const endDay = endDateTime ? String(endDateTime).slice(0, 10) : startDay;
+  // Convert UTC timestamps to Singapore-local YYYY-MM-DD so events land
+  // on the correct calendar day regardless of how the admin portal stored them
+  // (some rows use SGT-midnight-as-UTC, others use UTC midnight).
+  const startDay = toLocalYmd(startDateTime);
+  let endDay = endDateTime ? toLocalYmd(endDateTime) : startDay;
   const allDay =
     row.is_all_day ??
     (isMidnightUtc(startDateTime) && (!endDateTime || isMidnightUtc(endDateTime)));
+  // For all-day events, the admin portal often stores end as the last
+  // millisecond of the local day (e.g. 15:59:59+00 = SGT 23:59:59).
+  // After local conversion this collapses naturally, but guard against rows
+  // where end_date sits 1ms into the next local day.
+  if (allDay && endDay > startDay) {
+    const endDateObj = endDateTime ? new Date(endDateTime) : null;
+    if (endDateObj) {
+      // If the end is at local 00:00:00 of the next day, treat it as same-day.
+      const endLocalHM = new Intl.DateTimeFormat("en-GB", {
+        timeZone: LOCAL_TZ,
+        hour: "2-digit",
+        minute: "2-digit",
+        second: "2-digit",
+        hour12: false,
+      }).format(endDateObj);
+      if (endLocalHM === "00:00:00") {
+        const prev = new Date(endDateObj.getTime() - 1000);
+        endDay = toLocalYmd(prev.toISOString());
+      }
+    }
+  }
   const timeLabel = allDay ? "All Day" : formatTimeLabel(startDateTime, endDateTime);
 
   return {
