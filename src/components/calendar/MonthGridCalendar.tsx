@@ -76,7 +76,11 @@ export function MonthGridCalendar({
           kind: "event",
           id: event.id,
           title: event.title || "Event",
-          colorClass: getEventBadgeColor(event.tags?.[0], event.category, (event as any).eventType),
+          colorClass: getEventBadgeColor(
+            event.tags?.[0] != null ? String(event.tags[0]) : undefined,
+            event.category,
+            (event as any).eventType,
+          ),
           sortKey,
           payload: event,
         });
