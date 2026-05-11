@@ -28,54 +28,91 @@ function buildEmail(otp: string, ttlSeconds: number) {
       ? `${ttlSeconds} seconds`
       : `${minutes} minute${minutes === 1 ? "" : "s"}`;
 
-  const html = `<!doctype html>
+  const html = `<!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Your one-time login code</title>
-  </head>
-  <body style="margin:0;padding:0;background:#f4f6f8;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;color:#1f2933;">
-    <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="background:#f4f6f8;padding:32px 16px;">
-      <tr>
-        <td align="center">
-          <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="max-width:480px;background:#ffffff;border-radius:16px;overflow:hidden;box-shadow:0 6px 24px rgba(15,23,42,0.06);">
-            <tr>
-              <td style="padding:32px 32px 0 32px;">
-                <h1 style="margin:0 0 8px 0;font-size:20px;font-weight:600;color:#0f172a;">Your login code</h1>
-                <p style="margin:0;font-size:14px;line-height:20px;color:#475569;">
-                  Use the one-time code below to finish signing in. It expires in ${ttlLabel}.
-                </p>
-              </td>
-            </tr>
-            <tr>
-              <td align="center" style="padding:24px 32px;">
-                <div style="display:inline-block;padding:18px 28px;background:#f1f5f9;border:1px solid #e2e8f0;border-radius:12px;font-family:'SFMono-Regular',Menlo,Consolas,monospace;font-size:32px;letter-spacing:10px;font-weight:700;color:#0f172a;">
-                  ${safeOtp}
-                </div>
-              </td>
-            </tr>
-            <tr>
-              <td style="padding:0 32px 32px 32px;">
-                <p style="margin:0 0 12px 0;font-size:13px;line-height:20px;color:#475569;">
-                  If you didn't request this code, you can safely ignore this email — no changes will be made to your account.
-                </p>
-                <p style="margin:0;font-size:12px;line-height:18px;color:#94a3b8;">
-                  Sent by Collinz · Please do not reply to this email.
-                </p>
-              </td>
-            </tr>
-          </table>
-        </td>
-      </tr>
-    </table>
-  </body>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Your Collinz OTP Code</title>
+</head>
+<body style="margin: 0; padding: 0; background-color: #f4f6f8; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;">
+
+  <!-- Wrapper -->
+  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="background-color: #f4f6f8; padding: 40px 20px;">
+    <tr>
+      <td align="center">
+
+        <!-- Main card -->
+        <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="max-width: 480px; background-color: #ffffff; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.04); overflow: hidden;">
+
+          <!-- Header -->
+          <tr>
+            <td style="background-color: #1e3a5f; padding: 28px 32px; text-align: center;">
+              <h1 style="margin: 0; color: #ffffff; font-size: 22px; font-weight: 600; letter-spacing: 0.3px;">
+                Collinz School Management
+              </h1>
+            </td>
+          </tr>
+
+          <!-- Body -->
+          <tr>
+            <td style="padding: 36px 32px 24px 32px; color: #2c3e50;">
+              <p style="margin: 0 0 16px 0; font-size: 16px; line-height: 1.5;">
+                Hello,
+              </p>
+              <p style="margin: 0 0 28px 0; font-size: 15px; line-height: 1.6; color: #4a5568;">
+                Your one-time password (OTP) for the Collinz School Management App is:
+              </p>
+
+              <!-- OTP box -->
+              <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0">
+                <tr>
+                  <td align="center" style="background-color: #f0f4f8; border: 1px dashed #cbd5e0; border-radius: 8px; padding: 20px;">
+                    <span style="font-family: 'Courier New', Courier, monospace; font-size: 32px; font-weight: 700; color: #1e3a5f; letter-spacing: 8px;">
+                      ${safeOtp}
+                    </span>
+                  </td>
+                </tr>
+              </table>
+
+              <p style="margin: 28px 0 0 0; font-size: 14px; line-height: 1.6; color: #4a5568;">
+                Please enter this code to continue. This code is valid for ${ttlLabel}.
+              </p>
+
+              <p style="margin: 16px 0 0 0; font-size: 14px; line-height: 1.6; color: #718096;">
+                If you're unsure or did not request this, kindly contact the school admin.
+              </p>
+            </td>
+          </tr>
+
+          <!-- Footer -->
+          <tr>
+            <td style="background-color: #fafbfc; padding: 20px 32px; text-align: center; border-top: 1px solid #edf2f7;">
+              <p style="margin: 0; font-size: 12px; color: #a0aec0; line-height: 1.5;">
+                This is an automated message from Collinz School Management.<br>
+                Please do not reply to this email.
+              </p>
+            </td>
+          </tr>
+
+        </table>
+
+        <!-- Bottom spacer / brand -->
+        <p style="margin: 20px 0 0 0; font-size: 12px; color: #a0aec0;">
+          &copy; Collinz Education Group
+        </p>
+
+      </td>
+    </tr>
+  </table>
+
+</body>
 </html>`;
 
-  const text = `Your one-time login code is ${otp}.
-It expires in ${ttlLabel}.
+  const text = `Your Collinz OTP code is ${otp}.
+This code is valid for ${ttlLabel}.
 
-If you didn't request this code, you can ignore this email.`;
+If you did not request this, please contact the school admin.`;
 
   return { html, text };
 }
