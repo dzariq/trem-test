@@ -110,28 +110,15 @@ const mapCalendarRow = (row: any): UpcomingEvent => {
   // on the correct calendar day regardless of how the admin portal stored them
   // (some rows use SGT-midnight-as-UTC, others use UTC midnight).
   const startDay = toLocalYmd(startDateTime);
-  let endDay = endDateTime ? toLocalYmd(endDateTime) : startDay;
+  const endDay = endDateTime ? toLocalYmd(endDateTime) : startDay;
   const allDay =
     row.is_all_day ??
     (isMidnightUtc(startDateTime) && (!endDateTime || isMidnightUtc(endDateTime)));
-  // Admin portal stores all-day end as either:
-  //   - 23:59:59 of the last local day (collapses naturally to that day), or
-  //   - 00:00:00 of the next local day (means the event still ends on the previous day).
-  // Normalize the latter so endDay reflects the inclusive last day.
-  if (allDay && endDay > startDay && endDateTime) {
-    const endDateObj = new Date(endDateTime);
-    const endLocalHM = new Intl.DateTimeFormat("en-GB", {
-      timeZone: LOCAL_TZ,
-      hour: "2-digit",
-      minute: "2-digit",
-      second: "2-digit",
-      hour12: false,
-    }).format(endDateObj);
-    if (endLocalHM === "00:00:00") {
-      const prev = new Date(endDateObj.getTime() - 1000);
-      endDay = toLocalYmd(prev.toISOString());
-    }
-  }
+  // The admin portal uses two end-date conventions for all-day events:
+  //   - 23:59:59 of the last day (e.g. 15:59:59+00 SGT) → collapses to that day
+  //   - exactly 00:00:00 of the day AFTER the last day (e.g. 16:00:00+00 SGT)
+  //     → that next local day IS the inclusive last day of the event.
+  // toLocalYmd already handles both correctly, so no further adjustment needed.
   const timeLabel = allDay ? "All Day" : formatTimeLabel(startDateTime, endDateTime);
 
   return {
