@@ -273,43 +273,51 @@ export default function Login() {
     setLoading(true);
 
     try {
-      const res = await fetch(OTP_VERIFY_URL, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          source: method,
-          phone: method === "email" ? email : phone,
-          otp,
-        }),
-      });
+      if (method === "email") {
+        // Email OTP is generated client-side and delivered via Resend.
+        // Verify locally against the code we generated.
+        if (!generatedOtp || otp !== generatedOtp) {
+          throw new Error("Invalid OTP. Please try again.");
+        }
+      } else {
+        const res = await fetch(OTP_VERIFY_URL, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            source: method,
+            phone,
+            otp,
+          }),
+        });
 
-      const text = await res.text();
-      let data: any = null;
-      try {
-        data = text ? JSON.parse(text) : null;
-      } catch {
-        // non-JSON response
-      }
+        const text = await res.text();
+        let data: any = null;
+        try {
+          data = text ? JSON.parse(text) : null;
+        } catch {
+          // non-JSON response
+        }
 
-      if (!res.ok) {
-        throw new Error(
-          (data && (data.message || data.error)) ||
-            text ||
-            `Verification failed (${res.status})`,
-        );
-      }
+        if (!res.ok) {
+          throw new Error(
+            (data && (data.message || data.error)) ||
+              text ||
+              `Verification failed (${res.status})`,
+          );
+        }
 
-      // n8n may return an array or object; normalize to find status
-      const payload = Array.isArray(data) ? data[0] : data;
-      const statusVal = payload?.status;
-      const statusOk =
-        statusVal === 1 || statusVal === "1" || statusVal === true;
+        // n8n may return an array or object; normalize to find status
+        const payload = Array.isArray(data) ? data[0] : data;
+        const statusVal = payload?.status;
+        const statusOk =
+          statusVal === 1 || statusVal === "1" || statusVal === true;
 
-      if (!statusOk) {
-        throw new Error(
-          (payload && (payload.message || payload.error)) ||
-            "Invalid OTP. Please try again.",
-        );
+        if (!statusOk) {
+          throw new Error(
+            (payload && (payload.message || payload.error)) ||
+              "Invalid OTP. Please try again.",
+          );
+        }
       }
 
       // Look up the parent by phone via edge function and mint a session token
