@@ -99,7 +99,7 @@ export default function Login() {
     
     if (user && profile) {
       // User is already logged in with a profile, redirect based on role
-      if (profile.role === "teacher") {
+      if (["teacher", "admin", "super_admin"].includes(profile.role)) {
         navigate("/teacher", { replace: true });
       } else {
         navigate("/portal", { replace: true });
