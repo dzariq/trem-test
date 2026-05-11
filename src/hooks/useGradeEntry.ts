@@ -230,7 +230,7 @@ export function useGradeEntry(): UseGradeEntryReturn {
   useEffect(() => {
     if (!selectedClass) {
       setStudents([]);
-      setSubjects([]);
+      setRawSubjects([]);
       setSelectedSubject(null);
       return;
     }
@@ -249,7 +249,7 @@ export function useGradeEntry(): UseGradeEntryReturn {
             teacherScope.allowedClassYears.find((cls) => cls.class_name === selectedClass)?.id ??
             teacherScope.selectedClassYearId;
           if (!classYearId) {
-            setSubjects([]);
+            setRawSubjects([]);
             setSelectedSubject(null);
             toast({
               title: "Class not available",
@@ -260,12 +260,12 @@ export function useGradeEntry(): UseGradeEntryReturn {
           }
           const allowedSubjects = await teacherScope.getAllowedSubjects(classYearId);
           // Map to SubjectInfo with code field
-          setSubjects(allowedSubjects.map(s => ({ ...s, code: null })));
+          setRawSubjects(allowedSubjects.map(s => ({ ...s, code: null })));
         } else {
           // Get year level from first student
           const yearLevel = fetchedStudents[0]?.year_level;
           const fetchedSubjects = await fetchSubjects(yearLevel);
-          setSubjects(fetchedSubjects);
+          setRawSubjects(fetchedSubjects);
         }
       } catch (err) {
         setError("Failed to load students or subjects");
