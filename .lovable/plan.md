@@ -1,68 +1,98 @@
-## Audit Findings: Calendar event duplication / wrong-date issue
+## Goal
 
-### What you're seeing
-On the mobile app's May 2026 calendar, every weekday in May appears to have an event, and several events are duplicated one day earlier than the web admin shows. Example you flagged: "Y9 MYE Starts" appears on **May 5** in the app, but the source-of-truth is **May 6**.
+Replace the current "dot-only" month calendar on the Calendar page with a richer grid where each day cell shows up to 4 event chips (title only, color-coded), plus a "+N more" indicator when there are extra events. Tapping a day still opens the full list below as it does today.
 
-### Root cause: timezone handling, NOT duplicated rows in Supabase
-There is **no duplicated data in Supabase**. Each event exists as a single row. The bug is entirely in the mobile app's date parsing.
+Applies to both:
+- `src/pages/teacher/TeacherCalendarPage.tsx` (Teacher /teacher/calendar)
+- `src/pages/CalendarPage.tsx` (Parent /calendar)
 
-Looking at the raw `calendar_events` rows for May 2026:
+## What changes visually
 
-| Title | start_date (UTC) | end_date (UTC) | campus |
-|---|---|---|---|
-| Y9 MYE Starts | `2026-05-05 16:00:00+00` | `2026-05-06 15:59:59+00` | GL |
-| Y1-2 MYE Ends | `2026-05-12 16:00:00+00` | `2026-05-13 15:59:59+00` | GL |
-| Y1-2 MYE Ends | `2026-05-13 00:00:00+00` | `2026-05-13 00:00:00+00` | BO |
-| OHM | `2026-05-17 16:00:00+00` | `2026-05-18 15:59:59+00` | GL |
+Reference: the uploaded mobile calendar screenshot (chips stacked inside each day cell, "..." for overflow).
 
-Two different storage conventions are used by the admin portal:
-1. **GL campus** events store all-day events as **Singapore midnight expressed in UTC**, i.e. `previous-day 16:00:00+00 → that-day 15:59:59+00`. Correctly interpreted in SGT (UTC+8), this is one local day.
-2. **BO campus** events store all-day events as **UTC midnight**, i.e. `that-day 00:00:00+00`.
+Each day cell will show:
+- Day number (top of cell, smaller)
+- Up to **4 event chips** — short colored bar with truncated title (`truncate`, ~1 line)
+- If more than 4 events on that day → show `+N` pill on the last row instead of the 4th chip (so total visible rows stays = 4)
+- Multi-day events (e.g. May 22–23) appear on every day they span, using the same color
+- CCA sessions are shown as chips too (tagged "CCA" color)
+- Today: ring highlight on the day number; selected day: filled background on the cell
+- Empty days: just the day number, muted
 
-The mobile app's `mapCalendarRow` in `src/data/calendar.ts` does this:
-```ts
-const startDay = startDateTime ? String(startDateTime).slice(0, 10) : "";
-const endDay   = endDateTime   ? String(endDateTime).slice(0, 10)   : startDay;
+Chip color comes from the existing `getEventBadgeColor` / `getCcaTypeColor` helpers so it stays consistent with the badges in the day-detail list and Upcoming section.
+
+The detail card below ("Friday, May 22, 2026 — events…") and the "Upcoming Events" section stay exactly as they are. Tapping a chip opens the same `EventDetailsSheet` already used today.
+
+## Layout sizing (mobile 390px)
+
+- Replace `react-day-picker`'s fixed `h-9` day buttons with a custom 7-col CSS grid built directly inside the Calendar Card.
+- Cell height: `min-h-[88px]` on mobile, `min-h-[110px]` on `sm:` and up.
+- Chip height: `h-4` (16px), text `text-[10px]`, `px-1`, `truncate`.
+- Header row stays: month title + prev/next chevrons (reuse current pattern).
+- Weekday header row: `Su Mo Tu We Th Fr Sa`.
+
+This means we stop using `<Calendar>` (shadcn DayPicker wrapper) on this screen and render our own month grid component. DayPicker is still used elsewhere (date inputs) — we leave that untouched.
+
+## New component
+
+Create `src/components/calendar/MonthGridCalendar.tsx`:
+
+Props:
 ```
-It just **string-slices the first 10 chars of the UTC timestamp** — it never converts to the local timezone. So a GL event meant for May 6 gets `startDay="2026-05-05"` and `endDay="2026-05-06"`.
-
-Then in both `TeacherCalendarPage.tsx` and `CalendarPage.tsx`, `addRangeDays(startDay, endDay)` walks every day in that range and marks each one as "has event". Result: the GL event lights up **both May 5 and May 6**, and `eventsOnSelectedDate` returns it on both days. That's the "duplication" you see — same event, two consecutive days.
-
-The web admin doesn't have this bug because it converts the timestamps to the local timezone before extracting the date.
-
-### Why every May day looks occupied
-Because every GL all-day event spans two UTC days (the day before + the actual day) under this slicing logic, the gaps between back-to-back real events get filled in. That's why May 5, 7, 12, 21 etc. appear occupied even though the source data has nothing on those days.
-
-### Same bug also affects
-- The "has events" dot/highlight on the month grid (`hasEventsSet`)
-- The events list under "Events for selected date"
-- `UpcomingEvents` widget on home pages and `listUpcomingEvents`
-- Parent `CalendarPage` — same `mapCalendarRow` is used
-
-### The fix (single source of truth)
-Update `mapCalendarRow` in `src/data/calendar.ts` to derive `startDay`/`endDay` in **Asia/Singapore** local time instead of slicing the UTC string. Also normalize `is_all_day` so that a GL-style range (`16:00:00+00 → next-day 15:59:59+00`) collapses to a single local day.
-
-```text
-GL row:  start=2026-05-05T16:00Z end=2026-05-06T15:59:59Z
-         → local SGT: 2026-05-06 00:00 → 2026-05-06 23:59
-         → startDay="2026-05-06", endDay="2026-05-06"  ✓
-
-BO row:  start=2026-05-13T00:00Z end=2026-05-13T00:00Z is_all_day=true
-         → keep as 2026-05-13 (single day)             ✓
+{
+  month: Date;
+  selectedDay: string;            // YYYY-MM-DD
+  onSelectDay: (ymd: string) => void;
+  onMonthChange: (date: Date) => void;
+  events: UpcomingEvent[];        // already filtered
+  ccaSessions: CcaCalendarSession[]; // already filtered
+  onEventClick: (event: UpcomingEvent) => void;
+  onSessionClick: (session: CcaCalendarSession) => void;
+  maxChipsPerDay?: number;        // default 4
+}
 ```
 
-Concretely:
-1. Add a small `toLocalYmd(iso, tz="Asia/Singapore")` helper.
-2. In `mapCalendarRow`, compute `startDay`/`endDay` via that helper.
-3. For all-day events where the raw end is exactly `next-day 15:59:59+00` relative to start, treat `endDay = startDay` (single-day all-day).
-4. Drop the now-unnecessary `isMidnightUtc` heuristic; rely on `row.is_all_day` plus the local-day calculation.
+Internals:
+- Build a `Map<ymd, Array<ChipItem>>` once per render, where `ChipItem` = `{ kind: "event" | "cca", title, colorClass, payload }`.
+- For each event, walk from `startDay` to `endDay` (inclusive) and push to every day's bucket.
+- Sort each day's bucket by: all-day first, then start time, then title.
+- Generate the 6-row × 7-col grid for the visible month (including leading/trailing days from adjacent months, rendered muted).
+- For each cell:
+  - Header: day number + (today indicator)
+  - Up to `maxChipsPerDay - 1` chips, then a `+N` pill if `bucket.length > maxChipsPerDay`; otherwise show all (up to `maxChipsPerDay`).
+- Click on the cell area (not on a chip) → `onSelectDay(ymd)`.
+- Click on a chip → `onEventClick` / `onSessionClick` and stopPropagation.
 
-No Supabase migration needed — purely a frontend display fix. The `time` label formatting (`formatTimeLabel`) already uses the user's local timezone via `toLocaleTimeString`, so timed events keep working.
+## Wire-up changes
 
-### Verification after the fix
-- May 5, 7, 12, 21 should be **empty** on the mobile calendar (matches admin).
-- "Y9 MYE Starts" should appear **only on May 6**.
-- "Y1-2 MYE Ends" (GL + BO) should both land on May 13 — and de-dup logic in `dedupeRows`/`getEventDedupeKey` will then collapse them as expected since `startDay` will match.
+In both `TeacherCalendarPage.tsx` and `CalendarPage.tsx`:
 
-### Out of scope
-No changes to Supabase schema, RLS, or admin portal. No business-logic changes — this is a presentation-layer timezone bug only.
+1. Replace the `<Card>` wrapping `<Calendar mode="single" …>` with `<MonthGridCalendar … />`.
+2. Pass through the same `filteredEvents`, `ccaSessions` (filtered for parent's selected student where applicable), `selectedDay`, `currentMonth`, and the existing `setSelectedDay` / `setCurrentMonth` handlers.
+3. Pass `openEventDetails` (already exists) for `onEventClick` and the CCA session opener for `onSessionClick`.
+4. Remove the now-unused `hasEventsSet` / `eventDaySet` / `addRangeDays` block — the grid builds its own per-day buckets.
+5. Keep the per-day detail Card and Upcoming section beneath unchanged.
+
+## Multi-day & all-day handling
+
+Already correct in `src/data/calendar.ts` (startDay / endDay normalized for SGT and inclusive end at next-day midnight). The new grid relies on those fields, so May 22–23 type events render chips on both days automatically.
+
+## Edge cases
+
+- Months with 6 visible weeks → grid renders 6 rows; with 4-5 weeks → render only the needed rows so the card height adapts.
+- Outside-month days are still clickable (selecting one switches `currentMonth`).
+- If `events.length === 0` on a day, no chips render; cell stays empty but selectable.
+- Long titles: `truncate`. Hover/long-press on desktop is not required (mobile-first).
+- Color contrast: keep using existing semantic `getEventBadgeColor` classes (already designed for both light/dark).
+
+## Out of scope (not changing)
+
+- Filter pills, CCA tab, Upcoming Events section, EventDetailsSheet, SessionDetailsSheet — all unchanged.
+- The shared `<Calendar>` (DayPicker) wrapper stays in place for any other date pickers in the app.
+- No DB / RLS / data-shape changes.
+
+## Files touched
+
+- `src/components/calendar/MonthGridCalendar.tsx` (new)
+- `src/pages/teacher/TeacherCalendarPage.tsx` (swap calendar component + cleanup)
+- `src/pages/CalendarPage.tsx` (swap calendar component + cleanup)
