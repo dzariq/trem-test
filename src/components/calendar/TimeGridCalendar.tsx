@@ -180,9 +180,9 @@ export function TimeGridCalendar({
     return { allDayByDay: allDay, timedByDay: timed };
   }, [events, ccaSessions, days]);
 
-  const handleBlockClick = (e: MouseEvent, block: Block) => {
+  const handleBlockClick = (e: MouseEvent, block: Block, ymd: string) => {
     e.stopPropagation();
-    onSelectDay(toYmd(block.payload && (block.kind === "cca" ? new Date((block.payload as any).sessionDate + "T00:00:00") : (block.payload as any).start || new Date())));
+    onSelectDay(ymd);
     if (block.kind === "event") onEventClick?.(block.payload);
     else onSessionClick?.(block.payload);
   };
@@ -319,7 +319,7 @@ export function TimeGridCalendar({
                       <button
                         key={`${b.kind}-${b.id}`}
                         type="button"
-                        onClick={(e) => handleBlockClick(e, b)}
+                        onClick={(e) => handleBlockClick(e, b, d.ymd)}
                         title={b.title}
                         className={cn(
                           "h-[18px] px-1 rounded-[3px] text-[10px] leading-[18px] font-medium truncate text-left border-transparent",
@@ -392,7 +392,7 @@ export function TimeGridCalendar({
                       <button
                         key={`${b.kind}-${b.id}`}
                         type="button"
-                        onClick={(e) => handleBlockClick(e, b)}
+                        onClick={(e) => handleBlockClick(e, b, d.ymd)}
                         title={b.title}
                         className={cn(
                           "absolute left-0.5 right-0.5 rounded-[4px] px-1 py-0.5 text-[10px] font-medium text-left overflow-hidden border border-transparent shadow-sm",
