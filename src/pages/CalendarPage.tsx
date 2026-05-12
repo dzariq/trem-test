@@ -35,6 +35,8 @@ import { EventDetailsSheet } from "@/components/events/EventDetailsSheet";
 import { UpcomingEventsSection } from "@/components/calendar/UpcomingEventsSection";
 import { CategoryFilterPill } from "@/components/calendar/CategoryFilterPill";
 import { CalendarFiltersSheet } from "@/components/calendar/CalendarFiltersSheet";
+import { usePullToRefresh } from "@/hooks/usePullToRefresh";
+import { PullToRefreshIndicator } from "@/components/calendar/PullToRefreshIndicator";
 import { 
   PARENT_CATEGORY_ORDER, 
   TEACHER_CATEGORY_ORDER,
