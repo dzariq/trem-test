@@ -203,7 +203,11 @@ export default function TeacherAttendancePage() {
   };
 
   const handleMarkAllPresent = () => {
-    students.forEach((s) => setStudentStatus(s.id, "present"));
+    students.forEach((s) => {
+      if (!attendanceState[s.id]?.status) {
+        setStudentStatus(s.id, "present");
+      }
+    });
   };
 
   const getStatusButton = (studentId: string, status: AttendanceStatus, icon: React.ReactNode, label: string, activeColor: string) => {
