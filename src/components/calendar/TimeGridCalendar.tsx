@@ -1,5 +1,5 @@
 import { useMemo, type MouseEvent } from "react";
-import { ChevronLeft, ChevronRight, ArrowLeft } from "lucide-react";
+import { ChevronLeft, ChevronRight, ArrowLeft, SlidersHorizontal } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { getEventBadgeColor } from "@/lib/calendarUtils";
@@ -26,6 +26,8 @@ interface TimeGridCalendarProps {
   view?: CalendarViewMode;
   onViewChange?: (view: CalendarViewMode) => void;
   onBackToMonth?: () => void;
+  onOpenFilters?: () => void;
+  hasActiveFilters?: boolean;
 }
 
 const WEEKDAY_SHORT = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
