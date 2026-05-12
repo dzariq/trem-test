@@ -20,13 +20,8 @@ function escapeHtml(input: string): string {
     .replace(/'/g, "&#39;");
 }
 
-function buildEmail(otp: string, ttlSeconds: number) {
+function buildEmail(otp: string, _ttlSeconds: number) {
   const safeOtp = escapeHtml(otp);
-  const minutes = Math.max(1, Math.round(ttlSeconds / 60));
-  const ttlLabel =
-    ttlSeconds < 60
-      ? `${ttlSeconds} seconds`
-      : `${minutes} minute${minutes === 1 ? "" : "s"}`;
 
   const html = `<!DOCTYPE html>
 <html lang="en">
@@ -47,7 +42,7 @@ function buildEmail(otp: string, ttlSeconds: number) {
 
           <!-- Header -->
           <tr>
-            <td style="background-color: #1e3a5f; padding: 28px 32px; text-align: center;">
+            <td style="background-color: #0B5D28; padding: 28px 32px; text-align: center;">
               <h1 style="margin: 0; color: #ffffff; font-size: 22px; font-weight: 600; letter-spacing: 0.3px;">
                 Collinz School Management
               </h1>
@@ -76,7 +71,7 @@ function buildEmail(otp: string, ttlSeconds: number) {
               </table>
 
               <p style="margin: 28px 0 0 0; font-size: 14px; line-height: 1.6; color: #4a5568;">
-                Please enter this code to continue. This code is valid for ${ttlLabel}.
+                Please enter this code to continue. This code is valid for a limited time.
               </p>
 
               <p style="margin: 16px 0 0 0; font-size: 14px; line-height: 1.6; color: #718096;">
@@ -87,7 +82,7 @@ function buildEmail(otp: string, ttlSeconds: number) {
 
           <!-- Footer -->
           <tr>
-            <td style="background-color: #fafbfc; padding: 20px 32px; text-align: center; border-top: 1px solid #edf2f7;">
+            <td style="background-color: #0B5D28; padding: 20px 32px; text-align: center; border-top: 1px solid #edf2f7;">
               <p style="margin: 0; font-size: 12px; color: #a0aec0; line-height: 1.5;">
                 This is an automated message from Collinz School Management.<br>
                 Please do not reply to this email.
@@ -110,7 +105,7 @@ function buildEmail(otp: string, ttlSeconds: number) {
 </html>`;
 
   const text = `Your Collinz OTP code is ${otp}.
-This code is valid for ${ttlLabel}.
+This code is valid for a limited time.
 
 If you did not request this, please contact the school admin.`;
 
