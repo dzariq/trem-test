@@ -235,7 +235,7 @@ export function TimeGridCalendar({
     days.reduce((mx, d) => Math.max(mx, (allDayByDay.get(d.ymd) || []).length), 0),
   );
   const allDayRowHeight = 22;
-  const allDayBlockHeight = maxAllDay > 0 ? maxAllDay * allDayRowHeight + 14 : 0;
+  const allDayBlockHeight = maxAllDay > 0 ? maxAllDay * allDayRowHeight + 6 : 0;
 
   return (
     <div className="bg-card border border-border rounded-xl overflow-hidden shadow-sm">
@@ -254,7 +254,7 @@ export function TimeGridCalendar({
               <ArrowLeft className="h-4 w-4" />
             </Button>
           )}
-          <div className="text-sm sm:text-base font-semibold text-foreground truncate">
+          <div className="text-lg sm:text-xl font-semibold text-foreground truncate">
             {headerLabel}
           </div>
           {onViewChange && (
@@ -301,7 +301,7 @@ export function TimeGridCalendar({
       </div>
 
       {/* Scrollable area */}
-      <div className="overflow-x-auto">
+      <div className={mode === "week" ? "overflow-x-auto" : "overflow-visible"}>
         <div style={{ minWidth: mode === "week" ? 560 : undefined }}>
           {/* Day header row */}
           <div
@@ -344,7 +344,7 @@ export function TimeGridCalendar({
           {/* All-day strip */}
           {maxAllDay > 0 && (
             <div
-              className="grid border-b-2 border-border bg-background pb-1.5"
+              className="grid border-b border-border bg-background"
               style={{ gridTemplateColumns: gridTemplate, height: allDayBlockHeight }}
             >
               <div className="border-r border-border flex items-center justify-end pr-1 text-[9px] font-medium uppercase text-muted-foreground">
@@ -382,7 +382,7 @@ export function TimeGridCalendar({
 
           {/* Time grid */}
           <div
-            className="grid relative"
+            className="grid relative mt-3"
             style={{ gridTemplateColumns: gridTemplate, height: totalHeight }}
           >
             {/* Time gutter */}
