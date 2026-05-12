@@ -1,7 +1,6 @@
 import { useMemo, type MouseEvent } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import { getEventBadgeColor } from "@/lib/calendarUtils";
 import { getCcaTypeColor } from "@/components/cca/CcaTypeTabs";
@@ -24,7 +23,8 @@ interface MonthGridCalendarProps {
   maxChipsPerDay?: number;
 }
 
-const WEEKDAYS = ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"];
+// Monday-first weekdays
+const WEEKDAYS = ["Mo", "Tu", "We", "Th", "Fr", "Sa", "Su"];
 const MONTH_NAMES = [
   "January", "February", "March", "April", "May", "June",
   "July", "August", "September", "October", "November", "December",
@@ -105,12 +105,13 @@ export function MonthGridCalendar({
     return map;
   }, [events, ccaSessions]);
 
-  // Build grid days (always 6 weeks, leading/trailing from adjacent months)
+  // Build grid cells (Mon-first, always 6 weeks)
   const days = useMemo(() => {
     const year = month.getFullYear();
     const m = month.getMonth();
     const firstOfMonth = new Date(year, m, 1);
-    const startOffset = firstOfMonth.getDay(); // 0=Sun
+    // JS getDay: 0=Sun..6=Sat. We want Monday = 0.
+    const startOffset = (firstOfMonth.getDay() + 6) % 7;
     const gridStart = new Date(year, m, 1 - startOffset);
     const cells: Array<{ date: Date; ymd: string; inMonth: boolean }> = [];
     for (let i = 0; i < 42; i++) {
@@ -118,7 +119,7 @@ export function MonthGridCalendar({
       d.setDate(gridStart.getDate() + i);
       cells.push({ date: d, ymd: toYmd(d), inMonth: d.getMonth() === m });
     }
-    // Trim trailing weeks that are entirely outside the month
+    // Trim trailing all-outside weeks
     const weeks: typeof cells[] = [];
     for (let i = 0; i < 6; i++) weeks.push(cells.slice(i * 7, i * 7 + 7));
     while (weeks.length > 4 && weeks[weeks.length - 1].every((c) => !c.inMonth)) {
@@ -127,133 +128,139 @@ export function MonthGridCalendar({
     return weeks.flat();
   }, [month]);
 
-  const goPrev = () => {
-    const d = new Date(month.getFullYear(), month.getMonth() - 1, 1);
-    onMonthChange(d);
-  };
-  const goNext = () => {
-    const d = new Date(month.getFullYear(), month.getMonth() + 1, 1);
-    onMonthChange(d);
-  };
+  const totalRows = days.length / 7;
+
+  const goPrev = () => onMonthChange(new Date(month.getFullYear(), month.getMonth() - 1, 1));
+  const goNext = () => onMonthChange(new Date(month.getFullYear(), month.getMonth() + 1, 1));
 
   return (
-    <Card className="bg-card border-border shadow-sm overflow-hidden">
-      <CardContent className="p-2 sm:p-3">
-        {/* Header */}
-        <div className="flex items-center justify-between px-1 py-2">
-          <Button
-            type="button"
-            variant="outline"
-            size="icon"
-            className="h-9 w-9 rounded-md"
-            onClick={goPrev}
-            aria-label="Previous month"
+    <div className="bg-card border border-border rounded-xl overflow-hidden shadow-sm">
+      {/* Header */}
+      <div className="flex items-center justify-between px-2 py-2 border-b border-border bg-card">
+        <Button
+          type="button"
+          variant="outline"
+          size="icon"
+          className="h-9 w-9 rounded-md"
+          onClick={goPrev}
+          aria-label="Previous month"
+        >
+          <ChevronLeft className="h-5 w-5" />
+        </Button>
+        <div className="text-base font-semibold text-foreground">
+          {MONTH_NAMES[month.getMonth()]} {month.getFullYear()}
+        </div>
+        <Button
+          type="button"
+          variant="outline"
+          size="icon"
+          className="h-9 w-9 rounded-md"
+          onClick={goNext}
+          aria-label="Next month"
+        >
+          <ChevronRight className="h-5 w-5" />
+        </Button>
+      </div>
+
+      {/* Weekday header row */}
+      <div className="grid grid-cols-7 bg-muted/30 border-b border-border">
+        {WEEKDAYS.map((wd, i) => (
+          <div
+            key={wd}
+            className={cn(
+              "text-center text-[11px] font-semibold uppercase tracking-wide text-muted-foreground py-1.5",
+              i < 6 && "border-r border-border",
+            )}
           >
-            <ChevronLeft className="h-5 w-5" />
-          </Button>
-          <div className="text-base font-semibold text-foreground">
-            {MONTH_NAMES[month.getMonth()]} {month.getFullYear()}
+            {wd}
           </div>
-          <Button
-            type="button"
-            variant="outline"
-            size="icon"
-            className="h-9 w-9 rounded-md"
-            onClick={goNext}
-            aria-label="Next month"
-          >
-            <ChevronRight className="h-5 w-5" />
-          </Button>
-        </div>
+        ))}
+      </div>
 
-        {/* Weekday header */}
-        <div className="grid grid-cols-7 mt-2 mb-1">
-          {WEEKDAYS.map((wd) => (
-            <div
-              key={wd}
-              className="text-center text-[11px] font-medium text-muted-foreground py-1"
+      {/* Grid cells */}
+      <div className="grid grid-cols-7">
+        {days.map(({ date, ymd, inMonth }, idx) => {
+          const bucket = buckets.get(ymd) || [];
+          const isToday = ymd === todayYmd;
+          const isSelected = ymd === selectedDay;
+          const overflowing = bucket.length > maxChipsPerDay;
+          const visibleCount = overflowing ? maxChipsPerDay - 1 : Math.min(bucket.length, maxChipsPerDay);
+          const visible = bucket.slice(0, visibleCount);
+          const extra = bucket.length - visibleCount;
+
+          const col = idx % 7;
+          const row = Math.floor(idx / 7);
+          const isLastCol = col === 6;
+          const isLastRow = row === totalRows - 1;
+
+          const handleCellClick = () => {
+            if (!inMonth) {
+              onMonthChange(new Date(date.getFullYear(), date.getMonth(), 1));
+            }
+            onSelectDay(ymd);
+          };
+
+          const handleChipClick = (e: MouseEvent, item: ChipItem) => {
+            e.stopPropagation();
+            onSelectDay(ymd);
+            if (item.kind === "event") onEventClick?.(item.payload);
+            else onSessionClick?.(item.payload);
+          };
+
+          return (
+            <button
+              key={ymd}
+              type="button"
+              onClick={handleCellClick}
+              className={cn(
+                "relative flex flex-col items-stretch text-left min-h-[88px] sm:min-h-[110px] p-1 transition-colors",
+                !isLastCol && "border-r border-border",
+                !isLastRow && "border-b border-border",
+                inMonth ? "bg-background" : "bg-muted/30",
+                !isSelected && "hover:bg-muted/40",
+              )}
             >
-              {wd}
-            </div>
-          ))}
-        </div>
-
-        {/* Grid */}
-        <div className="grid grid-cols-7 gap-0.5 sm:gap-1">
-          {days.map(({ date, ymd, inMonth }) => {
-            const bucket = buckets.get(ymd) || [];
-            const isToday = ymd === todayYmd;
-            const isSelected = ymd === selectedDay;
-            const overflowing = bucket.length > maxChipsPerDay;
-            const visibleCount = overflowing ? maxChipsPerDay - 1 : Math.min(bucket.length, maxChipsPerDay);
-            const visible = bucket.slice(0, visibleCount);
-            const extra = bucket.length - visibleCount;
-
-            const handleCellClick = () => {
-              if (!inMonth) {
-                onMonthChange(new Date(date.getFullYear(), date.getMonth(), 1));
-              }
-              onSelectDay(ymd);
-            };
-
-            const handleChipClick = (e: MouseEvent, item: ChipItem) => {
-              e.stopPropagation();
-              onSelectDay(ymd);
-              if (item.kind === "event") onEventClick?.(item.payload);
-              else onSessionClick?.(item.payload);
-            };
-
-            return (
-              <button
-                key={ymd}
-                type="button"
-                onClick={handleCellClick}
-                className={cn(
-                  "flex flex-col items-stretch text-left rounded-md border transition-colors min-h-[88px] sm:min-h-[110px] p-1 overflow-hidden",
-                  inMonth ? "bg-background border-border/60" : "bg-muted/20 border-transparent",
-                  isSelected && "ring-2 ring-primary border-primary",
-                  !isSelected && "hover:bg-muted/40",
-                )}
-              >
-                <div className="flex items-center justify-between mb-1">
-                  <span
+              {isSelected && (
+                <span className="pointer-events-none absolute inset-0 ring-2 ring-inset ring-primary" />
+              )}
+              <div className="flex items-center justify-start mb-1">
+                <span
+                  className={cn(
+                    "inline-flex items-center justify-center text-[11px] sm:text-xs font-medium leading-none w-5 h-5 rounded-full",
+                    isToday && "bg-primary text-primary-foreground font-semibold",
+                    !inMonth && "text-muted-foreground/60",
+                    inMonth && !isToday && "text-foreground",
+                  )}
+                >
+                  {date.getDate()}
+                </span>
+              </div>
+              <div className="flex flex-col gap-0.5">
+                {visible.map((item) => (
+                  <div
+                    key={`${item.kind}-${item.id}`}
+                    role="button"
+                    tabIndex={-1}
+                    onClick={(e) => handleChipClick(e, item)}
+                    title={item.title}
                     className={cn(
-                      "inline-flex items-center justify-center text-[11px] sm:text-xs font-medium leading-none w-5 h-5 rounded-full",
-                      isToday && "bg-primary text-primary-foreground font-semibold",
-                      !inMonth && "text-muted-foreground/60",
-                      inMonth && !isToday && "text-foreground",
+                      "h-[18px] px-1 rounded-[3px] text-[9px] sm:text-[10px] leading-[18px] font-medium truncate border-transparent",
+                      item.colorClass,
                     )}
                   >
-                    {date.getDate()}
-                  </span>
-                </div>
-                <div className="flex flex-col gap-0.5">
-                  {visible.map((item) => (
-                    <div
-                      key={`${item.kind}-${item.id}`}
-                      role="button"
-                      tabIndex={-1}
-                      onClick={(e) => handleChipClick(e, item)}
-                      title={item.title}
-                      className={cn(
-                        "h-4 px-1 rounded-sm text-[9px] sm:text-[10px] leading-4 font-medium truncate border-transparent",
-                        item.colorClass,
-                      )}
-                    >
-                      {item.title}
-                    </div>
-                  ))}
-                  {overflowing && extra > 0 && (
-                    <div className="h-4 px-1 rounded-sm text-[9px] sm:text-[10px] leading-4 font-medium text-muted-foreground bg-muted/60 truncate">
-                      +{extra} more
-                    </div>
-                  )}
-                </div>
-              </button>
-            );
-          })}
-        </div>
-      </CardContent>
-    </Card>
+                    {item.title}
+                  </div>
+                ))}
+                {overflowing && extra > 0 && (
+                  <div className="h-[18px] px-1 rounded-[3px] text-[9px] sm:text-[10px] leading-[18px] font-medium text-muted-foreground bg-muted/60 truncate">
+                    +{extra} more
+                  </div>
+                )}
+              </div>
+            </button>
+          );
+        })}
+      </div>
+    </div>
   );
 }

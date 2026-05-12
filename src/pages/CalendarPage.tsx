@@ -6,6 +6,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { MonthGridCalendar } from "@/components/calendar/MonthGridCalendar";
+import { TimeGridCalendar } from "@/components/calendar/TimeGridCalendar";
+import { CalendarViewSwitcher, type CalendarViewMode } from "@/components/calendar/CalendarViewSwitcher";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { BottomSheet } from "@/components/ui/bottom-sheet";
 import { MapPin, Clock, CalendarDays, User, Loader2, ArrowRightLeft } from "lucide-react";
@@ -50,6 +52,7 @@ export default function CalendarPage() {
   const todayYmd = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
   const [selectedDay, setSelectedDay] = useState<string>(todayYmd);
   const [currentMonth, setCurrentMonth] = useState<Date>(new Date());
+  const [view, setView] = useState<CalendarViewMode>("month");
   const [ccaTypeFilter, setCcaTypeFilter] = useState("all");
   const [selectedCCA, setSelectedCCA] = useState<CcaActivity | null>(null);
   const [selectedEventDetails, setSelectedEventDetails] = useState<UpcomingEvent | null>(null);
@@ -468,19 +471,54 @@ export default function CalendarPage() {
             </div>
 
             {/* Calendar Component */}
-            <MonthGridCalendar
-              month={currentMonth}
-              selectedDay={selectedDay}
-              onSelectDay={setSelectedDay}
-              onMonthChange={(date) => {
-                setCurrentMonth(date);
-                const month = String(date.getMonth() + 1).padStart(2, "0");
-                setSelectedDay(`${date.getFullYear()}-${month}-01`);
-              }}
-              events={filteredEvents}
-              ccaSessions={gridCcaSessions}
-              onEventClick={openEventDetails}
-            />
+            <div className="flex justify-end pb-2">
+              <CalendarViewSwitcher view={view} onChange={setView} />
+            </div>
+
+            {view === "month" && (
+              <MonthGridCalendar
+                month={currentMonth}
+                selectedDay={selectedDay}
+                onSelectDay={setSelectedDay}
+                onMonthChange={(date) => {
+                  setCurrentMonth(date);
+                  const month = String(date.getMonth() + 1).padStart(2, "0");
+                  setSelectedDay(`${date.getFullYear()}-${month}-01`);
+                }}
+                events={filteredEvents}
+                ccaSessions={gridCcaSessions}
+                onEventClick={openEventDetails}
+              />
+            )}
+
+            {(view === "week" || view === "day") && (
+              <TimeGridCalendar
+                mode={view}
+                date={parseDayKey(selectedDay)}
+                selectedDay={selectedDay}
+                onSelectDay={(ymd) => {
+                  setSelectedDay(ymd);
+                  const d = parseDayKey(ymd);
+                  if (
+                    d.getFullYear() !== currentMonth.getFullYear() ||
+                    d.getMonth() !== currentMonth.getMonth()
+                  ) {
+                    setCurrentMonth(new Date(d.getFullYear(), d.getMonth(), 1));
+                  }
+                }}
+                onDateChange={(d) => {
+                  if (
+                    d.getFullYear() !== currentMonth.getFullYear() ||
+                    d.getMonth() !== currentMonth.getMonth()
+                  ) {
+                    setCurrentMonth(new Date(d.getFullYear(), d.getMonth(), 1));
+                  }
+                }}
+                events={filteredEvents}
+                ccaSessions={gridCcaSessions}
+                onEventClick={openEventDetails}
+              />
+            )}
 
             {/* Events for Selected Date */}
             <Card className="bg-card border-border shadow-sm">
