@@ -18,21 +18,20 @@ const formatDate = (dateString: string) => {
   });
 };
 
-const getCategoryColor = (category: string) => {
-  const normalized = category.toLowerCase();
-  switch (normalized) {
-    case "event":
-      return "bg-blue-500 text-white";
-    case "academic":
-      return "bg-amber-500 text-white";
-    case "general":
-      return "bg-primary text-primary-foreground";
+const getPriorityStyles = (priority?: string) => {
+  switch ((priority ?? "").toLowerCase()) {
+    case "high":
+      return { className: "bg-red-500 text-white hover:bg-red-500", label: "High Priority", dot: "bg-white" };
+    case "low":
+      return { className: "bg-emerald-500 text-white hover:bg-emerald-500", label: "Low Priority", dot: "bg-white" };
+    case "medium":
     default:
-      return "bg-muted text-muted-foreground";
+      return { className: "bg-amber-500 text-white hover:bg-amber-500", label: "Medium Priority", dot: "bg-white" };
   }
 };
 
 export function AnnouncementListCard({ announcement, onClick }: Props) {
+  const priority = getPriorityStyles(announcement.priority);
   return (
     <Card
       className="bg-card border-border shadow-sm overflow-hidden cursor-pointer active:scale-[0.98] transition-transform"
@@ -58,8 +57,9 @@ export function AnnouncementListCard({ announcement, onClick }: Props) {
         )}
         <div className="absolute inset-0 bg-gradient-to-t from-card via-card/30 to-transparent" />
         <div className="absolute top-3 left-3 flex gap-2">
-          <Badge className={getCategoryColor(announcement.category)}>
-            {announcement.category}
+          <Badge className={`${priority.className} gap-1.5`}>
+            <span className={`h-1.5 w-1.5 rounded-full ${priority.dot}`} />
+            {priority.label}
           </Badge>
         </div>
         {announcement.requires_acknowledgement && (
