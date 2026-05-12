@@ -495,6 +495,16 @@ export default function TeacherCalendarPage() {
         } : null}
         isPIC={selectedSession ? isTeacherPICOfSession(selectedSession) : false}
       />
+
+      <CalendarFiltersSheet
+        open={filtersOpen}
+        onOpenChange={setFiltersOpen}
+        availableCategories={availableCategories}
+        isAllSelected={isAllSelected}
+        categoryFilters={categoryFilters}
+        setIsAllSelected={setIsAllSelected}
+        setCategoryFilters={setCategoryFilters}
+      />
     </TeacherAppLayout>
   );
 }
