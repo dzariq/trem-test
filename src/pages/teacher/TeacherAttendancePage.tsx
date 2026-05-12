@@ -480,7 +480,11 @@ export default function TeacherAttendancePage() {
                   {format(selectedDate, "PPP")}
                 </Button>
               </PopoverTrigger>
-              <PopoverContent className="w-[320px] p-0" align="center" sideOffset={8}>
+              <PopoverContent
+                align="center"
+                sideOffset={8}
+                className="w-[320px] p-0 fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2"
+              >
                 <Calendar
                   mode="single"
                   selected={selectedDate}
