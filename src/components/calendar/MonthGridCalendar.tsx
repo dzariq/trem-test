@@ -1,5 +1,5 @@
-import { useMemo, type MouseEvent } from "react";
-import { ChevronLeft, ChevronRight, SlidersHorizontal } from "lucide-react";
+import { useMemo, useState, type MouseEvent } from "react";
+import { ChevronLeft, ChevronRight, SlidersHorizontal, ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { getEventBadgeColor } from "@/lib/calendarUtils";
@@ -35,6 +35,10 @@ const MONTH_NAMES = [
   "January", "February", "March", "April", "May", "June",
   "July", "August", "September", "October", "November", "December",
 ];
+const MONTH_SHORT = [
+  "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+  "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
+];
 
 const toYmd = (d: Date) => {
   const y = d.getFullYear();
@@ -65,6 +69,7 @@ export function MonthGridCalendar({
   hasActiveFilters,
 }: MonthGridCalendarProps) {
   const todayYmd = toYmd(new Date());
+  const [monthPickerOpen, setMonthPickerOpen] = useState(false);
 
   // Build per-day buckets
   const buckets = useMemo(() => {
@@ -144,14 +149,31 @@ export function MonthGridCalendar({
   const goPrev = () => onMonthChange(new Date(month.getFullYear(), month.getMonth() - 1, 1));
   const goNext = () => onMonthChange(new Date(month.getFullYear(), month.getMonth() + 1, 1));
 
+  const handleMonthStripClick = (idx: number) => {
+    onMonthChange(new Date(month.getFullYear(), idx, 1));
+    setMonthPickerOpen(false);
+  };
+
   return (
     <div className="bg-card border border-border rounded-xl overflow-hidden shadow-sm">
       {/* Header */}
       <div className="flex items-center justify-between gap-2 px-2 py-2 border-b border-border bg-card">
         <div className="flex items-center gap-1.5 min-w-0">
-          <div className="text-2xl sm:text-3xl font-semibold text-foreground truncate">
-            {MONTH_NAMES[month.getMonth()]}
-          </div>
+          <button
+            type="button"
+            onClick={() => setMonthPickerOpen((v) => !v)}
+            className="inline-flex items-center gap-1 text-2xl sm:text-3xl font-semibold text-foreground truncate hover:opacity-80 transition-opacity"
+            aria-expanded={monthPickerOpen}
+            aria-label="Toggle month picker"
+          >
+            <span className="truncate">{MONTH_NAMES[month.getMonth()]}</span>
+            <ChevronDown
+              className={cn(
+                "h-5 w-5 opacity-70 transition-transform",
+                monthPickerOpen && "rotate-180",
+              )}
+            />
+          </button>
           {onViewChange && (
             <CalendarViewDropdown view={view} onChange={onViewChange} />
           )}
@@ -192,6 +214,39 @@ export function MonthGridCalendar({
           >
             <ChevronRight className="h-4 w-4" />
           </Button>
+        </div>
+      </div>
+
+      {/* Expandable month strip */}
+      <div
+        className={cn(
+          "overflow-hidden transition-all duration-300 ease-in-out",
+          monthPickerOpen
+            ? "max-h-[80px] opacity-100 border-b border-border"
+            : "max-h-0 opacity-0",
+        )}
+      >
+        <div className="px-3 py-2 bg-background overflow-x-auto [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+          <div className="flex items-center gap-1.5 min-w-max">
+            {MONTH_SHORT.map((m, idx) => {
+              const isActive = idx === month.getMonth();
+              return (
+                <button
+                  key={m}
+                  type="button"
+                  onClick={() => handleMonthStripClick(idx)}
+                  className={cn(
+                    "px-3 h-7 rounded-full text-xs font-medium transition-colors whitespace-nowrap",
+                    isActive
+                      ? "bg-primary/15 text-primary"
+                      : "bg-background text-muted-foreground border border-border hover:bg-muted/50",
+                  )}
+                >
+                  {m}
+                </button>
+              );
+            })}
+          </div>
         </div>
       </div>
 
