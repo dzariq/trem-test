@@ -418,16 +418,16 @@ export default function CalendarPage() {
         <PullToRefreshIndicator pullDistance={pullDistance} refreshing={refreshing} />
         <Tabs defaultValue={initialTab} className="w-full">
           <div className="pb-2">
-            <TabsList className="grid w-full grid-cols-2 rounded-full bg-muted/40 p-1">
+            <TabsList className="grid w-full grid-cols-2 rounded-md bg-muted/40 p-1">
               <TabsTrigger
                 value="calendar"
-                className="rounded-full text-sm data-[state=active]:bg-background data-[state=active]:shadow-sm"
+                className="rounded-md text-sm data-[state=active]:bg-background data-[state=active]:shadow-sm"
               >
                 Main Calendar
               </TabsTrigger>
               <TabsTrigger
                 value="cca"
-                className="rounded-full text-sm data-[state=active]:bg-background data-[state=active]:shadow-sm"
+                className="rounded-md text-sm data-[state=active]:bg-background data-[state=active]:shadow-sm"
               >
                 CCA Activities
               </TabsTrigger>
@@ -686,7 +686,7 @@ export default function CalendarPage() {
               <CardContent className="p-4 space-y-3">
                 {(selectedCCA.meetingDay || selectedCCA.meetingTime) && (
                   <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
+                    <div className="w-8 h-8 rounded-md bg-primary/10 flex items-center justify-center">
                       <CalendarDays className="h-4 w-4 text-primary" />
                     </div>
                     <div>
@@ -701,7 +701,7 @@ export default function CalendarPage() {
 
                 {selectedCCA.location && (
                   <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
+                    <div className="w-8 h-8 rounded-md bg-primary/10 flex items-center justify-center">
                       <MapPin className="h-4 w-4 text-primary" />
                     </div>
                     <div>
@@ -713,7 +713,7 @@ export default function CalendarPage() {
 
                 {(selectedCCA.picTeachers.length > 0 || selectedCCA.coordinatorName) && (
                   <div className="flex items-start gap-3">
-                    <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+                    <div className="w-8 h-8 rounded-md bg-primary/10 flex items-center justify-center flex-shrink-0">
                       <User className="h-4 w-4 text-primary" />
                     </div>
                     <div className="flex-1">
