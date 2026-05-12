@@ -350,9 +350,17 @@ export function AnnouncementDrawer({
                         className="w-full aspect-[16/9] object-cover"
                       />
                     </button>
+                    {currentAnnouncement.is_featured && (
+                      <div className="absolute top-3 left-3 z-10 pointer-events-none">
+                        <div className="h-9 w-9 rounded-full bg-yellow-400 text-yellow-950 flex items-center justify-center shadow-md ring-2 ring-white/80">
+                          <Star className="h-5 w-5" fill="currentColor" />
+                        </div>
+                      </div>
+                    )}
                     <div className="absolute bottom-3 left-3 z-10 pointer-events-none">
-                      <Badge className="text-xs font-semibold px-3 py-1 bg-white text-foreground border border-border hover:bg-white capitalize shadow-sm">
-                        {currentAnnouncement.category}
+                      <Badge className={cn("text-xs font-semibold px-3 py-1 gap-1.5 shadow-sm", priorityBadge.className)}>
+                        <span className="h-1.5 w-1.5 rounded-full bg-white" />
+                        {priorityBadge.label}
                       </Badge>
                     </div>
                   </div>
