@@ -213,15 +213,15 @@ export function TimeGridCalendar({
 
   const headerLabel = useMemo(() => {
     if (mode === "day") {
-      return `${WEEKDAY_SHORT[(date.getDay() + 6) % 7]}, ${MONTH_NAMES[date.getMonth()]} ${date.getDate()}, ${date.getFullYear()}`;
+      return MONTH_NAMES[date.getMonth()];
     }
     const start = days[0].date;
     const end = days[6].date;
     const sameMonth = start.getMonth() === end.getMonth();
     if (sameMonth) {
-      return `${MONTH_NAMES[start.getMonth()]} ${start.getDate()}–${end.getDate()}, ${start.getFullYear()}`;
+      return MONTH_NAMES[start.getMonth()];
     }
-    return `${MONTH_NAMES[start.getMonth()]} ${start.getDate()} – ${MONTH_NAMES[end.getMonth()]} ${end.getDate()}, ${end.getFullYear()}`;
+    return `${MONTH_NAMES[start.getMonth()]} – ${MONTH_NAMES[end.getMonth()]}`;
   }, [days, mode, date]);
 
   // Layout: time gutter (48px) + N day columns
@@ -235,7 +235,7 @@ export function TimeGridCalendar({
     days.reduce((mx, d) => Math.max(mx, (allDayByDay.get(d.ymd) || []).length), 0),
   );
   const allDayRowHeight = 22;
-  const allDayBlockHeight = maxAllDay > 0 ? maxAllDay * allDayRowHeight + 6 : 0;
+  const allDayBlockHeight = maxAllDay > 0 ? maxAllDay * allDayRowHeight + 14 : 0;
 
   return (
     <div className="bg-card border border-border rounded-xl overflow-hidden shadow-sm">
@@ -245,14 +245,13 @@ export function TimeGridCalendar({
           {onBackToMonth && (
             <Button
               type="button"
-              variant="ghost"
-              size="sm"
-              className="h-8 px-2 rounded-md text-xs gap-1 shrink-0"
+              variant="outline"
+              size="icon"
+              className="h-8 w-8 rounded-md shrink-0"
               onClick={onBackToMonth}
               aria-label="Back to month view"
             >
-              <ArrowLeft className="h-3.5 w-3.5" />
-              Back
+              <ArrowLeft className="h-4 w-4" />
             </Button>
           )}
           <div className="text-sm sm:text-base font-semibold text-foreground truncate">
@@ -345,7 +344,7 @@ export function TimeGridCalendar({
           {/* All-day strip */}
           {maxAllDay > 0 && (
             <div
-              className="grid border-b border-border bg-background"
+              className="grid border-b-2 border-border bg-background pb-1.5"
               style={{ gridTemplateColumns: gridTemplate, height: allDayBlockHeight }}
             >
               <div className="border-r border-border flex items-center justify-end pr-1 text-[9px] font-medium uppercase text-muted-foreground">
