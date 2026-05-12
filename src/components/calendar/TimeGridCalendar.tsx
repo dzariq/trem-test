@@ -86,7 +86,7 @@ export function TimeGridCalendar({
   hasActiveFilters,
 }: TimeGridCalendarProps) {
   const todayYmd = toYmd(new Date());
-  const HOUR_PX = 48;
+  const HOUR_PX = mode === "day" ? 72 : 48;
   const totalHours = endHour - startHour;
   const totalHeight = totalHours * HOUR_PX;
 
@@ -347,8 +347,9 @@ export function TimeGridCalendar({
               className="grid border-b border-border bg-background"
               style={{ gridTemplateColumns: gridTemplate, height: allDayBlockHeight }}
             >
-              <div className="border-r border-border flex items-center justify-end pr-1 text-[9px] font-medium uppercase text-muted-foreground">
-                all-day
+              <div className="border-r border-border flex flex-col items-center justify-center text-[9px] font-semibold uppercase leading-tight text-muted-foreground">
+                <span>All</span>
+                <span>Day</span>
               </div>
               {days.map((d, i) => {
                 const items = (allDayByDay.get(d.ymd) || []).slice(0, maxAllDay);
