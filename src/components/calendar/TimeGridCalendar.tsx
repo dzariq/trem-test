@@ -382,11 +382,13 @@ export function TimeGridCalendar({
       {/* Expandable month picker (Google Calendar style) */}
       <div
         className={cn(
-          "overflow-hidden transition-all duration-300 ease-in-out border-b border-border",
-          monthPickerOpen ? "max-h-[420px] opacity-100" : "max-h-0 opacity-0 border-b-0",
+          "overflow-hidden transition-all duration-300 ease-in-out",
+          monthPickerOpen
+            ? "max-h-[420px] opacity-100 border-b border-border"
+            : "max-h-0 opacity-0",
         )}
       >
-        <div className="px-3 pt-3 pb-2 bg-muted/30">
+        <div className="px-3 pt-3 pb-2 bg-background">
           {/* Weekday header */}
           <div className="grid grid-cols-7 mb-1">
             {WEEKDAY_SHORT.map((w) => (
@@ -436,7 +438,9 @@ export function TimeGridCalendar({
             })}
           </div>
           {/* Month strip */}
-          <div className="mt-3 -mx-3 px-3 overflow-x-auto">
+          <div
+            className="mt-3 -mx-3 px-3 overflow-x-auto [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+          >
             <div className="flex items-center gap-1.5 pb-1 min-w-max">
               {MONTH_SHORT.map((m, idx) => {
                 const isActive = idx === date.getMonth();
