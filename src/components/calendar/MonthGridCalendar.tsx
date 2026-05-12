@@ -30,7 +30,7 @@ interface MonthGridCalendarProps {
 }
 
 // Monday-first weekdays
-const WEEKDAYS = ["Mo", "Tu", "We", "Th", "Fr", "Sa", "Su"];
+const WEEKDAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 const MONTH_NAMES = [
   "January", "February", "March", "April", "May", "June",
   "July", "August", "September", "October", "November", "December",
@@ -247,15 +247,13 @@ export function MonthGridCalendar({
               type="button"
               onClick={handleCellClick}
               className={cn(
-                "relative flex flex-col items-stretch text-left min-h-[128px] sm:min-h-[150px] p-1 transition-colors",
-                !isLastCol && "border-r border-border",
-                !isLastRow && "border-b border-border",
+                "relative flex flex-col items-stretch text-left min-h-[115px] sm:min-h-[135px] p-1 m-0.5 rounded-md transition-colors",
                 inMonth ? "bg-background" : "bg-muted/30",
                 !isSelected && "hover:bg-muted/40",
               )}
             >
               {isSelected && (
-                <span className="pointer-events-none absolute inset-0 ring-2 ring-inset ring-primary" />
+                <span className="pointer-events-none absolute inset-0 rounded-md ring-2 ring-inset ring-primary" />
               )}
               <div className="flex items-center justify-between mb-1 gap-1">
                 <span
