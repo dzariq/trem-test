@@ -77,6 +77,7 @@ interface UseGradeEntryReturn {
 export function useGradeEntry(): UseGradeEntryReturn {
   const teacherScope = useTeacherScope();
   const isTeacher = teacherScope.isTeacher;
+  const { activeCampus } = useCampus();
   const allowedClassNames = useMemo(
     () => teacherScope.allowedClassYears.map((cls) => cls.class_name),
     [teacherScope.allowedClassYears]
@@ -290,7 +291,7 @@ export function useGradeEntry(): UseGradeEntryReturn {
     };
 
     loadStudentsAndSubjects();
-  }, [isTeacher, selectedClass, teacherScope.allowedClassYears, teacherScope.getAllowedSubjects, teacherScope.selectedClassYearId]);
+  }, [isTeacher, selectedClass, teacherScope.allowedClassYears, teacherScope.getAllowedSubjects, teacherScope.selectedClassYearId, activeCampus]);
 
   const allowedSubjectIds = useMemo(() => {
     if (!isTeacher) return null;
