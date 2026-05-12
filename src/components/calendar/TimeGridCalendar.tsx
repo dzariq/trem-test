@@ -450,7 +450,7 @@ export function TimeGridCalendar({
                     type="button"
                     onClick={() => handleMonthStripClick(idx)}
                     className={cn(
-                      "px-3 min-h-9 rounded-full text-xs font-medium transition-colors whitespace-nowrap no-callout",
+                      "px-3 min-h-11 rounded-full text-xs font-medium transition-colors whitespace-nowrap no-callout [touch-action:manipulation]",
                       isActive
                         ? "bg-primary/15 text-primary"
                         : "bg-background text-muted-foreground border border-border hover:bg-muted/50",
