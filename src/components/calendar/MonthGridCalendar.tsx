@@ -299,8 +299,10 @@ export function MonthGridCalendar({
               key={ymd}
               type="button"
               onClick={handleCellClick}
+              aria-label={`${date.toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" })}${bucket.length > 0 ? `, ${bucket.length} event${bucket.length === 1 ? "" : "s"}` : ", no events"}${isToday ? ", today" : ""}${isSelected ? ", selected" : ""}`}
+              aria-pressed={isSelected}
               className={cn(
-                "relative flex flex-col items-stretch text-left min-h-[104px] sm:min-h-[122px] p-0.5 m-px rounded-md transition-colors no-callout",
+                "relative flex flex-col items-stretch text-left min-h-[104px] sm:min-h-[122px] p-0.5 m-px rounded-md transition-colors no-callout [touch-action:manipulation]",
                 inMonth ? "bg-background" : "bg-muted/30",
                 !isSelected && "hover:bg-muted/40",
               )}

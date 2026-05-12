@@ -30,6 +30,8 @@ import { useAuth } from "@/contexts/AuthContext";
 import { EventDetailsSheet } from "@/components/events/EventDetailsSheet";
 import { UpcomingEventsSection } from "@/components/calendar/UpcomingEventsSection";
 import { CalendarFiltersSheet } from "@/components/calendar/CalendarFiltersSheet";
+import { usePullToRefresh } from "@/hooks/usePullToRefresh";
+import { PullToRefreshIndicator } from "@/components/calendar/PullToRefreshIndicator";
 import { TEACHER_CATEGORY_ORDER, mapDbToCategory, mapDbToSubtype } from "@/lib/calendarCategorySubtypes";
 import { cn } from "@/lib/utils";
 
@@ -222,6 +224,21 @@ export default function TeacherCalendarPage() {
     };
   }, [currentMonth, activeCampus]);
 
+  // Pull-to-refresh: refetch events + CCA sessions
+  const handleRefresh = async () => {
+    const year = currentMonth.getFullYear();
+    const month = currentMonth.getMonth() + 1;
+    await Promise.all([
+      listCalendarEvents(year, month, { role: "teacher", campusCode: activeCampus })
+        .then((data) => setEvents(data))
+        .catch(() => {}),
+      Promise.resolve(refetchCcaSessions()),
+    ]);
+  };
+  const { ref: pullRef, pullDistance, refreshing } = usePullToRefresh<HTMLDivElement>({
+    onRefresh: handleRefresh,
+  });
+
   const filteredCCA = filterByTypeId(ccaTypeFilter);
 
   const openEventDetails = (event: UpcomingEvent, triggerEl?: HTMLElement | null) => {
@@ -248,7 +265,8 @@ export default function TeacherCalendarPage() {
         }
       />
 
-      <section className="px-4 pt-3">
+      <section className="px-4 pt-3" ref={pullRef}>
+        <PullToRefreshIndicator pullDistance={pullDistance} refreshing={refreshing} />
         <Tabs defaultValue="calendar" className="w-full">
           <div className="pb-2">
             <TabsList className="grid w-full grid-cols-2 rounded-full bg-muted/40 p-1">
