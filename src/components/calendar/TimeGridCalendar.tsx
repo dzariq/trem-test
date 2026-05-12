@@ -213,15 +213,15 @@ export function TimeGridCalendar({
 
   const headerLabel = useMemo(() => {
     if (mode === "day") {
-      return `${WEEKDAY_SHORT[(date.getDay() + 6) % 7]}, ${MONTH_NAMES[date.getMonth()]} ${date.getDate()}, ${date.getFullYear()}`;
+      return MONTH_NAMES[date.getMonth()];
     }
     const start = days[0].date;
     const end = days[6].date;
     const sameMonth = start.getMonth() === end.getMonth();
     if (sameMonth) {
-      return `${MONTH_NAMES[start.getMonth()]} ${start.getDate()}–${end.getDate()}, ${start.getFullYear()}`;
+      return MONTH_NAMES[start.getMonth()];
     }
-    return `${MONTH_NAMES[start.getMonth()]} ${start.getDate()} – ${MONTH_NAMES[end.getMonth()]} ${end.getDate()}, ${end.getFullYear()}`;
+    return `${MONTH_NAMES[start.getMonth()]} – ${MONTH_NAMES[end.getMonth()]}`;
   }, [days, mode, date]);
 
   // Layout: time gutter (48px) + N day columns
