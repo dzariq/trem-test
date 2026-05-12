@@ -78,12 +78,15 @@ export function CalendarFiltersSheet({
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="bottom" className="z-[100] rounded-t-2xl max-h-[75vh] overflow-y-auto">
-        <SheetHeader>
+      <SheetContent
+        side="bottom"
+        className="z-[100] rounded-t-2xl h-[75vh] flex flex-col p-0"
+      >
+        <SheetHeader className="px-6 pt-6 pb-2 shrink-0">
           <SheetTitle>Filter events</SheetTitle>
         </SheetHeader>
 
-        <div className="mt-4">
+        <div className="flex-1 overflow-y-auto px-6 pb-4">
           <button
             type="button"
             className={cn(
@@ -190,7 +193,7 @@ export function CalendarFiltersSheet({
           </div>
         </div>
 
-        <div className="flex items-center justify-between gap-2 mt-6">
+        <div className="flex items-center justify-between gap-2 px-6 py-3 border-t border-border bg-background shrink-0 pb-[calc(0.75rem+env(safe-area-inset-bottom))]">
           <Button type="button" variant="ghost" onClick={reset} className="flex-1">
             Reset
           </Button>
