@@ -1,98 +1,63 @@
-## Goal
+## Calendar Redesign — Grid Layout + Multiple Views
 
-Replace the current "dot-only" month calendar on the Calendar page with a richer grid where each day cell shows up to 4 event chips (title only, color-coded), plus a "+N more" indicator when there are extra events. Tapping a day still opens the full list below as it does today.
+Refine `MonthGridCalendar` and add a view switcher so the calendar feels like a proper desktop/mobile calendar app (Google Calendar / Apple Calendar style).
 
-Applies to both:
-- `src/pages/teacher/TeacherCalendarPage.tsx` (Teacher /teacher/calendar)
-- `src/pages/CalendarPage.tsx` (Parent /calendar)
+### 1. Week starts Monday
+- Change `WEEKDAYS` from `Su Mo Tu We Th Fr Sa` → `Mo Tu We Th Fr Sa Su`.
+- Update `startOffset` calc: `(firstOfMonth.getDay() + 6) % 7` so Monday = 0.
 
-## What changes visually
+### 2. True grid (not rounded chips)
+Replace the gap-based rounded cells with a hairline grid:
+- Outer container: rounded card border, `overflow-hidden`.
+- Grid: `gap-0`, each cell uses `border-r border-b border-border` (last col drops right border, last row drops bottom).
+- Weekday header row: same border treatment, `bg-muted/30`, uppercase 11px labels.
+- Day cells: square-ish (`min-h-[92px]` mobile, `min-h-[120px]` sm+), no per-cell rounding, no per-cell border radius.
+- Day number: top-left, plain number; today = filled primary circle (5×5); selected = thin primary ring on the cell (inset, no offset).
+- Outside-month days: faded number, no background tint.
+- Event chips: keep colored pill style, slightly tighter (`h-[18px]`, `text-[10px]`, `rounded-[3px]`), full-width, truncated.
+- Multi-day events: visually continuous look — no left radius if continued from prior day, no right radius if continues. (Stretch: keep simple per-day chip for v1, document continuous-bar as follow-up.)
 
-Reference: the uploaded mobile calendar screenshot (chips stacked inside each day cell, "..." for overflow).
+### 3. View switcher
+Add a segmented control above the grid: **Month · Week · Day** (mobile) / **Month · Week · Day · Agenda** (sm+).
 
-Each day cell will show:
-- Day number (top of cell, smaller)
-- Up to **4 event chips** — short colored bar with truncated title (`truncate`, ~1 line)
-- If more than 4 events on that day → show `+N` pill on the last row instead of the 4th chip (so total visible rows stays = 4)
-- Multi-day events (e.g. May 22–23) appear on every day they span, using the same color
-- CCA sessions are shown as chips too (tagged "CCA" color)
-- Today: ring highlight on the day number; selected day: filled background on the cell
-- Empty days: just the day number, muted
+Component: new `src/components/calendar/CalendarViewSwitcher.tsx` — segmented pill with active state using primary token.
 
-Chip color comes from the existing `getEventBadgeColor` / `getCcaTypeColor` helpers so it stays consistent with the badges in the day-detail list and Upcoming section.
+State: `view: "month" | "week" | "day" | "agenda"` lifted into `TeacherCalendarPage` and `CalendarPage` (URL-synced via `?view=` is out of scope for v1, just local state).
 
-The detail card below ("Friday, May 22, 2026 — events…") and the "Upcoming Events" section stay exactly as they are. Tapping a chip opens the same `EventDetailsSheet` already used today.
+#### Month view
+The redesigned `MonthGridCalendar` above.
 
-## Layout sizing (mobile 390px)
+#### Week view (new `WeekGridCalendar.tsx`)
+- Header row: 7 day columns (Mon–Sun) with date number + weekday short label; today highlighted.
+- Body: time-axis on the left (hourly rows 7am–7pm by default), 7 columns; events render as positioned blocks based on `start_time`/`end_time`.
+- All-day events sit in a thin row above the time grid.
+- Tap a block → opens `EventDetailsSheet` / `SessionDetailsSheet` (reuse existing handlers).
+- Mobile (390px): horizontal scroll for the 7 columns OR collapse to a 3-day visible window with swipe — v1 = horizontal scroll with sticky time gutter.
 
-- Replace `react-day-picker`'s fixed `h-9` day buttons with a custom 7-col CSS grid built directly inside the Calendar Card.
-- Cell height: `min-h-[88px]` on mobile, `min-h-[110px]` on `sm:` and up.
-- Chip height: `h-4` (16px), text `text-[10px]`, `px-1`, `truncate`.
-- Header row stays: month title + prev/next chevrons (reuse current pattern).
-- Weekday header row: `Su Mo Tu We Th Fr Sa`.
+#### Day view (new `DayAgendaView.tsx`)
+- Full-width single column, hourly rows, same event-block rendering as week view.
+- All-day strip at top.
+- Date stepper header (◀ Wed, Jun 3 ▶).
 
-This means we stop using `<Calendar>` (shadcn DayPicker wrapper) on this screen and render our own month grid component. DayPicker is still used elsewhere (date inputs) — we leave that untouched.
+#### Agenda view (sm+ only, optional v1)
+- Flat chronological list grouped by date — reuses existing `UpcomingEventsSection` styling.
 
-## New component
+### 4. Wire-up
+`TeacherCalendarPage.tsx` and `CalendarPage.tsx`:
+- Add `view` state, render `<CalendarViewSwitcher>` above the calendar surface.
+- Conditionally render `<MonthGridCalendar>` / `<WeekGridCalendar>` / `<DayAgendaView>`.
+- All views receive the same `events`, `ccaSessions`, `selectedDay`, click handlers — no data fetching changes.
+- Selecting a day in Month view + tapping the view switcher → switches into Week/Day around that day.
 
-Create `src/components/calendar/MonthGridCalendar.tsx`:
+### 5. Files
+- Edit: `src/components/calendar/MonthGridCalendar.tsx` (Mon-start + true grid styling)
+- New: `src/components/calendar/CalendarViewSwitcher.tsx`
+- New: `src/components/calendar/WeekGridCalendar.tsx`
+- New: `src/components/calendar/DayAgendaView.tsx`
+- Edit: `src/pages/teacher/TeacherCalendarPage.tsx`, `src/pages/CalendarPage.tsx` (view state + switcher + conditional render)
 
-Props:
-```
-{
-  month: Date;
-  selectedDay: string;            // YYYY-MM-DD
-  onSelectDay: (ymd: string) => void;
-  onMonthChange: (date: Date) => void;
-  events: UpcomingEvent[];        // already filtered
-  ccaSessions: CcaCalendarSession[]; // already filtered
-  onEventClick: (event: UpcomingEvent) => void;
-  onSessionClick: (session: CcaCalendarSession) => void;
-  maxChipsPerDay?: number;        // default 4
-}
-```
-
-Internals:
-- Build a `Map<ymd, Array<ChipItem>>` once per render, where `ChipItem` = `{ kind: "event" | "cca", title, colorClass, payload }`.
-- For each event, walk from `startDay` to `endDay` (inclusive) and push to every day's bucket.
-- Sort each day's bucket by: all-day first, then start time, then title.
-- Generate the 6-row × 7-col grid for the visible month (including leading/trailing days from adjacent months, rendered muted).
-- For each cell:
-  - Header: day number + (today indicator)
-  - Up to `maxChipsPerDay - 1` chips, then a `+N` pill if `bucket.length > maxChipsPerDay`; otherwise show all (up to `maxChipsPerDay`).
-- Click on the cell area (not on a chip) → `onSelectDay(ymd)`.
-- Click on a chip → `onEventClick` / `onSessionClick` and stopPropagation.
-
-## Wire-up changes
-
-In both `TeacherCalendarPage.tsx` and `CalendarPage.tsx`:
-
-1. Replace the `<Card>` wrapping `<Calendar mode="single" …>` with `<MonthGridCalendar … />`.
-2. Pass through the same `filteredEvents`, `ccaSessions` (filtered for parent's selected student where applicable), `selectedDay`, `currentMonth`, and the existing `setSelectedDay` / `setCurrentMonth` handlers.
-3. Pass `openEventDetails` (already exists) for `onEventClick` and the CCA session opener for `onSessionClick`.
-4. Remove the now-unused `hasEventsSet` / `eventDaySet` / `addRangeDays` block — the grid builds its own per-day buckets.
-5. Keep the per-day detail Card and Upcoming section beneath unchanged.
-
-## Multi-day & all-day handling
-
-Already correct in `src/data/calendar.ts` (startDay / endDay normalized for SGT and inclusive end at next-day midnight). The new grid relies on those fields, so May 22–23 type events render chips on both days automatically.
-
-## Edge cases
-
-- Months with 6 visible weeks → grid renders 6 rows; with 4-5 weeks → render only the needed rows so the card height adapts.
-- Outside-month days are still clickable (selecting one switches `currentMonth`).
-- If `events.length === 0` on a day, no chips render; cell stays empty but selectable.
-- Long titles: `truncate`. Hover/long-press on desktop is not required (mobile-first).
-- Color contrast: keep using existing semantic `getEventBadgeColor` classes (already designed for both light/dark).
-
-## Out of scope (not changing)
-
-- Filter pills, CCA tab, Upcoming Events section, EventDetailsSheet, SessionDetailsSheet — all unchanged.
-- The shared `<Calendar>` (DayPicker) wrapper stays in place for any other date pickers in the app.
-- No DB / RLS / data-shape changes.
-
-## Files touched
-
-- `src/components/calendar/MonthGridCalendar.tsx` (new)
-- `src/pages/teacher/TeacherCalendarPage.tsx` (swap calendar component + cleanup)
-- `src/pages/CalendarPage.tsx` (swap calendar component + cleanup)
+### Out of scope (v1)
+- Continuous multi-day event bars spanning across cells (per-day chips for now)
+- Drag-to-create / drag-to-reschedule
+- URL sync of `?view=` and `?date=`
+- Search icon in the header from the reference
