@@ -29,7 +29,6 @@ import { SessionDetailsSheet } from "@/components/cca/SessionDetailsSheet";
 import { useAuth } from "@/contexts/AuthContext";
 import { EventDetailsSheet } from "@/components/events/EventDetailsSheet";
 import { UpcomingEventsSection } from "@/components/calendar/UpcomingEventsSection";
-import { CategoryFilterPill } from "@/components/calendar/CategoryFilterPill";
 import { CalendarFiltersSheet } from "@/components/calendar/CalendarFiltersSheet";
 import { TEACHER_CATEGORY_ORDER, mapDbToCategory, mapDbToSubtype } from "@/lib/calendarCategorySubtypes";
 import { cn } from "@/lib/utils";
