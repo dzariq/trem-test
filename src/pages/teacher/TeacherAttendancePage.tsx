@@ -478,7 +478,7 @@ export default function TeacherAttendancePage() {
               <Button
                 type="button"
                 variant="outline"
-                className={`w-full justify-start text-left font-normal ${datePickerOpen ? "relative z-[101] bg-background" : ""}`}
+                className="w-full justify-start text-left font-normal"
                 onClick={() => setDatePickerOpen(true)}
               >
                   <CalendarIcon className="mr-2 h-4 w-4" />
@@ -486,13 +486,27 @@ export default function TeacherAttendancePage() {
               </Button>
               {datePickerOpen && (
                 <div
-                  className="fixed inset-0 z-[100] flex items-center justify-center bg-foreground/40 p-4"
+                  className="fixed inset-0 z-[100] flex items-center justify-center bg-foreground/50 backdrop-blur-sm p-4 animate-in fade-in-0"
                   onClick={() => setDatePickerOpen(false)}
                 >
                   <div
-                    className="w-full max-w-[calc(100vw-2rem)] rounded-md border bg-popover p-0 text-popover-foreground shadow-md"
+                    className="w-full max-w-sm rounded-2xl bg-white text-foreground shadow-2xl overflow-hidden animate-in zoom-in-95 fade-in-0"
                     onClick={(event) => event.stopPropagation()}
                   >
+                    <div className="flex items-center justify-between px-5 pt-4 pb-2">
+                      <div>
+                        <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Select date</p>
+                        <p className="text-base font-semibold text-foreground">{format(selectedDate, "EEE, MMM d")}</p>
+                      </div>
+                      <button
+                        type="button"
+                        aria-label="Close"
+                        onClick={() => setDatePickerOpen(false)}
+                        className="h-8 w-8 inline-flex items-center justify-center rounded-full text-muted-foreground hover:bg-muted"
+                      >
+                        <X className="h-4 w-4" />
+                      </button>
+                    </div>
                     <Calendar
                       mode="single"
                       selected={selectedDate}
@@ -503,7 +517,7 @@ export default function TeacherAttendancePage() {
                         }
                       }}
                       initialFocus
-                      className="w-full"
+                      className="w-full px-3 pb-3 pointer-events-auto"
                       classNames={{
                         day_today: "rdp-day_today font-semibold text-foreground",
                       }}
@@ -518,6 +532,22 @@ export default function TeacherAttendancePage() {
                           "aria-selected:!bg-destructive aria-selected:!text-destructive-foreground after:content-[''] after:absolute after:bottom-1 after:left-1/2 after:-translate-x-1/2 after:h-1.5 after:w-1.5 after:rounded-full after:bg-destructive",
                       }}
                     />
+                    <div className="flex items-center justify-between gap-3 border-t px-5 py-3 bg-muted/30">
+                      <div className="flex items-center gap-3 text-[11px] text-muted-foreground">
+                        <span className="inline-flex items-center gap-1.5"><span className="h-1.5 w-1.5 rounded-full bg-primary" />Complete</span>
+                        <span className="inline-flex items-center gap-1.5"><span className="h-1.5 w-1.5 rounded-full bg-destructive" />Partial</span>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setSelectedDate(new Date());
+                          setDatePickerOpen(false);
+                        }}
+                        className="text-xs font-semibold text-primary hover:underline"
+                      >
+                        Today
+                      </button>
+                    </div>
                   </div>
                 </div>
               )}
