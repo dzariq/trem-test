@@ -305,10 +305,10 @@ export function TimeGridCalendar({
         <div style={{ minWidth: mode === "week" ? 560 : undefined }}>
           {/* Day header row */}
           <div
-            className="grid"
+            className="grid bg-muted/40"
             style={{ gridTemplateColumns: gridTemplate }}
           >
-            <div />
+            <div className="bg-muted/40" />
             {days.map((d, i) => {
               const isToday = d.ymd === todayYmd;
               const isSelected = d.ymd === selectedDay;
@@ -318,8 +318,8 @@ export function TimeGridCalendar({
                   type="button"
                   onClick={() => onSelectDay(d.ymd)}
                   className={cn(
-                    "flex flex-col items-center justify-center py-1.5 text-[11px] font-medium rounded-md",
-                    isSelected && "bg-primary/5",
+                    "flex flex-col items-center justify-center py-1.5 text-[11px] font-medium",
+                    isSelected && "bg-primary/10",
                   )}
                 >
                   <span className="uppercase tracking-wide text-muted-foreground">
@@ -343,22 +343,19 @@ export function TimeGridCalendar({
           {/* All-day strip */}
           {maxAllDay > 0 && (
             <div
-              className="grid border-b border-border bg-background"
+              className="grid bg-background"
               style={{ gridTemplateColumns: gridTemplate, height: allDayBlockHeight }}
             >
-              <div className="border-r border-border flex flex-col items-center justify-center text-[9px] font-semibold uppercase leading-tight text-muted-foreground">
+              <div className="bg-muted/40 flex flex-col items-center justify-center text-[9px] font-semibold uppercase leading-tight text-muted-foreground">
                 <span>All</span>
                 <span>Day</span>
               </div>
-              {days.map((d, i) => {
+              {days.map((d) => {
                 const items = (allDayByDay.get(d.ymd) || []).slice(0, maxAllDay);
                 return (
                   <div
                     key={d.ymd}
-                    className={cn(
-                      "p-0.5 flex flex-col gap-0.5",
-                      i < days.length - 1 && "border-r border-border",
-                    )}
+                    className="p-0.5 flex flex-col gap-0.5"
                   >
                     {items.map((b) => (
                       <button
@@ -380,18 +377,15 @@ export function TimeGridCalendar({
             </div>
           )}
 
-          {/* Spacer that continues the gutter + column borders down to the time grid */}
+          {/* Spacer */}
           {maxAllDay > 0 && (
             <div
               className="grid"
               style={{ gridTemplateColumns: gridTemplate, height: 12 }}
             >
-              <div className="border-r border-border" />
-              {days.map((d, i) => (
-                <div
-                  key={d.ymd}
-                  className={cn(i < days.length - 1 && "border-r border-border")}
-                />
+              <div className="bg-muted/40" />
+              {days.map((d) => (
+                <div key={d.ymd} />
               ))}
             </div>
           )}
@@ -402,7 +396,7 @@ export function TimeGridCalendar({
             style={{ gridTemplateColumns: gridTemplate, height: totalHeight }}
           >
             {/* Time gutter */}
-            <div className="border-r border-border relative">
+            <div className="bg-muted/40 relative">
               {Array.from({ length: totalHours }).map((_, i) => (
                 <div
                   key={i}
