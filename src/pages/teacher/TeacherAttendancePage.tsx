@@ -92,13 +92,17 @@ export default function TeacherAttendancePage() {
     setShowUnmarkedOnly(false);
   }, [selectedClass, selectedDate]);
 
-  // Dates with attendance records for the selected class, split by indicator color
-  const [presentDates, setPresentDates] = useState<Set<string>>(new Set());
-  const [absentDates, setAbsentDates] = useState<Set<string>>(new Set());
+  // Dates with attendance records for the selected class.
+  // Green dot = every student in the class is marked for that date.
+  // Red dot = some students marked but not all (incomplete).
+  // No dot = nothing marked.
+  const [completeDates, setCompleteDates] = useState<Set<string>>(new Set());
+  const [partialDates, setPartialDates] = useState<Set<string>>(new Set());
+  const rosterSize = students.length;
   useEffect(() => {
     if (!selectedClass) {
-      setPresentDates(new Set());
-      setAbsentDates(new Set());
+      setCompleteDates(new Set());
+      setPartialDates(new Set());
       return;
     }
     let mounted = true;
@@ -109,7 +113,7 @@ export default function TeacherAttendancePage() {
       const end = format(addWeeks(today, 13), "yyyy-MM-dd");
       let q = supabase
         .from("attendance")
-        .select("date,status")
+        .select("date,student_id")
         .eq("class", selectedClass)
         .gte("date", start)
         .lte("date", end);
@@ -120,21 +124,30 @@ export default function TeacherAttendancePage() {
         console.error("[TeacherAttendancePage] markedDates fetch failed", error);
         return;
       }
-      const green = new Set<string>();
-      const red = new Set<string>();
+      // Count unique students marked per date
+      const perDate = new Map<string, Set<string>>();
       (data ?? []).forEach((r: any) => {
-        const s = (r.status ?? "").toLowerCase();
-        if (s === "present" || s === "late") green.add(r.date);
-        if (s === "absent" || s === "excused") red.add(r.date);
+        if (!r?.date || !r?.student_id) return;
+        if (!perDate.has(r.date)) perDate.set(r.date, new Set());
+        perDate.get(r.date)!.add(r.student_id);
       });
-      setPresentDates(green);
-      setAbsentDates(red);
+      const complete = new Set<string>();
+      const partial = new Set<string>();
+      perDate.forEach((ids, date) => {
+        if (rosterSize > 0 && ids.size >= rosterSize) {
+          complete.add(date);
+        } else if (ids.size > 0) {
+          partial.add(date);
+        }
+      });
+      setCompleteDates(complete);
+      setPartialDates(partial);
     })();
     return () => {
       mounted = false;
     };
     // Refetch when class, campus, or a successful save occurs (lastSavedAt only changes on success)
-  }, [selectedClass, activeCampus, lastSavedAt]);
+  }, [selectedClass, activeCampus, lastSavedAt, rosterSize]);
   
   // Statistics state - now using Supabase data
   const currentYear = new Date().getFullYear();
@@ -475,26 +488,14 @@ export default function TeacherAttendancePage() {
                   initialFocus
                   className="w-full"
                   modifiers={{
-                    presentOnly: (date) => {
-                      const k = format(date, "yyyy-MM-dd");
-                      return presentDates.has(k) && !absentDates.has(k);
-                    },
-                    absentOnly: (date) => {
-                      const k = format(date, "yyyy-MM-dd");
-                      return absentDates.has(k) && !presentDates.has(k);
-                    },
-                    bothMarks: (date) => {
-                      const k = format(date, "yyyy-MM-dd");
-                      return presentDates.has(k) && absentDates.has(k);
-                    },
+                    complete: (date) => completeDates.has(format(date, "yyyy-MM-dd")),
+                    partial: (date) => partialDates.has(format(date, "yyyy-MM-dd")),
                   }}
                   modifiersClassNames={{
-                    presentOnly:
+                    complete:
                       "after:content-[''] after:absolute after:bottom-1 after:left-1/2 after:-translate-x-1/2 after:h-1.5 after:w-1.5 after:rounded-full after:bg-emerald-500 aria-selected:after:bg-white",
-                    absentOnly:
+                    partial:
                       "after:content-[''] after:absolute after:bottom-1 after:left-1/2 after:-translate-x-1/2 after:h-1.5 after:w-1.5 after:rounded-full after:bg-red-500 aria-selected:after:bg-white",
-                    bothMarks:
-                      "after:content-[''] after:absolute after:bottom-1 after:left-[calc(50%-4px)] after:-translate-x-1/2 after:h-1.5 after:w-1.5 after:rounded-full after:bg-emerald-500 after:shadow-[8px_0_0_0_hsl(0,84%,60%)]",
                   }}
                 />
               </PopoverContent>
