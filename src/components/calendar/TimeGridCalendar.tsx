@@ -473,7 +473,7 @@ export function TimeGridCalendar({
             className="grid pt-2 pb-3"
             style={{ gridTemplateColumns: gridTemplate }}
           >
-            <div />
+            <div className="sticky left-0 z-20 bg-card" />
             {days.map((d) => {
               const isToday = d.ymd === todayYmd;
               const isSelected = d.ymd === selectedDay;
@@ -515,7 +515,7 @@ export function TimeGridCalendar({
               className="grid pb-2"
               style={{ gridTemplateColumns: gridTemplate, height: allDayBlockHeight }}
             >
-              <div />
+              <div className="sticky left-0 z-20 bg-card" />
               {days.map((d) => {
                 const items = (allDayByDay.get(d.ymd) || []).slice(0, maxAllDay);
                 return (
@@ -549,7 +549,7 @@ export function TimeGridCalendar({
             style={{ gridTemplateColumns: gridTemplate, height: totalHeight }}
           >
             {/* Time gutter labels (no background, no border) */}
-            <div className="relative">
+            <div className="relative sticky left-0 z-20 bg-card">
               {Array.from({ length: totalHours }).map((_, i) => (
                 <div
                   key={i}
