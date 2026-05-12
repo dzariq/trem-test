@@ -235,7 +235,7 @@ export function TimeGridCalendar({
     days.reduce((mx, d) => Math.max(mx, (allDayByDay.get(d.ymd) || []).length), 0),
   );
   const allDayRowHeight = 22;
-  const allDayBlockHeight = maxAllDay > 0 ? maxAllDay * allDayRowHeight + 6 : 0;
+  const allDayBlockHeight = maxAllDay > 0 ? maxAllDay * allDayRowHeight + 14 : 0;
 
   return (
     <div className="bg-card border border-border rounded-xl overflow-hidden shadow-sm">
@@ -344,7 +344,7 @@ export function TimeGridCalendar({
           {/* All-day strip */}
           {maxAllDay > 0 && (
             <div
-              className="grid border-b border-border bg-background"
+              className="grid border-b-2 border-border bg-background pb-1.5"
               style={{ gridTemplateColumns: gridTemplate, height: allDayBlockHeight }}
             >
               <div className="border-r border-border flex items-center justify-end pr-1 text-[9px] font-medium uppercase text-muted-foreground">
