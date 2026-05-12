@@ -87,10 +87,11 @@ export function AnnouncementCarousel({
   const mainAnnouncement =
     resolvedAnnouncements.find((a) => a.is_featured) ?? resolvedAnnouncements[0];
 
-  // Below: pinned posts excluding the featured one. If none, fall back to latest.
+  // Below: pinned posts first, then the rest. Show up to 7 cards total.
   const remaining = resolvedAnnouncements.filter((a) => a.id !== mainAnnouncement?.id);
   const pinned = remaining.filter((a) => a.is_pinned);
-  const otherAnnouncements = (pinned.length > 0 ? pinned : remaining).slice(0, 3);
+  const nonPinned = remaining.filter((a) => !a.is_pinned);
+  const otherAnnouncements = [...pinned, ...nonPinned].slice(0, 7);
 
   // Build the index map so click handlers open the correct announcement in the drawer
   const indexOf = (id: AnnouncementId) =>
