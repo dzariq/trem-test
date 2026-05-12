@@ -384,7 +384,7 @@ export function TimeGridCalendar({
         className={cn(
           "overflow-hidden transition-all duration-300 ease-in-out",
           monthPickerOpen
-            ? "max-h-[420px] opacity-100 border-b border-border"
+            ? "max-h-[min(60vh,420px)] opacity-100 border-b border-border overflow-y-auto"
             : "max-h-0 opacity-0",
         )}
       >
@@ -411,7 +411,7 @@ export function TimeGridCalendar({
                   key={cell.ymd}
                   type="button"
                   onClick={() => handleMiniDayClick(cell.date)}
-                  className="flex flex-col items-center justify-start py-1"
+                  className="flex flex-col items-center justify-start py-1 min-h-11 no-callout"
                 >
                   <span
                     className={cn(
@@ -439,7 +439,7 @@ export function TimeGridCalendar({
           </div>
           {/* Month strip */}
           <div
-            className="mt-3 -mx-3 px-3 overflow-x-auto [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+            className="mt-3 -mx-3 px-3 overflow-x-auto [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden [overscroll-behavior-x:contain]"
           >
             <div className="flex items-center gap-1.5 pb-1 min-w-max">
               {MONTH_SHORT.map((m, idx) => {
@@ -450,7 +450,7 @@ export function TimeGridCalendar({
                     type="button"
                     onClick={() => handleMonthStripClick(idx)}
                     className={cn(
-                      "px-3 h-7 rounded-full text-xs font-medium transition-colors whitespace-nowrap",
+                      "px-3 min-h-9 rounded-full text-xs font-medium transition-colors whitespace-nowrap no-callout",
                       isActive
                         ? "bg-primary/15 text-primary"
                         : "bg-background text-muted-foreground border border-border hover:bg-muted/50",
@@ -466,7 +466,14 @@ export function TimeGridCalendar({
       </div>
 
       {/* Scrollable area */}
-      <div className={mode === "week" ? "overflow-x-auto" : "overflow-visible"}>
+      <div
+        className={
+          mode === "week"
+            ? "overflow-x-auto [overscroll-behavior-x:contain]"
+            : "overflow-visible"
+        }
+        style={mode === "week" ? { touchAction: "pan-x pan-y" } : undefined}
+      >
         <div style={{ minWidth: mode === "week" ? 560 : undefined }}>
           {/* Day header row — floating, no background, today inside filled circle */}
           <div
@@ -482,7 +489,7 @@ export function TimeGridCalendar({
                   key={d.ymd}
                   type="button"
                   onClick={() => onSelectDay(d.ymd)}
-                  className="flex flex-col items-center justify-center gap-1 bg-transparent"
+                  className="flex flex-col items-center justify-center gap-1 bg-transparent no-callout"
                 >
                   <span
                     className={cn(
@@ -494,7 +501,7 @@ export function TimeGridCalendar({
                   </span>
                   <span
                     className={cn(
-                      "inline-flex items-center justify-center w-8 h-8 rounded-full text-base",
+                      "inline-flex items-center justify-center w-10 h-10 sm:w-8 sm:h-8 rounded-full text-base",
                       isSelected
                         ? "bg-primary text-primary-foreground font-semibold"
                         : isToday
@@ -528,9 +535,9 @@ export function TimeGridCalendar({
                         key={`${b.kind}-${b.id}`}
                         type="button"
                         onClick={(e) => handleBlockClick(e, b, d.ymd)}
-                        title={b.title}
+                        aria-label={b.title}
                         className={cn(
-                          "h-[30px] px-2 rounded-md text-[11px] leading-[30px] font-medium truncate text-left border-transparent",
+                          "h-[30px] px-2 rounded-md text-[11px] leading-[30px] font-medium truncate text-left border-transparent no-callout",
                           b.colorClass,
                         )}
                       >
@@ -549,7 +556,10 @@ export function TimeGridCalendar({
             style={{ gridTemplateColumns: gridTemplate, height: totalHeight }}
           >
             {/* Time gutter labels (no background, no border) */}
-            <div className="relative sticky left-0 z-20 bg-card">
+            <div
+              className="relative sticky left-0 z-20 bg-card"
+              style={{ willChange: "transform" }}
+            >
               {Array.from({ length: totalHours }).map((_, i) => (
                 <div
                   key={i}
@@ -569,14 +579,20 @@ export function TimeGridCalendar({
                 <div
                   key={d.ymd}
                   className="relative"
-                  onClick={() => onSelectDay(d.ymd)}
                 >
+                  {/* Background tap layer — selects the day when tapping empty space */}
+                  <button
+                    type="button"
+                    aria-label={`Select ${d.ymd}`}
+                    onClick={() => onSelectDay(d.ymd)}
+                    className="absolute inset-0 z-0 bg-transparent no-callout"
+                  />
                   {/* Per-hour rounded cards */}
                   {Array.from({ length: totalHours }).map((_, h) => (
                     <div
                       key={h}
                       className={cn(
-                        "absolute left-1 right-1 rounded-lg border",
+                        "absolute left-1 right-1 rounded-lg border pointer-events-none",
                         isToday
                           ? "bg-muted/20 border-border/40"
                           : "bg-muted/15 border-border/40",
@@ -597,9 +613,9 @@ export function TimeGridCalendar({
                         key={`${b.kind}-${b.id}`}
                         type="button"
                         onClick={(e) => handleBlockClick(e, b, d.ymd)}
-                        title={b.title}
+                        aria-label={b.title}
                         className={cn(
-                          "absolute left-1.5 right-1.5 rounded-lg px-1.5 py-0.5 text-[10px] font-medium text-left overflow-hidden border border-transparent shadow-sm z-10",
+                          "absolute left-1.5 right-1.5 rounded-lg px-1.5 py-0.5 text-[10px] font-medium text-left overflow-hidden border border-transparent shadow-sm z-10 no-callout",
                           b.colorClass,
                         )}
                         style={{ top: clampedTop, height }}
