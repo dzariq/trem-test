@@ -1652,7 +1652,7 @@ export default function TeacherAcademicPage() {
                         aria-selected={active}
                         onClick={() => gradeEntry.setSelectedPeriod(period)}
                         className={cn(
-                          "min-w-0 inline-flex items-center justify-center gap-1.5 rounded-md border px-2 min-h-9 text-xs font-medium transition-colors [touch-action:manipulation]",
+                          "min-w-0 inline-flex items-center justify-center gap-1.5 rounded-md border px-2 min-h-11 text-xs font-medium transition-colors active:scale-[0.97] [touch-action:manipulation]",
                           active
                             ? "bg-primary text-primary-foreground border-primary"
                             : "bg-background text-foreground border-border hover:bg-muted/50",
