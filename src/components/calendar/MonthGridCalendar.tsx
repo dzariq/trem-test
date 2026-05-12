@@ -217,7 +217,6 @@ export function MonthGridCalendar({
         </div>
       </div>
 
-      {/* Expandable month strip */}
       <div
         className={cn(
           "overflow-hidden transition-all duration-300 ease-in-out",
@@ -226,7 +225,7 @@ export function MonthGridCalendar({
             : "max-h-0 opacity-0",
         )}
       >
-        <div className="px-3 py-2 bg-background overflow-x-auto [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+        <div className="px-3 py-2 bg-background overflow-x-auto [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden [overscroll-behavior-x:contain]">
           <div className="flex items-center gap-1.5 min-w-max">
             {MONTH_SHORT.map((m, idx) => {
               const isActive = idx === month.getMonth();
@@ -236,7 +235,7 @@ export function MonthGridCalendar({
                   type="button"
                   onClick={() => handleMonthStripClick(idx)}
                   className={cn(
-                    "px-3 h-7 rounded-full text-xs font-medium transition-colors whitespace-nowrap",
+                    "px-3 min-h-9 rounded-full text-xs font-medium transition-colors whitespace-nowrap no-callout",
                     isActive
                       ? "bg-primary/15 text-primary"
                       : "bg-background text-muted-foreground border border-border hover:bg-muted/50",
@@ -301,7 +300,7 @@ export function MonthGridCalendar({
               type="button"
               onClick={handleCellClick}
               className={cn(
-                "relative flex flex-col items-stretch text-left min-h-[115px] sm:min-h-[135px] p-1 m-0.5 rounded-md transition-colors",
+                "relative flex flex-col items-stretch text-left min-h-[115px] sm:min-h-[135px] p-1 m-0.5 rounded-md transition-colors no-callout",
                 inMonth ? "bg-background" : "bg-muted/30",
                 !isSelected && "hover:bg-muted/40",
               )}
@@ -343,9 +342,9 @@ export function MonthGridCalendar({
                     role="button"
                     tabIndex={-1}
                     onClick={(e) => handleChipClick(e, item)}
-                    title={item.title}
+                    aria-label={item.title}
                     className={cn(
-                      "h-[18px] px-1 rounded-[3px] text-[9px] sm:text-[10px] leading-[18px] font-medium truncate border-transparent",
+                      "h-[18px] px-1 rounded-[3px] text-[9px] sm:text-[10px] leading-[18px] font-medium truncate border-transparent no-callout",
                       item.colorClass,
                     )}
                   >

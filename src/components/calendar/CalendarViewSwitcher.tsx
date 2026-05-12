@@ -34,7 +34,7 @@ export function CalendarViewDropdown({ view, onChange, className }: CalendarView
     <DropdownMenu>
       <DropdownMenuTrigger
         className={cn(
-          "inline-flex items-center gap-1 rounded-md border border-border bg-background px-2 h-8 text-xs font-medium text-foreground hover:bg-muted/50 transition-colors",
+          "inline-flex items-center gap-1 rounded-md border border-border bg-background px-2 min-h-9 min-w-9 text-xs font-medium text-foreground hover:bg-muted/50 transition-colors no-callout",
           className,
         )}
       >
