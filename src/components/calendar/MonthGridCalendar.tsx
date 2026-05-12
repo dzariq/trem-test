@@ -55,7 +55,7 @@ export function MonthGridCalendar({
   ccaSessions,
   onEventClick,
   onSessionClick,
-  maxChipsPerDay = 4,
+  maxChipsPerDay = 3,
   view = "month",
   onViewChange,
   onZoomToDay,
@@ -196,7 +196,7 @@ export function MonthGridCalendar({
           const isToday = ymd === todayYmd;
           const isSelected = ymd === selectedDay;
           const overflowing = bucket.length > maxChipsPerDay;
-          const visibleCount = overflowing ? maxChipsPerDay - 1 : Math.min(bucket.length, maxChipsPerDay);
+          const visibleCount = Math.min(bucket.length, maxChipsPerDay);
           const visible = bucket.slice(0, visibleCount);
           const extra = bucket.length - visibleCount;
 
@@ -226,7 +226,7 @@ export function MonthGridCalendar({
               type="button"
               onClick={handleCellClick}
               className={cn(
-                "relative flex flex-col items-stretch text-left min-h-[88px] sm:min-h-[110px] p-1 transition-colors",
+                "relative flex flex-col items-stretch text-left min-h-[128px] sm:min-h-[150px] p-1 transition-colors",
                 !isLastCol && "border-r border-border",
                 !isLastRow && "border-b border-border",
                 inMonth ? "bg-background" : "bg-muted/30",
@@ -236,7 +236,7 @@ export function MonthGridCalendar({
               {isSelected && (
                 <span className="pointer-events-none absolute inset-0 ring-2 ring-inset ring-primary" />
               )}
-              <div className="flex items-center justify-start mb-1">
+              <div className="flex items-center justify-between mb-1 gap-1">
                 <span
                   className={cn(
                     "inline-flex items-center justify-center text-[11px] sm:text-xs font-medium leading-none w-5 h-5 rounded-full",
@@ -247,6 +247,21 @@ export function MonthGridCalendar({
                 >
                   {date.getDate()}
                 </span>
+                {overflowing && extra > 0 && (
+                  <span
+                    role="button"
+                    tabIndex={-1}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onSelectDay(ymd);
+                      onZoomToDay?.(ymd);
+                    }}
+                    title={`+${extra} more`}
+                    className="inline-flex items-center justify-center h-4 min-w-[18px] px-1 rounded-full text-[9px] font-semibold text-muted-foreground bg-muted/70 hover:bg-muted leading-none"
+                  >
+                    +{extra}
+                  </span>
+                )}
               </div>
               <div className="flex flex-col gap-0.5">
                 {visible.map((item) => (
@@ -264,11 +279,6 @@ export function MonthGridCalendar({
                     {item.title}
                   </div>
                 ))}
-                {overflowing && extra > 0 && (
-                  <div className="h-[18px] px-1 rounded-[3px] text-[9px] sm:text-[10px] leading-[18px] font-medium text-muted-foreground bg-muted/60 truncate">
-                    +{extra} more
-                  </div>
-                )}
               </div>
             </button>
           );
