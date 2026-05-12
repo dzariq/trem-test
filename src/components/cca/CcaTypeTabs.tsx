@@ -135,26 +135,26 @@ export function getCcaTypeColor(typeName: string | null | undefined): string {
     // CCA Type categories (Indoor, Outdoor, etc.)
     case "indoor":
     case "indoor cca":
-      return "bg-sky-100 text-sky-800 dark:bg-sky-900/50 dark:text-sky-300";
+      return "bg-sky-200 text-sky-900 dark:bg-sky-900/60 dark:text-sky-200";
     case "outdoor":
     case "outdoor cca":
-      return "bg-amber-100 text-amber-800 dark:bg-amber-900/50 dark:text-amber-300";
+      return "bg-amber-200 text-amber-900 dark:bg-amber-900/60 dark:text-amber-200";
     case "enrichment":
-      return "bg-teal-100 text-teal-800 dark:bg-teal-900/50 dark:text-teal-300";
+      return "bg-teal-200 text-teal-900 dark:bg-teal-900/60 dark:text-teal-200";
     case "competition":
-      return "bg-rose-100 text-rose-800 dark:bg-rose-900/50 dark:text-rose-300";
+      return "bg-rose-200 text-rose-900 dark:bg-rose-900/60 dark:text-rose-200";
     // Legacy category names
     case "sports":
-      return "bg-orange-100 text-orange-800 dark:bg-orange-900/50 dark:text-orange-300";
+      return "bg-orange-200 text-orange-900 dark:bg-orange-900/60 dark:text-orange-200";
     case "arts":
-      return "bg-pink-100 text-pink-800 dark:bg-pink-900/50 dark:text-pink-300";
+      return "bg-pink-200 text-pink-900 dark:bg-pink-900/60 dark:text-pink-200";
     case "academic":
-      return "bg-indigo-100 text-indigo-800 dark:bg-indigo-900/50 dark:text-indigo-300";
+      return "bg-indigo-200 text-indigo-900 dark:bg-indigo-900/60 dark:text-indigo-200";
     case "club":
     case "clubs":
-      return "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/50 dark:text-emerald-300";
+      return "bg-emerald-200 text-emerald-900 dark:bg-emerald-900/60 dark:text-emerald-200";
     case "music":
-      return "bg-violet-100 text-violet-800 dark:bg-violet-900/50 dark:text-violet-300";
+      return "bg-violet-200 text-violet-900 dark:bg-violet-900/60 dark:text-violet-200";
     default:
       return "bg-muted text-muted-foreground";
   }
