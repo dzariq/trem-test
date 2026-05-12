@@ -13,7 +13,7 @@ type NavItem = {
 
 const navItems: NavItem[] = [
   { to: "/teacher", icon: Home, label: "Home" },
-  { to: "/teacher/attendance", icon: UserCheck, label: "Attendance" },
+  { to: "/teacher/attendance", icon: UserCheck, label: "Attend" },
   { to: "/teacher/academic", customIcon: academicOwlIcon, label: "Academic" },
   { to: "/teacher/lesson-plans", icon: ClipboardList, label: "Lesson" },
   { to: "/teacher/calendar", icon: Calendar, label: "Calendar" },
@@ -44,7 +44,7 @@ export function TeacherBottomNavigation() {
     return () => target.removeEventListener("scroll", handleScroll);
   }, []);
   return <nav className={cn("fixed bottom-0 left-0 right-0 bg-card border-t border-border shadow-lg z-50 transition-transform duration-300 bottom-tabbar", isVisible ? "translate-y-0" : "translate-y-full")}>
-      <div className="flex justify-around items-center py-2 px-2">
+      <div className="grid grid-cols-5 items-stretch py-2 px-2">
         {navItems.map(item => (
           <NavLink 
             key={item.to} 
@@ -52,7 +52,7 @@ export function TeacherBottomNavigation() {
             end={item.to === "/teacher"} 
             className={({ isActive }) => 
               cn(
-                "flex flex-col items-center justify-center py-2 px-3 rounded-lg transition-all duration-200 min-w-[60px]",
+                "flex flex-col items-center justify-center py-2 px-1 rounded-lg transition-all duration-200 w-full",
                 isActive ? "text-primary bg-accent" : "text-muted-foreground hover:text-foreground hover:bg-accent/50"
               )
             }
