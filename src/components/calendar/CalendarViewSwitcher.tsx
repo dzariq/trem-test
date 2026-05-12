@@ -1,4 +1,4 @@
-import { ChevronDown } from "lucide-react";
+import { ChevronDown, CalendarDays, CalendarRange, CalendarClock, type LucideIcon } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -13,6 +13,12 @@ const LABELS: Record<CalendarViewMode, string> = {
   month: "Month",
   week: "Week",
   day: "Day",
+};
+
+const ICONS: Record<CalendarViewMode, LucideIcon> = {
+  month: CalendarDays,
+  week: CalendarRange,
+  day: CalendarClock,
 };
 
 const OPTIONS: CalendarViewMode[] = ["month", "week", "day"];
@@ -32,22 +38,30 @@ export function CalendarViewDropdown({ view, onChange, className }: CalendarView
           className,
         )}
       >
+        {(() => {
+          const Icon = ICONS[view];
+          return <Icon className="h-3.5 w-3.5 opacity-80" />;
+        })()}
         {LABELS[view]}
         <ChevronDown className="h-3.5 w-3.5 opacity-70" />
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="min-w-[8rem]">
-        {OPTIONS.map((opt) => (
-          <DropdownMenuItem
-            key={opt}
-            onSelect={() => onChange(opt)}
-            className={cn(
-              "text-sm cursor-pointer",
-              view === opt && "font-semibold bg-accent",
-            )}
-          >
-            {LABELS[opt]}
-          </DropdownMenuItem>
-        ))}
+        {OPTIONS.map((opt) => {
+          const Icon = ICONS[opt];
+          return (
+            <DropdownMenuItem
+              key={opt}
+              onSelect={() => onChange(opt)}
+              className={cn(
+                "text-sm cursor-pointer gap-2",
+                view === opt && "font-semibold bg-accent",
+              )}
+            >
+              <Icon className="h-4 w-4 opacity-80" />
+              {LABELS[opt]}
+            </DropdownMenuItem>
+          );
+        })}
       </DropdownMenuContent>
     </DropdownMenu>
   );
