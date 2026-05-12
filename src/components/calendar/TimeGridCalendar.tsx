@@ -330,10 +330,10 @@ export function TimeGridCalendar({
                   <span
                     className={cn(
                       "inline-flex items-center justify-center w-8 h-8 rounded-full text-base",
-                      isToday
+                      isSelected
                         ? "bg-primary text-primary-foreground font-semibold"
-                        : isSelected
-                          ? "ring-2 ring-primary text-foreground font-medium"
+                        : isToday
+                          ? "text-primary font-semibold"
                           : "text-foreground",
                     )}
                   >
@@ -413,8 +413,8 @@ export function TimeGridCalendar({
                       className={cn(
                         "absolute left-1 right-1 rounded-lg border",
                         isToday
-                          ? "bg-primary/5 border-primary/20"
-                          : "bg-card border-border/60",
+                          ? "bg-muted/40 border-border/60"
+                          : "bg-muted/30 border-border/60",
                       )}
                       style={{ top: h * HOUR_PX + 3, height: HOUR_PX - 6 }}
                     />
