@@ -63,6 +63,7 @@ export default function TeacherAttendancePage() {
   const { activeCampus } = useCampus();
   const [activeTab, setActiveTab] = useState<TabType>("take");
   const [showUnmarkedOnly, setShowUnmarkedOnly] = useState(false);
+  const [datePickerOpen, setDatePickerOpen] = useState(false);
 
   // Use the new Supabase-connected hook for Take Attendance tab
   const {
@@ -473,37 +474,51 @@ export default function TeacherAttendancePage() {
               </SelectContent>
             </Select>
 
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button variant="outline" className="flex-1 justify-start text-left font-normal">
+            <div className="flex-1">
+              <Button
+                type="button"
+                variant="outline"
+                className="w-full justify-start text-left font-normal"
+                onClick={() => setDatePickerOpen(true)}
+              >
                   <CalendarIcon className="mr-2 h-4 w-4" />
                   {format(selectedDate, "PPP")}
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent
-                align="center"
-                sideOffset={8}
-                className="!fixed !left-1/2 !top-1/2 !z-[100] w-[320px] !-translate-x-1/2 !-translate-y-1/2 p-0"
-              >
-                <Calendar
-                  mode="single"
-                  selected={selectedDate}
-                  onSelect={(date) => date && setSelectedDate(date)}
-                  initialFocus
-                  className="w-full"
-                  modifiers={{
-                    complete: (date) => completeDates.has(format(date, "yyyy-MM-dd")),
-                    partial: (date) => partialDates.has(format(date, "yyyy-MM-dd")),
-                  }}
-                  modifiersClassNames={{
-                    complete:
-                      "after:content-[''] after:absolute after:bottom-1 after:left-1/2 after:-translate-x-1/2 after:h-1.5 after:w-1.5 after:rounded-full after:bg-primary",
-                    partial:
-                      "after:content-[''] after:absolute after:bottom-1 after:left-1/2 after:-translate-x-1/2 after:h-1.5 after:w-1.5 after:rounded-full after:bg-destructive",
-                  }}
-                />
-              </PopoverContent>
-            </Popover>
+              </Button>
+              {datePickerOpen && (
+                <div
+                  className="fixed inset-0 z-[100] flex items-center justify-center bg-foreground/10 p-4"
+                  onClick={() => setDatePickerOpen(false)}
+                >
+                  <div
+                    className="w-[320px] max-w-[calc(100vw-2rem)] rounded-md border bg-popover p-0 text-popover-foreground shadow-md"
+                    onClick={(event) => event.stopPropagation()}
+                  >
+                    <Calendar
+                      mode="single"
+                      selected={selectedDate}
+                      onSelect={(date) => {
+                        if (date) {
+                          setSelectedDate(date);
+                          setDatePickerOpen(false);
+                        }
+                      }}
+                      initialFocus
+                      className="w-full"
+                      modifiers={{
+                        complete: (date) => completeDates.has(format(date, "yyyy-MM-dd")),
+                        partial: (date) => partialDates.has(format(date, "yyyy-MM-dd")),
+                      }}
+                      modifiersClassNames={{
+                        complete:
+                          "aria-selected:!bg-primary aria-selected:!text-primary-foreground after:content-[''] after:absolute after:bottom-1 after:left-1/2 after:-translate-x-1/2 after:h-1.5 after:w-1.5 after:rounded-full after:bg-primary",
+                        partial:
+                          "aria-selected:!bg-destructive aria-selected:!text-destructive-foreground after:content-[''] after:absolute after:bottom-1 after:left-1/2 after:-translate-x-1/2 after:h-1.5 after:w-1.5 after:rounded-full after:bg-destructive",
+                      }}
+                    />
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
 
           {/* Summary */}
