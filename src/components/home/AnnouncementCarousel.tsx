@@ -228,7 +228,7 @@ export function AnnouncementCarousel({
               {otherAnnouncements.map((announcement) => (
                 <CarouselItem key={announcement.id} className="pl-2 basis-[75%]">
                   <Card 
-                    className="bg-card border-border shadow-sm overflow-hidden cursor-pointer active:scale-[0.98] transition-transform"
+                    className="bg-card border-border shadow-sm overflow-hidden cursor-pointer active:scale-[0.98] transition-transform h-full flex flex-col"
                     onClick={() => handleAnnouncementClick(indexOf(announcement.id))}
                   >
                     <div className="relative h-20 overflow-hidden">
@@ -269,12 +269,12 @@ export function AnnouncementCarousel({
                         )}
                       </div>
                     </div>
-                    <CardContent className="p-3 pt-2">
+                    <CardContent className="p-3 pt-2 flex-1 flex flex-col">
                       <h3 className="font-medium text-foreground text-sm line-clamp-1 mb-1">
                         {announcement.title}
                       </h3>
-                      <p className="text-xs text-muted-foreground line-clamp-2">
-                        {announcement.snippet}
+                      <p className="text-xs text-muted-foreground line-clamp-2 min-h-[2rem]">
+                        {announcement.snippet || "\u00A0"}
                       </p>
                     </CardContent>
                   </Card>
