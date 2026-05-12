@@ -5230,7 +5230,7 @@ export default function TeacherAcademicPage() {
                 </div>
 
                 {/* View Mode Toggle */}
-                <div className="flex gap-1 bg-muted p-1 rounded-lg">
+                <div className="flex gap-1 bg-muted/50 p-1 rounded-lg">
                   <button
                     onClick={() => setBoxPlotViewMode("student")}
                     className={cn(
@@ -5276,7 +5276,7 @@ export default function TeacherAcademicPage() {
                       </SelectContent>
                     </Select>
                   </div>
-                  <span className="text-muted-foreground text-xs mt-5">to</span>
+                  <span className="text-muted-foreground text-xs font-medium mt-5">to</span>
                   <div className="flex-1">
                     <label className="text-xs text-muted-foreground mb-1 block">End Year</label>
                       <Select value={boxPlotEndYear} disabled={availableBoxPlotYears.length === 0} onValueChange={(v) => {
@@ -5384,9 +5384,9 @@ export default function TeacherAcademicPage() {
                           <label className="text-xs text-muted-foreground mb-1 block">
                             Subjects {boxPlotStudentSubjects.length > 0 && `(${boxPlotStudentSubjects.length} selected)`}
                           </label>
-                          <Popover>
+                           <Popover>
                             <PopoverTrigger asChild>
-                              <Button variant="outline" className="w-full h-9 justify-between text-xs font-normal">
+                              <Button variant="outline" className="w-full h-9 justify-between text-xs font-normal bg-background">
                                 {boxPlotStudentSubjects.length === 0 
                                   ? "All Subjects" 
                                   : boxPlotStudentSubjects.length === 1 
@@ -5443,23 +5443,23 @@ export default function TeacherAcademicPage() {
                           {/* Show selected subjects as badges */}
                           <div className="flex flex-wrap gap-1 mt-2">
                             {boxPlotStudentSubjects.length === 0 ? (
-                              <Badge variant="secondary" className="text-[10px] px-2 py-0.5 bg-muted text-muted-foreground">
+                              <Badge variant="secondary" className="text-[10px] px-2 py-0.5 bg-blue-50 text-blue-700 border border-blue-200/60 dark:bg-blue-950/40 dark:text-blue-300">
                                 All Subjects
                               </Badge>
                             ) : boxPlotStudentSubjects.length <= 4 ? (
                               boxPlotStudentSubjects.map(subject => (
-                                <Badge key={subject} variant="secondary" className="text-[10px] px-2 py-0.5 bg-muted text-muted-foreground">
+                                <Badge key={subject} variant="secondary" className="text-[10px] px-2 py-0.5 bg-blue-50 text-blue-700 border border-blue-200/60 dark:bg-blue-950/40 dark:text-blue-300">
                                   {shortenSubjectName(subject)}
                                 </Badge>
                               ))
                             ) : (
                               <>
                                 {boxPlotStudentSubjects.slice(0, 3).map(subject => (
-                                  <Badge key={subject} variant="secondary" className="text-[10px] px-2 py-0.5 bg-muted text-muted-foreground">
+                                  <Badge key={subject} variant="secondary" className="text-[10px] px-2 py-0.5 bg-blue-50 text-blue-700 border border-blue-200/60 dark:bg-blue-950/40 dark:text-blue-300">
                                     {shortenSubjectName(subject)}
                                   </Badge>
                                 ))}
-                                <Badge variant="secondary" className="text-[10px] px-2 py-0.5 bg-muted text-muted-foreground">
+                                <Badge variant="secondary" className="text-[10px] px-2 py-0.5 bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400">
                                   +{boxPlotStudentSubjects.length - 3} more
                                 </Badge>
                               </>
@@ -5482,15 +5482,23 @@ export default function TeacherAcademicPage() {
                           <div className="flex flex-wrap gap-1 mt-2">
                             {boxPlotStudentExamType === "all" ? (
                               <>
-                                <Badge variant="secondary" className="text-[10px] px-2 py-0.5 bg-muted text-muted-foreground">
+                                <Badge variant="secondary" className="text-[10px] px-2 py-0.5 bg-amber-50 text-amber-700 border border-amber-200/60 dark:bg-amber-950/40 dark:text-amber-300">
                                   Mid-Year
                                 </Badge>
-                                <Badge variant="secondary" className="text-[10px] px-2 py-0.5 bg-muted text-muted-foreground">
+                                <Badge variant="secondary" className="text-[10px] px-2 py-0.5 bg-emerald-50 text-emerald-700 border border-emerald-200/60 dark:bg-emerald-950/40 dark:text-emerald-300">
                                   Year-End
                                 </Badge>
                               </>
                             ) : (
-                              <Badge variant="secondary" className="text-[10px] px-2 py-0.5 bg-muted text-muted-foreground">
+                              <Badge
+                                variant="secondary"
+                                className={cn(
+                                  "text-[10px] px-2 py-0.5 border",
+                                  boxPlotStudentExamType === "Mid-Year"
+                                    ? "bg-amber-50 text-amber-700 border-amber-200/60 dark:bg-amber-950/40 dark:text-amber-300"
+                                    : "bg-emerald-50 text-emerald-700 border-emerald-200/60 dark:bg-emerald-950/40 dark:text-emerald-300"
+                                )}
+                              >
                                 {boxPlotStudentExamType}
                               </Badge>
                             )}
