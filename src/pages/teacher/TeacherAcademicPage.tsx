@@ -1832,7 +1832,7 @@ export default function TeacherAcademicPage() {
                                     placeholder="Enter homeroom teacher comment..."
                                     value={behavior.homeroomComment}
                                     onChange={(e) => updateBehavior(student.id, "homeroomComment", e.target.value)}
-                                    className="min-h-[60px] text-sm resize-none bg-rose-50/50 dark:bg-rose-950/20 border-rose-200"
+                                    className="min-h-[60px] text-base sm:text-sm resize-none bg-rose-50/50 dark:bg-rose-950/20 border-rose-200"
                                   />
                                 </div>
                                 <div>
@@ -1843,7 +1843,7 @@ export default function TeacherAcademicPage() {
                                     placeholder="Enter responsibility comment..."
                                     value={behavior.responsibilityComment}
                                     onChange={(e) => updateBehavior(student.id, "responsibilityComment", e.target.value)}
-                                    className="min-h-[60px] text-sm resize-none bg-purple-50/50 dark:bg-purple-950/20 border-purple-200"
+                                    className="min-h-[60px] text-base sm:text-sm resize-none bg-purple-50/50 dark:bg-purple-950/20 border-purple-200"
                                   />
                                 </div>
                               </div>
@@ -2047,7 +2047,7 @@ export default function TeacherAcademicPage() {
                             }}
                             disabled={!isOpen}
                             className={cn(
-                              "min-h-[60px] text-sm resize-none border-border bg-background",
+                              "min-h-[60px] text-base sm:text-sm resize-none border-border bg-background",
                               !isOpen && "opacity-60 cursor-not-allowed"
                             )}
                           />
@@ -2226,7 +2226,7 @@ export default function TeacherAcademicPage() {
                                         }} 
                                         disabled={!gradeEntry.selectedPeriod?.is_open_for_grading}
                                         className={cn(
-                                          "min-h-[70px] text-sm resize-none border-border bg-background",
+                                          "min-h-[70px] text-base sm:text-sm resize-none border-border bg-background",
                                           !gradeEntry.selectedPeriod?.is_open_for_grading && "opacity-60 cursor-not-allowed"
                                         )}
                                       />
@@ -2265,7 +2265,7 @@ export default function TeacherAcademicPage() {
                                         }} 
                                         disabled={!gradeEntry.selectedPeriod?.is_open_for_grading}
                                         className={cn(
-                                          "min-h-[70px] text-sm resize-none border-border bg-background",
+                                          "min-h-[70px] text-base sm:text-sm resize-none border-border bg-background",
                                           !gradeEntry.selectedPeriod?.is_open_for_grading && "opacity-60 cursor-not-allowed"
                                         )}
                                       />
@@ -2301,7 +2301,7 @@ export default function TeacherAcademicPage() {
                                         maxLength={300}
                                         disabled={!gradeEntry.selectedPeriod?.is_open_for_grading}
                                         className={cn(
-                                          "min-h-[70px] text-sm resize-none border-border bg-background",
+                                          "min-h-[70px] text-base sm:text-sm resize-none border-border bg-background",
                                           !gradeEntry.selectedPeriod?.is_open_for_grading && "opacity-60 cursor-not-allowed"
                                         )}
                                       />
