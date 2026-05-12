@@ -198,7 +198,7 @@ export function AnnouncementCarousel({
               <h3 className="font-bold text-foreground text-lg mb-2">
                 {mainAnnouncement.title}
               </h3>
-              <p className="text-sm text-muted-foreground mb-4">
+              <p className="text-sm text-muted-foreground mb-4 line-clamp-2">
                 {mainAnnouncement.snippet}
               </p>
             <Button 
@@ -273,7 +273,7 @@ export function AnnouncementCarousel({
                       <h3 className="font-medium text-foreground text-sm line-clamp-1 mb-1">
                         {announcement.title}
                       </h3>
-                      <p className="text-xs text-muted-foreground line-clamp-1">
+                      <p className="text-xs text-muted-foreground line-clamp-2">
                         {announcement.snippet}
                       </p>
                     </CardContent>
