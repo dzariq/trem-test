@@ -300,7 +300,7 @@ export function MonthGridCalendar({
               type="button"
               onClick={handleCellClick}
               className={cn(
-                "relative flex flex-col items-stretch text-left min-h-[104px] sm:min-h-[122px] p-1 m-0.5 rounded-md transition-colors no-callout",
+                "relative flex flex-col items-stretch text-left min-h-[104px] sm:min-h-[122px] p-0.5 m-px rounded-md transition-colors no-callout",
                 inMonth ? "bg-background" : "bg-muted/30",
                 !isSelected && "hover:bg-muted/40",
               )}
@@ -344,7 +344,7 @@ export function MonthGridCalendar({
                     onClick={(e) => handleChipClick(e, item)}
                     aria-label={item.title}
                     className={cn(
-                      "h-[18px] px-1 rounded-[3px] text-[9px] sm:text-[10px] leading-[18px] font-medium truncate border-transparent no-callout",
+                      "h-[16px] px-0.5 rounded-[3px] text-[9px] sm:text-[10px] leading-[16px] font-medium truncate border-transparent no-callout",
                       item.colorClass,
                     )}
                   >
