@@ -162,17 +162,11 @@ export function MonthGridCalendar({
           <button
             type="button"
             onClick={() => setMonthPickerOpen((v) => !v)}
-            className="inline-flex items-center gap-1 text-2xl sm:text-3xl font-semibold text-foreground truncate hover:opacity-80 transition-opacity"
+            className="inline-flex items-center text-2xl sm:text-3xl font-semibold text-foreground truncate hover:opacity-80 transition-opacity"
             aria-expanded={monthPickerOpen}
             aria-label="Toggle month picker"
           >
             <span className="truncate">{MONTH_SHORT[month.getMonth()].toUpperCase()}</span>
-            <ChevronDown
-              className={cn(
-                "h-5 w-5 opacity-70 transition-transform",
-                monthPickerOpen && "rotate-180",
-              )}
-            />
           </button>
           {onViewChange && (
             <CalendarViewDropdown view={view} onChange={onViewChange} />
