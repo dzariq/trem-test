@@ -82,7 +82,7 @@ export function TimeGridCalendar({
   onEventClick,
   onSessionClick,
   startHour = 7,
-  endHour = 19,
+  endHour = 21,
   view,
   onViewChange,
   onBackToMonth,
@@ -291,14 +291,16 @@ export function TimeGridCalendar({
     if (mode === "day") onSelectDay(toYmd(nextDate));
   };
 
-  // Layout: time gutter (48px) + N day columns
-  const GUTTER = 44;
-  const colMinWidth = mode === "day" ? "1fr" : "minmax(64px, 1fr)";
+  // Layout: time gutter + N day columns. Use minmax(0,1fr) so columns always
+  // fit the viewport (no horizontal scroll on small phones).
+  const GUTTER = mode === "week" ? 36 : 44;
+  const colMinWidth = mode === "day" ? "1fr" : "minmax(0, 1fr)";
   const gridTemplate = `${GUTTER}px repeat(${days.length}, ${colMinWidth})`;
 
-  // Max all-day rows across visible days (capped)
+  // Cap all-day rows; remember overflow per-day to render "+N more"
+  const ALL_DAY_CAP = 2;
   const maxAllDay = Math.min(
-    3,
+    ALL_DAY_CAP,
     days.reduce((mx, d) => Math.max(mx, (allDayByDay.get(d.ymd) || []).length), 0),
   );
   const allDayRowHeight = 30;
@@ -465,16 +467,9 @@ export function TimeGridCalendar({
         </div>
       </div>
 
-      {/* Scrollable area */}
-      <div
-        className={
-          mode === "week"
-            ? "overflow-x-auto [overscroll-behavior-x:contain]"
-            : "overflow-visible"
-        }
-        style={mode === "week" ? { touchAction: "pan-x pan-y" } : undefined}
-      >
-        <div style={{ minWidth: mode === "week" ? 560 : undefined }}>
+      {/* Calendar body — fits viewport, no horizontal scroll */}
+      <div className="overflow-visible">
+        <div>
           {/* Day header row — floating, no background, today inside filled circle */}
           <div
             className="grid pt-2 pb-3"
