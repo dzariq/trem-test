@@ -5,7 +5,7 @@ import { cn } from "@/lib/utils";
 import { openExternal } from "@/lib/native/openExternal";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Calendar, Check, ChevronLeft, ChevronRight, Download, FileText, Inbox, ShieldCheck } from "lucide-react";
+import { Calendar, Check, ChevronLeft, ChevronRight, Download, FileText, Inbox, ShieldCheck, Star } from "lucide-react";
 import { markAnnouncementRead, acknowledgeAnnouncement, type AnnouncementAttachment } from "@/data/announcements";
 import { PDFViewerDialog } from "@/components/PDFViewerDialog";
 import { AnnouncementHtmlContent } from "@/components/announcements/AnnouncementHtmlContent";
@@ -46,6 +46,8 @@ interface Announcement {
   is_read?: boolean;
   requires_acknowledgement?: boolean;
   is_acknowledged?: boolean;
+  priority?: string | null;
+  is_featured?: boolean;
 }
 
 interface AnnouncementDrawerProps {
