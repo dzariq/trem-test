@@ -515,20 +515,42 @@ export function AnnouncementDrawer({
                 Prev
               </Button>
 
-              <div className="flex items-center gap-1.5 flex-wrap justify-center overflow-hidden">
-                {announcements.map((_, idx) => (
-                  <button
-                    key={idx}
-                    onClick={() => onNavigate(idx)}
-                    className={cn(
-                      "rounded-full transition-all duration-200 flex-shrink-0",
-                      idx === currentIndex
-                        ? "w-6 h-2 bg-primary"
-                        : "w-2 h-2 bg-muted-foreground/25 hover:bg-muted-foreground/40"
-                    )}
-                  />
-                ))}
-              </div>
+              {(() => {
+                const total = announcements.length;
+                const MAX = 7;
+                let start = 0;
+                let end = total;
+                if (total > MAX) {
+                  const half = Math.floor(MAX / 2);
+                  start = Math.max(0, Math.min(currentIndex - half, total - MAX));
+                  end = start + MAX;
+                }
+                const visible = Array.from({ length: end - start }, (_, i) => start + i);
+                return (
+                  <div className="flex items-center gap-1.5 justify-center overflow-hidden flex-1 min-w-0">
+                    {visible.map((idx) => {
+                      const isEdgeFade =
+                        total > MAX &&
+                        ((idx === start && start > 0) ||
+                          (idx === end - 1 && end < total));
+                      return (
+                        <button
+                          key={idx}
+                          onClick={() => onNavigate(idx)}
+                          className={cn(
+                            "rounded-full transition-all duration-200 flex-shrink-0",
+                            idx === currentIndex
+                              ? "w-6 h-2 bg-primary"
+                              : isEdgeFade
+                                ? "w-1.5 h-1.5 bg-muted-foreground/20"
+                                : "w-2 h-2 bg-muted-foreground/25 hover:bg-muted-foreground/40"
+                          )}
+                        />
+                      );
+                    })}
+                  </div>
+                );
+              })()}
 
               <Button
                 variant="outline"
