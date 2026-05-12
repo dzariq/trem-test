@@ -221,12 +221,21 @@ export async function fetchStudentsByClass(className: string): Promise<GradeEntr
   return data || [];
 }
 
-// Fetch subjects (optionally filter by year level)
-export async function fetchSubjects(yearLevel?: string): Promise<SubjectInfo[]> {
-  const { data, error } = await supabase
+// Fetch subjects (optionally filter by year level and campus code)
+export async function fetchSubjects(
+  yearLevel?: string,
+  campusCode?: string | null,
+): Promise<SubjectInfo[]> {
+  let query = supabase
     .from("subjects")
-    .select("id, name, code, year_levels")
+    .select("id, name, code, year_levels, campus_code")
     .order("name");
+
+  if (campusCode) {
+    query = query.or(`campus_code.eq.${campusCode},campus_code.is.null`);
+  }
+
+  const { data, error } = await query;
 
   if (error) {
     logSupabaseError("gradeEntry/fetchSubjects", error);
