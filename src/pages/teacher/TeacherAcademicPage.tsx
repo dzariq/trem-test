@@ -1652,7 +1652,7 @@ export default function TeacherAcademicPage() {
                         aria-selected={active}
                         onClick={() => gradeEntry.setSelectedPeriod(period)}
                         className={cn(
-                          "min-w-0 inline-flex items-center justify-center gap-1.5 rounded-md border px-2 min-h-9 text-xs font-medium transition-colors [touch-action:manipulation]",
+                          "min-w-0 inline-flex items-center justify-center gap-1.5 rounded-md border px-2 min-h-11 text-xs font-medium transition-colors active:scale-[0.97] [touch-action:manipulation]",
                           active
                             ? "bg-primary text-primary-foreground border-primary"
                             : "bg-background text-foreground border-border hover:bg-muted/50",
@@ -1832,7 +1832,7 @@ export default function TeacherAcademicPage() {
                                     placeholder="Enter homeroom teacher comment..."
                                     value={behavior.homeroomComment}
                                     onChange={(e) => updateBehavior(student.id, "homeroomComment", e.target.value)}
-                                    className="min-h-[60px] text-sm resize-none bg-rose-50/50 dark:bg-rose-950/20 border-rose-200"
+                                    className="min-h-[60px] text-base sm:text-sm resize-none bg-rose-50/50 dark:bg-rose-950/20 border-rose-200"
                                   />
                                 </div>
                                 <div>
@@ -1843,7 +1843,7 @@ export default function TeacherAcademicPage() {
                                     placeholder="Enter responsibility comment..."
                                     value={behavior.responsibilityComment}
                                     onChange={(e) => updateBehavior(student.id, "responsibilityComment", e.target.value)}
-                                    className="min-h-[60px] text-sm resize-none bg-purple-50/50 dark:bg-purple-950/20 border-purple-200"
+                                    className="min-h-[60px] text-base sm:text-sm resize-none bg-purple-50/50 dark:bg-purple-950/20 border-purple-200"
                                   />
                                 </div>
                               </div>
@@ -1856,7 +1856,7 @@ export default function TeacherAcademicPage() {
                 </div>
 
                 <Button 
-                  className="fixed z-50 shadow-xl bottom-24 right-4 h-14 w-14 rounded-full p-0 bg-purple-600 hover:bg-purple-700"
+                  className="fixed z-[60] shadow-xl right-[calc(env(safe-area-inset-right)+1rem)] bottom-[calc(env(safe-area-inset-bottom)+6rem)] h-14 w-14 rounded-full p-0 bg-purple-600 hover:bg-purple-700 active:scale-[0.96] transition-transform [touch-action:manipulation]"
                   onClick={() => {
                     toast.success(
                       "Behavior saved",
@@ -2047,7 +2047,7 @@ export default function TeacherAcademicPage() {
                             }}
                             disabled={!isOpen}
                             className={cn(
-                              "min-h-[60px] text-sm resize-none border-border bg-background",
+                              "min-h-[60px] text-base sm:text-sm resize-none border-border bg-background",
                               !isOpen && "opacity-60 cursor-not-allowed"
                             )}
                           />
@@ -2226,7 +2226,7 @@ export default function TeacherAcademicPage() {
                                         }} 
                                         disabled={!gradeEntry.selectedPeriod?.is_open_for_grading}
                                         className={cn(
-                                          "min-h-[70px] text-sm resize-none border-border bg-background",
+                                          "min-h-[70px] text-base sm:text-sm resize-none border-border bg-background",
                                           !gradeEntry.selectedPeriod?.is_open_for_grading && "opacity-60 cursor-not-allowed"
                                         )}
                                       />
@@ -2265,7 +2265,7 @@ export default function TeacherAcademicPage() {
                                         }} 
                                         disabled={!gradeEntry.selectedPeriod?.is_open_for_grading}
                                         className={cn(
-                                          "min-h-[70px] text-sm resize-none border-border bg-background",
+                                          "min-h-[70px] text-base sm:text-sm resize-none border-border bg-background",
                                           !gradeEntry.selectedPeriod?.is_open_for_grading && "opacity-60 cursor-not-allowed"
                                         )}
                                       />
@@ -2301,7 +2301,7 @@ export default function TeacherAcademicPage() {
                                         maxLength={300}
                                         disabled={!gradeEntry.selectedPeriod?.is_open_for_grading}
                                         className={cn(
-                                          "min-h-[70px] text-sm resize-none border-border bg-background",
+                                          "min-h-[70px] text-base sm:text-sm resize-none border-border bg-background",
                                           !gradeEntry.selectedPeriod?.is_open_for_grading && "opacity-60 cursor-not-allowed"
                                         )}
                                       />
@@ -2322,7 +2322,7 @@ export default function TeacherAcademicPage() {
                       const saveButton = (
                         <Button 
                           className={cn(
-                            "fixed z-50 shadow-xl bottom-24 right-4",
+                            "fixed z-[60] shadow-xl right-[calc(env(safe-area-inset-right)+1rem)] bottom-[calc(env(safe-area-inset-bottom)+6rem)] active:scale-[0.96] transition-transform [touch-action:manipulation]",
                             isGradingClosed 
                               ? "h-12 px-4 rounded-full gap-2" 
                               : "h-14 px-5 rounded-full gap-2"
@@ -3416,7 +3416,7 @@ export default function TeacherAcademicPage() {
 
                 {/* Performance Dialog */}
                 <Dialog open={performanceDialogOpen} onOpenChange={setPerformanceDialogOpen}>
-                  <DialogContent className="w-[95vw] max-w-lg h-[85vh] rounded-2xl overflow-hidden flex flex-col">
+                  <DialogContent className="w-[95vw] max-w-lg h-[100dvh] max-h-[85vh] rounded-2xl overflow-hidden flex flex-col pb-[calc(env(safe-area-inset-bottom)+0.5rem)]">
                     <DialogHeader>
                       <DialogTitle>Student Performance</DialogTitle>
                     </DialogHeader>
@@ -3539,7 +3539,7 @@ export default function TeacherAcademicPage() {
 
                 {/* Bands Report Dialog */}
                 <Dialog open={bandsReportDialogOpen} onOpenChange={setBandsReportDialogOpen}>
-                  <DialogContent className="w-[95vw] max-w-2xl max-h-[90vh] rounded-2xl overflow-hidden flex flex-col">
+                  <DialogContent className="w-[95vw] max-w-2xl h-[100dvh] max-h-[90vh] rounded-2xl overflow-hidden flex flex-col pb-[calc(env(safe-area-inset-bottom)+0.5rem)]">
                     <DialogHeader className="flex flex-row items-center justify-between pr-10">
                       <DialogTitle className="flex items-center gap-2">
                         <FileText className="h-5 w-5 text-primary" />
@@ -6345,7 +6345,7 @@ export default function TeacherAcademicPage() {
 
               {!isAtBottom && (
                 <Button
-                  className="fixed z-50 shadow-xl bottom-24 right-4 h-14 w-14 rounded-full p-0 bg-emerald-600 hover:bg-emerald-700 transition-all duration-300"
+                  className="fixed z-[60] shadow-xl right-[calc(env(safe-area-inset-right)+1rem)] bottom-[calc(env(safe-area-inset-bottom)+6rem)] h-14 w-14 rounded-full p-0 bg-emerald-600 hover:bg-emerald-700 active:scale-[0.96] transition-all duration-300 [touch-action:manipulation]"
                   onClick={() => {
                     if (analysisSubTab === 'overview') {
                       setOverviewReportDialogOpen(true);
@@ -6370,7 +6370,7 @@ export default function TeacherAcademicPage() {
 
       {/* Overview Report Dialog */}
       <Dialog open={overviewReportDialogOpen} onOpenChange={setOverviewReportDialogOpen}>
-        <DialogContent className="w-[95vw] max-w-3xl h-[90vh] rounded-2xl overflow-hidden flex flex-col">
+        <DialogContent className="w-[95vw] max-w-3xl h-[100dvh] max-h-[90vh] rounded-2xl overflow-hidden flex flex-col pb-[calc(env(safe-area-inset-bottom)+0.5rem)]">
           <DialogHeader className="flex flex-row items-center justify-between pr-12">
             <DialogTitle>Overview Report</DialogTitle>
             <div className="flex gap-2">
@@ -6720,7 +6720,7 @@ export default function TeacherAcademicPage() {
 
       {/* Trends Report Dialog */}
       <Dialog open={trendsReportDialogOpen} onOpenChange={setTrendsReportDialogOpen}>
-        <DialogContent className="w-[95vw] max-w-3xl h-[90vh] rounded-2xl overflow-hidden flex flex-col">
+        <DialogContent className="w-[95vw] max-w-3xl h-[100dvh] max-h-[90vh] rounded-2xl overflow-hidden flex flex-col pb-[calc(env(safe-area-inset-bottom)+0.5rem)]">
           <DialogHeader className="flex flex-row items-center justify-between pr-12">
             <DialogTitle>Trends Report</DialogTitle>
             <div className="flex gap-2">
@@ -7155,7 +7155,7 @@ export default function TeacherAcademicPage() {
 
       {/* Comparison Report Dialog */}
       <Dialog open={comparisonReportDialogOpen} onOpenChange={setComparisonReportDialogOpen}>
-        <DialogContent className="w-[95vw] max-w-3xl h-[90vh] rounded-2xl overflow-hidden flex flex-col">
+        <DialogContent className="w-[95vw] max-w-3xl h-[100dvh] max-h-[90vh] rounded-2xl overflow-hidden flex flex-col pb-[calc(env(safe-area-inset-bottom)+0.5rem)]">
           <DialogHeader className="flex flex-row items-center justify-between pr-12">
             <DialogTitle>Comparison Report</DialogTitle>
             <div className="flex gap-2">
@@ -7515,7 +7515,7 @@ export default function TeacherAcademicPage() {
 
       {/* Box Plot Report Dialog - Enhanced with Professional Design */}
       <Dialog open={boxPlotReportDialogOpen} onOpenChange={setBoxPlotReportDialogOpen}>
-        <DialogContent className="w-[95vw] max-w-3xl max-h-[90vh] rounded-2xl overflow-hidden flex flex-col">
+        <DialogContent className="w-[95vw] max-w-3xl h-[100dvh] max-h-[90vh] rounded-2xl overflow-hidden flex flex-col pb-[calc(env(safe-area-inset-bottom)+0.5rem)]">
           <DialogHeader className="flex flex-row items-center justify-between pr-10">
             <DialogTitle className="flex items-center gap-2">
               <BarChart3 className="h-5 w-5 text-primary" />
