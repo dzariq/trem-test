@@ -1,11 +1,12 @@
 import { useMemo, type MouseEvent } from "react";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { getEventBadgeColor } from "@/lib/calendarUtils";
 import { getCcaTypeColor } from "@/components/cca/CcaTypeTabs";
 import type { UpcomingEvent } from "@/data/calendar";
 import type { CcaCalendarSession } from "@/hooks/useCcaSessionsCalendar";
+import { CalendarViewDropdown, type CalendarViewMode } from "./CalendarViewSwitcher";
 
 export type TimeGridMode = "week" | "day";
 
@@ -22,6 +23,9 @@ interface TimeGridCalendarProps {
   onSessionClick?: (session: CcaCalendarSession) => void;
   startHour?: number;
   endHour?: number;
+  view?: CalendarViewMode;
+  onViewChange?: (view: CalendarViewMode) => void;
+  onBackToMonth?: () => void;
 }
 
 const WEEKDAY_SHORT = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
@@ -73,6 +77,9 @@ export function TimeGridCalendar({
   onSessionClick,
   startHour = 7,
   endHour = 19,
+  view,
+  onViewChange,
+  onBackToMonth,
 }: TimeGridCalendarProps) {
   const todayYmd = toYmd(new Date());
   const HOUR_PX = 48;
@@ -229,29 +236,47 @@ export function TimeGridCalendar({
   return (
     <div className="bg-card border border-border rounded-xl overflow-hidden shadow-sm">
       {/* Header */}
-      <div className="flex items-center justify-between px-2 py-2 border-b border-border">
-        <Button
-          type="button"
-          variant="outline"
-          size="icon"
-          className="h-9 w-9 rounded-md"
-          onClick={goPrev}
-          aria-label="Previous"
-        >
-          <ChevronLeft className="h-5 w-5" />
-        </Button>
-        <div className="text-sm sm:text-base font-semibold text-foreground text-center">
-          {headerLabel}
+      <div className="flex items-center justify-between gap-2 px-2 py-2 border-b border-border">
+        <div className="flex items-center gap-1.5 min-w-0">
+          {onBackToMonth && (
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              className="h-8 px-2 rounded-md text-xs gap-1 shrink-0"
+              onClick={onBackToMonth}
+              aria-label="Back to month view"
+            >
+              <ArrowLeft className="h-3.5 w-3.5" />
+              Back
+            </Button>
+          )}
+          <Button
+            type="button"
+            variant="outline"
+            size="icon"
+            className="h-8 w-8 rounded-md shrink-0"
+            onClick={goPrev}
+            aria-label="Previous"
+          >
+            <ChevronLeft className="h-4 w-4" />
+          </Button>
+          <div className="text-sm sm:text-base font-semibold text-foreground truncate">
+            {headerLabel}
+          </div>
+          {onViewChange && (
+            <CalendarViewDropdown view={view ?? (mode as CalendarViewMode)} onChange={onViewChange} />
+          )}
         </div>
         <Button
           type="button"
           variant="outline"
           size="icon"
-          className="h-9 w-9 rounded-md"
+          className="h-8 w-8 rounded-md shrink-0"
           onClick={goNext}
           aria-label="Next"
         >
-          <ChevronRight className="h-5 w-5" />
+          <ChevronRight className="h-4 w-4" />
         </Button>
       </div>
 

@@ -471,10 +471,6 @@ export default function CalendarPage() {
             </div>
 
             {/* Calendar Component */}
-            <div className="flex justify-end pb-2">
-              <CalendarViewSwitcher view={view} onChange={setView} />
-            </div>
-
             {view === "month" && (
               <MonthGridCalendar
                 month={currentMonth}
@@ -488,6 +484,12 @@ export default function CalendarPage() {
                 events={filteredEvents}
                 ccaSessions={gridCcaSessions}
                 onEventClick={openEventDetails}
+                view={view}
+                onViewChange={setView}
+                onZoomToDay={(ymd) => {
+                  setSelectedDay(ymd);
+                  setView("day");
+                }}
               />
             )}
 
@@ -517,6 +519,9 @@ export default function CalendarPage() {
                 events={filteredEvents}
                 ccaSessions={gridCcaSessions}
                 onEventClick={openEventDetails}
+                view={view}
+                onViewChange={setView}
+                onBackToMonth={() => setView("month")}
               />
             )}
 

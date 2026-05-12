@@ -329,10 +329,6 @@ export default function TeacherCalendarPage() {
             </div>
 
             {/* Calendar Component */}
-            <div className="flex justify-end pb-2">
-              <CalendarViewSwitcher view={view} onChange={setView} />
-            </div>
-
             {view === "month" && (
               <MonthGridCalendar
                 month={currentMonth}
@@ -349,6 +345,12 @@ export default function TeacherCalendarPage() {
                 onSessionClick={(session) => {
                   setSelectedSession(session);
                   setSessionDetailsOpen(true);
+                }}
+                view={view}
+                onViewChange={setView}
+                onZoomToDay={(ymd) => {
+                  setSelectedDay(ymd);
+                  setView("day");
                 }}
               />
             )}
@@ -383,6 +385,9 @@ export default function TeacherCalendarPage() {
                   setSelectedSession(session);
                   setSessionDetailsOpen(true);
                 }}
+                view={view}
+                onViewChange={setView}
+                onBackToMonth={() => setView("month")}
               />
             )}
 
