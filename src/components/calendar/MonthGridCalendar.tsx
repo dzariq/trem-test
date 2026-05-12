@@ -149,7 +149,7 @@ export function MonthGridCalendar({
       {/* Header */}
       <div className="flex items-center justify-between gap-2 px-2 py-2 border-b border-border bg-card">
         <div className="flex items-center gap-1.5 min-w-0">
-          <div className="text-sm sm:text-base font-semibold text-foreground truncate">
+          <div className="text-2xl sm:text-3xl font-semibold text-foreground truncate">
             {MONTH_NAMES[month.getMonth()]}
           </div>
           {onViewChange && (

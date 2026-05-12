@@ -254,7 +254,7 @@ export function TimeGridCalendar({
               <ArrowLeft className="h-4 w-4" />
             </Button>
           )}
-          <div className="text-lg sm:text-xl font-semibold text-foreground truncate">
+          <div className="text-2xl sm:text-3xl font-semibold text-foreground truncate">
             {headerLabel}
           </div>
           {onViewChange && (
@@ -380,9 +380,25 @@ export function TimeGridCalendar({
             </div>
           )}
 
+          {/* Spacer that continues the gutter + column borders down to the time grid */}
+          {maxAllDay > 0 && (
+            <div
+              className="grid"
+              style={{ gridTemplateColumns: gridTemplate, height: 12 }}
+            >
+              <div className="border-r border-border" />
+              {days.map((d, i) => (
+                <div
+                  key={d.ymd}
+                  className={cn(i < days.length - 1 && "border-r border-border")}
+                />
+              ))}
+            </div>
+          )}
+
           {/* Time grid */}
           <div
-            className="grid relative mt-3"
+            className="grid relative"
             style={{ gridTemplateColumns: gridTemplate, height: totalHeight }}
           >
             {/* Time gutter */}
