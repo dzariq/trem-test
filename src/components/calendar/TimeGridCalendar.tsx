@@ -301,7 +301,7 @@ export function TimeGridCalendar({
     3,
     days.reduce((mx, d) => Math.max(mx, (allDayByDay.get(d.ymd) || []).length), 0),
   );
-  const allDayRowHeight = 44;
+  const allDayRowHeight = 30;
   const allDayBlockHeight = maxAllDay > 0 ? maxAllDay * allDayRowHeight + 6 : 0;
 
   return (
@@ -537,7 +537,7 @@ export function TimeGridCalendar({
                         onClick={(e) => handleBlockClick(e, b, d.ymd)}
                         aria-label={b.title}
                         className={cn(
-                          "h-[30px] px-2 rounded-md text-[11px] leading-[30px] font-medium truncate text-left border-transparent no-callout",
+                          "h-[26px] px-1.5 rounded-md text-[9px] leading-[26px] font-medium truncate text-left border-transparent no-callout",
                           b.colorClass,
                         )}
                       >
