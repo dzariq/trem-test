@@ -1,5 +1,5 @@
 import { useMemo, type MouseEvent } from "react";
-import { ChevronLeft, ChevronRight, ArrowLeft } from "lucide-react";
+import { ChevronLeft, ChevronRight, ArrowLeft, SlidersHorizontal } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { getEventBadgeColor } from "@/lib/calendarUtils";
@@ -26,6 +26,8 @@ interface TimeGridCalendarProps {
   view?: CalendarViewMode;
   onViewChange?: (view: CalendarViewMode) => void;
   onBackToMonth?: () => void;
+  onOpenFilters?: () => void;
+  hasActiveFilters?: boolean;
 }
 
 const WEEKDAY_SHORT = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
@@ -80,6 +82,8 @@ export function TimeGridCalendar({
   view,
   onViewChange,
   onBackToMonth,
+  onOpenFilters,
+  hasActiveFilters,
 }: TimeGridCalendarProps) {
   const todayYmd = toYmd(new Date());
   const HOUR_PX = 48;
@@ -251,33 +255,50 @@ export function TimeGridCalendar({
               Back
             </Button>
           )}
-          <Button
-            type="button"
-            variant="outline"
-            size="icon"
-            className="h-8 w-8 rounded-md shrink-0"
-            onClick={goPrev}
-            aria-label="Previous"
-          >
-            <ChevronLeft className="h-4 w-4" />
-          </Button>
           <div className="text-sm sm:text-base font-semibold text-foreground truncate">
             {headerLabel}
           </div>
           {onViewChange && (
             <CalendarViewDropdown view={view ?? (mode as CalendarViewMode)} onChange={onViewChange} />
           )}
+          {onOpenFilters && (
+            <Button
+              type="button"
+              variant="outline"
+              size="icon"
+              className="relative h-8 w-8 rounded-md shrink-0"
+              onClick={onOpenFilters}
+              aria-label="Filter events"
+            >
+              <SlidersHorizontal className="h-4 w-4" />
+              {hasActiveFilters && (
+                <span className="absolute top-1 right-1 h-1.5 w-1.5 rounded-full bg-primary" />
+              )}
+            </Button>
+          )}
         </div>
-        <Button
-          type="button"
-          variant="outline"
-          size="icon"
-          className="h-8 w-8 rounded-md shrink-0"
-          onClick={goNext}
-          aria-label="Next"
-        >
-          <ChevronRight className="h-4 w-4" />
-        </Button>
+        <div className="flex items-center gap-1.5 shrink-0">
+          <Button
+            type="button"
+            variant="outline"
+            size="icon"
+            className="h-8 w-8 rounded-md"
+            onClick={goPrev}
+            aria-label="Previous"
+          >
+            <ChevronLeft className="h-4 w-4" />
+          </Button>
+          <Button
+            type="button"
+            variant="outline"
+            size="icon"
+            className="h-8 w-8 rounded-md"
+            onClick={goNext}
+            aria-label="Next"
+          >
+            <ChevronRight className="h-4 w-4" />
+          </Button>
+        </div>
       </div>
 
       {/* Scrollable area */}

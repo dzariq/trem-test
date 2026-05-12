@@ -1,5 +1,5 @@
 import { useMemo, type MouseEvent } from "react";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, SlidersHorizontal } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { getEventBadgeColor } from "@/lib/calendarUtils";
@@ -25,6 +25,8 @@ interface MonthGridCalendarProps {
   view?: CalendarViewMode;
   onViewChange?: (view: CalendarViewMode) => void;
   onZoomToDay?: (ymd: string) => void;
+  onOpenFilters?: () => void;
+  hasActiveFilters?: boolean;
 }
 
 // Monday-first weekdays
@@ -59,6 +61,8 @@ export function MonthGridCalendar({
   view = "month",
   onViewChange,
   onZoomToDay,
+  onOpenFilters,
+  hasActiveFilters,
 }: MonthGridCalendarProps) {
   const todayYmd = toYmd(new Date());
 
@@ -144,34 +148,51 @@ export function MonthGridCalendar({
     <div className="bg-card border border-border rounded-xl overflow-hidden shadow-sm">
       {/* Header */}
       <div className="flex items-center justify-between gap-2 px-2 py-2 border-b border-border bg-card">
-        <div className="flex items-center gap-2 min-w-0">
-          <Button
-            type="button"
-            variant="outline"
-            size="icon"
-            className="h-8 w-8 rounded-md shrink-0"
-            onClick={goPrev}
-            aria-label="Previous month"
-          >
-            <ChevronLeft className="h-4 w-4" />
-          </Button>
+        <div className="flex items-center gap-1.5 min-w-0">
           <div className="text-sm sm:text-base font-semibold text-foreground truncate">
             {MONTH_NAMES[month.getMonth()]} {month.getFullYear()}
           </div>
           {onViewChange && (
             <CalendarViewDropdown view={view} onChange={onViewChange} />
           )}
+          {onOpenFilters && (
+            <Button
+              type="button"
+              variant="outline"
+              size="icon"
+              className="relative h-8 w-8 rounded-md shrink-0"
+              onClick={onOpenFilters}
+              aria-label="Filter events"
+            >
+              <SlidersHorizontal className="h-4 w-4" />
+              {hasActiveFilters && (
+                <span className="absolute top-1 right-1 h-1.5 w-1.5 rounded-full bg-primary" />
+              )}
+            </Button>
+          )}
         </div>
-        <Button
-          type="button"
-          variant="outline"
-          size="icon"
-          className="h-8 w-8 rounded-md shrink-0"
-          onClick={goNext}
-          aria-label="Next month"
-        >
-          <ChevronRight className="h-4 w-4" />
-        </Button>
+        <div className="flex items-center gap-1.5 shrink-0">
+          <Button
+            type="button"
+            variant="outline"
+            size="icon"
+            className="h-8 w-8 rounded-md"
+            onClick={goPrev}
+            aria-label="Previous month"
+          >
+            <ChevronLeft className="h-4 w-4" />
+          </Button>
+          <Button
+            type="button"
+            variant="outline"
+            size="icon"
+            className="h-8 w-8 rounded-md"
+            onClick={goNext}
+            aria-label="Next month"
+          >
+            <ChevronRight className="h-4 w-4" />
+          </Button>
+        </div>
       </div>
 
       {/* Weekday header row */}
