@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/contexts/AuthContext";
+import { useCampus } from "@/contexts/CampusContext";
 import { toast } from "@/hooks/use-toast";
 import {
   type LessonPlan,
@@ -16,15 +17,22 @@ export function useLessonPlanSubjects() {
   const [subjects, setSubjects] = useState<{ id: number; name: string }[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const { activeCampus } = useCampus();
 
   useEffect(() => {
     const fetchSubjects = async () => {
       setLoading(true);
       try {
-        const { data, error: fetchError } = await supabase
+        let query = supabase
           .from("subjects")
-          .select("id, name")
+          .select("id, name, campus_code")
           .order("name");
+
+        if (activeCampus) {
+          query = query.or(`campus_code.eq.${activeCampus},campus_code.is.null`);
+        }
+
+        const { data, error: fetchError } = await query;
 
         if (fetchError) throw fetchError;
 
@@ -38,7 +46,7 @@ export function useLessonPlanSubjects() {
     };
 
     fetchSubjects();
-  }, []);
+  }, [activeCampus]);
 
   // Get just the subject names for dropdown display
   const subjectNames = useMemo(() => subjects.map(s => s.name), [subjects]);

@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useMemo } from "react";
 import { toast } from "@/hooks/use-toast";
 import { useTeacherScope } from "@/hooks/useTeacherScope";
 import { supabase } from "@/lib/supabase";
+import { useCampus } from "@/contexts/CampusContext";
 import {
   fetchAvailableClasses,
   fetchStudentsByClass,
@@ -76,6 +77,7 @@ interface UseGradeEntryReturn {
 export function useGradeEntry(): UseGradeEntryReturn {
   const teacherScope = useTeacherScope();
   const isTeacher = teacherScope.isTeacher;
+  const { activeCampus } = useCampus();
   const allowedClassNames = useMemo(
     () => teacherScope.allowedClassYears.map((cls) => cls.class_name),
     [teacherScope.allowedClassYears]
@@ -271,7 +273,7 @@ export function useGradeEntry(): UseGradeEntryReturn {
         } else {
           // Get year level from first student
           const yearLevel = fetchedStudents[0]?.year_level;
-          const fetchedSubjects = await fetchSubjects(yearLevel);
+          const fetchedSubjects = await fetchSubjects(yearLevel, activeCampus);
           setRawSubjects(fetchedSubjects);
         }
       } catch (err) {
@@ -289,7 +291,7 @@ export function useGradeEntry(): UseGradeEntryReturn {
     };
 
     loadStudentsAndSubjects();
-  }, [isTeacher, selectedClass, teacherScope.allowedClassYears, teacherScope.getAllowedSubjects, teacherScope.selectedClassYearId]);
+  }, [isTeacher, selectedClass, teacherScope.allowedClassYears, teacherScope.getAllowedSubjects, teacherScope.selectedClassYearId, activeCampus]);
 
   const allowedSubjectIds = useMemo(() => {
     if (!isTeacher) return null;
