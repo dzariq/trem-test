@@ -344,7 +344,7 @@ export function TimeGridCalendar({
           {/* All-day strip */}
           {maxAllDay > 0 && (
             <div
-              className="grid border-b-2 border-border bg-background pb-1.5"
+              className="grid border-b border-border bg-background"
               style={{ gridTemplateColumns: gridTemplate, height: allDayBlockHeight }}
             >
               <div className="border-r border-border flex items-center justify-end pr-1 text-[9px] font-medium uppercase text-muted-foreground">
@@ -382,7 +382,7 @@ export function TimeGridCalendar({
 
           {/* Time grid */}
           <div
-            className="grid relative"
+            className="grid relative mt-3"
             style={{ gridTemplateColumns: gridTemplate, height: totalHeight }}
           >
             {/* Time gutter */}
