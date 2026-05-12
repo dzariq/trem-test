@@ -1637,7 +1637,7 @@ export default function TeacherAcademicPage() {
               {/* Period tabs (replaces dropdown) — shows Open/Closed status inline */}
               {gradeEntry.academicPeriodsForYear.length > 0 && (
                 <div
-                  className="flex gap-1 overflow-x-auto pb-1 -mx-1 px-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+                  className="flex flex-wrap gap-1"
                   role="tablist"
                   aria-label="Exam period"
                 >
@@ -1652,7 +1652,7 @@ export default function TeacherAcademicPage() {
                         aria-selected={active}
                         onClick={() => gradeEntry.setSelectedPeriod(period)}
                         className={cn(
-                          "shrink-0 inline-flex items-center gap-1.5 rounded-md border px-3 min-h-9 text-xs font-medium transition-colors [touch-action:manipulation]",
+                          "min-w-0 inline-flex items-center justify-center gap-1.5 rounded-md border px-2 min-h-9 text-xs font-medium transition-colors [touch-action:manipulation]",
                           active
                             ? "bg-primary text-primary-foreground border-primary"
                             : "bg-background text-foreground border-border hover:bg-muted/50",
