@@ -3441,7 +3441,7 @@ export default function TeacherAcademicPage() {
                     </DialogHeader>
                     
                     {/* Tab switcher */}
-                    <div className="flex gap-1 bg-muted p-1 rounded-lg">
+                    <div className="flex gap-1 bg-muted/50 p-1 rounded-lg">
                       <button
                         onClick={() => setPerformanceDialogTab("top")}
                         className={cn(
@@ -5612,7 +5612,7 @@ export default function TeacherAcademicPage() {
                         <label className="text-xs text-muted-foreground block">Cohort Scope</label>
                         
                         {/* Cohort type tabs */}
-                        <div className="flex rounded-lg border bg-muted/30 p-0.5">
+                        <div className="flex gap-1 rounded-lg bg-muted/50 p-1">
                           <Button
                             variant="ghost"
                             size="sm"
