@@ -382,6 +382,26 @@ export default function CalendarPage() {
     }
   };
 
+  // Pull-to-refresh: refetch calendar + upcoming events + CCA sessions + enrollments
+  const handleRefresh = async () => {
+    const year = currentMonth.getFullYear();
+    const month = currentMonth.getMonth() + 1;
+    await Promise.all([
+      listCalendarEvents(year, month, { role: profile?.role, campusCode: selectedStudent?.campus_code ?? null })
+        .then(setEvents)
+        .catch(() => {}),
+      listUpcomingEvents({ role: profile?.role, limit: 50, campusCode: selectedStudent?.campus_code ?? null })
+        .then(setUpcomingEvents)
+        .catch(() => {}),
+      Promise.resolve(refetchCcaSessions()),
+      Promise.resolve(refetchActivities()),
+      Promise.resolve(refetchEnrollments()),
+    ]);
+  };
+  const { ref: pullRef, pullDistance, refreshing } = usePullToRefresh<HTMLDivElement>({
+    onRefresh: handleRefresh,
+  });
+
   return (
     <AppLayout>
       <AppHeader
@@ -394,7 +414,8 @@ export default function CalendarPage() {
         }
       />
 
-      <section className="px-4 pt-3">
+      <section className="px-4 pt-3" ref={pullRef}>
+        <PullToRefreshIndicator pullDistance={pullDistance} refreshing={refreshing} />
         <Tabs defaultValue={initialTab} className="w-full">
           <div className="pb-2">
             <TabsList className="grid w-full grid-cols-2 rounded-full bg-muted/40 p-1">
