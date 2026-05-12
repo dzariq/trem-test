@@ -234,7 +234,7 @@ export function TimeGridCalendar({
     3,
     days.reduce((mx, d) => Math.max(mx, (allDayByDay.get(d.ymd) || []).length), 0),
   );
-  const allDayRowHeight = 22;
+  const allDayRowHeight = 29;
   const allDayBlockHeight = maxAllDay > 0 ? maxAllDay * allDayRowHeight + 6 : 0;
 
   return (
@@ -305,10 +305,10 @@ export function TimeGridCalendar({
         <div style={{ minWidth: mode === "week" ? 560 : undefined }}>
           {/* Day header row */}
           <div
-            className="grid bg-muted/30 border-b border-border"
+            className="grid"
             style={{ gridTemplateColumns: gridTemplate }}
           >
-            <div className="border-r border-border" />
+            <div />
             {days.map((d, i) => {
               const isToday = d.ymd === todayYmd;
               const isSelected = d.ymd === selectedDay;
@@ -318,9 +318,8 @@ export function TimeGridCalendar({
                   type="button"
                   onClick={() => onSelectDay(d.ymd)}
                   className={cn(
-                    "flex flex-col items-center justify-center py-1.5 text-[11px] font-medium",
-                    i < days.length - 1 && "border-r border-border",
-                    isSelected ? "bg-primary/5" : "hover:bg-muted/40",
+                    "flex flex-col items-center justify-center py-1.5 text-[11px] font-medium rounded-md",
+                    isSelected && "bg-primary/5",
                   )}
                 >
                   <span className="uppercase tracking-wide text-muted-foreground">
@@ -429,19 +428,14 @@ export function TimeGridCalendar({
                   )}
                   onClick={() => onSelectDay(d.ymd)}
                 >
-                  {/* Hour grid lines */}
+                  {/* Rounded hour cells */}
                   {Array.from({ length: totalHours }).map((_, h) => (
                     <div
                       key={h}
-                      className="absolute left-0 right-0 border-t border-border/60"
-                      style={{ top: h * HOUR_PX }}
+                      className="absolute left-1 right-1 rounded-md bg-muted/20 border border-border/40"
+                      style={{ top: h * HOUR_PX + 2, height: HOUR_PX - 4 }}
                     />
                   ))}
-                  {/* Bottom line */}
-                  <div
-                    className="absolute left-0 right-0 border-t border-border/60"
-                    style={{ top: totalHours * HOUR_PX }}
-                  />
                   {/* Event blocks */}
                   {items.map((b) => {
                     const top = ((b.startMin - startHour * 60) / 60) * HOUR_PX;
