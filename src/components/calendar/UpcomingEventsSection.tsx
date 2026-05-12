@@ -49,7 +49,7 @@ export function UpcomingEventsSection({ events, onEventClick }: UpcomingEventsSe
       {/* Tab switcher */}
       <div className="px-4 pb-3">
         <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as UpcomingTab)}>
-          <TabsList className="grid w-full grid-cols-3 h-9 bg-muted/50">
+          <TabsList className="grid w-full grid-cols-3 h-9 bg-muted/50 rounded-md">
             {UPCOMING_TABS.map((tab) => {
               const isActive = activeTab === tab.value;
               // Apply color based on tab type when active
@@ -64,7 +64,7 @@ export function UpcomingEventsSection({ events, onEventClick }: UpcomingEventsSe
                   key={tab.value} 
                   value={tab.value} 
                   className={cn(
-                    "text-xs transition-colors",
+                    "text-xs transition-colors rounded-md",
                     isActive && activeClass
                   )}
                 >
