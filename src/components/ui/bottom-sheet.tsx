@@ -90,6 +90,21 @@ export function BottomSheet({
   const isFullSnap = useSnapPoints && activeSnapPoint === 1;
   const shouldCenter = centeredOnDesktop && !useSnapPoints;
 
+  // Vaul defaults `fadeFromIndex` to the last snap point, which means the
+  // background overlay only becomes visible at the tallest snap. We want it
+  // dimmed at the first "open" snap (the first non-zero point) so the user's
+  // focus is pulled to the sheet immediately.
+  const fadeFromIndex = React.useMemo(() => {
+    if (!useSnapPoints || !sortedSnapPoints || sortedSnapPoints.length === 0) {
+      return undefined;
+    }
+    const idx = sortedSnapPoints.findIndex((sp) => {
+      const n = typeof sp === "number" ? sp : parseFloat(sp);
+      return !Number.isNaN(n) && n > 0;
+    });
+    return idx >= 0 ? idx : undefined;
+  }, [useSnapPoints, sortedSnapPoints]);
+
   return (
     <DrawerPrimitive.Root
       open={open}
@@ -97,6 +112,7 @@ export function BottomSheet({
       snapPoints={snapPointsProp}
       activeSnapPoint={activeSnapPointProp}
       setActiveSnapPoint={setActiveSnapPointProp}
+      fadeFromIndex={fadeFromIndex}
       scrollLockTimeout={0}
       modal={modal}
     >
