@@ -303,13 +303,13 @@ export function TimeGridCalendar({
       {/* Scrollable area */}
       <div className={mode === "week" ? "overflow-x-auto" : "overflow-visible"}>
         <div style={{ minWidth: mode === "week" ? 560 : undefined }}>
-          {/* Day header row */}
+          {/* Day header row — floating, no background, today inside filled circle */}
           <div
-            className="grid bg-muted/40"
+            className="grid pt-2 pb-3"
             style={{ gridTemplateColumns: gridTemplate }}
           >
-            <div className="bg-muted/40" />
-            {days.map((d, i) => {
+            <div />
+            {days.map((d) => {
               const isToday = d.ymd === todayYmd;
               const isSelected = d.ymd === selectedDay;
               return (
@@ -317,20 +317,24 @@ export function TimeGridCalendar({
                   key={d.ymd}
                   type="button"
                   onClick={() => onSelectDay(d.ymd)}
-                  className={cn(
-                    "flex flex-col items-center justify-center py-1.5 text-[11px] font-medium",
-                    isSelected && "bg-primary/10",
-                  )}
+                  className="flex flex-col items-center justify-center gap-1 bg-transparent"
                 >
-                  <span className="uppercase tracking-wide text-muted-foreground">
+                  <span
+                    className={cn(
+                      "text-[11px] font-medium uppercase tracking-wide",
+                      isToday ? "text-primary" : "text-muted-foreground",
+                    )}
+                  >
                     {WEEKDAY_SHORT[(d.date.getDay() + 6) % 7]}
                   </span>
                   <span
                     className={cn(
-                      "inline-flex items-center justify-center w-6 h-6 mt-0.5 rounded-full text-sm",
+                      "inline-flex items-center justify-center w-8 h-8 rounded-full text-base",
                       isToday
                         ? "bg-primary text-primary-foreground font-semibold"
-                        : "text-foreground",
+                        : isSelected
+                          ? "ring-2 ring-primary text-foreground font-medium"
+                          : "text-foreground",
                     )}
                   >
                     {d.date.getDate()}
@@ -340,22 +344,19 @@ export function TimeGridCalendar({
             })}
           </div>
 
-          {/* All-day strip */}
+          {/* All-day strip — chips only, no label cell */}
           {maxAllDay > 0 && (
             <div
-              className="grid bg-background"
+              className="grid pb-2"
               style={{ gridTemplateColumns: gridTemplate, height: allDayBlockHeight }}
             >
-              <div className="bg-muted/40 flex flex-col items-center justify-center text-[9px] font-semibold uppercase leading-tight text-muted-foreground">
-                <span>All</span>
-                <span>Day</span>
-              </div>
+              <div />
               {days.map((d) => {
                 const items = (allDayByDay.get(d.ymd) || []).slice(0, maxAllDay);
                 return (
                   <div
                     key={d.ymd}
-                    className="p-0.5 flex flex-col gap-0.5"
+                    className="px-1 flex flex-col gap-0.5"
                   >
                     {items.map((b) => (
                       <button
@@ -364,7 +365,7 @@ export function TimeGridCalendar({
                         onClick={(e) => handleBlockClick(e, b, d.ymd)}
                         title={b.title}
                         className={cn(
-                          "h-[18px] px-1 rounded-[3px] text-[10px] leading-[18px] font-medium truncate text-left border-transparent",
+                          "h-[20px] px-1.5 rounded-md text-[10px] leading-[20px] font-medium truncate text-left border-transparent",
                           b.colorClass,
                         )}
                       >
@@ -377,30 +378,17 @@ export function TimeGridCalendar({
             </div>
           )}
 
-          {/* Spacer */}
-          {maxAllDay > 0 && (
-            <div
-              className="grid"
-              style={{ gridTemplateColumns: gridTemplate, height: 12 }}
-            >
-              <div className="bg-muted/40" />
-              {days.map((d) => (
-                <div key={d.ymd} />
-              ))}
-            </div>
-          )}
-
-          {/* Time grid */}
+          {/* Time grid — independent rounded cards per (day, hour) */}
           <div
             className="grid relative"
             style={{ gridTemplateColumns: gridTemplate, height: totalHeight }}
           >
-            {/* Time gutter */}
-            <div className="bg-muted/40 relative">
+            {/* Time gutter labels (no background, no border) */}
+            <div className="relative">
               {Array.from({ length: totalHours }).map((_, i) => (
                 <div
                   key={i}
-                  className="absolute right-1 text-[10px] text-muted-foreground"
+                  className="absolute right-1.5 text-[10px] font-medium text-muted-foreground"
                   style={{ top: i * HOUR_PX - 6 }}
                 >
                   {((startHour + i) % 12 || 12)}{(startHour + i) < 12 ? " AM" : " PM"}
@@ -409,24 +397,26 @@ export function TimeGridCalendar({
             </div>
 
             {/* Day columns */}
-            {days.map((d, i) => {
+            {days.map((d) => {
               const items = timedByDay.get(d.ymd) || [];
               const isToday = d.ymd === todayYmd;
               return (
                 <div
                   key={d.ymd}
-                  className={cn(
-                    "relative",
-                    isToday && "bg-primary/[0.03]",
-                  )}
+                  className="relative"
                   onClick={() => onSelectDay(d.ymd)}
                 >
-                  {/* Rounded hour cells */}
+                  {/* Per-hour rounded cards */}
                   {Array.from({ length: totalHours }).map((_, h) => (
                     <div
                       key={h}
-                      className="absolute left-1 right-1 rounded-md bg-muted/40"
-                      style={{ top: h * HOUR_PX + 2, height: HOUR_PX - 4 }}
+                      className={cn(
+                        "absolute left-1 right-1 rounded-lg border",
+                        isToday
+                          ? "bg-primary/5 border-primary/20"
+                          : "bg-card border-border/60",
+                      )}
+                      style={{ top: h * HOUR_PX + 3, height: HOUR_PX - 6 }}
                     />
                   ))}
                   {/* Event blocks */}
@@ -444,7 +434,7 @@ export function TimeGridCalendar({
                         onClick={(e) => handleBlockClick(e, b, d.ymd)}
                         title={b.title}
                         className={cn(
-                          "absolute left-0.5 right-0.5 rounded-[4px] px-1 py-0.5 text-[10px] font-medium text-left overflow-hidden border border-transparent shadow-sm",
+                          "absolute left-1.5 right-1.5 rounded-lg px-1.5 py-0.5 text-[10px] font-medium text-left overflow-hidden border border-transparent shadow-sm z-10",
                           b.colorClass,
                         )}
                         style={{ top: clampedTop, height }}
