@@ -4615,24 +4615,15 @@ export type Database = {
     }
     Functions: {
       activate_own_account: { Args: never; Returns: undefined }
-      auto_generate_term_weeks:
-        | {
-            Args: {
-              p_start_dow?: number
-              p_term_configuration_id: string
-              p_week_length_days?: number
-            }
-            Returns: number
-          }
-        | {
-            Args: {
-              p_block_length_days?: number
-              p_start_dow?: number
-              p_term_configuration_id: string
-              p_week_length_days?: number
-            }
-            Returns: number
-          }
+      auto_generate_term_weeks: {
+        Args: {
+          p_block_length_days?: number
+          p_start_dow?: number
+          p_term_configuration_id: string
+          p_week_length_days?: number
+        }
+        Returns: number
+      }
       calculate_current_headcount: {
         Args: { target_campus_id?: string; target_month_start: string }
         Returns: number
