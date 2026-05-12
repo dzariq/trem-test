@@ -1,49 +1,57 @@
+import { ChevronDown } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
 
 export type CalendarViewMode = "month" | "week" | "day";
 
-interface CalendarViewSwitcherProps {
+const LABELS: Record<CalendarViewMode, string> = {
+  month: "Month",
+  week: "Week",
+  day: "Day",
+};
+
+const OPTIONS: CalendarViewMode[] = ["month", "week", "day"];
+
+interface CalendarViewDropdownProps {
   view: CalendarViewMode;
   onChange: (view: CalendarViewMode) => void;
   className?: string;
 }
 
-const OPTIONS: { value: CalendarViewMode; label: string }[] = [
-  { value: "month", label: "Month" },
-  { value: "week", label: "Week" },
-  { value: "day", label: "Day" },
-];
-
-export function CalendarViewSwitcher({ view, onChange, className }: CalendarViewSwitcherProps) {
+export function CalendarViewDropdown({ view, onChange, className }: CalendarViewDropdownProps) {
   return (
-    <div
-      role="tablist"
-      aria-label="Calendar view"
-      className={cn(
-        "inline-flex items-center rounded-full bg-muted/40 p-1 border border-border",
-        className,
-      )}
-    >
-      {OPTIONS.map((opt) => {
-        const active = view === opt.value;
-        return (
-          <button
-            key={opt.value}
-            type="button"
-            role="tab"
-            aria-selected={active}
-            onClick={() => onChange(opt.value)}
+    <DropdownMenu>
+      <DropdownMenuTrigger
+        className={cn(
+          "inline-flex items-center gap-1 rounded-md border border-border bg-background px-2 h-8 text-xs font-medium text-foreground hover:bg-muted/50 transition-colors",
+          className,
+        )}
+      >
+        {LABELS[view]}
+        <ChevronDown className="h-3.5 w-3.5 opacity-70" />
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end" className="min-w-[8rem]">
+        {OPTIONS.map((opt) => (
+          <DropdownMenuItem
+            key={opt}
+            onSelect={() => onChange(opt)}
             className={cn(
-              "px-3 py-1 text-xs font-medium rounded-full transition-colors",
-              active
-                ? "bg-background text-foreground shadow-sm"
-                : "text-muted-foreground hover:text-foreground",
+              "text-sm cursor-pointer",
+              view === opt && "font-semibold bg-accent",
             )}
           >
-            {opt.label}
-          </button>
-        );
-      })}
-    </div>
+            {LABELS[opt]}
+          </DropdownMenuItem>
+        ))}
+      </DropdownMenuContent>
+    </DropdownMenu>
   );
 }
+
+// Backwards-compatible export so existing imports keep working
+export const CalendarViewSwitcher = CalendarViewDropdown;
