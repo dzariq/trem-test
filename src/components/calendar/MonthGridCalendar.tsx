@@ -150,7 +150,7 @@ export function MonthGridCalendar({
       <div className="flex items-center justify-between gap-2 px-2 py-2 border-b border-border bg-card">
         <div className="flex items-center gap-1.5 min-w-0">
           <div className="text-sm sm:text-base font-semibold text-foreground truncate">
-            {MONTH_NAMES[month.getMonth()]} {month.getFullYear()}
+            {MONTH_NAMES[month.getMonth()]}
           </div>
           {onViewChange && (
             <CalendarViewDropdown view={view} onChange={onViewChange} />
@@ -196,14 +196,11 @@ export function MonthGridCalendar({
       </div>
 
       {/* Weekday header row */}
-      <div className="grid grid-cols-7 bg-muted/30 border-b border-border">
-        {WEEKDAYS.map((wd, i) => (
+      <div className="grid grid-cols-7 px-0.5 pt-1.5 pb-1">
+        {WEEKDAYS.map((wd) => (
           <div
             key={wd}
-            className={cn(
-              "text-center text-[11px] font-semibold uppercase tracking-wide text-muted-foreground py-1.5",
-              i < 6 && "border-r border-border",
-            )}
+            className="text-center text-[13px] font-medium text-muted-foreground"
           >
             {wd}
           </div>
