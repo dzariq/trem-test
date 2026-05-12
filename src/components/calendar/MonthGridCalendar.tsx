@@ -299,9 +299,6 @@ export function MonthGridCalendar({
                 !isSelected && "hover:bg-muted/40",
               )}
             >
-              {isSelected && (
-                <span className="pointer-events-none absolute inset-0 rounded-md ring-2 ring-inset ring-primary" />
-              )}
               <div className="flex items-center justify-between mb-1 gap-1">
                 <span
                   className={cn(
