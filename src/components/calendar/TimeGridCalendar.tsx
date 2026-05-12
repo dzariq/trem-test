@@ -301,7 +301,7 @@ export function TimeGridCalendar({
     3,
     days.reduce((mx, d) => Math.max(mx, (allDayByDay.get(d.ymd) || []).length), 0),
   );
-  const allDayRowHeight = 44;
+  const allDayRowHeight = 30;
   const allDayBlockHeight = maxAllDay > 0 ? maxAllDay * allDayRowHeight + 6 : 0;
 
   return (
