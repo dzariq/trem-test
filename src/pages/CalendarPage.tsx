@@ -782,6 +782,16 @@ export default function CalendarPage() {
         onConfirm={handleConfirmSwitch}
         loading={enrolling}
       />
+
+      <CalendarFiltersSheet
+        open={filtersOpen}
+        onOpenChange={setFiltersOpen}
+        availableCategories={availableCategories}
+        isAllSelected={isAllSelected}
+        categoryFilters={categoryFilters}
+        setIsAllSelected={setIsAllSelected}
+        setCategoryFilters={setCategoryFilters}
+      />
     </AppLayout>
   );
 }
