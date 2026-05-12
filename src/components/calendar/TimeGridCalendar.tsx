@@ -82,6 +82,8 @@ export function TimeGridCalendar({
   view,
   onViewChange,
   onBackToMonth,
+  onOpenFilters,
+  hasActiveFilters,
 }: TimeGridCalendarProps) {
   const todayYmd = toYmd(new Date());
   const HOUR_PX = 48;
