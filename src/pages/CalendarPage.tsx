@@ -152,6 +152,7 @@ export default function CalendarPage() {
   const {
     sessions: ccaSessions,
     loading: ccaSessionsLoading,
+    refetch: refetchCcaSessions,
   } = useCcaSessionsCalendar({
     year: currentMonth.getFullYear(),
     month: currentMonth.getMonth() + 1,
