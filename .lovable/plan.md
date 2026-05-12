@@ -1,37 +1,47 @@
-## Calendar Header Reorg + Collapsible Filters
+## Redesign week/day view to Google Calendar Material 3 mobile style
 
-### New header layout (inside `MonthGridCalendar` and `TimeGridCalendar`)
+Rework `src/components/calendar/TimeGridCalendar.tsx` to match the reference (Google Calendar mobile, image-503).
+
+### Visual direction
 
 ```text
-[ May 2026 ]  [ Month ▾ ]  [ ⛃ Filter ]   ........   [ < ]  [ > ]
+                Mon         Tue         Wed         Thu
+                 1          (2)          3           4
+                          ╲ today circle ╱
+
+       PH 10 (Ago…)   RPH 9 (Re…)   EX4 (MYE)    AHM           ← all-day chips, no label cell
+
+7 AM   ┌──────┐     ┌──────┐     ┌──────┐     ┌──────┐
+       │      │     │      │     │      │     │      │
+8 AM   ├──────┤     ├──────┤     ├──────┤     ├──────┤
+       │      │     │      │     │      │     │      │
+9 AM   └──────┘     └──────┘     └──────┘     └──────┘
 ```
 
-Left cluster (grouped tight): month/date label → view dropdown → filter button.
-Right cluster: prev / next arrows. (Day/Week views also keep the existing `[← Back]` button at the far left.)
+Key rules from the reference:
+- No tinted "header row" rectangle and no tinted gutter column. The page background shows through everywhere.
+- Day header floats above the columns: small uppercase weekday on top, big date underneath. Today's date is rendered inside a filled primary-color circle. Selected (non-today) day uses an outlined circle.
+- "All Day" label cell is removed. All-day events sit as colored pills directly under the day header, in their day column, no row label.
+- Time labels (`7 AM`, `8 AM`…) sit in the left margin as small muted text aligned to the gridline, with no background tint and no right border.
+- Each hour × day cell is its own rounded card (white/`bg-card`, subtle `border-border/60`, `rounded-lg`), separated by horizontal and vertical gaps so they read as individual chips, not a continuous grid.
+- No vertical column dividers, no horizontal hour dividers — the gaps between rounded cells provide the rhythm.
+- Today's column gets a very subtle primary tint behind the cells (optional, matches Google's accent column).
+- Timed event blocks keep absolute positioning over the cell stack, with the same color/shape they have today (rounded, shadow, colored bg).
 
-### Filter button → bottom sheet
+### Files to change
 
-- Replace the row of filter pills currently rendered above the calendar in `TeacherCalendarPage.tsx` and `CalendarPage.tsx`.
-- New `Filter` icon button (lucide `SlidersHorizontal`) in the calendar header, with a small badge dot when any filter is active.
-- Tapping it opens a bottom sheet (`@/components/ui/sheet` `side="bottom"`) titled "Filter events" containing:
-  - The existing "All" toggle
-  - The existing `CategoryFilterPill` row (full set, wrapped)
-  - "Apply" / "Reset" footer (Reset = All selected)
-- Sheet state (`filtersOpen`) lives on the page; filter state and handlers stay where they are today (no logic change).
-
-### Wiring
-
-- `MonthGridCalendar` and `TimeGridCalendar` get new optional props: `onOpenFilters?: () => void`, `hasActiveFilters?: boolean`.
-- Both pages pass `onOpenFilters={() => setFiltersOpen(true)}` and `hasActiveFilters={!isAllSelected}`.
-- Remove the existing `<div className="flex flex-wrap gap-1.5 pb-2">…pills…</div>` block from both pages; move that exact JSX into the new sheet content (extracted as a small `CalendarFiltersSheet` component to avoid duplication between teacher and parent pages).
+- `src/components/calendar/TimeGridCalendar.tsx`
+  - Remove `bg-muted/40` from header row, gutter, and "All Day" label cell
+  - Delete the "All Day" label cell entirely; render all-day chips in a row of day-column cells with no first-column label
+  - Replace the time-gutter `<div>` with absolutely positioned hour labels overlaid in a narrow left margin (no border, no bg)
+  - Replace the single absolute "rounded hour cell" per hour with a per-(day, hour) rounded card grid: each card is `bg-card border border-border/60 rounded-lg` with small inset (`left-1 right-1 top-1 bottom-1` style spacing using padded wrappers, or render via a CSS grid of cells with gap)
+  - Day header: switch to two-line layout (small uppercase weekday + big date), wrap today's date in a filled `bg-primary text-primary-foreground` circle (~28px), selected non-today uses ring outline
+  - Drop the spacer row between all-day strip and time grid (no longer needed because there are no continuing borders)
+  - Keep timed event blocks absolutely positioned over the cell stack, same color logic
 
 ### Out of scope
-- No changes to filter logic, event/CCA data, day-zoom behavior, or styling of the pills themselves.
-- No changes to the Upcoming Events section.
 
-### Files
-- `src/components/calendar/MonthGridCalendar.tsx` — header layout + filter button
-- `src/components/calendar/TimeGridCalendar.tsx` — header layout + filter button
-- `src/components/calendar/CalendarFiltersSheet.tsx` — new, wraps All + CategoryFilterPill row in a bottom sheet
-- `src/pages/teacher/TeacherCalendarPage.tsx` — remove pill row, add sheet, pass props
-- `src/pages/CalendarPage.tsx` — same
+- No changes to month view (`MonthGridCalendar`)
+- No changes to filter/header bar above the calendar (June, view dropdown, filter, prev/next stay as-is)
+- No changes to event/CCA data, click-to-zoom behavior, or detail sheets
+- No new colors added — only existing semantic tokens (`bg-card`, `bg-primary`, `border-border`, `text-muted-foreground`)
