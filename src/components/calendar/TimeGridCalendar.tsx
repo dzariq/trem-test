@@ -217,16 +217,10 @@ export function TimeGridCalendar({
   };
 
   const headerLabel = useMemo(() => {
-    if (mode === "day") {
-      return MONTH_NAMES[date.getMonth()];
-    }
-    const start = days[0].date;
-    const end = days[6].date;
-    const sameMonth = start.getMonth() === end.getMonth();
-    if (sameMonth) {
-      return MONTH_NAMES[start.getMonth()];
-    }
-    return `${MONTH_NAMES[start.getMonth()]} – ${MONTH_NAMES[end.getMonth()]}`;
+    // Always show the selected date's month as a 3-letter uppercase label
+    // (consistent with the Month view, and avoids "April" when the current
+    // week spans Apr → May but today is in May).
+    return MONTH_SHORT[date.getMonth()].toUpperCase();
   }, [days, mode, date]);
 
   // YMDs in the visible month that have events or CCA sessions
