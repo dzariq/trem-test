@@ -226,6 +226,7 @@ export async function listAnnouncements(
       featured_at: row.featured_at ?? null,
       is_pinned: Boolean(row.is_pinned),
       pinned_at: row.pinned_at ?? null,
+      priority: row.priority ?? null,
     };
   });
 }
@@ -310,6 +311,7 @@ export async function getAnnouncementById(
     featured_at: data.featured_at ?? null,
     is_pinned: Boolean(data.is_pinned),
     pinned_at: data.pinned_at ?? null,
+    priority: data.priority ?? null,
   };
 }
 
