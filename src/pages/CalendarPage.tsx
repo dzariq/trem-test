@@ -470,11 +470,13 @@ export default function CalendarPage() {
               />
             )}
 
-            {/* Upcoming Events with tab switcher */}
-            <UpcomingEventsSection
-              events={upcomingEvents}
-              onEventClick={openEventDetails}
-            />
+            {/* Upcoming Events with tab switcher (month view only) */}
+            {view === "month" && (
+              <UpcomingEventsSection
+                events={upcomingEvents}
+                onEventClick={openEventDetails}
+              />
+            )}
           </TabsContent>
 
           <TabsContent value="cca" className="mt-4 space-y-4">
