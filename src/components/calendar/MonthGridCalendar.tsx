@@ -166,7 +166,7 @@ export function MonthGridCalendar({
             aria-expanded={monthPickerOpen}
             aria-label="Toggle month picker"
           >
-            <span className="truncate">{MONTH_NAMES[month.getMonth()]}</span>
+            <span className="truncate">{MONTH_SHORT[month.getMonth()].toUpperCase()}</span>
             <ChevronDown
               className={cn(
                 "h-5 w-5 opacity-70 transition-transform",
@@ -300,7 +300,7 @@ export function MonthGridCalendar({
               type="button"
               onClick={handleCellClick}
               className={cn(
-                "relative flex flex-col items-stretch text-left min-h-[115px] sm:min-h-[135px] p-1 m-0.5 rounded-md transition-colors no-callout",
+                "relative flex flex-col items-stretch text-left min-h-[104px] sm:min-h-[122px] p-1 m-0.5 rounded-md transition-colors no-callout",
                 inMonth ? "bg-background" : "bg-muted/30",
                 !isSelected && "hover:bg-muted/40",
               )}
