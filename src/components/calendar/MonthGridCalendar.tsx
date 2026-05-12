@@ -158,19 +158,19 @@ export function MonthGridCalendar({
     <div className="bg-card border border-border rounded-xl overflow-hidden shadow-sm">
       {/* Header */}
       <div className="flex items-center gap-1 px-2 py-2 border-b border-border bg-card">
-        <div className="flex items-center gap-1 min-w-0 flex-1">
-          <button
+        <button
             type="button"
             onClick={() => setMonthPickerOpen((v) => !v)}
-            className="inline-flex items-center text-2xl sm:text-3xl font-semibold text-foreground truncate hover:opacity-80 transition-opacity"
+            className="inline-flex items-center text-2xl sm:text-3xl font-semibold text-foreground truncate hover:opacity-80 transition-opacity min-w-0"
             aria-expanded={monthPickerOpen}
             aria-label="Toggle month picker"
           >
             <span className="truncate">{MONTH_SHORT[month.getMonth()].toUpperCase()}</span>
-          </button>
-          {onViewChange && (
+        </button>
+        {onViewChange && (
             <CalendarViewDropdown view={view} onChange={onViewChange} />
-          )}
+        )}
+        <div className="flex items-center gap-1 shrink-0 ml-auto">
           {onOpenFilters && (
             <Button
               type="button"
@@ -186,8 +186,6 @@ export function MonthGridCalendar({
               )}
             </Button>
           )}
-        </div>
-        <div className="flex items-center gap-1 shrink-0">
           <Button
             type="button"
             variant="outline"
