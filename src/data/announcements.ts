@@ -63,6 +63,7 @@ export type Announcement = {
   featured_at?: string | null;
   is_pinned?: boolean;
   pinned_at?: string | null;
+  priority?: "low" | "medium" | "high" | string;
 };
 
 export type ListAnnouncementsParams = {
