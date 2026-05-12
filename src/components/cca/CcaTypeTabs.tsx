@@ -141,6 +141,15 @@ export function getCcaTypeColor(typeName: string | null | undefined): string {
       return "bg-amber-200 text-amber-900 dark:bg-amber-900/60 dark:text-amber-200";
     case "enrichment":
       return "bg-teal-200 text-teal-900 dark:bg-teal-900/60 dark:text-teal-200";
+    case "indoor talks/workshop":
+      return "bg-cyan-200 text-cyan-900 dark:bg-cyan-900/60 dark:text-cyan-200";
+    case "community service":
+      return "bg-lime-200 text-lime-900 dark:bg-lime-900/60 dark:text-lime-200";
+    case "event":
+    case "events":
+      return "bg-fuchsia-200 text-fuchsia-900 dark:bg-fuchsia-900/60 dark:text-fuchsia-200";
+    case "other":
+      return "bg-slate-200 text-slate-900 dark:bg-slate-800/60 dark:text-slate-200";
     case "competition":
       return "bg-rose-200 text-rose-900 dark:bg-rose-900/60 dark:text-rose-200";
     // Legacy category names
