@@ -1567,29 +1567,6 @@ export default function TeacherAcademicPage() {
               </Select>
 
               <Select
-                value={gradeEntry.selectedPeriod?.id || ""}
-                onValueChange={v => {
-                  const period = gradeEntry.academicPeriodsForYear.find(p => p.id === v);
-                  gradeEntry.setSelectedPeriod(period || null);
-                }}
-                disabled={gradeEntry.academicPeriodsForYear.length === 0}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Period" />
-                </SelectTrigger>
-                <SelectContent>
-                  {gradeEntry.academicPeriodsForYear.map(period => (
-                    <SelectItem key={period.id} value={period.id}>
-                      {period.name}
-                      {!period.is_open_for_grading && " (Closed)"}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              </div>
-
-              <div className="grid grid-cols-2 gap-2">
-              <Select
                 value={gradeEntry.selectedClass || ""}
                 onValueChange={v => {
                   gradeEntry.setSelectedClass(v || null);
@@ -1608,12 +1585,20 @@ export default function TeacherAcademicPage() {
                   )}
                 </SelectTrigger>
                 <SelectContent>
-                  {gradeEntry.classes.map(cls => (
-                    <SelectItem key={cls} value={cls}>{formatClassDisplay(cls)}</SelectItem>
-                  ))}
+                  {gradeEntry.classes.length === 0 && !gradeEntry.loadingClasses ? (
+                    <div className="px-2 py-3 text-xs text-muted-foreground">
+                      No classes with students
+                    </div>
+                  ) : (
+                    gradeEntry.classes.map(cls => (
+                      <SelectItem key={cls} value={cls}>{formatClassDisplay(cls)}</SelectItem>
+                    ))
+                  )}
                 </SelectContent>
               </Select>
+              </div>
 
+              <div className="grid grid-cols-1 gap-2">
               <Select
                 value={gradeEntry.selectedSubject?.id?.toString() || ""} 
                 onValueChange={v => {
@@ -1634,14 +1619,75 @@ export default function TeacherAcademicPage() {
                   )}
                 </SelectTrigger>
                 <SelectContent className="bg-white dark:bg-card max-h-60">
-                  {gradeEntry.subjects.map(subject => (
-                    <SelectItem key={subject.id} value={subject.id.toString()}>
-                      {subject.name}
-                    </SelectItem>
-                  ))}
+                  {gradeEntry.subjects.length === 0 && !gradeEntry.loadingSubjects ? (
+                    <div className="px-2 py-3 text-xs text-muted-foreground">
+                      No subjects assigned
+                    </div>
+                  ) : (
+                    gradeEntry.subjects.map(subject => (
+                      <SelectItem key={subject.id} value={subject.id.toString()}>
+                        {subject.name}
+                      </SelectItem>
+                    ))
+                  )}
                 </SelectContent>
               </Select>
               </div>
+
+              {/* Period tabs (replaces dropdown) — shows Open/Closed status inline */}
+              {gradeEntry.academicPeriodsForYear.length > 0 && (
+                <div
+                  className="flex gap-1 overflow-x-auto pb-1 -mx-1 px-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+                  role="tablist"
+                  aria-label="Exam period"
+                >
+                  {gradeEntry.academicPeriodsForYear.map((period) => {
+                    const active = gradeEntry.selectedPeriod?.id === period.id;
+                    const open = period.is_open_for_grading;
+                    return (
+                      <button
+                        key={period.id}
+                        type="button"
+                        role="tab"
+                        aria-selected={active}
+                        onClick={() => gradeEntry.setSelectedPeriod(period)}
+                        className={cn(
+                          "shrink-0 inline-flex items-center gap-1.5 rounded-md border px-3 min-h-9 text-xs font-medium transition-colors [touch-action:manipulation]",
+                          active
+                            ? "bg-primary text-primary-foreground border-primary"
+                            : "bg-background text-foreground border-border hover:bg-muted/50",
+                        )}
+                      >
+                        <span className="truncate">{period.name}</span>
+                        <span
+                          className={cn(
+                            "inline-flex items-center gap-1 rounded-full px-1.5 py-0.5 text-[10px] font-semibold",
+                            open
+                              ? active
+                                ? "bg-emerald-100 text-emerald-700"
+                                : "bg-emerald-50 text-emerald-700 border border-emerald-200"
+                              : active
+                                ? "bg-amber-100 text-amber-700"
+                                : "bg-amber-50 text-amber-700 border border-amber-200",
+                          )}
+                        >
+                          {open ? (
+                            <>
+                              <CheckCircle className="h-2.5 w-2.5" />
+                              Open
+                            </>
+                          ) : (
+                            <>
+                              <Lock className="h-2.5 w-2.5" />
+                              Closed
+                            </>
+                          )}
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
             </div>
 
             {/* Grading Closed Banner */}
