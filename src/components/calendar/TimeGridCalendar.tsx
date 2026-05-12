@@ -479,12 +479,21 @@ export function TimeGridCalendar({
             {days.map((d) => {
               const isToday = d.ymd === todayYmd;
               const isSelected = d.ymd === selectedDay;
+              const dayEventCount =
+                (allDayByDay.get(d.ymd)?.length || 0) + (timedByDay.get(d.ymd)?.length || 0);
+              const ariaLabel = `${d.date.toLocaleDateString("en-US", {
+                weekday: "long",
+                month: "long",
+                day: "numeric",
+              })}${dayEventCount > 0 ? `, ${dayEventCount} event${dayEventCount === 1 ? "" : "s"}` : ", no events"}${isToday ? ", today" : ""}${isSelected ? ", selected" : ""}`;
               return (
                 <button
                   key={d.ymd}
                   type="button"
                   onClick={() => onSelectDay(d.ymd)}
-                  className="flex flex-col items-center justify-center gap-1 bg-transparent no-callout"
+                  aria-label={ariaLabel}
+                  aria-pressed={isSelected}
+                  className="flex flex-col items-center justify-center gap-1 bg-transparent no-callout [touch-action:manipulation]"
                 >
                   <span
                     className={cn(
@@ -519,11 +528,14 @@ export function TimeGridCalendar({
             >
               <div className="sticky left-0 z-20 bg-card" />
               {days.map((d) => {
-                const items = (allDayByDay.get(d.ymd) || []).slice(0, maxAllDay);
+                const allItems = allDayByDay.get(d.ymd) || [];
+                const visibleCap = allItems.length > maxAllDay ? maxAllDay - 1 : maxAllDay;
+                const items = allItems.slice(0, visibleCap);
+                const overflow = allItems.length - items.length;
                 return (
                   <div
                     key={d.ymd}
-                    className="px-1 flex flex-col gap-0.5"
+                    className="px-0.5 flex flex-col gap-0.5 min-w-0"
                   >
                     {items.map((b) => (
                       <button
@@ -532,13 +544,26 @@ export function TimeGridCalendar({
                         onClick={(e) => handleBlockClick(e, b, d.ymd)}
                         aria-label={b.title}
                         className={cn(
-                          "h-[26px] px-1.5 rounded-md text-[9px] leading-[26px] font-medium truncate text-left border-transparent no-callout",
+                          "h-[26px] px-1.5 rounded-md text-[9px] leading-[26px] font-medium truncate text-left border-transparent no-callout [touch-action:manipulation]",
                           b.colorClass,
                         )}
                       >
                         {b.title}
                       </button>
                     ))}
+                    {overflow > 0 && (
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onSelectDay(d.ymd);
+                        }}
+                        aria-label={`Show ${overflow} more event${overflow === 1 ? "" : "s"} on ${d.ymd}`}
+                        className="h-[20px] px-1 rounded-md text-[9px] leading-[20px] font-semibold text-muted-foreground bg-muted/70 hover:bg-muted truncate text-left no-callout [touch-action:manipulation]"
+                      >
+                        +{overflow} more
+                      </button>
+                    )}
                   </div>
                 );
               })}
