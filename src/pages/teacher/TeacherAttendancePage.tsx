@@ -478,7 +478,7 @@ export default function TeacherAttendancePage() {
               <Button
                 type="button"
                 variant="outline"
-                className="w-full justify-start text-left font-normal"
+                className={`w-full justify-start text-left font-normal ${datePickerOpen ? "relative z-[101] bg-background" : ""}`}
                 onClick={() => setDatePickerOpen(true)}
               >
                   <CalendarIcon className="mr-2 h-4 w-4" />
@@ -486,11 +486,11 @@ export default function TeacherAttendancePage() {
               </Button>
               {datePickerOpen && (
                 <div
-                  className="fixed inset-0 z-[100] flex items-center justify-center bg-foreground/10 p-4"
+                  className="fixed inset-0 z-[100] flex items-center justify-center bg-foreground/40 p-4"
                   onClick={() => setDatePickerOpen(false)}
                 >
                   <div
-                    className="w-[320px] max-w-[calc(100vw-2rem)] rounded-md border bg-popover p-0 text-popover-foreground shadow-md"
+                    className="w-full max-w-[calc(100vw-2rem)] rounded-md border bg-popover p-0 text-popover-foreground shadow-md"
                     onClick={(event) => event.stopPropagation()}
                   >
                     <Calendar
