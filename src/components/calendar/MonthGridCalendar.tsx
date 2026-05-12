@@ -196,7 +196,7 @@ export function MonthGridCalendar({
           const isToday = ymd === todayYmd;
           const isSelected = ymd === selectedDay;
           const overflowing = bucket.length > maxChipsPerDay;
-          const visibleCount = overflowing ? maxChipsPerDay - 1 : Math.min(bucket.length, maxChipsPerDay);
+          const visibleCount = Math.min(bucket.length, maxChipsPerDay);
           const visible = bucket.slice(0, visibleCount);
           const extra = bucket.length - visibleCount;
 
