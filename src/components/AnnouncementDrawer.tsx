@@ -157,17 +157,15 @@ export function AnnouncementDrawer({
     });
   };
 
-  const getCategoryColor = (category: string) => {
-    const normalized = category.toLowerCase();
-    switch (normalized) {
-      case "event":
-        return "bg-blue-500 text-white";
-      case "academic":
-        return "bg-amber-500 text-white";
-      case "general":
-        return "bg-primary text-primary-foreground";
+  const getPriorityBadge = (priority?: string | null) => {
+    switch ((priority ?? "").toLowerCase()) {
+      case "high":
+        return { className: "bg-red-500 text-white hover:bg-red-500", label: "High Priority" };
+      case "low":
+        return { className: "bg-emerald-500 text-white hover:bg-emerald-500", label: "Low Priority" };
+      case "medium":
       default:
-        return "bg-muted text-muted-foreground";
+        return { className: "bg-amber-500 text-white hover:bg-amber-500", label: "Medium Priority" };
     }
   };
 
@@ -261,17 +259,19 @@ export function AnnouncementDrawer({
     );
   }
 
-  const attachmentCount = currentAnnouncement.attachments?.length || 0;
   const allAttachments = currentAnnouncement.attachments ?? [];
   const primaryImage = allAttachments.find(a => a.is_primary && isImageUrl(a.url));
   const firstImageAttachment = primaryImage ?? allAttachments.find(a => isImageUrl(a.url));
   const heroImage = firstImageAttachment?.url ?? currentAnnouncement.image;
-  // Quick-link chips: exclude PDFs (shown in banner) and cover image
+  // Count attachments excluding the duplicate cover image
+  const attachmentCount = allAttachments.filter(a => a.url !== heroImage).length;
+  // Quick-link chips: exclude PDFs (shown in banner), cover image, and all other images (rendered in content body)
   const quickLinkAttachments = allAttachments.filter(
-    a => !isPdfAttachment(a) && a.url !== heroImage,
+    a => !isPdfAttachment(a) && a.url !== heroImage && !isImageUrl(a.url),
   );
-  // Other attachments below body: same exclusion
+  // Other attachments below body: exclude images too (they appear inside the content)
   const nonHeroAttachments = quickLinkAttachments;
+  const priorityBadge = getPriorityBadge(currentAnnouncement.priority);
 
   const drawerNode = (
     <>
