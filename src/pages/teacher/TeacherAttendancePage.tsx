@@ -483,7 +483,7 @@ export default function TeacherAttendancePage() {
               <PopoverContent
                 align="center"
                 sideOffset={8}
-                className="w-[320px] p-0 fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2"
+                className="!fixed !left-1/2 !top-1/2 !z-[100] w-[320px] !-translate-x-1/2 !-translate-y-1/2 p-0"
               >
                 <Calendar
                   mode="single"
@@ -497,9 +497,9 @@ export default function TeacherAttendancePage() {
                   }}
                   modifiersClassNames={{
                     complete:
-                      "after:content-[''] after:absolute after:bottom-1 after:left-1/2 after:-translate-x-1/2 after:h-1.5 after:w-1.5 after:rounded-full after:bg-emerald-500 aria-selected:after:bg-white",
+                      "after:content-[''] after:absolute after:bottom-1 after:left-1/2 after:-translate-x-1/2 after:h-1.5 after:w-1.5 after:rounded-full after:bg-primary",
                     partial:
-                      "after:content-[''] after:absolute after:bottom-1 after:left-1/2 after:-translate-x-1/2 after:h-1.5 after:w-1.5 after:rounded-full after:bg-red-500 aria-selected:after:bg-white",
+                      "after:content-[''] after:absolute after:bottom-1 after:left-1/2 after:-translate-x-1/2 after:h-1.5 after:w-1.5 after:rounded-full after:bg-destructive",
                   }}
                 />
               </PopoverContent>
