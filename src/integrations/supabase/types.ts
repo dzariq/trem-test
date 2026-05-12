@@ -4615,6 +4615,14 @@ export type Database = {
     }
     Functions: {
       activate_own_account: { Args: never; Returns: undefined }
+      auto_generate_term_weeks: {
+        Args: {
+          p_start_dow?: number
+          p_term_configuration_id: string
+          p_week_length_days?: number
+        }
+        Returns: number
+      }
       calculate_current_headcount: {
         Args: { target_campus_id?: string; target_month_start: string }
         Returns: number
@@ -4725,6 +4733,10 @@ export type Database = {
       is_ticket_owner: {
         Args: { ticket_parent_email: string }
         Returns: boolean
+      }
+      renumber_academic_year_weeks: {
+        Args: { p_academic_year: number }
+        Returns: undefined
       }
       reset_subject_grade_configs: {
         Args: {
