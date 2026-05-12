@@ -335,11 +335,13 @@ export default function TeacherCalendarPage() {
               />
             )}
 
-            {/* Upcoming Events with tab switcher */}
-            <UpcomingEventsSection
-              events={filteredEvents}
-              onEventClick={openEventDetails}
-            />
+            {/* Upcoming Events with tab switcher (month view only) */}
+            {view === "month" && (
+              <UpcomingEventsSection
+                events={filteredEvents}
+                onEventClick={openEventDetails}
+              />
+            )}
           </TabsContent>
 
           <TabsContent value="cca" className="mt-4 space-y-4">
