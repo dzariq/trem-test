@@ -519,54 +519,50 @@ export default function TeacherAttendancePage() {
 
           {/* Student List */}
           <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-base flex items-center justify-between gap-2 flex-wrap">
-                <div className="flex items-center gap-2 min-w-0">
-                  <span className="truncate">{selectedClass}</span>
-                  <span className="inline-flex items-center gap-1 h-9 px-3 rounded-full border border-border bg-muted/40 text-foreground text-sm font-medium whitespace-nowrap">
-                    <Users className="h-4 w-4" />
-                    {students.length}
-                  </span>
-                </div>
-                <div className="flex items-center gap-2 flex-shrink-0">
-                  {(loadingStudents || loadingAttendance) && (
-                    <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
-                  )}
-                  {students.length > 0 && (
-                    <button
-                      type="button"
-                      onClick={handleMarkAllPresent}
-                      title="Mark all as present"
-                      disabled={saving}
-                      className="inline-flex items-center gap-1.5 h-9 px-3.5 rounded-full border border-emerald-200 bg-emerald-50 text-emerald-700 text-sm font-medium transition-colors hover:bg-emerald-100 whitespace-nowrap"
-                    >
-                      <Check className="h-4 w-4" />
-                      Mark all
-                    </button>
-                  )}
-                  {students.length > 0 && (
-                    <button
-                      type="button"
-                      onClick={() => setShowUnmarkedOnly((v) => !v)}
-                      title={showUnmarkedOnly ? "Show all students" : "Show only unsaved"}
-                      className={cn(
-                        "inline-flex items-center gap-1.5 h-9 px-3.5 rounded-full border text-sm font-medium transition-colors whitespace-nowrap",
-                        showUnmarkedOnly
-                          ? "border-primary/40 bg-primary/10 text-primary"
-                          : "border-border bg-background text-muted-foreground hover:text-foreground"
-                      )}
-                    >
-                      <Filter className="h-4 w-4" />
-                      {(() => {
-                        const unsaved = students.filter(
-                          (s) => !savedStudentIds.has(s.id)
-                        ).length;
-                        return unsaved > 0 ? `${unsaved} unsaved` : "Unsaved";
-                      })()}
-                    </button>
-                  )}
-                </div>
+            <CardHeader className="pb-2 space-y-3">
+              <CardTitle className="text-base flex items-center justify-center gap-2">
+                <span className="truncate">{selectedClass}</span>
+                <span className="inline-flex items-center gap-1.5 h-8 px-3 rounded-lg border border-border bg-background text-foreground text-sm font-medium whitespace-nowrap">
+                  <Users className="h-4 w-4 text-muted-foreground" />
+                  {students.length}
+                </span>
+                {(loadingStudents || loadingAttendance) && (
+                  <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+                )}
               </CardTitle>
+              {students.length > 0 && (
+                <div className="grid grid-cols-2 gap-2">
+                  <button
+                    type="button"
+                    onClick={handleMarkAllPresent}
+                    title="Mark all as present"
+                    disabled={saving}
+                    className="inline-flex items-center justify-center gap-1.5 h-10 w-full rounded-xl border border-emerald-200 bg-emerald-50 text-emerald-700 text-sm font-medium transition-colors hover:bg-emerald-100"
+                  >
+                    <Check className="h-4 w-4" />
+                    Mark all
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setShowUnmarkedOnly((v) => !v)}
+                    title={showUnmarkedOnly ? "Show all students" : "Show only unsaved"}
+                    className={cn(
+                      "inline-flex items-center justify-center gap-1.5 h-10 w-full rounded-xl border text-sm font-medium transition-colors",
+                      showUnmarkedOnly
+                        ? "border-primary/40 bg-primary/10 text-primary"
+                        : "border-border bg-background text-muted-foreground hover:text-foreground"
+                    )}
+                  >
+                    <Filter className="h-4 w-4" />
+                    {(() => {
+                      const unsaved = students.filter(
+                        (s) => !savedStudentIds.has(s.id)
+                      ).length;
+                      return unsaved > 0 ? `${unsaved} unsaved` : "Unsaved";
+                    })()}
+                  </button>
+                </div>
+              )}
             </CardHeader>
             <CardContent className="space-y-2">
               {loadingStudents ? (
