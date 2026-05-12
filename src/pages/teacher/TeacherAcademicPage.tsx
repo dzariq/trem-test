@@ -3416,7 +3416,7 @@ export default function TeacherAcademicPage() {
 
                 {/* Performance Dialog */}
                 <Dialog open={performanceDialogOpen} onOpenChange={setPerformanceDialogOpen}>
-                  <DialogContent className="w-[95vw] max-w-lg h-[85vh] rounded-2xl overflow-hidden flex flex-col">
+                  <DialogContent className="w-[95vw] max-w-lg h-[100dvh] max-h-[85vh] rounded-2xl overflow-hidden flex flex-col pb-[calc(env(safe-area-inset-bottom)+0.5rem)]">
                     <DialogHeader>
                       <DialogTitle>Student Performance</DialogTitle>
                     </DialogHeader>
@@ -3539,7 +3539,7 @@ export default function TeacherAcademicPage() {
 
                 {/* Bands Report Dialog */}
                 <Dialog open={bandsReportDialogOpen} onOpenChange={setBandsReportDialogOpen}>
-                  <DialogContent className="w-[95vw] max-w-2xl max-h-[90vh] rounded-2xl overflow-hidden flex flex-col">
+                  <DialogContent className="w-[95vw] max-w-2xl h-[100dvh] max-h-[90vh] rounded-2xl overflow-hidden flex flex-col pb-[calc(env(safe-area-inset-bottom)+0.5rem)]">
                     <DialogHeader className="flex flex-row items-center justify-between pr-10">
                       <DialogTitle className="flex items-center gap-2">
                         <FileText className="h-5 w-5 text-primary" />
@@ -6370,7 +6370,7 @@ export default function TeacherAcademicPage() {
 
       {/* Overview Report Dialog */}
       <Dialog open={overviewReportDialogOpen} onOpenChange={setOverviewReportDialogOpen}>
-        <DialogContent className="w-[95vw] max-w-3xl h-[90vh] rounded-2xl overflow-hidden flex flex-col">
+        <DialogContent className="w-[95vw] max-w-3xl h-[100dvh] max-h-[90vh] rounded-2xl overflow-hidden flex flex-col pb-[calc(env(safe-area-inset-bottom)+0.5rem)]">
           <DialogHeader className="flex flex-row items-center justify-between pr-12">
             <DialogTitle>Overview Report</DialogTitle>
             <div className="flex gap-2">
@@ -6720,7 +6720,7 @@ export default function TeacherAcademicPage() {
 
       {/* Trends Report Dialog */}
       <Dialog open={trendsReportDialogOpen} onOpenChange={setTrendsReportDialogOpen}>
-        <DialogContent className="w-[95vw] max-w-3xl h-[90vh] rounded-2xl overflow-hidden flex flex-col">
+        <DialogContent className="w-[95vw] max-w-3xl h-[100dvh] max-h-[90vh] rounded-2xl overflow-hidden flex flex-col pb-[calc(env(safe-area-inset-bottom)+0.5rem)]">
           <DialogHeader className="flex flex-row items-center justify-between pr-12">
             <DialogTitle>Trends Report</DialogTitle>
             <div className="flex gap-2">
@@ -7155,7 +7155,7 @@ export default function TeacherAcademicPage() {
 
       {/* Comparison Report Dialog */}
       <Dialog open={comparisonReportDialogOpen} onOpenChange={setComparisonReportDialogOpen}>
-        <DialogContent className="w-[95vw] max-w-3xl h-[90vh] rounded-2xl overflow-hidden flex flex-col">
+        <DialogContent className="w-[95vw] max-w-3xl h-[100dvh] max-h-[90vh] rounded-2xl overflow-hidden flex flex-col pb-[calc(env(safe-area-inset-bottom)+0.5rem)]">
           <DialogHeader className="flex flex-row items-center justify-between pr-12">
             <DialogTitle>Comparison Report</DialogTitle>
             <div className="flex gap-2">
@@ -7515,7 +7515,7 @@ export default function TeacherAcademicPage() {
 
       {/* Box Plot Report Dialog - Enhanced with Professional Design */}
       <Dialog open={boxPlotReportDialogOpen} onOpenChange={setBoxPlotReportDialogOpen}>
-        <DialogContent className="w-[95vw] max-w-3xl max-h-[90vh] rounded-2xl overflow-hidden flex flex-col">
+        <DialogContent className="w-[95vw] max-w-3xl h-[100dvh] max-h-[90vh] rounded-2xl overflow-hidden flex flex-col pb-[calc(env(safe-area-inset-bottom)+0.5rem)]">
           <DialogHeader className="flex flex-row items-center justify-between pr-10">
             <DialogTitle className="flex items-center gap-2">
               <BarChart3 className="h-5 w-5 text-primary" />
