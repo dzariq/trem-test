@@ -93,6 +93,7 @@ export function TimeGridCalendar({
   const HOUR_PX = mode === "day" ? 72 : 48;
   const totalHours = endHour - startHour;
   const totalHeight = totalHours * HOUR_PX;
+  const [monthPickerOpen, setMonthPickerOpen] = useState(false);
 
   const days = useMemo(() => {
     if (mode === "day") {
@@ -228,6 +229,68 @@ export function TimeGridCalendar({
     return `${MONTH_NAMES[start.getMonth()]} – ${MONTH_NAMES[end.getMonth()]}`;
   }, [days, mode, date]);
 
+  // YMDs in the visible month that have events or CCA sessions
+  const eventDayKeys = useMemo(() => {
+    const set = new Set<string>();
+    const year = date.getFullYear();
+    const month = date.getMonth();
+    const monthStart = new Date(year, month, 1);
+    const monthEnd = new Date(year, month + 1, 0);
+    events.forEach((event) => {
+      if (!event.startDay) return;
+      const start = parseYmd(event.startDay);
+      const end = event.endDay ? parseYmd(event.endDay) : start;
+      if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) return;
+      const cursor = new Date(Math.max(start.getTime(), monthStart.getTime()));
+      const last = new Date(Math.min(end.getTime(), monthEnd.getTime()));
+      while (cursor <= last) {
+        set.add(toYmd(cursor));
+        cursor.setDate(cursor.getDate() + 1);
+      }
+    });
+    ccaSessions.forEach((s) => {
+      if (s.sessionDate) set.add(s.sessionDate);
+    });
+    return set;
+  }, [events, ccaSessions, date]);
+
+  // Build mini-month weeks (Mon-first), including leading/trailing days from neighboring months
+  const miniMonthWeeks = useMemo(() => {
+    const year = date.getFullYear();
+    const month = date.getMonth();
+    const first = new Date(year, month, 1);
+    const leadOffset = (first.getDay() + 6) % 7; // Mon = 0
+    const gridStart = new Date(year, month, 1 - leadOffset);
+    const weeks: { date: Date; ymd: string; inMonth: boolean }[][] = [];
+    const cursor = new Date(gridStart);
+    for (let w = 0; w < 6; w++) {
+      const row: { date: Date; ymd: string; inMonth: boolean }[] = [];
+      for (let i = 0; i < 7; i++) {
+        const d = new Date(cursor);
+        row.push({ date: d, ymd: toYmd(d), inMonth: d.getMonth() === month });
+        cursor.setDate(cursor.getDate() + 1);
+      }
+      weeks.push(row);
+    }
+    return weeks;
+  }, [date]);
+
+  const handleMiniDayClick = (d: Date) => {
+    const ymd = toYmd(d);
+    onSelectDay(ymd);
+    onDateChange(d);
+    setMonthPickerOpen(false);
+  };
+
+  const handleMonthStripClick = (monthIdx: number) => {
+    const year = date.getFullYear();
+    const day = date.getDate();
+    const lastDayOfTarget = new Date(year, monthIdx + 1, 0).getDate();
+    const nextDate = new Date(year, monthIdx, Math.min(day, lastDayOfTarget));
+    onDateChange(nextDate);
+    if (mode === "day") onSelectDay(toYmd(nextDate));
+  };
+
   // Layout: time gutter (48px) + N day columns
   const GUTTER = 44;
   const colMinWidth = mode === "day" ? "1fr" : "minmax(64px, 1fr)";
@@ -258,9 +321,21 @@ export function TimeGridCalendar({
               <ArrowLeft className="h-4 w-4" />
             </Button>
           )}
-          <div className="text-2xl sm:text-3xl font-semibold text-foreground truncate">
-            {headerLabel}
-          </div>
+          <button
+            type="button"
+            onClick={() => setMonthPickerOpen((v) => !v)}
+            className="inline-flex items-center gap-1 text-2xl sm:text-3xl font-semibold text-foreground truncate hover:opacity-80 transition-opacity"
+            aria-expanded={monthPickerOpen}
+            aria-label="Toggle month picker"
+          >
+            <span className="truncate">{headerLabel}</span>
+            <ChevronDown
+              className={cn(
+                "h-5 w-5 opacity-70 transition-transform",
+                monthPickerOpen && "rotate-180",
+              )}
+            />
+          </button>
           {onViewChange && (
             <CalendarViewDropdown view={view ?? (mode as CalendarViewMode)} onChange={onViewChange} />
           )}
@@ -301,6 +376,88 @@ export function TimeGridCalendar({
           >
             <ChevronRight className="h-4 w-4" />
           </Button>
+        </div>
+      </div>
+
+      {/* Expandable month picker (Google Calendar style) */}
+      <div
+        className={cn(
+          "overflow-hidden transition-all duration-300 ease-in-out border-b border-border",
+          monthPickerOpen ? "max-h-[420px] opacity-100" : "max-h-0 opacity-0 border-b-0",
+        )}
+      >
+        <div className="px-3 pt-3 pb-2 bg-muted/30">
+          {/* Weekday header */}
+          <div className="grid grid-cols-7 mb-1">
+            {WEEKDAY_SHORT.map((w) => (
+              <div
+                key={w}
+                className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground text-center"
+              >
+                {w[0]}
+              </div>
+            ))}
+          </div>
+          {/* Mini month grid */}
+          <div className="grid grid-cols-7 gap-y-1">
+            {miniMonthWeeks.flat().map((cell) => {
+              const isToday = cell.ymd === todayYmd;
+              const isSelected = cell.ymd === selectedDay;
+              const hasEvent = eventDayKeys.has(cell.ymd);
+              return (
+                <button
+                  key={cell.ymd}
+                  type="button"
+                  onClick={() => handleMiniDayClick(cell.date)}
+                  className="flex flex-col items-center justify-start py-1"
+                >
+                  <span
+                    className={cn(
+                      "inline-flex items-center justify-center w-7 h-7 rounded-full text-xs",
+                      isSelected
+                        ? "bg-primary text-primary-foreground font-semibold"
+                        : isToday
+                          ? "text-primary font-semibold"
+                          : cell.inMonth
+                            ? "text-foreground"
+                            : "text-muted-foreground/50",
+                    )}
+                  >
+                    {cell.date.getDate()}
+                  </span>
+                  <span
+                    className={cn(
+                      "mt-0.5 h-1 w-1 rounded-full",
+                      hasEvent && cell.inMonth ? "bg-primary" : "bg-transparent",
+                    )}
+                  />
+                </button>
+              );
+            })}
+          </div>
+          {/* Month strip */}
+          <div className="mt-3 -mx-3 px-3 overflow-x-auto">
+            <div className="flex items-center gap-1.5 pb-1 min-w-max">
+              {MONTH_SHORT.map((m, idx) => {
+                const isActive = idx === date.getMonth();
+                return (
+                  <button
+                    key={m}
+                    type="button"
+                    onClick={() => handleMonthStripClick(idx)}
+                    className={cn(
+                      "px-3 h-7 rounded-full text-xs font-medium transition-colors whitespace-nowrap",
+                      isActive
+                        ? "bg-primary/15 text-primary"
+                        : "bg-background text-muted-foreground border border-border hover:bg-muted/50",
+                    )}
+                  >
+                    {m}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
         </div>
       </div>
 
