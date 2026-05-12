@@ -6,6 +6,7 @@ import { getEventBadgeColor } from "@/lib/calendarUtils";
 import { getCcaTypeColor } from "@/components/cca/CcaTypeTabs";
 import type { UpcomingEvent } from "@/data/calendar";
 import type { CcaCalendarSession } from "@/hooks/useCcaSessionsCalendar";
+import { CalendarViewDropdown, type CalendarViewMode } from "./CalendarViewSwitcher";
 
 type ChipItem =
   | { kind: "event"; id: string; title: string; colorClass: string; sortKey: string; payload: UpcomingEvent }
@@ -21,6 +22,9 @@ interface MonthGridCalendarProps {
   onEventClick?: (event: UpcomingEvent) => void;
   onSessionClick?: (session: CcaCalendarSession) => void;
   maxChipsPerDay?: number;
+  view?: CalendarViewMode;
+  onViewChange?: (view: CalendarViewMode) => void;
+  onZoomToDay?: (ymd: string) => void;
 }
 
 // Monday-first weekdays
@@ -52,6 +56,9 @@ export function MonthGridCalendar({
   onEventClick,
   onSessionClick,
   maxChipsPerDay = 4,
+  view = "month",
+  onViewChange,
+  onZoomToDay,
 }: MonthGridCalendarProps) {
   const todayYmd = toYmd(new Date());
 
@@ -136,29 +143,34 @@ export function MonthGridCalendar({
   return (
     <div className="bg-card border border-border rounded-xl overflow-hidden shadow-sm">
       {/* Header */}
-      <div className="flex items-center justify-between px-2 py-2 border-b border-border bg-card">
-        <Button
-          type="button"
-          variant="outline"
-          size="icon"
-          className="h-9 w-9 rounded-md"
-          onClick={goPrev}
-          aria-label="Previous month"
-        >
-          <ChevronLeft className="h-5 w-5" />
-        </Button>
-        <div className="text-base font-semibold text-foreground">
-          {MONTH_NAMES[month.getMonth()]} {month.getFullYear()}
+      <div className="flex items-center justify-between gap-2 px-2 py-2 border-b border-border bg-card">
+        <div className="flex items-center gap-2 min-w-0">
+          <Button
+            type="button"
+            variant="outline"
+            size="icon"
+            className="h-8 w-8 rounded-md shrink-0"
+            onClick={goPrev}
+            aria-label="Previous month"
+          >
+            <ChevronLeft className="h-4 w-4" />
+          </Button>
+          <div className="text-sm sm:text-base font-semibold text-foreground truncate">
+            {MONTH_NAMES[month.getMonth()]} {month.getFullYear()}
+          </div>
+          {onViewChange && (
+            <CalendarViewDropdown view={view} onChange={onViewChange} />
+          )}
         </div>
         <Button
           type="button"
           variant="outline"
           size="icon"
-          className="h-9 w-9 rounded-md"
+          className="h-8 w-8 rounded-md shrink-0"
           onClick={goNext}
           aria-label="Next month"
         >
-          <ChevronRight className="h-5 w-5" />
+          <ChevronRight className="h-4 w-4" />
         </Button>
       </div>
 
@@ -198,6 +210,7 @@ export function MonthGridCalendar({
               onMonthChange(new Date(date.getFullYear(), date.getMonth(), 1));
             }
             onSelectDay(ymd);
+            onZoomToDay?.(ymd);
           };
 
           const handleChipClick = (e: MouseEvent, item: ChipItem) => {
