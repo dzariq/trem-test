@@ -245,14 +245,13 @@ export function TimeGridCalendar({
           {onBackToMonth && (
             <Button
               type="button"
-              variant="ghost"
-              size="sm"
-              className="h-8 px-2 rounded-md text-xs gap-1 shrink-0"
+              variant="outline"
+              size="icon"
+              className="h-8 w-8 rounded-md shrink-0"
               onClick={onBackToMonth}
               aria-label="Back to month view"
             >
-              <ArrowLeft className="h-3.5 w-3.5" />
-              Back
+              <ArrowLeft className="h-4 w-4" />
             </Button>
           )}
           <div className="text-sm sm:text-base font-semibold text-foreground truncate">
