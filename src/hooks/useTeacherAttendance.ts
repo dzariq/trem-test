@@ -212,14 +212,21 @@ export function useTeacherAttendance() {
   }, [selectedClass, dateString, students, activeCampus]);
 
   // Update status for a student
-  const setStudentStatus = useCallback((studentId: string, status: AttendanceStatus) => {
-    setAttendanceState((prev) => ({
-      ...prev,
-      [studentId]: {
-        ...prev[studentId],
-        status,
-      },
-    }));
+  const setStudentStatus = useCallback((studentId: string, status: AttendanceStatus | null) => {
+    setAttendanceState((prev) => {
+      const existing = prev[studentId] ?? {};
+      if (status === null) {
+        const { status: _omit, ...rest } = existing as any;
+        return { ...prev, [studentId]: rest };
+      }
+      return {
+        ...prev,
+        [studentId]: {
+          ...existing,
+          status,
+        },
+      };
+    });
   }, []);
 
   // Update remarks for a student
