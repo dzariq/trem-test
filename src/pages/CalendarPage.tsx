@@ -411,67 +411,6 @@ export default function CalendarPage() {
           </div>
 
           <TabsContent value="calendar" className="mt-3 space-y-4">
-            {/* Filter pills */}
-            <div className="flex flex-wrap gap-1.5 pb-2">
-              {/* All button */}
-              <button
-                type="button"
-                className={cn(
-                  "inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-medium border transition-colors",
-                  isAllSelected
-                    ? "bg-foreground text-background border-foreground"
-                    : "bg-muted/40 text-muted-foreground border-border"
-                )}
-                onClick={() => {
-                  setIsAllSelected(true);
-                  setCategoryFilters({} as Record<TagCategory, (CalendarTag | "all")[]>);
-                }}
-              >
-                All
-              </button>
-
-              {/* Category pills with dropdowns */}
-              {availableCategories.map((category) => {
-                const subtypes = categoryFilters[category] || [];
-                const isSelected = subtypes.length > 0;
-                
-                return (
-                  <CategoryFilterPill
-                    key={category}
-                    category={category}
-                    isSelected={isSelected}
-                    selectedSubtypes={subtypes.length > 0 ? subtypes : ["all"]}
-                    onToggleCategory={(cat) => {
-                      setIsAllSelected(false);
-                      setCategoryFilters((prev) => {
-                        const current = prev[cat] || [];
-                        if (current.length > 0) {
-                          // Deselect this category
-                          const newFilters = { ...prev };
-                          delete newFilters[cat];
-                          // If no categories left, select All
-                          if (Object.keys(newFilters).length === 0) {
-                            setIsAllSelected(true);
-                          }
-                          return newFilters;
-                        } else {
-                          // Select this category with "all" subtypes
-                          return { ...prev, [cat]: ["all"] };
-                        }
-                      });
-                    }}
-                    onSubtypeChange={(cat, subtypes) => {
-                      setIsAllSelected(false);
-                      setCategoryFilters((prev) => ({
-                        ...prev,
-                        [cat]: subtypes,
-                      }));
-                    }}
-                  />
-                );
-              })}
-            </div>
-
             {/* Calendar Component */}
             {view === "month" && (
               <MonthGridCalendar
