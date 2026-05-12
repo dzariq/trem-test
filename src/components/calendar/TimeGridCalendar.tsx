@@ -314,7 +314,7 @@ export function TimeGridCalendar({
               type="button"
               variant="outline"
               size="icon"
-              className="h-8 w-8 rounded-md shrink-0"
+              className="h-11 w-11 rounded-md shrink-0 [touch-action:manipulation]"
               onClick={onBackToMonth}
               aria-label="Back to month view"
             >
@@ -344,13 +344,13 @@ export function TimeGridCalendar({
               type="button"
               variant="outline"
               size="icon"
-              className="relative h-8 w-8 rounded-md shrink-0"
+              className="relative h-11 w-11 rounded-md shrink-0 [touch-action:manipulation]"
               onClick={onOpenFilters}
               aria-label="Filter events"
             >
               <SlidersHorizontal className="h-4 w-4" />
               {hasActiveFilters && (
-                <span className="absolute top-1 right-1 h-1.5 w-1.5 rounded-full bg-primary" />
+                <span className="absolute top-1.5 right-1.5 h-1.5 w-1.5 rounded-full bg-primary" />
               )}
             </Button>
           )}
@@ -360,7 +360,7 @@ export function TimeGridCalendar({
             type="button"
             variant="outline"
             size="icon"
-            className="h-8 w-8 rounded-md"
+            className="h-11 w-11 rounded-md [touch-action:manipulation]"
             onClick={goPrev}
             aria-label="Previous"
           >
@@ -370,7 +370,7 @@ export function TimeGridCalendar({
             type="button"
             variant="outline"
             size="icon"
-            className="h-8 w-8 rounded-md"
+            className="h-11 w-11 rounded-md [touch-action:manipulation]"
             onClick={goNext}
             aria-label="Next"
           >
@@ -380,14 +380,14 @@ export function TimeGridCalendar({
       </div>
 
       {/* Expandable month picker (Google Calendar style) */}
-      <div
-        className={cn(
-          "overflow-hidden transition-all duration-300 ease-in-out",
-          monthPickerOpen
-            ? "max-h-[min(60vh,420px)] opacity-100 border-b border-border overflow-y-auto"
-            : "max-h-0 opacity-0",
-        )}
-      >
+        <div
+          className={cn(
+            "overflow-hidden transition-all duration-300 ease-in-out",
+            monthPickerOpen
+              ? "max-h-[min(60dvh,420px)] opacity-100 border-b border-border overflow-y-auto"
+              : "max-h-0 opacity-0",
+          )}
+        >
         <div className="px-3 pt-3 pb-2 bg-background">
           {/* Weekday header */}
           <div className="grid grid-cols-7 mb-1">
