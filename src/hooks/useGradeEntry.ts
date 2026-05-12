@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useMemo } from "react";
 import { toast } from "@/hooks/use-toast";
 import { useTeacherScope } from "@/hooks/useTeacherScope";
 import { supabase } from "@/lib/supabase";
+import { useCampus } from "@/contexts/CampusContext";
 import {
   fetchAvailableClasses,
   fetchStudentsByClass,
@@ -271,7 +272,7 @@ export function useGradeEntry(): UseGradeEntryReturn {
         } else {
           // Get year level from first student
           const yearLevel = fetchedStudents[0]?.year_level;
-          const fetchedSubjects = await fetchSubjects(yearLevel);
+          const fetchedSubjects = await fetchSubjects(yearLevel, activeCampus);
           setRawSubjects(fetchedSubjects);
         }
       } catch (err) {
