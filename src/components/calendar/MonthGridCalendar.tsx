@@ -231,11 +231,13 @@ export function MonthGridCalendar({
             onZoomToDay?.(ymd);
           };
 
-          const handleChipClick = (e: MouseEvent, item: ChipItem) => {
+          const handleChipClick = (e: MouseEvent, _item: ChipItem) => {
             e.stopPropagation();
+            if (!inMonth) {
+              onMonthChange(new Date(date.getFullYear(), date.getMonth(), 1));
+            }
             onSelectDay(ymd);
-            if (item.kind === "event") onEventClick?.(item.payload);
-            else onSessionClick?.(item.payload);
+            onZoomToDay?.(ymd);
           };
 
           return (
