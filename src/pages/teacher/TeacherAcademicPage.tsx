@@ -1856,7 +1856,7 @@ export default function TeacherAcademicPage() {
                 </div>
 
                 <Button 
-                  className="fixed z-50 shadow-xl bottom-24 right-4 h-14 w-14 rounded-full p-0 bg-purple-600 hover:bg-purple-700"
+                  className="fixed z-[60] shadow-xl right-[calc(env(safe-area-inset-right)+1rem)] bottom-[calc(env(safe-area-inset-bottom)+6rem)] h-14 w-14 rounded-full p-0 bg-purple-600 hover:bg-purple-700 active:scale-[0.96] transition-transform [touch-action:manipulation]"
                   onClick={() => {
                     toast.success(
                       "Behavior saved",
@@ -2322,7 +2322,7 @@ export default function TeacherAcademicPage() {
                       const saveButton = (
                         <Button 
                           className={cn(
-                            "fixed z-50 shadow-xl bottom-24 right-4",
+                            "fixed z-[60] shadow-xl right-[calc(env(safe-area-inset-right)+1rem)] bottom-[calc(env(safe-area-inset-bottom)+6rem)] active:scale-[0.96] transition-transform [touch-action:manipulation]",
                             isGradingClosed 
                               ? "h-12 px-4 rounded-full gap-2" 
                               : "h-14 px-5 rounded-full gap-2"
@@ -6345,7 +6345,7 @@ export default function TeacherAcademicPage() {
 
               {!isAtBottom && (
                 <Button
-                  className="fixed z-50 shadow-xl bottom-24 right-4 h-14 w-14 rounded-full p-0 bg-emerald-600 hover:bg-emerald-700 transition-all duration-300"
+                  className="fixed z-[60] shadow-xl right-[calc(env(safe-area-inset-right)+1rem)] bottom-[calc(env(safe-area-inset-bottom)+6rem)] h-14 w-14 rounded-full p-0 bg-emerald-600 hover:bg-emerald-700 active:scale-[0.96] transition-all duration-300 [touch-action:manipulation]"
                   onClick={() => {
                     if (analysisSubTab === 'overview') {
                       setOverviewReportDialogOpen(true);
