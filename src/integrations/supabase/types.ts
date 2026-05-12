@@ -4698,6 +4698,10 @@ export type Database = {
       }
       get_user_campus_id: { Args: never; Returns: string }
       get_user_campuses: { Args: never; Returns: string[] }
+      has_module_edit_access: {
+        Args: { p_module_key: string }
+        Returns: boolean
+      }
       has_role: { Args: { _role: string; _user_id: string }; Returns: boolean }
       is_admin: { Args: never; Returns: boolean }
       is_admin_like: { Args: never; Returns: boolean }
