@@ -431,6 +431,8 @@ export default function CalendarPage() {
                   setSelectedDay(ymd);
                   setView("day");
                 }}
+                onOpenFilters={() => setFiltersOpen(true)}
+                hasActiveFilters={!isAllSelected}
               />
             )}
 
@@ -463,6 +465,8 @@ export default function CalendarPage() {
                 view={view}
                 onViewChange={setView}
                 onBackToMonth={() => setView("month")}
+                onOpenFilters={() => setFiltersOpen(true)}
+                hasActiveFilters={!isAllSelected}
               />
             )}
 
