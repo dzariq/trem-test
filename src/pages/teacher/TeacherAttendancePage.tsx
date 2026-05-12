@@ -504,6 +504,9 @@ export default function TeacherAttendancePage() {
                       }}
                       initialFocus
                       className="w-full"
+                      classNames={{
+                        day_today: "rdp-day_today font-semibold text-foreground",
+                      }}
                       modifiers={{
                         complete: (date) => completeDates.has(format(date, "yyyy-MM-dd")),
                         partial: (date) => partialDates.has(format(date, "yyyy-MM-dd")),
