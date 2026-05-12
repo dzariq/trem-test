@@ -107,7 +107,7 @@ export function CategoryFilterPill({
         <DropdownMenuContent 
           align="start" 
           sideOffset={6} 
-          className="min-w-[220px] max-h-[300px] overflow-y-auto bg-card border-border z-50"
+          className="min-w-[220px] max-h-[300px] overflow-y-auto bg-card border-border z-[100]"
         >
           {subtypeOptions.map((option) => (
             <button

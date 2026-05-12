@@ -182,13 +182,13 @@ export function MonthGridCalendar({
               type="button"
               variant="outline"
               size="icon"
-              className="relative h-8 w-8 rounded-md shrink-0"
+              className="relative h-11 w-11 rounded-md shrink-0 [touch-action:manipulation]"
               onClick={onOpenFilters}
               aria-label="Filter events"
             >
               <SlidersHorizontal className="h-4 w-4" />
               {hasActiveFilters && (
-                <span className="absolute top-1 right-1 h-1.5 w-1.5 rounded-full bg-primary" />
+                <span className="absolute top-1.5 right-1.5 h-1.5 w-1.5 rounded-full bg-primary" />
               )}
             </Button>
           )}
@@ -198,7 +198,7 @@ export function MonthGridCalendar({
             type="button"
             variant="outline"
             size="icon"
-            className="h-8 w-8 rounded-md"
+            className="h-11 w-11 rounded-md [touch-action:manipulation]"
             onClick={goPrev}
             aria-label="Previous month"
           >
@@ -208,7 +208,7 @@ export function MonthGridCalendar({
             type="button"
             variant="outline"
             size="icon"
-            className="h-8 w-8 rounded-md"
+            className="h-11 w-11 rounded-md [touch-action:manipulation]"
             onClick={goNext}
             aria-label="Next month"
           >

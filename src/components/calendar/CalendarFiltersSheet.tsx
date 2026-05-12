@@ -80,7 +80,7 @@ export function CalendarFiltersSheet({
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent
         side="bottom"
-        className="z-[100] rounded-t-2xl h-[75vh] flex flex-col p-0"
+        className="z-[100] rounded-t-2xl h-[75dvh] flex flex-col p-0"
       >
         <SheetHeader className="px-6 pt-6 pb-2 shrink-0">
           <SheetTitle>Filter events</SheetTitle>
@@ -90,7 +90,7 @@ export function CalendarFiltersSheet({
           <button
             type="button"
             className={cn(
-              "inline-flex items-center gap-1 rounded-full px-3 py-1.5 text-xs font-medium border transition-colors mb-3",
+              "inline-flex items-center min-h-11 rounded-full px-4 text-xs font-medium border transition-colors mb-3 [touch-action:manipulation]",
               isAllSelected
                 ? "bg-foreground text-background border-foreground"
                 : "bg-muted/40 text-muted-foreground border-border",
@@ -130,7 +130,7 @@ export function CalendarFiltersSheet({
                       type="button"
                       onClick={() => toggleCategory(category)}
                       className={cn(
-                        "inline-flex items-center gap-1 rounded-full px-3 py-1.5 text-xs font-medium border transition-colors",
+                        "inline-flex items-center gap-1 min-h-11 rounded-full px-4 text-xs font-medium border transition-colors [touch-action:manipulation]",
                         pillStyle,
                         isSelected ? "ring-2 ring-primary/30" : "opacity-70",
                       )}
@@ -143,7 +143,7 @@ export function CalendarFiltersSheet({
                         type="button"
                         aria-label={`Toggle ${displayName} subtypes`}
                         onClick={() => setExpanded(isOpen ? null : category)}
-                        className="inline-flex items-center justify-center h-8 w-8 rounded-full hover:bg-muted transition-colors text-muted-foreground"
+                        className="inline-flex items-center justify-center h-11 w-11 rounded-full hover:bg-muted transition-colors text-muted-foreground [touch-action:manipulation]"
                       >
                         <ChevronDown
                           className={cn(

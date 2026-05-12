@@ -34,7 +34,7 @@ export function CalendarViewDropdown({ view, onChange, className }: CalendarView
     <DropdownMenu>
       <DropdownMenuTrigger
         className={cn(
-          "inline-flex items-center gap-1 rounded-md border border-border bg-background px-2 min-h-9 min-w-9 text-xs font-medium text-foreground hover:bg-muted/50 transition-colors no-callout",
+          "inline-flex items-center gap-1 rounded-md border border-border bg-background px-3 min-h-11 min-w-11 text-xs font-medium text-foreground hover:bg-muted/50 transition-colors no-callout [touch-action:manipulation]",
           className,
         )}
       >
@@ -45,7 +45,7 @@ export function CalendarViewDropdown({ view, onChange, className }: CalendarView
         {LABELS[view]}
         <ChevronDown className="h-3.5 w-3.5 opacity-70" />
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="min-w-[8rem]">
+      <DropdownMenuContent align="end" className="min-w-[8rem] z-[100]">
         {OPTIONS.map((opt) => {
           const Icon = ICONS[opt];
           return (
