@@ -471,19 +471,54 @@ export default function CalendarPage() {
             </div>
 
             {/* Calendar Component */}
-            <MonthGridCalendar
-              month={currentMonth}
-              selectedDay={selectedDay}
-              onSelectDay={setSelectedDay}
-              onMonthChange={(date) => {
-                setCurrentMonth(date);
-                const month = String(date.getMonth() + 1).padStart(2, "0");
-                setSelectedDay(`${date.getFullYear()}-${month}-01`);
-              }}
-              events={filteredEvents}
-              ccaSessions={gridCcaSessions}
-              onEventClick={openEventDetails}
-            />
+            <div className="flex justify-end pb-2">
+              <CalendarViewSwitcher view={view} onChange={setView} />
+            </div>
+
+            {view === "month" && (
+              <MonthGridCalendar
+                month={currentMonth}
+                selectedDay={selectedDay}
+                onSelectDay={setSelectedDay}
+                onMonthChange={(date) => {
+                  setCurrentMonth(date);
+                  const month = String(date.getMonth() + 1).padStart(2, "0");
+                  setSelectedDay(`${date.getFullYear()}-${month}-01`);
+                }}
+                events={filteredEvents}
+                ccaSessions={gridCcaSessions}
+                onEventClick={openEventDetails}
+              />
+            )}
+
+            {(view === "week" || view === "day") && (
+              <TimeGridCalendar
+                mode={view}
+                date={parseDayKey(selectedDay)}
+                selectedDay={selectedDay}
+                onSelectDay={(ymd) => {
+                  setSelectedDay(ymd);
+                  const d = parseDayKey(ymd);
+                  if (
+                    d.getFullYear() !== currentMonth.getFullYear() ||
+                    d.getMonth() !== currentMonth.getMonth()
+                  ) {
+                    setCurrentMonth(new Date(d.getFullYear(), d.getMonth(), 1));
+                  }
+                }}
+                onDateChange={(d) => {
+                  if (
+                    d.getFullYear() !== currentMonth.getFullYear() ||
+                    d.getMonth() !== currentMonth.getMonth()
+                  ) {
+                    setCurrentMonth(new Date(d.getFullYear(), d.getMonth(), 1));
+                  }
+                }}
+                events={filteredEvents}
+                ccaSessions={gridCcaSessions}
+                onEventClick={openEventDetails}
+              />
+            )}
 
             {/* Events for Selected Date */}
             <Card className="bg-card border-border shadow-sm">
