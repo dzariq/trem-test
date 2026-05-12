@@ -331,6 +331,8 @@ export default function TeacherCalendarPage() {
                 view={view}
                 onViewChange={setView}
                 onBackToMonth={() => setView("month")}
+                onOpenFilters={() => setFiltersOpen(true)}
+                hasActiveFilters={!isAllSelected}
               />
             )}
 
