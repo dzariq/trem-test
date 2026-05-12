@@ -1,21 +1,37 @@
-## Calendar Month View — Taller Cells + Remove Day Section
+## Calendar Header Reorg + Collapsible Filters
 
-### Changes
+### New header layout (inside `MonthGridCalendar` and `TimeGridCalendar`)
 
-**1. Taller month grid cells (`MonthGridCalendar.tsx`)**
-- Increase min cell height: `min-h-[88px] sm:min-h-[110px]` → `min-h-[128px] sm:min-h-[150px]` so 3 event chips fit comfortably with the date number.
-- Change default `maxChipsPerDay` from `4` → `3`.
-- Overflow indicator: when a day has more than 3 events, show the first 2 chips plus a compact "…" / "+N" pill (instead of "+N more" text row). Clicking it (or the cell) zooms into the Day view via existing `onZoomToDay`.
-- Tapping any day cell already calls `onZoomToDay` — keep as-is so the overflow tap zooms naturally.
+```text
+[ May 2026 ]  [ Month ▾ ]  [ ⛃ Filter ]   ........   [ < ]  [ > ]
+```
 
-**2. Remove the bottom "selected day events" section**
-- In `src/pages/CalendarPage.tsx` and `src/pages/teacher/TeacherCalendarPage.tsx`, remove the block under the Month grid that renders the selected day's heading ("Tuesday, May 12, 2026") and its event list / "No events scheduled for this date" empty state.
-- Keep `selectedDay` state (still used for highlighting and zoom-to-day).
+Left cluster (grouped tight): month/date label → view dropdown → filter button.
+Right cluster: prev / next arrows. (Day/Week views also keep the existing `[← Back]` button at the far left.)
+
+### Filter button → bottom sheet
+
+- Replace the row of filter pills currently rendered above the calendar in `TeacherCalendarPage.tsx` and `CalendarPage.tsx`.
+- New `Filter` icon button (lucide `SlidersHorizontal`) in the calendar header, with a small badge dot when any filter is active.
+- Tapping it opens a bottom sheet (`@/components/ui/sheet` `side="bottom"`) titled "Filter events" containing:
+  - The existing "All" toggle
+  - The existing `CategoryFilterPill` row (full set, wrapped)
+  - "Apply" / "Reset" footer (Reset = All selected)
+- Sheet state (`filtersOpen`) lives on the page; filter state and handlers stay where they are today (no logic change).
+
+### Wiring
+
+- `MonthGridCalendar` and `TimeGridCalendar` get new optional props: `onOpenFilters?: () => void`, `hasActiveFilters?: boolean`.
+- Both pages pass `onOpenFilters={() => setFiltersOpen(true)}` and `hasActiveFilters={!isAllSelected}`.
+- Remove the existing `<div className="flex flex-wrap gap-1.5 pb-2">…pills…</div>` block from both pages; move that exact JSX into the new sheet content (extracted as a small `CalendarFiltersSheet` component to avoid duplication between teacher and parent pages).
 
 ### Out of scope
-- No changes to Week/Day views, filters, sheets, data hooks, or styling tokens beyond cell height.
+- No changes to filter logic, event/CCA data, day-zoom behavior, or styling of the pills themselves.
+- No changes to the Upcoming Events section.
 
 ### Files
-- `src/components/calendar/MonthGridCalendar.tsx`
-- `src/pages/CalendarPage.tsx`
-- `src/pages/teacher/TeacherCalendarPage.tsx`
+- `src/components/calendar/MonthGridCalendar.tsx` — header layout + filter button
+- `src/components/calendar/TimeGridCalendar.tsx` — header layout + filter button
+- `src/components/calendar/CalendarFiltersSheet.tsx` — new, wraps All + CategoryFilterPill row in a bottom sheet
+- `src/pages/teacher/TeacherCalendarPage.tsx` — remove pill row, add sheet, pass props
+- `src/pages/CalendarPage.tsx` — same
