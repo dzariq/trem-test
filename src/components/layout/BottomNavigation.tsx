@@ -14,7 +14,7 @@ type NavItem = {
 
 const navItems: NavItem[] = [
   { to: "/parent", icon: Home, label: "Home" },
-  { to: "/parent/attendance", icon: UserCheck, label: "Attendance" },
+  { to: "/parent/attendance", icon: UserCheck, label: "Attend" },
   { to: "/parent/academic", customIcon: academicOwlIcon, label: "Academic" },
   { to: "/parent/calendar", icon: Calendar, label: "Calendar" },
   ...(FEATURES.homeworkParent ? [{ to: "/parent/homework", icon: BookOpen, label: "Homework" }] : []),
@@ -56,7 +56,10 @@ export function BottomNavigation() {
         isVisible ? "translate-y-0" : "translate-y-full"
       )}
     >
-      <div className="max-w-lg mx-auto flex justify-around items-center py-2 px-1">
+      <div
+        className="max-w-lg mx-auto grid items-stretch py-2 px-1"
+        style={{ gridTemplateColumns: `repeat(${navItems.length}, minmax(0, 1fr))` }}
+      >
         {navItems.map((item) => (
           <NavLink
             key={item.to}
@@ -64,7 +67,7 @@ export function BottomNavigation() {
             end={item.to === "/parent"}
             className={({ isActive }) =>
               cn(
-                "flex flex-col items-center justify-center py-2 px-3 rounded-lg transition-all duration-200 min-w-[60px]",
+                "flex flex-col items-center justify-center py-2 px-1 rounded-lg transition-all duration-200 w-full",
                 isActive
                   ? "text-primary bg-accent"
                   : "text-muted-foreground hover:text-foreground hover:bg-accent/50"
