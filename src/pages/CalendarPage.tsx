@@ -34,6 +34,7 @@ import { useCcaSessionsCalendar, type CcaCalendarSession } from "@/hooks/useCcaS
 import { EventDetailsSheet } from "@/components/events/EventDetailsSheet";
 import { UpcomingEventsSection } from "@/components/calendar/UpcomingEventsSection";
 import { CategoryFilterPill } from "@/components/calendar/CategoryFilterPill";
+import { CalendarFiltersSheet } from "@/components/calendar/CalendarFiltersSheet";
 import { 
   PARENT_CATEGORY_ORDER, 
   TEACHER_CATEGORY_ORDER,
@@ -73,6 +74,7 @@ export default function CalendarPage() {
   // Track which categories are selected and their subtypes
   const [categoryFilters, setCategoryFilters] = useState<Record<TagCategory, (CalendarTag | "all")[]>>({} as Record<TagCategory, (CalendarTag | "all")[]>);
   const [isAllSelected, setIsAllSelected] = useState(true);
+  const [filtersOpen, setFiltersOpen] = useState(false);
 
   const {
     linkedStudents,
