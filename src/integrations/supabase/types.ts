@@ -4089,6 +4089,7 @@ export type Database = {
       }
       subject_categories: {
         Row: {
+          campus_code: string | null
           color: string | null
           created_at: string
           id: string
@@ -4099,6 +4100,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          campus_code?: string | null
           color?: string | null
           created_at?: string
           id?: string
@@ -4109,6 +4111,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          campus_code?: string | null
           color?: string | null
           created_at?: string
           id?: string
