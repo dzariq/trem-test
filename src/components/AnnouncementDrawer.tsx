@@ -5,7 +5,7 @@ import { cn } from "@/lib/utils";
 import { openExternal } from "@/lib/native/openExternal";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Calendar, Check, ChevronLeft, ChevronRight, Download, FileText, Inbox, ShieldCheck } from "lucide-react";
+import { Calendar, Check, ChevronLeft, ChevronRight, Download, FileText, Inbox, ShieldCheck, Star } from "lucide-react";
 import { markAnnouncementRead, acknowledgeAnnouncement, type AnnouncementAttachment } from "@/data/announcements";
 import { PDFViewerDialog } from "@/components/PDFViewerDialog";
 import { AnnouncementHtmlContent } from "@/components/announcements/AnnouncementHtmlContent";
@@ -46,6 +46,8 @@ interface Announcement {
   is_read?: boolean;
   requires_acknowledgement?: boolean;
   is_acknowledged?: boolean;
+  priority?: string | null;
+  is_featured?: boolean;
 }
 
 interface AnnouncementDrawerProps {
@@ -155,17 +157,15 @@ export function AnnouncementDrawer({
     });
   };
 
-  const getCategoryColor = (category: string) => {
-    const normalized = category.toLowerCase();
-    switch (normalized) {
-      case "event":
-        return "bg-blue-500 text-white";
-      case "academic":
-        return "bg-amber-500 text-white";
-      case "general":
-        return "bg-primary text-primary-foreground";
+  const getPriorityBadge = (priority?: string | null) => {
+    switch ((priority ?? "").toLowerCase()) {
+      case "high":
+        return { className: "bg-red-500 text-white hover:bg-red-500", label: "High Priority" };
+      case "low":
+        return { className: "bg-emerald-500 text-white hover:bg-emerald-500", label: "Low Priority" };
+      case "medium":
       default:
-        return "bg-muted text-muted-foreground";
+        return { className: "bg-amber-500 text-white hover:bg-amber-500", label: "Medium Priority" };
     }
   };
 
@@ -259,17 +259,19 @@ export function AnnouncementDrawer({
     );
   }
 
-  const attachmentCount = currentAnnouncement.attachments?.length || 0;
   const allAttachments = currentAnnouncement.attachments ?? [];
   const primaryImage = allAttachments.find(a => a.is_primary && isImageUrl(a.url));
   const firstImageAttachment = primaryImage ?? allAttachments.find(a => isImageUrl(a.url));
   const heroImage = firstImageAttachment?.url ?? currentAnnouncement.image;
-  // Quick-link chips: exclude PDFs (shown in banner) and cover image
+  // Count attachments excluding the duplicate cover image
+  const attachmentCount = allAttachments.filter(a => a.url !== heroImage).length;
+  // Quick-link chips: exclude PDFs (shown in banner), cover image, and all other images (rendered in content body)
   const quickLinkAttachments = allAttachments.filter(
-    a => !isPdfAttachment(a) && a.url !== heroImage,
+    a => !isPdfAttachment(a) && a.url !== heroImage && !isImageUrl(a.url),
   );
-  // Other attachments below body: same exclusion
+  // Other attachments below body: exclude images too (they appear inside the content)
   const nonHeroAttachments = quickLinkAttachments;
+  const priorityBadge = getPriorityBadge(currentAnnouncement.priority);
 
   const drawerNode = (
     <>
@@ -348,9 +350,17 @@ export function AnnouncementDrawer({
                         className="w-full aspect-[16/9] object-cover"
                       />
                     </button>
+                    {currentAnnouncement.is_featured && (
+                      <div className="absolute top-3 left-3 z-10 pointer-events-none">
+                        <div className="h-9 w-9 rounded-full bg-yellow-400 text-yellow-950 flex items-center justify-center shadow-md ring-2 ring-white/80">
+                          <Star className="h-5 w-5" fill="currentColor" />
+                        </div>
+                      </div>
+                    )}
                     <div className="absolute bottom-3 left-3 z-10 pointer-events-none">
-                      <Badge className="text-xs font-semibold px-3 py-1 bg-white text-foreground border border-border hover:bg-white capitalize shadow-sm">
-                        {currentAnnouncement.category}
+                      <Badge className={cn("text-xs font-semibold px-3 py-1 gap-1.5 shadow-sm", priorityBadge.className)}>
+                        <span className="h-1.5 w-1.5 rounded-full bg-white" />
+                        {priorityBadge.label}
                       </Badge>
                     </div>
                   </div>
