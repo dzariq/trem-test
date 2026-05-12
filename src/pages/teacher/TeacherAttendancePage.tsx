@@ -478,7 +478,7 @@ export default function TeacherAttendancePage() {
               <Button
                 type="button"
                 variant="outline"
-                className="w-full justify-start text-left font-normal"
+                className={`w-full justify-start text-left font-normal ${datePickerOpen ? "relative z-[101] bg-background" : ""}`}
                 onClick={() => setDatePickerOpen(true)}
               >
                   <CalendarIcon className="mr-2 h-4 w-4" />
