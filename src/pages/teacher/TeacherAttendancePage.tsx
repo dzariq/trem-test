@@ -194,7 +194,16 @@ export default function TeacherAttendancePage() {
     (teacherScope.allowedClassYears.length > 0 && !teacherScope.loading);
 
   const handleStatusChange = (studentId: string, status: AttendanceStatus) => {
-    setStudentStatus(studentId, status);
+    const current = attendanceState[studentId]?.status;
+    if (current === status) {
+      setStudentStatus(studentId, null);
+    } else {
+      setStudentStatus(studentId, status);
+    }
+  };
+
+  const handleMarkAllPresent = () => {
+    students.forEach((s) => setStudentStatus(s.id, "present"));
   };
 
   const getStatusButton = (studentId: string, status: AttendanceStatus, icon: React.ReactNode, label: string, activeColor: string) => {
@@ -512,10 +521,22 @@ export default function TeacherAttendancePage() {
           <Card>
             <CardHeader className="pb-2">
               <CardTitle className="text-base flex items-center justify-between gap-2">
-                <span className="truncate">{selectedClass} ({students.length} students)</span>
+                <span className="truncate">{selectedClass} ({students.length} 🧑‍🎓)</span>
                 <div className="flex items-center gap-2 flex-shrink-0">
                   {(loadingStudents || loadingAttendance) && (
                     <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+                  )}
+                  {students.length > 0 && (
+                    <button
+                      type="button"
+                      onClick={handleMarkAllPresent}
+                      title="Mark all as present"
+                      disabled={saving}
+                      className="inline-flex items-center gap-1 h-7 px-2 rounded-full border border-emerald-200 bg-emerald-50 text-emerald-700 text-xs font-medium transition-colors hover:bg-emerald-100 whitespace-nowrap"
+                    >
+                      <Check className="h-3.5 w-3.5" />
+                      Mark all
+                    </button>
                   )}
                   {students.length > 0 && (
                     <button
