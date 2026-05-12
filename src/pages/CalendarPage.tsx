@@ -418,16 +418,16 @@ export default function CalendarPage() {
         <PullToRefreshIndicator pullDistance={pullDistance} refreshing={refreshing} />
         <Tabs defaultValue={initialTab} className="w-full">
           <div className="pb-2">
-            <TabsList className="grid w-full grid-cols-2 rounded-full bg-muted/40 p-1">
+            <TabsList className="grid w-full grid-cols-2 rounded-md bg-muted/40 p-1">
               <TabsTrigger
                 value="calendar"
-                className="rounded-full text-sm data-[state=active]:bg-background data-[state=active]:shadow-sm"
+                className="rounded-md text-sm data-[state=active]:bg-background data-[state=active]:shadow-sm"
               >
                 Main Calendar
               </TabsTrigger>
               <TabsTrigger
                 value="cca"
-                className="rounded-full text-sm data-[state=active]:bg-background data-[state=active]:shadow-sm"
+                className="rounded-md text-sm data-[state=active]:bg-background data-[state=active]:shadow-sm"
               >
                 CCA Activities
               </TabsTrigger>
