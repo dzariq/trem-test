@@ -308,13 +308,13 @@ export function TimeGridCalendar({
     <div className="bg-card border border-border rounded-xl overflow-hidden shadow-sm">
       {/* Header */}
       <div className="flex items-center justify-between gap-2 px-2 py-2 border-b border-border">
-        <div className="flex items-center gap-1.5 min-w-0">
+        <div className="flex items-center gap-1 min-w-0">
           {onBackToMonth && (
             <Button
               type="button"
               variant="outline"
               size="icon"
-              className="h-11 w-11 rounded-md shrink-0 [touch-action:manipulation]"
+              className="h-9 w-9 rounded-md shrink-0 [touch-action:manipulation]"
               onClick={onBackToMonth}
               aria-label="Back to month view"
             >
@@ -344,7 +344,7 @@ export function TimeGridCalendar({
               type="button"
               variant="outline"
               size="icon"
-              className="relative h-11 w-11 rounded-md shrink-0 [touch-action:manipulation]"
+              className="relative h-9 w-9 rounded-md shrink-0 [touch-action:manipulation]"
               onClick={onOpenFilters}
               aria-label="Filter events"
             >
@@ -355,12 +355,12 @@ export function TimeGridCalendar({
             </Button>
           )}
         </div>
-        <div className="flex items-center gap-1.5 shrink-0">
+        <div className="flex items-center gap-1 shrink-0">
           <Button
             type="button"
             variant="outline"
             size="icon"
-            className="h-11 w-11 rounded-md [touch-action:manipulation]"
+            className="h-9 w-9 rounded-md [touch-action:manipulation]"
             onClick={goPrev}
             aria-label="Previous"
           >
@@ -370,7 +370,7 @@ export function TimeGridCalendar({
             type="button"
             variant="outline"
             size="icon"
-            className="h-11 w-11 rounded-md [touch-action:manipulation]"
+            className="h-9 w-9 rounded-md [touch-action:manipulation]"
             onClick={goNext}
             aria-label="Next"
           >
