@@ -417,7 +417,6 @@ export function TimeGridCalendar({
                   key={d.ymd}
                   className={cn(
                     "relative",
-                    i < days.length - 1 && "border-r border-border",
                     isToday && "bg-primary/[0.03]",
                   )}
                   onClick={() => onSelectDay(d.ymd)}
@@ -426,7 +425,7 @@ export function TimeGridCalendar({
                   {Array.from({ length: totalHours }).map((_, h) => (
                     <div
                       key={h}
-                      className="absolute left-1 right-1 rounded-md bg-muted/20 border border-border/40"
+                      className="absolute left-1 right-1 rounded-md bg-muted/40"
                       style={{ top: h * HOUR_PX + 2, height: HOUR_PX - 4 }}
                     />
                   ))}
