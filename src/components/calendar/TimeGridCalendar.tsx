@@ -325,10 +325,10 @@ export function TimeGridCalendar({
           >
             <span className="truncate">{headerLabel}</span>
         </button>
-        {onViewChange && (
-            <CalendarViewDropdown view={view ?? (mode as CalendarViewMode)} onChange={onViewChange} />
-        )}
         <div className="flex items-center gap-1 shrink-0 ml-auto">
+          {onViewChange && (
+            <CalendarViewDropdown view={view ?? (mode as CalendarViewMode)} onChange={onViewChange} />
+          )}
           {onOpenFilters && (
             <Button
               type="button"

@@ -167,10 +167,10 @@ export function MonthGridCalendar({
           >
             <span className="truncate">{MONTH_SHORT[month.getMonth()].toUpperCase()}</span>
         </button>
-        {onViewChange && (
-            <CalendarViewDropdown view={view} onChange={onViewChange} />
-        )}
         <div className="flex items-center gap-1 shrink-0 ml-auto">
+          {onViewChange && (
+            <CalendarViewDropdown view={view} onChange={onViewChange} />
+          )}
           {onOpenFilters && (
             <Button
               type="button"
