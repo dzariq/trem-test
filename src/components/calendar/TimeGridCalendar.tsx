@@ -413,8 +413,8 @@ export function TimeGridCalendar({
                       className={cn(
                         "absolute left-1 right-1 rounded-lg border",
                         isToday
-                          ? "bg-muted/40 border-border/60"
-                          : "bg-muted/30 border-border/60",
+                          ? "bg-muted/20 border-border/40"
+                          : "bg-muted/15 border-border/40",
                       )}
                       style={{ top: h * HOUR_PX + 3, height: HOUR_PX - 6 }}
                     />
