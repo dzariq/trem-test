@@ -1,12 +1,17 @@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Megaphone, Star, ShieldCheck } from "lucide-react";
+import { Megaphone, Star, ShieldCheck, Calendar } from "lucide-react";
 import type { Announcement } from "@/data/announcements";
 
 interface Props {
   announcement: Announcement;
   onClick: () => void;
 }
+
+const formatDate = (dateString: string) => {
+  const date = new Date(dateString);
+  return date.toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" });
+};
 
 export function FeaturedAnnouncementCard({ announcement, onClick }: Props) {
   return (
@@ -55,9 +60,25 @@ export function FeaturedAnnouncementCard({ announcement, onClick }: Props) {
         <h3 className="font-bold text-foreground text-lg mb-1 leading-tight">
           {announcement.title}
         </h3>
-        <p className="text-sm text-muted-foreground line-clamp-2">
+        <p className="text-sm text-muted-foreground line-clamp-2 mb-3">
           {announcement.snippet}
         </p>
+        <div className="flex items-center justify-between">
+          <span className="text-xs text-muted-foreground flex items-center gap-1">
+            <Calendar className="h-3 w-3" />
+            {formatDate(announcement.date)}
+          </span>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={(e) => {
+              e.stopPropagation();
+              onClick();
+            }}
+          >
+            Read More
+          </Button>
+        </div>
       </div>
     </div>
   );
