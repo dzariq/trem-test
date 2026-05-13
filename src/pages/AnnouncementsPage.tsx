@@ -53,6 +53,9 @@ export default function AnnouncementsPage() {
 
   const { featured, pinned, regular } = categorizeAnnouncements(filteredAnnouncements);
 
+  const unreadRegular = regular.filter(a => !a.is_read);
+  const readRegular = regular.filter(a => a.is_read);
+
   // Build a flat list for the drawer navigation (featured first, then pinned, then regular)
   const drawerList = [
     ...(featured ? [featured] : []),
@@ -146,13 +149,36 @@ export default function AnnouncementsPage() {
             )}
 
             {/* Regular */}
-            {regular.map((a) => (
-              <AnnouncementListCard
-                key={a.id}
-                announcement={a}
-                onClick={() => handleAnnouncementClick(a)}
-              />
-            ))}
+            {unreadRegular.length > 0 && (
+              <div className="space-y-2">
+                <div className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                  Unread
+                </div>
+                {unreadRegular.map((a) => (
+                  <AnnouncementListCard
+                    key={a.id}
+                    announcement={a}
+                    onClick={() => handleAnnouncementClick(a)}
+                  />
+                ))}
+              </div>
+            )}
+            {readRegular.length > 0 && (
+              <div className="space-y-2">
+                {unreadRegular.length > 0 && (
+                  <div className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                    Earlier
+                  </div>
+                )}
+                {readRegular.map((a) => (
+                  <AnnouncementListCard
+                    key={a.id}
+                    announcement={a}
+                    onClick={() => handleAnnouncementClick(a)}
+                  />
+                ))}
+              </div>
+            )}
 
             {filteredAnnouncements.length === 0 && (
               <div className="text-center py-12">
