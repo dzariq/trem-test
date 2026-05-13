@@ -1,6 +1,7 @@
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Pin, ShieldCheck, Calendar } from "lucide-react";
+import { Pin, ShieldCheck, Calendar, Megaphone } from "lucide-react";
 import type { Announcement } from "@/data/announcements";
 
 interface Props {
@@ -10,7 +11,7 @@ interface Props {
 
 const formatDate = (dateString: string) => {
   const date = new Date(dateString);
-  return date.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+  return date.toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" });
 };
 
 export function PinnedAnnouncementCard({ announcement, onClick }: Props) {
@@ -19,37 +20,63 @@ export function PinnedAnnouncementCard({ announcement, onClick }: Props) {
       className="bg-card border-border shadow-sm cursor-pointer active:scale-[0.98] transition-transform overflow-hidden"
       onClick={onClick}
     >
+      <div className="relative h-32 overflow-hidden">
+        {announcement.image ? (
+          <img
+            src={announcement.image}
+            alt={announcement.title}
+            className="w-full h-full object-cover"
+          />
+        ) : (
+          <div className="w-full h-full bg-gradient-to-br from-primary/20 via-primary/10 to-secondary/20 flex items-center justify-center">
+            <Megaphone className="h-12 w-12 text-primary/40" />
+          </div>
+        )}
+        <div className="absolute inset-0 bg-gradient-to-t from-card via-card/30 to-transparent" />
+        <div className="absolute top-3 left-3 flex gap-2">
+          <Badge className="bg-primary text-primary-foreground hover:bg-primary gap-1.5">
+            <Pin className="h-3 w-3 rotate-45" />
+            Pinned
+          </Badge>
+        </div>
+        {announcement.requires_acknowledgement && (
+          <div className="absolute top-3 right-3">
+            {announcement.is_acknowledged ? (
+              <Badge variant="outline" className="text-xs gap-1 text-blue-600 border-blue-600/30 bg-blue-500/10 backdrop-blur-sm">
+                <ShieldCheck className="h-3 w-3" />
+                Acknowledged
+              </Badge>
+            ) : (
+              <Badge className="bg-destructive text-destructive-foreground text-xs gap-1">
+                <ShieldCheck className="h-3 w-3" />
+                Action Required
+              </Badge>
+            )}
+          </div>
+        )}
+      </div>
       <CardContent className="p-4">
-        <div className="flex items-start gap-3">
-          <div className="flex-shrink-0 mt-0.5">
-            <Pin className="h-4 w-4 text-primary rotate-45" />
-          </div>
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2 mb-1">
-              <h4 className="font-semibold text-foreground text-sm truncate flex-1">
-                {announcement.title}
-              </h4>
-              {announcement.requires_acknowledgement && (
-                announcement.is_acknowledged ? (
-                  <Badge variant="outline" className="text-[10px] gap-0.5 text-blue-600 border-blue-600/30 bg-blue-500/10 flex-shrink-0">
-                    <ShieldCheck className="h-2.5 w-2.5" />
-                    Done
-                  </Badge>
-                ) : (
-                  <Badge className="bg-destructive text-destructive-foreground text-[10px] flex-shrink-0">
-                    Acknowledge
-                  </Badge>
-                )
-              )}
-            </div>
-            <p className="text-xs text-muted-foreground line-clamp-1 mb-1">
-              {announcement.snippet}
-            </p>
-            <span className="text-[10px] text-muted-foreground/70 flex items-center gap-1">
-              <Calendar className="h-2.5 w-2.5" />
-              {formatDate(announcement.date)}
-            </span>
-          </div>
+        <h3 className="font-semibold text-foreground text-lg mb-2">
+          {announcement.title}
+        </h3>
+        <p className="text-sm text-muted-foreground mb-3">
+          {announcement.snippet}
+        </p>
+        <div className="flex items-center justify-between">
+          <span className="text-xs text-muted-foreground flex items-center gap-1">
+            <Calendar className="h-3 w-3" />
+            {formatDate(announcement.date)}
+          </span>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={(e) => {
+              e.stopPropagation();
+              onClick();
+            }}
+          >
+            Read More
+          </Button>
         </div>
       </CardContent>
     </Card>
