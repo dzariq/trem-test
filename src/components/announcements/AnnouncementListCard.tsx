@@ -32,9 +32,12 @@ const getPriorityStyles = (priority?: string) => {
 
 export function AnnouncementListCard({ announcement, onClick }: Props) {
   const priority = getPriorityStyles(announcement.priority);
+  const isUnread = !announcement.is_read;
   return (
     <Card
-      className="bg-card border-border shadow-sm overflow-hidden cursor-pointer active:scale-[0.98] transition-transform"
+      className={`bg-card border-border shadow-sm overflow-hidden cursor-pointer active:scale-[0.98] transition-transform ${
+        isUnread ? "border-l-4 border-l-primary" : ""
+      }`}
       onClick={onClick}
     >
       {/* Image header or default pattern */}
@@ -80,9 +83,14 @@ export function AnnouncementListCard({ announcement, onClick }: Props) {
       </div>
 
       <CardContent className="p-4">
-        <h3 className="font-semibold text-foreground text-lg mb-2">
-          {announcement.title}
-        </h3>
+        <div className="flex items-start justify-between gap-2 mb-2">
+          <h3 className={`text-foreground text-lg ${isUnread ? "font-bold" : "font-semibold"}`}>
+            {announcement.title}
+          </h3>
+          {isUnread && (
+            <span className="mt-2 h-2 w-2 rounded-full bg-primary flex-shrink-0" aria-label="Unread" />
+          )}
+        </div>
         <p className="text-sm text-muted-foreground mb-3">
           {announcement.snippet}
         </p>
