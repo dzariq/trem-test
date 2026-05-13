@@ -492,9 +492,9 @@ export function TimeGridCalendar({
                   <span
                     className={cn(
                       "inline-flex items-center justify-center w-10 h-10 sm:w-8 sm:h-8 rounded-full text-base",
-                      isSelected
+                      isToday
                         ? "bg-primary text-primary-foreground font-semibold"
-                        : isToday
+                        : isSelected && mode === "day"
                           ? "text-primary font-semibold"
                           : "text-foreground",
                     )}
