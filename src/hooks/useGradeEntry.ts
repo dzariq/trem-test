@@ -147,16 +147,18 @@ export function useGradeEntry(): UseGradeEntryReturn {
       setLoadingClasses(true);
       setError(null);
       try {
+        // Teachers: trust teacherScope's allowed classes directly. The global
+        // students fetch can be restricted by RLS and would otherwise hide
+        // valid classes from the dropdown.
+        if (isTeacher) {
+          setClasses(allowedClassNames);
+          return;
+        }
         // Always fetch the set of classes that actually have (non-archived)
         // students enrolled. Empty classes are hidden from the dropdown
         // even if the teacher has access to them.
         const classesWithStudents = await fetchAvailableClasses();
-        const withStudentsSet = new Set(classesWithStudents);
-        if (isTeacher) {
-          setClasses(allowedClassNames.filter((c) => withStudentsSet.has(c)));
-        } else {
-          setClasses(classesWithStudents);
-        }
+        setClasses(classesWithStudents);
       } catch (err) {
         setError("Failed to load classes");
         console.error(err);
