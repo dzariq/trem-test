@@ -1,4 +1,4 @@
-import { useMemo, useState, type MouseEvent } from "react";
+import { useEffect, useMemo, useState, type MouseEvent } from "react";
 import { ChevronLeft, ChevronRight, ArrowLeft, SlidersHorizontal, ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -94,6 +94,22 @@ export function TimeGridCalendar({
   const totalHours = endHour - startHour;
   const totalHeight = totalHours * HOUR_PX;
   const [monthPickerOpen, setMonthPickerOpen] = useState(false);
+
+  // Live "now" time in minutes since midnight, refreshed every 60s
+  const [nowMin, setNowMin] = useState(() => {
+    const n = new Date();
+    return n.getHours() * 60 + n.getMinutes();
+  });
+  useEffect(() => {
+    const tick = () => {
+      const n = new Date();
+      setNowMin(n.getHours() * 60 + n.getMinutes());
+    };
+    const id = window.setInterval(tick, 60_000);
+    return () => window.clearInterval(id);
+  }, []);
+  const nowTopPx = ((nowMin - startHour * 60) / 60) * HOUR_PX;
+  const nowVisible = nowMin >= startHour * 60 && nowMin <= endHour * 60;
 
   const days = useMemo(() => {
     if (mode === "day") {
@@ -635,6 +651,19 @@ export function TimeGridCalendar({
                       </button>
                     );
                   })}
+                  {/* Now indicator — red line on today's column */}
+                  {isToday && nowVisible && (
+                    <div
+                      className="absolute left-0 right-0 z-20 pointer-events-none"
+                      style={{ top: nowTopPx }}
+                      aria-hidden
+                    >
+                      <div className="relative h-0">
+                        <span className="absolute -left-1 -top-1 h-2 w-2 rounded-full bg-red-500 shadow-sm" />
+                        <span className="absolute left-0 right-0 top-0 border-t-2 border-red-500" />
+                      </div>
+                    </div>
+                  )}
                 </div>
               );
             })}
