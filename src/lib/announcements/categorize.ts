@@ -23,6 +23,14 @@ export function categorizeAnnouncements(announcements: Announcement[]) {
     const t = a.title?.trim().toLowerCase();
     if (t && usedTitles.has(t)) return false;
     return true;
+  }).sort((a, b) => {
+    // Unread first, then newest first
+    const aUnread = a.is_read ? 1 : 0;
+    const bUnread = b.is_read ? 1 : 0;
+    if (aUnread !== bUnread) return aUnread - bUnread;
+    const aTime = a.date ? new Date(a.date).getTime() : 0;
+    const bTime = b.date ? new Date(b.date).getTime() : 0;
+    return bTime - aTime;
   });
   return { featured, pinned, regular };
 }

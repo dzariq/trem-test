@@ -42,6 +42,9 @@ export default function TeacherAnnouncementsPage() {
 
   const { featured, pinned, regular } = categorizeAnnouncements(announcements);
 
+  const unreadRegular = regular.filter(a => !a.is_read);
+  const readRegular = regular.filter(a => a.is_read);
+
   const drawerList = [
     ...(featured ? [featured] : []),
     ...pinned,
@@ -121,13 +124,36 @@ export default function TeacherAnnouncementsPage() {
             )}
 
             {/* Regular */}
-            {regular.map((a) => (
-              <AnnouncementListCard
-                key={a.id}
-                announcement={a}
-                onClick={() => handleAnnouncementClick(a)}
-              />
-            ))}
+            {unreadRegular.length > 0 && (
+              <div className="space-y-2">
+                <div className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                  Unread
+                </div>
+                {unreadRegular.map((a) => (
+                  <AnnouncementListCard
+                    key={a.id}
+                    announcement={a}
+                    onClick={() => handleAnnouncementClick(a)}
+                  />
+                ))}
+              </div>
+            )}
+            {readRegular.length > 0 && (
+              <div className="space-y-2">
+                {unreadRegular.length > 0 && (
+                  <div className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                    Earlier
+                  </div>
+                )}
+                {readRegular.map((a) => (
+                  <AnnouncementListCard
+                    key={a.id}
+                    announcement={a}
+                    onClick={() => handleAnnouncementClick(a)}
+                  />
+                ))}
+              </div>
+            )}
           </>
         )}
       </section>
