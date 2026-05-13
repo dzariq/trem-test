@@ -155,13 +155,20 @@ export function filterEventsByRole(events: CalendarEvent[], role: UserRole): Cal
   }
   
   return events
-    .map(event => ({
-      ...event,
+    .map(event => {
+      const originalTags = event.tags ?? [];
       // Filter out hidden tags for this role
-      tags: event.tags.filter(tag => isTagVisibleForRole(tag, role))
-    }))
-    // Only include events that still have at least one visible tag
-    .filter(event => event.tags.length > 0);
+      const visibleTags = originalTags.filter(tag => isTagVisibleForRole(tag, role));
+      return { ...event, tags: visibleTags, _hadTags: originalTags.length > 0 } as CalendarEvent & { _hadTags: boolean };
+    })
+    // Drop events that originally had tags but every tag is hidden for this role.
+    // Events with no tags at all (e.g. ad-hoc events created without categorization)
+    // are kept so they remain visible.
+    .filter(event => {
+      const ev = event as CalendarEvent & { _hadTags: boolean };
+      return !ev._hadTags || ev.tags.length > 0;
+    })
+    .map(({ _hadTags, ...rest }: any) => rest);
 }
 
 // Filter events by category
