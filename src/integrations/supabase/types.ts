@@ -1512,6 +1512,7 @@ export type Database = {
       }
       cca_activity_types: {
         Row: {
+          campus_code: string | null
           created_at: string
           id: string
           is_active: boolean
@@ -1520,6 +1521,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          campus_code?: string | null
           created_at?: string
           id?: string
           is_active?: boolean
@@ -1528,6 +1530,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          campus_code?: string | null
           created_at?: string
           id?: string
           is_active?: boolean
