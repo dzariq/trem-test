@@ -598,12 +598,16 @@ export function TimeGridCalendar({
                     <div
                       key={h}
                       className={cn(
-                        "absolute left-px right-px rounded-md border pointer-events-none",
+                        "absolute rounded-md border pointer-events-none",
+                        mode === "day" ? "left-1 right-1 rounded-lg" : "left-px right-px",
                         isToday
                           ? "bg-muted/20 border-border/40"
                           : "bg-muted/15 border-border/40",
                       )}
-                      style={{ top: h * HOUR_PX + 1, height: HOUR_PX - 2 }}
+                      style={{
+                        top: h * HOUR_PX + (mode === "day" ? 3 : 1),
+                        height: HOUR_PX - (mode === "day" ? 6 : 2),
+                      }}
                     />
                   ))}
                   {/* Event blocks */}
@@ -621,7 +625,8 @@ export function TimeGridCalendar({
                         onClick={(e) => handleBlockClick(e, b, d.ymd)}
                         aria-label={b.title}
                         className={cn(
-                          "absolute left-0.5 right-0.5 rounded-md px-1.5 py-0.5 text-[10px] font-medium text-left overflow-hidden border border-transparent shadow-sm z-10 no-callout",
+                          "absolute rounded-md px-1.5 py-0.5 text-[10px] font-medium text-left overflow-hidden border border-transparent shadow-sm z-10 no-callout",
+                          mode === "day" ? "left-1.5 right-1.5 rounded-lg" : "left-0.5 right-0.5",
                           b.colorClass,
                         )}
                         style={{ top: clampedTop, height }}
