@@ -125,10 +125,10 @@ export function AttendanceScopeFilterSheet({
         </div>
       }
       description="Filter attendance data by scope"
-      snapPoints={[0, 0.65, 1]}
-      defaultSnapPoint={0.65}
+        snapPoints={[0, 0.9, 1]}
+        defaultSnapPoint={0.9}
     >
-      <div className="px-4 py-3 space-y-5">
+        <div className="px-4 py-3 pb-24 space-y-5">
         {/* Whole School Yes/No */}
         <div className="space-y-2">
           <Label className="text-sm font-semibold">Whole School</Label>
