@@ -12,22 +12,39 @@ export interface CcaType {
  * Use this for dynamic tab generation instead of hardcoded categories.
  */
 export function useCcaTypes() {
+  return useCcaTypesByCampus(null);
+}
+
+export function useCcaTypesByCampus(campusCode: string | null | undefined) {
   const { data: types = [], isLoading, error, refetch } = useQuery({
-    queryKey: ["cca-activity-types"],
+    queryKey: ["cca-activity-types", campusCode ?? "all"],
     queryFn: async () => {
-      const { data, error } = await supabase
+      let query = supabase
         .from("cca_activity_types")
-        .select("id, name, sort_order")
+        .select("id, name, sort_order, campus_code")
         .eq("is_active", true)
         .order("sort_order", { ascending: true });
+      if (campusCode) {
+        query = query.or(`campus_code.eq.${campusCode},campus_code.is.null`);
+      }
+      const { data, error } = await query;
 
       if (error) throw error;
 
-      return (data || []).map((t) => ({
-        id: t.id,
-        name: t.name,
-        sortOrder: t.sort_order ?? 0,
-      })) as CcaType[];
+      // Deduplicate by name; prefer the entry matching the active campus
+      const byName = new Map<string, any>();
+      for (const t of data || []) {
+        const key = (t.name || "").toLowerCase();
+        const existing = byName.get(key);
+        if (!existing) {
+          byName.set(key, t);
+        } else if (campusCode && t.campus_code === campusCode && existing.campus_code !== campusCode) {
+          byName.set(key, t);
+        }
+      }
+      return Array.from(byName.values())
+        .map((t) => ({ id: t.id, name: t.name, sortOrder: t.sort_order ?? 0 }))
+        .sort((a, b) => a.sortOrder - b.sortOrder) as CcaType[];
     },
     staleTime: 5 * 60 * 1000, // 5 minutes
   });

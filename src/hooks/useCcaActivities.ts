@@ -55,6 +55,8 @@ interface UseCcaActivitiesOptions {
   currentUserId?: string | null;
   /** Include inactive activities */
   includeInactive?: boolean;
+  /** Filter by campus code (BO/GL); also includes campus-agnostic rows */
+  campusCode?: string | null;
 }
 
 // Helper: normalize year levels from various formats
@@ -104,6 +106,7 @@ export function useCcaActivities(options: UseCcaActivitiesOptions = {}) {
     myActivitiesOnly = false,
     currentUserId,
     includeInactive = false,
+    campusCode = null,
   } = options;
 
   const [activities, setActivities] = useState<CcaActivity[]>([]);
@@ -135,11 +138,18 @@ export function useCcaActivities(options: UseCcaActivitiesOptions = {}) {
           coordinator_name,
           coordinator_email,
           allow_free_text,
-          image_url
+          image_url,
+          campus_code
         `);
 
       if (!includeInactive) {
         activitiesQuery = activitiesQuery.eq("is_active", true);
+      }
+
+      if (campusCode) {
+        activitiesQuery = activitiesQuery.or(
+          `campus_code.eq.${campusCode},campus_code.is.null`
+        );
       }
 
       const { data: activitiesData, error: activitiesError } = await activitiesQuery;
@@ -309,7 +319,7 @@ export function useCcaActivities(options: UseCcaActivitiesOptions = {}) {
     } finally {
       setLoading(false);
     }
-  }, [studentYearLevel, myActivitiesOnly, currentUserId, includeInactive]);
+  }, [studentYearLevel, myActivitiesOnly, currentUserId, includeInactive, campusCode]);
 
   useEffect(() => {
     fetchActivities();

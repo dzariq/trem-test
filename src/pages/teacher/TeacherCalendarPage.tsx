@@ -9,7 +9,7 @@ import { MonthGridCalendar } from "@/components/calendar/MonthGridCalendar";
 import { TimeGridCalendar } from "@/components/calendar/TimeGridCalendar";
 import { CalendarViewSwitcher, type CalendarViewMode } from "@/components/calendar/CalendarViewSwitcher";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { MapPin, Clock, User, Loader2, Eye } from "lucide-react";
+import { MapPin, Clock, User, Loader2, Eye, SlidersHorizontal, X } from "lucide-react";
 import schoolLogo from "@/assets/school-badge.png";
 
 import { format } from "date-fns";
@@ -23,6 +23,8 @@ import { listCalendarEvents, type UpcomingEvent } from "@/data/calendar";
 import { useCcaActivities, type CcaActivity } from "@/hooks/useCcaActivities";
 import { useCcaSessionsCalendar, type CcaCalendarSession } from "@/hooks/useCcaSessionsCalendar";
 import { CcaTypeTabs, getCcaTypeColor } from "@/components/cca/CcaTypeTabs";
+import { useCcaTypesByCampus } from "@/hooks/useCcaTypes";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { CcaDetailsSheet } from "@/components/cca/CcaDetailsSheet";
 import { ManageSessionsSheet } from "@/components/cca/ManageSessionsSheet";
 import { SessionDetailsSheet } from "@/components/cca/SessionDetailsSheet";
@@ -75,7 +77,15 @@ export default function TeacherCalendarPage() {
     myActivitiesOnly: false,
     currentUserId: user?.id,
     includeInactive: false,
+    campusCode: activeCampus,
   });
+
+  const { types: ccaTypes } = useCcaTypesByCampus(activeCampus);
+  const selectedTypeName =
+    ccaTypeFilter === "all"
+      ? "All categories"
+      : ccaTypes.find((t) => t.id === ccaTypeFilter)?.name ?? "Filter";
+  const [ccaFilterOpen, setCcaFilterOpen] = useState(false);
 
   const isCurrentTeacherPIC = useMemo(() => {
     return (activity: CcaActivity): boolean => {
@@ -367,10 +377,36 @@ export default function TeacherCalendarPage() {
           </TabsContent>
 
           <TabsContent value="cca" className="mt-4 space-y-4">
-            <CcaTypeTabs
-              selectedTypeId={ccaTypeFilter}
-              onSelectType={setCcaTypeFilter}
-            />
+            <div className="flex items-center justify-between gap-2">
+              <Popover open={ccaFilterOpen} onOpenChange={setCcaFilterOpen}>
+                <PopoverTrigger asChild>
+                  <Button variant="outline" size="sm" className="gap-2">
+                    <SlidersHorizontal className="h-4 w-4" />
+                    <span className="text-sm">{selectedTypeName}</span>
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent align="start" className="w-[min(90vw,320px)] p-3">
+                  <CcaTypeTabs
+                    selectedTypeId={ccaTypeFilter}
+                    onSelectType={(id) => {
+                      setCcaTypeFilter(id);
+                      setCcaFilterOpen(false);
+                    }}
+                    campusCode={activeCampus}
+                  />
+                </PopoverContent>
+              </Popover>
+              {ccaTypeFilter !== "all" && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="gap-1 text-muted-foreground"
+                  onClick={() => setCcaTypeFilter("all")}
+                >
+                  <X className="h-3.5 w-3.5" /> Clear
+                </Button>
+              )}
+            </div>
 
             {/* CCA List */}
             <div className="space-y-3">
