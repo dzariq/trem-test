@@ -11,6 +11,8 @@ const corsHeaders = {
 const FROM_ADDRESS =
   Deno.env.get("RESEND_FROM_ADDRESS") ?? "Collinz <onboarding@resend.dev>";
 
+const GATEWAY_URL = "https://connector-gateway.lovable.dev/resend";
+
 function escapeHtml(input: string): string {
   return input
     .replace(/&/g, "&amp;")
@@ -118,10 +120,18 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
+    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
+    if (!LOVABLE_API_KEY) {
+      return new Response(
+        JSON.stringify({ error: "LOVABLE_API_KEY is not configured" }),
+        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+      );
+    }
+    const RESEND_API_KEY =
+      Deno.env.get("RESEND_API_KEY_1") ?? Deno.env.get("RESEND_API_KEY");
     if (!RESEND_API_KEY) {
       return new Response(
-        JSON.stringify({ error: "RESEND_API_KEY is not configured" }),
+        JSON.stringify({ error: "Resend connection is not configured" }),
         { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } },
       );
     }
@@ -148,11 +158,12 @@ Deno.serve(async (req) => {
 
     const { html, text } = buildEmail(otp, ttlSeconds);
 
-    const resendRes = await fetch("https://api.resend.com/emails", {
+    const resendRes = await fetch(`${GATEWAY_URL}/emails`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Bearer ${RESEND_API_KEY}`,
+        Authorization: `Bearer ${LOVABLE_API_KEY}`,
+        "X-Connection-Api-Key": RESEND_API_KEY,
       },
       body: JSON.stringify({
         from: FROM_ADDRESS,
