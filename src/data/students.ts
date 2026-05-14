@@ -21,6 +21,7 @@ export type LinkedStudent = {
   dob?: string | null;
   enrollmentDate?: string | null;
   graduationYear?: number | null;
+  email?: string | null;
 };
 
 const isMissingResource = (error: { message?: string } | null, keyword: string) => {
@@ -92,7 +93,7 @@ const listViaStudentGuardians = async (guardianUserId: string) => {
 
   const { data: students, error: studentsError } = await supabase
     .from("students")
-    .select("id, name, year_level, class, campus_id, campus_code, family_id, student_code, dob, enrollment_date, graduation_year")
+    .select("id, name, year_level, class, campus_id, campus_code, family_id, student_code, dob, enrollment_date, graduation_year, email")
     .in("id", studentIds as any[]);
 
   if (studentsError) {
@@ -178,6 +179,7 @@ const listViaStudentGuardians = async (guardianUserId: string) => {
         dob: student.dob ?? null,
         enrollmentDate: student.enrollment_date ?? null,
         graduationYear: student.graduation_year ?? null,
+        email: student.email ?? null,
       } as LinkedStudent;
     })
     .filter((student): student is LinkedStudent => Boolean(student));
