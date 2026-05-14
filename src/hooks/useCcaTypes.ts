@@ -31,20 +31,20 @@ export function useCcaTypesByCampus(campusCode: string | null | undefined) {
 
       if (error) throw error;
 
-      // Deduplicate by name (campus-scoped variants share the same name)
-      const seen = new Set<string>();
-      const unique: CcaType[] = [];
+      // Deduplicate by name; prefer the entry matching the active campus
+      const byName = new Map<string, any>();
       for (const t of data || []) {
         const key = (t.name || "").toLowerCase();
-        if (seen.has(key)) continue;
-        seen.add(key);
-        unique.push({
-          id: t.id,
-          name: t.name,
-          sortOrder: t.sort_order ?? 0,
-        });
+        const existing = byName.get(key);
+        if (!existing) {
+          byName.set(key, t);
+        } else if (campusCode && t.campus_code === campusCode && existing.campus_code !== campusCode) {
+          byName.set(key, t);
+        }
       }
-      return unique;
+      return Array.from(byName.values())
+        .map((t) => ({ id: t.id, name: t.name, sortOrder: t.sort_order ?? 0 }))
+        .sort((a, b) => a.sortOrder - b.sortOrder) as CcaType[];
     },
     staleTime: 5 * 60 * 1000, // 5 minutes
   });
