@@ -1,0 +1,1 @@
+DELETE FROM public.calendar_events WHERE id = 'e2879c89-8e03-4f37-b05f-1aaaa8211a3d';
