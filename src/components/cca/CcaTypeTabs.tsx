@@ -1,11 +1,12 @@
 import { Badge } from "@/components/ui/badge";
 import { Loader2 } from "lucide-react";
-import { useCcaTypes, type CcaType } from "@/hooks/useCcaTypes";
+import { useCcaTypesByCampus, type CcaType } from "@/hooks/useCcaTypes";
 import { cn } from "@/lib/utils";
 
 interface CcaTypeTabsProps {
   selectedTypeId: string; // "all" or type_id
   onSelectType: (typeId: string) => void;
+  campusCode?: string | null;
 }
 
 /**
@@ -61,8 +62,8 @@ function getTypeTabColors(typeName: string): { light: string; strong: string } {
  * Reusable component for CCA type filter tabs.
  * Fetches types from backend and always includes "All" option.
  */
-export function CcaTypeTabs({ selectedTypeId, onSelectType }: CcaTypeTabsProps) {
-  const { types, loading, error } = useCcaTypes();
+export function CcaTypeTabs({ selectedTypeId, onSelectType, campusCode = null }: CcaTypeTabsProps) {
+  const { types, loading, error } = useCcaTypesByCampus(campusCode);
 
   if (loading) {
     return (
