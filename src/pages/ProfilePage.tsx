@@ -641,6 +641,11 @@ export default function ProfilePage() {
                       {[selectedStudent.className, selectedStudent.grade].filter(Boolean).join(" - ")}
                     </p>
                   )}
+                  {selectedStudent.email && (
+                    <p className="text-sm text-muted-foreground mt-1 break-all">
+                      {selectedStudent.email}
+                    </p>
+                  )}
                 </div>
 
                 <Button
