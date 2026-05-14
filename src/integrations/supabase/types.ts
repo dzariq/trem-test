@@ -3737,8 +3737,11 @@ export type Database = {
           bukku_invoice_id: string | null
           content: Json
           created_at: string
+          credit_note: boolean | null
           id: string
           invoice_date: string | null
+          outstanding_amount: string | null
+          payment_amount: string | null
           period_key: string | null
           status: string
           type: Database["public"]["Enums"]["student_invoice_type"]
@@ -3750,8 +3753,11 @@ export type Database = {
           bukku_invoice_id?: string | null
           content?: Json
           created_at?: string
+          credit_note?: boolean | null
           id?: string
           invoice_date?: string | null
+          outstanding_amount?: string | null
+          payment_amount?: string | null
           period_key?: string | null
           status: string
           type?: Database["public"]["Enums"]["student_invoice_type"]
@@ -3763,8 +3769,11 @@ export type Database = {
           bukku_invoice_id?: string | null
           content?: Json
           created_at?: string
+          credit_note?: boolean | null
           id?: string
           invoice_date?: string | null
+          outstanding_amount?: string | null
+          payment_amount?: string | null
           period_key?: string | null
           status?: string
           type?: Database["public"]["Enums"]["student_invoice_type"]
@@ -3915,6 +3924,271 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "student_sport_houses_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: true
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      student_visa_documents: {
+        Row: {
+          doc_type: string
+          file_name: string
+          file_size: number | null
+          file_url: string
+          id: string
+          storage_path: string
+          student_id: string
+          uploaded_at: string
+          uploaded_by: string | null
+          visa_record_id: string | null
+        }
+        Insert: {
+          doc_type: string
+          file_name: string
+          file_size?: number | null
+          file_url: string
+          id?: string
+          storage_path: string
+          student_id: string
+          uploaded_at?: string
+          uploaded_by?: string | null
+          visa_record_id?: string | null
+        }
+        Update: {
+          doc_type?: string
+          file_name?: string
+          file_size?: number | null
+          file_url?: string
+          id?: string
+          storage_path?: string
+          student_id?: string
+          uploaded_at?: string
+          uploaded_by?: string | null
+          visa_record_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "student_visa_documents_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "student_visa_documents_visa_record_id_fkey"
+            columns: ["visa_record_id"]
+            isOneToOne: false
+            referencedRelation: "student_visa_records"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "student_visa_documents_visa_record_id_fkey"
+            columns: ["visa_record_id"]
+            isOneToOne: false
+            referencedRelation: "v_student_visa_summary"
+            referencedColumns: ["visa_record_id"]
+          },
+        ]
+      }
+      student_visa_history: {
+        Row: {
+          change_reason: string | null
+          changed_at: string
+          changed_by: string | null
+          details: Json
+          expiry_date: string | null
+          id: string
+          issue_date: string | null
+          pass_number: string | null
+          pathway: Database["public"]["Enums"]["visa_pathway"]
+          status: Database["public"]["Enums"]["visa_status"]
+          student_id: string
+        }
+        Insert: {
+          change_reason?: string | null
+          changed_at?: string
+          changed_by?: string | null
+          details?: Json
+          expiry_date?: string | null
+          id?: string
+          issue_date?: string | null
+          pass_number?: string | null
+          pathway: Database["public"]["Enums"]["visa_pathway"]
+          status: Database["public"]["Enums"]["visa_status"]
+          student_id: string
+        }
+        Update: {
+          change_reason?: string | null
+          changed_at?: string
+          changed_by?: string | null
+          details?: Json
+          expiry_date?: string | null
+          id?: string
+          issue_date?: string | null
+          pass_number?: string | null
+          pathway?: Database["public"]["Enums"]["visa_pathway"]
+          status?: Database["public"]["Enums"]["visa_status"]
+          student_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "student_visa_history_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      student_visa_periods: {
+        Row: {
+          created_at: string
+          expiry_date: string | null
+          id: string
+          insurance_expiry: string | null
+          insurance_policy_no: string | null
+          insurance_provider: string | null
+          issue_date: string | null
+          notes: string | null
+          parent_mm2h_expiry: string | null
+          parent_mm2h_holder_name: string | null
+          parent_mm2h_pass_number: string | null
+          pass_number: string | null
+          pathway: Database["public"]["Enums"]["visa_pathway"]
+          period_no: number
+          personal_bond_amount: number | null
+          status: Database["public"]["Enums"]["visa_status"]
+          student_id: string
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          created_at?: string
+          expiry_date?: string | null
+          id?: string
+          insurance_expiry?: string | null
+          insurance_policy_no?: string | null
+          insurance_provider?: string | null
+          issue_date?: string | null
+          notes?: string | null
+          parent_mm2h_expiry?: string | null
+          parent_mm2h_holder_name?: string | null
+          parent_mm2h_pass_number?: string | null
+          pass_number?: string | null
+          pathway: Database["public"]["Enums"]["visa_pathway"]
+          period_no: number
+          personal_bond_amount?: number | null
+          status?: Database["public"]["Enums"]["visa_status"]
+          student_id: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          created_at?: string
+          expiry_date?: string | null
+          id?: string
+          insurance_expiry?: string | null
+          insurance_policy_no?: string | null
+          insurance_provider?: string | null
+          issue_date?: string | null
+          notes?: string | null
+          parent_mm2h_expiry?: string | null
+          parent_mm2h_holder_name?: string | null
+          parent_mm2h_pass_number?: string | null
+          pass_number?: string | null
+          pathway?: Database["public"]["Enums"]["visa_pathway"]
+          period_no?: number
+          personal_bond_amount?: number | null
+          status?: Database["public"]["Enums"]["visa_status"]
+          student_id?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "student_visa_periods_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      student_visa_records: {
+        Row: {
+          created_at: string
+          current_pathway: Database["public"]["Enums"]["visa_pathway"]
+          expiry_date: string | null
+          id: string
+          immigration_sticker_ref: string | null
+          insurance_expiry: string | null
+          insurance_policy_no: string | null
+          insurance_provider: string | null
+          issue_date: string | null
+          moe_letter_date: string | null
+          moe_letter_ref: string | null
+          notes: string | null
+          parent_mm2h_expiry: string | null
+          parent_mm2h_holder_name: string | null
+          parent_mm2h_pass_number: string | null
+          pass_number: string | null
+          personal_bond_amount: number | null
+          status: Database["public"]["Enums"]["visa_status"]
+          student_id: string
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          created_at?: string
+          current_pathway: Database["public"]["Enums"]["visa_pathway"]
+          expiry_date?: string | null
+          id?: string
+          immigration_sticker_ref?: string | null
+          insurance_expiry?: string | null
+          insurance_policy_no?: string | null
+          insurance_provider?: string | null
+          issue_date?: string | null
+          moe_letter_date?: string | null
+          moe_letter_ref?: string | null
+          notes?: string | null
+          parent_mm2h_expiry?: string | null
+          parent_mm2h_holder_name?: string | null
+          parent_mm2h_pass_number?: string | null
+          pass_number?: string | null
+          personal_bond_amount?: number | null
+          status?: Database["public"]["Enums"]["visa_status"]
+          student_id: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          created_at?: string
+          current_pathway?: Database["public"]["Enums"]["visa_pathway"]
+          expiry_date?: string | null
+          id?: string
+          immigration_sticker_ref?: string | null
+          insurance_expiry?: string | null
+          insurance_policy_no?: string | null
+          insurance_provider?: string | null
+          issue_date?: string | null
+          moe_letter_date?: string | null
+          moe_letter_ref?: string | null
+          notes?: string | null
+          parent_mm2h_expiry?: string | null
+          parent_mm2h_holder_name?: string | null
+          parent_mm2h_pass_number?: string | null
+          pass_number?: string | null
+          personal_bond_amount?: number | null
+          status?: Database["public"]["Enums"]["visa_status"]
+          student_id?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "student_visa_records_student_id_fkey"
             columns: ["student_id"]
             isOneToOne: true
             referencedRelation: "students"
@@ -4597,6 +4871,50 @@ export type Database = {
       }
     }
     Views: {
+      v_student_visa_summary: {
+        Row: {
+          campus_code: string | null
+          campus_id: string | null
+          class: string | null
+          created_at: string | null
+          current_pathway: Database["public"]["Enums"]["visa_pathway"] | null
+          days_until_expiry: number | null
+          expiry_date: string | null
+          insurance_expiry: string | null
+          insurance_provider: string | null
+          issue_date: string | null
+          moe_letter_ref: string | null
+          nationality: string | null
+          notes: string | null
+          parent_mm2h_expiry: string | null
+          parent_mm2h_holder_name: string | null
+          parent_mm2h_pass_number: string | null
+          pass_number: string | null
+          status: Database["public"]["Enums"]["visa_status"] | null
+          student_code: string | null
+          student_id: string | null
+          student_name: string | null
+          updated_at: string | null
+          visa_record_id: string | null
+          year_level: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "student_visa_records_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: true
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "students_campus_id_fkey"
+            columns: ["campus_id"]
+            isOneToOne: false
+            referencedRelation: "campuses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       v_teacher_public: {
         Row: {
           departments: string[] | null
@@ -4738,6 +5056,7 @@ export type Database = {
         Args: { ticket_parent_email: string }
         Returns: boolean
       }
+      refresh_visa_statuses: { Args: never; Returns: number }
       renumber_academic_year_weeks: {
         Args: { p_academic_year: number }
         Returns: undefined
@@ -4808,6 +5127,13 @@ export type Database = {
       invoice_status: "pending_payment" | "paid"
       student_invoice_status: "pending_payment" | "paid" | "draft"
       student_invoice_type: "enrolment" | "fees" | "others"
+      visa_pathway: "PTS" | "STUDENT_PASS"
+      visa_status:
+        | "active"
+        | "expiring_soon"
+        | "expired"
+        | "pending_renewal"
+        | "cancelled"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -4939,6 +5265,14 @@ export const Constants = {
       invoice_status: ["pending_payment", "paid"],
       student_invoice_status: ["pending_payment", "paid", "draft"],
       student_invoice_type: ["enrolment", "fees", "others"],
+      visa_pathway: ["PTS", "STUDENT_PASS"],
+      visa_status: [
+        "active",
+        "expiring_soon",
+        "expired",
+        "pending_renewal",
+        "cancelled",
+      ],
     },
   },
 } as const
