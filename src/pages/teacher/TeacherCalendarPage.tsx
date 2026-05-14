@@ -22,9 +22,9 @@ import {
 import { listCalendarEvents, type UpcomingEvent } from "@/data/calendar";
 import { useCcaActivities, type CcaActivity } from "@/hooks/useCcaActivities";
 import { useCcaSessionsCalendar, type CcaCalendarSession } from "@/hooks/useCcaSessionsCalendar";
-import { CcaTypeTabs, getCcaTypeColor } from "@/components/cca/CcaTypeTabs";
+import { getCcaTypeColor } from "@/components/cca/CcaTypeTabs";
 import { useCcaTypesByCampus } from "@/hooks/useCcaTypes";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { CcaFilterSheet } from "@/components/cca/CcaFilterSheet";
 import { CcaDetailsSheet } from "@/components/cca/CcaDetailsSheet";
 import { ManageSessionsSheet } from "@/components/cca/ManageSessionsSheet";
 import { SessionDetailsSheet } from "@/components/cca/SessionDetailsSheet";
@@ -378,24 +378,15 @@ export default function TeacherCalendarPage() {
 
           <TabsContent value="cca" className="mt-4 space-y-4">
             <div className="flex items-center justify-between gap-2">
-              <Popover open={ccaFilterOpen} onOpenChange={setCcaFilterOpen}>
-                <PopoverTrigger asChild>
-                  <Button variant="outline" size="sm" className="gap-2">
-                    <SlidersHorizontal className="h-4 w-4" />
-                    <span className="text-sm">{selectedTypeName}</span>
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent align="start" className="w-[min(90vw,320px)] p-3">
-                  <CcaTypeTabs
-                    selectedTypeId={ccaTypeFilter}
-                    onSelectType={(id) => {
-                      setCcaTypeFilter(id);
-                      setCcaFilterOpen(false);
-                    }}
-                    campusCode={activeCampus}
-                  />
-                </PopoverContent>
-              </Popover>
+              <Button
+                variant="outline"
+                size="sm"
+                className="gap-2"
+                onClick={() => setCcaFilterOpen(true)}
+              >
+                <SlidersHorizontal className="h-4 w-4" />
+                <span className="text-sm">{selectedTypeName}</span>
+              </Button>
               {ccaTypeFilter !== "all" && (
                 <Button
                   variant="ghost"
@@ -407,6 +398,16 @@ export default function TeacherCalendarPage() {
                 </Button>
               )}
             </div>
+            <CcaFilterSheet
+              open={ccaFilterOpen}
+              onOpenChange={setCcaFilterOpen}
+              selectedTypeId={ccaTypeFilter}
+              onSelectType={(id) => {
+                setCcaTypeFilter(id);
+                setCcaFilterOpen(false);
+              }}
+              campusCode={activeCampus}
+            />
 
             {/* CCA List */}
             <div className="space-y-3">
