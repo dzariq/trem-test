@@ -1,12 +1,5 @@
 import { useNavigate, useLocation } from "react-router-dom";
 import { BottomSheet } from "@/components/ui/bottom-sheet";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { SwipeableNotification } from "@/components/SwipeableNotification";
@@ -294,16 +287,14 @@ export function NotificationsDrawer({ open, onOpenChange }: NotificationsDrawerP
       setReadSynthetic(next);
       persistSynthetic("notif_synthetic_read", next);
     }
-    if (item) setActiveDigest(item);
-  };
-
-  const handleDigestGoToCalendar = () => {
+    if (!item) return;
     const calendarPath = location.pathname.startsWith("/teacher")
       ? "/teacher/calendar"
       : "/parent/calendar";
-    setActiveDigest(null);
     onOpenChange(false);
     navigate(calendarPath);
+    // Show centered popup after navigation
+    setTimeout(() => setActiveDigest(item), 50);
   };
 
   const renderSynthetic = (item: { id: string; title: string; message: string; type: string }) => {
@@ -444,27 +435,32 @@ export function NotificationsDrawer({ open, onOpenChange }: NotificationsDrawerP
         )}
       </div>
     </BottomSheet>
-    <Dialog open={!!activeDigest} onOpenChange={(o) => !o && setActiveDigest(null)}>
-      <DialogContent className="max-w-sm z-[110]">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2 text-base">
-            <Sparkles className="h-4 w-4 text-primary" />
-            {activeDigest?.title}
-          </DialogTitle>
-        </DialogHeader>
-        <div className="text-sm text-foreground whitespace-pre-line leading-relaxed max-h-[50vh] overflow-y-auto">
-          {activeDigest?.message}
+    {activeDigest && (
+      <div
+        className="fixed inset-0 z-[120] flex items-center justify-center p-4 bg-black/60 animate-in fade-in"
+        onClick={() => setActiveDigest(null)}
+      >
+        <div
+          className="w-full max-w-sm rounded-2xl bg-background shadow-2xl border border-border p-5 animate-in zoom-in-95"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <div className="flex items-center gap-2 mb-3">
+            <Sparkles className="h-4 w-4 text-primary flex-shrink-0" />
+            <h3 className="text-base font-semibold text-foreground">
+              {activeDigest.title}
+            </h3>
+          </div>
+          <div className="text-sm text-foreground whitespace-pre-line leading-relaxed max-h-[50vh] overflow-y-auto">
+            {activeDigest.message}
+          </div>
+          <div className="mt-5 flex justify-end">
+            <Button size="sm" onClick={() => setActiveDigest(null)}>
+              Dismiss
+            </Button>
+          </div>
         </div>
-        <DialogFooter className="flex-row gap-2 sm:justify-end">
-          <Button variant="outline" size="sm" onClick={() => setActiveDigest(null)}>
-            Close
-          </Button>
-          <Button size="sm" onClick={handleDigestGoToCalendar}>
-            Open calendar
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+      </div>
+    )}
     </>
   );
 }
