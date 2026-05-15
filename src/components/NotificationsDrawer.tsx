@@ -458,31 +458,131 @@ export function NotificationsDrawer({ open, onOpenChange }: NotificationsDrawerP
       </div>
     </BottomSheet>
     {activeDigest && (
-      <div
-        className="fixed inset-0 z-[120] flex items-center justify-center p-4 bg-black/60 animate-in fade-in"
-        onClick={() => setActiveDigest(null)}
-      >
-        <div
-          className="w-full max-w-sm rounded-2xl bg-background shadow-2xl border border-border p-5 animate-in zoom-in-95"
-          onClick={(e) => e.stopPropagation()}
-        >
-          <div className="flex items-center gap-2 mb-3">
-            <Sparkles className="h-4 w-4 text-primary flex-shrink-0" />
-            <h3 className="text-base font-semibold text-foreground">
-              {activeDigest.title}
-            </h3>
-          </div>
-          <div className="text-sm text-foreground whitespace-pre-line leading-relaxed max-h-[50vh] overflow-y-auto">
-            {activeDigest.message}
-          </div>
-          <div className="mt-5 flex justify-end">
-            <Button size="sm" onClick={() => setActiveDigest(null)}>
-              Dismiss
-            </Button>
-          </div>
-        </div>
-      </div>
+      <DigestPopup digest={activeDigest} onClose={() => setActiveDigest(null)} />
     )}
     </>
+  );
+}
+
+function DigestPopup({
+  digest,
+  onClose,
+}: {
+  digest: { id: string; title: string; message: string; type: string };
+  onClose: () => void;
+}) {
+  // Parse the message into day groups.
+  // Weekly digest format:
+  //   "Wed, May 13\n  • Y1-2 MYE Ends\n\nThu, May 14\n  • ..."
+  // Daily digest format:
+  //   "• Title A\n• Title B"
+  const groups = useMemo(() => {
+    const lines = digest.message.split("\n");
+    const result: Array<{ day: string | null; items: string[] }> = [];
+    let current: { day: string | null; items: string[] } | null = null;
+    for (const raw of lines) {
+      const line = raw.trimEnd();
+      if (!line.trim()) continue;
+      const bulletMatch = line.match(/^\s*•\s*(.+)$/);
+      if (bulletMatch) {
+        if (!current) {
+          current = { day: null, items: [] };
+          result.push(current);
+        }
+        current.items.push(bulletMatch[1].trim());
+      } else {
+        current = { day: line.trim(), items: [] };
+        result.push(current);
+      }
+    }
+    return result;
+  }, [digest.message]);
+
+  // Split "Title — subtitle" pattern (e.g., "Week at a glance — Mon, May 11 to Sun, May 17")
+  const [headTitle, headSubtitle] = useMemo(() => {
+    const idx = digest.title.indexOf(" — ");
+    if (idx === -1) return [digest.title, null as string | null];
+    return [digest.title.slice(0, idx), digest.title.slice(idx + 3)];
+  }, [digest.title]);
+
+  return (
+    <div
+      className="fixed inset-0 z-[120] flex items-center justify-center bg-black/50 backdrop-blur-sm animate-in fade-in"
+      style={{
+        paddingTop: "calc(var(--safe-top, 0px) + 1rem)",
+        paddingBottom: "calc(var(--safe-bottom, 0px) + 1rem)",
+        paddingLeft: "1rem",
+        paddingRight: "1rem",
+      }}
+      onClick={onClose}
+    >
+      <div
+        className="w-full max-w-[360px] flex flex-col rounded-[28px] bg-background/95 backdrop-blur-xl shadow-2xl ring-1 ring-primary/10 border border-border/60 overflow-hidden animate-in zoom-in-95"
+        style={{
+          maxHeight: "min(80vh, 640px)",
+          boxShadow:
+            "0 24px 60px -20px hsl(var(--primary) / 0.25), 0 0 0 1px hsl(var(--primary) / 0.08)",
+        }}
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* Header */}
+        <div className="px-6 pt-6 pb-4 flex items-start gap-3">
+          <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0">
+            <Sparkles className="h-5 w-5 text-primary" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <h2 className="text-lg font-bold text-foreground leading-tight">
+              {headTitle}
+            </h2>
+            {headSubtitle && (
+              <p className="text-xs font-medium text-muted-foreground mt-0.5">
+                {headSubtitle}
+              </p>
+            )}
+          </div>
+        </div>
+
+        {/* Scrollable Content */}
+        <div className="flex-1 overflow-y-auto px-6 pb-4 space-y-5">
+          {groups.map((group, gi) => (
+            <div key={gi}>
+              {group.day && (
+                <div className="flex items-center gap-2 mb-2.5">
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+                    {group.day}
+                  </span>
+                  <div className="h-px flex-1 bg-border/60" />
+                </div>
+              )}
+              <div className="space-y-2">
+                {group.items.map((item, ii) => (
+                  <div
+                    key={ii}
+                    className="flex items-center gap-3 p-3 rounded-2xl bg-muted/40 border border-border/50"
+                  >
+                    <div className="w-8 h-8 rounded-lg bg-background shadow-sm border border-border/50 flex items-center justify-center flex-shrink-0">
+                      <Calendar className="h-4 w-4 text-primary" />
+                    </div>
+                    <span className="text-sm font-medium text-foreground leading-snug">
+                      {item}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* Footer */}
+        <div className="px-6 pt-3 pb-4 bg-background/80 backdrop-blur-sm border-t border-border/50">
+          <Button
+            onClick={onClose}
+            className="w-full h-12 rounded-2xl text-sm font-semibold shadow-lg shadow-primary/20"
+          >
+            Dismiss
+          </Button>
+        </div>
+      </div>
+    </div>
   );
 }
