@@ -2854,6 +2854,47 @@ export type Database = {
         }
         Relationships: []
       }
+      parent_passport_records: {
+        Row: {
+          created_at: string
+          expiry_date: string | null
+          id: string
+          notes: string | null
+          parent_id: string
+          passport_number: string | null
+          seq_no: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          expiry_date?: string | null
+          id?: string
+          notes?: string | null
+          parent_id: string
+          passport_number?: string | null
+          seq_no: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          expiry_date?: string | null
+          id?: string
+          notes?: string | null
+          parent_id?: string
+          passport_number?: string | null
+          seq_no?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "parent_passport_records_parent_id_fkey"
+            columns: ["parent_id"]
+            isOneToOne: false
+            referencedRelation: "parents"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       parent_tickets: {
         Row: {
           assigned_to: string | null
@@ -3750,6 +3791,47 @@ export type Database = {
           },
           {
             foreignKeyName: "student_parent_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      student_passport_records: {
+        Row: {
+          created_at: string
+          expiry_date: string | null
+          id: string
+          notes: string | null
+          passport_number: string | null
+          seq_no: number
+          student_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          expiry_date?: string | null
+          id?: string
+          notes?: string | null
+          passport_number?: string | null
+          seq_no: number
+          student_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          expiry_date?: string | null
+          id?: string
+          notes?: string | null
+          passport_number?: string | null
+          seq_no?: number
+          student_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "student_passport_records_student_id_fkey"
             columns: ["student_id"]
             isOneToOne: false
             referencedRelation: "students"
@@ -5019,8 +5101,16 @@ export type Database = {
       }
       show_limit: { Args: never; Returns: number }
       show_trgm: { Args: { "": string }; Returns: string[] }
+      sync_parent_passport_summary: {
+        Args: { p_parent_id: string }
+        Returns: undefined
+      }
       sync_parent_visa_summary: {
         Args: { p_parent_id: string }
+        Returns: undefined
+      }
+      sync_student_passport_summary: {
+        Args: { p_student_id: string }
         Returns: undefined
       }
       teacher_allowed_class_year_ids: { Args: never; Returns: number[] }
