@@ -3,7 +3,7 @@ import { AppLayout } from "@/components/layout/AppLayout";
 import { AppHeader } from "@/components/layout/AppHeader";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Megaphone, ChevronLeft, Pin } from "lucide-react";
+import { Megaphone, ChevronLeft, Pin, MailOpen, Users } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { AnnouncementDrawer } from "@/components/AnnouncementDrawer";
 import { listAnnouncements, markAnnouncementRead, type Announcement } from "@/data/announcements";
@@ -12,6 +12,13 @@ import { categorizeAnnouncements } from "@/lib/announcements/categorize";
 import { FeaturedAnnouncementCard } from "@/components/announcements/FeaturedAnnouncementCard";
 import { PinnedAnnouncementCard } from "@/components/announcements/PinnedAnnouncementCard";
 import { AnnouncementListCard } from "@/components/announcements/AnnouncementListCard";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 type CategoryFilter = "all" | "Event" | "Academic" | "General";
 
@@ -23,7 +30,13 @@ export default function AnnouncementsPage() {
   const [announcements, setAnnouncements] = useState<Announcement[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const { selectedStudentId, selectedStudent } = useStudentSelection();
+  const [unreadOnly, setUnreadOnly] = useState(false);
+  const {
+    selectedStudentId,
+    selectedStudent,
+    linkedStudents,
+    setSelectedStudentId,
+  } = useStudentSelection();
   const parentCampusCode = selectedStudent?.campus_code ?? null;
 
   useEffect(() => {
@@ -47,9 +60,12 @@ export default function AnnouncementsPage() {
 
   const categories: CategoryFilter[] = ["all", "Event", "Academic", "General"];
 
-  const filteredAnnouncements = announcements.filter(a =>
-    categoryFilter === "all" || a.category.toLowerCase() === categoryFilter.toLowerCase()
-  );
+  const filteredAnnouncements = announcements.filter(a => {
+    const matchesCategory =
+      categoryFilter === "all" || a.category.toLowerCase() === categoryFilter.toLowerCase();
+    const matchesUnread = !unreadOnly || !a.is_read;
+    return matchesCategory && matchesUnread;
+  });
 
   const { featured, pinned, regular } = categorizeAnnouncements(filteredAnnouncements);
 
@@ -93,18 +109,58 @@ export default function AnnouncementsPage() {
       />
 
       <section className="px-4 py-4">
-        {/* Category Filter */}
-        <div className="flex gap-2 overflow-x-auto pb-3 mb-4">
-          {categories.map((category) => (
-            <Badge
-              key={category}
-              variant={categoryFilter === category ? "default" : "outline"}
-              className="cursor-pointer whitespace-nowrap capitalize"
-              onClick={() => setCategoryFilter(category)}
-            >
-              {category === "all" ? "All" : category}
-            </Badge>
-          ))}
+        {/* Filters */}
+        <div className="space-y-3 mb-4">
+          {/* Student + Unread row */}
+          {(linkedStudents.length > 0 || true) && (
+            <div className="flex items-center gap-2">
+              {linkedStudents.length > 0 && (
+                <Select
+                  value={selectedStudentId ?? undefined}
+                  onValueChange={(v) => setSelectedStudentId(v)}
+                >
+                  <SelectTrigger className="h-9 flex-1 min-w-0">
+                    <div className="flex items-center gap-2 min-w-0">
+                      <Users className="h-4 w-4 text-muted-foreground shrink-0" />
+                      <SelectValue placeholder="Select student" />
+                    </div>
+                  </SelectTrigger>
+                  <SelectContent>
+                    {linkedStudents.map((s) => (
+                      <SelectItem key={s.id} value={s.id}>
+                        {s.name}
+                        {s.className ? ` · ${s.className}` : ""}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              )}
+              <Button
+                type="button"
+                variant={unreadOnly ? "default" : "outline"}
+                size="sm"
+                className="h-9 gap-1.5 shrink-0"
+                onClick={() => setUnreadOnly((v) => !v)}
+              >
+                <MailOpen className="h-4 w-4" />
+                Unread
+              </Button>
+            </div>
+          )}
+
+          {/* Category Filter */}
+          <div className="flex gap-2 overflow-x-auto pb-1">
+            {categories.map((category) => (
+              <Badge
+                key={category}
+                variant={categoryFilter === category ? "default" : "outline"}
+                className="cursor-pointer whitespace-nowrap capitalize"
+                onClick={() => setCategoryFilter(category)}
+              >
+                {category === "all" ? "All" : category}
+              </Badge>
+            ))}
+          </div>
         </div>
 
         {loading && (
