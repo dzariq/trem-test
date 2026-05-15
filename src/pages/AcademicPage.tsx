@@ -1500,15 +1500,15 @@ export default function AcademicPage() {
       {mainSection === "report" && <section className="px-4 py-4">
         <Card className="bg-card border-border shadow-sm">
           <CardHeader className="pb-3">
-            <CardTitle className="text-lg font-semibold flex items-center gap-2">
-              <FileText className="h-5 w-5 text-primary" />
-              Report Card
-            </CardTitle>
-            {selectedStudent && (
-              <div className="mt-1">
+            <div className="flex flex-col items-center text-center gap-2">
+              <CardTitle className="text-lg font-semibold flex items-center justify-center gap-2">
+                <FileText className="h-5 w-5 text-primary" />
+                Report Card
+              </CardTitle>
+              {selectedStudent && (
                 <Badge variant="secondary" className="text-xs">{selectedStudent.name}</Badge>
-              </div>
-            )}
+              )}
+            </div>
             {/* Shared Year / Exam Filters */}
             <div className="flex flex-col gap-2 mt-3">
               <div className="flex items-center gap-2">
