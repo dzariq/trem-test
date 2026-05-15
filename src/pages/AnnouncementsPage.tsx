@@ -1,9 +1,8 @@
 import { useEffect, useState } from "react";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { AppHeader } from "@/components/layout/AppHeader";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Megaphone, ChevronLeft, Pin, MailOpen, Users } from "lucide-react";
+import { Megaphone, ChevronLeft, Pin, MailOpen, Users, Flag, ArrowDownUp } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { AnnouncementDrawer } from "@/components/AnnouncementDrawer";
 import { listAnnouncements, markAnnouncementRead, type Announcement } from "@/data/announcements";
@@ -20,11 +19,13 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
-type CategoryFilter = "all" | "Event" | "Academic" | "General";
+type PriorityFilter = "all" | "high" | "medium" | "low";
+type SortOrder = "newest" | "oldest";
 
 export default function AnnouncementsPage() {
   const navigate = useNavigate();
-  const [categoryFilter, setCategoryFilter] = useState<CategoryFilter>("all");
+  const [priorityFilter, setPriorityFilter] = useState<PriorityFilter>("all");
+  const [sortOrder, setSortOrder] = useState<SortOrder>("newest");
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [currentAnnouncementIndex, setCurrentAnnouncementIndex] = useState(0);
   const [announcements, setAnnouncements] = useState<Announcement[]>([]);
@@ -58,14 +59,19 @@ export default function AnnouncementsPage() {
     return () => { isMounted = false; };
   }, [selectedStudentId, parentCampusCode]);
 
-  const categories: CategoryFilter[] = ["all", "Event", "Academic", "General"];
-
-  const filteredAnnouncements = announcements.filter(a => {
-    const matchesCategory =
-      categoryFilter === "all" || a.category.toLowerCase() === categoryFilter.toLowerCase();
-    const matchesUnread = !unreadOnly || !a.is_read;
-    return matchesCategory && matchesUnread;
-  });
+  const filteredAnnouncements = announcements
+    .filter(a => {
+      const matchesPriority =
+        priorityFilter === "all" ||
+        (a.priority ?? "").toString().toLowerCase() === priorityFilter;
+      const matchesUnread = !unreadOnly || !a.is_read;
+      return matchesPriority && matchesUnread;
+    })
+    .sort((a, b) => {
+      const ta = new Date(a.date).getTime() || 0;
+      const tb = new Date(b.date).getTime() || 0;
+      return sortOrder === "newest" ? tb - ta : ta - tb;
+    });
 
   const { featured, pinned, regular } = categorizeAnnouncements(filteredAnnouncements);
 
@@ -111,55 +117,75 @@ export default function AnnouncementsPage() {
       <section className="px-4 py-4">
         {/* Filters */}
         <div className="space-y-3 mb-4">
-          {/* Student + Unread row */}
-          {(linkedStudents.length > 0 || true) && (
-            <div className="flex items-center gap-2">
-              {linkedStudents.length > 0 && (
-                <Select
-                  value={selectedStudentId ?? undefined}
-                  onValueChange={(v) => setSelectedStudentId(v)}
-                >
-                  <SelectTrigger className="h-9 flex-1 min-w-0">
-                    <div className="flex items-center gap-2 min-w-0">
-                      <Users className="h-4 w-4 text-muted-foreground shrink-0" />
-                      <SelectValue placeholder="Select student" />
-                    </div>
-                  </SelectTrigger>
-                  <SelectContent>
-                    {linkedStudents.map((s) => (
-                      <SelectItem key={s.id} value={s.id}>
-                        {s.name}
-                        {s.className ? ` · ${s.className}` : ""}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              )}
-              <Button
-                type="button"
-                variant={unreadOnly ? "default" : "outline"}
-                size="sm"
-                className="h-9 gap-1.5 shrink-0"
-                onClick={() => setUnreadOnly((v) => !v)}
+          {/* Row 1: Student + Unread */}
+          <div className="flex items-center gap-2">
+            {linkedStudents.length > 0 && (
+              <Select
+                value={selectedStudentId ?? undefined}
+                onValueChange={(v) => setSelectedStudentId(v)}
               >
-                <MailOpen className="h-4 w-4" />
-                Unread
-              </Button>
-            </div>
-          )}
+                <SelectTrigger className="h-9 flex-1 min-w-0">
+                  <div className="flex items-center gap-2 min-w-0">
+                    <Users className="h-4 w-4 text-muted-foreground shrink-0" />
+                    <SelectValue placeholder="Select student" />
+                  </div>
+                </SelectTrigger>
+                <SelectContent>
+                  {linkedStudents.map((s) => (
+                    <SelectItem key={s.id} value={s.id}>
+                      {s.name}
+                      {s.className ? ` · ${s.className}` : ""}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            )}
+            <Button
+              type="button"
+              variant={unreadOnly ? "default" : "outline"}
+              size="sm"
+              className="h-9 gap-1.5 shrink-0"
+              onClick={() => setUnreadOnly((v) => !v)}
+            >
+              <MailOpen className="h-4 w-4" />
+              Unread
+            </Button>
+          </div>
 
-          {/* Category Filter */}
-          <div className="flex gap-2 overflow-x-auto pb-1">
-            {categories.map((category) => (
-              <Badge
-                key={category}
-                variant={categoryFilter === category ? "default" : "outline"}
-                className="cursor-pointer whitespace-nowrap capitalize"
-                onClick={() => setCategoryFilter(category)}
-              >
-                {category === "all" ? "All" : category}
-              </Badge>
-            ))}
+          {/* Row 2: Priority + Sort */}
+          <div className="flex items-center gap-2">
+            <Select
+              value={priorityFilter}
+              onValueChange={(v) => setPriorityFilter(v as PriorityFilter)}
+            >
+              <SelectTrigger className="h-9 flex-1 min-w-0">
+                <div className="flex items-center gap-2 min-w-0">
+                  <Flag className="h-4 w-4 text-muted-foreground shrink-0" />
+                  <SelectValue />
+                </div>
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All priorities</SelectItem>
+                <SelectItem value="high">High</SelectItem>
+                <SelectItem value="medium">Medium</SelectItem>
+                <SelectItem value="low">Low</SelectItem>
+              </SelectContent>
+            </Select>
+            <Select
+              value={sortOrder}
+              onValueChange={(v) => setSortOrder(v as SortOrder)}
+            >
+              <SelectTrigger className="h-9 flex-1 min-w-0">
+                <div className="flex items-center gap-2 min-w-0">
+                  <ArrowDownUp className="h-4 w-4 text-muted-foreground shrink-0" />
+                  <SelectValue />
+                </div>
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="newest">Newest first</SelectItem>
+                <SelectItem value="oldest">Oldest first</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
         </div>
 
@@ -239,7 +265,7 @@ export default function AnnouncementsPage() {
             {filteredAnnouncements.length === 0 && (
               <div className="text-center py-12">
                 <Megaphone className="h-12 w-12 mx-auto text-muted-foreground/50 mb-3" />
-                <p className="text-muted-foreground">No announcements in this category</p>
+                <p className="text-muted-foreground">No announcements match your filters</p>
               </div>
             )}
           </div>
