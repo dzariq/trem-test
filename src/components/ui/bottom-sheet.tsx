@@ -151,7 +151,7 @@ export function BottomSheet({
             {(title || description) && (
               <div className={cn("flex-shrink-0 px-4 pb-3 pt-3 border-b border-border", headerClassName)}>
                 {title && (
-                  <DrawerPrimitive.Title className="text-lg font-semibold flex items-center gap-2">
+                  <DrawerPrimitive.Title className="text-lg font-semibold flex items-center justify-center gap-2">
                     {title}
                   </DrawerPrimitive.Title>
                 )}
