@@ -2988,6 +2988,7 @@ export type Database = {
           parent_email: string | null
           parent_user_id: string | null
           passport_expiry_date: string | null
+          passport_number: string | null
           phone: string | null
           relationship: string | null
           updated_at: string
@@ -3004,6 +3005,7 @@ export type Database = {
           parent_email?: string | null
           parent_user_id?: string | null
           passport_expiry_date?: string | null
+          passport_number?: string | null
           phone?: string | null
           relationship?: string | null
           updated_at?: string
@@ -3020,6 +3022,7 @@ export type Database = {
           parent_email?: string | null
           parent_user_id?: string | null
           passport_expiry_date?: string | null
+          passport_number?: string | null
           phone?: string | null
           relationship?: string | null
           updated_at?: string
@@ -4122,6 +4125,7 @@ export type Database = {
           name: string
           nationality: string | null
           passport_expiry_date: string | null
+          passport_number: string | null
           payment_type: string | null
           postcode: string | null
           previous: string | null
@@ -4172,6 +4176,7 @@ export type Database = {
           name: string
           nationality?: string | null
           passport_expiry_date?: string | null
+          passport_number?: string | null
           payment_type?: string | null
           postcode?: string | null
           previous?: string | null
@@ -4222,6 +4227,7 @@ export type Database = {
           name?: string
           nationality?: string | null
           passport_expiry_date?: string | null
+          passport_number?: string | null
           payment_type?: string | null
           postcode?: string | null
           previous?: string | null
