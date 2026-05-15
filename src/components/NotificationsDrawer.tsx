@@ -401,17 +401,16 @@ export function NotificationsDrawer({ open, onOpenChange }: NotificationsDrawerP
                 className={`flex items-center gap-3 px-3 py-2.5 cursor-pointer active:bg-muted/60 transition-colors ${
                   !n.is_read ? "bg-primary/5" : ""
                 }`}
-                onClick={() => handleNotificationClick(n)}
+                onClick={() => {
+                  if (!n.is_read) markAsRead(n.id);
+                  onOpenChange(false);
+                  navigate("/calendar");
+                }}
               >
                 {pill && (
-                  <div className="flex-shrink-0 w-11 h-11 rounded-lg bg-primary/10 text-primary flex flex-col items-center justify-center">
-                    <span className="text-[9px] font-semibold uppercase leading-none">
-                      {pill.day}
-                    </span>
-                    <span className="text-base font-bold leading-none mt-0.5">
-                      {pill.num}
-                    </span>
-                  </div>
+                  <span className="flex-shrink-0 px-2 py-1 rounded-md bg-primary/10 text-primary text-[11px] font-semibold whitespace-nowrap">
+                    {pill.label}
+                  </span>
                 )}
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2">
@@ -426,9 +425,6 @@ export function NotificationsDrawer({ open, onOpenChange }: NotificationsDrawerP
                       <span className="w-1.5 h-1.5 rounded-full bg-primary flex-shrink-0" />
                     )}
                   </div>
-                  <p className="text-[11px] text-muted-foreground mt-0.5 truncate">
-                    {n.time}
-                  </p>
                 </div>
                 <button
                   type="button"
