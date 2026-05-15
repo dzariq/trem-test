@@ -155,7 +155,7 @@ export const CATEGORY_DISPLAY_NAMES: Record<TagCategory, string> = {
   "school-level": "School Level",
   "exams": "Exams",
    "holidays": "Holidays",
-   "events": "Highlights",
+  "events": "Events",
    "staff-admin": "Staff",
   "due-dates": "Due Dates",
   "students": "Students",

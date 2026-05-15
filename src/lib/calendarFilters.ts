@@ -18,7 +18,7 @@ export const EVENT_TYPE_LABELS: Record<EventTypeFilter, string> = {
   academic: "Academic",
    exam: "Exam",
    holiday: "Holiday",
-   event: "Highlights",
+   event: "Events",
    cca: "CCA",
 };
 
