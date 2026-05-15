@@ -345,7 +345,7 @@ export function NotificationsDrawer({ open, onOpenChange }: NotificationsDrawerP
       return ta - tb;
     });
     const unreadInBucket = sortedItems.filter((n) => !n.is_read).length;
-    const expanded = !!expandedBuckets[section.key];
+    const expanded = expandedBuckets[section.key] !== false;
     const firstDate = sortedItems[0]?.event_date ? new Date(sortedItems[0].event_date) : null;
     const lastDate = sortedItems[sortedItems.length - 1]?.event_date ? new Date(sortedItems[sortedItems.length - 1].event_date!) : null;
     const fmt = (d: Date) => d.toLocaleDateString("en-US", { weekday: "short", day: "numeric" });
