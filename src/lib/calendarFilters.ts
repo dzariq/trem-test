@@ -91,9 +91,9 @@ export function filterEventsByTypes(
 
 export type UpcomingTab = "events" | "exams" | "holidays";
 
-export const UPCOMING_TABS: { value: UpcomingTab; label: string }[] = [
-  { value: "events", label: "Events" },
-  { value: "exams", label: "Exams" },
+ export const UPCOMING_TABS: { value: UpcomingTab; label: string }[] = [
+   { value: "events", label: "Highlights" },
+   { value: "exams", label: "Exams" },
   { value: "holidays", label: "Holidays" },
 ];
 

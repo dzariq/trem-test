@@ -154,9 +154,9 @@ export const TAG_DISPLAY_NAMES: Record<CalendarTag, string> = {
 export const CATEGORY_DISPLAY_NAMES: Record<TagCategory, string> = {
   "school-level": "School Level",
   "exams": "Exams",
-  "holidays": "Holidays",
-  "events": "Events",
-  "staff-admin": "Staff",
+   "holidays": "Holidays",
+   "events": "Highlights",
+   "staff-admin": "Staff",
   "due-dates": "Due Dates",
   "students": "Students",
   "parents": "Parents",
