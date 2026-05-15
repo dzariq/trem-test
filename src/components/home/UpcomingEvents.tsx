@@ -191,7 +191,7 @@ export function UpcomingEvents({ events, ccaSessions, seeAllPath = "/parent/cale
             return (
               <Card
                 key={`cca-${ccaSession.id}`}
-                className="bg-card border-border shadow-sm border-l-4 border-l-primary/50 cursor-pointer"
+                className="bg-primary/10 border-primary/30 shadow-sm cursor-pointer"
                 role="button"
                 tabIndex={0}
                 onClick={(e) => handleCardClick(e, ccaSession)}
