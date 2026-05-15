@@ -31,6 +31,7 @@ import { CcaActivityCard } from "@/components/cca/CcaActivityCard";
 import { ClubSwitchConfirmDialog } from "@/components/cca/ClubSwitchConfirmDialog";
 import { supabase } from "@/lib/supabase";
 import { useCcaSessionsCalendar, type CcaCalendarSession } from "@/hooks/useCcaSessionsCalendar";
+import { useUpcomingCcaSessions, type UpcomingCcaSession } from "@/hooks/useUpcomingCcaSessions";
 import { EventDetailsSheet } from "@/components/events/EventDetailsSheet";
 import { UpcomingEventsSection } from "@/components/calendar/UpcomingEventsSection";
 import { CategoryFilterPill } from "@/components/calendar/CategoryFilterPill";
@@ -58,7 +59,7 @@ export default function CalendarPage() {
   const [view, setView] = useState<CalendarViewMode>("month");
   const [ccaTypeFilter, setCcaTypeFilter] = useState("all");
   const [selectedCCA, setSelectedCCA] = useState<CcaActivity | null>(null);
-  const [selectedEventDetails, setSelectedEventDetails] = useState<UpcomingEvent | null>(null);
+  const [selectedEventDetails, setSelectedEventDetails] = useState<UpcomingEvent | UpcomingCcaSession | null>(null);
   const [eventDetailsOpen, setEventDetailsOpen] = useState(false);
   const [events, setEvents] = useState<UpcomingEvent[]>([]);
   const [upcomingEvents, setUpcomingEvents] = useState<UpcomingEvent[]>([]);
