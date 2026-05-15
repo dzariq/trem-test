@@ -322,6 +322,31 @@ export function NotificationsDrawer({ open, onOpenChange }: NotificationsDrawerP
   const renderSynthetic = (item: { id: string; title: string; message: string; type: string }) => {
     const Icon = getTypeIcon(item.type);
     const isRead = !!readSynthetic[item.id];
+    // Parse message lines into structured rows: [category] title
+    // Supports daily ("• [exam] Title") and weekly ("Wed, May 13\n  • [event] Title") formats.
+    const emojiRe = /^[\p{Extended_Pictographic}\p{Emoji_Presentation}\uFE0F\u200D\s]+/u;
+    const catPalette: Record<string, { bg: string; text: string; border: string }> = {
+      exam:     { bg: "bg-amber-100",   text: "text-amber-800",   border: "border-amber-200" },
+      holiday:  { bg: "bg-rose-100",    text: "text-rose-800",    border: "border-rose-200" },
+      academic: { bg: "bg-blue-100",    text: "text-blue-800",    border: "border-blue-200" },
+      cca:      { bg: "bg-violet-100",  text: "text-violet-800",  border: "border-violet-200" },
+      event:    { bg: "bg-emerald-100", text: "text-emerald-800", border: "border-emerald-200" },
+    };
+    const lines = item.message.split("\n");
+    type Row = { kind: "day"; label: string } | { kind: "item"; cat: string; title: string };
+    const rows: Row[] = [];
+    for (const raw of lines) {
+      const line = raw.trim();
+      if (!line) continue;
+      const bullet = line.match(/^•\s*(?:\[([a-z_]+)\]\s*)?(.+)$/i);
+      if (bullet) {
+        const cat = (bullet[1] || item.type || "event").toLowerCase();
+        const title = bullet[2].replace(emojiRe, "").trim();
+        rows.push({ kind: "item", cat, title });
+      } else {
+        rows.push({ kind: "day", label: line });
+      }
+    }
     return (
       <div
         key={item.id}
@@ -340,7 +365,26 @@ export function NotificationsDrawer({ open, onOpenChange }: NotificationsDrawerP
               {item.title}
             </p>
           </div>
-          <p className="text-xs text-muted-foreground mt-1 whitespace-pre-line leading-relaxed">{item.message}</p>
+          <div className="mt-2 space-y-1.5">
+            {rows.map((r, idx) =>
+              r.kind === "day" ? (
+                <p key={idx} className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground pt-1">
+                  {r.label}
+                </p>
+              ) : (
+                <div key={idx} className="flex items-start gap-2">
+                  <span
+                    className={`flex-shrink-0 inline-flex items-center px-2 h-5 rounded-full text-[10px] font-semibold uppercase tracking-wide border ${
+                      (catPalette[r.cat] || catPalette.event).bg
+                    } ${(catPalette[r.cat] || catPalette.event).text} ${(catPalette[r.cat] || catPalette.event).border}`}
+                  >
+                    {r.cat}
+                  </span>
+                  <span className="text-xs text-foreground leading-5 break-words">{r.title}</span>
+                </div>
+              ),
+            )}
+          </div>
         </div>
         <button
           type="button"
