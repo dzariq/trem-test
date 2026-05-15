@@ -29,6 +29,7 @@ import ContactPage from "./pages/ContactPage";
 import AwardsPage from "./pages/AwardsPage";
 import StudentHandbookPage from "./pages/StudentHandbookPage";
 import HomeworkPage from "./pages/HomeworkPage";
+import InvoicePage from "./pages/InvoicePage";
 import ParentStudentGuard from "./components/auth/ParentStudentGuard";
 
 // Teacher Pages
@@ -81,6 +82,7 @@ const App = () => (
                   <Route path="/parent/attendance" element={<AttendancePage />} />
                   <Route path="/parent/academic" element={<AcademicPage />} />
                   <Route path="/parent/calendar" element={<CalendarPage />} />
+                  <Route path="/parent/invoice" element={<InvoicePage />} />
                   <Route path="/parent/support" element={<SupportPage />} />
                   <Route path="/parent/profile" element={<ProfilePage />} />
                   <Route path="/parent/notifications" element={<NotificationsPage />} />

@@ -1,53 +1,78 @@
-## Home Page Mobile-Readiness Audit (Capacitor / Play Store + App Store)
+# Invoice module for parents
 
-I checked the wrapper setup and both home pages (`/parent` `HomePage.tsx` and `/teacher` `TeacherHomePage.tsx`). Overall the home page is in good shape for a native wrapper. A few small things to tighten before store submission.
+## What exists already (verified in Supabase)
 
-### What's already good
+- **`student_invoices`** — synced from Bukku. Key fields: `bukku_contact_id`, `bukku_invoice_id`, `type` (`fees` / `others`), `status` (`paid`, `pending_payment`, `draft`, `cancelled(CN)`), `invoice_date`, `period_key` (e.g. `2027-T1`), `payment_amount`, `outstanding_amount`, `url` (Bukku short link), and a rich `content` jsonb that holds `amount`, `balance`, invoice number, line items, due dates, etc.
+- **`bukku_contacts`** maps `student_id ↔ bukku_contact_id`.
+- **RLS** already lets parents read invoices for any of their linked children (via `student_guardians`). No DB migration needed.
 
-**Capacitor wrapper**
-- `capacitor.config.ts`: `appId: com.collinz.school`, `appName: Collinz School`, `webDir: dist`, splash configured (1.5s, fade), `ios.contentInset: "always"`, no live-reload `server.url` (correct for store builds).
-- Installed: `@capacitor/core` 8, `android` 8, `ios` 8, `app`, `splash-screen`, `status-bar`, `browser`, `share`, `filesystem`, `preferences`, `assets`.
-- `src/main.tsx`: status bar overlays WebView, light style, transparent bg, splash hidden after first paint.
-- `src/App.tsx`: `useAndroidBackButton()` wired at app root.
+## Scope
 
-**HTML / PWA shell**
-- `index.html`: `viewport-fit=cover`, theme-color, apple-mobile-web-app meta tags, app title, format-detection off, manifest + icons linked.
-- `public/manifest.webmanifest`: standalone, portrait, 192/512 icons + maskable, theme/background colors set.
-- `public/icons/`: `icon-192.png`, `icon-512.png`, `apple-touch-icon.png` present.
+Read-only parent view. No payment integration, no admin features.
 
-**Safe-area system (notch / home indicator)**
-- `index.css` defines `--safe-top/bottom/left/right` with the project's `--safe-reduce: 5px` rule.
-- Utilities `safe-pt`, `safe-pb`, `safe-px`, `bottom-tabbar` used consistently.
-- `AppHeader` uses `safe-pt`; `AppLayout`/`TeacherAppLayout` use `pb-[calc(5rem+var(--safe-bottom))] safe-px` and `overflow-x-hidden` so the bottom nav clears the home indicator.
-- Bottom navs are `fixed`, `z-50`, hide on scroll-down.
+## What we'll build
 
-### Gaps to fix before wrapping
+### 1. Navigation
+- Add **Invoice** (Receipt icon) right after Calendar in `BottomNavigation.tsx`. Five tabs comfortably fit at 390px; if the homework flag is on too, we'll let it scroll/condense the labels. New route `/parent/invoice` registered in `src/App.tsx`.
 
-1. **No native projects yet.** `android/` and `ios/` directories don't exist. Before the first store build the user needs to run (locally, after exporting to GitHub):
-   - `npm install`
-   - `npx cap add ios` and/or `npx cap add android`
-   - `npm run build && npx cap sync`
-   - Generate native icons + splash from a 1024px source via `npx capacitor-assets generate` (the `@capacitor/assets` package is already installed; just need a source asset).
+### 2. Data layer — `src/data/invoices.ts`
+- `listInvoicesForStudent(studentId)` — joins `bukku_contacts → student_invoices`, returns a normalized shape:
+  - `id, invoiceNumber, periodKey, invoiceDate, dueDate, status, type, amount, paidAmount, outstandingAmount, currency, lineItems[], bukkuUrl`
+- Filter out `draft` and `cancelled(CN)` from the parent view by default (toggleable).
+- Amounts: prefer `outstanding_amount` / `payment_amount` columns, fall back to `content.balance` / (`content.amount - content.balance`).
 
-2. **Splash background mismatch.** `capacitor.config.ts` splash `backgroundColor: "#f5f5f5"` and manifest `background_color: "#f5f5f5"` but `theme_color` is `#0a8a5c` (brand green). Decide one: either keep neutral grey or switch splash to the brand green so the launch experience matches the in-app theme.
+### 3. Hook — `src/hooks/useStudentInvoices.ts`
+- React Query hook keyed by `selectedStudentId`. Reuses the global `useStudentSelection` pattern (same as Homework / Academic pages).
 
-3. **External links / PDFs.** Home page opens `PDFViewerDialog` for the Student Timetable. On native iOS/Android, in-app PDF rendering via blob can be flaky — confirm `PDFViewerDialog` already uses `@capacitor/browser` or `Filesystem` + native viewer (it should, given `@capacitor/browser` is installed). Worth a single device test.
+### 4. Page — `src/pages/InvoicePage.tsx`
 
-4. **Hardware back button on home.** `useAndroidBackButton` is global, but on the root `/parent` and `/teacher` routes Android's back should exit the app (not navigate to a blank previous entry). Verify the hook treats home routes as "minimize/exit" rather than `history.back()`.
+Layout (mobile-first, 390px):
 
-5. **Tap-target sizing on `QuickLinks`.** Each tile is `w-11 h-11` icon inside a button with `py-1.5 px-1`. Touch target ends up ~44px which meets Apple's 44pt minimum but is right at the edge of Google's 48dp recommendation. Low priority — fine to ship, just noting.
+```text
+┌──────────────────────────────┐
+│  ← Invoices                  │
+├──────────────────────────────┤
+│ [👥 Student ▾]               │  ← reuses linkedStudents selector
+├──────────────────────────────┤
+│  ┌── Summary card ─────────┐ │
+│  │ Outstanding   RM 7,138  │ │  ← sum of pending_payment.outstanding
+│  │ Paid this year  RM 12k  │ │
+│  │ 3 invoices · 1 unpaid   │ │
+│  └─────────────────────────┘ │
+├──────────────────────────────┤
+│ [All] [Outstanding] [Paid]   │  ← status pills
+├──────────────────────────────┤
+│  GL-IV2701/0006   ● Pending  │
+│  Term 1 2027 · Due 7 Jan     │
+│  RM 7,138.30                 │
+│  [View on Bukku ↗]           │
+│  ────────────────────────    │
+│  GL-IV2604/0012   ✓ Paid     │
+│  Term 4 2026 · Paid 12 Oct   │
+│  RM 6,608.30                 │
+└──────────────────────────────┘
+```
 
-6. **Store metadata not yet authored.** Not a code change, but for submission the user will need: app name, subtitle, description, keywords, screenshots (6.7"/6.5"/5.5" iOS, phone + 7"/10" Android), privacy policy URL, support URL, age rating, data-safety form (since auth + analytics + push are involved).
+- **Summary card**: total outstanding, total paid YTD, invoice count, overdue count (status = pending_payment AND `term_items[0].date < today`).
+- **List card**: tap to open a bottom sheet with the full line-item breakdown from `content.form_items` (description, amount), plus a "View on Bukku" button that opens `url` in a new tab via `openExternal` for native compatibility.
+- Empty state: "No invoices yet for {student name}".
+- Handles students with no `bukku_contacts` row (show "Billing not set up — contact the school office").
 
-### Out of scope
+### 5. Notifications (out of scope for this round)
+We can add an automatic notification when a new `pending_payment` invoice appears in a follow-up — flag this and skip for now.
 
-- No changes to feature behavior, data fetching, or business logic.
-- Other portal pages (Attendance, Calendar, Academic, Lessons) are not part of this audit.
+## Files touched
 
-### Proposed next step
+- `src/components/layout/BottomNavigation.tsx` — add Invoice item
+- `src/App.tsx` — add `/parent/invoice` route
+- `src/data/invoices.ts` *(new)* — query + normalizer
+- `src/hooks/useStudentInvoices.ts` *(new)*
+- `src/pages/InvoicePage.tsx` *(new)*
+- `src/components/invoice/InvoiceCard.tsx` *(new)*
+- `src/components/invoice/InvoiceDetailsSheet.tsx` *(new)* — uses standard `BottomSheet` (75vh, draggable)
 
-If you'd like, I can:
-- (a) Align the splash + manifest colors to the brand green, and
-- (b) Add a small README section documenting the `npx cap add` / `npx cap sync` / asset-generation workflow so the wrap-and-submit process is reproducible.
+## Open questions (will assume defaults if not raised)
 
-Just say which (or both) and I'll switch to build mode.
+1. **Drafts** — hide from parents (default). Confirm?
+2. **Currency** — always RM in the data; we'll display with `Intl.NumberFormat('en-MY', { style: 'currency', currency: 'MYR' })`.
+3. **Bukku link** — open externally (defaults to yes, since Bukku has its own auth).
