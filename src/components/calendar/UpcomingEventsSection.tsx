@@ -70,31 +70,30 @@ export function UpcomingEventsSection({ events, ccaSessions = [], onEventClick, 
 
   return (
     <Card className="bg-card border-border shadow-sm">
-       <CardHeader className="pb-2">
-          <CardTitle className="text-lg font-semibold text-center w-full">What's Coming Up</CardTitle>
-       </CardHeader>
+      <CardHeader className="pb-3">
+        <CardTitle className="text-base font-semibold text-foreground">What's Coming Up</CardTitle>
+      </CardHeader>
 
       {/* Tab switcher */}
       <div className="px-4 pb-3">
         <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as UpcomingTab)}>
-          <TabsList className="grid w-full grid-cols-4 h-9 bg-muted/50 rounded-md">
+          <TabsList className="grid w-full grid-cols-4 h-8 p-0.5 bg-muted/60 rounded-lg gap-0.5">
             {UPCOMING_TABS.map((tab) => {
               const isActive = activeTab === tab.value;
-              // Apply color based on tab type when active
               let activeClass = "";
               if (isActive) {
-                if (tab.value === "events") activeClass = "bg-purple-500 text-white";
-                else if (tab.value === "exams") activeClass = "bg-red-500 text-white";
-                else if (tab.value === "holidays") activeClass = "bg-green-600 text-white";
-                else if (tab.value === "cca") activeClass = "bg-primary text-primary-foreground";
+                if (tab.value === "events") activeClass = "bg-purple-500 text-white shadow-sm";
+                else if (tab.value === "exams") activeClass = "bg-red-500 text-white shadow-sm";
+                else if (tab.value === "holidays") activeClass = "bg-green-600 text-white shadow-sm";
+                else if (tab.value === "cca") activeClass = "bg-primary text-primary-foreground shadow-sm";
               }
               return (
-                <TabsTrigger 
-                  key={tab.value} 
-                  value={tab.value} 
+                <TabsTrigger
+                  key={tab.value}
+                  value={tab.value}
                   className={cn(
-                    "text-xs transition-colors rounded-md",
-                    isActive && activeClass
+                    "text-xs font-medium h-7 rounded-md transition-colors data-[state=active]:shadow-sm",
+                    isActive ? activeClass : "text-muted-foreground hover:text-foreground"
                   )}
                 >
                   {tab.label}
