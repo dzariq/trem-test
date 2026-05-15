@@ -72,7 +72,11 @@ export function NotificationsDrawer({ open, onOpenChange }: NotificationsDrawerP
   } = useNotifications();
   
   const [filter, setFilter] = useState<"all" | "unread">("all");
-  const [expandedBuckets, setExpandedBuckets] = useState<Record<string, boolean>>({});
+  const [expandedBuckets, setExpandedBuckets] = useState<Record<string, boolean>>({
+    this: true,
+    next: true,
+    later: true,
+  });
   const [dismissedSynthetic, setDismissedSynthetic] = useState<Record<string, boolean>>(() => {
     try {
       return JSON.parse(localStorage.getItem("notif_synthetic_dismissed") || "{}");
@@ -296,10 +300,11 @@ export function NotificationsDrawer({ open, onOpenChange }: NotificationsDrawerP
       else later.push(n);
     }
 
+    const isMonday = now.getDay() === 1;
     return [
       { key: "inbox", label: "Latest", items: inbox },
       { key: "this", label: "This week", items: thisWeek },
-      { key: "next", label: "Next week", items: nextWeek },
+      { key: "next", label: "Next week", items: isMonday ? nextWeek : [] },
       { key: "later", label: "Later", items: later },
     ].filter((s) => s.items.length > 0);
   })();
@@ -328,7 +333,8 @@ export function NotificationsDrawer({ open, onOpenChange }: NotificationsDrawerP
     const d = new Date(iso);
     const day = d.toLocaleDateString("en-US", { weekday: "short" });
     const num = d.getDate();
-    return { day, num };
+    const month = d.toLocaleDateString("en-US", { month: "short" });
+    return { day, num, month, label: `${num} ${month} (${day})` };
   };
 
   const renderWeekBucket = (
@@ -340,7 +346,7 @@ export function NotificationsDrawer({ open, onOpenChange }: NotificationsDrawerP
       return ta - tb;
     });
     const unreadInBucket = sortedItems.filter((n) => !n.is_read).length;
-    const expanded = !!expandedBuckets[section.key];
+    const expanded = expandedBuckets[section.key] !== false;
     const firstDate = sortedItems[0]?.event_date ? new Date(sortedItems[0].event_date) : null;
     const lastDate = sortedItems[sortedItems.length - 1]?.event_date ? new Date(sortedItems[sortedItems.length - 1].event_date!) : null;
     const fmt = (d: Date) => d.toLocaleDateString("en-US", { weekday: "short", day: "numeric" });
@@ -395,17 +401,16 @@ export function NotificationsDrawer({ open, onOpenChange }: NotificationsDrawerP
                 className={`flex items-center gap-3 px-3 py-2.5 cursor-pointer active:bg-muted/60 transition-colors ${
                   !n.is_read ? "bg-primary/5" : ""
                 }`}
-                onClick={() => handleNotificationClick(n)}
+                onClick={() => {
+                  if (!n.is_read) markAsRead(n.id);
+                  onOpenChange(false);
+                  navigate("/calendar");
+                }}
               >
                 {pill && (
-                  <div className="flex-shrink-0 w-11 h-11 rounded-lg bg-primary/10 text-primary flex flex-col items-center justify-center">
-                    <span className="text-[9px] font-semibold uppercase leading-none">
-                      {pill.day}
-                    </span>
-                    <span className="text-base font-bold leading-none mt-0.5">
-                      {pill.num}
-                    </span>
-                  </div>
+                  <span className="flex-shrink-0 px-2 py-1 rounded-md bg-primary/10 text-primary text-[11px] font-semibold whitespace-nowrap">
+                    {pill.label}
+                  </span>
                 )}
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2">
@@ -420,9 +425,6 @@ export function NotificationsDrawer({ open, onOpenChange }: NotificationsDrawerP
                       <span className="w-1.5 h-1.5 rounded-full bg-primary flex-shrink-0" />
                     )}
                   </div>
-                  <p className="text-[11px] text-muted-foreground mt-0.5 truncate">
-                    {n.time}
-                  </p>
                 </div>
                 <button
                   type="button"
