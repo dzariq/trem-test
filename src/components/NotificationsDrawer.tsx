@@ -24,7 +24,9 @@ import {
   Loader2,
   Palette,
   Palmtree,
-  PenLine
+  PenLine,
+  X,
+  ChevronRight
 } from "lucide-react";
 import { useState } from "react";
 
@@ -194,6 +196,98 @@ export function NotificationsDrawer({ open, onOpenChange }: NotificationsDrawerP
     );
   };
 
+  const formatDatePill = (iso: string) => {
+    const d = new Date(iso);
+    const day = d.toLocaleDateString("en-US", { weekday: "short" });
+    const num = d.getDate();
+    return { day, num };
+  };
+
+  const renderWeekBucket = (
+    section: { key: string; label: string; items: typeof filteredNotifications }
+  ) => {
+    const sortedItems = [...section.items].sort((a, b) => {
+      const ta = a.event_date ? new Date(a.event_date).getTime() : 0;
+      const tb = b.event_date ? new Date(b.event_date).getTime() : 0;
+      return ta - tb;
+    });
+    const unreadInBucket = sortedItems.filter((n) => !n.is_read).length;
+
+    return (
+      <div key={section.key} className="rounded-xl border border-border bg-card overflow-hidden">
+        <div className="flex items-center justify-between px-3 py-2 bg-muted/40 border-b border-border">
+          <div className="flex items-center gap-2">
+            <h4 className="text-xs font-semibold uppercase tracking-wide text-foreground">
+              {section.label}
+            </h4>
+            <span className="text-[11px] text-muted-foreground">
+              {sortedItems.length} event{sortedItems.length === 1 ? "" : "s"}
+            </span>
+          </div>
+          {unreadInBucket > 0 && (
+            <span className="text-[10px] font-medium text-primary">
+              {unreadInBucket} new
+            </span>
+          )}
+        </div>
+        <ul className="divide-y divide-border">
+          {sortedItems.map((n) => {
+            const pill = n.event_date ? formatDatePill(n.event_date) : null;
+            return (
+              <li
+                key={n.id}
+                className={`flex items-center gap-3 px-3 py-2.5 cursor-pointer active:bg-muted/60 transition-colors ${
+                  !n.is_read ? "bg-primary/5" : ""
+                }`}
+                onClick={() => handleNotificationClick(n)}
+              >
+                {pill && (
+                  <div className="flex-shrink-0 w-11 h-11 rounded-lg bg-primary/10 text-primary flex flex-col items-center justify-center">
+                    <span className="text-[9px] font-semibold uppercase leading-none">
+                      {pill.day}
+                    </span>
+                    <span className="text-base font-bold leading-none mt-0.5">
+                      {pill.num}
+                    </span>
+                  </div>
+                )}
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2">
+                    <p
+                      className={`text-sm text-foreground truncate ${
+                        !n.is_read ? "font-semibold" : "font-medium"
+                      }`}
+                    >
+                      {n.title}
+                    </p>
+                    {!n.is_read && (
+                      <span className="w-1.5 h-1.5 rounded-full bg-primary flex-shrink-0" />
+                    )}
+                  </div>
+                  <p className="text-[11px] text-muted-foreground mt-0.5 truncate">
+                    {n.time}
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  aria-label="Dismiss"
+                  className="flex-shrink-0 w-7 h-7 rounded-full text-muted-foreground hover:text-destructive hover:bg-destructive/10 flex items-center justify-center"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    deleteNotification(n.id);
+                  }}
+                >
+                  <X className="h-3.5 w-3.5" />
+                </button>
+                <ChevronRight className="h-3.5 w-3.5 text-muted-foreground/60 flex-shrink-0 -ml-1" />
+              </li>
+            );
+          })}
+        </ul>
+      </div>
+    );
+  };
+
   return (
     <BottomSheet
       open={open}
@@ -255,16 +349,21 @@ export function NotificationsDrawer({ open, onOpenChange }: NotificationsDrawerP
         ) : (
           <div className="space-y-4 pb-6 overflow-x-hidden">
             {groupedSections ? (
-              groupedSections.map((section) => (
-                <div key={section.key} className="space-y-2">
-                  <h4 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground px-1">
-                    {section.label}
-                  </h4>
-                  <div className="space-y-2">
-                    {section.items.map(renderItem)}
-                  </div>
-                </div>
-              ))
+              groupedSections.map((section) => {
+                if (section.key === "inbox") {
+                  return (
+                    <div key={section.key} className="space-y-2">
+                      <h4 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground px-1">
+                        {section.label}
+                      </h4>
+                      <div className="space-y-2">
+                        {section.items.map(renderItem)}
+                      </div>
+                    </div>
+                  );
+                }
+                return renderWeekBucket(section);
+              })
             ) : (
               <div className="space-y-2">
                 {filteredNotifications.map(renderItem)}
