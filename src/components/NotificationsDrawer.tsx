@@ -1,5 +1,12 @@
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { BottomSheet } from "@/components/ui/bottom-sheet";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { SwipeableNotification } from "@/components/SwipeableNotification";
@@ -59,6 +66,7 @@ interface NotificationsDrawerProps {
 
 export function NotificationsDrawer({ open, onOpenChange }: NotificationsDrawerProps) {
   const navigate = useNavigate();
+  const location = useLocation();
   const { 
     notifications, 
     unreadCount, 
@@ -84,6 +92,9 @@ export function NotificationsDrawer({ open, onOpenChange }: NotificationsDrawerP
       return {};
     }
   });
+  const [activeDigest, setActiveDigest] = useState<
+    { id: string; title: string; message: string; type: string } | null
+  >(null);
 
   const persistSynthetic = (key: "notif_synthetic_dismissed" | "notif_synthetic_read", value: Record<string, boolean>) => {
     try { localStorage.setItem(key, JSON.stringify(value)); } catch {}
@@ -277,13 +288,22 @@ export function NotificationsDrawer({ open, onOpenChange }: NotificationsDrawerP
   };
 
   const handleSyntheticOpen = (id: string) => {
+    const item = allSyntheticItems.find((it) => it.id === id);
     if (!readSynthetic[id]) {
       const next = { ...readSynthetic, [id]: true };
       setReadSynthetic(next);
       persistSynthetic("notif_synthetic_read", next);
     }
+    if (item) setActiveDigest(item);
+  };
+
+  const handleDigestGoToCalendar = () => {
+    const calendarPath = location.pathname.startsWith("/teacher")
+      ? "/teacher/calendar"
+      : "/parent/calendar";
+    setActiveDigest(null);
     onOpenChange(false);
-    navigate("/calendar");
+    navigate(calendarPath);
   };
 
   const renderSynthetic = (item: { id: string; title: string; message: string; type: string }) => {
