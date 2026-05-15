@@ -16,10 +16,10 @@ export const EVENT_TYPE_FILTERS: EventTypeFilter[] = [
 
 export const EVENT_TYPE_LABELS: Record<EventTypeFilter, string> = {
   academic: "Academic",
-  exam: "Exam",
-  holiday: "Holiday",
-  event: "Event",
-  cca: "CCA",
+   exam: "Exam",
+   holiday: "Holiday",
+   event: "Highlights",
+   cca: "CCA",
 };
 
 export const EVENT_TYPE_COLORS: Record<EventTypeFilter, string> = {
