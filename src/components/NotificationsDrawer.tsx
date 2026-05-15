@@ -218,7 +218,7 @@ export function NotificationsDrawer({ open, onOpenChange }: NotificationsDrawerP
           const d = new Date(e.event_date!);
           const key = fmtDay(d);
           if (!groups.has(key)) groups.set(key, []);
-          groups.get(key)!.push(e.title);
+          groups.get(key)!.push(`[${e.type}] ${e.title}`);
         }
         const lines = Array.from(groups.entries())
           .map(
@@ -253,7 +253,7 @@ export function NotificationsDrawer({ open, onOpenChange }: NotificationsDrawerP
         const lines = dayEvents
           .slice()
           .sort((a, b) => (a.title || "").localeCompare(b.title || ""))
-          .map((e) => `• ${e.title}`)
+          .map((e) => `• [${e.type}] ${e.title}`)
           .join("\n");
 
         const isToday = day.getTime() === today.getTime();
@@ -558,27 +558,81 @@ function DigestPopup({
               }
             }
             return group.items.map((item, ii) => {
+              // Extract optional [type] prefix
+              const typeMatch = item.match(/^\[([a-z_]+)\]\s*(.*)$/i);
+              const itemType = typeMatch ? typeMatch[1].toLowerCase() : "event";
+              const rest = typeMatch ? typeMatch[2] : item;
               // Strip leading emoji / pictographs and stray whitespace
-              const cleaned = item
+              const cleaned = rest
                 .replace(/^[\p{Extended_Pictographic}\p{Emoji_Presentation}\uFE0F\u200D\s]+/u, "")
                 .trim();
+
+              // Map category -> Tailwind classes (semantic-ish, scoped to this popup)
+              const palette: Record<
+                string,
+                { bar: string; pillBg: string; pillBorder: string; monthText: string; dayText: string; label: string }
+              > = {
+                holiday: {
+                  bar: "bg-rose-400",
+                  pillBg: "bg-rose-50",
+                  pillBorder: "border-rose-200",
+                  monthText: "text-rose-500",
+                  dayText: "text-rose-700",
+                  label: "Holiday",
+                },
+                exam: {
+                  bar: "bg-amber-400",
+                  pillBg: "bg-amber-50",
+                  pillBorder: "border-amber-200",
+                  monthText: "text-amber-600",
+                  dayText: "text-amber-800",
+                  label: "Exam",
+                },
+                academic: {
+                  bar: "bg-blue-400",
+                  pillBg: "bg-blue-50",
+                  pillBorder: "border-blue-200",
+                  monthText: "text-blue-500",
+                  dayText: "text-blue-700",
+                  label: "Academic",
+                },
+                cca: {
+                  bar: "bg-violet-400",
+                  pillBg: "bg-violet-50",
+                  pillBorder: "border-violet-200",
+                  monthText: "text-violet-500",
+                  dayText: "text-violet-700",
+                  label: "CCA",
+                },
+                event: {
+                  bar: "bg-emerald-400",
+                  pillBg: "bg-emerald-50",
+                  pillBorder: "border-emerald-200",
+                  monthText: "text-emerald-600",
+                  dayText: "text-emerald-700",
+                  label: "Event",
+                },
+              };
+              const c = palette[itemType] || palette.event;
+
               return (
                 <div
                   key={`${gi}-${ii}`}
-                  className="flex items-center gap-3 p-3 rounded-xl bg-muted/40 border border-border/50"
+                  className="relative flex items-center gap-3 p-3 pl-4 rounded-xl bg-muted/40 border border-border/50 overflow-hidden"
                 >
+                  <span className={`absolute left-0 top-2 bottom-2 w-1 rounded-r-full ${c.bar}`} />
                   {day ? (
-                    <div className="w-12 flex-shrink-0 flex flex-col items-center justify-center rounded-lg bg-background border border-border/60 py-1.5">
-                      <span className="text-[9px] font-semibold uppercase tracking-wider text-muted-foreground leading-none">
+                    <div className={`w-12 flex-shrink-0 flex flex-col items-center justify-center rounded-lg border ${c.pillBg} ${c.pillBorder} py-1.5`}>
+                      <span className={`text-[9px] font-semibold uppercase tracking-wider leading-none ${c.monthText}`}>
                         {month}
                       </span>
-                      <span className="text-base font-bold text-foreground leading-tight mt-0.5">
+                      <span className={`text-base font-bold leading-tight mt-0.5 ${c.dayText}`}>
                         {day}
                       </span>
                     </div>
                   ) : null}
                   <span className="text-sm font-medium text-foreground leading-snug flex-1">
-                    {cleaned || item}
+                    {cleaned || rest}
                   </span>
                 </div>
               );
