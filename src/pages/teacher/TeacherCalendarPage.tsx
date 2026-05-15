@@ -69,6 +69,11 @@ export default function TeacherCalendarPage() {
     campusCode: activeCampus,
   });
 
+  const { sessions: upcomingCcaSessions } = useUpcomingCcaSessions({
+    role: "teacher",
+    limit: 20,
+  });
+
   const {
     activities: ccaActivities,
     loading: ccaLoading,
