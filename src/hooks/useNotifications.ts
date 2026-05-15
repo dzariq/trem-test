@@ -130,6 +130,12 @@ export function useNotifications() {
       const today = now.toISOString().split("T")[0];
       const in14Days = new Date(now.getTime() + 14 * 24 * 60 * 60 * 1000).toISOString().split("T")[0];
       const in7Days = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000).toISOString().split("T")[0];
+      // Backfill window: include this week's earlier days + next week so the
+      // weekly/daily digests can render past + upcoming events.
+      const dayOfWeek = (now.getDay() + 6) % 7; // 0 = Mon
+      const weekStart = new Date(now);
+      weekStart.setDate(now.getDate() - dayOfWeek);
+      const weekStartIso = weekStart.toISOString().split("T")[0];
       const syntheticState = getSyntheticNotificationState(user.id);
       const readSyntheticKeys = new Set(syntheticState.read);
       const dismissedSyntheticKeys = new Set(syntheticState.dismissed);
@@ -194,7 +200,7 @@ export function useNotifications() {
           for (const enrollment of ccaSessions) {
             const session = enrollment.session as any;
             if (!session || !session.session_date) continue;
-            if (session.session_date < today || session.session_date > in7Days) continue;
+            if (session.session_date < weekStartIso || session.session_date > in14Days) continue;
             if (seenSessions.has(session.id)) continue;
             seenSessions.add(session.id);
             
@@ -224,11 +230,11 @@ export function useNotifications() {
       let calendarEventsQuery = supabase
         .from("calendar_events")
         .select("id, title, start_date, event_category, description, event_categories:event_category(name)")
-        .gte("start_date", today)
+        .gte("start_date", weekStartIso)
         .lte("start_date", in14Days)
         .in("visibility", ["public", "all"])
         .order("start_date", { ascending: true })
-        .limit(15);
+        .limit(60);
       if (scopedCampusCode) {
         calendarEventsQuery = calendarEventsQuery.or(
           `campus_code.eq.${scopedCampusCode},campus_code.is.null`
@@ -239,7 +245,11 @@ export function useNotifications() {
       if (calendarEvents) {
         const seenEvents = new Set<string>();
         for (const event of calendarEvents) {
-          const eventKey = `${event.title}-${event.start_date.split("T")[0]}`;
+          // Convert to LOCAL calendar date — events stored as 16:00 UTC
+          // (= 00:00 SGT next day) would otherwise label one day early.
+          const local = new Date(event.start_date);
+          const eventDate = `${local.getFullYear()}-${String(local.getMonth() + 1).padStart(2, "0")}-${String(local.getDate()).padStart(2, "0")}`;
+          const eventKey = `${event.title}-${eventDate}`;
           if (seenEvents.has(eventKey)) continue;
           seenEvents.add(eventKey);
           
@@ -260,7 +270,6 @@ export function useNotifications() {
             icon = "📚";
           }
           
-          const eventDate = event.start_date.split("T")[0];
           const sourceKey = `event:${event.id}`;
           if (dismissedSyntheticKeys.has(sourceKey)) continue;
 
@@ -299,7 +308,7 @@ export function useNotifications() {
           for (const pic of teacherSessions) {
             const session = pic.session as any;
             if (!session || !session.session_date) continue;
-            if (session.session_date < today || session.session_date > in7Days) continue;
+            if (session.session_date < weekStartIso || session.session_date > in14Days) continue;
             
             const activityName = session.activity?.name || session.custom_title || "CCA Session";
             const startTime = session.start_time ? ` at ${session.start_time.slice(0, 5)}` : "";
