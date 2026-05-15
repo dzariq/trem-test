@@ -162,7 +162,6 @@ export function NotificationsDrawer({ open, onOpenChange }: NotificationsDrawerP
     const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
     const tomorrow = new Date(today);
     tomorrow.setDate(today.getDate() + 1);
-    const isMonday = now.getDay() === 1;
     const dayOfWeek = (today.getDay() + 6) % 7;
     const weekStart = new Date(today);
     weekStart.setDate(today.getDate() - dayOfWeek);
@@ -223,7 +222,10 @@ export function NotificationsDrawer({ open, onOpenChange }: NotificationsDrawerP
       }
     }
 
-    if (isMonday && weekEvents.length > 0 && !dismissedSynthetic[weekKey]) {
+    // Backfill: always render this week's digest (anchored to Monday) so users
+    // can see the weekly summary even mid-week. In production this can be
+    // gated by `isMonday` to only fire on Mondays.
+    if (weekEvents.length > 0 && !dismissedSynthetic[weekKey]) {
       const lastDay = new Date(weekEnd);
       lastDay.setDate(weekEnd.getDate() - 1);
       const groups = new Map<string, string[]>();
