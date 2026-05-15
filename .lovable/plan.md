@@ -1,19 +1,43 @@
-## Lump date-based notifications into one container per week
+## Goal
 
-### Today
-Each calendar event is its own swipeable card under the "This week / Next week / Later" headers, which makes the list very long.
+Reduce notification volume by collapsing each week bucket into **one** notification entry (not row-per-event), and add day-aware summaries.
 
-### Change
-Render each week-bucket (This week, Next week, Later) as **one container card** that lists all its events as compact rows inside, instead of N separate cards. Non-event items (Latest / announcements / attendance / weekly digest) keep their existing one-card-per-item layout — only date-based event notifications get lumped.
+## Behaviour
 
-### UX inside the lumped container
-- Section header chip on the card (e.g. "This week — 3 events").
-- Each row inside: small date pill (e.g. "Sun 17"), event title (truncated), unread dot. Tapping a row marks it read and navigates to the calendar; whole card is not a single link.
-- Swipe-to-dismiss applies to one row (not the whole bucket) — implemented as a lightweight inline row, not the existing `SwipeableNotification`.
-- "Mark all in this week as read" small action in the card header.
+**Week buckets (This week / Next week / Later)**
+- Render as a **single collapsed card** per bucket showing:
+  - Bucket label + event count (e.g. "Next week — 2 events")
+  - One-line preview: comma-joined event titles, truncated (e.g. "Teachers Day Cele…, Edu Field Trip…")
+  - Date range (e.g. "Mon 18 – Fri 22")
+  - Unread dot if any item is unread
+- Tap → expands inline (accordion) to reveal the per-day rows we have today
+- Swipe / X dismisses the entire bucket; "Mark all read" affects all items in bucket
 
-### Implementation
-- Edit `src/components/NotificationsDrawer.tsx` only.
-- Replace the per-section `section.items.map(renderItem)` for buckets `this`, `next`, `later` with a new local `WeekBucketCard` component (defined in the same file) that renders the rows.
-- Keep `Latest` bucket and the unread-filter view unchanged (still individual `SwipeableNotification`s).
-- No data, hook, or DB changes.
+**Monday weekly summary (auto)**
+- On Mondays, prepend a synthetic "📅 This week at a glance" notification at the top of the inbox
+- Lists all events Mon–Sun for the active campus, grouped by day
+- One notification, persists read/dismiss state per user (reuse synthetic-notification-persistence pattern)
+- Tap opens the same expanded week view
+
+**Daily summary (auto, every day)**
+- Synthetic "Today's schedule" notification if there are any events today
+- Shows count + event titles for today
+- Auto-dismisses at end of day; read state persisted
+
+**Individual day events**
+- Today's individual events still appear (so users see each one), but next-week / later events are **only** inside the collapsed week card — no per-event rows in the drawer
+
+## Files
+
+- `src/components/NotificationsDrawer.tsx`
+  - Replace `renderWeekBucket` row list with collapsed summary card + expandable section
+  - Add `buildWeeklySummary()` and `buildDailySummary()` synthetic notifications
+  - Inject them into the `inbox` section based on `new Date().getDay()` and event presence
+  - Reuse existing read/dismiss persistence hooks
+
+No DB, hook, or other component changes.
+
+## Out of scope
+
+- Server-side push for Monday digest (already covered by previous migration's `weekly_digest` job — this is the in-app drawer view only)
+- Changing event data sources
