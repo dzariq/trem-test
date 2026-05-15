@@ -1,12 +1,5 @@
 import { useNavigate, useLocation } from "react-router-dom";
 import { BottomSheet } from "@/components/ui/bottom-sheet";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { SwipeableNotification } from "@/components/SwipeableNotification";
