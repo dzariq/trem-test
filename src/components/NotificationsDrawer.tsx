@@ -223,7 +223,10 @@ export function NotificationsDrawer({ open, onOpenChange }: NotificationsDrawerP
       }
     }
 
-    if (isMonday && weekEvents.length > 0 && !dismissedSynthetic[weekKey]) {
+    // Backfill: always render this week's digest (anchored to Monday) so users
+    // can see the weekly summary even mid-week. In production this can be
+    // gated by `isMonday` to only fire on Mondays.
+    if (weekEvents.length > 0 && !dismissedSynthetic[weekKey]) {
       const lastDay = new Date(weekEnd);
       lastDay.setDate(weekEnd.getDate() - 1);
       const groups = new Map<string, string[]>();
