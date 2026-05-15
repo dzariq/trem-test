@@ -16,10 +16,10 @@ export const EVENT_TYPE_FILTERS: EventTypeFilter[] = [
 
 export const EVENT_TYPE_LABELS: Record<EventTypeFilter, string> = {
   academic: "Academic",
-  exam: "Exam",
-  holiday: "Holiday",
-  event: "Event",
-  cca: "CCA",
+   exam: "Exam",
+   holiday: "Holiday",
+   event: "Highlights",
+   cca: "CCA",
 };
 
 export const EVENT_TYPE_COLORS: Record<EventTypeFilter, string> = {
@@ -91,9 +91,9 @@ export function filterEventsByTypes(
 
 export type UpcomingTab = "events" | "exams" | "holidays";
 
-export const UPCOMING_TABS: { value: UpcomingTab; label: string }[] = [
-  { value: "events", label: "Events" },
-  { value: "exams", label: "Exams" },
+ export const UPCOMING_TABS: { value: UpcomingTab; label: string }[] = [
+   { value: "events", label: "Highlights" },
+   { value: "exams", label: "Exams" },
   { value: "holidays", label: "Holidays" },
 ];
 
