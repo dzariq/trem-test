@@ -1612,6 +1612,48 @@ export type Database = {
         }
         Relationships: []
       }
+      cca_audit_log: {
+        Row: {
+          action: string
+          activity_id: string | null
+          after_data: Json | null
+          before_data: Json | null
+          changed_by: string | null
+          created_at: string
+          entity_type: string
+          id: string
+          student_id: string | null
+          summary: string | null
+          teacher_user_id: string | null
+        }
+        Insert: {
+          action: string
+          activity_id?: string | null
+          after_data?: Json | null
+          before_data?: Json | null
+          changed_by?: string | null
+          created_at?: string
+          entity_type: string
+          id?: string
+          student_id?: string | null
+          summary?: string | null
+          teacher_user_id?: string | null
+        }
+        Update: {
+          action?: string
+          activity_id?: string | null
+          after_data?: Json | null
+          before_data?: Json | null
+          changed_by?: string | null
+          created_at?: string
+          entity_type?: string
+          id?: string
+          student_id?: string | null
+          summary?: string | null
+          teacher_user_id?: string | null
+        }
+        Relationships: []
+      }
       cca_budget_entries: {
         Row: {
           activity_id: string
@@ -3618,6 +3660,42 @@ export type Database = {
           name?: string
           sort_order?: number | null
           updated_at?: string | null
+        }
+        Relationships: []
+      }
+      sport_house_role_types: {
+        Row: {
+          archived: boolean
+          created_at: string
+          house_code: string
+          id: string
+          is_teacher_role: boolean
+          label: string
+          requires_year_level: boolean
+          sort_order: number
+          updated_at: string
+        }
+        Insert: {
+          archived?: boolean
+          created_at?: string
+          house_code: string
+          id?: string
+          is_teacher_role?: boolean
+          label: string
+          requires_year_level?: boolean
+          sort_order?: number
+          updated_at?: string
+        }
+        Update: {
+          archived?: boolean
+          created_at?: string
+          house_code?: string
+          id?: string
+          is_teacher_role?: boolean
+          label?: string
+          requires_year_level?: boolean
+          sort_order?: number
+          updated_at?: string
         }
         Relationships: []
       }
