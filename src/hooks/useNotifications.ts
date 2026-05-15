@@ -256,6 +256,7 @@ export function useNotifications() {
           const categoryName =
             (event as any).event_categories?.name ?? "";
           const category = String(categoryName).toLowerCase();
+          const titleLower = String(event.title || "").toLowerCase();
           let type = "event";
           let icon = "📅";
           
@@ -266,6 +267,26 @@ export function useNotifications() {
             type = "exam";
             icon = "📝";
           } else if (category.includes("academic")) {
+            type = "academic";
+            icon = "📚";
+          } else if (
+            /\b(ph|public holiday|holiday|hari raya|cny|christmas|deepavali|break)\b/.test(titleLower)
+          ) {
+            type = "holiday";
+            icon = "🏖️";
+          } else if (
+            /\b(mye|eoy|exam|test|tsm|dma|igcse|checkpoint|mfl|paper\s*\d)\b/.test(titleLower)
+          ) {
+            type = "exam";
+            icon = "📝";
+          } else if (
+            /\b(cca|club|sport|practice|rehearsal)\b/.test(titleLower)
+          ) {
+            type = "cca";
+            icon = "🎯";
+          } else if (
+            /\b(class|lesson|assembly|ptc|parent[- ]teacher|meeting|workshop|conference)\b/.test(titleLower)
+          ) {
             type = "academic";
             icon = "📚";
           }
