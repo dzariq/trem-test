@@ -162,7 +162,6 @@ export function NotificationsDrawer({ open, onOpenChange }: NotificationsDrawerP
     const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
     const tomorrow = new Date(today);
     tomorrow.setDate(today.getDate() + 1);
-    const isMonday = now.getDay() === 1;
     const dayOfWeek = (today.getDay() + 6) % 7;
     const weekStart = new Date(today);
     weekStart.setDate(today.getDate() - dayOfWeek);
