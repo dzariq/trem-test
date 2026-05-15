@@ -89,12 +89,13 @@ export function filterEventsByTypes(
 
 // --- Upcoming events tab filtering ---
 
-export type UpcomingTab = "events" | "exams" | "holidays";
+export type UpcomingTab = "events" | "exams" | "holidays" | "cca";
 
  export const UPCOMING_TABS: { value: UpcomingTab; label: string }[] = [
    { value: "events", label: "Highlights" },
    { value: "exams", label: "Exams" },
   { value: "holidays", label: "Holidays" },
+  { value: "cca", label: "CCA" },
 ];
 
 // Tab colors matching the category filter button colors
@@ -102,6 +103,7 @@ export const UPCOMING_TAB_COLORS: Record<UpcomingTab, string> = {
   events: "bg-purple-500 text-white data-[state=active]:bg-purple-500 data-[state=active]:text-white",
   exams: "bg-red-500 text-white data-[state=active]:bg-red-500 data-[state=active]:text-white",
   holidays: "bg-green-500 text-white data-[state=active]:bg-green-500 data-[state=active]:text-white",
+  cca: "bg-primary text-primary-foreground data-[state=active]:bg-primary data-[state=active]:text-primary-foreground",
 };
 
 const toYmd = (date: Date) => {

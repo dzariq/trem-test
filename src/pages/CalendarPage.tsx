@@ -31,6 +31,7 @@ import { CcaActivityCard } from "@/components/cca/CcaActivityCard";
 import { ClubSwitchConfirmDialog } from "@/components/cca/ClubSwitchConfirmDialog";
 import { supabase } from "@/lib/supabase";
 import { useCcaSessionsCalendar, type CcaCalendarSession } from "@/hooks/useCcaSessionsCalendar";
+import { useUpcomingCcaSessions, type UpcomingCcaSession } from "@/hooks/useUpcomingCcaSessions";
 import { EventDetailsSheet } from "@/components/events/EventDetailsSheet";
 import { UpcomingEventsSection } from "@/components/calendar/UpcomingEventsSection";
 import { CategoryFilterPill } from "@/components/calendar/CategoryFilterPill";
@@ -58,7 +59,7 @@ export default function CalendarPage() {
   const [view, setView] = useState<CalendarViewMode>("month");
   const [ccaTypeFilter, setCcaTypeFilter] = useState("all");
   const [selectedCCA, setSelectedCCA] = useState<CcaActivity | null>(null);
-  const [selectedEventDetails, setSelectedEventDetails] = useState<UpcomingEvent | null>(null);
+  const [selectedEventDetails, setSelectedEventDetails] = useState<UpcomingEvent | UpcomingCcaSession | null>(null);
   const [eventDetailsOpen, setEventDetailsOpen] = useState(false);
   const [events, setEvents] = useState<UpcomingEvent[]>([]);
   const [upcomingEvents, setUpcomingEvents] = useState<UpcomingEvent[]>([]);
@@ -157,6 +158,11 @@ export default function CalendarPage() {
     year: currentMonth.getFullYear(),
     month: currentMonth.getMonth() + 1,
     campusCode: selectedStudent?.campus_code ?? null,
+  });
+
+  const { sessions: upcomingCcaSessions } = useUpcomingCcaSessions({
+    role: "parent",
+    limit: 20,
   });
 
   const visibleEvents = filterEventsByRole(events, roleForFilters);
@@ -502,7 +508,13 @@ export default function CalendarPage() {
             {view === "month" && (
               <UpcomingEventsSection
                 events={upcomingEvents}
+                ccaSessions={upcomingCcaSessions}
                 onEventClick={openEventDetails}
+                onCcaSessionClick={(session, el) => {
+                  el?.blur?.();
+                  setSelectedEventDetails(session);
+                  setEventDetailsOpen(true);
+                }}
               />
             )}
           </TabsContent>
