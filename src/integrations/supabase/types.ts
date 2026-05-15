@@ -1364,6 +1364,7 @@ export type Database = {
       cca_activities: {
         Row: {
           allow_free_text: boolean
+          archived: boolean
           budget_notes: string | null
           budget_total: number | null
           campus_code: string | null
@@ -1392,6 +1393,7 @@ export type Database = {
         }
         Insert: {
           allow_free_text?: boolean
+          archived?: boolean
           budget_notes?: string | null
           budget_total?: number | null
           campus_code?: string | null
@@ -1420,6 +1422,7 @@ export type Database = {
         }
         Update: {
           allow_free_text?: boolean
+          archived?: boolean
           budget_notes?: string | null
           budget_total?: number | null
           campus_code?: string | null

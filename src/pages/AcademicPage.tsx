@@ -23,6 +23,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { LineChart, Line, XAxis, YAxis, ResponsiveContainer, Tooltip, Legend, CartesianGrid, BarChart, Bar, Cell, PieChart, Pie, AreaChart, Area, ReferenceLine, ReferenceDot, RadarChart, Radar, PolarGrid, PolarAngleAxis, PolarRadiusAxis } from "recharts";
 import { useStudentSelection } from "@/hooks/useStudentSelection";
 import { useAuth } from "@/contexts/AuthContext";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { resolveStudentAvatars } from "@/lib/studentAvatars";
 import { StatusIcon, type StatusIconVariant } from "@/components/common/StatusIcon";
 import { useStudentReportCard } from "@/hooks/useStudentReportCard";
 import { useStudentGradeGoals } from "@/hooks/useStudentGradeGoals";
@@ -268,6 +270,35 @@ export default function AcademicPage() {
   }, [selectedSubjects]);
   const [reportGenerated, setReportGenerated] = useState(false);
   const [reportCardDialogOpen, setReportCardDialogOpen] = useState(false);
+  const [studentAvatarUrl, setStudentAvatarUrl] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!selectedStudentId) {
+      setStudentAvatarUrl(null);
+      return;
+    }
+    let cancelled = false;
+    resolveStudentAvatars([selectedStudentId])
+      .then((map) => {
+        if (!cancelled) setStudentAvatarUrl(map[selectedStudentId] ?? null);
+      })
+      .catch(() => {
+        if (!cancelled) setStudentAvatarUrl(null);
+      });
+    const handler = (e: Event) => {
+      const detail = (e as CustomEvent).detail as
+        | { studentId: string; photoUrl: string | null }
+        | undefined;
+      if (detail && detail.studentId === selectedStudentId) {
+        setStudentAvatarUrl(detail.photoUrl);
+      }
+    };
+    window.addEventListener("student-photo-changed", handler);
+    return () => {
+      cancelled = true;
+      window.removeEventListener("student-photo-changed", handler);
+    };
+  }, [selectedStudentId]);
   const [expandedSubject, setExpandedSubject] = useState<string | null>(null);
   const [expandedSection, setExpandedSection] = useState<"comment" | "tips">("comment");
 
@@ -1500,15 +1531,19 @@ export default function AcademicPage() {
       {mainSection === "report" && <section className="px-4 py-4">
         <Card className="bg-card border-border shadow-sm">
           <CardHeader className="pb-3">
-            <div className="flex flex-col items-center text-center gap-2">
-              <CardTitle className="text-lg font-semibold flex items-center justify-center gap-2">
-                <FileText className="h-5 w-5 text-primary" />
-                Report Card
-              </CardTitle>
-              {selectedStudent && (
-                <Badge variant="secondary" className="text-xs">{selectedStudent.name}</Badge>
-              )}
-            </div>
+            {selectedStudent && (
+              <div className="flex items-center justify-center gap-3">
+                <Avatar className="h-9 w-9 ring-2 ring-primary/20">
+                  <AvatarImage src={studentAvatarUrl ?? undefined} alt={selectedStudent.name} />
+                  <AvatarFallback className="bg-primary/10 text-primary text-xs font-semibold">
+                    {selectedStudent.name.split(" ").map((n) => n[0]).slice(0, 2).join("")}
+                  </AvatarFallback>
+                </Avatar>
+                <CardTitle className="text-lg font-semibold tracking-tight">
+                  {selectedStudent.name}
+                </CardTitle>
+              </div>
+            )}
             {/* Shared Year / Exam Filters */}
             <div className="flex flex-col gap-2 mt-3">
               <div className="flex items-center gap-2">
