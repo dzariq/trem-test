@@ -636,6 +636,11 @@ export default function ProfilePage() {
                 
                 <div className="text-center">
                   <h3 className="text-xl font-semibold text-foreground">{selectedStudent.name}</h3>
+                  {selectedStudent.studentCode && (
+                    <p className="text-xs font-medium text-muted-foreground mt-0.5 tracking-wide">
+                      ID: {selectedStudent.studentCode}
+                    </p>
+                  )}
                   {(selectedStudent.className || selectedStudent.grade) && (
                     <p className="text-sm text-muted-foreground">
                       {[selectedStudent.className, selectedStudent.grade].filter(Boolean).join(" - ")}
@@ -660,32 +665,11 @@ export default function ProfilePage() {
 
               <Separator />
 
-              {/* CCA Clubs */}
-              <div className="space-y-3">
-                <div className="flex items-center gap-2">
-                  <BookOpen className="h-4 w-4 text-muted-foreground" />
-                  <span className="font-medium text-foreground">CCA Clubs</span>
-                </div>
-                {Array.isArray(selectedStudent.ccaActivities) && selectedStudent.ccaActivities.length > 0 ? (
-                  <div className="flex flex-wrap gap-2">
-                    {selectedStudent.ccaActivities.map((cca, idx) => (
-                      <Badge key={`${cca.name}-${idx}`} variant="secondary" className="text-sm">
-                        {cca.name}
-                      </Badge>
-                    ))}
-                  </div>
-                ) : (
-                  <p className="text-sm text-muted-foreground">No clubs joined</p>
-                )}
-              </div>
-
-              <Separator />
-
-              {/* Key Dates - Enrollment, Class, Graduation */}
+              {/* Key Information - Enrollment, Class, Graduation */}
               {(selectedStudent.enrollmentDate || selectedStudent.className || selectedStudent.graduationYear) && (
                 <>
                   <div className="space-y-3">
-                    <span className="font-medium text-foreground">Key Dates</span>
+                    <span className="font-medium text-foreground">Key Information</span>
                     <div className="grid grid-cols-3 gap-3">
                       <div className="relative flex flex-col items-center gap-1.5 p-3 rounded-xl bg-gradient-to-br from-emerald-50 to-teal-100 dark:from-emerald-950/40 dark:to-teal-900/30 border border-emerald-200/60 dark:border-emerald-800/40 shadow-sm overflow-hidden">
                         <div className="w-9 h-9 rounded-full bg-gradient-to-br from-emerald-400 to-teal-500 flex items-center justify-center shadow-md ring-2 ring-white/60 dark:ring-white/10">
@@ -778,11 +762,11 @@ export default function ProfilePage() {
 
               <Separator />
 
-              {/* Clubs & Activities */}
+              {/* CCA Clubs & Activities */}
               <div className="space-y-3">
                 <div className="flex items-center gap-2">
                   <BookOpen className="h-4 w-4 text-muted-foreground" />
-                  <span className="font-medium text-foreground">Clubs & Activities</span>
+                  <span className="font-medium text-foreground">CCA Clubs & Activities</span>
                 </div>
                 {selectedStudent.ccaActivities && selectedStudent.ccaActivities.length > 0 ? (
                   <div className="flex flex-wrap gap-2">
@@ -793,18 +777,8 @@ export default function ProfilePage() {
                     ))}
                   </div>
                 ) : (
-                  <p className="text-sm text-muted-foreground">-</p>
+                  <p className="text-sm text-muted-foreground">No clubs joined</p>
                 )}
-              </div>
-
-              <Separator />
-
-              {/* Student ID */}
-              <div className="p-3 rounded-lg bg-muted/50">
-                <p className="text-xs text-muted-foreground">Student ID</p>
-                <p className="text-sm font-medium text-foreground">
-                  {selectedStudent.studentCode || "-"}
-                </p>
               </div>
             </div>
           )}
