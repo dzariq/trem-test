@@ -1364,6 +1364,8 @@ export type Database = {
       cca_activities: {
         Row: {
           allow_free_text: boolean
+          budget_notes: string | null
+          budget_total: number | null
           campus_code: string | null
           category: string
           classes_involved: string[] | null
@@ -1375,6 +1377,7 @@ export type Database = {
           internal_notes: string | null
           is_active: boolean
           is_club: boolean
+          kind: string
           location: string | null
           location_id: string | null
           max_participants: number | null
@@ -1388,6 +1391,8 @@ export type Database = {
         }
         Insert: {
           allow_free_text?: boolean
+          budget_notes?: string | null
+          budget_total?: number | null
           campus_code?: string | null
           category?: string
           classes_involved?: string[] | null
@@ -1399,6 +1404,7 @@ export type Database = {
           internal_notes?: string | null
           is_active?: boolean
           is_club?: boolean
+          kind?: string
           location?: string | null
           location_id?: string | null
           max_participants?: number | null
@@ -1412,6 +1418,8 @@ export type Database = {
         }
         Update: {
           allow_free_text?: boolean
+          budget_notes?: string | null
+          budget_total?: number | null
           campus_code?: string | null
           category?: string
           classes_involved?: string[] | null
@@ -1423,6 +1431,7 @@ export type Database = {
           internal_notes?: string | null
           is_active?: boolean
           is_club?: boolean
+          kind?: string
           location?: string | null
           location_id?: string | null
           max_participants?: number | null
@@ -1447,6 +1456,63 @@ export type Database = {
             columns: ["type_id"]
             isOneToOne: false
             referencedRelation: "cca_activity_types"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      cca_activity_roles: {
+        Row: {
+          academic_period_id: string | null
+          activity_id: string
+          created_at: string
+          created_by: string | null
+          duration_end: string | null
+          duration_start: string | null
+          id: string
+          notes: string | null
+          role_label: string
+          student_id: string
+          updated_at: string
+        }
+        Insert: {
+          academic_period_id?: string | null
+          activity_id: string
+          created_at?: string
+          created_by?: string | null
+          duration_end?: string | null
+          duration_start?: string | null
+          id?: string
+          notes?: string | null
+          role_label: string
+          student_id: string
+          updated_at?: string
+        }
+        Update: {
+          academic_period_id?: string | null
+          activity_id?: string
+          created_at?: string
+          created_by?: string | null
+          duration_end?: string | null
+          duration_start?: string | null
+          id?: string
+          notes?: string | null
+          role_label?: string
+          student_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cca_activity_roles_activity_id_fkey"
+            columns: ["activity_id"]
+            isOneToOne: false
+            referencedRelation: "cca_activities"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cca_activity_roles_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
             referencedColumns: ["id"]
           },
         ]
@@ -1533,6 +1599,92 @@ export type Database = {
         }
         Relationships: []
       }
+      cca_budget_entries: {
+        Row: {
+          activity_id: string
+          amount: number
+          created_at: string
+          created_by: string | null
+          entry_date: string
+          entry_type: string
+          id: string
+          label: string
+          notes: string | null
+          receipt_url: string | null
+          updated_at: string
+        }
+        Insert: {
+          activity_id: string
+          amount: number
+          created_at?: string
+          created_by?: string | null
+          entry_date?: string
+          entry_type: string
+          id?: string
+          label: string
+          notes?: string | null
+          receipt_url?: string | null
+          updated_at?: string
+        }
+        Update: {
+          activity_id?: string
+          amount?: number
+          created_at?: string
+          created_by?: string | null
+          entry_date?: string
+          entry_type?: string
+          id?: string
+          label?: string
+          notes?: string | null
+          receipt_url?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cca_budget_entries_activity_id_fkey"
+            columns: ["activity_id"]
+            isOneToOne: false
+            referencedRelation: "cca_activities"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      cca_bus_assignments: {
+        Row: {
+          bus_id: string
+          created_at: string
+          id: string
+          student_id: string
+        }
+        Insert: {
+          bus_id: string
+          created_at?: string
+          id?: string
+          student_id: string
+        }
+        Update: {
+          bus_id?: string
+          created_at?: string
+          id?: string
+          student_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cca_bus_assignments_bus_id_fkey"
+            columns: ["bus_id"]
+            isOneToOne: false
+            referencedRelation: "cca_outdoor_buses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cca_bus_assignments_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       cca_club_year_eligibility: {
         Row: {
           club_id: string
@@ -1562,8 +1714,116 @@ export type Database = {
           },
         ]
       }
+      cca_event_awards: {
+        Row: {
+          academic_period_id: string | null
+          activity_id: string
+          award_title: string | null
+          award_type: string
+          awarded_on: string | null
+          certificate_url: string | null
+          created_at: string
+          created_by: string | null
+          id: string
+          notes: string | null
+          school_level: string
+          student_id: string
+          updated_at: string
+        }
+        Insert: {
+          academic_period_id?: string | null
+          activity_id: string
+          award_title?: string | null
+          award_type: string
+          awarded_on?: string | null
+          certificate_url?: string | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          notes?: string | null
+          school_level: string
+          student_id: string
+          updated_at?: string
+        }
+        Update: {
+          academic_period_id?: string | null
+          activity_id?: string
+          award_title?: string | null
+          award_type?: string
+          awarded_on?: string | null
+          certificate_url?: string | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          notes?: string | null
+          school_level?: string
+          student_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cca_event_awards_activity_id_fkey"
+            columns: ["activity_id"]
+            isOneToOne: false
+            referencedRelation: "cca_activities"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cca_event_awards_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      cca_outdoor_buses: {
+        Row: {
+          activity_id: string
+          capacity: number | null
+          created_at: string
+          id: string
+          name: string
+          notes: string | null
+          teacher_pic_main: string | null
+          teacher_pic_sub: string | null
+          updated_at: string
+        }
+        Insert: {
+          activity_id: string
+          capacity?: number | null
+          created_at?: string
+          id?: string
+          name: string
+          notes?: string | null
+          teacher_pic_main?: string | null
+          teacher_pic_sub?: string | null
+          updated_at?: string
+        }
+        Update: {
+          activity_id?: string
+          capacity?: number | null
+          created_at?: string
+          id?: string
+          name?: string
+          notes?: string | null
+          teacher_pic_main?: string | null
+          teacher_pic_sub?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cca_outdoor_buses_activity_id_fkey"
+            columns: ["activity_id"]
+            isOneToOne: false
+            referencedRelation: "cca_activities"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       cca_session_enrollments: {
         Row: {
+          bus_id: string | null
           created_at: string
           enrolled_by: string | null
           id: string
@@ -1573,6 +1833,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          bus_id?: string | null
           created_at?: string
           enrolled_by?: string | null
           id?: string
@@ -1582,6 +1843,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          bus_id?: string | null
           created_at?: string
           enrolled_by?: string | null
           id?: string
@@ -1591,6 +1853,13 @@ export type Database = {
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "cca_session_enrollments_bus_id_fkey"
+            columns: ["bus_id"]
+            isOneToOne: false
+            referencedRelation: "cca_outdoor_buses"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "cca_session_enrollments_session_id_fkey"
             columns: ["session_id"]
@@ -3279,6 +3548,56 @@ export type Database = {
         }
         Relationships: []
       }
+      sport_house_roles: {
+        Row: {
+          academic_period_id: string | null
+          campus_code: string | null
+          created_at: string
+          house_code: string
+          id: string
+          notes: string | null
+          role: string
+          student_id: string | null
+          teacher_user_id: string | null
+          updated_at: string
+          year_level: string | null
+        }
+        Insert: {
+          academic_period_id?: string | null
+          campus_code?: string | null
+          created_at?: string
+          house_code: string
+          id?: string
+          notes?: string | null
+          role: string
+          student_id?: string | null
+          teacher_user_id?: string | null
+          updated_at?: string
+          year_level?: string | null
+        }
+        Update: {
+          academic_period_id?: string | null
+          campus_code?: string | null
+          created_at?: string
+          house_code?: string
+          id?: string
+          notes?: string | null
+          role?: string
+          student_id?: string | null
+          teacher_user_id?: string | null
+          updated_at?: string
+          year_level?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sport_house_roles_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       stock_catalogue: {
         Row: {
           category: string | null
@@ -4890,6 +5209,187 @@ export type Database = {
           },
         ]
       }
+      venue_availability: {
+        Row: {
+          created_at: string
+          end_time: string
+          id: string
+          start_time: string
+          venue_id: string
+          weekday: number
+        }
+        Insert: {
+          created_at?: string
+          end_time: string
+          id?: string
+          start_time: string
+          venue_id: string
+          weekday: number
+        }
+        Update: {
+          created_at?: string
+          end_time?: string
+          id?: string
+          start_time?: string
+          venue_id?: string
+          weekday?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "venue_availability_venue_id_fkey"
+            columns: ["venue_id"]
+            isOneToOne: false
+            referencedRelation: "venues"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      venue_blackouts: {
+        Row: {
+          created_at: string
+          end_at: string
+          id: string
+          reason: string | null
+          start_at: string
+          venue_id: string
+        }
+        Insert: {
+          created_at?: string
+          end_at: string
+          id?: string
+          reason?: string | null
+          start_at: string
+          venue_id: string
+        }
+        Update: {
+          created_at?: string
+          end_at?: string
+          id?: string
+          reason?: string | null
+          start_at?: string
+          venue_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "venue_blackouts_venue_id_fkey"
+            columns: ["venue_id"]
+            isOneToOne: false
+            referencedRelation: "venues"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      venue_bookings: {
+        Row: {
+          approval_notes: string | null
+          approved_at: string | null
+          approver_id: string | null
+          created_at: string
+          description: string | null
+          end_at: string
+          id: string
+          linked_activity_id: string | null
+          purpose: string
+          requester_id: string
+          start_at: string
+          status: string
+          title: string
+          updated_at: string
+          venue_id: string
+        }
+        Insert: {
+          approval_notes?: string | null
+          approved_at?: string | null
+          approver_id?: string | null
+          created_at?: string
+          description?: string | null
+          end_at: string
+          id?: string
+          linked_activity_id?: string | null
+          purpose: string
+          requester_id: string
+          start_at: string
+          status?: string
+          title: string
+          updated_at?: string
+          venue_id: string
+        }
+        Update: {
+          approval_notes?: string | null
+          approved_at?: string | null
+          approver_id?: string | null
+          created_at?: string
+          description?: string | null
+          end_at?: string
+          id?: string
+          linked_activity_id?: string | null
+          purpose?: string
+          requester_id?: string
+          start_at?: string
+          status?: string
+          title?: string
+          updated_at?: string
+          venue_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "venue_bookings_linked_activity_id_fkey"
+            columns: ["linked_activity_id"]
+            isOneToOne: false
+            referencedRelation: "cca_activities"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "venue_bookings_venue_id_fkey"
+            columns: ["venue_id"]
+            isOneToOne: false
+            referencedRelation: "venues"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      venues: {
+        Row: {
+          campus_code: string | null
+          capacity: number | null
+          created_at: string
+          id: string
+          is_active: boolean
+          location_notes: string | null
+          name: string
+          pic_user_id: string | null
+          tags: string[] | null
+          updated_at: string
+          venue_type: string
+        }
+        Insert: {
+          campus_code?: string | null
+          capacity?: number | null
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          location_notes?: string | null
+          name: string
+          pic_user_id?: string | null
+          tags?: string[] | null
+          updated_at?: string
+          venue_type?: string
+        }
+        Update: {
+          campus_code?: string | null
+          capacity?: number | null
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          location_notes?: string | null
+          name?: string
+          pic_user_id?: string | null
+          tags?: string[] | null
+          updated_at?: string
+          venue_type?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       v_student_visa_summary: {
@@ -4957,6 +5457,32 @@ export type Database = {
     }
     Functions: {
       activate_own_account: { Args: never; Returns: undefined }
+      approve_venue_booking: {
+        Args: { _booking_id: string; _decision: string; _notes?: string }
+        Returns: {
+          approval_notes: string | null
+          approved_at: string | null
+          approver_id: string | null
+          created_at: string
+          description: string | null
+          end_at: string
+          id: string
+          linked_activity_id: string | null
+          purpose: string
+          requester_id: string
+          start_at: string
+          status: string
+          title: string
+          updated_at: string
+          venue_id: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "venue_bookings"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       auto_generate_term_weeks: {
         Args: {
           p_block_length_days?: number
@@ -5060,6 +5586,7 @@ export type Database = {
       has_role: { Args: { _role: string; _user_id: string }; Returns: boolean }
       is_admin: { Args: never; Returns: boolean }
       is_admin_like: { Args: never; Returns: boolean }
+      is_cca_pic: { Args: { _activity_id: string }; Returns: boolean }
       is_cca_session_full: { Args: { p_session_id: string }; Returns: boolean }
       is_parent: { Args: never; Returns: boolean }
       is_parent_of_student: { Args: { p_student_id: string }; Returns: boolean }
