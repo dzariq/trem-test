@@ -443,5 +443,27 @@ export function NotificationsDrawer({ open, onOpenChange }: NotificationsDrawerP
         )}
       </div>
     </BottomSheet>
+    <Dialog open={!!activeDigest} onOpenChange={(o) => !o && setActiveDigest(null)}>
+      <DialogContent className="max-w-sm z-[110]">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2 text-base">
+            <Sparkles className="h-4 w-4 text-primary" />
+            {activeDigest?.title}
+          </DialogTitle>
+        </DialogHeader>
+        <div className="text-sm text-foreground whitespace-pre-line leading-relaxed max-h-[50vh] overflow-y-auto">
+          {activeDigest?.message}
+        </div>
+        <DialogFooter className="flex-row gap-2 sm:justify-end">
+          <Button variant="outline" size="sm" onClick={() => setActiveDigest(null)}>
+            Close
+          </Button>
+          <Button size="sm" onClick={handleDigestGoToCalendar}>
+            Open calendar
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+    </>
   );
 }
