@@ -160,95 +160,93 @@ export function NotificationsDrawer({ open, onOpenChange }: NotificationsDrawerP
   const allSyntheticItems = useMemo(() => {
     const now = new Date();
     const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-    const tomorrow = new Date(today);
-    tomorrow.setDate(today.getDate() + 1);
     const dayOfWeek = (today.getDay() + 6) % 7;
-    const weekStart = new Date(today);
-    weekStart.setDate(today.getDate() - dayOfWeek);
-    const weekEnd = new Date(weekStart);
-    weekEnd.setDate(weekStart.getDate() + 7);
-
-    const todayKey = `today-${today.toISOString().slice(0, 10)}`;
-    const weekKey = `week-${weekStart.toISOString().slice(0, 10)}`;
+    const thisWeekStart = new Date(today);
+    thisWeekStart.setDate(today.getDate() - dayOfWeek);
 
     const fmtDay = (d: Date) =>
       d.toLocaleDateString("en-US", { weekday: "short", day: "numeric", month: "short" });
-
-    const todayEvents = notifications.filter((n) => {
-      if (!n.event_date) return false;
-      const d = new Date(n.event_date);
-      return d >= today && d < tomorrow;
-    });
-    const weekEvents = notifications.filter((n) => {
-      if (!n.event_date) return false;
-      const d = new Date(n.event_date);
-      return d >= weekStart && d < weekEnd;
-    });
-    const upcomingEvents = notifications
-      .filter((n) => {
-        if (!n.event_date) return false;
-        const d = new Date(n.event_date);
-        return d >= tomorrow;
-      })
-      .sort((a, b) => new Date(a.event_date!).getTime() - new Date(b.event_date!).getTime());
+    const isoKey = (d: Date) => d.toISOString().slice(0, 10);
 
     const items: Array<{ id: string; title: string; message: string; type: string }> = [];
 
-    const todayLabel = fmtDay(today);
-    if (!dismissedSynthetic[todayKey]) {
-      if (todayEvents.length > 0) {
-        const lines = todayEvents
+    // Backfill + forward-fill: render daily digests for every day in this week
+    // and next week that has events, plus a weekly digest for each Monday.
+    // This lets users see the full notification logic without waiting for the
+    // calendar to roll forward.
+    for (let weekOffset = 0; weekOffset < 2; weekOffset++) {
+      const weekStart = new Date(thisWeekStart);
+      weekStart.setDate(thisWeekStart.getDate() + weekOffset * 7);
+      const weekEnd = new Date(weekStart);
+      weekEnd.setDate(weekStart.getDate() + 7);
+      const lastDay = new Date(weekEnd);
+      lastDay.setDate(weekEnd.getDate() - 1);
+      const weekKey = `week-${isoKey(weekStart)}`;
+
+      const weekEvents = notifications.filter((n) => {
+        if (!n.event_date) return false;
+        const d = new Date(n.event_date);
+        return d >= weekStart && d < weekEnd;
+      });
+
+      // Weekly digest (Monday)
+      if (weekEvents.length > 0 && !dismissedSynthetic[weekKey]) {
+        const groups = new Map<string, string[]>();
+        const sorted = [...weekEvents].sort(
+          (a, b) =>
+            new Date(a.event_date!).getTime() - new Date(b.event_date!).getTime(),
+        );
+        for (const e of sorted) {
+          const d = new Date(e.event_date!);
+          const key = fmtDay(d);
+          if (!groups.has(key)) groups.set(key, []);
+          groups.get(key)!.push(e.title);
+        }
+        const lines = Array.from(groups.entries())
+          .map(
+            ([day, titles]) =>
+              `${day}\n${titles.map((t) => `  • ${t}`).join("\n")}`,
+          )
+          .join("\n\n");
+        const label = weekOffset === 0 ? "This week" : "Next week";
+        items.push({
+          id: weekKey,
+          title: `${label} — ${fmtDay(weekStart)} to ${fmtDay(lastDay)}`,
+          message: lines,
+          type: "weekly_digest",
+        });
+      }
+
+      // Daily digests for each day in the week that has events
+      for (let i = 0; i < 7; i++) {
+        const day = new Date(weekStart);
+        day.setDate(weekStart.getDate() + i);
+        const dayEnd = new Date(day);
+        dayEnd.setDate(day.getDate() + 1);
+        const dayKey = `today-${isoKey(day)}`;
+        if (dismissedSynthetic[dayKey]) continue;
+
+        const dayEvents = weekEvents.filter((n) => {
+          const d = new Date(n.event_date!);
+          return d >= day && d < dayEnd;
+        });
+        if (dayEvents.length === 0) continue;
+
+        const lines = dayEvents
           .slice()
           .sort((a, b) => (a.title || "").localeCompare(b.title || ""))
           .map((e) => `• ${e.title}`)
           .join("\n");
+
+        const isToday = day.getTime() === today.getTime();
+        const prefix = isToday ? "Today" : "Daily";
         items.push({
-          id: todayKey,
-          title: `Today — ${todayLabel}`,
+          id: dayKey,
+          title: `${prefix} — ${fmtDay(day)}`,
           message: lines,
           type: "event",
         });
-      } else {
-        const next3 = upcomingEvents.slice(0, 3);
-        const upcomingText = next3.length > 0
-          ? "Upcoming:\n" + next3.map((e) => `• ${fmtDay(new Date(e.event_date!))} — ${e.title}`).join("\n")
-          : "No upcoming events.";
-        items.push({
-          id: todayKey,
-          title: `Today — ${todayLabel}`,
-          message: `No events scheduled today.\n\n${upcomingText}`,
-          type: "event",
-        });
       }
-    }
-
-    // Backfill: always render this week's digest (anchored to Monday) so users
-    // can see the weekly summary even mid-week. In production this can be
-    // gated by `isMonday` to only fire on Mondays.
-    if (weekEvents.length > 0 && !dismissedSynthetic[weekKey]) {
-      const lastDay = new Date(weekEnd);
-      lastDay.setDate(weekEnd.getDate() - 1);
-      const groups = new Map<string, string[]>();
-      const sorted = [...weekEvents].sort((a, b) => {
-        const ta = a.event_date ? new Date(a.event_date).getTime() : 0;
-        const tb = b.event_date ? new Date(b.event_date).getTime() : 0;
-        return ta - tb;
-      });
-      for (const e of sorted) {
-        const d = new Date(e.event_date!);
-        const key = fmtDay(d);
-        if (!groups.has(key)) groups.set(key, []);
-        groups.get(key)!.push(e.title);
-      }
-      const lines = Array.from(groups.entries())
-        .map(([day, titles]) => `${day}\n${titles.map((t) => `  • ${t}`).join("\n")}`)
-        .join("\n\n");
-      items.push({
-        id: weekKey,
-        title: `This week — ${fmtDay(weekStart)} to ${fmtDay(lastDay)}`,
-        message: lines,
-        type: "weekly_digest",
-      });
     }
 
     return items;
