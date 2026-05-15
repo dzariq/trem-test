@@ -28,7 +28,7 @@ import {
   X,
   Sparkles
 } from "lucide-react";
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 
 type NotificationType = 
   | "announcement" 
@@ -88,6 +88,20 @@ export function NotificationsDrawer({ open, onOpenChange }: NotificationsDrawerP
   const [activeDigest, setActiveDigest] = useState<
     { id: string; title: string; message: string; type: string } | null
   >(null);
+
+  // Bridge across route navigations: when a digest is opened, we close the
+  // drawer and navigate to the calendar. The destination route mounts a fresh
+  // AppHeader/NotificationsDrawer instance, so we hand off the popup payload
+  // via sessionStorage and re-hydrate on mount.
+  useEffect(() => {
+    try {
+      const raw = sessionStorage.getItem("notif_active_digest");
+      if (raw) {
+        sessionStorage.removeItem("notif_active_digest");
+        setActiveDigest(JSON.parse(raw));
+      }
+    } catch {}
+  }, []);
 
   const persistSynthetic = (key: "notif_synthetic_dismissed" | "notif_synthetic_read", value: Record<string, boolean>) => {
     try { localStorage.setItem(key, JSON.stringify(value)); } catch {}
@@ -291,10 +305,17 @@ export function NotificationsDrawer({ open, onOpenChange }: NotificationsDrawerP
     const calendarPath = location.pathname.startsWith("/teacher")
       ? "/teacher/calendar"
       : "/parent/calendar";
+    const alreadyOnCalendar = location.pathname === calendarPath;
+    if (alreadyOnCalendar) {
+      onOpenChange(false);
+      setActiveDigest(item);
+      return;
+    }
+    try {
+      sessionStorage.setItem("notif_active_digest", JSON.stringify(item));
+    } catch {}
     onOpenChange(false);
     navigate(calendarPath);
-    // Show centered popup after navigation
-    setTimeout(() => setActiveDigest(item), 50);
   };
 
   const renderSynthetic = (item: { id: string; title: string; message: string; type: string }) => {
