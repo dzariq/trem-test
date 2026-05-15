@@ -26,8 +26,6 @@ import {
   Palmtree,
   PenLine,
   X,
-  ChevronRight,
-  ChevronDown,
   Sparkles
 } from "lucide-react";
 import { useState, useMemo } from "react";
@@ -71,12 +69,7 @@ export function NotificationsDrawer({ open, onOpenChange }: NotificationsDrawerP
     isMarkingAllRead
   } = useNotifications();
   
-  const [filter, setFilter] = useState<"all" | "unread">("all");
-  const [expandedBuckets, setExpandedBuckets] = useState<Record<string, boolean>>({
-    this: true,
-    next: true,
-    later: true,
-  });
+  const [filter, setFilter] = useState<"unread" | "read">("unread");
   const [dismissedSynthetic, setDismissedSynthetic] = useState<Record<string, boolean>>(() => {
     try {
       return JSON.parse(localStorage.getItem("notif_synthetic_dismissed") || "{}");
@@ -95,9 +88,6 @@ export function NotificationsDrawer({ open, onOpenChange }: NotificationsDrawerP
   const persistSynthetic = (key: "notif_synthetic_dismissed" | "notif_synthetic_read", value: Record<string, boolean>) => {
     try { localStorage.setItem(key, JSON.stringify(value)); } catch {}
   };
-
-  const toggleBucket = (key: string) =>
-    setExpandedBuckets((prev) => ({ ...prev, [key]: !prev[key] }));
 
   const getTypeIcon = (type: string) => {
     switch (type as NotificationType) {
@@ -162,12 +152,12 @@ export function NotificationsDrawer({ open, onOpenChange }: NotificationsDrawerP
     }
   };
 
-  const filteredNotifications = filter === "all" 
-    ? notifications 
-    : notifications.filter(n => !n.is_read);
+  const filteredNotifications = filter === "unread"
+    ? notifications.filter((n) => !n.is_read)
+    : notifications.filter((n) => n.is_read);
 
-  // Build synthetic summaries (today + Monday weekly)
-  const syntheticItems = useMemo(() => {
+  // Build synthetic summaries (today + Monday weekly) as plain text digests
+  const allSyntheticItems = useMemo(() => {
     const now = new Date();
     const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
     const tomorrow = new Date(today);
@@ -196,29 +186,63 @@ export function NotificationsDrawer({ open, onOpenChange }: NotificationsDrawerP
     const items: Array<{ id: string; title: string; message: string; type: string }> = [];
 
     if (todayEvents.length > 0 && !dismissedSynthetic[todayKey]) {
-      const titles = todayEvents.map((e) => e.title).slice(0, 3).join(", ");
-      const more = todayEvents.length > 3 ? ` +${todayEvents.length - 3} more` : "";
+      const todayLabel = today.toLocaleDateString("en-US", {
+        weekday: "short",
+        day: "numeric",
+        month: "short",
+      });
+      const lines = todayEvents
+        .slice()
+        .sort((a, b) => (a.title || "").localeCompare(b.title || ""))
+        .map((e) => `• ${e.title}`)
+        .join("\n");
       items.push({
         id: todayKey,
-        title: `Today's schedule — ${todayEvents.length} event${todayEvents.length === 1 ? "" : "s"}`,
-        message: `${titles}${more}`,
+        title: `Today — ${todayLabel}`,
+        message: lines,
         type: "event",
       });
     }
 
     if (isMonday && weekEvents.length > 0 && !dismissedSynthetic[weekKey]) {
-      const titles = weekEvents.map((e) => e.title).slice(0, 4).join(", ");
-      const more = weekEvents.length > 4 ? ` +${weekEvents.length - 4} more` : "";
+      const fmtDay = (d: Date) =>
+        d.toLocaleDateString("en-US", { weekday: "short", day: "numeric", month: "short" });
+      const lastDay = new Date(weekEnd);
+      lastDay.setDate(weekEnd.getDate() - 1);
+      const groups = new Map<string, string[]>();
+      const sorted = [...weekEvents].sort((a, b) => {
+        const ta = a.event_date ? new Date(a.event_date).getTime() : 0;
+        const tb = b.event_date ? new Date(b.event_date).getTime() : 0;
+        return ta - tb;
+      });
+      for (const e of sorted) {
+        const d = new Date(e.event_date!);
+        const key = fmtDay(d);
+        if (!groups.has(key)) groups.set(key, []);
+        groups.get(key)!.push(e.title);
+      }
+      const lines = Array.from(groups.entries())
+        .map(([day, titles]) => `${day}\n${titles.map((t) => `  • ${t}`).join("\n")}`)
+        .join("\n\n");
       items.push({
         id: weekKey,
-        title: `This week at a glance — ${weekEvents.length} event${weekEvents.length === 1 ? "" : "s"}`,
-        message: `${titles}${more}`,
+        title: `This week — ${fmtDay(weekStart)} to ${fmtDay(lastDay)}`,
+        message: lines,
         type: "weekly_digest",
       });
     }
 
     return items;
   }, [notifications, dismissedSynthetic]);
+
+  const syntheticItems = allSyntheticItems.filter((it) =>
+    filter === "unread" ? !readSynthetic[it.id] : !!readSynthetic[it.id]
+  );
+
+  const unreadSyntheticCount = allSyntheticItems.filter((it) => !readSynthetic[it.id]).length;
+  const readSyntheticCount = allSyntheticItems.filter((it) => !!readSynthetic[it.id]).length;
+  const totalUnread = unreadCount + unreadSyntheticCount;
+  const totalRead = notifications.filter((n) => n.is_read).length + readSyntheticCount;
 
   const dismissSynthetic = (id: string) => {
     const next = { ...dismissedSynthetic, [id]: true };
@@ -232,13 +256,23 @@ export function NotificationsDrawer({ open, onOpenChange }: NotificationsDrawerP
     persistSynthetic("notif_synthetic_read", next);
   };
 
+  const handleSyntheticOpen = (id: string) => {
+    if (!readSynthetic[id]) {
+      const next = { ...readSynthetic, [id]: true };
+      setReadSynthetic(next);
+      persistSynthetic("notif_synthetic_read", next);
+    }
+    onOpenChange(false);
+    navigate("/calendar");
+  };
+
   const renderSynthetic = (item: { id: string; title: string; message: string; type: string }) => {
     const Icon = getTypeIcon(item.type);
     const isRead = !!readSynthetic[item.id];
     return (
       <div
         key={item.id}
-        onClick={() => markSyntheticRead(item.id)}
+        onClick={() => handleSyntheticOpen(item.id)}
         className={`relative flex items-start gap-3 rounded-xl border border-border p-3 cursor-pointer active:bg-muted/60 transition-colors ${
           !isRead ? "bg-primary/5" : "bg-card"
         }`}
@@ -253,7 +287,7 @@ export function NotificationsDrawer({ open, onOpenChange }: NotificationsDrawerP
               {item.title}
             </p>
           </div>
-          <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{item.message}</p>
+          <p className="text-xs text-muted-foreground mt-1 whitespace-pre-line leading-relaxed">{item.message}</p>
         </div>
         <button
           type="button"
@@ -270,44 +304,9 @@ export function NotificationsDrawer({ open, onOpenChange }: NotificationsDrawerP
     );
   };
 
-  // Group notifications by week buckets (only when showing All)
-  const groupedSections = (() => {
-    if (filter !== "all") return null;
-
-    const now = new Date();
-    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-    const dayOfWeek = (today.getDay() + 6) % 7; // 0 = Monday
-    const thisWeekStart = new Date(today);
-    thisWeekStart.setDate(today.getDate() - dayOfWeek);
-    const thisWeekEnd = new Date(thisWeekStart);
-    thisWeekEnd.setDate(thisWeekStart.getDate() + 7);
-    const nextWeekEnd = new Date(thisWeekStart);
-    nextWeekEnd.setDate(thisWeekStart.getDate() + 14);
-
-    const inbox: typeof filteredNotifications = [];
-    const thisWeek: typeof filteredNotifications = [];
-    const nextWeek: typeof filteredNotifications = [];
-    const later: typeof filteredNotifications = [];
-
-    for (const n of filteredNotifications) {
-      if (!n.event_date) {
-        inbox.push(n);
-        continue;
-      }
-      const d = new Date(n.event_date);
-      if (d < thisWeekEnd) thisWeek.push(n);
-      else if (d < nextWeekEnd) nextWeek.push(n);
-      else later.push(n);
-    }
-
-    const isMonday = now.getDay() === 1;
-    return [
-      { key: "inbox", label: "Latest", items: inbox },
-      { key: "this", label: "This week", items: thisWeek },
-      { key: "next", label: "Next week", items: isMonday ? nextWeek : [] },
-      { key: "later", label: "Later", items: later },
-    ].filter((s) => s.items.length > 0);
-  })();
+  // Only show non-event notifications individually; event-derived items are
+  // surfaced by the daily/weekly digests above.
+  const otherNotifications = filteredNotifications.filter((n) => !n.event_date);
 
   const renderItem = (notification: typeof filteredNotifications[number]) => {
     const Icon = getTypeIcon(notification.type);
@@ -326,124 +325,6 @@ export function NotificationsDrawer({ open, onOpenChange }: NotificationsDrawerP
         onClick={() => handleNotificationClick(notification)}
         onDelete={() => deleteNotification(notification.id)}
       />
-    );
-  };
-
-  const formatDatePill = (iso: string) => {
-    const d = new Date(iso);
-    const day = d.toLocaleDateString("en-US", { weekday: "short" });
-    const num = d.getDate();
-    const month = d.toLocaleDateString("en-US", { month: "short" });
-    return { day, num, month, label: `${num} ${month} (${day})` };
-  };
-
-  const renderWeekBucket = (
-    section: { key: string; label: string; items: typeof filteredNotifications }
-  ) => {
-    const sortedItems = [...section.items].sort((a, b) => {
-      const ta = a.event_date ? new Date(a.event_date).getTime() : 0;
-      const tb = b.event_date ? new Date(b.event_date).getTime() : 0;
-      return ta - tb;
-    });
-    const unreadInBucket = sortedItems.filter((n) => !n.is_read).length;
-    const expanded = expandedBuckets[section.key] !== false;
-    const firstDate = sortedItems[0]?.event_date ? new Date(sortedItems[0].event_date) : null;
-    const lastDate = sortedItems[sortedItems.length - 1]?.event_date ? new Date(sortedItems[sortedItems.length - 1].event_date!) : null;
-    const fmt = (d: Date) => d.toLocaleDateString("en-US", { weekday: "short", day: "numeric" });
-    const range = firstDate && lastDate
-      ? (firstDate.getTime() === lastDate.getTime() ? fmt(firstDate) : `${fmt(firstDate)} – ${fmt(lastDate)}`)
-      : "";
-    const titlesPreview = sortedItems.slice(0, 3).map((n) => n.title).join(", ");
-    const more = sortedItems.length > 3 ? ` +${sortedItems.length - 3} more` : "";
-
-    return (
-      <div key={section.key} className="rounded-xl border border-border bg-card overflow-hidden">
-        <button
-          type="button"
-          onClick={() => toggleBucket(section.key)}
-          className="w-full flex items-start gap-3 px-3 py-3 text-left active:bg-muted/60 transition-colors"
-        >
-          <div className="flex-shrink-0 w-10 h-10 rounded-lg bg-primary/10 text-primary flex items-center justify-center">
-            <CalendarRange className="h-5 w-5" />
-          </div>
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2">
-              <h4 className="text-sm font-semibold text-foreground truncate">
-                {section.label}
-              </h4>
-              <span className="text-[11px] text-muted-foreground flex-shrink-0">
-                · {sortedItems.length} event{sortedItems.length === 1 ? "" : "s"}
-              </span>
-              {unreadInBucket > 0 && (
-                <span className="w-1.5 h-1.5 rounded-full bg-primary flex-shrink-0" />
-              )}
-            </div>
-            {range && (
-              <p className="text-[11px] text-muted-foreground mt-0.5">{range}</p>
-            )}
-            <p className="text-xs text-foreground/80 mt-1 line-clamp-2">
-              {titlesPreview}{more}
-            </p>
-          </div>
-          <ChevronDown
-            className={`h-4 w-4 text-muted-foreground flex-shrink-0 mt-1 transition-transform ${
-              expanded ? "rotate-180" : ""
-            }`}
-          />
-        </button>
-        {expanded && (
-        <ul className="divide-y divide-border border-t border-border">
-          {sortedItems.map((n) => {
-            const pill = n.event_date ? formatDatePill(n.event_date) : null;
-            return (
-              <li
-                key={n.id}
-                className={`flex items-center gap-3 px-3 py-2.5 cursor-pointer active:bg-muted/60 transition-colors ${
-                  !n.is_read ? "bg-primary/5" : ""
-                }`}
-                onClick={() => {
-                  if (!n.is_read) markAsRead(n.id);
-                  onOpenChange(false);
-                  navigate("/calendar");
-                }}
-              >
-                {pill && (
-                  <span className="flex-shrink-0 px-2 py-1 rounded-md bg-primary/10 text-primary text-[11px] font-semibold whitespace-nowrap">
-                    {pill.label}
-                  </span>
-                )}
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2">
-                    <p
-                      className={`text-sm text-foreground truncate ${
-                        !n.is_read ? "font-semibold" : "font-medium"
-                      }`}
-                    >
-                      {n.title}
-                    </p>
-                    {!n.is_read && (
-                      <span className="w-1.5 h-1.5 rounded-full bg-primary flex-shrink-0" />
-                    )}
-                  </div>
-                </div>
-                <button
-                  type="button"
-                  aria-label="Dismiss"
-                  className="flex-shrink-0 w-7 h-7 rounded-full text-muted-foreground hover:text-destructive hover:bg-destructive/10 flex items-center justify-center"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    deleteNotification(n.id);
-                  }}
-                >
-                  <X className="h-3.5 w-3.5" />
-                </button>
-                <ChevronRight className="h-3.5 w-3.5 text-muted-foreground/60 flex-shrink-0 -ml-1" />
-              </li>
-            );
-          })}
-        </ul>
-        )}
-      </div>
     );
   };
 
@@ -466,18 +347,18 @@ export function NotificationsDrawer({ open, onOpenChange }: NotificationsDrawerP
         <div className="flex items-center justify-between mb-4">
           <div className="flex gap-2">
             <Badge 
-              variant={filter === "all" ? "default" : "outline"}
-              className="cursor-pointer"
-              onClick={() => setFilter("all")}
-            >
-              All ({notifications.length})
-            </Badge>
-            <Badge 
               variant={filter === "unread" ? "default" : "outline"}
               className="cursor-pointer"
               onClick={() => setFilter("unread")}
             >
-              Unread ({unreadCount})
+              Unread ({totalUnread})
+            </Badge>
+            <Badge 
+              variant={filter === "read" ? "default" : "outline"}
+              className="cursor-pointer"
+              onClick={() => setFilter("read")}
+            >
+              Read ({totalRead})
             </Badge>
           </div>
           {unreadCount > 0 && (
@@ -496,7 +377,7 @@ export function NotificationsDrawer({ open, onOpenChange }: NotificationsDrawerP
           )}
         </div>
         <p className="text-xs text-muted-foreground text-center">
-          Swipe left to dismiss • Tap to open
+          Tap to open • Tap × to dismiss
         </p>
       </div>
 
@@ -506,40 +387,16 @@ export function NotificationsDrawer({ open, onOpenChange }: NotificationsDrawerP
             <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
           </div>
         ) : (
-          <div className="space-y-4 pb-6 overflow-x-hidden">
-            {groupedSections ? (
-              <>
-              {syntheticItems.length > 0 && (
-                <div className="space-y-2">
-                  {syntheticItems.map(renderSynthetic)}
-                </div>
-              )}
-              {groupedSections.map((section) => {
-                if (section.key === "inbox") {
-                  return (
-                    <div key={section.key} className="space-y-2">
-                      <h4 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground px-1">
-                        {section.label}
-                      </h4>
-                      <div className="space-y-2">
-                        {section.items.map(renderItem)}
-                      </div>
-                    </div>
-                  );
-                }
-                return renderWeekBucket(section);
-              })}
-              </>
-            ) : (
-              <div className="space-y-2">
-                {filteredNotifications.map(renderItem)}
-              </div>
-            )}
+          <div className="space-y-2 pb-6 overflow-x-hidden">
+            {syntheticItems.map(renderSynthetic)}
+            {otherNotifications.map(renderItem)}
 
-            {filteredNotifications.length === 0 && (
+            {syntheticItems.length === 0 && otherNotifications.length === 0 && (
               <div className="text-center py-12">
                 <Bell className="h-12 w-12 mx-auto text-muted-foreground/50 mb-3" />
-                <p className="text-muted-foreground">No notifications</p>
+                <p className="text-muted-foreground">
+                  {filter === "unread" ? "No unread notifications" : "No read notifications"}
+                </p>
               </div>
             )}
           </div>
