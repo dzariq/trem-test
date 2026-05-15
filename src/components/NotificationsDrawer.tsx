@@ -226,7 +226,7 @@ export function NotificationsDrawer({ open, onOpenChange }: NotificationsDrawerP
               `${day}\n${titles.map((t) => `  • ${t}`).join("\n")}`,
           )
           .join("\n\n");
-        const label = weekOffset === 0 ? "Week at a glance" : "On the horizon";
+        const label = weekOffset === 0 ? "Week at a glance" : "Next week at a glance";
         items.push({
           id: weekKey,
           title: `${label} — ${fmtDay(weekStart)} to ${fmtDay(lastDay)}`,
@@ -258,7 +258,7 @@ export function NotificationsDrawer({ open, onOpenChange }: NotificationsDrawerP
 
         const isToday = day.getTime() === today.getTime();
         const isFuture = day.getTime() > today.getTime();
-        const prefix = isToday ? "Today's brief" : isFuture ? "Up next" : "Daily recap";
+        const prefix = isToday ? "What's on today" : isFuture ? "What's on" : "Daily recap";
         items.push({
           id: dayKey,
           title: `${prefix} — ${fmtDay(day)}`,
