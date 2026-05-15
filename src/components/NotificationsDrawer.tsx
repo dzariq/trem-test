@@ -72,7 +72,11 @@ export function NotificationsDrawer({ open, onOpenChange }: NotificationsDrawerP
   } = useNotifications();
   
   const [filter, setFilter] = useState<"all" | "unread">("all");
-  const [expandedBuckets, setExpandedBuckets] = useState<Record<string, boolean>>({});
+  const [expandedBuckets, setExpandedBuckets] = useState<Record<string, boolean>>({
+    this: true,
+    next: true,
+    later: true,
+  });
   const [dismissedSynthetic, setDismissedSynthetic] = useState<Record<string, boolean>>(() => {
     try {
       return JSON.parse(localStorage.getItem("notif_synthetic_dismissed") || "{}");
