@@ -270,6 +270,35 @@ export default function AcademicPage() {
   }, [selectedSubjects]);
   const [reportGenerated, setReportGenerated] = useState(false);
   const [reportCardDialogOpen, setReportCardDialogOpen] = useState(false);
+  const [studentAvatarUrl, setStudentAvatarUrl] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!selectedStudentId) {
+      setStudentAvatarUrl(null);
+      return;
+    }
+    let cancelled = false;
+    resolveStudentAvatars([selectedStudentId])
+      .then((map) => {
+        if (!cancelled) setStudentAvatarUrl(map[selectedStudentId] ?? null);
+      })
+      .catch(() => {
+        if (!cancelled) setStudentAvatarUrl(null);
+      });
+    const handler = (e: Event) => {
+      const detail = (e as CustomEvent).detail as
+        | { studentId: string; photoUrl: string | null }
+        | undefined;
+      if (detail && detail.studentId === selectedStudentId) {
+        setStudentAvatarUrl(detail.photoUrl);
+      }
+    };
+    window.addEventListener("student-photo-changed", handler);
+    return () => {
+      cancelled = true;
+      window.removeEventListener("student-photo-changed", handler);
+    };
+  }, [selectedStudentId]);
   const [expandedSubject, setExpandedSubject] = useState<string | null>(null);
   const [expandedSection, setExpandedSection] = useState<"comment" | "tips">("comment");
 
