@@ -600,6 +600,45 @@ export default function ProfilePage() {
                 placeholder="Enter your phone number"
               />
             </div>
+            {isParent && (
+              <>
+                <div className="space-y-2">
+                  <Label htmlFor="relationship">Relationship to Student</Label>
+                  <Select
+                    value={editForm.parentRelationship || undefined}
+                    onValueChange={(v) =>
+                      setEditForm({ ...editForm, parentRelationship: v })
+                    }
+                  >
+                    <SelectTrigger id="relationship">
+                      <SelectValue placeholder="Select relationship" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Father">Father</SelectItem>
+                      <SelectItem value="Mother">Mother</SelectItem>
+                      <SelectItem value="Legal Guardian">Legal Guardian</SelectItem>
+                      <SelectItem value="Other">Other</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                {editForm.parentRelationship === "Other" && (
+                  <div className="space-y-2">
+                    <Label htmlFor="relationship-other">Please specify</Label>
+                    <Input
+                      id="relationship-other"
+                      value={editForm.parentRelationshipOther}
+                      onChange={(e) =>
+                        setEditForm({
+                          ...editForm,
+                          parentRelationshipOther: e.target.value,
+                        })
+                      }
+                      placeholder="e.g. Grandparent, Aunt, Uncle"
+                    />
+                  </div>
+                )}
+              </>
+            )}
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsEditOpen(false)}>
