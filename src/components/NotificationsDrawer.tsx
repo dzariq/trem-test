@@ -300,10 +300,11 @@ export function NotificationsDrawer({ open, onOpenChange }: NotificationsDrawerP
       else later.push(n);
     }
 
+    const isMonday = now.getDay() === 1;
     return [
       { key: "inbox", label: "Latest", items: inbox },
       { key: "this", label: "This week", items: thisWeek },
-      { key: "next", label: "Next week", items: nextWeek },
+      { key: "next", label: "Next week", items: isMonday ? nextWeek : [] },
       { key: "later", label: "Later", items: later },
     ].filter((s) => s.items.length > 0);
   })();
