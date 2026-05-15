@@ -1833,6 +1833,7 @@ export type Database = {
       }
       cca_role_types: {
         Row: {
+          activity_id: string | null
           created_at: string
           id: string
           is_active: boolean
@@ -1842,6 +1843,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          activity_id?: string | null
           created_at?: string
           id?: string
           is_active?: boolean
@@ -1851,6 +1853,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          activity_id?: string | null
           created_at?: string
           id?: string
           is_active?: boolean
@@ -1859,7 +1862,15 @@ export type Database = {
           sort_order?: number
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "cca_role_types_activity_id_fkey"
+            columns: ["activity_id"]
+            isOneToOne: false
+            referencedRelation: "cca_activities"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       cca_session_enrollments: {
         Row: {
@@ -1969,6 +1980,7 @@ export type Database = {
         Row: {
           activity_id: string
           allowed_classes: string[]
+          bus_label: string | null
           created_at: string
           custom_title: string | null
           description: string | null
@@ -1982,6 +1994,8 @@ export type Database = {
           requirements: string | null
           session_date: string
           session_type: string | null
+          sport_main: string | null
+          sport_sub: string | null
           start_time: string | null
           updated_at: string
           venue_id: string | null
@@ -1989,6 +2003,7 @@ export type Database = {
         Insert: {
           activity_id: string
           allowed_classes?: string[]
+          bus_label?: string | null
           created_at?: string
           custom_title?: string | null
           description?: string | null
@@ -2002,6 +2017,8 @@ export type Database = {
           requirements?: string | null
           session_date: string
           session_type?: string | null
+          sport_main?: string | null
+          sport_sub?: string | null
           start_time?: string | null
           updated_at?: string
           venue_id?: string | null
@@ -2009,6 +2026,7 @@ export type Database = {
         Update: {
           activity_id?: string
           allowed_classes?: string[]
+          bus_label?: string | null
           created_at?: string
           custom_title?: string | null
           description?: string | null
@@ -2022,6 +2040,8 @@ export type Database = {
           requirements?: string | null
           session_date?: string
           session_type?: string | null
+          sport_main?: string | null
+          sport_sub?: string | null
           start_time?: string | null
           updated_at?: string
           venue_id?: string | null
