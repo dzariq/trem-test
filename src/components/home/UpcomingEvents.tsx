@@ -1,8 +1,9 @@
 import { useState, useMemo, type KeyboardEvent, type MouseEvent } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ChevronRight, MapPin, Clock } from "lucide-react";
+import { ChevronRight, MapPin, Clock, SlidersHorizontal } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { useNavigate } from "react-router-dom";
 import type { UpcomingEvent } from "@/data/calendar";
 import type { UpcomingCcaSession } from "@/hooks/useUpcomingCcaSessions";
@@ -132,35 +133,49 @@ export function UpcomingEvents({ events, ccaSessions, seeAllPath = "/parent/cale
 
   return (
     <section className="px-4 py-4 overflow-x-hidden">
-       <div className="flex flex-col items-center justify-center mb-3">
-         <h2 className="text-lg font-semibold text-foreground text-center w-full">What's Coming Up</h2>
-         <Button 
-           variant="link" 
-           className="text-primary p-0 h-auto text-sm"
-           onClick={() => navigate(seeAllPath)}
-         >
-           See all <ChevronRight className="h-4 w-4 ml-1" />
-         </Button>
-       </div>
-
-      {/* Filter Tabs */}
-      <div className="flex flex-wrap gap-1.5 mb-3">
-        {filters.map((filter) => (
-          <Badge
-            key={filter.value}
-            variant="outline"
-            className={cn(
-              "cursor-pointer w-fit shrink-0 px-compact py-1 border transition-colors",
-              filter.pillStyle,
-              activeFilter === filter.value
-                ? "ring-2 ring-primary/40"
-                : "opacity-60"
-            )}
-            onClick={() => setActiveFilter(filter.value)}
+      <div className="flex items-center justify-between mb-3 gap-2">
+        <h2 className="text-lg font-semibold text-foreground">What's Coming Up</h2>
+        <div className="flex items-center gap-1">
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8 text-muted-foreground hover:text-foreground"
+                aria-label="Filter"
+              >
+                <SlidersHorizontal className="h-4 w-4" />
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent align="end" className="w-64 p-3">
+              <div className="flex flex-wrap gap-1.5">
+                {filters.map((filter) => (
+                  <Badge
+                    key={filter.value}
+                    variant="outline"
+                    className={cn(
+                      "cursor-pointer w-fit shrink-0 px-compact py-1 border transition-colors",
+                      filter.pillStyle,
+                      activeFilter === filter.value
+                        ? "ring-2 ring-primary/40"
+                        : "opacity-60"
+                    )}
+                    onClick={() => setActiveFilter(filter.value)}
+                  >
+                    {filter.label}
+                  </Badge>
+                ))}
+              </div>
+            </PopoverContent>
+          </Popover>
+          <Button
+            variant="link"
+            className="text-primary p-0 h-auto text-sm"
+            onClick={() => navigate(seeAllPath)}
           >
-            {filter.label}
-          </Badge>
-        ))}
+            See all <ChevronRight className="h-4 w-4 ml-1" />
+          </Button>
+        </div>
       </div>
       
       <div className="space-y-3">
