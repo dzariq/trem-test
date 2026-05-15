@@ -172,6 +172,9 @@ export function NotificationsDrawer({ open, onOpenChange }: NotificationsDrawerP
     const todayKey = `today-${today.toISOString().slice(0, 10)}`;
     const weekKey = `week-${weekStart.toISOString().slice(0, 10)}`;
 
+    const fmtDay = (d: Date) =>
+      d.toLocaleDateString("en-US", { weekday: "short", day: "numeric", month: "short" });
+
     const todayEvents = notifications.filter((n) => {
       if (!n.event_date) return false;
       const d = new Date(n.event_date);
@@ -182,31 +185,45 @@ export function NotificationsDrawer({ open, onOpenChange }: NotificationsDrawerP
       const d = new Date(n.event_date);
       return d >= weekStart && d < weekEnd;
     });
+    const upcomingEvents = notifications
+      .filter((n) => {
+        if (!n.event_date) return false;
+        const d = new Date(n.event_date);
+        return d >= tomorrow;
+      })
+      .sort((a, b) => new Date(a.event_date!).getTime() - new Date(b.event_date!).getTime());
 
     const items: Array<{ id: string; title: string; message: string; type: string }> = [];
 
-    if (todayEvents.length > 0 && !dismissedSynthetic[todayKey]) {
-      const todayLabel = today.toLocaleDateString("en-US", {
-        weekday: "short",
-        day: "numeric",
-        month: "short",
-      });
-      const lines = todayEvents
-        .slice()
-        .sort((a, b) => (a.title || "").localeCompare(b.title || ""))
-        .map((e) => `• ${e.title}`)
-        .join("\n");
-      items.push({
-        id: todayKey,
-        title: `Today — ${todayLabel}`,
-        message: lines,
-        type: "event",
-      });
+    const todayLabel = fmtDay(today);
+    if (!dismissedSynthetic[todayKey]) {
+      if (todayEvents.length > 0) {
+        const lines = todayEvents
+          .slice()
+          .sort((a, b) => (a.title || "").localeCompare(b.title || ""))
+          .map((e) => `• ${e.title}`)
+          .join("\n");
+        items.push({
+          id: todayKey,
+          title: `Today — ${todayLabel}`,
+          message: lines,
+          type: "event",
+        });
+      } else {
+        const next3 = upcomingEvents.slice(0, 3);
+        const upcomingText = next3.length > 0
+          ? "Upcoming:\n" + next3.map((e) => `• ${fmtDay(new Date(e.event_date!))} — ${e.title}`).join("\n")
+          : "No upcoming events.";
+        items.push({
+          id: todayKey,
+          title: `Today — ${todayLabel}`,
+          message: `No events scheduled today.\n\n${upcomingText}`,
+          type: "event",
+        });
+      }
     }
 
     if (isMonday && weekEvents.length > 0 && !dismissedSynthetic[weekKey]) {
-      const fmtDay = (d: Date) =>
-        d.toLocaleDateString("en-US", { weekday: "short", day: "numeric", month: "short" });
       const lastDay = new Date(weekEnd);
       lastDay.setDate(weekEnd.getDate() - 1);
       const groups = new Map<string, string[]>();
