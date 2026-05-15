@@ -50,6 +50,13 @@ import {
   Check,
   X
 } from "lucide-react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { toast } from "@/hooks/use-toast";
 import { HandbookReportDialog } from "@/components/HandbookReportDialog";
@@ -95,6 +102,8 @@ export default function ProfilePage() {
     name: "",
     email: "",
     phone: "",
+    parentRelationship: "",
+    parentRelationshipOther: "",
   });
   const [editForm, setEditForm] = useState(formProfile);
   const {
@@ -149,8 +158,11 @@ export default function ProfilePage() {
     const name = profile.full_name ?? "";
     const email = profile.email ?? "";
     const phone = profile.phone ?? "";
-    setFormProfile({ name, email, phone });
-    setEditForm({ name, email, phone });
+    const parentRelationship = profile.parent_relationship ?? "";
+    const parentRelationshipOther = profile.parent_relationship_other ?? "";
+    const next = { name, email, phone, parentRelationship, parentRelationshipOther };
+    setFormProfile(next);
+    setEditForm(next);
   }, [profile, profileLoading]);
 
   const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -229,6 +241,11 @@ export default function ProfilePage() {
       await updateMyProfile({
         full_name: editForm.name,
         phone: editForm.phone,
+        parent_relationship: editForm.parentRelationship || null,
+        parent_relationship_other:
+          editForm.parentRelationship === "Other"
+            ? (editForm.parentRelationshipOther || null)
+            : null,
       });
       setFormProfile(editForm);
       setIsEditOpen(false);
@@ -268,6 +285,20 @@ export default function ProfilePage() {
     ? `${profile.role.charAt(0).toUpperCase()}${profile.role.slice(1)}`
     : "Parent / Student";
 
+  const isParent = profile?.role?.toLowerCase() === "parent";
+  const relationshipLabel = (() => {
+    if (!isParent) return null;
+    const rel = profile?.parent_relationship;
+    if (!rel) return null;
+    if (rel === "Other") {
+      return profile?.parent_relationship_other?.trim() || "Other";
+    }
+    return rel;
+  })();
+  const displayRoleWithRelationship = relationshipLabel
+    ? `${displayRole} · ${relationshipLabel}`
+    : displayRole;
+
   return (
     <AppLayout>
       <AppHeader title="Profile" showBack />
@@ -286,7 +317,7 @@ export default function ProfilePage() {
                 <h2 className="text-xl font-semibold text-foreground">
                   {displayName}
                 </h2>
-                <p className="text-sm text-muted-foreground">{displayRole}</p>
+                <p className="text-sm text-muted-foreground">{displayRoleWithRelationship}</p>
               </div>
             </div>
           </CardContent>
@@ -330,7 +361,7 @@ export default function ProfilePage() {
               <div>
                 <p className="text-xs text-muted-foreground">Role</p>
                 <p className="text-sm font-medium text-foreground">
-                  {displayRole}
+                  {displayRoleWithRelationship}
                 </p>
               </div>
             </div>
