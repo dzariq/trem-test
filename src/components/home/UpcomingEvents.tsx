@@ -132,16 +132,16 @@ export function UpcomingEvents({ events, ccaSessions, seeAllPath = "/parent/cale
 
   return (
     <section className="px-4 py-4 overflow-x-hidden">
-      <div className="flex items-center justify-between mb-3">
-        <h2 className="text-lg font-semibold text-foreground">Upcoming Events</h2>
-        <Button 
-          variant="link" 
-          className="text-primary p-0 h-auto text-sm"
-          onClick={() => navigate(seeAllPath)}
-        >
-          See all <ChevronRight className="h-4 w-4 ml-1" />
-        </Button>
-      </div>
+       <div className="flex items-center justify-between mb-3">
+         <h2 className="text-lg font-semibold text-foreground">Upcoming</h2>
+         <Button 
+           variant="link" 
+           className="text-primary p-0 h-auto text-sm"
+           onClick={() => navigate(seeAllPath)}
+         >
+           See all <ChevronRight className="h-4 w-4 ml-1" />
+         </Button>
+       </div>
 
       {/* Filter Tabs */}
       <div className="flex flex-wrap gap-1.5 mb-3">
