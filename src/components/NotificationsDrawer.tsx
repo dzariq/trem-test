@@ -543,34 +543,47 @@ function DigestPopup({
         </div>
 
         {/* Scrollable Content */}
-        <div className="flex-1 overflow-y-auto px-6 pb-4 space-y-5">
-          {groups.map((group, gi) => (
-            <div key={gi}>
-              {group.day && (
-                <div className="flex items-center gap-2 mb-2.5">
-                  <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
-                    {group.day}
-                  </span>
-                  <div className="h-px flex-1 bg-border/60" />
-                </div>
-              )}
-              <div className="space-y-2">
-                {group.items.map((item, ii) => (
-                  <div
-                    key={ii}
-                    className="flex items-center gap-3 p-3 rounded-2xl bg-muted/40 border border-border/50"
-                  >
-                    <div className="w-8 h-8 rounded-lg bg-background shadow-sm border border-border/50 flex items-center justify-center flex-shrink-0">
-                      <Calendar className="h-4 w-4 text-primary" />
+        <div className="flex-1 overflow-y-auto px-5 pb-4 space-y-2">
+          {groups.flatMap((group, gi) => {
+            // Parse "WED, MAY 13" -> { weekday: "Wed", month: "May", day: "13" }
+            let weekday: string | null = null;
+            let month: string | null = null;
+            let day: string | null = null;
+            if (group.day) {
+              const m = group.day.match(/^([A-Za-z]+),?\s+([A-Za-z]+)\s+(\d{1,2})/);
+              if (m) {
+                weekday = m[1].slice(0, 3);
+                month = m[2].slice(0, 3);
+                day = m[3];
+              }
+            }
+            return group.items.map((item, ii) => {
+              // Strip leading emoji / pictographs and stray whitespace
+              const cleaned = item
+                .replace(/^[\p{Extended_Pictographic}\p{Emoji_Presentation}\uFE0F\u200D\s]+/u, "")
+                .trim();
+              return (
+                <div
+                  key={`${gi}-${ii}`}
+                  className="flex items-center gap-3 p-3 rounded-xl bg-muted/40 border border-border/50"
+                >
+                  {day ? (
+                    <div className="w-12 flex-shrink-0 flex flex-col items-center justify-center rounded-lg bg-background border border-border/60 py-1.5">
+                      <span className="text-[9px] font-semibold uppercase tracking-wider text-muted-foreground leading-none">
+                        {month}
+                      </span>
+                      <span className="text-base font-bold text-foreground leading-tight mt-0.5">
+                        {day}
+                      </span>
                     </div>
-                    <span className="text-sm font-medium text-foreground leading-snug">
-                      {item}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          ))}
+                  ) : null}
+                  <span className="text-sm font-medium text-foreground leading-snug flex-1">
+                    {cleaned || item}
+                  </span>
+                </div>
+              );
+            });
+          })}
         </div>
 
         {/* Footer */}
