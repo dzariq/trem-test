@@ -369,6 +369,7 @@ export function NotificationsDrawer({ open, onOpenChange }: NotificationsDrawerP
   };
 
   return (
+    <>
     <BottomSheet
       open={open}
       onOpenChange={onOpenChange}
