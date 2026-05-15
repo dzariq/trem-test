@@ -2,7 +2,9 @@ import { useState, useMemo, type KeyboardEvent } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Clock, MapPin } from "lucide-react";
 import type { UpcomingEvent } from "@/data/calendar";
+import type { UpcomingCcaSession } from "@/hooks/useUpcomingCcaSessions";
 import { getEventBadgeColor, getEventBadgeLabel } from "@/lib/calendarUtils";
 import {
   UPCOMING_TABS,
@@ -16,16 +18,18 @@ import { cn } from "@/lib/utils";
 
 interface UpcomingEventsSectionProps {
   events: UpcomingEvent[];
+  ccaSessions?: UpcomingCcaSession[];
   onEventClick: (event: UpcomingEvent, el?: HTMLElement | null) => void;
+  onCcaSessionClick?: (session: UpcomingCcaSession, el?: HTMLElement | null) => void;
 }
 
 /**
- * Upcoming events section with tab switcher (Upcoming | Exams | Holidays).
+ * Upcoming events section with tab switcher (Highlights | Exams | Holidays | CCA).
  * - Only shows future events (end_date >= today)
  * - Multi-day events render as single card with date range
- * - Event cards have a colored left indicator based on event type
+ * - CCA sessions render with a distinct filled-primary visual treatment
  */
-export function UpcomingEventsSection({ events, onEventClick }: UpcomingEventsSectionProps) {
+export function UpcomingEventsSection({ events, ccaSessions = [], onEventClick, onCcaSessionClick }: UpcomingEventsSectionProps) {
   const [activeTab, setActiveTab] = useState<UpcomingTab>("events");
 
   const filteredEvents = useMemo(
@@ -33,11 +37,35 @@ export function UpcomingEventsSection({ events, onEventClick }: UpcomingEventsSe
     [events, activeTab]
   );
 
+  const sortedCcaSessions = useMemo(
+    () => [...ccaSessions].sort((a, b) => a.sessionDate.localeCompare(b.sessionDate)),
+    [ccaSessions]
+  );
+
   const handleEventKeyDown = (e: KeyboardEvent<HTMLDivElement>, event: UpcomingEvent) => {
     if (e.key === "Enter" || e.key === " ") {
       e.preventDefault();
       onEventClick(event, e.currentTarget);
     }
+  };
+
+  const handleCcaKeyDown = (e: KeyboardEvent<HTMLDivElement>, session: UpcomingCcaSession) => {
+    if (e.key === "Enter" || e.key === " ") {
+      e.preventDefault();
+      onCcaSessionClick?.(session, e.currentTarget);
+    }
+  };
+
+  const formatTimeRange = (startTime: string | null, endTime: string | null) => {
+    if (!startTime) return "All Day";
+    const fmt = (t: string) => {
+      const [h, m] = t.split(":");
+      const hour = parseInt(h, 10);
+      const ampm = hour >= 12 ? "PM" : "AM";
+      const hour12 = hour % 12 || 12;
+      return `${hour12}:${m} ${ampm}`;
+    };
+    return endTime ? `${fmt(startTime)} - ${fmt(endTime)}` : fmt(startTime);
   };
 
   return (
@@ -49,7 +77,7 @@ export function UpcomingEventsSection({ events, onEventClick }: UpcomingEventsSe
       {/* Tab switcher */}
       <div className="px-4 pb-3">
         <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as UpcomingTab)}>
-          <TabsList className="grid w-full grid-cols-3 h-9 bg-muted/50 rounded-md">
+          <TabsList className="grid w-full grid-cols-4 h-9 bg-muted/50 rounded-md">
             {UPCOMING_TABS.map((tab) => {
               const isActive = activeTab === tab.value;
               // Apply color based on tab type when active
@@ -58,6 +86,7 @@ export function UpcomingEventsSection({ events, onEventClick }: UpcomingEventsSe
                 if (tab.value === "events") activeClass = "bg-purple-500 text-white";
                 else if (tab.value === "exams") activeClass = "bg-red-500 text-white";
                 else if (tab.value === "holidays") activeClass = "bg-green-600 text-white";
+                else if (tab.value === "cca") activeClass = "bg-primary text-primary-foreground";
               }
               return (
                 <TabsTrigger 
@@ -77,6 +106,60 @@ export function UpcomingEventsSection({ events, onEventClick }: UpcomingEventsSe
       </div>
 
       <CardContent className="space-y-3 pt-0">
+        {activeTab === "cca" ? (
+          <>
+            {sortedCcaSessions.map((session) => {
+              const [sY, sM, sD] = session.sessionDate.split("-").map(Number);
+              const date = new Date(sY, sM - 1, sD);
+              const timeLabel = formatTimeRange(session.startTime, session.endTime);
+              return (
+                <div
+                  key={session.id}
+                  className="flex items-start gap-3 p-3 rounded-lg bg-primary/10 border border-primary/30 hover:bg-primary/15 transition-colors cursor-pointer"
+                  role="button"
+                  tabIndex={0}
+                  onClick={(e) => onCcaSessionClick?.(session, e.currentTarget)}
+                  onKeyDown={(e) => handleCcaKeyDown(e, session)}
+                >
+                  {/* Filled date box (inverse of regular events) */}
+                  <div className="flex flex-col items-center justify-center bg-primary text-primary-foreground rounded-xl w-16 h-16 flex-shrink-0 shadow-sm">
+                    <span className="text-lg font-bold leading-none">{date.getDate()}</span>
+                    <span className="text-xs uppercase mt-0.5">
+                      {date.toLocaleDateString("en-US", { month: "short" })}
+                    </span>
+                  </div>
+
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 mb-0.5">
+                      <h3 className="font-medium text-foreground truncate">
+                        {session.customTitle || session.activityName}
+                      </h3>
+                      <Badge variant="secondary" className="text-[10px] px-1.5 py-0 bg-primary text-primary-foreground shrink-0">
+                        CCA
+                      </Badge>
+                    </div>
+                    <div className="flex items-center gap-3 text-sm text-muted-foreground">
+                      <span className="flex items-center gap-1">
+                        <Clock className="h-3 w-3" />
+                        {timeLabel}
+                      </span>
+                    </div>
+                    {session.locationName && (
+                      <div className="flex items-center gap-1 text-sm text-muted-foreground mt-0.5">
+                        <MapPin className="h-3 w-3" />
+                        {session.locationName}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+            {sortedCcaSessions.length === 0 && (
+              <p className="text-sm text-muted-foreground text-center py-4">No upcoming CCA sessions</p>
+            )}
+          </>
+        ) : (
+          <>
         {filteredEvents.map((event) => {
           const isMultiDay = event.startDay !== event.endDay;
           const [sY, sM, sD] = event.startDay.split("-").map(Number);
@@ -147,6 +230,8 @@ export function UpcomingEventsSection({ events, onEventClick }: UpcomingEventsSe
 
         {filteredEvents.length === 0 && (
           <p className="text-sm text-muted-foreground text-center py-4">No events found</p>
+        )}
+          </>
         )}
       </CardContent>
     </Card>
