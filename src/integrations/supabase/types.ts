@@ -1387,6 +1387,7 @@ export type Database = {
           public_description: string | null
           type_id: string | null
           updated_at: string
+          venue_id: string | null
           year_levels: string[] | null
         }
         Insert: {
@@ -1414,6 +1415,7 @@ export type Database = {
           public_description?: string | null
           type_id?: string | null
           updated_at?: string
+          venue_id?: string | null
           year_levels?: string[] | null
         }
         Update: {
@@ -1441,6 +1443,7 @@ export type Database = {
           public_description?: string | null
           type_id?: string | null
           updated_at?: string
+          venue_id?: string | null
           year_levels?: string[] | null
         }
         Relationships: [
@@ -1456,6 +1459,13 @@ export type Database = {
             columns: ["type_id"]
             isOneToOne: false
             referencedRelation: "cca_activity_types"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cca_activities_venue_id_fkey"
+            columns: ["venue_id"]
+            isOneToOne: false
+            referencedRelation: "venues"
             referencedColumns: ["id"]
           },
         ]
@@ -1821,6 +1831,36 @@ export type Database = {
           },
         ]
       }
+      cca_role_types: {
+        Row: {
+          created_at: string
+          id: string
+          is_active: boolean
+          label: string
+          scope: string
+          sort_order: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          label: string
+          scope?: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          label?: string
+          scope?: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       cca_session_enrollments: {
         Row: {
           bus_id: string | null
@@ -1944,6 +1984,7 @@ export type Database = {
           session_type: string | null
           start_time: string | null
           updated_at: string
+          venue_id: string | null
         }
         Insert: {
           activity_id: string
@@ -1963,6 +2004,7 @@ export type Database = {
           session_type?: string | null
           start_time?: string | null
           updated_at?: string
+          venue_id?: string | null
         }
         Update: {
           activity_id?: string
@@ -1982,6 +2024,7 @@ export type Database = {
           session_type?: string | null
           start_time?: string | null
           updated_at?: string
+          venue_id?: string | null
         }
         Relationships: [
           {
@@ -1996,6 +2039,13 @@ export type Database = {
             columns: ["location_id"]
             isOneToOne: false
             referencedRelation: "school_locations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cca_sessions_venue_id_fkey"
+            columns: ["venue_id"]
+            isOneToOne: false
+            referencedRelation: "venues"
             referencedColumns: ["id"]
           },
         ]
@@ -5360,6 +5410,7 @@ export type Database = {
           pic_user_id: string | null
           tags: string[] | null
           updated_at: string
+          venue_scope: string
           venue_type: string
         }
         Insert: {
@@ -5373,6 +5424,7 @@ export type Database = {
           pic_user_id?: string | null
           tags?: string[] | null
           updated_at?: string
+          venue_scope?: string
           venue_type?: string
         }
         Update: {
@@ -5386,6 +5438,7 @@ export type Database = {
           pic_user_id?: string | null
           tags?: string[] | null
           updated_at?: string
+          venue_scope?: string
           venue_type?: string
         }
         Relationships: []
