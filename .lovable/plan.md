@@ -1,78 +1,43 @@
-# Invoice module for parents
+## Notifications audit + plan
 
-## What exists already (verified in Supabase)
+### Audit of what already exists
 
-- **`student_invoices`** — synced from Bukku. Key fields: `bukku_contact_id`, `bukku_invoice_id`, `type` (`fees` / `others`), `status` (`paid`, `pending_payment`, `draft`, `cancelled(CN)`), `invoice_date`, `period_key` (e.g. `2027-T1`), `payment_amount`, `outstanding_amount`, `url` (Bukku short link), and a rich `content` jsonb that holds `amount`, `balance`, invoice number, line items, due dates, etc.
-- **`bukku_contacts`** maps `student_id ↔ bukku_contact_id`.
-- **RLS** already lets parents read invoices for any of their linked children (via `student_guardians`). No DB migration needed.
+| Requirement | Status | Where |
+|---|---|---|
+| Newly added calendar entry → individual notification | Already works | DB trigger `notify_on_calendar_event` on `public.calendar_events` (INSERT/UPDATE) writes a row into `public.notifications` with `source_key = event:<id>`. Realtime subscription in `useNotifications` picks it up live. |
+| Attendance marked → parent notification | Already works | DB trigger `notify_parent_on_attendance` on `public.attendance` writes a notification for non-present statuses (absent/late/excused) to each linked parent. Realtime subscription delivers it instantly. |
+| Weekly Monday-morning digest of the week's calendar events | Missing | No cron job or aggregator currently. |
+| Weekly grouping in the Notifications drawer UI | Partial | Today the drawer is a flat list; events appear individually. No "This week / Next week" grouping. |
 
-## Scope
+### What to build
 
-Read-only parent view. No payment integration, no admin features.
+1. Backend — Monday morning weekly digest
+   - New SQL function `public.create_weekly_calendar_digest()` that, for the current week (Mon–Sun in school timezone), looks up all visible `calendar_events` per audience (`parent`, `teacher`) per `campus_code`, and inserts ONE summary notification per (user, campus) with:
+     - `type = 'weekly_digest'`
+     - `title = "This week at school"`
+     - `message = "<n> events this week: …"` listing up to 5 titles + dates
+     - `source_key = "weekly-digest:<iso-week>:<campus_code|all>:<user_id>"` (idempotent — re-running same week is a no-op)
+     - `link_to = "/parent/calendar"` or `"/teacher/calendar"`
+   - Schedule with `pg_cron`: every Monday at 07:00 server time. (Falls back to manual edge-function trigger if pg_cron not enabled — we'll attempt cron first.)
+   - Make sure the new notifications row stays compatible with existing `notification_reads` / `notification_dismissals`.
 
-## What we'll build
+2. Frontend — group "Upcoming events" by week in the drawer
+   - In `src/components/NotificationsDrawer.tsx`, when `filter === "all"`, split notifications into three buckets:
+     1. New & alerts (announcements, attendance, weekly_digest, grades, etc. — anything without an `event_date` OR created in the last 24h)
+     2. This week (event_date within current ISO week)
+     3. Next week (event_date within following ISO week)
+     4. Later (everything else with an event_date)
+   - Render each bucket under a small subtle header (e.g. "This week", "Next week", "Later") only when non-empty. Unread filter view stays flat.
+   - Add a `Megaphone`/`CalendarRange` icon + emerald style for the new `weekly_digest` type in the `getTypeIcon` / `getTypeColor` maps.
 
-### 1. Navigation
-- Add **Invoice** (Receipt icon) right after Calendar in `BottomNavigation.tsx`. Five tabs comfortably fit at 390px; if the homework flag is on too, we'll let it scroll/condense the labels. New route `/parent/invoice` registered in `src/App.tsx`.
+3. No change needed for per-event and attendance flows — confirm by reading the existing triggers and add a short comment in `useNotifications.ts` documenting the three notification sources (DB trigger events, attendance, weekly digest) so this contract is obvious to future devs.
 
-### 2. Data layer — `src/data/invoices.ts`
-- `listInvoicesForStudent(studentId)` — joins `bukku_contacts → student_invoices`, returns a normalized shape:
-  - `id, invoiceNumber, periodKey, invoiceDate, dueDate, status, type, amount, paidAmount, outstandingAmount, currency, lineItems[], bukkuUrl`
-- Filter out `draft` and `cancelled(CN)` from the parent view by default (toggleable).
-- Amounts: prefer `outstanding_amount` / `payment_amount` columns, fall back to `content.balance` / (`content.amount - content.balance`).
+### Order of operations
 
-### 3. Hook — `src/hooks/useStudentInvoices.ts`
-- React Query hook keyed by `selectedStudentId`. Reuses the global `useStudentSelection` pattern (same as Homework / Academic pages).
+1. Write migration: weekly digest SQL function + pg_cron schedule + (optionally) backfill this week on deploy.
+2. Update `NotificationsDrawer.tsx` to group by week and add `weekly_digest` styling.
+3. Update memory index with a short "Weekly Calendar Digest" entry.
 
-### 4. Page — `src/pages/InvoicePage.tsx`
+### Open question
 
-Layout (mobile-first, 390px):
-
-```text
-┌──────────────────────────────┐
-│  ← Invoices                  │
-├──────────────────────────────┤
-│ [👥 Student ▾]               │  ← reuses linkedStudents selector
-├──────────────────────────────┤
-│  ┌── Summary card ─────────┐ │
-│  │ Outstanding   RM 7,138  │ │  ← sum of pending_payment.outstanding
-│  │ Paid this year  RM 12k  │ │
-│  │ 3 invoices · 1 unpaid   │ │
-│  └─────────────────────────┘ │
-├──────────────────────────────┤
-│ [All] [Outstanding] [Paid]   │  ← status pills
-├──────────────────────────────┤
-│  GL-IV2701/0006   ● Pending  │
-│  Term 1 2027 · Due 7 Jan     │
-│  RM 7,138.30                 │
-│  [View on Bukku ↗]           │
-│  ────────────────────────    │
-│  GL-IV2604/0012   ✓ Paid     │
-│  Term 4 2026 · Paid 12 Oct   │
-│  RM 6,608.30                 │
-└──────────────────────────────┘
-```
-
-- **Summary card**: total outstanding, total paid YTD, invoice count, overdue count (status = pending_payment AND `term_items[0].date < today`).
-- **List card**: tap to open a bottom sheet with the full line-item breakdown from `content.form_items` (description, amount), plus a "View on Bukku" button that opens `url` in a new tab via `openExternal` for native compatibility.
-- Empty state: "No invoices yet for {student name}".
-- Handles students with no `bukku_contacts` row (show "Billing not set up — contact the school office").
-
-### 5. Notifications (out of scope for this round)
-We can add an automatic notification when a new `pending_payment` invoice appears in a follow-up — flag this and skip for now.
-
-## Files touched
-
-- `src/components/layout/BottomNavigation.tsx` — add Invoice item
-- `src/App.tsx` — add `/parent/invoice` route
-- `src/data/invoices.ts` *(new)* — query + normalizer
-- `src/hooks/useStudentInvoices.ts` *(new)*
-- `src/pages/InvoicePage.tsx` *(new)*
-- `src/components/invoice/InvoiceCard.tsx` *(new)*
-- `src/components/invoice/InvoiceDetailsSheet.tsx` *(new)* — uses standard `BottomSheet` (75vh, draggable)
-
-## Open questions (will assume defaults if not raised)
-
-1. **Drafts** — hide from parents (default). Confirm?
-2. **Currency** — always RM in the data; we'll display with `Intl.NumberFormat('en-MY', { style: 'currency', currency: 'MYR' })`.
-3. **Bukku link** — open externally (defaults to yes, since Bukku has its own auth).
+Do you want the weekly digest sent to **teachers as well as parents**, or **parents only**? (Default in the plan: both audiences, scoped by their campus.)
