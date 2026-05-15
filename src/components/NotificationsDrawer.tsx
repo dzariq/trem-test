@@ -258,8 +258,11 @@ export function NotificationsDrawer({ open, onOpenChange }: NotificationsDrawerP
 
   const unreadSyntheticCount = allSyntheticItems.filter((it) => !readSynthetic[it.id]).length;
   const readSyntheticCount = allSyntheticItems.filter((it) => !!readSynthetic[it.id]).length;
-  const totalUnread = unreadCount + unreadSyntheticCount;
-  const totalRead = notifications.filter((n) => n.is_read).length + readSyntheticCount;
+  const nonEventNotifications = notifications.filter((n) => !n.event_date);
+  const totalUnread =
+    nonEventNotifications.filter((n) => !n.is_read).length + unreadSyntheticCount;
+  const totalRead =
+    nonEventNotifications.filter((n) => n.is_read).length + readSyntheticCount;
 
   const dismissSynthetic = (id: string) => {
     const next = { ...dismissedSynthetic, [id]: true };
