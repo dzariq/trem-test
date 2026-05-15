@@ -2929,6 +2929,50 @@ export type Database = {
         }
         Relationships: []
       }
+      parent_visa_periods: {
+        Row: {
+          created_at: string
+          expiry_date: string | null
+          id: string
+          notes: string | null
+          parent_id: string
+          period_no: number
+          status: Database["public"]["Enums"]["visa_status"]
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          created_at?: string
+          expiry_date?: string | null
+          id?: string
+          notes?: string | null
+          parent_id: string
+          period_no: number
+          status?: Database["public"]["Enums"]["visa_status"]
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          created_at?: string
+          expiry_date?: string | null
+          id?: string
+          notes?: string | null
+          parent_id?: string
+          period_no?: number
+          status?: Database["public"]["Enums"]["visa_status"]
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "parent_visa_periods_parent_id_fkey"
+            columns: ["parent_id"]
+            isOneToOne: false
+            referencedRelation: "parents"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       parent_visa_records: {
         Row: {
           created_at: string
@@ -4851,6 +4895,10 @@ export type Database = {
       can_user_access_all_campuses: { Args: never; Returns: boolean }
       can_write_grades: { Args: { p_period_id: string }; Returns: boolean }
       check_phone_exists: { Args: { phone_number: string }; Returns: Json }
+      create_weekly_calendar_digest: {
+        Args: { p_week_start?: string }
+        Returns: number
+      }
       current_user_role: { Args: never; Returns: string }
       delete_parent_cascade: {
         Args: { p_parents_row_id: string; p_user_id: string }
@@ -4971,6 +5019,10 @@ export type Database = {
       }
       show_limit: { Args: never; Returns: number }
       show_trgm: { Args: { "": string }; Returns: string[] }
+      sync_parent_visa_summary: {
+        Args: { p_parent_id: string }
+        Returns: undefined
+      }
       teacher_allowed_class_year_ids: { Args: never; Returns: number[] }
       teacher_assigned_to_cca: { Args: { _cca_id: string }; Returns: boolean }
       track_user_login: { Args: never; Returns: undefined }

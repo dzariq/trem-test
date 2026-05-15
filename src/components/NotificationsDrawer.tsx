@@ -8,6 +8,7 @@ import { useNotifications } from "@/hooks/useNotifications";
 import { 
   Bell, 
   Calendar, 
+  CalendarRange,
   FileText, 
   AlertCircle, 
   Users,
@@ -46,7 +47,8 @@ type NotificationType =
   | "message"
   | "cca"
   | "holiday"
-  | "exam";
+  | "exam"
+  | "weekly_digest";
 
 interface NotificationsDrawerProps {
   open: boolean;
@@ -88,6 +90,7 @@ export function NotificationsDrawer({ open, onOpenChange }: NotificationsDrawerP
       case "cca": return Palette;
       case "holiday": return Palmtree;
       case "exam": return PenLine;
+      case "weekly_digest": return CalendarRange;
       default: return Bell;
     }
   };
@@ -112,6 +115,7 @@ export function NotificationsDrawer({ open, onOpenChange }: NotificationsDrawerP
       case "cca": return "bg-emerald-500 text-white";
       case "holiday": return "bg-teal-500 text-white";
       case "exam": return "bg-rose-500 text-white";
+      case "weekly_digest": return "bg-emerald-600 text-white";
       default: return "bg-muted text-muted-foreground";
     }
   };
@@ -132,6 +136,64 @@ export function NotificationsDrawer({ open, onOpenChange }: NotificationsDrawerP
   const filteredNotifications = filter === "all" 
     ? notifications 
     : notifications.filter(n => !n.is_read);
+
+  // Group notifications by week buckets (only when showing All)
+  const groupedSections = (() => {
+    if (filter !== "all") return null;
+
+    const now = new Date();
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const dayOfWeek = (today.getDay() + 6) % 7; // 0 = Monday
+    const thisWeekStart = new Date(today);
+    thisWeekStart.setDate(today.getDate() - dayOfWeek);
+    const thisWeekEnd = new Date(thisWeekStart);
+    thisWeekEnd.setDate(thisWeekStart.getDate() + 7);
+    const nextWeekEnd = new Date(thisWeekStart);
+    nextWeekEnd.setDate(thisWeekStart.getDate() + 14);
+
+    const inbox: typeof filteredNotifications = [];
+    const thisWeek: typeof filteredNotifications = [];
+    const nextWeek: typeof filteredNotifications = [];
+    const later: typeof filteredNotifications = [];
+
+    for (const n of filteredNotifications) {
+      if (!n.event_date) {
+        inbox.push(n);
+        continue;
+      }
+      const d = new Date(n.event_date);
+      if (d < thisWeekEnd) thisWeek.push(n);
+      else if (d < nextWeekEnd) nextWeek.push(n);
+      else later.push(n);
+    }
+
+    return [
+      { key: "inbox", label: "Latest", items: inbox },
+      { key: "this", label: "This week", items: thisWeek },
+      { key: "next", label: "Next week", items: nextWeek },
+      { key: "later", label: "Later", items: later },
+    ].filter((s) => s.items.length > 0);
+  })();
+
+  const renderItem = (notification: typeof filteredNotifications[number]) => {
+    const Icon = getTypeIcon(notification.type);
+    const hasLink = !!notification.link_to;
+    return (
+      <SwipeableNotification
+        key={notification.id}
+        id={notification.id}
+        icon={<Icon className="h-5 w-5" />}
+        iconBgClass={getTypeColor(notification.type)}
+        title={notification.title}
+        message={notification.message}
+        time={notification.time}
+        isRead={notification.is_read}
+        hasLink={hasLink}
+        onClick={() => handleNotificationClick(notification)}
+        onDelete={() => deleteNotification(notification.id)}
+      />
+    );
+  };
 
   return (
     <BottomSheet
@@ -192,27 +254,23 @@ export function NotificationsDrawer({ open, onOpenChange }: NotificationsDrawerP
             <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
           </div>
         ) : (
-          <div className="space-y-2 pb-6 overflow-x-hidden">
-            {filteredNotifications.map((notification) => {
-              const Icon = getTypeIcon(notification.type);
-              const hasLink = !!notification.link_to;
-              
-              return (
-                <SwipeableNotification
-                  key={notification.id}
-                  id={notification.id}
-                  icon={<Icon className="h-5 w-5" />}
-                  iconBgClass={getTypeColor(notification.type)}
-                  title={notification.title}
-                  message={notification.message}
-                  time={notification.time}
-                  isRead={notification.is_read}
-                  hasLink={hasLink}
-                  onClick={() => handleNotificationClick(notification)}
-                  onDelete={() => deleteNotification(notification.id)}
-                />
-              );
-            })}
+          <div className="space-y-4 pb-6 overflow-x-hidden">
+            {groupedSections ? (
+              groupedSections.map((section) => (
+                <div key={section.key} className="space-y-2">
+                  <h4 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground px-1">
+                    {section.label}
+                  </h4>
+                  <div className="space-y-2">
+                    {section.items.map(renderItem)}
+                  </div>
+                </div>
+              ))
+            ) : (
+              <div className="space-y-2">
+                {filteredNotifications.map(renderItem)}
+              </div>
+            )}
 
             {filteredNotifications.length === 0 && (
               <div className="text-center py-12">
