@@ -43,7 +43,7 @@ export function UpcomingEventsSection({ events, onEventClick }: UpcomingEventsSe
   return (
     <Card className="bg-card border-border shadow-sm">
        <CardHeader className="pb-2">
-          <CardTitle className="text-lg font-semibold text-center w-full">Upcoming Events</CardTitle>
+          <CardTitle className="text-lg font-semibold text-center w-full">What's Coming Up</CardTitle>
        </CardHeader>
 
       {/* Tab switcher */}

@@ -26,7 +26,7 @@ export const CATEGORY_SUBTYPES: Record<TagCategory, { value: CalendarTag | "all"
     { value: "school-holiday-term-break", label: "School Holiday (Term Break)" },
   ],
    "events": [
-     { value: "all", label: "All Highlights" },
+     { value: "all", label: "All Events" },
      { value: "special-event-major", label: "Special Event (Major)" },
     { value: "internal-event", label: "Internal Event" },
     { value: "external-event", label: "External Event" },

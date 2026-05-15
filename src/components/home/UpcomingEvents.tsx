@@ -133,7 +133,7 @@ export function UpcomingEvents({ events, ccaSessions, seeAllPath = "/parent/cale
   return (
     <section className="px-4 py-4 overflow-x-hidden">
        <div className="flex flex-col items-center justify-center mb-3">
-         <h2 className="text-lg font-semibold text-foreground text-center w-full">Upcoming Events</h2>
+         <h2 className="text-lg font-semibold text-foreground text-center w-full">What's Coming Up</h2>
          <Button 
            variant="link" 
            className="text-primary p-0 h-auto text-sm"
