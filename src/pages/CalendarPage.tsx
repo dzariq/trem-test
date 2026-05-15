@@ -160,6 +160,11 @@ export default function CalendarPage() {
     campusCode: selectedStudent?.campus_code ?? null,
   });
 
+  const { sessions: upcomingCcaSessions } = useUpcomingCcaSessions({
+    role: "parent",
+    limit: 20,
+  });
+
   const visibleEvents = filterEventsByRole(events, roleForFilters);
 
   // Get available categories based on role
@@ -503,7 +508,13 @@ export default function CalendarPage() {
             {view === "month" && (
               <UpcomingEventsSection
                 events={upcomingEvents}
+                ccaSessions={upcomingCcaSessions}
                 onEventClick={openEventDetails}
+                onCcaSessionClick={(session, el) => {
+                  el?.blur?.();
+                  setSelectedEventDetails(session);
+                  setEventDetailsOpen(true);
+                }}
               />
             )}
           </TabsContent>
