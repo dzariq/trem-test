@@ -218,7 +218,7 @@ export function NotificationsDrawer({ open, onOpenChange }: NotificationsDrawerP
           const d = new Date(e.event_date!);
           const key = fmtDay(d);
           if (!groups.has(key)) groups.set(key, []);
-          groups.get(key)!.push(e.title);
+          groups.get(key)!.push(`[${e.type}] ${e.title}`);
         }
         const lines = Array.from(groups.entries())
           .map(
@@ -253,7 +253,7 @@ export function NotificationsDrawer({ open, onOpenChange }: NotificationsDrawerP
         const lines = dayEvents
           .slice()
           .sort((a, b) => (a.title || "").localeCompare(b.title || ""))
-          .map((e) => `• ${e.title}`)
+          .map((e) => `• [${e.type}] ${e.title}`)
           .join("\n");
 
         const isToday = day.getTime() === today.getTime();
