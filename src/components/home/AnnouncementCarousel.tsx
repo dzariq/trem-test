@@ -110,7 +110,7 @@ export function AnnouncementCarousel({
     return (
       <section className="py-4">
         <div className="flex items-center justify-between mb-3 px-4">
-          <h2 className="text-lg font-semibold text-foreground">Announcements</h2>
+          <h2 className="text-lg font-semibold text-foreground text-center">Announcements</h2>
         </div>
         <div className="px-4">
           <Card className="bg-card border-border shadow-sm">
