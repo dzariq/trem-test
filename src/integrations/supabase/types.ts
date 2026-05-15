@@ -2929,6 +2929,53 @@ export type Database = {
         }
         Relationships: []
       }
+      parent_visa_records: {
+        Row: {
+          created_at: string
+          expiry_date: string | null
+          id: string
+          issue_date: string | null
+          notes: string | null
+          parent_id: string
+          pass_number: string | null
+          status: Database["public"]["Enums"]["visa_status"]
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          created_at?: string
+          expiry_date?: string | null
+          id?: string
+          issue_date?: string | null
+          notes?: string | null
+          parent_id: string
+          pass_number?: string | null
+          status?: Database["public"]["Enums"]["visa_status"]
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          created_at?: string
+          expiry_date?: string | null
+          id?: string
+          issue_date?: string | null
+          notes?: string | null
+          parent_id?: string
+          pass_number?: string | null
+          status?: Database["public"]["Enums"]["visa_status"]
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "parent_visa_records_parent_id_fkey"
+            columns: ["parent_id"]
+            isOneToOne: true
+            referencedRelation: "parents"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       parents: {
         Row: {
           created_at: string
