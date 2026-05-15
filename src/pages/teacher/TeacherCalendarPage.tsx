@@ -372,7 +372,13 @@ export default function TeacherCalendarPage() {
             {view === "month" && (
               <UpcomingEventsSection
                 events={filteredEvents}
+                ccaSessions={upcomingCcaSessions}
                 onEventClick={openEventDetails}
+                onCcaSessionClick={(session, el) => {
+                  el?.blur?.();
+                  setSelectedEventDetails(session);
+                  setEventDetailsOpen(true);
+                }}
               />
             )}
           </TabsContent>
