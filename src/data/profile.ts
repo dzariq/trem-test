@@ -11,6 +11,8 @@ export type UserProfile = {
   campus_id?: string | null; // Alias for assigned_campus_id for compatibility
   can_access_all_campuses?: boolean | null;
   is_active?: boolean | null;
+  parent_relationship?: string | null;
+  parent_relationship_other?: string | null;
 };
 
 export async function getMyProfile(): Promise<UserProfile> {
@@ -41,6 +43,8 @@ export async function getMyProfile(): Promise<UserProfile> {
 export async function updateMyProfile(updates: {
   full_name?: string | null;
   phone?: string | null;
+  parent_relationship?: string | null;
+  parent_relationship_other?: string | null;
 }): Promise<void> {
   const { data: userData, error: userError } = await supabase.auth.getUser();
   if (userError) {
