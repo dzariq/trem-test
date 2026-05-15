@@ -3,21 +3,20 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ChevronRight, MapPin, Clock, SlidersHorizontal } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { useNavigate } from "react-router-dom";
 import type { UpcomingEvent } from "@/data/calendar";
 import type { UpcomingCcaSession } from "@/hooks/useUpcomingCcaSessions";
 import { EventDetailsSheet } from "@/components/events/EventDetailsSheet";
+import { CalendarFiltersSheet } from "@/components/calendar/CalendarFiltersSheet";
 import {
   PARENT_CATEGORY_ORDER,
   TEACHER_CATEGORY_ORDER,
   CATEGORY_PILL_STYLES,
   mapDbToCategory,
+  mapDbToSubtype,
 } from "@/lib/calendarCategorySubtypes";
-import { CATEGORY_DISPLAY_NAMES, type TagCategory } from "@/types/calendarTags";
+import { CATEGORY_DISPLAY_NAMES, TAG_CATEGORIES, type TagCategory, type CalendarTag } from "@/types/calendarTags";
 import { cn } from "@/lib/utils";
-
-type EventCategory = "all" | TagCategory;
 
 type MergedEvent = (UpcomingEvent | UpcomingCcaSession) & { isCca?: boolean };
 
@@ -29,12 +28,25 @@ interface UpcomingEventsProps {
 
 export function UpcomingEvents({ events, ccaSessions, seeAllPath = "/parent/calendar" }: UpcomingEventsProps) {
   const navigate = useNavigate();
-  const [activeFilter, setActiveFilter] = useState<EventCategory>("all");
+  const [filtersOpen, setFiltersOpen] = useState(false);
+  const [isAllSelected, setIsAllSelected] = useState(true);
+  const [categoryFilters, setCategoryFilters] = useState<Record<TagCategory, (CalendarTag | "all")[]>>(
+    {} as Record<TagCategory, (CalendarTag | "all")[]>
+  );
   const [detailsOpen, setDetailsOpen] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState<MergedEvent | null>(null);
 
   const isTeacher = seeAllPath.includes("/teacher");
-  const categoryOrder: TagCategory[] = isTeacher ? TEACHER_CATEGORY_ORDER : PARENT_CATEGORY_ORDER;
+  const availableCategories: TagCategory[] = isTeacher ? TEACHER_CATEGORY_ORDER : PARENT_CATEGORY_ORDER;
+
+  const activeCategories = useMemo(
+    () =>
+      Object.entries(categoryFilters)
+        .filter(([, subtypes]) => subtypes.length > 0)
+        .map(([cat]) => cat as TagCategory),
+    [categoryFilters],
+  );
+  const hasActiveFilters = !isAllSelected && activeCategories.length > 0;
 
   // Merge calendar events and CCA sessions, sorted by date
   const mergedEvents = useMemo<MergedEvent[]>(() => {
@@ -90,25 +102,32 @@ export function UpcomingEvents({ events, ccaSessions, seeAllPath = "/parent/cale
     }
   };
 
-  const filters: { value: EventCategory; label: string; pillStyle?: string }[] = [
-    { value: "all", label: "All" },
-    ...categoryOrder.map((c) => ({
-      value: c,
-      label: CATEGORY_DISPLAY_NAMES[c],
-      pillStyle: CATEGORY_PILL_STYLES[c],
-    })),
-  ];
+  const matchesCategory = (event: UpcomingEvent, category: TagCategory) => {
+    if (event.tags?.some((tag) => TAG_CATEGORIES[tag] === category)) return true;
+    return mapDbToCategory(event.category || "", (event as any).eventType) === category;
+  };
+
+  const matchesSubtype = (event: UpcomingEvent, subtype: CalendarTag) => {
+    if (event.tags?.includes(subtype)) return true;
+    return (
+      mapDbToSubtype(event.category || "", (event as any).eventType, event.title || "") === subtype
+    );
+  };
 
   const filteredEvents = useMemo(() => {
-    if (activeFilter === "all") return mergedEvents;
+    if (isAllSelected || activeCategories.length === 0) return mergedEvents;
 
     return mergedEvents.filter((e) => {
       if (e.isCca) return false; // CCA sessions only shown under "All"
       const calEvent = e as UpcomingEvent;
-      const mapped = mapDbToCategory(calEvent.category || "", (calEvent as any).eventType);
-      return mapped === activeFilter;
+      return activeCategories.some((category) => {
+        if (!matchesCategory(calEvent, category)) return false;
+        const subtypes = categoryFilters[category] || [];
+        if (subtypes.includes("all") || subtypes.length === 0) return true;
+        return subtypes.some((s) => matchesSubtype(calEvent, s as CalendarTag));
+      });
     });
-  }, [mergedEvents, activeFilter]);
+  }, [mergedEvents, isAllSelected, activeCategories, categoryFilters]);
 
   const openDetails = (event: MergedEvent, triggerEl?: HTMLElement | null) => {
     triggerEl?.blur?.();
@@ -136,38 +155,21 @@ export function UpcomingEvents({ events, ccaSessions, seeAllPath = "/parent/cale
       <div className="flex items-center justify-between mb-3 gap-2">
         <h2 className="text-lg font-semibold text-foreground">What's Coming Up</h2>
         <div className="flex items-center gap-1">
-          <Popover>
-            <PopoverTrigger asChild>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-8 w-8 text-muted-foreground hover:text-foreground"
-                aria-label="Filter"
-              >
-                <SlidersHorizontal className="h-4 w-4" />
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent align="end" className="w-64 p-3">
-              <div className="flex flex-wrap gap-1.5">
-                {filters.map((filter) => (
-                  <Badge
-                    key={filter.value}
-                    variant="outline"
-                    className={cn(
-                      "cursor-pointer w-fit shrink-0 px-compact py-1 border transition-colors",
-                      filter.pillStyle,
-                      activeFilter === filter.value
-                        ? "ring-2 ring-primary/40"
-                        : "opacity-60"
-                    )}
-                    onClick={() => setActiveFilter(filter.value)}
-                  >
-                    {filter.label}
-                  </Badge>
-                ))}
-              </div>
-            </PopoverContent>
-          </Popover>
+          <Button
+            variant="ghost"
+            size="icon"
+            className={cn(
+              "h-8 w-8 text-muted-foreground hover:text-foreground relative",
+              hasActiveFilters && "text-primary",
+            )}
+            aria-label="Filter"
+            onClick={() => setFiltersOpen(true)}
+          >
+            <SlidersHorizontal className="h-4 w-4" />
+            {hasActiveFilters && (
+              <span className="absolute top-1 right-1 h-1.5 w-1.5 rounded-full bg-primary" />
+            )}
+          </Button>
           <Button
             variant="link"
             className="text-primary p-0 h-auto text-sm"
@@ -303,6 +305,16 @@ export function UpcomingEvents({ events, ccaSessions, seeAllPath = "/parent/cale
         open={detailsOpen}
         onOpenChange={setDetailsOpen}
         event={selectedEvent}
+      />
+
+      <CalendarFiltersSheet
+        open={filtersOpen}
+        onOpenChange={setFiltersOpen}
+        availableCategories={availableCategories}
+        isAllSelected={isAllSelected}
+        categoryFilters={categoryFilters}
+        setIsAllSelected={setIsAllSelected}
+        setCategoryFilters={setCategoryFilters}
       />
     </section>
   );
