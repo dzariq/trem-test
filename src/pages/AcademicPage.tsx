@@ -1503,12 +1503,16 @@ export default function AcademicPage() {
             <CardTitle className="text-lg font-semibold flex items-center gap-2">
               <FileText className="h-5 w-5 text-primary" />
               Report Card
-              {selectedStudent && <Badge variant="secondary" className="ml-auto text-xs">{selectedStudent.name}</Badge>}
             </CardTitle>
+            {selectedStudent && (
+              <div className="mt-1">
+                <Badge variant="secondary" className="text-xs">{selectedStudent.name}</Badge>
+              </div>
+            )}
             {/* Shared Year / Exam Filters */}
             <div className="flex flex-col gap-2 mt-3">
               <div className="flex items-center gap-2">
-                <span className="text-sm font-medium text-muted-foreground shrink-0">Year:</span>
+                <span className="text-sm font-medium text-muted-foreground shrink-0 w-12">Year:</span>
                 <Select
                   value={selectedAcademicYearId}
                   onValueChange={setSelectedAcademicYearId}
@@ -1536,7 +1540,7 @@ export default function AcademicPage() {
               </div>
 
               <div className="flex items-center gap-2">
-                <span className="text-sm font-medium text-muted-foreground shrink-0">Exam:</span>
+                <span className="text-sm font-medium text-muted-foreground shrink-0 w-12">Exam:</span>
                 <Select
                   value={selectedExamPeriodId}
                   onValueChange={setSelectedExamPeriodId}
