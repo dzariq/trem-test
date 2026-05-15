@@ -332,7 +332,8 @@ export function NotificationsDrawer({ open, onOpenChange }: NotificationsDrawerP
     const d = new Date(iso);
     const day = d.toLocaleDateString("en-US", { weekday: "short" });
     const num = d.getDate();
-    return { day, num };
+    const month = d.toLocaleDateString("en-US", { month: "short" });
+    return { day, num, month, label: `${num} ${month} (${day})` };
   };
 
   const renderWeekBucket = (
