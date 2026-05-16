@@ -46,6 +46,7 @@ import {
   mapDbToSubtype,
 } from "@/lib/calendarCategorySubtypes";
 import { cn } from "@/lib/utils";
+import { RouteErrorBoundary } from "@/components/common/RouteErrorBoundary";
 
 export default function CalendarPage() {
   const { profile } = useMyProfile();
@@ -175,7 +176,8 @@ export default function CalendarPage() {
   // Check if event matches a category using DB fields
   const matchesCategory = (event: UpcomingEvent, category: TagCategory) => {
     // First check if any tags match the category
-    if (event.tags.some((tag) => TAG_CATEGORIES[tag] === category)) return true;
+    const tags = Array.isArray(event.tags) ? event.tags : [];
+    if (tags.some((tag) => TAG_CATEGORIES[tag] === category)) return true;
     
     // Use the improved mapping function
     const mappedCategory = mapDbToCategory(event.category || "", (event as any).eventType);
@@ -187,7 +189,8 @@ export default function CalendarPage() {
   // Check if event matches a specific subtype tag
   const matchesSubtype = (event: UpcomingEvent, subtype: CalendarTag) => {
     // Direct tag match
-    if (event.tags.includes(subtype)) return true;
+    const tags = Array.isArray(event.tags) ? event.tags : [];
+    if (tags.includes(subtype)) return true;
     
     // Use improved mapping that includes title for better classification
     const mappedSubtype = mapDbToSubtype(
