@@ -2093,6 +2093,60 @@ export type Database = {
           },
         ]
       }
+      cca_session_attendance: {
+        Row: {
+          created_at: string
+          id: string
+          marked_at: string
+          marked_by: string | null
+          notes: string | null
+          session_bus_id: string | null
+          session_id: string
+          status: string
+          student_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          marked_at?: string
+          marked_by?: string | null
+          notes?: string | null
+          session_bus_id?: string | null
+          session_id: string
+          status?: string
+          student_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          marked_at?: string
+          marked_by?: string | null
+          notes?: string | null
+          session_bus_id?: string | null
+          session_id?: string
+          status?: string
+          student_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cca_session_attendance_session_bus_id_fkey"
+            columns: ["session_bus_id"]
+            isOneToOne: false
+            referencedRelation: "cca_session_buses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cca_session_attendance_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "cca_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       cca_session_bus_assignments: {
         Row: {
           created_at: string
