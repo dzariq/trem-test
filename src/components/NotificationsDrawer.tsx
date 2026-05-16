@@ -30,6 +30,34 @@ import {
 } from "lucide-react";
 import { useState, useMemo, useEffect } from "react";
 
+// Format a date relative to today, e.g. "today", "in 3 days", "2 days ago".
+function formatRelativeDays(date: Date): string {
+  const now = new Date();
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const d = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+  const diff = Math.round((d.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+  if (diff === 0) return "Today";
+  if (diff === 1) return "Tomorrow";
+  if (diff === -1) return "Yesterday";
+  if (diff > 1) return `In ${diff} days`;
+  return `${Math.abs(diff)} days ago`;
+}
+
+// Parse the underlying anchor date from a synthetic digest id (week-/today-YYYY-MM-DD).
+function parseSyntheticAnchorDate(id: string): Date | null {
+  const m = id.match(/(\d{4})-(\d{2})-(\d{2})/);
+  if (!m) return null;
+  return new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3]));
+}
+
+// Parse the attendance date out of a notification message ("... on 14 MAY 2026").
+function parseAttendanceDate(message: string): Date | null {
+  const m = message.match(/\bon\s+(\d{1,2}\s+[A-Za-z]+\s+\d{4})\b/);
+  if (!m) return null;
+  const d = new Date(m[1]);
+  return isNaN(d.getTime()) ? null : d;
+}
+
 type NotificationType = 
   | "announcement" 
   | "event" 
@@ -271,9 +299,16 @@ export function NotificationsDrawer({ open, onOpenChange }: NotificationsDrawerP
     return items;
   }, [notifications, dismissedSynthetic]);
 
-  const syntheticItems = allSyntheticItems.filter((it) =>
-    filter === "unread" ? !readSynthetic[it.id] : !!readSynthetic[it.id]
-  );
+  const syntheticItems = allSyntheticItems
+    .filter((it) =>
+      filter === "unread" ? !readSynthetic[it.id] : !!readSynthetic[it.id]
+    )
+    .slice()
+    .sort((a, b) => {
+      const da = parseSyntheticAnchorDate(a.id)?.getTime() ?? 0;
+      const db = parseSyntheticAnchorDate(b.id)?.getTime() ?? 0;
+      return db - da;
+    });
 
   const unreadSyntheticCount = allSyntheticItems.filter((it) => !readSynthetic[it.id]).length;
   const readSyntheticCount = allSyntheticItems.filter((it) => !!readSynthetic[it.id]).length;
@@ -322,6 +357,8 @@ export function NotificationsDrawer({ open, onOpenChange }: NotificationsDrawerP
   const renderSynthetic = (item: { id: string; title: string; message: string; type: string }) => {
     const Icon = getTypeIcon(item.type);
     const isRead = !!readSynthetic[item.id];
+    const anchorDate = parseSyntheticAnchorDate(item.id);
+    const relativeLabel = anchorDate ? formatRelativeDays(anchorDate) : null;
     // Parse message lines into structured rows: [category] title
     // Supports daily ("• [exam] Title") and weekly ("Wed, May 13\n  • [event] Title") formats.
     const emojiRe = /^[\p{Extended_Pictographic}\p{Emoji_Presentation}\uFE0F\u200D\s]+/u;
@@ -365,6 +402,11 @@ export function NotificationsDrawer({ open, onOpenChange }: NotificationsDrawerP
               {item.title}
             </p>
           </div>
+          {relativeLabel && (
+            <p className="text-[10px] text-muted-foreground/70 mt-0.5">
+              {relativeLabel}
+            </p>
+          )}
           <div className="mt-2 space-y-1.5">
             {rows.map((r, idx) =>
               r.kind === "day" ? (
@@ -402,8 +444,20 @@ export function NotificationsDrawer({ open, onOpenChange }: NotificationsDrawerP
   };
 
   // Only show non-event notifications individually; event-derived items are
-  // surfaced by the daily/weekly digests above.
-  const otherNotifications = filteredNotifications.filter((n) => !n.event_date);
+  // surfaced by the daily/weekly digests above. Sort so the latest is on top:
+  // for attendance items use the parsed attendance date, otherwise created_at.
+  const otherNotifications = filteredNotifications
+    .filter((n) => !n.event_date)
+    .slice()
+    .sort((a, b) => {
+      const ta =
+        (a.type === "attendance" && parseAttendanceDate(a.message)?.getTime()) ||
+        new Date(a.created_at).getTime();
+      const tb =
+        (b.type === "attendance" && parseAttendanceDate(b.message)?.getTime()) ||
+        new Date(b.created_at).getTime();
+      return tb - ta;
+    });
 
   const renderItem = (notification: typeof filteredNotifications[number]) => {
     const Icon = getTypeIcon(notification.type);
