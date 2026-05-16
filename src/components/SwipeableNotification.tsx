@@ -12,7 +12,7 @@ interface SwipeableNotificationProps {
   hasLink: boolean;
   onClick: () => void;
   onDelete: () => void;
-  statusTag?: { label: string; className: string };
+  tags?: Array<{ label: string; className: string }>;
 }
 
 export function SwipeableNotification({
@@ -26,7 +26,7 @@ export function SwipeableNotification({
   hasLink,
   onClick,
   onDelete,
-  statusTag,
+  tags,
 }: SwipeableNotificationProps) {
   const [translateX, setTranslateX] = useState(0);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -115,21 +115,26 @@ export function SwipeableNotification({
         
         {/* Content */}
         <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2 flex-wrap">
+          <div className="flex items-center gap-2">
             <h3 className={`text-sm text-foreground truncate ${!isRead ? "font-semibold" : "font-medium"}`}>
               {title}
             </h3>
-            {statusTag && (
-              <span
-                className={`inline-flex items-center px-2 h-5 rounded-full text-[10px] font-semibold uppercase tracking-wide border ${statusTag.className}`}
-              >
-                {statusTag.label}
-              </span>
-            )}
             {!isRead && (
               <div className="w-2 h-2 rounded-full bg-primary flex-shrink-0" />
             )}
           </div>
+          {tags && tags.length > 0 && (
+            <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
+              {tags.map((t, i) => (
+                <span
+                  key={i}
+                  className={`inline-flex items-center px-2 h-5 rounded-full text-[10px] font-semibold uppercase tracking-wide border ${t.className}`}
+                >
+                  {t.label}
+                </span>
+              ))}
+            </div>
+          )}
           <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">
             {message}
           </p>
