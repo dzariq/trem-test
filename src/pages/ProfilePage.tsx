@@ -11,6 +11,9 @@ import { Separator } from "@/components/ui/separator";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
+import { CcaActivityCard } from "@/components/cca/CcaActivityCard";
+import { useStudentCcaEnrollments } from "@/hooks/useStudentCcaEnrollments";
+import { Loader2 } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -100,6 +103,10 @@ export default function ProfilePage() {
   const [isTimetablePdfOpen, setIsTimetablePdfOpen] = useState(false);
   const [selectedStudent, setSelectedStudent] = useState<LinkedStudent | null>(null);
   const [isPhotoEditOpen, setIsPhotoEditOpen] = useState(false);
+  const {
+    enrollments: selectedStudentEnrollments,
+    loading: selectedStudentEnrollmentsLoading,
+  } = useStudentCcaEnrollments({ studentId: selectedStudent?.id ?? null });
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [formProfile, setFormProfile] = useState({
     name: "",
@@ -919,7 +926,22 @@ export default function ProfilePage() {
                   <BookOpen className="h-4 w-4 text-muted-foreground" />
                   <span className="font-medium text-foreground">CCA Clubs & Activities</span>
                 </div>
-                {selectedStudent.ccaActivities && selectedStudent.ccaActivities.length > 0 ? (
+                {selectedStudentEnrollmentsLoading ? (
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground py-2">
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    <span>Loading clubs...</span>
+                  </div>
+                ) : selectedStudentEnrollments.length > 0 ? (
+                  <div className="space-y-3">
+                    {selectedStudentEnrollments.map((activity) => (
+                      <CcaActivityCard
+                        key={activity.enrollmentId}
+                        activity={activity}
+                        variant="enrolled"
+                      />
+                    ))}
+                  </div>
+                ) : selectedStudent.ccaActivities && selectedStudent.ccaActivities.length > 0 ? (
                   <div className="flex flex-wrap gap-2">
                     {selectedStudent.ccaActivities.map((cca, idx) => (
                       <Badge key={idx} variant="secondary" className="text-sm">
