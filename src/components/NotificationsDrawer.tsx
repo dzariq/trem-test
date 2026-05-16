@@ -408,6 +408,29 @@ export function NotificationsDrawer({ open, onOpenChange }: NotificationsDrawerP
   const renderItem = (notification: typeof filteredNotifications[number]) => {
     const Icon = getTypeIcon(notification.type);
     const hasLink = !!notification.link_to;
+
+    // Derive attendance status tag + clean message
+    let statusTag: { label: string; className: string } | undefined;
+    let displayMessage = notification.message;
+    if (notification.type === "attendance") {
+      const m = notification.message.match(/\b(present|absent|late|excused)\b/i);
+      if (m) {
+        const status = m[1].toLowerCase();
+        const palette: Record<string, string> = {
+          present: "bg-emerald-100 text-emerald-800 border-emerald-200",
+          late:    "bg-amber-100 text-amber-800 border-amber-200",
+          absent:  "bg-rose-100 text-rose-800 border-rose-200",
+          excused: "bg-sky-100 text-sky-800 border-sky-200",
+        };
+        statusTag = { label: status, className: palette[status] };
+        // Strip "is <status>" from the displayed message
+        displayMessage = notification.message
+          .replace(/\s*is\s+(present|absent|late|excused)\b/i, "")
+          .replace(/\s+/g, " ")
+          .trim();
+      }
+    }
+
     return (
       <SwipeableNotification
         key={notification.id}
@@ -415,12 +438,13 @@ export function NotificationsDrawer({ open, onOpenChange }: NotificationsDrawerP
         icon={<Icon className="h-5 w-5" />}
         iconBgClass={getTypeColor(notification.type)}
         title={notification.title}
-        message={notification.message}
+        message={displayMessage}
         time={notification.time}
         isRead={notification.is_read}
         hasLink={hasLink}
         onClick={() => handleNotificationClick(notification)}
         onDelete={() => deleteNotification(notification.id)}
+        statusTag={statusTag}
       />
     );
   };
