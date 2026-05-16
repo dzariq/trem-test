@@ -412,6 +412,7 @@ export default function CalendarPage() {
   });
 
   return (
+    <RouteErrorBoundary fallbackLabel="Calendar">
     <AppLayout>
       <AppHeader
         showChildSelector
@@ -838,5 +839,6 @@ export default function CalendarPage() {
         setCategoryFilters={setCategoryFilters}
       />
     </AppLayout>
+    </RouteErrorBoundary>
   );
 }
