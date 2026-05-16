@@ -706,21 +706,16 @@ export default function ProfilePage() {
                 
                 <div className="flex flex-col items-center gap-2">
                   <h3 className="text-xl font-semibold text-foreground leading-tight text-center">{selectedStudent.name}</h3>
-                  {(selectedStudent.studentCode || selectedStudent.className || selectedStudent.grade) && (
+                  {(selectedStudent.studentCode || selectedStudent.className) && (
                     <div className="flex flex-wrap items-center justify-center gap-1.5">
                       {selectedStudent.studentCode && (
-                        <Badge variant="secondary" className="text-sm font-medium px-2.5 py-0.5">
+                        <Badge variant="outline" className="text-sm font-medium px-2.5 py-0.5 bg-muted/40 border-border text-foreground/80">
                           ID: {selectedStudent.studentCode}
                         </Badge>
                       )}
                       {selectedStudent.className && (
-                        <Badge variant="secondary" className="text-sm font-medium px-2.5 py-0.5">
+                        <Badge variant="outline" className="text-sm font-medium px-2.5 py-0.5 bg-muted/40 border-border text-foreground/80">
                           {selectedStudent.className}
-                        </Badge>
-                      )}
-                      {selectedStudent.grade && (
-                        <Badge variant="secondary" className="text-sm font-medium px-2.5 py-0.5">
-                          {selectedStudent.grade}
                         </Badge>
                       )}
                     </div>
