@@ -103,6 +103,10 @@ export default function ProfilePage() {
   const [isTimetablePdfOpen, setIsTimetablePdfOpen] = useState(false);
   const [selectedStudent, setSelectedStudent] = useState<LinkedStudent | null>(null);
   const [isPhotoEditOpen, setIsPhotoEditOpen] = useState(false);
+  const {
+    enrollments: selectedStudentEnrollments,
+    loading: selectedStudentEnrollmentsLoading,
+  } = useStudentCcaEnrollments({ studentId: selectedStudent?.id ?? null });
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [formProfile, setFormProfile] = useState({
     name: "",
