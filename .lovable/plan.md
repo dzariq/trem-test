@@ -1,44 +1,47 @@
-# Parent Attendance — Audit Findings & Fix Plan
+## Goal
 
-## What I checked (deep audit)
+Make the Notifications drawer surface the latest real events (e.g. "Attendance marked") at the very top, give every card a clear tap-to-open / tap-X-to-dismiss affordance, and add a small colored status pill to attendance notifications so parents can see Present / Absent / Late / Excused at a glance.
 
-1. **Network** — The Supabase REST call for `/attendance?student_id=eq.<id>` returns **HTTP 200** with body `[]`. No RLS error, no 401/403, no timeout.
-2. **Console** — Logs say `[attendance] Fetched 0 rows`. No JS errors.
-3. **RLS policies on `public.attendance`** — Two SELECT policies allow parents:
-   - `Scoped attendance access` → admin OR teacher OR `student_guardians` link
-   - `parents_can_read_linked_students_attendance` → `student_guardians` link
-   Both correctly join via `student_guardians.guardian_user_id = auth.uid()`.
-4. **Guardian link** — The currently logged-in parent (`fa15c909…`) is correctly linked to 3 students via `student_guardians`:
-   - KARTI SAI (GL-Y4C)
-   - SESHIAN (GL-Y6C)
-   - DEEVESHWAR (GL-Y7I)
-5. **Actual DB rows** — Ran `SELECT COUNT(*) FROM attendance WHERE student_id IN (...)` for all three children: **0 rows each.**
-6. **Classes** — Attendance HAS been marked for class `GL-Y7I`, but only for student `ZHANG BOXUAN`. None of this parent's children appear in any attendance record anywhere in the DB.
+## Issues observed (from the screenshot on /parent)
 
-## Root cause
+1. Calendar "What's on — Mon/Tue/Wed" cards appear above the much newer "Attendance marked" cards. Cause: in `useNotifications.ts` the sort prioritises any item that has an `event_date` (calendar items) over DB-stored notifications.
+2. Real DB notification cards (attendance, announcements, etc.) only support tap-to-open + left-swipe-to-delete. The synthetic event cards have a visible X button. Behaviour should be consistent — every card needs a tap-to-open and a visible X to dismiss.
+3. Attendance notifications read "KARTI SAI A/L THANABALAN is Excuse…", "…is Absent…", "…is Late…" — the status is buried in the truncated message text. There's no visual tag.
 
-**The backend is working perfectly. The data simply does not exist.** Teachers have not marked attendance for KARTI / SESHIAN / DEEVESHWAR. So the page loads → fetches → returns `[]` → renders an (almost) empty chart + a tiny "No attendance records for this month" line, which visually reads as "blank."
+## Changes (frontend only, no DB work)
 
-The page is not broken — the empty state is just too quiet.
+### 1. Sort order — `src/hooks/useNotifications.ts`
+Replace the current sort block so real DB notifications (no `event_date`, includes attendance + announcements + alerts) come first, ordered by `created_at` desc (newest on top). Calendar/CCA synthetic items (with `event_date`) follow, ordered by `event_date` asc.
 
-## Fix plan (UX only, no backend changes needed)
+```text
+[ DB notifications, newest first ]
+[ Calendar / CCA items, soonest first ]
+```
 
-1. **Chart empty state** — When `records.length === 0` after loading, replace the empty zero-bars chart with a clear empty-state card:
-   - Icon + headline: "No attendance recorded yet"
-   - Sub-copy: "Your child's teacher hasn't marked any attendance for [student name] yet. Records will appear here once class attendance starts being taken."
-2. **Monthly summary card** — When all four counters are 0, show the same empty-state messaging instead of four "0" tiles which look broken.
-3. **Daily breakdown** — Keep the existing "No attendance records for this month." but upgrade the styling so it reads as intentional (centered, icon, muted card) rather than a stray line of text.
-4. **Loading → empty transition** — Add a short stable-state guard so the loader doesn't flicker off into a near-blank page (currently `isLoading` flips to false → user sees a chart full of zeros → confused).
+### 2. Dismiss X on every card — `src/components/SwipeableNotification.tsx`
+Add a small `X` button (top-right of the card, same style as the synthetic-digest X) that calls `onDelete()` with `stopPropagation`. Keep the existing left-swipe-to-delete as a secondary gesture. Keep tap-to-open behaviour. Update the drawer copy "Tap to open • Tap × to dismiss" so it now applies to all cards.
 
-No DB migration, no RLS change, no query change.
+### 3. Status tag on attendance notifications — `src/components/NotificationsDrawer.tsx`
+In `renderItem`, when `notification.type === "attendance"`, parse the status from `notification.message` (regex match on `\b(present|absent|late|excused)\b`, case-insensitive) and pass an optional `statusTag` prop to `SwipeableNotification`. Render the pill next to the title with these colors (light bg + dark text + matching border, all via Tailwind utility classes consistent with existing `catPalette` in the file):
 
-## Technical notes
+- Present  → emerald
+- Late     → amber
+- Absent   → rose
+- Excused  → sky
 
-- File: `src/pages/AttendancePage.tsx` — add `hasAnyData = records.length > 0` derived from `useParentAttendance`, branch the chart/summary/breakdown render on it.
-- Hook `useParentAttendance` already exposes `records` and `loading` — no hook changes required.
-- Optionally: in dev, surface the existing `DebugPanel` toggle hint so future "blank" reports can be diagnosed by enabling `localStorage.dev_debug = '1'`.
+`SwipeableNotification` gets one new optional prop `statusTag?: { label: string; className: string }` rendered inline after the title, before the unread dot.
+
+### 4. Cleaner attendance message
+Trim the status word from the displayed message (since it now lives in the pill) so the card reads e.g. "KARTI SAI A/L THANABALAN — 16 May 2026" instead of "…is Excused on …". Purely a display-side transformation in `renderItem`; the DB row is untouched.
 
 ## Out of scope
 
-- Seeding mock attendance for these three students (let me know if you want that — it's a one-line SQL insert).
-- Changing teacher attendance marking flow.
+- No DB schema, trigger, or RLS changes (the attendance trigger already fires for all four statuses from the previous migration).
+- No changes to the synthetic event/CCA digest cards beyond keeping them visually consistent with the new X button styling already present there.
+- No new notification types.
+
+## Files touched
+
+- `src/hooks/useNotifications.ts` — sort block only
+- `src/components/SwipeableNotification.tsx` — add X button + optional `statusTag` prop
+- `src/components/NotificationsDrawer.tsx` — derive status tag, trim message, pass new prop

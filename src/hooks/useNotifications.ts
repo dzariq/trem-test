@@ -355,8 +355,10 @@ export function useNotifications() {
       }
       
       allNotifications.sort((a, b) => {
-        if (a.event_date && !b.event_date) return -1;
-        if (!a.event_date && b.event_date) return 1;
+        // Real DB notifications (no event_date) come first, newest first.
+        // Calendar/CCA synthetic items (with event_date) follow, soonest first.
+        if (!a.event_date && b.event_date) return -1;
+        if (a.event_date && !b.event_date) return 1;
         if (a.event_date && b.event_date) {
           return new Date(a.event_date).getTime() - new Date(b.event_date).getTime();
         }
