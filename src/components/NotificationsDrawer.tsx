@@ -425,7 +425,7 @@ export function NotificationsDrawer({ open, onOpenChange }: NotificationsDrawerP
       if (dateMatch) {
         built.push({
           label: dateMatch[1],
-          className: "bg-slate-100 text-slate-700 border-slate-200",
+          className: "bg-white text-slate-800 border-slate-300 shadow-sm",
         });
       }
       if (statusMatch) {
