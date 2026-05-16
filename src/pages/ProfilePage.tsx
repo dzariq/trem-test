@@ -926,7 +926,22 @@ export default function ProfilePage() {
                   <BookOpen className="h-4 w-4 text-muted-foreground" />
                   <span className="font-medium text-foreground">CCA Clubs & Activities</span>
                 </div>
-                {selectedStudent.ccaActivities && selectedStudent.ccaActivities.length > 0 ? (
+                {selectedStudentEnrollmentsLoading ? (
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground py-2">
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    <span>Loading clubs...</span>
+                  </div>
+                ) : selectedStudentEnrollments.length > 0 ? (
+                  <div className="space-y-3">
+                    {selectedStudentEnrollments.map((activity) => (
+                      <CcaActivityCard
+                        key={activity.enrollmentId}
+                        activity={activity}
+                        variant="enrolled"
+                      />
+                    ))}
+                  </div>
+                ) : selectedStudent.ccaActivities && selectedStudent.ccaActivities.length > 0 ? (
                   <div className="flex flex-wrap gap-2">
                     {selectedStudent.ccaActivities.map((cca, idx) => (
                       <Badge key={idx} variant="secondary" className="text-sm">
