@@ -33,6 +33,7 @@ import { useState, useMemo, useEffect } from "react";
 
 // Format a date relative to today, e.g. "today", "in 3 days", "2 days ago".
 function formatRelativeDays(date: Date): string {
+  if (!(date instanceof Date) || isNaN(date.getTime())) return "";
   const now = new Date();
   const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
   const d = new Date(date.getFullYear(), date.getMonth(), date.getDate());
@@ -48,7 +49,8 @@ function formatRelativeDays(date: Date): string {
 function parseSyntheticAnchorDate(id: string): Date | null {
   const m = id.match(/(\d{4})-(\d{2})-(\d{2})/);
   if (!m) return null;
-  return new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3]));
+  const d = new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3]));
+  return isNaN(d.getTime()) ? null : d;
 }
 
 // Parse the attendance date out of a notification message ("... on 14 MAY 2026").
