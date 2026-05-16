@@ -726,26 +726,27 @@ export default function AttendancePage() {
 
             {/* Remarks */}
             <div className="space-y-2">
-              {selectedDay.reason && (
-                <p className="text-sm text-foreground break-words">{selectedDay.reason}</p>
-              )}
+              <p className="text-sm text-muted-foreground italic">
+                {selectedDay.status === 'present'
+                  ? "Your child arrived on time today. Great job! 🎉"
+                  : selectedDay.status === 'absent'
+                  ? "Your child was absent today. Please ensure to inform the school for any absences."
+                  : selectedDay.status === 'late'
+                  ? "Your child arrived late today. Please try to ensure punctuality going forward."
+                  : selectedDay.status === 'excused'
+                  ? "Your child's absence has been excused for this day."
+                  : "No additional remarks for this day."}
+              </p>
 
               {selectedDay.remarks && (
-                <p className="text-sm text-foreground leading-relaxed break-words">{selectedDay.remarks}</p>
-              )}
-
-              {!selectedDay.reason && !selectedDay.remarks && (
-                <p className="text-sm text-muted-foreground italic">
-                  {selectedDay.status === 'present'
-                    ? "Your child arrived on time today. Great job! 🎉"
-                    : selectedDay.status === 'absent'
-                    ? "Your child was absent today. Please ensure to inform the school for any absences."
-                    : selectedDay.status === 'late'
-                    ? "Your child arrived late today. Please try to ensure punctuality going forward."
-                    : selectedDay.status === 'excused'
-                    ? "Your child's absence has been excused for this day."
-                    : "No additional remarks for this day."}
-                </p>
+                <div className="pt-2 border-t border-border/50">
+                  <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-1">
+                    Teacher's Remark
+                  </p>
+                  <p className="text-sm text-foreground leading-relaxed break-words">
+                    {selectedDay.remarks}
+                  </p>
+                </div>
               )}
             </div>
           </div>
