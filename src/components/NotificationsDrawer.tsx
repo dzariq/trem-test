@@ -299,9 +299,16 @@ export function NotificationsDrawer({ open, onOpenChange }: NotificationsDrawerP
     return items;
   }, [notifications, dismissedSynthetic]);
 
-  const syntheticItems = allSyntheticItems.filter((it) =>
-    filter === "unread" ? !readSynthetic[it.id] : !!readSynthetic[it.id]
-  );
+  const syntheticItems = allSyntheticItems
+    .filter((it) =>
+      filter === "unread" ? !readSynthetic[it.id] : !!readSynthetic[it.id]
+    )
+    .slice()
+    .sort((a, b) => {
+      const da = parseSyntheticAnchorDate(a.id)?.getTime() ?? 0;
+      const db = parseSyntheticAnchorDate(b.id)?.getTime() ?? 0;
+      return db - da;
+    });
 
   const unreadSyntheticCount = allSyntheticItems.filter((it) => !readSynthetic[it.id]).length;
   const readSyntheticCount = allSyntheticItems.filter((it) => !!readSynthetic[it.id]).length;
