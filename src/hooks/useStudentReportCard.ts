@@ -480,27 +480,10 @@ export function useStudentReportCard(
       return Object.values(ratingMap).filter((item) => item.grade !== "N/A");
     }
 
-    // Fallback: derive behavior from student_grades columns (attitude_marks, homework_marks)
-    if (data.grades.length > 0) {
-      const avgAttitude = Math.round(
-        data.grades.reduce((sum, g) => sum + g.attitudeMarks, 0) / data.grades.length
-      );
-      const avgHomework = Math.round(
-        data.grades.reduce((sum, g) => sum + g.homeworkMarks, 0) / data.grades.length
-      );
-
-      const items: { category: string; grade: string }[] = [];
-      
-      if (avgAttitude > 0) {
-        items.push({ category: "Initiative / Attitude", grade: getBehaviorGrade(avgAttitude) });
-      }
-      if (avgHomework > 0) {
-        items.push({ category: "Homework Submission", grade: getBehaviorGrade(avgHomework) });
-      }
-
-      return items;
-    }
-
+    // No behavioral assessment recorded yet for this period.
+    // We intentionally do NOT derive behavior grades from attitude/homework
+    // marks — those low marks (often 0 placeholders) would otherwise be
+    // shown as "E", which misrepresents un-entered data.
     return [];
   }, [data.behavior, data.grades]);
 

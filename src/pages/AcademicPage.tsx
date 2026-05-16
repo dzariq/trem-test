@@ -1844,9 +1844,14 @@ export default function AcademicPage() {
 
                 {/* Empty State */}
                 {!reportCardLoading && realBehaviorItems.length === 0 && (
-                  <div className="text-center py-12">
+                  <div className="text-center py-12 px-6">
                     <Sparkles className="h-12 w-12 text-muted-foreground/50 mx-auto mb-3" />
-                    <p className="text-sm text-muted-foreground">No behavior assessment available for this period.</p>
+                    <p className="text-sm font-medium text-foreground mb-1">
+                      Behaviour data not keyed in yet
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      The teacher hasn't recorded behaviour ratings for this period. Please check back later.
+                    </p>
                   </div>
                 )}
 
