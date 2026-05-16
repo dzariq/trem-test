@@ -457,15 +457,9 @@ export function NotificationsDrawer({ open, onOpenChange }: NotificationsDrawerP
   const otherNotifications = filteredNotifications
     .filter((n) => !n.event_date)
     .slice()
-    .sort((a, b) => {
-      const ta =
-        (a.type === "attendance" && parseAttendanceDate(a.message)?.getTime()) ||
-        new Date(a.created_at).getTime();
-      const tb =
-        (b.type === "attendance" && parseAttendanceDate(b.message)?.getTime()) ||
-        new Date(b.created_at).getTime();
-      return tb - ta;
-    });
+    .sort(
+      (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
+    );
 
   const renderItem = (notification: typeof filteredNotifications[number]) => {
     const Icon = getTypeIcon(notification.type);
@@ -591,10 +585,7 @@ export function NotificationsDrawer({ open, onOpenChange }: NotificationsDrawerP
                 })),
                 ...otherNotifications.map((item) => ({
                   kind: "other" as const,
-                  ts:
-                    (item.type === "attendance" &&
-                      parseAttendanceDate(item.message)?.getTime()) ||
-                    new Date(item.created_at).getTime(),
+                  ts: new Date(item.created_at).getTime(),
                   item,
                 })),
               ].sort((a, b) => b.ts - a.ts);
