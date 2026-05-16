@@ -1689,7 +1689,11 @@ export default function AcademicPage() {
                              {/* Expanded Comment Box - Full Width */}
                              {expandedInRow && (
                                <div className="animate-fade-in">
-                                 <div className="rounded-xl p-3 relative mt-1 bg-amber-50/70 dark:bg-amber-950/20 border border-amber-200 transition-colors">
+                                 <div className={`rounded-xl p-3 relative mt-1 border transition-colors ${
+                                   expandedSection === "comment"
+                                     ? "bg-primary/5 border-primary/20"
+                                     : "bg-amber-50/70 dark:bg-amber-950/20 border-amber-200"
+                                 }`}>
                                    {(() => {
                                      const hasClassRecommendation = expandedInRow.classStudyRecommendation &&
                                        expandedInRow.classStudyRecommendation !== "-" &&
@@ -1700,13 +1704,17 @@ export default function AcademicPage() {
                                      return (
                                        <>
                                          {/* Primary tab switcher: Comment / Study Tips */}
-                                         <div className="grid grid-cols-2 gap-1 p-1 rounded-lg bg-amber-100/70 dark:bg-amber-950/40 mb-3">
+                                         <div className={`grid grid-cols-2 gap-1 p-1 rounded-lg mb-3 transition-colors ${
+                                           expandedSection === "comment"
+                                             ? "bg-primary/10"
+                                             : "bg-amber-100/70 dark:bg-amber-950/40"
+                                         }`}>
                                            <button
                                              onClick={(e) => { e.stopPropagation(); setExpandedSection("comment"); }}
                                              className={`flex items-center justify-center gap-1.5 h-8 rounded-md text-xs font-medium transition-colors ${
                                                expandedSection === "comment"
-                                                 ? "bg-amber-500 text-white shadow-sm"
-                                                 : "text-amber-900/70 dark:text-amber-100/70 hover:bg-amber-200/50"
+                                                 ? "bg-primary text-primary-foreground shadow-sm"
+                                                 : "text-muted-foreground hover:bg-accent/60"
                                              }`}
                                            >
                                              <MessageSquare className="h-3.5 w-3.5" />
@@ -1717,7 +1725,9 @@ export default function AcademicPage() {
                                              className={`flex items-center justify-center gap-1.5 h-8 rounded-md text-xs font-medium transition-colors ${
                                                expandedSection === "tips"
                                                  ? "bg-amber-500 text-white shadow-sm"
-                                                 : "text-amber-900/70 dark:text-amber-100/70 hover:bg-amber-200/50"
+                                                 : expandedSection === "comment"
+                                                   ? "text-muted-foreground hover:bg-accent/60"
+                                                   : "text-amber-900/70 dark:text-amber-100/70 hover:bg-amber-200/50"
                                              }`}
                                            >
                                              <Lightbulb className="h-3.5 w-3.5" />
@@ -1727,29 +1737,29 @@ export default function AcademicPage() {
 
                                          {/* Comment Tab Content */}
                                          {expandedSection === "comment" && (
-                                           <div className="rounded-lg bg-white/70 dark:bg-amber-950/20 border border-amber-200/60 p-3">
-                                             <p className="text-sm text-amber-950 dark:text-amber-50 leading-relaxed">
+                                           <div className="rounded-lg bg-white/70 dark:bg-background/40 border border-primary/20 p-3">
+                                             <p className="text-sm text-foreground leading-relaxed">
                                                {expandedInRow.teacherComment || "No comment available for this subject."}
                                              </p>
                                              {canViewBreakdown && (
-                                               <div className="mt-3 pt-3 border-t border-amber-200/60">
-                                                 <p className="text-xs font-medium text-amber-700 mb-2">Score Breakdown</p>
+                                               <div className="mt-3 pt-3 border-t border-primary/20">
+                                                 <p className="text-xs font-medium text-muted-foreground mb-2">Score Breakdown</p>
                                                  <div className="grid grid-cols-4 gap-2">
-                                                   <div className="text-center p-2 bg-amber-100/60 rounded-md">
-                                                     <p className="text-xs text-amber-700">Quiz</p>
-                                                     <p className="text-sm font-semibold text-amber-950">{expandedInRow.quizMarks}</p>
+                                                   <div className="text-center p-2 bg-muted/50 rounded-md">
+                                                     <p className="text-xs text-muted-foreground">Quiz</p>
+                                                     <p className="text-sm font-semibold">{expandedInRow.quizMarks}</p>
                                                    </div>
-                                                   <div className="text-center p-2 bg-amber-100/60 rounded-md">
-                                                     <p className="text-xs text-amber-700">HW</p>
-                                                     <p className="text-sm font-semibold text-amber-950">{expandedInRow.homeworkMarks}</p>
+                                                   <div className="text-center p-2 bg-muted/50 rounded-md">
+                                                     <p className="text-xs text-muted-foreground">HW</p>
+                                                     <p className="text-sm font-semibold">{expandedInRow.homeworkMarks}</p>
                                                    </div>
-                                                   <div className="text-center p-2 bg-amber-100/60 rounded-md">
-                                                     <p className="text-xs text-amber-700">Exam</p>
-                                                     <p className="text-sm font-semibold text-amber-950">{expandedInRow.examMarks}</p>
+                                                   <div className="text-center p-2 bg-muted/50 rounded-md">
+                                                     <p className="text-xs text-muted-foreground">Exam</p>
+                                                     <p className="text-sm font-semibold">{expandedInRow.examMarks}</p>
                                                    </div>
-                                                   <div className="text-center p-2 bg-amber-100/60 rounded-md">
-                                                     <p className="text-xs text-amber-700">Att</p>
-                                                     <p className="text-sm font-semibold text-amber-950">{expandedInRow.attitudeMarks}</p>
+                                                   <div className="text-center p-2 bg-muted/50 rounded-md">
+                                                     <p className="text-xs text-muted-foreground">Att</p>
+                                                     <p className="text-sm font-semibold">{expandedInRow.attitudeMarks}</p>
                                                    </div>
                                                  </div>
                                                </div>
