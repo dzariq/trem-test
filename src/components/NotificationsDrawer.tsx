@@ -437,8 +437,20 @@ export function NotificationsDrawer({ open, onOpenChange }: NotificationsDrawerP
   };
 
   // Only show non-event notifications individually; event-derived items are
-  // surfaced by the daily/weekly digests above.
-  const otherNotifications = filteredNotifications.filter((n) => !n.event_date);
+  // surfaced by the daily/weekly digests above. Sort so the latest is on top:
+  // for attendance items use the parsed attendance date, otherwise created_at.
+  const otherNotifications = filteredNotifications
+    .filter((n) => !n.event_date)
+    .slice()
+    .sort((a, b) => {
+      const ta =
+        (a.type === "attendance" && parseAttendanceDate(a.message)?.getTime()) ||
+        new Date(a.created_at).getTime();
+      const tb =
+        (b.type === "attendance" && parseAttendanceDate(b.message)?.getTime()) ||
+        new Date(b.created_at).getTime();
+      return tb - ta;
+    });
 
   const renderItem = (notification: typeof filteredNotifications[number]) => {
     const Icon = getTypeIcon(notification.type);
