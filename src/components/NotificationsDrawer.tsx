@@ -357,6 +357,8 @@ export function NotificationsDrawer({ open, onOpenChange }: NotificationsDrawerP
   const renderSynthetic = (item: { id: string; title: string; message: string; type: string }) => {
     const Icon = getTypeIcon(item.type);
     const isRead = !!readSynthetic[item.id];
+    const anchorDate = parseSyntheticAnchorDate(item.id);
+    const relativeLabel = anchorDate ? formatRelativeDays(anchorDate) : null;
     // Parse message lines into structured rows: [category] title
     // Supports daily ("• [exam] Title") and weekly ("Wed, May 13\n  • [event] Title") formats.
     const emojiRe = /^[\p{Extended_Pictographic}\p{Emoji_Presentation}\uFE0F\u200D\s]+/u;
@@ -400,6 +402,11 @@ export function NotificationsDrawer({ open, onOpenChange }: NotificationsDrawerP
               {item.title}
             </p>
           </div>
+          {relativeLabel && (
+            <p className="text-[10px] text-muted-foreground/70 mt-0.5">
+              {relativeLabel}
+            </p>
+          )}
           <div className="mt-2 space-y-1.5">
             {rows.map((r, idx) =>
               r.kind === "day" ? (
