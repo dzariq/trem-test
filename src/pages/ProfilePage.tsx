@@ -48,7 +48,10 @@ import {
   School,
   GraduationCap,
   Check,
-  X
+  X,
+  Plane,
+  BookMarked,
+  Globe
 } from "lucide-react";
 import {
   Select,
@@ -706,18 +709,11 @@ export default function ProfilePage() {
                 
                 <div className="flex flex-col items-center gap-2">
                   <h3 className="text-xl font-semibold text-foreground leading-tight text-center">{selectedStudent.name}</h3>
-                  {(selectedStudent.studentCode || selectedStudent.className) && (
+                  {selectedStudent.studentCode && (
                     <div className="flex flex-wrap items-center justify-center gap-1.5">
-                      {selectedStudent.studentCode && (
-                        <Badge variant="outline" className="text-sm font-medium px-2.5 py-0.5 bg-muted/40 border-border text-foreground/80">
-                          ID: {selectedStudent.studentCode}
-                        </Badge>
-                      )}
-                      {selectedStudent.className && (
-                        <Badge variant="outline" className="text-sm font-medium px-2.5 py-0.5 bg-muted/40 border-border text-foreground/80">
-                          {selectedStudent.className}
-                        </Badge>
-                      )}
+                      <Badge variant="outline" className="text-sm font-medium px-2.5 py-0.5 bg-muted/40 border-border text-foreground/80">
+                        ID: {selectedStudent.studentCode}
+                      </Badge>
                     </div>
                   )}
                   {selectedStudent.email && (
