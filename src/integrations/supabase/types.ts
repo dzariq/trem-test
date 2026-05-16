@@ -1740,6 +1740,119 @@ export type Database = {
           },
         ]
       }
+      cca_bus_template_assignments: {
+        Row: {
+          created_at: string
+          id: string
+          seat_label: string | null
+          student_id: string
+          template_bus_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          seat_label?: string | null
+          student_id: string
+          template_bus_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          seat_label?: string | null
+          student_id?: string
+          template_bus_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cca_bus_template_assignments_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cca_bus_template_assignments_template_bus_id_fkey"
+            columns: ["template_bus_id"]
+            isOneToOne: false
+            referencedRelation: "cca_bus_template_buses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      cca_bus_template_buses: {
+        Row: {
+          capacity: number | null
+          created_at: string
+          id: string
+          name: string
+          sort_order: number
+          teacher_pic_main: string | null
+          teacher_pic_sub: string | null
+          template_id: string
+          updated_at: string
+        }
+        Insert: {
+          capacity?: number | null
+          created_at?: string
+          id?: string
+          name: string
+          sort_order?: number
+          teacher_pic_main?: string | null
+          teacher_pic_sub?: string | null
+          template_id: string
+          updated_at?: string
+        }
+        Update: {
+          capacity?: number | null
+          created_at?: string
+          id?: string
+          name?: string
+          sort_order?: number
+          teacher_pic_main?: string | null
+          teacher_pic_sub?: string | null
+          template_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cca_bus_template_buses_template_id_fkey"
+            columns: ["template_id"]
+            isOneToOne: false
+            referencedRelation: "cca_bus_templates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      cca_bus_templates: {
+        Row: {
+          campus_code: string
+          created_at: string
+          created_by: string | null
+          description: string | null
+          id: string
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          campus_code: string
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          campus_code?: string
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          name?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       cca_club_year_eligibility: {
         Row: {
           club_id: string
@@ -1917,6 +2030,99 @@ export type Database = {
           },
         ]
       }
+      cca_session_bus_assignments: {
+        Row: {
+          created_at: string
+          id: string
+          seat_label: string | null
+          session_bus_id: string
+          student_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          seat_label?: string | null
+          session_bus_id: string
+          student_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          seat_label?: string | null
+          session_bus_id?: string
+          student_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cca_session_bus_assignments_session_bus_id_fkey"
+            columns: ["session_bus_id"]
+            isOneToOne: false
+            referencedRelation: "cca_session_buses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cca_session_bus_assignments_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      cca_session_buses: {
+        Row: {
+          capacity: number | null
+          created_at: string
+          id: string
+          name: string
+          session_id: string
+          sort_order: number
+          teacher_pic_main: string | null
+          teacher_pic_sub: string | null
+          template_bus_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          capacity?: number | null
+          created_at?: string
+          id?: string
+          name: string
+          session_id: string
+          sort_order?: number
+          teacher_pic_main?: string | null
+          teacher_pic_sub?: string | null
+          template_bus_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          capacity?: number | null
+          created_at?: string
+          id?: string
+          name?: string
+          session_id?: string
+          sort_order?: number
+          teacher_pic_main?: string | null
+          teacher_pic_sub?: string | null
+          template_bus_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cca_session_buses_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "cca_sessions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cca_session_buses_template_bus_id_fkey"
+            columns: ["template_bus_id"]
+            isOneToOne: false
+            referencedRelation: "cca_bus_template_buses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       cca_session_enrollments: {
         Row: {
           bus_id: string | null
@@ -2039,6 +2245,7 @@ export type Database = {
           requirements: string | null
           session_date: string
           session_type: string | null
+          sport_activity_ids: string[]
           sport_main: string | null
           sport_sub: string | null
           start_time: string | null
@@ -2062,6 +2269,7 @@ export type Database = {
           requirements?: string | null
           session_date: string
           session_type?: string | null
+          sport_activity_ids?: string[]
           sport_main?: string | null
           sport_sub?: string | null
           start_time?: string | null
@@ -2085,6 +2293,7 @@ export type Database = {
           requirements?: string | null
           session_date?: string
           session_type?: string | null
+          sport_activity_ids?: string[]
           sport_main?: string | null
           sport_sub?: string | null
           start_time?: string | null
@@ -5505,6 +5714,7 @@ export type Database = {
           capacity: number | null
           created_at: string
           id: string
+          image_url: string | null
           is_active: boolean
           location_notes: string | null
           name: string
@@ -5519,6 +5729,7 @@ export type Database = {
           capacity?: number | null
           created_at?: string
           id?: string
+          image_url?: string | null
           is_active?: boolean
           location_notes?: string | null
           name: string
@@ -5533,6 +5744,7 @@ export type Database = {
           capacity?: number | null
           created_at?: string
           id?: string
+          image_url?: string | null
           is_active?: boolean
           location_notes?: string | null
           name?: string
