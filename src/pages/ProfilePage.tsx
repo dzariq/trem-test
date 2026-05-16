@@ -11,6 +11,9 @@ import { Separator } from "@/components/ui/separator";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
+import { CcaActivityCard } from "@/components/cca/CcaActivityCard";
+import { useStudentCcaEnrollments } from "@/hooks/useStudentCcaEnrollments";
+import { Loader2 } from "lucide-react";
 import {
   Dialog,
   DialogContent,
