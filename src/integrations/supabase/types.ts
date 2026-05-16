@@ -2345,9 +2345,33 @@ export type Database = {
         ]
       }
       cca_session_sport_pics: {
-        Row: {}
-        Insert: {}
-        Update: {}
+        Row: {
+          activity_id: string
+          created_at: string
+          id: string
+          role: string
+          session_id: string
+          teacher_user_id: string
+          updated_at: string
+        }
+        Insert: {
+          activity_id: string
+          created_at?: string
+          id?: string
+          role: string
+          session_id: string
+          teacher_user_id: string
+          updated_at?: string
+        }
+        Update: {
+          activity_id?: string
+          created_at?: string
+          id?: string
+          role?: string
+          session_id?: string
+          teacher_user_id?: string
+          updated_at?: string
+        }
         Relationships: [
           {
             foreignKeyName: "cca_session_sport_pics_activity_id_fkey"
@@ -2364,12 +2388,6 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
-      }
-      cca_session_sports: {
-        Row: {}
-        Insert: {}
-        Update: {}
-        Relationships: []
       }
       cca_sessions: {
         Row: {
