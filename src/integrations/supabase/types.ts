@@ -2290,6 +2290,51 @@ export type Database = {
           },
         ]
       }
+      cca_session_sport_pics: {
+        Row: {
+          activity_id: string
+          created_at: string
+          id: string
+          role: string
+          session_id: string
+          teacher_user_id: string
+          updated_at: string
+        }
+        Insert: {
+          activity_id: string
+          created_at?: string
+          id?: string
+          role: string
+          session_id: string
+          teacher_user_id: string
+          updated_at?: string
+        }
+        Update: {
+          activity_id?: string
+          created_at?: string
+          id?: string
+          role?: string
+          session_id?: string
+          teacher_user_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cca_session_sport_pics_activity_id_fkey"
+            columns: ["activity_id"]
+            isOneToOne: false
+            referencedRelation: "cca_activities"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cca_session_sport_pics_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "cca_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       cca_sessions: {
         Row: {
           activity_id: string
