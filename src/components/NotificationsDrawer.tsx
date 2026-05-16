@@ -409,26 +409,36 @@ export function NotificationsDrawer({ open, onOpenChange }: NotificationsDrawerP
     const Icon = getTypeIcon(notification.type);
     const hasLink = !!notification.link_to;
 
-    // Derive attendance status tag + clean message
-    let statusTag: { label: string; className: string } | undefined;
+    // Derive attendance tag row (date + status) + clean message
+    let tags: Array<{ label: string; className: string }> | undefined;
     let displayMessage = notification.message;
     if (notification.type === "attendance") {
-      const m = notification.message.match(/\b(present|absent|late|excused)\b/i);
-      if (m) {
-        const status = m[1].toLowerCase();
-        const palette: Record<string, string> = {
-          present: "bg-emerald-100 text-emerald-800 border-emerald-200",
-          late:    "bg-amber-100 text-amber-800 border-amber-200",
-          absent:  "bg-rose-100 text-rose-800 border-rose-200",
-          excused: "bg-sky-100 text-sky-800 border-sky-200",
-        };
-        statusTag = { label: status, className: palette[status] };
-        // Strip "is <status>" from the displayed message
-        displayMessage = notification.message
-          .replace(/\s*is\s+(present|absent|late|excused)\b/i, "")
-          .replace(/\s+/g, " ")
-          .trim();
+      const statusMatch = notification.message.match(/\b(present|absent|late|excused)\b/i);
+      const dateMatch = notification.message.match(/\bon\s+(\d{1,2}\s+[A-Za-z]+\s+\d{4})\b/);
+      const palette: Record<string, string> = {
+        present: "bg-emerald-100 text-emerald-800 border-emerald-200",
+        late:    "bg-amber-100 text-amber-800 border-amber-200",
+        absent:  "bg-rose-100 text-rose-800 border-rose-200",
+        excused: "bg-sky-100 text-sky-800 border-sky-200",
+      };
+      const built: Array<{ label: string; className: string }> = [];
+      if (dateMatch) {
+        built.push({
+          label: dateMatch[1],
+          className: "bg-slate-100 text-slate-700 border-slate-200",
+        });
       }
+      if (statusMatch) {
+        const status = statusMatch[1].toLowerCase();
+        built.push({ label: status, className: palette[status] });
+      }
+      if (built.length > 0) tags = built;
+      // Strip "is <status>" and "on <date>" from the displayed message
+      displayMessage = notification.message
+        .replace(/\s*is\s+(present|absent|late|excused)\b/i, "")
+        .replace(/\s*on\s+\d{1,2}\s+[A-Za-z]+\s+\d{4}\b/, "")
+        .replace(/\s+/g, " ")
+        .trim();
     }
 
     return (
@@ -444,7 +454,7 @@ export function NotificationsDrawer({ open, onOpenChange }: NotificationsDrawerP
         hasLink={hasLink}
         onClick={() => handleNotificationClick(notification)}
         onDelete={() => deleteNotification(notification.id)}
-        statusTag={statusTag}
+        tags={tags}
       />
     );
   };
