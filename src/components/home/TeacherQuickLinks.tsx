@@ -13,7 +13,7 @@ interface TeacherQuickLinksProps {
 
 const quickLinks = [
   { icon: Heart, label: "DNA", path: "/teacher/dna", bgColor: "bg-rose-100", iconColor: "text-rose-500", isHeart: true },
-  { icon: BookOpen, label: "Grade Entry", path: "/teacher/academic", bgColor: "bg-blue-100", iconColor: "text-blue-600" },
+  { icon: BookOpen, label: "Grades", path: "/teacher/academic", bgColor: "bg-blue-100", iconColor: "text-blue-600" },
   { icon: BookMarked, label: "Handbook", path: "/teacher/handbook", bgColor: "bg-purple-100", iconColor: "text-purple-600" },
   { icon: CalendarClock, label: "Timetable", path: "/teacher/timetable", bgColor: "bg-emerald-100", iconColor: "text-emerald-600", action: "timetable" },
 ];
@@ -44,16 +44,16 @@ export function TeacherQuickLinks({ onTimetableClick }: TeacherQuickLinksProps) 
               )}
             >
               <div className={cn(
-                "w-11 h-11 rounded-xl flex items-center justify-center",
+                "w-14 h-14 rounded-2xl flex items-center justify-center",
                 link.bgColor
               )}>
                 {link.isHeart ? (
-                  <link.icon className="h-6 w-6" fill="#ef4444" color="#ef4444" strokeWidth={2} />
+                  <link.icon className="h-7 w-7" fill="#ef4444" color="#ef4444" strokeWidth={2} />
                 ) : (
-                  <link.icon className={cn("h-6 w-6", link.iconColor)} strokeWidth={2} />
+                  <link.icon className={cn("h-7 w-7", link.iconColor)} strokeWidth={2} />
                 )}
               </div>
-              <span className="text-[9px] font-medium text-foreground text-center leading-tight mt-1.5 h-6 flex items-start justify-center">{link.label}</span>
+              <span className="text-xs font-medium text-foreground text-center leading-tight mt-2">{link.label}</span>
             </button>
           ))}
         </div>
