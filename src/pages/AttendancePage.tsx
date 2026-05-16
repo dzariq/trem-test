@@ -4,7 +4,7 @@ import { AppHeader } from "@/components/layout/AppHeader";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { ChevronLeft, ChevronRight, Check, X, Clock, CalendarOff, Bug } from "lucide-react";
+import { ChevronLeft, ChevronRight, Check, X, Clock, CalendarOff, Bug, Inbox } from "lucide-react";
 import schoolLogo from "@/assets/school-badge.png";
 import {
   BarChart,
@@ -368,6 +368,26 @@ export default function AttendancePage() {
 
   const isLoading = studentsLoading || attendanceLoading || (zoomLevel !== 12 && rollingLoading);
 
+  // Empty-state detection: no records returned for this student after loading completes
+  const hasAnyData = records.length > 0;
+  const selectedStudent = linkedStudents.find((s) => s.id === selectedStudentId);
+  const selectedStudentName = selectedStudent?.name?.split(" ")[0] ?? "your child";
+  const showEmptyState = !isLoading && !!selectedStudentId && !hasAnyData;
+
+  const EmptyStateBlock = ({ compact = false }: { compact?: boolean }) => (
+    <div className={`flex flex-col items-center justify-center text-center ${compact ? "py-6" : "py-10"} px-4`}>
+      <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center mb-3">
+        <Inbox className="h-6 w-6 text-muted-foreground" />
+      </div>
+      <p className="text-sm font-semibold text-foreground">No attendance recorded yet</p>
+      <p className="text-xs text-muted-foreground mt-1 max-w-xs">
+        {selectedStudent
+          ? `${selectedStudentName}'s teacher hasn't marked any attendance yet. Records will appear here once class attendance starts being taken.`
+          : "Records will appear here once class attendance starts being taken."}
+      </p>
+    </div>
+  );
+
   return (
     <AppLayout>
       {/* DEV Debug Panel - only shown in dev mode with explicit flag */}
@@ -453,6 +473,10 @@ export default function AttendancePage() {
                 <div className="h-full flex items-center justify-center">
                   <p className="text-muted-foreground text-sm">Loading attendance data...</p>
                 </div>
+              ) : showEmptyState ? (
+                <div className="h-full flex items-center justify-center">
+                  <EmptyStateBlock />
+                </div>
               ) : (
                 <div 
                   className="transition-all duration-300 ease-out"
@@ -534,6 +558,9 @@ export default function AttendancePage() {
             </div>
 
             {/* Summary Stats */}
+            {showEmptyState ? (
+              <EmptyStateBlock compact />
+            ) : (
             <div className="grid grid-cols-4 gap-3">
               <div className="flex flex-col items-center justify-center p-3 rounded-xl bg-emerald-50 dark:bg-emerald-950/30 min-h-[72px]">
                 <p className="text-2xl font-bold leading-none" style={{ color: "hsl(160, 84%, 39%)" }}>{monthlySummary.present}</p>
@@ -552,6 +579,7 @@ export default function AttendancePage() {
                 <p className="text-xs text-muted-foreground mt-1.5">Excused</p>
               </div>
             </div>
+            )}
           </CardContent>
         </Card>
       </section>
@@ -598,9 +626,17 @@ export default function AttendancePage() {
             )}
 
             {!isLoading && weeklyBreakdown.length === 0 && (
-              <div className="py-8 text-center">
-                <p className="text-muted-foreground text-sm">No attendance records for this month.</p>
-              </div>
+              showEmptyState ? (
+                <EmptyStateBlock compact />
+              ) : (
+                <div className="py-8 flex flex-col items-center justify-center text-center">
+                  <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center mb-2">
+                    <CalendarOff className="h-5 w-5 text-muted-foreground" />
+                  </div>
+                  <p className="text-sm font-medium text-foreground">No records for {selectedMonth}</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">Try a different month or status filter.</p>
+                </div>
+              )
             )}
 
             {/* Weekly Groups */}
