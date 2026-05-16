@@ -462,7 +462,11 @@ export function NotificationsDrawer({ open, onOpenChange }: NotificationsDrawerP
     .filter((n) => !n.event_date)
     .slice()
     .sort(
-      (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
+      (a, b) => {
+        const ta = a.created_at ? new Date(a.created_at).getTime() : 0;
+        const tb = b.created_at ? new Date(b.created_at).getTime() : 0;
+        return (isNaN(tb) ? 0 : tb) - (isNaN(ta) ? 0 : ta);
+      },
     );
 
   const renderItem = (notification: typeof filteredNotifications[number]) => {
@@ -589,7 +593,11 @@ export function NotificationsDrawer({ open, onOpenChange }: NotificationsDrawerP
                 })),
                 ...otherNotifications.map((item) => ({
                   kind: "other" as const,
-                  ts: new Date(item.created_at).getTime(),
+                  ts: (() => {
+                    if (!item.created_at) return 0;
+                    const t = new Date(item.created_at).getTime();
+                    return isNaN(t) ? 0 : t;
+                  })(),
                   item,
                 })),
               ].sort((a, b) => b.ts - a.ts);
