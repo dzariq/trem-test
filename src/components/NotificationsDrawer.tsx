@@ -571,8 +571,29 @@ export function NotificationsDrawer({ open, onOpenChange }: NotificationsDrawerP
           </div>
         ) : (
           <div className="space-y-2 overflow-x-hidden pb-[calc(6rem+env(safe-area-inset-bottom))]">
-            {syntheticItems.map(renderSynthetic)}
-            {otherNotifications.map(renderItem)}
+            {(() => {
+              type Entry =
+                | { kind: "synthetic"; ts: number; item: typeof syntheticItems[number] }
+                | { kind: "other"; ts: number; item: typeof otherNotifications[number] };
+              const entries: Entry[] = [
+                ...syntheticItems.map((item) => ({
+                  kind: "synthetic" as const,
+                  ts: parseSyntheticAnchorDate(item.id)?.getTime() ?? 0,
+                  item,
+                })),
+                ...otherNotifications.map((item) => ({
+                  kind: "other" as const,
+                  ts:
+                    (item.type === "attendance" &&
+                      parseAttendanceDate(item.message)?.getTime()) ||
+                    new Date(item.created_at).getTime(),
+                  item,
+                })),
+              ].sort((a, b) => b.ts - a.ts);
+              return entries.map((e) =>
+                e.kind === "synthetic" ? renderSynthetic(e.item) : renderItem(e.item),
+              );
+            })()}
 
             {syntheticItems.length === 0 && otherNotifications.length === 0 && (
               <div className="text-center py-12">
