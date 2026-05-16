@@ -26,7 +26,8 @@ import {
   Palmtree,
   PenLine,
   X,
-  Sparkles
+  Sparkles,
+  Clock
 } from "lucide-react";
 import { useState, useMemo, useEffect } from "react";
 
@@ -410,11 +411,6 @@ export function NotificationsDrawer({ open, onOpenChange }: NotificationsDrawerP
               {item.title}
             </p>
           </div>
-          {relativeLabel && (
-            <p className="text-[10px] text-muted-foreground/70 mt-0.5">
-              {relativeLabel}
-            </p>
-          )}
           <div className="mt-2 space-y-1.5">
             {rows.map((r, idx) =>
               r.kind === "day" ? (
@@ -435,6 +431,12 @@ export function NotificationsDrawer({ open, onOpenChange }: NotificationsDrawerP
               ),
             )}
           </div>
+          {relativeLabel && (
+            <span className="text-[10px] text-muted-foreground/70 mt-2 flex items-center gap-1">
+              <Clock className="h-2.5 w-2.5" />
+              {relativeLabel}
+            </span>
+          )}
         </div>
         <button
           type="button"
