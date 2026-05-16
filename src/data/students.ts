@@ -22,6 +22,11 @@ export type LinkedStudent = {
   enrollmentDate?: string | null;
   graduationYear?: number | null;
   email?: string | null;
+  nationality?: string | null;
+  malaysianCitizen?: boolean | null;
+  passportNumber?: string | null;
+  passportExpiryDate?: string | null;
+  visaExpiryDate?: string | null;
 };
 
 const isMissingResource = (error: { message?: string } | null, keyword: string) => {
@@ -93,7 +98,7 @@ const listViaStudentGuardians = async (guardianUserId: string) => {
 
   const { data: students, error: studentsError } = await supabase
     .from("students")
-    .select("id, name, year_level, class, campus_id, campus_code, family_id, student_code, dob, enrollment_date, graduation_year, email")
+    .select("id, name, year_level, class, campus_id, campus_code, family_id, student_code, dob, enrollment_date, graduation_year, email, nationality, malaysian_citizen, passport_number, passport_expiry_date, visa_expiry_date")
     .in("id", studentIds as any[]);
 
   if (studentsError) {
@@ -180,6 +185,11 @@ const listViaStudentGuardians = async (guardianUserId: string) => {
         enrollmentDate: student.enrollment_date ?? null,
         graduationYear: student.graduation_year ?? null,
         email: student.email ?? null,
+        nationality: student.nationality ?? null,
+        malaysianCitizen: student.malaysian_citizen ?? null,
+        passportNumber: student.passport_number ?? null,
+        passportExpiryDate: student.passport_expiry_date ?? null,
+        visaExpiryDate: student.visa_expiry_date ?? null,
       } as LinkedStudent;
     })
     .filter((student): student is LinkedStudent => Boolean(student));
