@@ -480,6 +480,54 @@ export type Database = {
           },
         ]
       }
+      audit_log: {
+        Row: {
+          action: string
+          actor_label: string | null
+          after_data: Json | null
+          before_data: Json | null
+          changed_by: string | null
+          changed_by_role: string | null
+          changed_fields: string[] | null
+          context: Json | null
+          created_at: string
+          entity_id: string | null
+          entity_type: string
+          id: string
+          summary: string | null
+        }
+        Insert: {
+          action: string
+          actor_label?: string | null
+          after_data?: Json | null
+          before_data?: Json | null
+          changed_by?: string | null
+          changed_by_role?: string | null
+          changed_fields?: string[] | null
+          context?: Json | null
+          created_at?: string
+          entity_id?: string | null
+          entity_type: string
+          id?: string
+          summary?: string | null
+        }
+        Update: {
+          action?: string
+          actor_label?: string | null
+          after_data?: Json | null
+          before_data?: Json | null
+          changed_by?: string | null
+          changed_by_role?: string | null
+          changed_fields?: string[] | null
+          context?: Json | null
+          created_at?: string
+          entity_id?: string | null
+          entity_type?: string
+          id?: string
+          summary?: string | null
+        }
+        Relationships: []
+      }
       behavioral_assessments: {
         Row: {
           academic_period_id: string
@@ -1615,48 +1663,6 @@ export type Database = {
           name?: string
           sort_order?: number
           updated_at?: string
-        }
-        Relationships: []
-      }
-      cca_audit_log: {
-        Row: {
-          action: string
-          activity_id: string | null
-          after_data: Json | null
-          before_data: Json | null
-          changed_by: string | null
-          created_at: string
-          entity_type: string
-          id: string
-          student_id: string | null
-          summary: string | null
-          teacher_user_id: string | null
-        }
-        Insert: {
-          action: string
-          activity_id?: string | null
-          after_data?: Json | null
-          before_data?: Json | null
-          changed_by?: string | null
-          created_at?: string
-          entity_type: string
-          id?: string
-          student_id?: string | null
-          summary?: string | null
-          teacher_user_id?: string | null
-        }
-        Update: {
-          action?: string
-          activity_id?: string | null
-          after_data?: Json | null
-          before_data?: Json | null
-          changed_by?: string | null
-          created_at?: string
-          entity_type?: string
-          id?: string
-          student_id?: string | null
-          summary?: string | null
-          teacher_user_id?: string | null
         }
         Relationships: []
       }
@@ -5885,6 +5891,13 @@ export type Database = {
       }
     }
     Functions: {
+      _audit_actor_info: {
+        Args: { p_user_id: string }
+        Returns: {
+          label: string
+          role: string
+        }[]
+      }
       activate_own_account: { Args: never; Returns: undefined }
       approve_venue_booking: {
         Args: { _booking_id: string; _decision: string; _notes?: string }
@@ -5932,6 +5945,7 @@ export type Database = {
       can_user_access_all_campuses: { Args: never; Returns: boolean }
       can_write_grades: { Args: { p_period_id: string }; Returns: boolean }
       check_phone_exists: { Args: { phone_number: string }; Returns: Json }
+      cleanup_audit_log: { Args: never; Returns: undefined }
       create_weekly_calendar_digest: {
         Args: { p_week_start?: string }
         Returns: number

@@ -508,9 +508,6 @@ export function NotificationsDrawer({ open, onOpenChange }: NotificationsDrawerP
             </Button>
           )}
         </div>
-        <p className="text-xs text-muted-foreground text-center">
-          Tap to open • Tap × to dismiss
-        </p>
       </div>
 
       <div className="flex-1 px-4 overflow-x-hidden">
