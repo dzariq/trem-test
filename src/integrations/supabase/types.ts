@@ -1660,15 +1660,55 @@ export type Database = {
         }
         Relationships: []
       }
+      cca_budget_categories: {
+        Row: {
+          activity_id: string | null
+          created_at: string
+          created_by: string | null
+          id: string
+          name: string
+          scope: string
+          updated_at: string
+        }
+        Insert: {
+          activity_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          name: string
+          scope?: string
+          updated_at?: string
+        }
+        Update: {
+          activity_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          name?: string
+          scope?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cca_budget_categories_activity_id_fkey"
+            columns: ["activity_id"]
+            isOneToOne: false
+            referencedRelation: "cca_activities"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       cca_budget_entries: {
         Row: {
           activity_id: string
           amount: number
+          category_id: string | null
           created_at: string
           created_by: string | null
           entry_date: string
           entry_type: string
           id: string
+          image_urls: string[]
           label: string
           notes: string | null
           receipt_url: string | null
@@ -1677,11 +1717,13 @@ export type Database = {
         Insert: {
           activity_id: string
           amount: number
+          category_id?: string | null
           created_at?: string
           created_by?: string | null
           entry_date?: string
-          entry_type: string
+          entry_type?: string
           id?: string
+          image_urls?: string[]
           label: string
           notes?: string | null
           receipt_url?: string | null
@@ -1690,11 +1732,13 @@ export type Database = {
         Update: {
           activity_id?: string
           amount?: number
+          category_id?: string | null
           created_at?: string
           created_by?: string | null
           entry_date?: string
           entry_type?: string
           id?: string
+          image_urls?: string[]
           label?: string
           notes?: string | null
           receipt_url?: string | null
@@ -1706,6 +1750,13 @@ export type Database = {
             columns: ["activity_id"]
             isOneToOne: false
             referencedRelation: "cca_activities"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cca_budget_entries_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "cca_budget_categories"
             referencedColumns: ["id"]
           },
         ]
