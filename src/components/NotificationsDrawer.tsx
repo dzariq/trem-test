@@ -30,6 +30,34 @@ import {
 } from "lucide-react";
 import { useState, useMemo, useEffect } from "react";
 
+// Format a date relative to today, e.g. "today", "in 3 days", "2 days ago".
+function formatRelativeDays(date: Date): string {
+  const now = new Date();
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const d = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+  const diff = Math.round((d.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+  if (diff === 0) return "Today";
+  if (diff === 1) return "Tomorrow";
+  if (diff === -1) return "Yesterday";
+  if (diff > 1) return `In ${diff} days`;
+  return `${Math.abs(diff)} days ago`;
+}
+
+// Parse the underlying anchor date from a synthetic digest id (week-/today-YYYY-MM-DD).
+function parseSyntheticAnchorDate(id: string): Date | null {
+  const m = id.match(/(\d{4})-(\d{2})-(\d{2})/);
+  if (!m) return null;
+  return new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3]));
+}
+
+// Parse the attendance date out of a notification message ("... on 14 MAY 2026").
+function parseAttendanceDate(message: string): Date | null {
+  const m = message.match(/\bon\s+(\d{1,2}\s+[A-Za-z]+\s+\d{4})\b/);
+  if (!m) return null;
+  const d = new Date(m[1]);
+  return isNaN(d.getTime()) ? null : d;
+}
+
 type NotificationType = 
   | "announcement" 
   | "event" 
