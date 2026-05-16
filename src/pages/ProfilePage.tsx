@@ -780,6 +780,89 @@ export default function ProfilePage() {
                 </>
               )}
 
+              {/* Visa & Passport - foreign students only */}
+              {selectedStudent.malaysianCitizen === false && (
+                <>
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between">
+                      <span className="font-medium text-foreground">Visa & Passport</span>
+                      {selectedStudent.nationality && (
+                        <Badge variant="outline" className="text-xs font-medium px-2 py-0.5 bg-muted/40 border-border text-foreground/80 gap-1">
+                          <Globe className="w-3 h-3" />
+                          {selectedStudent.nationality}
+                        </Badge>
+                      )}
+                    </div>
+                    {(() => {
+                      const today = new Date();
+                      today.setHours(0, 0, 0, 0);
+                      const formatDate = (d: string) =>
+                        new Date(d).toLocaleDateString("en-GB", {
+                          day: "2-digit",
+                          month: "short",
+                          year: "numeric",
+                        });
+                      const daysUntil = (d?: string | null) => {
+                        if (!d) return null;
+                        const target = new Date(d);
+                        target.setHours(0, 0, 0, 0);
+                        return Math.round((target.getTime() - today.getTime()) / 86400000);
+                      };
+                      const visaDays = daysUntil(selectedStudent.visaExpiryDate);
+                      const passportDays = daysUntil(selectedStudent.passportExpiryDate);
+                      const statusFor = (days: number | null) => {
+                        if (days === null) return null;
+                        if (days < 0) return { label: "Expired", className: "bg-destructive/15 text-destructive border-destructive/30" };
+                        if (days <= 90) return { label: `Expiring in ${days}d`, className: "bg-amber-500/15 text-amber-700 dark:text-amber-300 border-amber-500/30" };
+                        return { label: "Valid", className: "bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 border-emerald-500/30" };
+                      };
+                      const visaStatus = statusFor(visaDays);
+                      const passportStatus = statusFor(passportDays);
+                      return (
+                        <div className="grid grid-cols-1 gap-2">
+                          <div className="flex items-center gap-3 p-3 rounded-xl bg-gradient-to-br from-sky-50 to-indigo-50 dark:from-sky-950/40 dark:to-indigo-900/30 border border-sky-200/60 dark:border-sky-800/40">
+                            <div className="w-9 h-9 rounded-full bg-gradient-to-br from-sky-400 to-indigo-500 flex items-center justify-center shadow-md ring-2 ring-white/60 dark:ring-white/10 shrink-0">
+                              <Plane className="w-5 h-5 text-white" />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <div className="text-[11px] font-semibold uppercase tracking-wide text-sky-700 dark:text-sky-300">Visa Expiry</div>
+                              <div className="text-sm font-bold text-foreground">
+                                {selectedStudent.visaExpiryDate ? formatDate(selectedStudent.visaExpiryDate) : "—"}
+                              </div>
+                            </div>
+                            {visaStatus && (
+                              <Badge variant="outline" className={cn("text-[11px] font-medium px-2 py-0.5 border", visaStatus.className)}>
+                                {visaStatus.label}
+                              </Badge>
+                            )}
+                          </div>
+                          <div className="flex items-center gap-3 p-3 rounded-xl bg-gradient-to-br from-violet-50 to-fuchsia-50 dark:from-violet-950/40 dark:to-fuchsia-900/30 border border-violet-200/60 dark:border-violet-800/40">
+                            <div className="w-9 h-9 rounded-full bg-gradient-to-br from-violet-400 to-fuchsia-500 flex items-center justify-center shadow-md ring-2 ring-white/60 dark:ring-white/10 shrink-0">
+                              <BookMarked className="w-5 h-5 text-white" />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <div className="text-[11px] font-semibold uppercase tracking-wide text-violet-700 dark:text-violet-300">Passport Expiry</div>
+                              <div className="text-sm font-bold text-foreground">
+                                {selectedStudent.passportExpiryDate ? formatDate(selectedStudent.passportExpiryDate) : "—"}
+                              </div>
+                              {selectedStudent.passportNumber && (
+                                <div className="text-[11px] text-muted-foreground truncate">No. {selectedStudent.passportNumber}</div>
+                              )}
+                            </div>
+                            {passportStatus && (
+                              <Badge variant="outline" className={cn("text-[11px] font-medium px-2 py-0.5 border", passportStatus.className)}>
+                                {passportStatus.label}
+                              </Badge>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })()}
+                  </div>
+                  <Separator />
+                </>
+              )}
+
               {/* Student Options - Meal Plan, Sports House */}
               {(typeof selectedStudent.mealPlan === "boolean" || selectedStudent.sportsHouse) && (
                 <>
