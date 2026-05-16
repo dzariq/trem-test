@@ -24,7 +24,7 @@ const quickLinks = [
   { icon: HeadphonesIcon, label: "Support", path: "/parent/support", bgColor: "bg-blue-100", iconColor: "text-blue-600" },
   { icon: Award, label: "Awards", path: "/parent/awards", bgColor: "bg-purple-100", iconColor: "text-purple-600" },
   { icon: Dumbbell, label: "CCA", path: "/parent/calendar?tab=cca", bgColor: "bg-amber-100", iconColor: "text-amber-600" },
-  ...(FEATURES.gradeAnalysisParent ? [{ icon: BarChart3, label: "Grade Analysis", path: "/parent/academic?section=analysis", bgColor: "bg-rose-100", iconColor: "text-rose-600" }] : []),
+  ...(FEATURES.gradeAnalysisParent ? [{ icon: BarChart3, label: "Grades", path: "/parent/academic?section=analysis", bgColor: "bg-rose-100", iconColor: "text-rose-600" }] : []),
 ];
 
 export function QuickLinks() {
@@ -56,12 +56,12 @@ export function QuickLinks() {
                 )}
               >
                 <div className={cn(
-                  "w-11 h-11 rounded-xl flex items-center justify-center shrink-0",
+                  "w-14 h-14 rounded-2xl flex items-center justify-center shrink-0",
                   link.bgColor
                 )}>
-                  <link.icon className={cn("h-6 w-6", link.iconColor)} strokeWidth={2} />
+                  <link.icon className={cn("h-7 w-7", link.iconColor)} strokeWidth={2} />
                 </div>
-                <span className="text-[9px] font-medium text-foreground text-center leading-tight mt-1.5 h-6 flex items-start justify-center">{link.label}</span>
+                <span className="text-xs font-medium text-foreground text-center leading-tight mt-2">{link.label}</span>
               </button>
             ))}
           </div>
