@@ -704,20 +704,29 @@ export default function ProfilePage() {
                   </AvatarFallback>
                 </Avatar>
                 
-                <div className="text-center space-y-1.5">
-                  <h3 className="text-xl font-semibold text-foreground leading-tight">{selectedStudent.name}</h3>
+                <div className="flex flex-col items-center gap-2">
+                  <h3 className="text-xl font-semibold text-foreground leading-tight text-center">{selectedStudent.name}</h3>
                   {(selectedStudent.studentCode || selectedStudent.className || selectedStudent.grade) && (
-                    <p className="text-base font-medium text-foreground/80">
-                      {[
-                        selectedStudent.studentCode ? `ID: ${selectedStudent.studentCode}` : null,
-                        [selectedStudent.className, selectedStudent.grade].filter(Boolean).join(" · "),
-                      ]
-                        .filter(Boolean)
-                        .join("  •  ")}
-                    </p>
+                    <div className="flex flex-wrap items-center justify-center gap-1.5">
+                      {selectedStudent.studentCode && (
+                        <Badge variant="secondary" className="text-sm font-medium px-2.5 py-0.5">
+                          ID: {selectedStudent.studentCode}
+                        </Badge>
+                      )}
+                      {selectedStudent.className && (
+                        <Badge variant="secondary" className="text-sm font-medium px-2.5 py-0.5">
+                          {selectedStudent.className}
+                        </Badge>
+                      )}
+                      {selectedStudent.grade && (
+                        <Badge variant="secondary" className="text-sm font-medium px-2.5 py-0.5">
+                          {selectedStudent.grade}
+                        </Badge>
+                      )}
+                    </div>
                   )}
                   {selectedStudent.email && (
-                    <p className="text-xs text-muted-foreground break-all">
+                    <p className="text-xs text-muted-foreground break-all text-center">
                       {selectedStudent.email}
                     </p>
                   )}
