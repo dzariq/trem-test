@@ -8,6 +8,7 @@ import { AuthProvider } from "@/contexts/AuthContext";
 import { CampusProvider } from "@/contexts/CampusContext";
 import { StudentSelectionProvider } from "@/contexts/StudentSelectionContext";
 import { useAndroidBackButton } from "@/hooks/useAndroidBackButton";
+import { RouteErrorBoundary } from "@/components/common/RouteErrorBoundary";
 
 // Role Selection
 import RoleSelectionPage from "./pages/RoleSelectionPage";
@@ -70,6 +71,7 @@ const App = () => (
           >
             <BrowserRouter>
               <NativeBindings />
+              <RouteErrorBoundary>
               <Routes>
                 {/* Role Selection - Landing Page */}
                 <Route path="/" element={<RoleSelectionPage />} />
@@ -140,6 +142,7 @@ const App = () => (
 
                 <Route path="*" element={<NotFound />} />
               </Routes>
+              </RouteErrorBoundary>
             </BrowserRouter>
           </div>
         </TooltipProvider>
