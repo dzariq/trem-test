@@ -1385,6 +1385,7 @@ export type Database = {
           meeting_day: string | null
           meeting_time: string | null
           name: string
+          poster_url: string | null
           public_description: string | null
           type_id: string | null
           updated_at: string
@@ -1414,6 +1415,7 @@ export type Database = {
           meeting_day?: string | null
           meeting_time?: string | null
           name: string
+          poster_url?: string | null
           public_description?: string | null
           type_id?: string | null
           updated_at?: string
@@ -1443,6 +1445,7 @@ export type Database = {
           meeting_day?: string | null
           meeting_time?: string | null
           name?: string
+          poster_url?: string | null
           public_description?: string | null
           type_id?: string | null
           updated_at?: string
@@ -1584,6 +1587,7 @@ export type Database = {
       }
       cca_activity_types: {
         Row: {
+          applies_to: string[]
           campus_code: string | null
           created_at: string
           id: string
@@ -1593,6 +1597,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          applies_to?: string[]
           campus_code?: string | null
           created_at?: string
           id?: string
@@ -1602,6 +1607,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          applies_to?: string[]
           campus_code?: string | null
           created_at?: string
           id?: string
@@ -5713,6 +5719,7 @@ export type Database = {
           campus_code: string | null
           capacity: number | null
           created_at: string
+          eligible_year_groups: string[] | null
           id: string
           image_url: string | null
           is_active: boolean
@@ -5721,6 +5728,7 @@ export type Database = {
           pic_user_id: string | null
           tags: string[] | null
           updated_at: string
+          venue_group_id: string
           venue_scope: string
           venue_type: string
         }
@@ -5728,6 +5736,7 @@ export type Database = {
           campus_code?: string | null
           capacity?: number | null
           created_at?: string
+          eligible_year_groups?: string[] | null
           id?: string
           image_url?: string | null
           is_active?: boolean
@@ -5736,6 +5745,7 @@ export type Database = {
           pic_user_id?: string | null
           tags?: string[] | null
           updated_at?: string
+          venue_group_id?: string
           venue_scope?: string
           venue_type?: string
         }
@@ -5743,6 +5753,7 @@ export type Database = {
           campus_code?: string | null
           capacity?: number | null
           created_at?: string
+          eligible_year_groups?: string[] | null
           id?: string
           image_url?: string | null
           is_active?: boolean
@@ -5751,6 +5762,7 @@ export type Database = {
           pic_user_id?: string | null
           tags?: string[] | null
           updated_at?: string
+          venue_group_id?: string
           venue_scope?: string
           venue_type?: string
         }
