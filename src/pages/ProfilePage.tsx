@@ -704,20 +704,20 @@ export default function ProfilePage() {
                   </AvatarFallback>
                 </Avatar>
                 
-                <div className="text-center">
-                  <h3 className="text-xl font-semibold text-foreground">{selectedStudent.name}</h3>
-                  {selectedStudent.studentCode && (
-                    <p className="text-xs font-medium text-muted-foreground mt-0.5 tracking-wide">
-                      ID: {selectedStudent.studentCode}
-                    </p>
-                  )}
-                  {(selectedStudent.className || selectedStudent.grade) && (
-                    <p className="text-sm text-muted-foreground">
-                      {[selectedStudent.className, selectedStudent.grade].filter(Boolean).join(" - ")}
+                <div className="text-center space-y-1.5">
+                  <h3 className="text-xl font-semibold text-foreground leading-tight">{selectedStudent.name}</h3>
+                  {(selectedStudent.studentCode || selectedStudent.className || selectedStudent.grade) && (
+                    <p className="text-base font-medium text-foreground/80">
+                      {[
+                        selectedStudent.studentCode ? `ID: ${selectedStudent.studentCode}` : null,
+                        [selectedStudent.className, selectedStudent.grade].filter(Boolean).join(" · "),
+                      ]
+                        .filter(Boolean)
+                        .join("  •  ")}
                     </p>
                   )}
                   {selectedStudent.email && (
-                    <p className="text-sm text-muted-foreground mt-1 break-all">
+                    <p className="text-xs text-muted-foreground break-all">
                       {selectedStudent.email}
                     </p>
                   )}
@@ -782,6 +782,7 @@ export default function ProfilePage() {
 
               {/* Student Options - Meal Plan, Sports House */}
               {(typeof selectedStudent.mealPlan === "boolean" || selectedStudent.sportsHouse) && (
+                <>
                 <div className="space-y-3">
                   <span className="font-medium text-foreground">Student Options</span>
                   <div className="grid grid-cols-2 gap-3">
@@ -825,12 +826,9 @@ export default function ProfilePage() {
                     )}
                   </div>
                 </div>
+                <Separator />
+                </>
               )}
-
-              {/* Sports House fallback when no meal plan but has sport house */}
-              {typeof selectedStudent.mealPlan !== "boolean" && selectedStudent.sportsHouse && !(typeof selectedStudent.mealPlan === "boolean" || selectedStudent.sportsHouse) && null}
-
-              <Separator />
 
               {/* CCA Clubs & Activities */}
               <div className="space-y-3">
