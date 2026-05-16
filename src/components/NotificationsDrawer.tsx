@@ -509,7 +509,7 @@ export function NotificationsDrawer({ open, onOpenChange }: NotificationsDrawerP
             <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
           </div>
         ) : (
-          <div className="space-y-2 pb-6 overflow-x-hidden">
+          <div className="space-y-2 overflow-x-hidden pb-[calc(6rem+env(safe-area-inset-bottom))]">
             {syntheticItems.map(renderSynthetic)}
             {otherNotifications.map(renderItem)}
 
