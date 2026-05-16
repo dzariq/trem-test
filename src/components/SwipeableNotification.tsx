@@ -1,5 +1,5 @@
 import { useState, useRef } from "react";
-import { Clock, ChevronRight, Trash2 } from "lucide-react";
+import { Clock, ChevronRight, Trash2, X } from "lucide-react";
 
 interface SwipeableNotificationProps {
   id: string;
@@ -12,6 +12,7 @@ interface SwipeableNotificationProps {
   hasLink: boolean;
   onClick: () => void;
   onDelete: () => void;
+  statusTag?: { label: string; className: string };
 }
 
 export function SwipeableNotification({
@@ -25,6 +26,7 @@ export function SwipeableNotification({
   hasLink,
   onClick,
   onDelete,
+  statusTag,
 }: SwipeableNotificationProps) {
   const [translateX, setTranslateX] = useState(0);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -113,15 +115,22 @@ export function SwipeableNotification({
         
         {/* Content */}
         <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-wrap">
             <h3 className={`text-sm text-foreground truncate ${!isRead ? "font-semibold" : "font-medium"}`}>
               {title}
             </h3>
+            {statusTag && (
+              <span
+                className={`inline-flex items-center px-2 h-5 rounded-full text-[10px] font-semibold uppercase tracking-wide border ${statusTag.className}`}
+              >
+                {statusTag.label}
+              </span>
+            )}
             {!isRead && (
               <div className="w-2 h-2 rounded-full bg-primary flex-shrink-0" />
             )}
           </div>
-          <p className="text-xs text-muted-foreground mt-0.5 line-clamp-1">
+          <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">
             {message}
           </p>
           <span className="text-[10px] text-muted-foreground/70 mt-1 flex items-center gap-1">
@@ -129,11 +138,25 @@ export function SwipeableNotification({
             {time}
           </span>
         </div>
-        
+
         {/* Arrow */}
         {hasLink && (
           <ChevronRight className="h-4 w-4 text-muted-foreground flex-shrink-0" />
         )}
+
+        {/* Dismiss X */}
+        <button
+          type="button"
+          aria-label="Dismiss"
+          className="flex-shrink-0 w-7 h-7 rounded-full text-muted-foreground hover:text-destructive hover:bg-destructive/10 flex items-center justify-center"
+          onClick={(e) => {
+            e.stopPropagation();
+            setIsDeleting(true);
+            setTimeout(() => onDelete(), 150);
+          }}
+        >
+          <X className="h-3.5 w-3.5" />
+        </button>
       </div>
     </div>
   );
