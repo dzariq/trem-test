@@ -1,4 +1,4 @@
-import { supabase } from "@/integrations/supabase/client";
+import { supabase } from "@/lib/supabase";
 
 const BUCKET = "student-avatars";
 const URL_CACHE_KEY = "student_avatar_urls_v1";
