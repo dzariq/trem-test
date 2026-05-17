@@ -1,48 +1,54 @@
 ## Issue
 
-On the parent **Calendar → Main Calendar** view (month / week / day), tapping a CCA capsule does nothing. Only regular event chips open the details drawer. Reason: `MonthGridCalendar` and `TimeGridCalendar` already accept an `onSessionClick` prop and fire it on CCA chips, but `CalendarPage.tsx` never passes a handler — so the click is a no-op.
-
-The "Upcoming → CCA" tab already opens `EventDetailsSheet` correctly, but the sheet was designed around `UpcomingCcaSession` and shows only generic Date / Time / Location / Description, with a plain "CCA" + category badge. It doesn't surface the kind (Club / Outdoor / Event), the underlying activity name when a custom session title is used, or session-specific extras like requirements.
+On `/parent/calendar → CCA Activities`, the "Enrolled" and "Available" cards (and their detail sheets) were designed before the 3-kind taxonomy (Club / Outdoor / Event). They show a generic category badge and weekly meeting day/time — fine for clubs, but events have no recurring meeting day and parents currently see almost nothing useful for them. Other parent-relevant signals (kind bucket, upcoming session date for events, classes involved, requirements, capacity, coordinator email) are missing.
 
 ## Plan
 
-### 1. Wire CCA capsule clicks on grids (`src/pages/CalendarPage.tsx`)
+### 1. Surface the kind bucket on cards (`src/components/cca/CcaActivityCard.tsx`)
 
-Add an `openCcaSessionDetails` helper and pass it as `onSessionClick` to both `MonthGridCalendar` and `TimeGridCalendar`:
+Replace the category-only badge on the hero image with a **kind bucket badge** (Club / Outdoor / Event) using existing `getCcaBucket`, `getCcaTypePillColor`, `getCcaBucketIcon` helpers — same visual language as the calendar capsules and the event details drawer. Keep `typeName` (subcategory like "Indoor CCA / Sports") as a smaller secondary line under the title.
 
-```text
-onSessionClick={(session) => {
-  setSelectedEventDetails(session);
-  setEventDetailsOpen(true);
-}}
-```
+### 2. Make the card kind-aware (same file)
 
-`CcaCalendarSession` (from `useCcaSessionsCalendar`) already includes `kind` (added earlier), so the sheet can render kind-aware UI. Widen `selectedEventDetails` state type to `UpcomingEvent | UpcomingCcaSession | CcaCalendarSession | null`.
+- **Clubs & Outdoor:** keep existing `meetingDay` + `meetingTime` row (weekly schedule).
+- **Events:** weekly meeting fields are usually blank. Show the **next upcoming session date** from `activity.sessions` instead (label "Next: Sat 23 May · 9:00 AM"), falling back to "Date to be announced" if none. Available on `CcaActivity.sessions` already.
+- **Capacity** (clubs/outdoor only, when `maxParticipants` is set): small "Up to N spots" hint under schedule. Skip for events.
+- Location, PIC teacher list: keep as-is.
 
-### 2. Make `EventDetailsSheet` CCA-aware (`src/components/events/EventDetailsSheet.tsx`)
+The enrolled-card branch shares the same component, so the same logic applies there. `EnrolledCcaActivity` doesn't carry `sessions`/`maxParticipants` — degrade gracefully (no Next row, no capacity hint).
 
-- Accept either CCA shape (`UpcomingCcaSession` from the Upcoming card, or `CcaCalendarSession` from the grid). The existing `"sessionDate" in event` guard already covers both — just update the union type.
-- Replace the generic "CCA" + raw `category` badges in the title with a **bucket badge** using the existing `getCcaBucket` / `getCcaTypePillColor` / `getCcaBucketIcon` helpers from `@/components/cca/CcaTypeTabs`:
-  - Club → yellow pill + Users icon + label "Club"
-  - Outdoor → orange pill + Bike icon + label "Outdoor"
-  - Event → amber pill + PartyPopper icon + label "Event"
-  - Bucket is derived from `session.kind` first, then `session.category` as fallback.
-- When `customTitle` is set, show the actual activity name as a secondary subtitle line under the title (e.g. small muted "Activity: <activityName>"). Currently this info is lost.
-- Add a **Requirements** row (icon + label) below Location when the session has a non-empty `requirements` string (only present on `CcaCalendarSession`). Hide otherwise.
-- Hide the trailing tag-list block for CCA (it only ran for non-CCA already, keep as-is).
-- Only render the Description block when description is a non-empty string; do not render a literal "-".
-- Same for Location: hide the row if there is no location.
+### 3. Enrich the Enrolled details sheet (`src/components/cca/CcaDetailsSheet.tsx`)
 
-### 3. Out of scope
+- Replace the plain category badge in the title with the kind bucket pill (icon + Club/Outdoor/Event), keep subcategory as a small line.
+- Add **Upcoming Sessions** block (next up to 3 from `activity.sessions`, future-only, sorted ascending) showing date, time range, and location. Only render when there is at least one upcoming session.
+- Show **Capacity** row ("X spots") when `maxParticipants` is set.
+- Show **Contact** row with `coordinatorEmail` as a `mailto:` link when set.
+- Keep existing Requirements (use the *next upcoming* session's requirements, not `sessions[0]` which may be in the past).
+- Hide the Operational Notes block for parents (it's already gated by `isPIC`, leave as-is).
 
-- Teacher calendar (separate page; only fix if user reports it).
-- PIC teacher / enrolled-students lists inside the drawer (would need extra queries; user only asked for key info).
-- Visual restyle of the drawer beyond the bucket badge + requirements row.
+### 4. Enrich the Available details bottom sheet (inline in `src/pages/CalendarPage.tsx`)
+
+Mirror the same enrichments on the inline `BottomSheet` used for "Available CCA" cards:
+- Kind bucket pill in title (instead of the `getCcaCategoryColor` category badge).
+- For events: Upcoming Sessions block + Classes Involved chips (so the parent can confirm their child's class is in scope).
+- For clubs/outdoor: Capacity row when `maxParticipants` is set.
+- Coordinator email contact row when set.
+
+To support "Classes Involved" on this sheet for events, extend `useEligibleCcaActivities` to also select `classes_involved` and expose it on the `CcaActivity` type. No new query — single column add to the existing `.select(...)`.
+
+### 5. Out of scope
+
+- Teacher CCA calendar — only the parent surfaces here.
+- New RLS / migrations / RPCs.
+- Restyling the card hero / image — only badges and info rows change.
+- Showing enrolled-student lists or attendance.
 
 ### Technical notes
 
 Files touched:
-- `src/pages/CalendarPage.tsx` — pass `onSessionClick` to both grid components; widen the `selectedEventDetails` state union.
-- `src/components/events/EventDetailsSheet.tsx` — union type widening, bucket-based badge/icon, optional activity-name subtitle, optional Requirements row, conditional Location/Description rendering.
+- `src/components/cca/CcaActivityCard.tsx` — bucket badge, kind-aware "Next" / weekly schedule row, capacity hint.
+- `src/components/cca/CcaDetailsSheet.tsx` — bucket pill in title, upcoming sessions block, capacity, coordinator email, requirements from next session.
+- `src/pages/CalendarPage.tsx` — same enrichments for the inline Available CCA bottom sheet; classes involved chips for events.
+- `src/hooks/useEligibleCcaActivities.ts` — add `classesInvolved: string[]` (select `classes_involved`).
 
-No DB / RLS / schema changes. No new hooks.
+No DB / schema / RLS changes.
