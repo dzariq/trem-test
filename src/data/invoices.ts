@@ -117,8 +117,8 @@ export async function listInvoicesForStudent(studentId: string): Promise<ParentI
 
   if (cErr) throw cErr;
 
-  const contactIds = (contacts || [])
-    .map((c: any) => c.bukku_contact_id)
+  const contactIds = ((contacts || []) as { bukku_contact_id: unknown }[])
+    .map((c) => c.bukku_contact_id)
     .filter(Boolean);
 
   if (contactIds.length === 0) return [];
