@@ -1,4 +1,4 @@
-import { supabase } from "@/integrations/supabase/client";
+import { supabase } from "@/lib/supabase";
 
 export type InvoiceStatus = "paid" | "pending_payment" | "draft" | "cancelled";
 
@@ -39,6 +39,12 @@ function normalizeStatus(s: string | null | undefined): InvoiceStatus {
   return "pending_payment";
 }
 
+function toDateString(v: unknown): string | null {
+  if (typeof v !== "string") return null;
+  const trimmed = v.trim();
+  return trimmed && !Number.isNaN(new Date(trimmed).getTime()) ? trimmed : null;
+}
+
 function normalize(row: any): ParentInvoice {
   const content = (row?.content ?? {}) as any;
   const amount = toNumber(content?.amount);
@@ -51,7 +57,7 @@ function normalize(row: any): ParentInvoice {
   const paidAmount = paidFromCol > 0 ? paidFromCol : Math.max(amount - balance, 0);
 
   const termItems: any[] = Array.isArray(content?.term_items) ? content.term_items : [];
-  const dueDate = termItems[0]?.date ?? null;
+  const dueDate = toDateString(termItems[0]?.date ?? row?.due_date);
 
   const formItems: any[] = Array.isArray(content?.form_items) ? content.form_items : [];
   const lineItems: InvoiceLineItem[] = formItems.map((it) => ({
@@ -63,7 +69,7 @@ function normalize(row: any): ParentInvoice {
     id: row.id,
     invoiceNumber: content?.number ?? null,
     periodKey: row.period_key ?? null,
-    invoiceDate: row.invoice_date ?? null,
+    invoiceDate: toDateString(row.invoice_date),
     dueDate,
     status: normalizeStatus(row.status),
     rawStatus: row.status ?? "",
