@@ -1,9 +1,9 @@
 import { useEffect, useMemo, useState, type MouseEvent } from "react";
-import { ChevronLeft, ChevronRight, ArrowLeft, SlidersHorizontal, ChevronDown, Users } from "lucide-react";
+import { ChevronLeft, ChevronRight, ArrowLeft, SlidersHorizontal, ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { getEventBadgeColor } from "@/lib/calendarUtils";
-import { getCcaTypePillColor } from "@/components/cca/CcaTypeTabs";
+import { getCcaTypePillColor, getCcaBucketIcon } from "@/components/cca/CcaTypeTabs";
 import type { UpcomingEvent } from "@/data/calendar";
 import type { CcaCalendarSession } from "@/hooks/useCcaSessionsCalendar";
 import { CalendarViewDropdown, type CalendarViewMode } from "./CalendarViewSwitcher";
@@ -553,9 +553,10 @@ export function TimeGridCalendar({
                           b.colorClass,
                         )}
                       >
-                        {b.kind === "cca" && (
-                          <Users className="h-3 w-3 shrink-0 opacity-80" aria-hidden />
-                        )}
+                        {b.kind === "cca" && (() => {
+                          const Icon = getCcaBucketIcon((b.payload as any).category);
+                          return <Icon className="h-3 w-3 shrink-0 opacity-80" aria-hidden />;
+                        })()}
                         <span className="truncate">{b.title}</span>
                       </button>
                     ))}
@@ -659,9 +660,10 @@ export function TimeGridCalendar({
                         style={{ top: clampedTop, height }}
                       >
                         <div className="truncate flex items-center gap-1">
-                          {b.kind === "cca" && (
-                            <Users className="h-3 w-3 shrink-0 opacity-80" aria-hidden />
-                          )}
+                          {b.kind === "cca" && (() => {
+                            const Icon = getCcaBucketIcon((b.payload as any).category);
+                            return <Icon className="h-3 w-3 shrink-0 opacity-80" aria-hidden />;
+                          })()}
                           <span className="truncate">{b.title}</span>
                         </div>
                       </button>
