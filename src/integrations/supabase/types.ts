@@ -2408,8 +2408,6 @@ export type Database = {
           session_date: string
           session_type: string | null
           sport_activity_ids: string[]
-          sport_main: string | null
-          sport_sub: string | null
           start_time: string | null
           updated_at: string
           venue_id: string | null
@@ -2432,8 +2430,6 @@ export type Database = {
           session_date: string
           session_type?: string | null
           sport_activity_ids?: string[]
-          sport_main?: string | null
-          sport_sub?: string | null
           start_time?: string | null
           updated_at?: string
           venue_id?: string | null
@@ -2456,8 +2452,6 @@ export type Database = {
           session_date?: string
           session_type?: string | null
           sport_activity_ids?: string[]
-          sport_main?: string | null
-          sport_sub?: string | null
           start_time?: string | null
           updated_at?: string
           venue_id?: string | null
@@ -4196,6 +4190,66 @@ export type Database = {
             columns: ["stock_item_id"]
             isOneToOne: false
             referencedRelation: "stock_catalogue"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      student_academic_awards: {
+        Row: {
+          academic_period_id: string
+          award_title: string | null
+          award_type: string
+          created_at: string
+          created_by: string | null
+          id: string
+          notes: string | null
+          position: string | null
+          school_level: string | null
+          student_id: string
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          academic_period_id: string
+          award_title?: string | null
+          award_type: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          notes?: string | null
+          position?: string | null
+          school_level?: string | null
+          student_id: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          academic_period_id?: string
+          award_title?: string | null
+          award_type?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          notes?: string | null
+          position?: string | null
+          school_level?: string | null
+          student_id?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "student_academic_awards_academic_period_id_fkey"
+            columns: ["academic_period_id"]
+            isOneToOne: false
+            referencedRelation: "academic_periods"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "student_academic_awards_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
             referencedColumns: ["id"]
           },
         ]
