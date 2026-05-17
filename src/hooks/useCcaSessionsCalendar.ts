@@ -14,15 +14,24 @@ export interface CcaCalendarSession {
   requirements: string | null;
   isCancelled: boolean;
   category: string;
+  kind?: string | null;
 }
 
 interface UseCcaSessionsCalendarOptions {
   year: number;
   month: number; // 1-12
   campusCode?: string | null;
+  /**
+   * When provided, restrict sessions to those visible to this student:
+   * - club/outdoor: student must be actively enrolled
+   * - event: student's class must be in cca_activities.classes_involved[]
+   */
+  studentId?: string | null;
+  /** Apply parent scoping when true and studentId provided */
+  scopeToStudent?: boolean;
 }
 
-export function useCcaSessionsCalendar({ year, month, campusCode }: UseCcaSessionsCalendarOptions) {
+export function useCcaSessionsCalendar({ year, month, campusCode, studentId, scopeToStudent }: UseCcaSessionsCalendarOptions) {
   const [sessions, setSessions] = useState<CcaCalendarSession[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -41,6 +50,45 @@ export function useCcaSessionsCalendar({ year, month, campusCode }: UseCcaSessio
       const startStr = startDate.toISOString().split("T")[0];
       const endStr = endDate.toISOString().split("T")[0];
 
+      // Parent scoping: limit to activities the student is enrolled in (club/outdoor)
+      // or events whose classes_involved contains the student's class.
+      let scopedActivityIds: string[] | null = null;
+      if (scopeToStudent && studentId) {
+        const { data: studentRow } = await supabase
+          .from("students")
+          .select("class")
+          .eq("id", studentId)
+          .maybeSingle();
+        const studentClass = (studentRow as any)?.class || null;
+
+        const { data: enrollRows } = await supabase
+          .from("student_cca_enrollments")
+          .select("cca_activity_id")
+          .eq("student_id", studentId)
+          .eq("status", "active");
+        const enrolledIds = (enrollRows || [])
+          .map((r: any) => r.cca_activity_id)
+          .filter(Boolean);
+
+        let eventIds: string[] = [];
+        if (studentClass) {
+          const { data: eventRows } = await supabase
+            .from("cca_activities")
+            .select("id")
+            .eq("kind", "event")
+            .eq("is_active", true)
+            .contains("classes_involved", [studentClass]);
+          eventIds = (eventRows || []).map((r: any) => r.id);
+        }
+
+        scopedActivityIds = Array.from(new Set([...enrolledIds, ...eventIds]));
+        if (scopedActivityIds.length === 0) {
+          setSessions([]);
+          setLoading(false);
+          return;
+        }
+      }
+
       let query = supabase
         .from("cca_sessions")
         .select(`
@@ -58,6 +106,7 @@ export function useCcaSessionsCalendar({ year, month, campusCode }: UseCcaSessio
           cca_activities!inner(
             name,
             category,
+            kind,
             campus_code
           ),
           school_locations(name)
@@ -66,6 +115,10 @@ export function useCcaSessionsCalendar({ year, month, campusCode }: UseCcaSessio
         .lte("session_date", endStr)
         .eq("is_cancelled", false)
         .order("session_date", { ascending: true });
+
+      if (scopedActivityIds) {
+        query = query.in("activity_id", scopedActivityIds);
+      }
 
       if (campusCode) {
         query = query.or(
@@ -91,6 +144,7 @@ export function useCcaSessionsCalendar({ year, month, campusCode }: UseCcaSessio
         requirements: s.requirements,
         isCancelled: s.is_cancelled,
         category: s.cca_activities?.category || "Other",
+        kind: s.cca_activities?.kind ?? null,
       }));
 
       setSessions(mapped);
@@ -100,7 +154,7 @@ export function useCcaSessionsCalendar({ year, month, campusCode }: UseCcaSessio
     } finally {
       setLoading(false);
     }
-  }, [year, month, campusCode]);
+  }, [year, month, campusCode, studentId, scopeToStudent]);
 
   useEffect(() => {
     fetchSessions();
