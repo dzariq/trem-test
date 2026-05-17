@@ -1,54 +1,35 @@
-## Problem
+# Calendar module updates & audit
 
-On `/parent/calendar` the page paints for a moment and then disappears (blank). HomePage works. No build errors in dev logs; `listCalendarEvents` returns 19 rows successfully. This pattern = an uncaught runtime error thrown during a follow-up render after data loads, with no Error Boundary to catch it.
+## 1. Rename "Highlights" tab to "Events"
+- `src/lib/calendarFilters.ts` → in `UPCOMING_TABS`, change the `events` tab `label` from `"Highlights"` to `"Events"`.
+- No key change (`value` stays `"events"`), so no other code is affected.
 
-## Likely culprits
+## 2. Reorder tabs to: Events · CCA · Exams · Holidays
+- `src/lib/calendarFilters.ts` → reorder `UPCOMING_TABS` to `[events, cca, exams, holidays]`.
+- `src/components/calendar/UpcomingEventsSection.tsx` already iterates over `UPCOMING_TABS`, so order updates automatically. Active-tab color mapping (purple/red/green/primary) is keyed by `tab.value` and stays correct.
 
-`CalendarPage` mounts a lot of dependent hooks/components that fire after the first paint:
+## 3. Restyle CCA pills in month grid to match screenshot 2
+Target: distinct pill shape so CCA stands out from event chips.
 
-1. `useEligibleCcaActivities`, `useStudentCcaEnrollments`, `useCcaSessionsCalendar`, `useUpcomingCcaSessions` — any throw inside a `.map` (e.g. `picTeachers.map`, optional fields read as non-null) crashes the tree.
-2. `NotificationsDrawer` (mounted via `AppHeader`) — recently edited; `formatRelativeDays(new Date(NaN))` would throw, and the synthetic-anchor sort/filter chain runs every render.
-3. `MonthGridCalendar` / `UpcomingEventsSection` — first render uses empty arrays, second render uses real data; a bad event row (e.g. `event.tags` not array, `event.startDay` null) could throw inside `matchesCategory`/`matchesSubtype`/`UpcomingEventsSection`.
-4. `EventDetailsSheet` rendered with `event={null}` initially — fine — but the `selectedEventDetails` union type (`UpcomingEvent | UpcomingCcaSession`) can throw if it reads CCA-only fields off an event.
+- `src/components/calendar/MonthGridCalendar.tsx` → in the chip render (around lines 330–344), branch on `item.kind === "cca"`:
+  - Use a **fully rounded** pill (`rounded-full`), thin **border with matching color**, light tinted background, slightly taller (`h-[18px]`), with a small leading **Users icon** (`lucide-react` `Users`, `h-2.5 w-2.5`) — mirrors the "Indoor Clubs / Education FT / Art Club" style.
+  - Keep regular events as the current squared chip (`rounded-[3px]`).
+- Re-use `getCcaTypeColor(category)` but split it (or wrap it) so we get a border-color + soft bg variant for the pill, instead of solid fill. Implementation detail: extend `getCcaTypeColor` in `src/components/cca/CcaTypeTabs.tsx` with an optional `variant: "solid" | "outline"` (default solid to preserve existing call sites), and use `"outline"` from the month grid.
+- Apply the same outline-pill treatment in `src/components/calendar/TimeGridCalendar.tsx` where CCA chips render, so day/week views stay consistent.
 
-## Fix plan
+## 4. Calendar backend audit
+Read-only verification against the current Supabase schema to catch drift from recent backend updates. No code changes unless an issue is found; fixes will be listed and confirmed before applying.
 
-### 1. Add a route-level Error Boundary (the real fix for "disappears silently")
+Checks:
+- `calendar_events` table — columns referenced by `src/data/calendar.ts` loader (title, start/end date, all_day, event_type, event_category, tags, location, campus_code, visibility/role fields) still exist and match types.
+- `cca_sessions` + `cca_activities` + `school_locations` joins used by `src/hooks/useCcaSessionsCalendar.ts` and `src/hooks/useUpcomingCcaSessions.ts` — column names (`session_date`, `start_time`, `end_time`, `location`, `location_id`, `custom_title`, `is_cancelled`, `cca_activities.campus_code`, `cca_activities.category`).
+- `cca_activity_types` used by `src/hooks/useCcaTypes.ts` (`name`, `sort_order`, `is_active`, `campus_code`).
+- Campus scoping filter `campus_code.eq.X,campus_code.is.null` still matches the parent's campus context.
+- RLS: parent role can `SELECT` from `calendar_events`, `cca_sessions`, `cca_activities`, `cca_activity_types`, `school_locations`. Use `supabase--linter` + a few `supabase--read_query` smoke selects.
+- Tag visibility against `PARENT_HIDDEN_TAGS` in `src/types/calendarTags.ts` — confirm any new event types added on the backend are categorised (otherwise they'll silently fall through filters).
 
-- Create `src/components/common/RouteErrorBoundary.tsx` (class component, `componentDidCatch` logs to console + shows a small "Something went wrong on this page" card with a Reload button).
-- Wrap each `<Route element={...}>` body in `App.tsx` (at minimum the parent routes group) with `<RouteErrorBoundary>`. This stops the whole app from going blank and surfaces the actual stack to console so we (and the user) can see the real cause next time.
-
-### 2. Instrument `CalendarPage` so the error is identifiable
-
-- Wrap the body of `CalendarPage` in a local `<RouteErrorBoundary fallbackLabel="Calendar">`.
-- Wrap each major subtree separately so we can isolate the offender:
-  - Calendar tab: `MonthGridCalendar` / `TimeGridCalendar` + `UpcomingEventsSection`.
-  - CCA tab: enrolled list + available list.
-  - Bottom sheets (`CcaDetailsSheet`, `EventDetailsSheet`, `ClubSwitchConfirmDialog`, `CalendarFiltersSheet`).
-
-### 3. Harden the most likely throw sites
-
-- `CalendarPage.matchesCategory` / `matchesSubtype`: guard `event.tags` with `Array.isArray(event.tags) ? event.tags : []` and treat missing `category`/`eventType`/`title` as empty strings (already mostly done — verify).
-- `NotificationsDrawer`:
-  - In `parseSyntheticAnchorDate`, also reject invalid month/day (e.g. `02-30`) and return `null` for `isNaN(date.getTime())`.
-  - In `formatRelativeDays`, return `""` if `date` is invalid instead of producing `NaN days ago`.
-  - In the unified sort, fall back to `0` when `created_at` is missing/invalid.
-- `EventDetailsSheet`: render `null` when `event` is null OR when it doesn't have the minimum fields it reads.
-
-### 4. Verify
-
-- Reload `/parent/calendar` in the preview — page must stay on screen.
-- If the boundary fallback shows, the console will contain the real stack; fix the specific component and remove the temporary inner boundaries afterward (keep the top-level one).
+Deliverable: a short audit report in chat listing ✅/⚠️ per check; any ⚠️ items get a follow-up patch.
 
 ## Out of scope
-
-- No business-logic / data-shape changes in `data/calendar.ts` (the data already loads).
-- No UI redesign — only defensive null/array guards and the new boundary component.
-
-## Files to touch
-
-- New: `src/components/common/RouteErrorBoundary.tsx`
-- Edit: `src/App.tsx` (wrap routes)
-- Edit: `src/pages/CalendarPage.tsx` (inner boundaries + small guards)
-- Edit: `src/components/NotificationsDrawer.tsx` (date guards)
-- Edit: `src/components/events/EventDetailsSheet.tsx` (null guard, if needed after inspection)
+- No changes to event detail sheets, filter sheet, or pull-to-refresh behaviour.
+- No migration unless the audit surfaces something broken.
