@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase } from "@/lib/supabase";
 
 export interface HomeworkItem {
   id: string;
@@ -13,6 +13,28 @@ export interface HomeworkItem {
   lessonTitle: string | null;
   lessonDate: string | null;
 }
+
+type HomeworkAssignmentRow = {
+  id: string;
+  title: string | null;
+  instructions: string;
+  due_date: string | null;
+  subject: string | null;
+  lesson_plan_detail_id: string | null;
+};
+
+type HomeworkStudentRow = {
+  id: string;
+  status: string | null;
+  submitted_at: string | null;
+  homework_assignments: HomeworkAssignmentRow | HomeworkAssignmentRow[] | null;
+};
+
+type LessonDetailRow = {
+  id: string;
+  title: string;
+  date: string | null;
+};
 
 export function useStudentHomework(studentId: string | null) {
   const homeworkQuery = useQuery({
@@ -42,24 +64,33 @@ export function useStudentHomework(studentId: string | null) {
       if (error) throw error;
 
       // Get lesson plan detail info for context
-      const lessonDetailIds = (data || [])
-        .map((r: any) => r.homework_assignments?.lesson_plan_detail_id)
+      const rows = (data || []) as unknown as HomeworkStudentRow[];
+      const lessonDetailIds = rows
+        .map((r) => {
+          const hw = Array.isArray(r.homework_assignments)
+            ? r.homework_assignments[0]
+            : r.homework_assignments;
+          return hw?.lesson_plan_detail_id;
+        })
         .filter(Boolean);
 
-      let lessonDetailsMap: Record<string, { title: string; date: string | null }> = {};
+      const lessonDetailsMap: Record<string, { title: string; date: string | null }> = {};
       if (lessonDetailIds.length > 0) {
         const { data: lessonDetails } = await supabase
           .from("lesson_plan_details")
           .select("id, title, date")
           .in("id", lessonDetailIds);
 
-        (lessonDetails || []).forEach((ld: any) => {
+        ((lessonDetails || []) as LessonDetailRow[]).forEach((ld) => {
           lessonDetailsMap[ld.id] = { title: ld.title, date: ld.date };
         });
       }
 
-      const items: HomeworkItem[] = (data || []).map((row: any) => {
-        const hw = row.homework_assignments;
+      const items: HomeworkItem[] = rows.map((row) => {
+        const hw = Array.isArray(row.homework_assignments)
+          ? row.homework_assignments[0]
+          : row.homework_assignments;
+        if (!hw) return null;
         const lessonDetail = hw.lesson_plan_detail_id
           ? lessonDetailsMap[hw.lesson_plan_detail_id]
           : null;
@@ -84,7 +115,7 @@ export function useStudentHomework(studentId: string | null) {
           lessonTitle: lessonDetail?.title || null,
           lessonDate: lessonDetail?.date || null,
         };
-      });
+      }).filter((item): item is HomeworkItem => item !== null);
 
       return items;
     },
