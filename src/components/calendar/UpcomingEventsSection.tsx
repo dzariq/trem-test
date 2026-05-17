@@ -112,8 +112,9 @@ export function UpcomingEventsSection({ events, ccaSessions = [], onEventClick, 
               const [sY, sM, sD] = session.sessionDate.split("-").map(Number);
               const date = new Date(sY, sM - 1, sD);
               const timeLabel = formatTimeRange(session.startTime, session.endTime);
-              const bucket = getCcaBucket(session.category);
-              const pillClass = getCcaTypePillColor(session.category);
+              const bucketKey = session.kind || session.category;
+              const bucket = getCcaBucket(bucketKey);
+              const pillClass = getCcaTypePillColor(bucketKey);
               const Icon = getCcaBucketIcon(bucket);
               return (
                 <div
