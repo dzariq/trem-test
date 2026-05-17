@@ -1,7 +1,7 @@
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, useLocation, useNavigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
 import { useEffect } from "react";
 import { FEATURES } from "@/config/featureFlags";
 import { AuthProvider } from "@/contexts/AuthContext";
@@ -58,6 +58,28 @@ function NativeBindings() {
   return null;
 }
 
+function RouteScrollRestoration() {
+  const { pathname } = useLocation();
+
+  useEffect(() => {
+    const scrollToTop = () => {
+      const appScroll = document.querySelector('[data-app-scroll="true"]') as HTMLElement | null;
+      appScroll?.scrollTo({ top: 0, left: 0, behavior: "auto" });
+      window.scrollTo({ top: 0, left: 0, behavior: "auto" });
+    };
+
+    const raf = requestAnimationFrame(scrollToTop);
+    const timeout = window.setTimeout(scrollToTop, 50);
+
+    return () => {
+      cancelAnimationFrame(raf);
+      window.clearTimeout(timeout);
+    };
+  }, [pathname]);
+
+  return null;
+}
+
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <AuthProvider>
@@ -71,6 +93,7 @@ const App = () => (
           >
             <BrowserRouter>
               <NativeBindings />
+              <RouteScrollRestoration />
               <RouteErrorBoundary>
               <Routes>
                 {/* Role Selection - Landing Page */}
