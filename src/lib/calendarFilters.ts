@@ -92,11 +92,11 @@ export function filterEventsByTypes(
 export type UpcomingTab = "events" | "exams" | "holidays" | "cca";
 
  export const UPCOMING_TABS: { value: UpcomingTab; label: string }[] = [
-   { value: "events", label: "Highlights" },
+   { value: "events", label: "Events" },
+   { value: "cca", label: "CCA" },
    { value: "exams", label: "Exams" },
-  { value: "holidays", label: "Holidays" },
-  { value: "cca", label: "CCA" },
-];
+   { value: "holidays", label: "Holidays" },
+ ];
 
 // Tab colors matching the category filter button colors
 export const UPCOMING_TAB_COLORS: Record<UpcomingTab, string> = {
