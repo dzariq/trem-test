@@ -1,11 +1,12 @@
 import { BottomSheet } from "@/components/ui/bottom-sheet";
 import { Badge } from "@/components/ui/badge";
-import { CalendarDays, Clock, MapPin, ClipboardList } from "lucide-react";
+import { CalendarDays, Clock, MapPin, ClipboardList, Users } from "lucide-react";
 import type { UpcomingEvent } from "@/data/calendar";
 import type { UpcomingCcaSession } from "@/hooks/useUpcomingCcaSessions";
 import type { CcaCalendarSession } from "@/hooks/useCcaSessionsCalendar";
 import { getEventBadgeColor, getEventBadgeLabel } from "@/lib/calendarUtils";
 import { getCcaBucket, getCcaTypePillColor, getCcaBucketIcon } from "@/components/cca/CcaTypeTabs";
+import { formatClassDisplay } from "@/lib/utils";
 import { cn } from "@/lib/utils";
 
 type CcaLike = UpcomingCcaSession | CcaCalendarSession;
@@ -69,6 +70,9 @@ export function EventDetailsSheet({ open, onOpenChange, event }: EventDetailsShe
   const requirements = cca
     ? ((event as CcaCalendarSession).requirements || "").trim()
     : "";
+  const classesInvolved: string[] = cca
+    ? ((event as CcaCalendarSession).classesInvolved || []).filter(Boolean)
+    : [];
   const showActivitySubtitle =
     cca && !!event.customTitle && event.customTitle !== event.activityName;
 
@@ -162,6 +166,28 @@ export function EventDetailsSheet({ open, onOpenChange, event }: EventDetailsShe
               <p className="text-sm font-medium text-foreground whitespace-pre-wrap">
                 {requirements}
               </p>
+            </div>
+          </div>
+        )}
+
+        {classesInvolved.length > 0 && (
+          <div className="flex items-start gap-3">
+            <div className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+              <Users className="h-4 w-4 text-primary" />
+            </div>
+            <div className="min-w-0">
+              <p className="text-xs text-muted-foreground">Classes Involved</p>
+              <div className="flex flex-wrap gap-1 mt-1">
+                {classesInvolved.map((c) => (
+                  <Badge
+                    key={c}
+                    variant="secondary"
+                    className="text-xs font-medium"
+                  >
+                    {formatClassDisplay(c)}
+                  </Badge>
+                ))}
+              </div>
             </div>
           </div>
         )}
