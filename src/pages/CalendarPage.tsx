@@ -638,7 +638,7 @@ export default function CalendarPage() {
                     </p>
                     <p className="text-xs text-muted-foreground mt-1">
                       There are no activities available for {studentYearLevel} students
-                      {ccaTypeFilter !== "all" ? " in this category" : ""}
+                      {ccaKindFilter !== "all" ? " in this category" : ""}
                     </p>
                   </CardContent>
                 </Card>
