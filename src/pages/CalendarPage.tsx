@@ -802,6 +802,7 @@ export default function CalendarPage() {
           category: selectedEnrolledCCA.category || "Indoor CCA",
           typeId: selectedEnrolledCCA.typeId,
           typeName: selectedEnrolledCCA.typeName,
+          kind: selectedEnrolledCCA.kind,
           yearLevels: [],
           meetingDay: selectedEnrolledCCA.meetingDay,
           meetingTime: selectedEnrolledCCA.meetingTime,
