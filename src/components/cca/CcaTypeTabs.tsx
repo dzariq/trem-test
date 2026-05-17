@@ -255,3 +255,64 @@ export function getCcaBucketIcon(bucketOrType: CcaBucket | string | null | undef
       : getCcaBucket(bucketOrType);
   return CCA_BUCKET_ICON[bucket];
 }
+
+/**
+ * Fixed 3-bucket tab filter (All / Clubs / Outdoor / Events) based on
+ * cca_activities.kind. Used on the parent calendar CCA tab.
+ */
+export type CcaKindFilter = "all" | "club" | "outdoor" | "event";
+
+interface CcaKindTabsProps {
+  selected: CcaKindFilter;
+  onSelect: (kind: CcaKindFilter) => void;
+}
+
+const KIND_TAB_COLORS: Record<CcaKindFilter, { light: string; strong: string }> = {
+  all: {
+    light: "bg-emerald-100 text-emerald-700 border-emerald-200 hover:bg-emerald-150",
+    strong: "bg-emerald-600 text-white border-emerald-600",
+  },
+  club: {
+    light: "bg-yellow-50 text-yellow-800 border-yellow-300 hover:bg-yellow-100",
+    strong: "bg-yellow-500 text-white border-yellow-500",
+  },
+  outdoor: {
+    light: "bg-orange-50 text-orange-800 border-orange-300 hover:bg-orange-100",
+    strong: "bg-orange-500 text-white border-orange-500",
+  },
+  event: {
+    light: "bg-amber-50 text-amber-700 border-amber-300 hover:bg-amber-100",
+    strong: "bg-amber-500 text-white border-amber-500",
+  },
+};
+
+const KIND_TABS: { value: CcaKindFilter; label: string }[] = [
+  { value: "all", label: "All" },
+  { value: "club", label: "Clubs" },
+  { value: "outdoor", label: "Outdoors" },
+  { value: "event", label: "Events" },
+];
+
+export function CcaKindTabs({ selected, onSelect }: CcaKindTabsProps) {
+  return (
+    <div className="flex flex-wrap gap-2 pb-2">
+      {KIND_TABS.map((tab) => {
+        const isSelected = selected === tab.value;
+        const colors = KIND_TAB_COLORS[tab.value];
+        return (
+          <Badge
+            key={tab.value}
+            variant="outline"
+            className={cn(
+              "cursor-pointer border transition-colors",
+              isSelected ? colors.strong : colors.light
+            )}
+            onClick={() => onSelect(tab.value)}
+          >
+            {tab.label}
+          </Badge>
+        );
+      })}
+    </div>
+  );
+}
