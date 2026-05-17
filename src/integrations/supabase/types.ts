@@ -4340,6 +4340,57 @@ export type Database = {
           },
         ]
       }
+      student_additional_achievements: {
+        Row: {
+          academic_period_id: string
+          created_at: string
+          created_by: string | null
+          id: string
+          organization: string
+          role: string
+          sort_order: number
+          student_id: string
+          updated_at: string
+        }
+        Insert: {
+          academic_period_id: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          organization?: string
+          role?: string
+          sort_order?: number
+          student_id: string
+          updated_at?: string
+        }
+        Update: {
+          academic_period_id?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          organization?: string
+          role?: string
+          sort_order?: number
+          student_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "student_additional_achievements_academic_period_id_fkey"
+            columns: ["academic_period_id"]
+            isOneToOne: false
+            referencedRelation: "academic_periods"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "student_additional_achievements_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       student_campus_transfers: {
         Row: {
           created_at: string
