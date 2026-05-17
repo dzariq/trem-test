@@ -546,11 +546,17 @@ export function TimeGridCalendar({
                         onClick={(e) => handleBlockClick(e, b, d.ymd)}
                         aria-label={b.title}
                         className={cn(
-                          "h-[26px] px-1.5 rounded-md text-[9px] leading-[26px] font-medium truncate text-left border-transparent no-callout [touch-action:manipulation]",
+                          "h-[26px] text-[9px] font-medium truncate text-left no-callout [touch-action:manipulation]",
+                          b.kind === "cca"
+                            ? "flex items-center gap-1 px-1.5 rounded-full border leading-none"
+                            : "px-1.5 rounded-md leading-[26px] border border-transparent",
                           b.colorClass,
                         )}
                       >
-                        {b.title}
+                        {b.kind === "cca" && (
+                          <Users className="h-3 w-3 shrink-0 opacity-80" aria-hidden />
+                        )}
+                        <span className="truncate">{b.title}</span>
                       </button>
                     ))}
                     {overflow > 0 && (
