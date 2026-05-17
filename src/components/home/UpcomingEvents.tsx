@@ -8,6 +8,7 @@ import type { UpcomingEvent } from "@/data/calendar";
 import type { UpcomingCcaSession } from "@/hooks/useUpcomingCcaSessions";
 import { EventDetailsSheet } from "@/components/events/EventDetailsSheet";
 import { CalendarFiltersSheet } from "@/components/calendar/CalendarFiltersSheet";
+import { getCcaTypePillColor, getCcaBucketIcon, getCcaBucket } from "@/components/cca/CcaTypeTabs";
 import {
   PARENT_CATEGORY_ORDER,
   TEACHER_CATEGORY_ORDER,
@@ -189,38 +190,42 @@ export function UpcomingEvents({ events, ccaSessions, seeAllPath = "/parent/cale
             const { day, month, full } = formatDateParts(ccaSession.sessionDate);
             const timeLabel = formatTimeRange(ccaSession.startTime, ccaSession.endTime);
             const locationLabel = ccaSession.locationName || "—";
+            const bucket = getCcaBucket(ccaSession.category);
+            const pillClass = getCcaTypePillColor(ccaSession.category);
+            const BucketIcon = getCcaBucketIcon(bucket);
 
             return (
               <Card
                 key={`cca-${ccaSession.id}`}
-                className="bg-primary/10 border-primary/30 shadow-sm cursor-pointer"
+                className={cn("shadow-sm cursor-pointer border", pillClass)}
                 role="button"
                 tabIndex={0}
                 onClick={(e) => handleCardClick(e, ccaSession)}
                 onKeyDown={(e) => handleKeyDown(e, ccaSession)}
               >
                 <CardContent className="p-3 flex items-center gap-4">
-                  <div className={`flex flex-col items-center justify-center rounded-lg w-14 h-14 flex-shrink-0 ${getCcaCategoryColor(ccaSession.category)}`}>
+                  <div className={cn(
+                    "flex flex-col items-center justify-center rounded-lg w-14 h-14 flex-shrink-0 border",
+                    pillClass,
+                  )}>
                     <span className="text-lg font-bold leading-none">{day}</span>
                     <span className="text-xs uppercase">{month}</span>
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-0.5">
-                      <h3 className="font-medium text-foreground truncate">
+                      <BucketIcon className="h-4 w-4 shrink-0 opacity-80" aria-hidden />
+                      <h3 className="font-medium truncate">
                         {ccaSession.customTitle || ccaSession.activityName}
                       </h3>
-                      <Badge variant="secondary" className="text-[10px] px-1.5 py-0 bg-primary/10 text-primary shrink-0">
-                        CCA
-                      </Badge>
                     </div>
-                    <div className="flex items-center gap-3 text-sm text-muted-foreground mt-1">
+                    <div className="flex items-center gap-3 text-sm opacity-90 mt-1">
                       <span className="flex items-center gap-1">
                         <Clock className="h-3 w-3" />
                         {timeLabel}
                       </span>
                       <span className="text-xs">{full}</span>
                     </div>
-                    <div className="flex items-center gap-1 text-sm text-muted-foreground mt-0.5">
+                    <div className="flex items-center gap-1 text-sm opacity-90 mt-0.5">
                       <MapPin className="h-3 w-3" />
                       {locationLabel}
                     </div>
