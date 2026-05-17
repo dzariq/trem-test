@@ -1954,6 +1954,41 @@ export type Database = {
           },
         ]
       }
+      cca_event_award_types: {
+        Row: {
+          activity_id: string
+          created_at: string
+          id: string
+          label: string
+          sort_order: number
+          updated_at: string
+        }
+        Insert: {
+          activity_id: string
+          created_at?: string
+          id?: string
+          label: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Update: {
+          activity_id?: string
+          created_at?: string
+          id?: string
+          label?: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cca_event_award_types_activity_id_fkey"
+            columns: ["activity_id"]
+            isOneToOne: false
+            referencedRelation: "cca_activities"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       cca_event_awards: {
         Row: {
           academic_period_id: string | null
@@ -1966,7 +2001,7 @@ export type Database = {
           created_by: string | null
           id: string
           notes: string | null
-          school_level: string
+          school_level: string | null
           student_id: string
           updated_at: string
         }
@@ -1981,7 +2016,7 @@ export type Database = {
           created_by?: string | null
           id?: string
           notes?: string | null
-          school_level: string
+          school_level?: string | null
           student_id: string
           updated_at?: string
         }
@@ -1996,7 +2031,7 @@ export type Database = {
           created_by?: string | null
           id?: string
           notes?: string | null
-          school_level?: string
+          school_level?: string | null
           student_id?: string
           updated_at?: string
         }

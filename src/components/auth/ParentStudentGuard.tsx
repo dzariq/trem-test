@@ -1,6 +1,5 @@
 import { useEffect, useRef } from "react";
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
-import { toast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
 import { Loader2 } from "lucide-react";
 
@@ -12,6 +11,12 @@ export default function ParentStudentGuard() {
   const location = useLocation();
   const didRedirect = useRef(false);
 
+  const loadingScreen = (
+    <div className="min-h-screen bg-background flex items-center justify-center">
+      <Loader2 className="h-8 w-8 animate-spin text-primary" />
+    </div>
+  );
+
   useEffect(() => {
     if (loading) return;
     
@@ -20,9 +25,13 @@ export default function ParentStudentGuard() {
       navigate("/login?portal=family", { replace: true, state: { from: location.pathname } });
       return;
     }
+
+    // Profile can briefly be null while Supabase restores/refreshes the session.
+    // Do not blank or redirect the parent portal until the role is actually known.
+    if (!profile) return;
     
-    // If no profile or wrong role, redirect silently (no warning toast)
-    if (!profile || !allowedRoles.has(profile.role)) {
+    // If wrong role, redirect silently (no warning toast)
+    if (!allowedRoles.has(profile.role)) {
       if (!didRedirect.current) {
         didRedirect.current = true;
         // Removed the incorrect warning toast - auth routing handles role mismatches
@@ -32,15 +41,9 @@ export default function ParentStudentGuard() {
   }, [loading, user, profile, navigate, location.pathname]);
 
   // Show loading spinner while checking auth
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-      </div>
-    );
-  }
+  if (loading || !user || !profile) return loadingScreen;
   
-  if (!user || !profile || !allowedRoles.has(profile.role)) return null;
+  if (!allowedRoles.has(profile.role)) return loadingScreen;
 
   return <Outlet />;
 }
