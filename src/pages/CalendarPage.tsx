@@ -10,7 +10,7 @@ import { TimeGridCalendar } from "@/components/calendar/TimeGridCalendar";
 import { CalendarViewSwitcher, type CalendarViewMode } from "@/components/calendar/CalendarViewSwitcher";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { BottomSheet } from "@/components/ui/bottom-sheet";
-import { MapPin, Clock, CalendarDays, User, Loader2, ArrowRightLeft } from "lucide-react";
+import { MapPin, Clock, CalendarDays, User, Loader2, ArrowRightLeft, Users as UsersIcon, Mail, ClipboardList } from "lucide-react";
 import schoolLogo from "@/assets/school-badge.png";
 import { TAG_CATEGORIES, type TagCategory, type CalendarTag } from "@/types/calendarTags";
 import {
@@ -25,7 +25,14 @@ import { useEligibleCcaActivities, type CcaActivity } from "@/hooks/useEligibleC
 import { useStudentCcaEnrollments, type EnrolledCcaActivity } from "@/hooks/useStudentCcaEnrollments";
 import { useCcaClubEnrollment } from "@/hooks/useCcaClubEnrollment";
 import { PICTeachersList } from "@/components/cca/PICTeacherPill";
-import { CcaTypeTabs, CcaKindTabs, getCcaTypeColor, type CcaKindFilter } from "@/components/cca/CcaTypeTabs";
+import { CcaTypeTabs, CcaKindTabs, getCcaTypeColor, getCcaBucket, getCcaBucketIcon, getCcaTypePillColor, type CcaKindFilter } from "@/components/cca/CcaTypeTabs";
+import {
+  CCA_BUCKET_LABEL,
+  formatSessionDateShort,
+  formatSessionTimeRange,
+  getUpcomingSessions,
+  getNextUpcomingSession,
+} from "@/lib/ccaSessionFormat";
 import { CcaDetailsSheet } from "@/components/cca/CcaDetailsSheet";
 import { CcaActivityCard } from "@/components/cca/CcaActivityCard";
 import { ClubSwitchConfirmDialog } from "@/components/cca/ClubSwitchConfirmDialog";
