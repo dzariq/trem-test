@@ -6,6 +6,7 @@ import { Clock, MapPin } from "lucide-react";
 import type { UpcomingEvent } from "@/data/calendar";
 import type { UpcomingCcaSession } from "@/hooks/useUpcomingCcaSessions";
 import { getEventBadgeColor, getEventBadgeLabel } from "@/lib/calendarUtils";
+import { getCcaTypePillColor, getCcaBucketIcon, getCcaBucket } from "@/components/cca/CcaTypeTabs";
 import {
   UPCOMING_TABS,
   UPCOMING_TAB_COLORS,
@@ -111,17 +112,26 @@ export function UpcomingEventsSection({ events, ccaSessions = [], onEventClick, 
               const [sY, sM, sD] = session.sessionDate.split("-").map(Number);
               const date = new Date(sY, sM - 1, sD);
               const timeLabel = formatTimeRange(session.startTime, session.endTime);
+              const bucket = getCcaBucket(session.category);
+              const pillClass = getCcaTypePillColor(session.category);
+              const Icon = getCcaBucketIcon(bucket);
               return (
                 <div
                   key={session.id}
-                  className="flex items-start gap-3 p-3 rounded-lg bg-primary/10 border border-primary/30 hover:bg-primary/15 transition-colors cursor-pointer"
+                  className={cn(
+                    "flex items-start gap-3 p-3 rounded-lg border transition-colors cursor-pointer",
+                    pillClass,
+                  )}
                   role="button"
                   tabIndex={0}
                   onClick={(e) => onCcaSessionClick?.(session, e.currentTarget)}
                   onKeyDown={(e) => handleCcaKeyDown(e, session)}
                 >
                   {/* Filled date box (inverse of regular events) */}
-                  <div className="flex flex-col items-center justify-center bg-primary text-primary-foreground rounded-xl w-16 h-16 flex-shrink-0 shadow-sm">
+                  <div className={cn(
+                    "flex flex-col items-center justify-center rounded-xl w-16 h-16 flex-shrink-0 shadow-sm border",
+                    pillClass,
+                  )}>
                     <span className="text-lg font-bold leading-none">{date.getDate()}</span>
                     <span className="text-xs uppercase mt-0.5">
                       {date.toLocaleDateString("en-US", { month: "short" })}
@@ -130,21 +140,19 @@ export function UpcomingEventsSection({ events, ccaSessions = [], onEventClick, 
 
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-0.5">
-                      <h3 className="font-medium text-foreground truncate">
+                      <Icon className="h-4 w-4 shrink-0 opacity-80" aria-hidden />
+                      <h3 className="font-medium truncate">
                         {session.customTitle || session.activityName}
                       </h3>
-                      <Badge variant="secondary" className="text-[10px] px-1.5 py-0 bg-primary text-primary-foreground shrink-0">
-                        CCA
-                      </Badge>
                     </div>
-                    <div className="flex items-center gap-3 text-sm text-muted-foreground">
+                    <div className="flex items-center gap-3 text-sm opacity-90">
                       <span className="flex items-center gap-1">
                         <Clock className="h-3 w-3" />
                         {timeLabel}
                       </span>
                     </div>
                     {session.locationName && (
-                      <div className="flex items-center gap-1 text-sm text-muted-foreground mt-0.5">
+                      <div className="flex items-center gap-1 text-sm opacity-90 mt-0.5">
                         <MapPin className="h-3 w-3" />
                         {session.locationName}
                       </div>
