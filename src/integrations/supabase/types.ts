@@ -2619,39 +2619,6 @@ export type Database = {
         }
         Relationships: []
       }
-      cocurricular_field_options: {
-        Row: {
-          category: string
-          created_at: string | null
-          field_label: string
-          field_name: string
-          id: string
-          options: string[]
-          sort_order: number | null
-          updated_at: string | null
-        }
-        Insert: {
-          category: string
-          created_at?: string | null
-          field_label: string
-          field_name: string
-          id?: string
-          options?: string[]
-          sort_order?: number | null
-          updated_at?: string | null
-        }
-        Update: {
-          category?: string
-          created_at?: string | null
-          field_label?: string
-          field_name?: string
-          id?: string
-          options?: string[]
-          sort_order?: number | null
-          updated_at?: string | null
-        }
-        Relationships: []
-      }
       departments: {
         Row: {
           created_at: string
@@ -4481,75 +4448,6 @@ export type Database = {
           },
           {
             foreignKeyName: "student_cca_enrollments_student_id_fkey"
-            columns: ["student_id"]
-            isOneToOne: false
-            referencedRelation: "students"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      student_cocurricular_activities: {
-        Row: {
-          academic_period_id: string
-          achievements_award: string | null
-          achievements_event: string | null
-          club_org: string | null
-          club_role: string | null
-          created_at: string
-          events_org: string | null
-          events_role: string | null
-          id: string
-          leadership_org: string | null
-          leadership_role: string | null
-          sports_house_org: string | null
-          sports_house_role: string | null
-          student_id: string
-          updated_at: string
-        }
-        Insert: {
-          academic_period_id: string
-          achievements_award?: string | null
-          achievements_event?: string | null
-          club_org?: string | null
-          club_role?: string | null
-          created_at?: string
-          events_org?: string | null
-          events_role?: string | null
-          id?: string
-          leadership_org?: string | null
-          leadership_role?: string | null
-          sports_house_org?: string | null
-          sports_house_role?: string | null
-          student_id: string
-          updated_at?: string
-        }
-        Update: {
-          academic_period_id?: string
-          achievements_award?: string | null
-          achievements_event?: string | null
-          club_org?: string | null
-          club_role?: string | null
-          created_at?: string
-          events_org?: string | null
-          events_role?: string | null
-          id?: string
-          leadership_org?: string | null
-          leadership_role?: string | null
-          sports_house_org?: string | null
-          sports_house_role?: string | null
-          student_id?: string
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "student_cocurricular_activities_academic_period_id_fkey"
-            columns: ["academic_period_id"]
-            isOneToOne: false
-            referencedRelation: "academic_periods"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "student_cocurricular_activities_student_id_fkey"
             columns: ["student_id"]
             isOneToOne: false
             referencedRelation: "students"
