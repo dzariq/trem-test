@@ -203,3 +203,46 @@ export function getCcaTypeBadgeColor(typeName: string | null | undefined): strin
       return "bg-primary text-primary-foreground";
   }
 }
+
+/**
+ * Outline-pill variant for CCA chips inside the calendar grid.
+ * Provides a soft tinted background + matching border + text color
+ * so CCA chips are visually distinct from solid event chips.
+ */
+export function getCcaTypePillColor(typeName: string | null | undefined): string {
+  const name = (typeName ?? "").toLowerCase();
+  switch (name) {
+    case "indoor":
+    case "indoor cca":
+      return "bg-sky-50 text-sky-800 border-sky-400 dark:bg-sky-900/30 dark:text-sky-200 dark:border-sky-500/60";
+    case "outdoor":
+    case "outdoor cca":
+      return "bg-amber-50 text-amber-800 border-amber-400 dark:bg-amber-900/30 dark:text-amber-200 dark:border-amber-500/60";
+    case "enrichment":
+      return "bg-teal-50 text-teal-800 border-teal-400 dark:bg-teal-900/30 dark:text-teal-200 dark:border-teal-500/60";
+    case "indoor talks/workshop":
+      return "bg-cyan-50 text-cyan-800 border-cyan-400 dark:bg-cyan-900/30 dark:text-cyan-200 dark:border-cyan-500/60";
+    case "community service":
+      return "bg-lime-50 text-lime-800 border-lime-400 dark:bg-lime-900/30 dark:text-lime-200 dark:border-lime-500/60";
+    case "event":
+    case "events":
+      return "bg-fuchsia-50 text-fuchsia-800 border-fuchsia-400 dark:bg-fuchsia-900/30 dark:text-fuchsia-200 dark:border-fuchsia-500/60";
+    case "competition":
+      return "bg-rose-50 text-rose-800 border-rose-400 dark:bg-rose-900/30 dark:text-rose-200 dark:border-rose-500/60";
+    case "sports":
+      return "bg-orange-50 text-orange-800 border-orange-400 dark:bg-orange-900/30 dark:text-orange-200 dark:border-orange-500/60";
+    case "arts":
+      return "bg-pink-50 text-pink-800 border-pink-400 dark:bg-pink-900/30 dark:text-pink-200 dark:border-pink-500/60";
+    case "academic":
+      return "bg-indigo-50 text-indigo-800 border-indigo-400 dark:bg-indigo-900/30 dark:text-indigo-200 dark:border-indigo-500/60";
+    case "club":
+    case "clubs":
+      return "bg-emerald-50 text-emerald-800 border-emerald-400 dark:bg-emerald-900/30 dark:text-emerald-200 dark:border-emerald-500/60";
+    case "music":
+      return "bg-violet-50 text-violet-800 border-violet-400 dark:bg-violet-900/30 dark:text-violet-200 dark:border-violet-500/60";
+    case "other":
+      return "bg-slate-50 text-slate-800 border-slate-400 dark:bg-slate-800/40 dark:text-slate-200 dark:border-slate-500/60";
+    default:
+      return "bg-amber-50 text-amber-800 border-amber-400 dark:bg-amber-900/30 dark:text-amber-200 dark:border-amber-500/60";
+  }
+}
