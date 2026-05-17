@@ -1,40 +1,31 @@
-# CCA pill — 3 types with icons + colors
+## Goal
+On `/parent/calendar` → CCA tab ("Enrolled CCA Activities"), pull upcoming sessions for all 3 kinds — **clubs, outdoor, events** — for the selected student, sorted by soonest first.
 
-## Scope
-Use the same 3 styles everywhere CCA appears: month grid, week/day time grid, and the "What's Coming Up → CCA" list.
+## Scoping rules (per kind)
+- **Club (`kind='club'`)** and **Outdoor (`kind='outdoor'`)**: show only when the student is **directly tagged/enrolled** in the activity → `student_cca_enrollments` where `student_id = selectedStudentId` and `status = 'active'`.
+- **Event (`kind='event'`)**: show when the student's **class** appears in the activity's `classes_involved[]` (no per-student tagging required).
 
-## Type mapping (from `cca_activity_types`)
-Backend currently has 5 type names. Group them into 3 visual buckets:
+## Data approach
+All 3 kinds share `cca_sessions` (linked via `activity_id` → `cca_activities`), so one session table query covers everything once we know the activity IDs.
 
-| Bucket | Icon | Color (light/border/text) | Source type names |
-|---|---|---|---|
-| **Clubs** | `Users` | yellow — `bg-yellow-50 border-yellow-400 text-yellow-800` | `Indoor CCA`, `Indoor Talks/Workshop`, `Sports` |
-| **Outdoor** | `Bike` | orange — `bg-orange-50 border-orange-400 text-orange-800` | `Outdoor CCA` |
-| **Events** | `PartyPopper` | cream/amber — `bg-amber-50 border-amber-300 text-amber-700` | `Event` |
+### Resolve activity IDs for the selected student
+1. Fetch student row: `class`, `year_level` from `students`.
+2. **Enrolled activity IDs (clubs + outdoor)**:
+   - `student_cca_enrollments` → `cca_activity_id` where `student_id = sel` and `status = 'active'`.
+3. **Event activity IDs**:
+   - `cca_activities` where `kind = 'event'`, `is_active = true`, `archived` not true, and `classes_involved` array contains the student's `class`.
+4. Union the two lists.
 
-Dark-mode equivalents follow the existing `dark:bg-*/30 dark:text-*-200 dark:border-*-500/60` pattern.
+### Fetch sessions
+- `cca_sessions` where `activity_id IN (union)`, `session_date >= today`, `is_cancelled = false`, ordered by `session_date asc, start_time asc`, limited to N.
+- Join `cca_activities(name, category, kind)` + `school_locations(name)` as today.
+- Map `kind` onto the existing 3-bucket pill/icon system in `CcaTypeTabs` (clubs / outdoor / events).
 
-If `Sports` should be Outdoor instead of Clubs, that's a one-line swap — flag during review.
-
-## Technical changes
-
-1. **`src/components/cca/CcaTypeTabs.tsx`**
-   - Add `getCcaBucket(typeName)` → `"clubs" | "outdoor" | "events"` (single source of truth).
-   - Add `getCcaBucketIcon(bucket)` → returns `Users | Bike | PartyPopper` lucide component.
-   - Rewrite `getCcaTypePillColor` to delegate via the bucket → only 3 color sets returned.
-   - Keep `getCcaTypeColor` / `getCcaTypeBadgeColor` untouched (used by activity cards / details sheet that still display the raw type name).
-
-2. **`src/components/calendar/MonthGridCalendar.tsx`**
-   - Replace hard-coded `Users` icon with `getCcaBucketIcon(bucket)` resolved from `session.category`.
-   - Color from `getCcaTypePillColor` (now bucket-driven).
-
-3. **`src/components/calendar/TimeGridCalendar.tsx`**
-   - Same swap: dynamic icon by bucket, both for all-day strip and timed blocks.
-
-4. **`src/components/calendar/UpcomingEventsSection.tsx`** (CCA tab)
-   - Replace solid `primary` date-box + `bg-primary/10` row with bucket-tinted styling so each session's row + date-box + small `CCA` chip match the screenshot tones.
-   - Add the bucket icon next to the title (matches month-grid pills).
+## Files to change
+- `src/hooks/useUpcomingCcaSessions.ts` — replace the parent branch's "year-level eligible" logic with the enrollment + event-class scoping above. Also include `kind` in the returned `UpcomingCcaSession` (so the card can pick the correct bucket icon/color reliably instead of inferring from `category`).
+- `src/components/calendar/UpcomingEventsSection.tsx` (CCA tab card) — use the new `kind` field when computing `getCcaBucket`/`pillClass`/icon, falling back to category if missing. No layout changes.
 
 ## Out of scope
-- Tab order, "Events" rename, filter sheet behavior, and CCA details sheet styling are unchanged.
-- No DB / RLS changes — purely presentation.
+- Teacher branch (unchanged).
+- Calendar grid/timeline tabs (already use the existing taxonomy/colors).
+- Awards/`cca_activity_roles` are not used for scoping per the user's decision.
