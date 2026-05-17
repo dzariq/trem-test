@@ -1769,21 +1769,30 @@ export type Database = {
       }
       cca_bus_assignments: {
         Row: {
+          attended: boolean | null
           bus_id: string
           created_at: string
           id: string
+          marked_at: string | null
+          marked_by: string | null
           student_id: string
         }
         Insert: {
+          attended?: boolean | null
           bus_id: string
           created_at?: string
           id?: string
+          marked_at?: string | null
+          marked_by?: string | null
           student_id: string
         }
         Update: {
+          attended?: boolean | null
           bus_id?: string
           created_at?: string
           id?: string
+          marked_at?: string | null
+          marked_by?: string | null
           student_id?: string
         }
         Relationships: [
@@ -3091,6 +3100,41 @@ export type Database = {
             foreignKeyName: "homework_submissions_student_id_fkey"
             columns: ["student_id"]
             isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      invoice_reminder_settings: {
+        Row: {
+          created_at: string
+          id: string
+          notify_email: boolean
+          notify_whatsapp: boolean
+          student_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          notify_email?: boolean
+          notify_whatsapp?: boolean
+          student_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          notify_email?: boolean
+          notify_whatsapp?: boolean
+          student_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "invoice_reminder_settings_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: true
             referencedRelation: "students"
             referencedColumns: ["id"]
           },
@@ -4610,7 +4654,9 @@ export type Database = {
           content: Json
           created_at: string
           credit_note: boolean | null
+          due_date: string | null
           id: string
+          invoice_amount: string | null
           invoice_date: string | null
           outstanding_amount: string | null
           payment_amount: string | null
@@ -4626,7 +4672,9 @@ export type Database = {
           content?: Json
           created_at?: string
           credit_note?: boolean | null
+          due_date?: string | null
           id?: string
+          invoice_amount?: string | null
           invoice_date?: string | null
           outstanding_amount?: string | null
           payment_amount?: string | null
@@ -4642,7 +4690,9 @@ export type Database = {
           content?: Json
           created_at?: string
           credit_note?: boolean | null
+          due_date?: string | null
           id?: string
+          invoice_amount?: string | null
           invoice_date?: string | null
           outstanding_amount?: string | null
           payment_amount?: string | null
@@ -5935,6 +5985,8 @@ export type Database = {
           is_active: boolean
           location_notes: string | null
           name: string
+          pic_name: string | null
+          pic_phone: string | null
           pic_user_id: string | null
           tags: string[] | null
           updated_at: string
@@ -5952,6 +6004,8 @@ export type Database = {
           is_active?: boolean
           location_notes?: string | null
           name: string
+          pic_name?: string | null
+          pic_phone?: string | null
           pic_user_id?: string | null
           tags?: string[] | null
           updated_at?: string
@@ -5969,6 +6023,8 @@ export type Database = {
           is_active?: boolean
           location_notes?: string | null
           name?: string
+          pic_name?: string | null
+          pic_phone?: string | null
           pic_user_id?: string | null
           tags?: string[] | null
           updated_at?: string
