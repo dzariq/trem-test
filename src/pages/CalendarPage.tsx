@@ -10,7 +10,7 @@ import { TimeGridCalendar } from "@/components/calendar/TimeGridCalendar";
 import { CalendarViewSwitcher, type CalendarViewMode } from "@/components/calendar/CalendarViewSwitcher";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { BottomSheet } from "@/components/ui/bottom-sheet";
-import { MapPin, Clock, CalendarDays, User, Loader2, ArrowRightLeft } from "lucide-react";
+import { MapPin, Clock, CalendarDays, User, Loader2, ArrowRightLeft, Users as UsersIcon, Mail, ClipboardList } from "lucide-react";
 import schoolLogo from "@/assets/school-badge.png";
 import { TAG_CATEGORIES, type TagCategory, type CalendarTag } from "@/types/calendarTags";
 import {
@@ -25,7 +25,14 @@ import { useEligibleCcaActivities, type CcaActivity } from "@/hooks/useEligibleC
 import { useStudentCcaEnrollments, type EnrolledCcaActivity } from "@/hooks/useStudentCcaEnrollments";
 import { useCcaClubEnrollment } from "@/hooks/useCcaClubEnrollment";
 import { PICTeachersList } from "@/components/cca/PICTeacherPill";
-import { CcaTypeTabs, CcaKindTabs, getCcaTypeColor, type CcaKindFilter } from "@/components/cca/CcaTypeTabs";
+import { CcaTypeTabs, CcaKindTabs, getCcaTypeColor, getCcaBucket, getCcaBucketIcon, getCcaTypePillColor, type CcaKindFilter } from "@/components/cca/CcaTypeTabs";
+import {
+  CCA_BUCKET_LABEL,
+  formatSessionDateShort,
+  formatSessionTimeRange,
+  getUpcomingSessions,
+  getNextUpcomingSession,
+} from "@/lib/ccaSessionFormat";
 import { CcaDetailsSheet } from "@/components/cca/CcaDetailsSheet";
 import { CcaActivityCard } from "@/components/cca/CcaActivityCard";
 import { ClubSwitchConfirmDialog } from "@/components/cca/ClubSwitchConfirmDialog";
@@ -681,17 +688,31 @@ export default function CalendarPage() {
         title={
           <div className="flex items-center gap-2">
             <span className="text-lg font-semibold">{selectedCCA?.name}</span>
-            {selectedCCA && (
-              <Badge className={getCcaCategoryColor(selectedCCA.category)} variant="secondary">
-                {selectedCCA.category}
-              </Badge>
-            )}
+            {selectedCCA && (() => {
+              const b = getCcaBucket(selectedCCA.kind ?? selectedCCA.category);
+              const Icon = getCcaBucketIcon(b);
+              return (
+                <Badge
+                  className={cn(getCcaTypePillColor(selectedCCA.kind ?? selectedCCA.category), "border gap-1")}
+                  variant="outline"
+                >
+                  <Icon className="h-3 w-3" />
+                  {CCA_BUCKET_LABEL[b]}
+                </Badge>
+              );
+            })()}
           </div>
         }
         description="CCA details"
         bodyClassName="px-4 py-3 space-y-4"
       >
-        {selectedCCA && (
+        {selectedCCA && (() => {
+          const bucket = getCcaBucket(selectedCCA.kind ?? selectedCCA.category);
+          const isEvent = bucket === "events";
+          const upcomingSessions = getUpcomingSessions(selectedCCA.sessions, 3);
+          const nextSession = getNextUpcomingSession(selectedCCA.sessions);
+          const requirementsText = nextSession?.requirements || selectedCCA.sessions?.[0]?.requirements || null;
+          return (
           <>
             <p className="text-sm text-muted-foreground">
               {selectedCCA.publicDescription || "Details to be announced"}
@@ -710,9 +731,22 @@ export default function CalendarPage() {
               </div>
             )}
 
+            {isEvent && selectedCCA.classesInvolved.length > 0 && (
+              <div className="flex items-start gap-2">
+                <span className="text-xs text-muted-foreground mt-1">Classes:</span>
+                <div className="flex flex-wrap gap-1">
+                  {selectedCCA.classesInvolved.map((cls) => (
+                    <Badge key={cls} variant="outline" className="text-xs">
+                      {cls}
+                    </Badge>
+                  ))}
+                </div>
+              </div>
+            )}
+
             <Card className="bg-primary/5 dark:bg-primary/10 border border-primary/20 dark:border-primary/30 rounded-xl">
               <CardContent className="p-4 space-y-3">
-                {(selectedCCA.meetingDay || selectedCCA.meetingTime) && (
+                {!isEvent && (selectedCCA.meetingDay || selectedCCA.meetingTime) && (
                   <div className="flex items-center gap-3">
                     <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
                       <CalendarDays className="h-4 w-4 text-primary" />
@@ -739,6 +773,18 @@ export default function CalendarPage() {
                   </div>
                 )}
 
+                {!isEvent && selectedCCA.maxParticipants != null && selectedCCA.maxParticipants > 0 && (
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
+                      <UsersIcon className="h-4 w-4 text-primary" />
+                    </div>
+                    <div>
+                      <p className="text-xs text-muted-foreground">Capacity</p>
+                      <p className="text-sm font-medium">Up to {selectedCCA.maxParticipants} spots</p>
+                    </div>
+                  </div>
+                )}
+
                 {(selectedCCA.picTeachers.length > 0 || selectedCCA.coordinatorName) && (
                   <div className="flex items-start gap-3">
                     <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
@@ -753,8 +799,65 @@ export default function CalendarPage() {
                     </div>
                   </div>
                 )}
+
+                {selectedCCA.coordinatorEmail && (
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
+                      <Mail className="h-4 w-4 text-primary" />
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-xs text-muted-foreground">Contact</p>
+                      <a
+                        href={`mailto:${selectedCCA.coordinatorEmail}`}
+                        className="text-sm font-medium text-primary underline-offset-2 hover:underline truncate block"
+                      >
+                        {selectedCCA.coordinatorEmail}
+                      </a>
+                    </div>
+                  </div>
+                )}
               </CardContent>
             </Card>
+
+            {isEvent && upcomingSessions.length > 0 && (
+              <div className="space-y-2">
+                <div className="flex items-center gap-2">
+                  <CalendarDays className="h-4 w-4 text-muted-foreground" />
+                  <span className="text-sm font-medium">Upcoming Sessions</span>
+                </div>
+                <div className="space-y-2 pl-6">
+                  {upcomingSessions.map((s) => (
+                    <div key={s.id} className="rounded-lg border border-border bg-muted/30 p-2.5 text-sm">
+                      <p className="font-medium text-foreground">
+                        {formatSessionDateShort(s.sessionDate)}
+                        {formatSessionTimeRange(s.startTime, s.endTime) && (
+                          <span className="text-muted-foreground font-normal">
+                            {" · "}
+                            {formatSessionTimeRange(s.startTime, s.endTime)}
+                          </span>
+                        )}
+                      </p>
+                      {s.location && (
+                        <p className="text-xs text-muted-foreground mt-0.5 flex items-center gap-1">
+                          <MapPin className="h-3 w-3" />
+                          {s.location}
+                        </p>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {requirementsText && (
+              <div className="space-y-2">
+                <div className="flex items-center gap-2">
+                  <ClipboardList className="h-4 w-4 text-muted-foreground" />
+                  <span className="text-sm font-medium">Requirements</span>
+                </div>
+                <p className="text-sm text-muted-foreground pl-6">{requirementsText}</p>
+              </div>
+            )}
 
             {/* Join/Switch button in bottom sheet - Only show for non-parent roles */}
             {roleForFilters !== "parent" && !isEnrolledInActivity(selectedCCA.id) && (
@@ -787,7 +890,8 @@ export default function CalendarPage() {
               </div>
             )}
           </>
-        )}
+          );
+        })()}
       </BottomSheet>
 
       {/* Enrolled CCA Details Sheet */}
@@ -802,6 +906,7 @@ export default function CalendarPage() {
           category: selectedEnrolledCCA.category || "Indoor CCA",
           typeId: selectedEnrolledCCA.typeId,
           typeName: selectedEnrolledCCA.typeName,
+          kind: selectedEnrolledCCA.kind,
           yearLevels: [],
           meetingDay: selectedEnrolledCCA.meetingDay,
           meetingTime: selectedEnrolledCCA.meetingTime,

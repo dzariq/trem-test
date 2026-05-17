@@ -32,6 +32,7 @@ export interface CcaActivity {
   category: string;
   typeId: string | null;
   typeName: string | null;
+  kind?: string | null;
   yearLevels: string[];
   meetingDay: string | null;
   meetingTime: string | null;
