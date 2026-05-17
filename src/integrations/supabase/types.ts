@@ -4310,33 +4310,36 @@ export type Database = {
       student_additional_achievements: {
         Row: {
           academic_period_id: string
+          award_level: string
+          award_title: string
           created_at: string
           created_by: string | null
           id: string
-          organization: string
-          role: string
+          remarks: string | null
           sort_order: number
           student_id: string
           updated_at: string
         }
         Insert: {
           academic_period_id: string
+          award_level?: string
+          award_title?: string
           created_at?: string
           created_by?: string | null
           id?: string
-          organization?: string
-          role?: string
+          remarks?: string | null
           sort_order?: number
           student_id: string
           updated_at?: string
         }
         Update: {
           academic_period_id?: string
+          award_level?: string
+          award_title?: string
           created_at?: string
           created_by?: string | null
           id?: string
-          organization?: string
-          role?: string
+          remarks?: string | null
           sort_order?: number
           student_id?: string
           updated_at?: string
