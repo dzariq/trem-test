@@ -1,9 +1,9 @@
 import { useEffect, useMemo, useState, type MouseEvent } from "react";
-import { ChevronLeft, ChevronRight, ArrowLeft, SlidersHorizontal, ChevronDown } from "lucide-react";
+import { ChevronLeft, ChevronRight, ArrowLeft, SlidersHorizontal, ChevronDown, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { getEventBadgeColor } from "@/lib/calendarUtils";
-import { getCcaTypeColor } from "@/components/cca/CcaTypeTabs";
+import { getCcaTypePillColor } from "@/components/cca/CcaTypeTabs";
 import type { UpcomingEvent } from "@/data/calendar";
 import type { CcaCalendarSession } from "@/hooks/useCcaSessionsCalendar";
 import { CalendarViewDropdown, type CalendarViewMode } from "./CalendarViewSwitcher";
@@ -192,7 +192,7 @@ export function TimeGridCalendar({
       if (!session.sessionDate || !dayKeys.has(session.sessionDate)) return;
       const startMin = parseHHMM(session.startTime);
       const endMin = parseHHMM(session.endTime);
-      const colorClass = getCcaTypeColor(session.category);
+      const colorClass = getCcaTypePillColor(session.category);
       const block: Block = {
         kind: "cca",
         id: session.id,
@@ -546,11 +546,17 @@ export function TimeGridCalendar({
                         onClick={(e) => handleBlockClick(e, b, d.ymd)}
                         aria-label={b.title}
                         className={cn(
-                          "h-[26px] px-1.5 rounded-md text-[9px] leading-[26px] font-medium truncate text-left border-transparent no-callout [touch-action:manipulation]",
+                          "h-[26px] text-[9px] font-medium truncate text-left no-callout [touch-action:manipulation]",
+                          b.kind === "cca"
+                            ? "flex items-center gap-1 px-1.5 rounded-full border leading-none"
+                            : "px-1.5 rounded-md leading-[26px] border border-transparent",
                           b.colorClass,
                         )}
                       >
-                        {b.title}
+                        {b.kind === "cca" && (
+                          <Users className="h-3 w-3 shrink-0 opacity-80" aria-hidden />
+                        )}
+                        <span className="truncate">{b.title}</span>
                       </button>
                     ))}
                     {overflow > 0 && (
@@ -641,13 +647,23 @@ export function TimeGridCalendar({
                         onClick={(e) => handleBlockClick(e, b, d.ymd)}
                         aria-label={b.title}
                         className={cn(
-                          "absolute rounded-md px-1.5 py-0.5 text-[10px] font-medium text-left overflow-hidden border border-transparent shadow-sm z-10 no-callout",
-                          mode === "day" ? "left-1.5 right-1.5 rounded-lg" : "left-0.5 right-0.5",
+                          "absolute px-1.5 py-0.5 text-[10px] font-medium text-left overflow-hidden shadow-sm z-10 no-callout",
+                          b.kind === "cca"
+                            ? "rounded-2xl border-2"
+                            : "rounded-md border border-transparent",
+                          mode === "day"
+                            ? cn("left-1.5 right-1.5", b.kind === "cca" ? "rounded-2xl" : "rounded-lg")
+                            : "left-0.5 right-0.5",
                           b.colorClass,
                         )}
                         style={{ top: clampedTop, height }}
                       >
-                        <div className="truncate">{b.title}</div>
+                        <div className="truncate flex items-center gap-1">
+                          {b.kind === "cca" && (
+                            <Users className="h-3 w-3 shrink-0 opacity-80" aria-hidden />
+                          )}
+                          <span className="truncate">{b.title}</span>
+                        </div>
                       </button>
                     );
                   })}
