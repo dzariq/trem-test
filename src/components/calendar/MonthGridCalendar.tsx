@@ -1,9 +1,9 @@
 import { useMemo, useState, type MouseEvent } from "react";
-import { ChevronLeft, ChevronRight, SlidersHorizontal, ChevronDown } from "lucide-react";
+import { ChevronLeft, ChevronRight, SlidersHorizontal, ChevronDown, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { getEventBadgeColor } from "@/lib/calendarUtils";
-import { getCcaTypeColor } from "@/components/cca/CcaTypeTabs";
+import { getCcaTypePillColor } from "@/components/cca/CcaTypeTabs";
 import type { UpcomingEvent } from "@/data/calendar";
 import type { CcaCalendarSession } from "@/hooks/useCcaSessionsCalendar";
 import { CalendarViewDropdown, type CalendarViewMode } from "./CalendarViewSwitcher";
@@ -111,7 +111,7 @@ export function MonthGridCalendar({
         kind: "cca",
         id: session.id,
         title: session.customTitle || session.activityName || "CCA",
-        colorClass: getCcaTypeColor(session.category),
+        colorClass: getCcaTypePillColor(session.category),
         sortKey,
         payload: session,
       });
