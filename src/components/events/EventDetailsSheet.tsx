@@ -1,11 +1,15 @@
 import { BottomSheet } from "@/components/ui/bottom-sheet";
 import { Badge } from "@/components/ui/badge";
-import { CalendarDays, Clock, MapPin } from "lucide-react";
+import { CalendarDays, Clock, MapPin, ClipboardList } from "lucide-react";
 import type { UpcomingEvent } from "@/data/calendar";
 import type { UpcomingCcaSession } from "@/hooks/useUpcomingCcaSessions";
+import type { CcaCalendarSession } from "@/hooks/useCcaSessionsCalendar";
 import { getEventBadgeColor, getEventBadgeLabel } from "@/lib/calendarUtils";
+import { getCcaBucket, getCcaTypePillColor, getCcaBucketIcon } from "@/components/cca/CcaTypeTabs";
+import { cn } from "@/lib/utils";
 
-type EventLike = UpcomingEvent | UpcomingCcaSession;
+type CcaLike = UpcomingCcaSession | CcaCalendarSession;
+type EventLike = UpcomingEvent | CcaLike;
 
 interface EventDetailsSheetProps {
   open: boolean;
@@ -13,7 +17,7 @@ interface EventDetailsSheetProps {
   event: EventLike | null;
 }
 
-const isCcaSession = (event: EventLike): event is UpcomingCcaSession => {
+const isCcaSession = (event: EventLike): event is CcaLike => {
   return "sessionDate" in event;
 };
 
@@ -60,8 +64,21 @@ export function EventDetailsSheet({ open, onOpenChange, event }: EventDetailsShe
     : event.allDay
       ? "All Day"
       : event.time || "-";
-  const locationLabel = cca ? event.locationName || "-" : event.location || "-";
-  const description = (cca ? event.description : event.description) || "-";
+  const locationLabel = cca ? event.locationName : event.location;
+  const description = (event.description || "").trim();
+  const requirements = cca
+    ? ((event as CcaCalendarSession).requirements || "").trim()
+    : "";
+  const showActivitySubtitle =
+    cca && !!event.customTitle && event.customTitle !== event.activityName;
+
+  // CCA bucket-aware label/icon/color
+  const bucketKey = cca ? (event.kind || event.category) : null;
+  const bucket = cca ? getCcaBucket(bucketKey) : null;
+  const BucketIcon = cca ? getCcaBucketIcon(bucket!) : null;
+  const bucketPill = cca ? getCcaTypePillColor(bucketKey) : "";
+  const bucketLabel =
+    bucket === "clubs" ? "Club" : bucket === "outdoor" ? "Outdoor" : "Event";
 
   return (
     <BottomSheet
@@ -70,23 +87,32 @@ export function EventDetailsSheet({ open, onOpenChange, event }: EventDetailsShe
       snapPoints={[0, 0.75, 1]}
       defaultSnapPoint={0.75}
       title={
-        <div className="flex flex-wrap items-center gap-2">
-          <span className="text-lg font-semibold">
-            {cca ? event.customTitle || event.activityName : event.title}
-          </span>
-          {cca ? (
-            <>
-              <Badge variant="secondary" className="text-[10px] px-1.5 py-0 shrink-0 w-fit">
-                CCA
+        <div className="space-y-1">
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="text-lg font-semibold">
+              {cca ? event.customTitle || event.activityName : event.title}
+            </span>
+            {cca && BucketIcon ? (
+              <Badge
+                variant="outline"
+                className={cn(
+                  "text-xs shrink-0 w-fit gap-1 border",
+                  bucketPill,
+                )}
+              >
+                <BucketIcon className="h-3 w-3" />
+                {bucketLabel}
               </Badge>
+            ) : (
               <Badge variant="secondary" className="text-xs shrink-0 w-fit">
                 {event.category}
               </Badge>
-            </>
-          ) : (
-            <Badge variant="secondary" className="text-xs shrink-0 w-fit">
-              {event.category}
-            </Badge>
+            )}
+          </div>
+          {showActivitySubtitle && (
+            <p className="text-xs text-muted-foreground font-normal">
+              Activity: {event.activityName}
+            </p>
           )}
         </div>
       }
@@ -114,15 +140,31 @@ export function EventDetailsSheet({ open, onOpenChange, event }: EventDetailsShe
           </div>
         </div>
 
-        <div className="flex items-start gap-3">
-          <div className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
-            <MapPin className="h-4 w-4 text-primary" />
+        {locationLabel && (
+          <div className="flex items-start gap-3">
+            <div className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+              <MapPin className="h-4 w-4 text-primary" />
+            </div>
+            <div>
+              <p className="text-xs text-muted-foreground">Location</p>
+              <p className="text-sm font-medium text-foreground">{locationLabel}</p>
+            </div>
           </div>
-          <div>
-            <p className="text-xs text-muted-foreground">Location</p>
-            <p className="text-sm font-medium text-foreground">{locationLabel}</p>
+        )}
+
+        {requirements && (
+          <div className="flex items-start gap-3">
+            <div className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+              <ClipboardList className="h-4 w-4 text-primary" />
+            </div>
+            <div>
+              <p className="text-xs text-muted-foreground">Requirements</p>
+              <p className="text-sm font-medium text-foreground whitespace-pre-wrap">
+                {requirements}
+              </p>
+            </div>
           </div>
-        </div>
+        )}
       </div>
 
       {!cca && (event.tags.length > 0 || event.category) && (
@@ -138,12 +180,14 @@ export function EventDetailsSheet({ open, onOpenChange, event }: EventDetailsShe
         </div>
       )}
 
-      <div className="space-y-1">
-        <p className="text-xs text-muted-foreground">Description</p>
-        <p className="text-sm text-foreground/90 leading-relaxed">
-          {description}
-        </p>
-      </div>
+      {description && (
+        <div className="space-y-1">
+          <p className="text-xs text-muted-foreground">Description</p>
+          <p className="text-sm text-foreground/90 leading-relaxed whitespace-pre-wrap">
+            {description}
+          </p>
+        </div>
+      )}
     </BottomSheet>
   );
 }
