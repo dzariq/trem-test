@@ -335,11 +335,17 @@ export function MonthGridCalendar({
                     onClick={(e) => handleChipClick(e, item)}
                     aria-label={item.title}
                     className={cn(
-                      "h-[16px] px-0.5 rounded-[3px] text-[9px] sm:text-[10px] leading-[16px] font-medium truncate border-transparent no-callout",
+                      "h-[16px] text-[9px] sm:text-[10px] leading-[14px] font-medium truncate no-callout",
+                      item.kind === "cca"
+                        ? "flex items-center gap-1 px-1 rounded-full border"
+                        : "px-0.5 rounded-[3px] border border-transparent",
                       item.colorClass,
                     )}
                   >
-                    {item.title}
+                    {item.kind === "cca" && (
+                      <Users className="h-2.5 w-2.5 shrink-0 opacity-80" aria-hidden />
+                    )}
+                    <span className="truncate">{item.title}</span>
                   </div>
                 ))}
               </div>
