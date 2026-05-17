@@ -3,7 +3,7 @@ import { ChevronLeft, ChevronRight, ArrowLeft, SlidersHorizontal, ChevronDown, U
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { getEventBadgeColor } from "@/lib/calendarUtils";
-import { getCcaTypeColor, getCcaTypePillColor } from "@/components/cca/CcaTypeTabs";
+import { getCcaTypePillColor } from "@/components/cca/CcaTypeTabs";
 import type { UpcomingEvent } from "@/data/calendar";
 import type { CcaCalendarSession } from "@/hooks/useCcaSessionsCalendar";
 import { CalendarViewDropdown, type CalendarViewMode } from "./CalendarViewSwitcher";
