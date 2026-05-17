@@ -1658,15 +1658,18 @@ export default function AcademicPage() {
                                 const isExpanded = expandedSubject === grade.subjectName;
                                 const gradeKey = isPending ? 'C' : (grade.letterGrade?.[0] || 'C');
                                 const cardStyle = gradeCardBgStyles[gradeKey] || gradeCardBgStyles.C;
-                                return <div key={index} onClick={() => setExpandedSubject(isExpanded ? null : grade.subjectName)} className={`
-                                        flex flex-col p-4 rounded-xl cursor-pointer border
-                                        transition-all duration-200 ease-out min-h-[80px]
-                                        hover:shadow-md
-                                        ${isExpanded ? 'ring-2 ring-primary/40 shadow-md' : ''}
-                                      `} style={{
-                                  backgroundColor: cardStyle.bg,
-                                  borderColor: cardStyle.border
-                                }}>
+                                 const pillColor = (gradePillStyles[gradeKey] || gradePillStyles.C).bg;
+                                 const expandedBg = cardStyle.bg.replace(/0\.1\)$/, '0.22)');
+                                 return <div key={index} onClick={() => setExpandedSubject(isExpanded ? null : grade.subjectName)} className={`
+                                         flex flex-col p-4 rounded-xl cursor-pointer border
+                                         transition-all duration-200 ease-out min-h-[80px]
+                                         hover:shadow-md
+                                         ${isExpanded ? 'shadow-md' : ''}
+                                       `} style={{
+                                   backgroundColor: isExpanded ? expandedBg : cardStyle.bg,
+                                   borderColor: isExpanded ? pillColor : cardStyle.border,
+                                   borderWidth: isExpanded ? 2 : 1
+                                 }}>
                                       <h3 className="font-medium text-foreground text-sm leading-tight mb-2 line-clamp-2 break-words">{grade.subjectName}</h3>
                                       <div className="flex items-center justify-between mt-auto">
                                         <div className="flex items-center gap-2">
