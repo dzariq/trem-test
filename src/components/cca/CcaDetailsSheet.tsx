@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { CalendarDays, MapPin, User, ClipboardList, FileText, Settings } from "lucide-react";
+import { CalendarDays, MapPin, User, ClipboardList, FileText, Settings, Users as UsersIcon, Mail } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -11,7 +11,15 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { PICTeachersList } from "@/components/cca/PICTeacherPill";
-import { getCcaTypeColor } from "@/components/cca/CcaTypeTabs";
+import { getCcaBucket, getCcaBucketIcon, getCcaTypePillColor } from "@/components/cca/CcaTypeTabs";
+import {
+  CCA_BUCKET_LABEL,
+  formatSessionDateShort,
+  formatSessionTimeRange,
+  getUpcomingSessions,
+  getNextUpcomingSession,
+} from "@/lib/ccaSessionFormat";
+import { cn } from "@/lib/utils";
 import { CcaActivityImage } from "@/components/cca/CcaActivityImage";
 import { CcaImageUpload } from "@/components/cca/CcaImageUpload";
 import type { CcaActivity } from "@/hooks/useCcaActivities";
@@ -41,11 +49,19 @@ export function CcaDetailsSheet({
   onManageSessions,
   onActivityUpdated,
 }: CcaDetailsSheetProps) {
-  const getCcaCategoryColor = getCcaTypeColor;
   const [localImageUrl, setLocalImageUrl] = useState<string | null | undefined>(undefined);
 
   // Use local state if updated, otherwise use activity's image
   const displayImageUrl = localImageUrl !== undefined ? localImageUrl : activity?.imageUrl;
+
+  const bucket = activity ? getCcaBucket(activity.kind ?? activity.category) : "clubs";
+  const BucketIcon = getCcaBucketIcon(bucket);
+  const bucketLabel = CCA_BUCKET_LABEL[bucket];
+  const bucketPill = activity ? getCcaTypePillColor(activity.kind ?? activity.category) : "";
+  const isEvent = bucket === "events";
+  const upcomingSessions = activity ? getUpcomingSessions(activity.sessions, 3) : [];
+  const nextSession = activity ? getNextUpcomingSession(activity.sessions) : null;
+  const requirementsText = nextSession?.requirements || activity?.sessions?.[0]?.requirements || null;
 
   const handleImageUploadComplete = (newUrl: string | null) => {
     setLocalImageUrl(newUrl);
@@ -83,7 +99,7 @@ export function CcaDetailsSheet({
 
       <Card className="bg-emerald-50/80 dark:bg-emerald-950/30 border border-emerald-200/60 dark:border-emerald-800/40 rounded-xl">
         <CardContent className="p-4 space-y-3">
-          {(activity.meetingDay || activity.meetingTime) && (
+          {!isEvent && (activity.meetingDay || activity.meetingTime) && (
             <div className="flex items-center gap-3">
               <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
                 <CalendarDays className="h-4 w-4 text-primary" />
@@ -110,6 +126,18 @@ export function CcaDetailsSheet({
             </div>
           )}
 
+          {!isEvent && activity.maxParticipants != null && activity.maxParticipants > 0 && (
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
+                <UsersIcon className="h-4 w-4 text-primary" />
+              </div>
+              <div>
+                <p className="text-xs text-muted-foreground">Capacity</p>
+                <p className="text-sm font-medium">Up to {activity.maxParticipants} spots</p>
+              </div>
+            </div>
+          )}
+
           <div className="flex items-start gap-3">
             <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
               <User className="h-4 w-4 text-primary" />
@@ -123,17 +151,67 @@ export function CcaDetailsSheet({
               />
             </div>
           </div>
+
+          {activity.coordinatorEmail && (
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
+                <Mail className="h-4 w-4 text-primary" />
+              </div>
+              <div className="min-w-0">
+                <p className="text-xs text-muted-foreground">Contact</p>
+                <a
+                  href={`mailto:${activity.coordinatorEmail}`}
+                  className="text-sm font-medium text-primary underline-offset-2 hover:underline truncate block"
+                >
+                  {activity.coordinatorEmail}
+                </a>
+              </div>
+            </div>
+          )}
         </CardContent>
       </Card>
 
-      {activity.sessions.length > 0 && activity.sessions[0].requirements && (
+      {isEvent && upcomingSessions.length > 0 && (
+        <div className="space-y-2">
+          <div className="flex items-center gap-2">
+            <CalendarDays className="h-4 w-4 text-muted-foreground" />
+            <span className="text-sm font-medium">Upcoming Sessions</span>
+          </div>
+          <div className="space-y-2 pl-6">
+            {upcomingSessions.map((s) => (
+              <div
+                key={s.id}
+                className="rounded-lg border border-border bg-muted/30 p-2.5 text-sm"
+              >
+                <p className="font-medium text-foreground">
+                  {formatSessionDateShort(s.sessionDate)}
+                  {formatSessionTimeRange(s.startTime, s.endTime) && (
+                    <span className="text-muted-foreground font-normal">
+                      {" · "}
+                      {formatSessionTimeRange(s.startTime, s.endTime)}
+                    </span>
+                  )}
+                </p>
+                {s.location && (
+                  <p className="text-xs text-muted-foreground mt-0.5 flex items-center gap-1">
+                    <MapPin className="h-3 w-3" />
+                    {s.location}
+                  </p>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {requirementsText && (
         <div className="space-y-2">
           <div className="flex items-center gap-2">
             <ClipboardList className="h-4 w-4 text-muted-foreground" />
             <span className="text-sm font-medium">Requirements</span>
           </div>
           <p className="text-sm text-muted-foreground pl-6">
-            {activity.sessions[0].requirements}
+            {requirementsText}
           </p>
         </div>
       )}
@@ -192,9 +270,13 @@ export function CcaDetailsSheet({
           PIC
         </Badge>
       )}
-      <Badge className={getCcaCategoryColor(activity.category)} variant="secondary">
-        {activity.category}
+      <Badge className={cn(bucketPill, "border gap-1")} variant="outline">
+        <BucketIcon className="h-3 w-3" />
+        {bucketLabel}
       </Badge>
+      {activity.typeName && activity.typeName !== bucketLabel && (
+        <span className="text-xs text-muted-foreground">{activity.typeName}</span>
+      )}
     </div>
   ) : null;
 
