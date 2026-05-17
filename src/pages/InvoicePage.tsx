@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Receipt } from "lucide-react";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { AppHeader } from "@/components/layout/AppHeader";
@@ -20,6 +20,23 @@ export default function InvoicePage() {
   const { invoices, isLoading, error } = useStudentInvoices(selectedStudentId);
   const [filter, setFilter] = useState<Filter>("all");
   const [active, setActive] = useState<ParentInvoice | null>(null);
+
+  useEffect(() => {
+    const scrollToTop = () => {
+      const appScroll = document.querySelector('[data-app-scroll="true"]') as HTMLElement | null;
+      appScroll?.scrollTo({ top: 0, left: 0, behavior: "auto" });
+      window.scrollTo({ top: 0, left: 0, behavior: "auto" });
+    };
+
+    scrollToTop();
+    const raf = requestAnimationFrame(scrollToTop);
+    const timeout = window.setTimeout(scrollToTop, 100);
+
+    return () => {
+      cancelAnimationFrame(raf);
+      window.clearTimeout(timeout);
+    };
+  }, []);
 
   const summary = useMemo(() => {
     const outstanding = invoices
