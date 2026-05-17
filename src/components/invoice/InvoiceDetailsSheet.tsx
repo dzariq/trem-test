@@ -16,6 +16,7 @@ export function InvoiceDetailsSheet({ invoice, open, onOpenChange }: Props) {
   if (!invoice) return null;
 
   const statusInfo = statusLabel(invoice.status);
+  const hasDates = Boolean(invoice.invoiceDate || invoice.dueDate);
 
   return (
     <BottomSheet
@@ -67,7 +68,7 @@ export function InvoiceDetailsSheet({ invoice, open, onOpenChange }: Props) {
         </div>
 
         {/* Dates */}
-        <div className="grid grid-cols-2 gap-3 text-sm">
+        {hasDates && <div className="grid grid-cols-2 gap-3 text-sm">
           {invoice.invoiceDate && (
             <div>
               <p className="text-xs text-muted-foreground">Invoice date</p>
@@ -84,7 +85,7 @@ export function InvoiceDetailsSheet({ invoice, open, onOpenChange }: Props) {
               </p>
             </div>
           )}
-        </div>
+        </div>}
 
         {/* Line items */}
         {invoice.lineItems.length > 0 && (
