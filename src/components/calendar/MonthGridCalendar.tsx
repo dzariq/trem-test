@@ -1,9 +1,9 @@
 import { useMemo, useState, type MouseEvent } from "react";
-import { ChevronLeft, ChevronRight, SlidersHorizontal, ChevronDown, Users } from "lucide-react";
+import { ChevronLeft, ChevronRight, SlidersHorizontal, ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { getEventBadgeColor } from "@/lib/calendarUtils";
-import { getCcaTypePillColor } from "@/components/cca/CcaTypeTabs";
+import { getCcaTypePillColor, getCcaBucketIcon } from "@/components/cca/CcaTypeTabs";
 import type { UpcomingEvent } from "@/data/calendar";
 import type { CcaCalendarSession } from "@/hooks/useCcaSessionsCalendar";
 import { CalendarViewDropdown, type CalendarViewMode } from "./CalendarViewSwitcher";
@@ -342,9 +342,10 @@ export function MonthGridCalendar({
                       item.colorClass,
                     )}
                   >
-                    {item.kind === "cca" && (
-                      <Users className="h-2.5 w-2.5 shrink-0 opacity-80" aria-hidden />
-                    )}
+                    {item.kind === "cca" && (() => {
+                      const Icon = getCcaBucketIcon((item.payload as CcaCalendarSession).category);
+                      return <Icon className="h-2.5 w-2.5 shrink-0 opacity-80" aria-hidden />;
+                    })()}
                     <span className="truncate">{item.title}</span>
                   </div>
                 ))}
