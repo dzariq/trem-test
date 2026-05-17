@@ -14,6 +14,28 @@ export interface HomeworkItem {
   lessonDate: string | null;
 }
 
+type HomeworkAssignmentRow = {
+  id: string;
+  title: string | null;
+  instructions: string;
+  due_date: string | null;
+  subject: string | null;
+  lesson_plan_detail_id: string | null;
+};
+
+type HomeworkStudentRow = {
+  id: string;
+  status: string | null;
+  submitted_at: string | null;
+  homework_assignments: HomeworkAssignmentRow;
+};
+
+type LessonDetailRow = {
+  id: string;
+  title: string;
+  date: string | null;
+};
+
 export function useStudentHomework(studentId: string | null) {
   const homeworkQuery = useQuery({
     queryKey: ["student-homework", studentId],
@@ -42,23 +64,24 @@ export function useStudentHomework(studentId: string | null) {
       if (error) throw error;
 
       // Get lesson plan detail info for context
-      const lessonDetailIds = (data || [])
-        .map((r: any) => r.homework_assignments?.lesson_plan_detail_id)
+      const rows = (data || []) as HomeworkStudentRow[];
+      const lessonDetailIds = rows
+        .map((r) => r.homework_assignments?.lesson_plan_detail_id)
         .filter(Boolean);
 
-      let lessonDetailsMap: Record<string, { title: string; date: string | null }> = {};
+      const lessonDetailsMap: Record<string, { title: string; date: string | null }> = {};
       if (lessonDetailIds.length > 0) {
         const { data: lessonDetails } = await supabase
           .from("lesson_plan_details")
           .select("id, title, date")
           .in("id", lessonDetailIds);
 
-        (lessonDetails || []).forEach((ld: any) => {
+        ((lessonDetails || []) as LessonDetailRow[]).forEach((ld) => {
           lessonDetailsMap[ld.id] = { title: ld.title, date: ld.date };
         });
       }
 
-      const items: HomeworkItem[] = (data || []).map((row: any) => {
+      const items: HomeworkItem[] = rows.map((row) => {
         const hw = row.homework_assignments;
         const lessonDetail = hw.lesson_plan_detail_id
           ? lessonDetailsMap[hw.lesson_plan_detail_id]
