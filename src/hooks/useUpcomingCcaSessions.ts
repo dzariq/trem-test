@@ -15,6 +15,7 @@ export interface UpcomingCcaSession {
   customTitle: string | null;
   description: string | null;
   category: string;
+  kind?: string | null;
   isCca: true;
 }
 
@@ -98,29 +99,58 @@ export function useUpcomingCcaSessions(options: UseUpcomingCcaSessionsOptions = 
           customTitle: s.custom_title,
           description: s.description,
           category: s.cca_activities?.category || "Other",
+          kind: s.cca_activities?.kind ?? null,
           isCca: true,
         }));
 
         setSessions(mapped);
       } else {
-        // For parents: fetch sessions for activities by student year level
+        // For parents: scope by actual linkage.
+        // - club/outdoor: student must be enrolled (student_cca_enrollments, status='active')
+        // - event: student's class must be in cca_activities.classes_involved[]
         if (!selectedStudentId) {
           setSessions([]);
           return;
         }
 
-        // Get student's year level
+        // Get student's class
         const { data: studentData, error: studentError } = await supabase
           .from("students")
-          .select("year_level")
+          .select("class")
           .eq("id", selectedStudentId)
           .maybeSingle();
 
         if (studentError) throw studentError;
-        
-        const yearLevel = studentData?.year_level || null;
+        const studentClass = studentData?.class || null;
 
-        // Fetch upcoming sessions with activity info
+        // 1. Enrolled activity IDs (clubs + outdoor) — direct tagging
+        const { data: enrollRows, error: enrollErr } = await supabase
+          .from("student_cca_enrollments")
+          .select("cca_activity_id")
+          .eq("student_id", selectedStudentId)
+          .eq("status", "active");
+        if (enrollErr) throw enrollErr;
+        const enrolledIds = (enrollRows || []).map((r: any) => r.cca_activity_id).filter(Boolean);
+
+        // 2. Event activities matching student's class
+        let eventIds: string[] = [];
+        if (studentClass) {
+          const { data: eventRows, error: eventErr } = await supabase
+            .from("cca_activities")
+            .select("id")
+            .eq("kind", "event")
+            .eq("is_active", true)
+            .contains("classes_involved", [studentClass]);
+          if (eventErr) throw eventErr;
+          eventIds = (eventRows || []).map((r: any) => r.id);
+        }
+
+        const activityIds = Array.from(new Set([...enrolledIds, ...eventIds]));
+        if (activityIds.length === 0) {
+          setSessions([]);
+          return;
+        }
+
         const { data, error: fetchError } = await supabase
           .from("cca_sessions")
           .select(`
@@ -133,30 +163,20 @@ export function useUpcomingCcaSessions(options: UseUpcomingCcaSessionsOptions = 
             custom_title,
             description,
             is_cancelled,
-            cca_activities!inner(name, category, year_levels, is_active),
+            cca_activities!inner(name, category, kind, is_active),
             school_locations(name)
           `)
+          .in("activity_id", activityIds)
           .gte("session_date", now)
           .eq("is_cancelled", false)
           .eq("cca_activities.is_active", true)
           .order("session_date", { ascending: true })
-          .limit(50);
+          .order("start_time", { ascending: true })
+          .limit(limit);
 
         if (fetchError) throw fetchError;
 
-        // Filter by year level eligibility on client side
-        const filtered = (data || []).filter((s: any) => {
-          const yearLevels = s.cca_activities?.year_levels;
-          if (!yearLevels || !Array.isArray(yearLevels) || yearLevels.length === 0) {
-            return true; // No restriction = all years
-          }
-          if (yearLevels.includes("All")) {
-            return true;
-          }
-          return yearLevel && yearLevels.includes(yearLevel);
-        });
-
-        const mapped: UpcomingCcaSession[] = filtered.slice(0, limit).map((s: any) => ({
+        const mapped: UpcomingCcaSession[] = (data || []).map((s: any) => ({
           id: s.id,
           activityId: s.activity_id,
           activityName: s.cca_activities?.name || "Unknown Activity",
@@ -167,6 +187,7 @@ export function useUpcomingCcaSessions(options: UseUpcomingCcaSessionsOptions = 
           customTitle: s.custom_title,
           description: s.description,
           category: s.cca_activities?.category || "Other",
+          kind: s.cca_activities?.kind ?? null,
           isCca: true,
         }));
 
