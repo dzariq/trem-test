@@ -12,6 +12,7 @@ interface Props {
 
 export function InvoiceCard({ invoice, onClick }: Props) {
   const status = statusLabel(invoice.status);
+  const displayDate = invoice.dueDate || invoice.invoiceDate;
   const isOverdue =
     invoice.status === "pending_payment" &&
     invoice.dueDate &&
@@ -42,10 +43,8 @@ export function InvoiceCard({ invoice, onClick }: Props) {
         <div className="flex items-center justify-between gap-3">
           <div className="flex items-center gap-1 text-xs text-muted-foreground">
             <Calendar className="h-3 w-3" />
-            {invoice.dueDate
-              ? `Due ${format(parseISO(invoice.dueDate), "d MMM yyyy")}`
-              : invoice.invoiceDate
-              ? format(parseISO(invoice.invoiceDate), "d MMM yyyy")
+            {displayDate
+              ? `${invoice.dueDate ? "Due " : ""}${format(parseISO(displayDate), "d MMM yyyy")}`
               : "—"}
           </div>
           <div className="flex items-center gap-1">
