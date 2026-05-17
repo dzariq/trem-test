@@ -161,6 +161,8 @@ export default function CalendarPage() {
     year: currentMonth.getFullYear(),
     month: currentMonth.getMonth() + 1,
     campusCode: selectedStudent?.campus_code ?? null,
+    studentId: selectedStudentId,
+    scopeToStudent: true,
   });
 
   const { sessions: upcomingCcaSessions } = useUpcomingCcaSessions({
