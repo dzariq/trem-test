@@ -15,6 +15,7 @@ export interface CcaCalendarSession {
   isCancelled: boolean;
   category: string;
   kind?: string | null;
+  classesInvolved: string[];
 }
 
 interface UseCcaSessionsCalendarOptions {
@@ -107,6 +108,7 @@ export function useCcaSessionsCalendar({ year, month, campusCode, studentId, sco
             name,
             category,
             kind,
+            classes_involved,
             campus_code
           ),
           school_locations(name)
@@ -145,6 +147,9 @@ export function useCcaSessionsCalendar({ year, month, campusCode, studentId, sco
         isCancelled: s.is_cancelled,
         category: s.cca_activities?.category || "Other",
         kind: s.cca_activities?.kind ?? null,
+        classesInvolved: Array.isArray(s.cca_activities?.classes_involved)
+          ? s.cca_activities.classes_involved.filter(Boolean)
+          : [],
       }));
 
       setSessions(mapped);
