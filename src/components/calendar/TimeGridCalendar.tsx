@@ -1,9 +1,9 @@
 import { useEffect, useMemo, useState, type MouseEvent } from "react";
-import { ChevronLeft, ChevronRight, ArrowLeft, SlidersHorizontal, ChevronDown } from "lucide-react";
+import { ChevronLeft, ChevronRight, ArrowLeft, SlidersHorizontal, ChevronDown, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { getEventBadgeColor } from "@/lib/calendarUtils";
-import { getCcaTypeColor } from "@/components/cca/CcaTypeTabs";
+import { getCcaTypeColor, getCcaTypePillColor } from "@/components/cca/CcaTypeTabs";
 import type { UpcomingEvent } from "@/data/calendar";
 import type { CcaCalendarSession } from "@/hooks/useCcaSessionsCalendar";
 import { CalendarViewDropdown, type CalendarViewMode } from "./CalendarViewSwitcher";
@@ -192,7 +192,7 @@ export function TimeGridCalendar({
       if (!session.sessionDate || !dayKeys.has(session.sessionDate)) return;
       const startMin = parseHHMM(session.startTime);
       const endMin = parseHHMM(session.endTime);
-      const colorClass = getCcaTypeColor(session.category);
+      const colorClass = getCcaTypePillColor(session.category);
       const block: Block = {
         kind: "cca",
         id: session.id,
