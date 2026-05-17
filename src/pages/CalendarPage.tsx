@@ -25,7 +25,7 @@ import { useEligibleCcaActivities, type CcaActivity } from "@/hooks/useEligibleC
 import { useStudentCcaEnrollments, type EnrolledCcaActivity } from "@/hooks/useStudentCcaEnrollments";
 import { useCcaClubEnrollment } from "@/hooks/useCcaClubEnrollment";
 import { PICTeachersList } from "@/components/cca/PICTeacherPill";
-import { CcaTypeTabs, getCcaTypeColor } from "@/components/cca/CcaTypeTabs";
+import { CcaTypeTabs, CcaKindTabs, getCcaTypeColor, type CcaKindFilter } from "@/components/cca/CcaTypeTabs";
 import { CcaDetailsSheet } from "@/components/cca/CcaDetailsSheet";
 import { CcaActivityCard } from "@/components/cca/CcaActivityCard";
 import { ClubSwitchConfirmDialog } from "@/components/cca/ClubSwitchConfirmDialog";
@@ -58,7 +58,7 @@ export default function CalendarPage() {
   const [selectedDay, setSelectedDay] = useState<string>(todayYmd);
   const [currentMonth, setCurrentMonth] = useState<Date>(new Date());
   const [view, setView] = useState<CalendarViewMode>("month");
-  const [ccaTypeFilter, setCcaTypeFilter] = useState("all");
+  const [ccaKindFilter, setCcaKindFilter] = useState<CcaKindFilter>("all");
   const [selectedCCA, setSelectedCCA] = useState<CcaActivity | null>(null);
   const [selectedEventDetails, setSelectedEventDetails] = useState<UpcomingEvent | UpcomingCcaSession | null>(null);
   const [eventDetailsOpen, setEventDetailsOpen] = useState(false);
@@ -116,6 +116,7 @@ export default function CalendarPage() {
     loading: ccaLoading,
     error: ccaError,
     filterByTypeId,
+    filterByKind,
     refetch: refetchActivities,
   } = useEligibleCcaActivities({
     studentId: selectedStudentId,
@@ -128,6 +129,7 @@ export default function CalendarPage() {
     loading: enrolledLoading,
     error: enrolledError,
     filterByTypeId: filterEnrolledByTypeId,
+    filterByKind: filterEnrolledByKind,
     refetch: refetchEnrollments,
   } = useStudentCcaEnrollments({
     studentId: selectedStudentId,
@@ -313,15 +315,15 @@ export default function CalendarPage() {
   }, [profile?.role, selectedStudent?.campus_code]);
 
   const filteredCCA = useMemo(() => {
-    // Filter by type, then exclude already-enrolled activities
-    const byType = filterByTypeId(ccaTypeFilter);
+    // Filter by kind, then exclude already-enrolled activities
+    const byKind = filterByKind(ccaKindFilter);
     const enrolledIds = new Set(enrolledCcas.map((e) => e.activityId));
-    return byType.filter((activity) => !enrolledIds.has(activity.id));
-  }, [filterByTypeId, ccaTypeFilter, enrolledCcas]);
+    return byKind.filter((activity) => !enrolledIds.has(activity.id));
+  }, [filterByKind, ccaKindFilter, enrolledCcas]);
 
   const filteredEnrolledCCA = useMemo(() => {
-    return filterEnrolledByTypeId(ccaTypeFilter);
-  }, [filterEnrolledByTypeId, ccaTypeFilter]);
+    return filterEnrolledByKind(ccaKindFilter);
+  }, [filterEnrolledByKind, ccaKindFilter]);
 
   // Check if a given activity is currently enrolled
   const isEnrolledInActivity = (activityId: string): boolean => {
@@ -524,9 +526,9 @@ export default function CalendarPage() {
           </TabsContent>
 
           <TabsContent value="cca" className="mt-4 space-y-4">
-            <CcaTypeTabs
-              selectedTypeId={ccaTypeFilter}
-              onSelectType={setCcaTypeFilter}
+            <CcaKindTabs
+              selected={ccaKindFilter}
+              onSelect={setCcaKindFilter}
             />
 
             {/* My CCAs (Enrolled) Section */}
