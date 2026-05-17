@@ -31,6 +31,7 @@ export interface CcaActivity {
   category: string;
   typeId: string | null;
   typeName: string | null;
+  kind: string | null;
   eligibleYears: string[];
   meetingDay: string | null;
   meetingTime: string | null;
@@ -105,6 +106,7 @@ export function useEligibleCcaActivities(options: UseEligibleCcaActivitiesOption
           internal_notes,
           category,
           type_id,
+          kind,
           cca_activity_types(id, name),
           meeting_day,
           meeting_time,
@@ -237,6 +239,7 @@ export function useEligibleCcaActivities(options: UseEligibleCcaActivitiesOption
         category: a.category || "Other",
         typeId: a.type_id || null,
         typeName: a.cca_activity_types?.name || null,
+        kind: a.kind || null,
         eligibleYears: eligibilityMap.get(a.id) || [],
         meetingDay: a.meeting_day,
         meetingTime: a.meeting_time,
@@ -283,6 +286,15 @@ export function useEligibleCcaActivities(options: UseEligibleCcaActivitiesOption
     [activities]
   );
 
+  // Filter by kind bucket: "all" | "club" | "outdoor" | "event"
+  const filterByKind = useCallback(
+    (kind: string) => {
+      if (kind === "all") return activities;
+      return activities.filter((a) => (a.kind || "club").toLowerCase() === kind);
+    },
+    [activities]
+  );
+
   // Get unique categories
   const categories = useMemo(() => {
     const cats = new Set(activities.map((a) => a.category));
@@ -295,6 +307,7 @@ export function useEligibleCcaActivities(options: UseEligibleCcaActivitiesOption
     error,
     refetch: fetchActivities,
     filterByTypeId,
+    filterByKind,
     categories,
   };
 }
