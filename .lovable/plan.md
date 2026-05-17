@@ -1,35 +1,40 @@
-# Calendar module updates & audit
+# CCA pill — 3 types with icons + colors
 
-## 1. Rename "Highlights" tab to "Events"
-- `src/lib/calendarFilters.ts` → in `UPCOMING_TABS`, change the `events` tab `label` from `"Highlights"` to `"Events"`.
-- No key change (`value` stays `"events"`), so no other code is affected.
+## Scope
+Use the same 3 styles everywhere CCA appears: month grid, week/day time grid, and the "What's Coming Up → CCA" list.
 
-## 2. Reorder tabs to: Events · CCA · Exams · Holidays
-- `src/lib/calendarFilters.ts` → reorder `UPCOMING_TABS` to `[events, cca, exams, holidays]`.
-- `src/components/calendar/UpcomingEventsSection.tsx` already iterates over `UPCOMING_TABS`, so order updates automatically. Active-tab color mapping (purple/red/green/primary) is keyed by `tab.value` and stays correct.
+## Type mapping (from `cca_activity_types`)
+Backend currently has 5 type names. Group them into 3 visual buckets:
 
-## 3. Restyle CCA pills in month grid to match screenshot 2
-Target: distinct pill shape so CCA stands out from event chips.
+| Bucket | Icon | Color (light/border/text) | Source type names |
+|---|---|---|---|
+| **Clubs** | `Users` | yellow — `bg-yellow-50 border-yellow-400 text-yellow-800` | `Indoor CCA`, `Indoor Talks/Workshop`, `Sports` |
+| **Outdoor** | `Bike` | orange — `bg-orange-50 border-orange-400 text-orange-800` | `Outdoor CCA` |
+| **Events** | `PartyPopper` | cream/amber — `bg-amber-50 border-amber-300 text-amber-700` | `Event` |
 
-- `src/components/calendar/MonthGridCalendar.tsx` → in the chip render (around lines 330–344), branch on `item.kind === "cca"`:
-  - Use a **fully rounded** pill (`rounded-full`), thin **border with matching color**, light tinted background, slightly taller (`h-[18px]`), with a small leading **Users icon** (`lucide-react` `Users`, `h-2.5 w-2.5`) — mirrors the "Indoor Clubs / Education FT / Art Club" style.
-  - Keep regular events as the current squared chip (`rounded-[3px]`).
-- Re-use `getCcaTypeColor(category)` but split it (or wrap it) so we get a border-color + soft bg variant for the pill, instead of solid fill. Implementation detail: extend `getCcaTypeColor` in `src/components/cca/CcaTypeTabs.tsx` with an optional `variant: "solid" | "outline"` (default solid to preserve existing call sites), and use `"outline"` from the month grid.
-- Apply the same outline-pill treatment in `src/components/calendar/TimeGridCalendar.tsx` where CCA chips render, so day/week views stay consistent.
+Dark-mode equivalents follow the existing `dark:bg-*/30 dark:text-*-200 dark:border-*-500/60` pattern.
 
-## 4. Calendar backend audit
-Read-only verification against the current Supabase schema to catch drift from recent backend updates. No code changes unless an issue is found; fixes will be listed and confirmed before applying.
+If `Sports` should be Outdoor instead of Clubs, that's a one-line swap — flag during review.
 
-Checks:
-- `calendar_events` table — columns referenced by `src/data/calendar.ts` loader (title, start/end date, all_day, event_type, event_category, tags, location, campus_code, visibility/role fields) still exist and match types.
-- `cca_sessions` + `cca_activities` + `school_locations` joins used by `src/hooks/useCcaSessionsCalendar.ts` and `src/hooks/useUpcomingCcaSessions.ts` — column names (`session_date`, `start_time`, `end_time`, `location`, `location_id`, `custom_title`, `is_cancelled`, `cca_activities.campus_code`, `cca_activities.category`).
-- `cca_activity_types` used by `src/hooks/useCcaTypes.ts` (`name`, `sort_order`, `is_active`, `campus_code`).
-- Campus scoping filter `campus_code.eq.X,campus_code.is.null` still matches the parent's campus context.
-- RLS: parent role can `SELECT` from `calendar_events`, `cca_sessions`, `cca_activities`, `cca_activity_types`, `school_locations`. Use `supabase--linter` + a few `supabase--read_query` smoke selects.
-- Tag visibility against `PARENT_HIDDEN_TAGS` in `src/types/calendarTags.ts` — confirm any new event types added on the backend are categorised (otherwise they'll silently fall through filters).
+## Technical changes
 
-Deliverable: a short audit report in chat listing ✅/⚠️ per check; any ⚠️ items get a follow-up patch.
+1. **`src/components/cca/CcaTypeTabs.tsx`**
+   - Add `getCcaBucket(typeName)` → `"clubs" | "outdoor" | "events"` (single source of truth).
+   - Add `getCcaBucketIcon(bucket)` → returns `Users | Bike | PartyPopper` lucide component.
+   - Rewrite `getCcaTypePillColor` to delegate via the bucket → only 3 color sets returned.
+   - Keep `getCcaTypeColor` / `getCcaTypeBadgeColor` untouched (used by activity cards / details sheet that still display the raw type name).
+
+2. **`src/components/calendar/MonthGridCalendar.tsx`**
+   - Replace hard-coded `Users` icon with `getCcaBucketIcon(bucket)` resolved from `session.category`.
+   - Color from `getCcaTypePillColor` (now bucket-driven).
+
+3. **`src/components/calendar/TimeGridCalendar.tsx`**
+   - Same swap: dynamic icon by bucket, both for all-day strip and timed blocks.
+
+4. **`src/components/calendar/UpcomingEventsSection.tsx`** (CCA tab)
+   - Replace solid `primary` date-box + `bg-primary/10` row with bucket-tinted styling so each session's row + date-box + small `CCA` chip match the screenshot tones.
+   - Add the bucket icon next to the title (matches month-grid pills).
 
 ## Out of scope
-- No changes to event detail sheets, filter sheet, or pull-to-refresh behaviour.
-- No migration unless the audit surfaces something broken.
+- Tab order, "Events" rename, filter sheet behavior, and CCA details sheet styling are unchanged.
+- No DB / RLS changes — purely presentation.
