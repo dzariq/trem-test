@@ -60,7 +60,7 @@ export default function CalendarPage() {
   const [view, setView] = useState<CalendarViewMode>("month");
   const [ccaKindFilter, setCcaKindFilter] = useState<CcaKindFilter>("all");
   const [selectedCCA, setSelectedCCA] = useState<CcaActivity | null>(null);
-  const [selectedEventDetails, setSelectedEventDetails] = useState<UpcomingEvent | UpcomingCcaSession | null>(null);
+  const [selectedEventDetails, setSelectedEventDetails] = useState<UpcomingEvent | UpcomingCcaSession | CcaCalendarSession | null>(null);
   const [eventDetailsOpen, setEventDetailsOpen] = useState(false);
   const [events, setEvents] = useState<UpcomingEvent[]>([]);
   const [upcomingEvents, setUpcomingEvents] = useState<UpcomingEvent[]>([]);
@@ -463,6 +463,10 @@ export default function CalendarPage() {
                 events={filteredEvents}
                 ccaSessions={gridCcaSessions}
                 onEventClick={openEventDetails}
+                onSessionClick={(session) => {
+                  setSelectedEventDetails(session);
+                  setEventDetailsOpen(true);
+                }}
                 view={view}
                 onViewChange={setView}
                 onZoomToDay={(ymd) => {
@@ -504,6 +508,10 @@ export default function CalendarPage() {
                 events={filteredEvents}
                 ccaSessions={gridCcaSessions}
                 onEventClick={openEventDetails}
+                onSessionClick={(session) => {
+                  setSelectedEventDetails(session);
+                  setEventDetailsOpen(true);
+                }}
                 view={view}
                 onViewChange={setView}
                 onBackToMonth={() => setView("month")}
