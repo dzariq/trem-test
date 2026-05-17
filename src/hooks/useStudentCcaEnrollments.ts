@@ -9,6 +9,7 @@ export interface EnrolledCcaActivity {
   category: string | null;
   typeId: string | null;
   typeName: string | null;
+  kind: string | null;
   meetingDay: string | null;
   meetingTime: string | null;
   location: string | null;
@@ -58,6 +59,7 @@ export function useStudentCcaEnrollments({ studentId }: UseStudentCcaEnrollments
             name,
             category,
             type_id,
+            kind,
             cca_activity_types(id, name),
             meeting_day,
             meeting_time,
@@ -147,6 +149,7 @@ export function useStudentCcaEnrollments({ studentId }: UseStudentCcaEnrollments
           category: e.cca_activities?.category || null,
           typeId: e.cca_activities?.type_id || null,
           typeName: e.cca_activities?.cca_activity_types?.name || null,
+          kind: e.cca_activities?.kind || null,
           meetingDay: e.cca_activities?.meeting_day || null,
           meetingTime: e.cca_activities?.meeting_time || null,
           location: e.cca_activities?.location || null,
@@ -189,6 +192,15 @@ export function useStudentCcaEnrollments({ studentId }: UseStudentCcaEnrollments
     [enrollments]
   );
 
+  // Filter by kind bucket: "all" | "club" | "outdoor" | "event"
+  const filterByKind = useCallback(
+    (kind: string) => {
+      if (kind === "all") return enrollments;
+      return enrollments.filter((e) => (e.kind || "club").toLowerCase() === kind);
+    },
+    [enrollments]
+  );
+
   return {
     enrollments,
     loading,
@@ -196,5 +208,6 @@ export function useStudentCcaEnrollments({ studentId }: UseStudentCcaEnrollments
     refetch: fetchEnrollments,
     filterByCategory,
     filterByTypeId,
+    filterByKind,
   };
 }
