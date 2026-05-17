@@ -190,8 +190,9 @@ export function UpcomingEvents({ events, ccaSessions, seeAllPath = "/parent/cale
             const { day, month, full } = formatDateParts(ccaSession.sessionDate);
             const timeLabel = formatTimeRange(ccaSession.startTime, ccaSession.endTime);
             const locationLabel = ccaSession.locationName || "—";
-            const bucket = getCcaBucket(ccaSession.category);
-            const pillClass = getCcaTypePillColor(ccaSession.category);
+            const bucketKey = ccaSession.kind || ccaSession.category;
+            const bucket = getCcaBucket(bucketKey);
+            const pillClass = getCcaTypePillColor(bucketKey);
             const BucketIcon = getCcaBucketIcon(bucket);
 
             return (
