@@ -33,6 +33,7 @@ export interface CcaActivity {
   typeName: string | null;
   kind: string | null;
   eligibleYears: string[];
+  classesInvolved: string[];
   meetingDay: string | null;
   meetingTime: string | null;
   location: string | null;
@@ -107,6 +108,7 @@ export function useEligibleCcaActivities(options: UseEligibleCcaActivitiesOption
           category,
           type_id,
           kind,
+          classes_involved,
           cca_activity_types(id, name),
           meeting_day,
           meeting_time,
@@ -241,6 +243,7 @@ export function useEligibleCcaActivities(options: UseEligibleCcaActivitiesOption
         typeName: a.cca_activity_types?.name || null,
         kind: a.kind || null,
         eligibleYears: eligibilityMap.get(a.id) || [],
+        classesInvolved: Array.isArray(a.classes_involved) ? a.classes_involved : [],
         meetingDay: a.meeting_day,
         meetingTime: a.meeting_time,
         location: a.location,
