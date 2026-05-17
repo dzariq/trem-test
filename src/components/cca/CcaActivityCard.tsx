@@ -1,9 +1,15 @@
-import { Clock, MapPin, User } from "lucide-react";
+import { Clock, MapPin, User, CalendarDays, Users as UsersIcon } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { CcaActivityImage } from "./CcaActivityImage";
 import { PICTeachersList } from "./PICTeacherPill";
-import { getCcaTypeColor } from "./CcaTypeTabs";
+import { getCcaBucket, getCcaBucketIcon, getCcaTypePillColor } from "./CcaTypeTabs";
+import {
+  CCA_BUCKET_LABEL,
+  formatSessionDateShort,
+  formatSessionTime,
+  getNextUpcomingSession,
+} from "@/lib/ccaSessionFormat";
 import { cn } from "@/lib/utils";
 import type { EnrolledCcaActivity } from "@/hooks/useStudentCcaEnrollments";
 import type { CcaActivity } from "@/hooks/useEligibleCcaActivities";
@@ -31,11 +37,21 @@ export function CcaActivityCard({
   className,
 }: CcaActivityCardProps) {
   const isEnrolledState = variant === "enrolled" || isEnrolled;
-  
+
   // Get teacher info based on activity type
   const hasTeacherInfo = 
     ("picTeachers" in activity && activity.picTeachers.length > 0) || 
     ("coordinatorName" in activity && activity.coordinatorName);
+
+  const bucket = getCcaBucket(activity.kind ?? activity.category);
+  const BucketIcon = getCcaBucketIcon(bucket);
+  const bucketLabel = CCA_BUCKET_LABEL[bucket];
+  const bucketPill = getCcaTypePillColor(activity.kind ?? activity.category);
+
+  const isEvent = bucket === "events";
+  const sessions = "sessions" in activity ? activity.sessions : undefined;
+  const nextSession = isEvent ? getNextUpcomingSession(sessions) : null;
+  const maxParticipants = "maxParticipants" in activity ? activity.maxParticipants : null;
 
   return (
     <Card
@@ -87,15 +103,13 @@ export function CcaActivityCard({
           )}
           {!isEnrolledState && <div />}
           
-          {/* Category Badge (right) */}
+          {/* Kind Bucket Badge (right) */}
           <Badge
-            className={cn(
-              getCcaTypeColor(activity.typeName || activity.category),
-              "shadow-md"
-            )}
-            variant="secondary"
+            className={cn(bucketPill, "border shadow-md gap-1")}
+            variant="outline"
           >
-            {activity.typeName || activity.category}
+            <BucketIcon className="h-3 w-3" />
+            {bucketLabel}
           </Badge>
         </div>
       </div>
@@ -107,6 +121,11 @@ export function CcaActivityCard({
           <h3 className="font-semibold text-foreground text-base line-clamp-1">
             {activity.name}
           </h3>
+          {activity.typeName && (
+            <p className="text-xs text-muted-foreground mt-0.5 line-clamp-1">
+              {activity.typeName}
+            </p>
+          )}
           {"eligibleYears" in activity && activity.eligibleYears.length > 0 && (
             <p className="text-xs text-muted-foreground mt-0.5">
               Years: {activity.eligibleYears.join(", ")}
@@ -123,13 +142,32 @@ export function CcaActivityCard({
 
         {/* Meeting Details */}
         <div className="space-y-1.5 text-sm text-muted-foreground">
-          {(activity.meetingDay || activity.meetingTime) && (
+          {isEvent ? (
+            <div className="flex items-center gap-2">
+              <CalendarDays className="h-4 w-4 shrink-0" />
+              <span className="truncate">
+                {nextSession
+                  ? `Next: ${formatSessionDateShort(nextSession.sessionDate)}${
+                      nextSession.startTime ? ` · ${formatSessionTime(nextSession.startTime)}` : ""
+                    }`
+                  : "Date to be announced"}
+              </span>
+            </div>
+          ) : (
+            (activity.meetingDay || activity.meetingTime) && (
             <div className="flex items-center gap-2">
               <Clock className="h-4 w-4 shrink-0" />
               <span className="truncate">
                 {activity.meetingDay || "TBD"}
                 {activity.meetingTime ? `, ${activity.meetingTime}` : ""}
               </span>
+            </div>
+            )
+          )}
+          {!isEvent && maxParticipants != null && maxParticipants > 0 && (
+            <div className="flex items-center gap-2">
+              <UsersIcon className="h-4 w-4 shrink-0" />
+              <span className="truncate">Up to {maxParticipants} spots</span>
             </div>
           )}
           {activity.location && (
