@@ -27,7 +27,7 @@ type HomeworkStudentRow = {
   id: string;
   status: string | null;
   submitted_at: string | null;
-  homework_assignments: HomeworkAssignmentRow;
+  homework_assignments: HomeworkAssignmentRow | HomeworkAssignmentRow[] | null;
 };
 
 type LessonDetailRow = {
@@ -64,9 +64,14 @@ export function useStudentHomework(studentId: string | null) {
       if (error) throw error;
 
       // Get lesson plan detail info for context
-      const rows = (data || []) as HomeworkStudentRow[];
+      const rows = (data || []) as unknown as HomeworkStudentRow[];
       const lessonDetailIds = rows
-        .map((r) => r.homework_assignments?.lesson_plan_detail_id)
+        .map((r) => {
+          const hw = Array.isArray(r.homework_assignments)
+            ? r.homework_assignments[0]
+            : r.homework_assignments;
+          return hw?.lesson_plan_detail_id;
+        })
         .filter(Boolean);
 
       const lessonDetailsMap: Record<string, { title: string; date: string | null }> = {};
@@ -82,7 +87,10 @@ export function useStudentHomework(studentId: string | null) {
       }
 
       const items: HomeworkItem[] = rows.map((row) => {
-        const hw = row.homework_assignments;
+        const hw = Array.isArray(row.homework_assignments)
+          ? row.homework_assignments[0]
+          : row.homework_assignments;
+        if (!hw) return null;
         const lessonDetail = hw.lesson_plan_detail_id
           ? lessonDetailsMap[hw.lesson_plan_detail_id]
           : null;
@@ -107,7 +115,7 @@ export function useStudentHomework(studentId: string | null) {
           lessonTitle: lessonDetail?.title || null,
           lessonDate: lessonDetail?.date || null,
         };
-      });
+      }).filter((item): item is HomeworkItem => item !== null);
 
       return items;
     },
