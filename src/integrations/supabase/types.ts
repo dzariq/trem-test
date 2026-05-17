@@ -1566,6 +1566,13 @@ export type Database = {
         }
         Relationships: [
           {
+            foreignKeyName: "cca_activity_roles_academic_period_id_fkey"
+            columns: ["academic_period_id"]
+            isOneToOne: false
+            referencedRelation: "academic_periods"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "cca_activity_roles_activity_id_fkey"
             columns: ["activity_id"]
             isOneToOne: false
