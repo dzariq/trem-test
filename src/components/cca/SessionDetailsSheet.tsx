@@ -14,6 +14,9 @@ import { format, parseISO } from "date-fns";
 import { supabase } from "@/lib/supabase";
 import { ManageStudentsSheet } from "./ManageStudentsSheet";
 import { SessionAttendanceList } from "./SessionAttendanceList";
+import { BusAttendanceList } from "./BusAttendanceList";
+import { useCcaActivities } from "@/hooks/useCcaActivities";
+import { useCcaActivityPermissions } from "@/hooks/useCcaActivityPermissions";
 import { formatClassDisplay } from "@/lib/utils";
 
 interface SessionDetailsSheetProps {
@@ -59,6 +62,19 @@ export function SessionDetailsSheet({
     loading: boolean;
   }>({ count: 0, max: 25, loading: true });
   const [manageStudentsOpen, setManageStudentsOpen] = useState(false);
+
+  // Look up the activity object for permission derivation. We piggy-back on
+  // the existing list hook (it caches by options). For outdoor sessions this
+  // also drives the bus list visibility.
+  const { activities } = useCcaActivities({
+    includeInactive: false,
+    campusCode,
+  });
+  const activity = session
+    ? activities.find((a) => a.id === session.activityId) ?? null
+    : null;
+  const perms = useCcaActivityPermissions(activity);
+  const isOutdoor = (session?.kind || "").toLowerCase() === "outdoor";
 
   useEffect(() => {
     if (open && session?.id) {
@@ -287,6 +303,16 @@ export function SessionDetailsSheet({
                 canEdit={canManageAttendance && !session.isCancelled}
               />
             </div>
+
+            {/* Bus Attendance — outdoor activities only (teacher-only, no parents) */}
+            {isOutdoor && perms.canViewBuses && (
+              <div className="pt-4 border-t">
+                <BusAttendanceList
+                  activityId={session.activityId}
+                  activityPerms={perms}
+                />
+              </div>
+            )}
           </>
         )}
       </BottomSheet>

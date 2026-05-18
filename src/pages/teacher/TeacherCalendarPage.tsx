@@ -37,6 +37,7 @@ import { usePullToRefresh } from "@/hooks/usePullToRefresh";
 import { PullToRefreshIndicator } from "@/components/calendar/PullToRefreshIndicator";
 import { TEACHER_CATEGORY_ORDER, mapDbToCategory, mapDbToSubtype } from "@/lib/calendarCategorySubtypes";
 import { useTeacherScope } from "@/hooks/useTeacherScope";
+import { useCcaActivityFilter } from "@/hooks/useCcaActivityFilter";
 import { cn } from "@/lib/utils";
 
 export default function TeacherCalendarPage() {
@@ -100,6 +101,7 @@ export default function TeacherCalendarPage() {
   });
 
   const { types: ccaTypes } = useCcaTypesByCampus(activeCampus);
+  const ccaFilter = useCcaActivityFilter();
   const selectedTypeName =
     ccaTypeFilter === "all"
       ? "All categories"
@@ -268,23 +270,12 @@ export default function TeacherCalendarPage() {
     onRefresh: handleRefresh,
   });
 
+  // Apply unified CCA permission filter: principal sees all, teachers see
+  // activities where they are PIC OR have year-overlap with the scope.
   const filteredCCA = useMemo(() => {
     const base = filterByTypeId(ccaTypeFilter);
-    if (!teacherScope.isTeacher) return base;
-    if (teacherYearLevels.length === 0 && teacherClassNames.length === 0) return [];
-    const ylSet = new Set(teacherYearLevels);
-    const cnSet = new Set(teacherClassNames);
-    return base.filter((a: any) => {
-      const kind = (a.kind || "").toLowerCase();
-      if (kind === "event") {
-        const involved: string[] = Array.isArray(a.classesInvolved) ? a.classesInvolved : [];
-        return involved.some((c) => cnSet.has(c));
-      }
-      // club / outdoor / unknown — match by year levels
-      const yls: string[] = Array.isArray(a.yearLevels) ? a.yearLevels : [];
-      return yls.some((y) => ylSet.has(y));
-    });
-  }, [filterByTypeId, ccaTypeFilter, teacherScope.isTeacher, teacherYearLevels, teacherClassNames]);
+    return ccaFilter.apply(base);
+  }, [filterByTypeId, ccaTypeFilter, ccaFilter]);
 
   const openEventDetails = (event: UpcomingEvent, triggerEl?: HTMLElement | null) => {
     triggerEl?.blur?.();
