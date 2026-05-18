@@ -23,6 +23,7 @@ import { cn } from "@/lib/utils";
 import { CcaActivityImage } from "@/components/cca/CcaActivityImage";
 import { CcaImageUpload } from "@/components/cca/CcaImageUpload";
 import type { CcaActivity } from "@/hooks/useCcaActivities";
+import { useCcaActivityPermissions } from "@/hooks/useCcaActivityPermissions";
 
 interface CcaDetailsSheetProps {
   open: boolean;
@@ -51,6 +52,12 @@ export function CcaDetailsSheet({
 }: CcaDetailsSheetProps) {
   const [localImageUrl, setLocalImageUrl] = useState<string | null | undefined>(undefined);
 
+  // Unified permission model. `isPIC` prop is still accepted for backward
+  // compatibility but `canEdit` (principal OR activity PIC) is the source
+  // of truth for editable surfaces.
+  const perms = useCcaActivityPermissions(activity);
+  const canEdit = perms.canEdit || isPIC;
+
   // Use local state if updated, otherwise use activity's image
   const displayImageUrl = localImageUrl !== undefined ? localImageUrl : activity?.imageUrl;
 
@@ -69,10 +76,10 @@ export function CcaDetailsSheet({
   };
 
   // Shared content for both mobile and desktop
-  const sheetContent = activity ? (
+  const sheetContent = activity && perms.canView ? (
     <>
       {/* Hero Image - Editable for PIC teachers */}
-      {isPIC ? (
+      {canEdit ? (
         <CcaImageUpload
           activityId={activity.id}
           activityName={activity.name}
@@ -231,7 +238,7 @@ export function CcaDetailsSheet({
       )}
 
       <div className="pt-4 border-t">
-        {isPIC ? (
+        {canEdit ? (
           <Button onClick={onManageSessions} className="w-full">
             <Settings className="h-4 w-4 mr-2" />
             Manage Sessions
@@ -259,15 +266,24 @@ export function CcaDetailsSheet({
         )}
       </div>
     </>
+  ) : activity && !perms.canView ? (
+    <div className="py-10 text-center text-sm text-muted-foreground">
+      You don't have access to this activity.
+    </div>
   ) : null;
 
   // Header/title content
   const titleContent = activity ? (
     <div className="flex items-center gap-2 flex-wrap">
       <span className="text-lg font-semibold">{activity.name}</span>
-      {isPIC && (
+      {perms.isActivityPIC && (
         <Badge variant="default" className="text-xs">
           PIC
+        </Badge>
+      )}
+      {!perms.canEdit && perms.canView && (
+        <Badge variant="secondary" className="text-[10px]">
+          View only
         </Badge>
       )}
       <Badge className={cn(bucketPill, "border gap-1")} variant="outline">
