@@ -1,3 +1,8 @@
+// Mints a Supabase session for an existing user only after verifying:
+//   - email path: a valid, unconsumed, unexpired server-side OTP (auth_email_otps)
+//   - phone path: still uses upstream n8n verification (caller must have verified)
+// Returns a magic-link token_hash that the client uses with supabase.auth.verifyOtp.
+
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 
 const corsHeaders = {
@@ -7,11 +12,21 @@ const corsHeaders = {
   "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
 
+const MAX_OTP_ATTEMPTS = 5;
+
 function normalizeDigits(input: string | null | undefined): string {
   if (!input) return "";
   let d = String(input).replace(/\D+/g, "");
   while (d.startsWith("0")) d = d.slice(1);
   return d;
+}
+
+async function sha256Hex(input: string): Promise<string> {
+  const data = new TextEncoder().encode(input);
+  const hash = await crypto.subtle.digest("SHA-256", data);
+  return Array.from(new Uint8Array(hash))
+    .map((b) => b.toString(16).padStart(2, "0"))
+    .join("");
 }
 
 Deno.serve(async (req) => {
@@ -22,6 +37,7 @@ Deno.serve(async (req) => {
   try {
     const body = await req.json().catch(() => ({}));
     const emailInput = String(body?.email ?? "").trim().toLowerCase();
+    const otpInput = String(body?.otp ?? "").trim();
     const phone = String(body?.phone ?? "").trim();
     const countryCodeRaw = String(body?.country_code ?? "").trim();
     const portal = String(body?.portal ?? "family").trim().toLowerCase();
@@ -36,9 +52,12 @@ Deno.serve(async (req) => {
       );
     }
 
-    const dial = countryCodeRaw.replace(/\D+/g, "");
-    const phoneDigits = normalizeDigits(phone);
-    const fullDigits = `${dial}${phoneDigits}`; // e.g. 60192300024
+    if (emailInput && !/^\d{4,8}$/.test(otpInput)) {
+      return new Response(
+        JSON.stringify({ error: "OTP code is required" }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+      );
+    }
 
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
@@ -46,14 +65,75 @@ Deno.serve(async (req) => {
       auth: { persistSession: false, autoRefreshToken: false },
     });
 
-    // Pull active parent profiles. RLS bypassed via service role.
-    let query = admin
-      .from("user_profiles")
-      .select("user_id, email, phone, role, is_active")
+    // === EMAIL PATH: server-side OTP verification ===
+    if (emailInput) {
+      // Fetch the most recent unconsumed OTP for this email
+      const { data: otpRow, error: otpErr } = await admin
+        .from("auth_email_otps")
+        .select("id, code_hash, expires_at, attempts, consumed")
+        .eq("email", emailInput)
+        .eq("consumed", false)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      if (otpErr) {
+        console.error("[phone-login] otp lookup failed", otpErr);
+        return new Response(
+          JSON.stringify({ error: "Verification failed" }),
+          { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+        );
+      }
+      if (!otpRow) {
+        return new Response(
+          JSON.stringify({ error: "No OTP issued for this email. Request a new code." }),
+          { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+        );
+      }
+      if (new Date(otpRow.expires_at).getTime() < Date.now()) {
+        await admin.from("auth_email_otps").update({ consumed: true }).eq("id", otpRow.id);
+        return new Response(
+          JSON.stringify({ error: "OTP has expired. Please request a new code." }),
+          { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+        );
+      }
+      if ((otpRow.attempts ?? 0) >= MAX_OTP_ATTEMPTS) {
+        await admin.from("auth_email_otps").update({ consumed: true }).eq("id", otpRow.id);
+        return new Response(
+          JSON.stringify({ error: "Too many attempts. Please request a new code." }),
+          { status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+        );
+      }
+
+      const providedHash = await sha256Hex(otpInput);
+      if (providedHash !== otpRow.code_hash) {
+        await admin
+          .from("auth_email_otps")
+          .update({ attempts: (otpRow.attempts ?? 0) + 1 })
+          .eq("id", otpRow.id);
+        return new Response(
+          JSON.stringify({ error: "Invalid OTP code." }),
+          { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+        );
+      }
+
+      // Mark consumed on success
+      await admin.from("auth_email_otps").update({ consumed: true }).eq("id", otpRow.id);
+    }
+
+    const dial = countryCodeRaw.replace(/\D+/g, "");
+    const phoneDigits = normalizeDigits(phone);
+    const fullDigits = `${dial}${phoneDigits}`;
+
+    // Look up user profile
+    let query = admin.from("user_profiles").select("user_id, email, phone, role, is_active");
     if (emailInput) {
       query = query.ilike("email", emailInput);
     } else {
-      query = query.in("role", allowedRoles).not("phone", "is", null).eq("is_active", true);
+      query = query
+        .in("role", allowedRoles)
+        .not("phone", "is", null)
+        .eq("is_active", true);
     }
     const { data: profiles, error: profilesErr } = await query;
 
@@ -77,8 +157,6 @@ Deno.serve(async (req) => {
         });
 
     if (!match) {
-      // If an account with this email exists but in a different role,
-      // tell the user to switch portals instead of "no account found".
       if (emailInput) {
         const wrongPortalMatch = (profiles ?? []).find(
           (p: any) => (p.email ?? "").toLowerCase() === emailInput,
@@ -120,16 +198,11 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Generate a magic-link token; we return the hashed_token so the client
-    // can call supabase.auth.verifyOtp({ type: 'magiclink', token_hash, email }).
-    // Ensure the auth user exists and is confirmed so magiclink works even when
-    // the invitation has not been accepted yet.
+    // Ensure auth user is confirmed so magic link works.
     try {
       const { data: authUser } = await admin.auth.admin.getUserById(match.user_id);
       if (authUser?.user && !authUser.user.email_confirmed_at) {
-        await admin.auth.admin.updateUserById(match.user_id, {
-          email_confirm: true,
-        });
+        await admin.auth.admin.updateUserById(match.user_id, { email_confirm: true });
       }
     } catch (e) {
       console.warn("[phone-login] confirm user failed (continuing)", e);
