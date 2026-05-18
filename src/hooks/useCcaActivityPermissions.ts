@@ -71,6 +71,7 @@ export function useCcaActivityPermissions(
     const role = profile.role ?? "";
     const isPrincipal =
       role === "super_admin" || role === "admin" || role === "principal";
+    const isParent = role === "parent";
 
     const uid = user?.id ?? null;
     const isActivityPIC =
@@ -91,7 +92,9 @@ export function useCcaActivityPermissions(
       }
     }
 
-    const canView = isPrincipal || isActivityPIC || hasYearOverlap;
+    // Parents always have read-only view because upstream eligibility hooks
+    // already restrict which activities a parent can reach.
+    const canView = isPrincipal || isActivityPIC || hasYearOverlap || isParent;
     const canEdit = isPrincipal || isActivityPIC;
 
     return {
