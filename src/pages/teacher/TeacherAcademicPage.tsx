@@ -18,7 +18,7 @@ import { useTeacherScope } from "@/hooks/useTeacherScope";
 import { Carousel, CarouselContent, CarouselItem } from "@/components/ui/carousel";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { toast } from "@/hooks/use-toast";
-import schoolLogo from "@/assets/school-badge.png";
+import schoolLogo from "@/assets/header-logo.png";
 import collinzLogo from "@/assets/collinz-school-logo.png";
 import cambridgeLogo from "@/assets/cambridge-logo.jpg";
 import { teacherProfile, classRosters, classGrades } from "@/data/teacherMockData";
