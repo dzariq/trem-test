@@ -322,8 +322,8 @@ export function CcaDetailsSheet({
     <BottomSheet
       open={open}
       onOpenChange={onOpenChange}
-      snapPoints={[0, 0.92, 1]}
-      defaultSnapPoint={0.92}
+      snapPoints={[0, 0.85, 1]}
+      defaultSnapPoint={0.85}
       expandOnHeaderClick
       title={titleContent}
       description="CCA details"
