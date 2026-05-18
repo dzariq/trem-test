@@ -1,79 +1,82 @@
-# Teacher Calendar — Year-Group Scoped Events + Session Attendance
+# Notifications Module — Audit & Fix
 
-Mirror the parent-side scoping logic for teachers, then add a session attendance flow (lead/sub PIC can mark, other involved teachers can view only).
+## What's actually happening
 
-## 1. Scope teacher CCA visibility to assigned year groups
+Two parallel "digest" systems exist and are stepping on each other:
 
-Today `TeacherCalendarPage` loads every CCA session and every CCA activity for the campus. Apply the same approach used on the parent side, but keyed on the teacher's assigned class_years instead of a single student.
+| Source | What it produces | Where |
+|---|---|---|
+| **DB cron** `create_weekly_calendar_digest` (Sun 23:00) → writes to `notifications` table with type `weekly_digest` | "**This week at school** — 1 event (18 May – 24 May)…" | `supabase/migrations/20260515061346…sql` |
+| **Client synthetic** in `NotificationsDrawer.tsx` (computed at render time from calendar events) | "**Week at a glance** — Mon…" and "**What's on** — Tue, May 19" | `src/components/NotificationsDrawer.tsx` lines 220–300 |
 
-- `useCcaSessionsCalendar` already accepts `scopeToStudent`. Add a parallel `scopeToTeacher` mode:
-  - Inputs: teacher's `allowedClassYears` (from `useTeacherScope`) → derive an array of `year_level` codes and `class_name`s.
-  - Include a session when its parent activity is either:
-    - `kind in ('club','outdoor')` and the activity's `year_levels` intersects the teacher's year levels, OR
-    - `kind = 'event'` and `classes_involved` intersects the teacher's class names.
-  - If the teacher has no assignments → return `[]`.
-- `useCcaActivities` (teacher CCA Schedule tab): apply the same filter post-fetch so the list under "CCA Schedule" only shows activities tied to the teacher's year groups. Keep the existing "I am PIC" badge logic untouched.
+So every Monday, parents see **both** "This week at school" (DB cron) and "Week at a glance" (client) — that's the duplicate in your screenshot.
 
-## 2. Session detail drawer — show key info for events
+Second bug — the client loop generates a "What's on — <day>" item for **every day of this week and next week that has any event**, then tries to hide future ones with a `<= today` filter (line 311-315). That filter is comparing local Date objects parsed from `dayKey` and is letting tomorrow leak through in the screenshot (Tue May 19 visible on May 18).
 
-When the teacher taps a CCA event/outdoor/club session in the calendar grid or list, the existing `SessionDetailsSheet` opens. Extend it to surface:
+Third issue — Monday currently shows both the weekly digest **and** a "What's on today" for Monday, double-coverage.
 
-- Kind bucket pill (Club / Outdoor / Event) — reuse helpers already added on parent side.
-- Classes Involved chips (events only).
-- Requirements, description, location, start/end time (already present where applicable — verify).
-- A new **Attendance** section (see step 3).
+## Desired behaviour (from your message)
 
-No new drawer; we extend the existing one.
+- **Kill** "This week at school" entirely. Only "Week at a glance" survives as the weekly digest.
+- **Monday** → only **"Week at a glance"** for that week. **No Monday daily digest.**
+- **Tue–Sun** → only **"What's on — <that weekday>"** for **today**. No past days, no future days.
+- Rinse and repeat the next week (Monday again only weekly, etc.).
 
-## 3. CCA session attendance (focus: outdoor + event sessions)
+## Changes
 
-Add an attendance block inside `SessionDetailsSheet`.
+### 1. Remove the DB weekly digest
 
-### Permissions
-- **Can mark / edit** (lead or sub PIC): teacher is in `cca_activity_teachers` for the session's activity with `is_primary = true` OR `role ILIKE 'pic'` OR `role ILIKE 'sub%'`. We already have this list loaded via `useCcaActivities`; derive `canManageAttendance` from it.
-- **Read-only**: any other teacher who can see the session (i.e. passed the year-group scope above).
-- Admin-like users always get write access.
+New migration:
+- `SELECT cron.unschedule('weekly-calendar-digest');`
+- `DROP FUNCTION public.create_weekly_calendar_digest(date);`
+- `DELETE FROM public.notifications WHERE type = 'weekly_digest' AND title = 'This week at school';` (clears the existing duplicates already in users' inboxes — including the read ones)
 
-### Data
-- Table: `public.cca_session_attendance(session_id, student_id, status, notes, marked_by, marked_at, session_bus_id)`. Status values follow existing CCA pattern — start with `present | absent | late | excused` (confirm with the user if a different vocabulary is expected; see open question).
-- Roster = students currently enrolled in this session via `cca_session_enrollments` where `status='enrolled'`. For event-type activities without per-session enrollments, fall back to students whose `class` is in `cca_activities.classes_involved`.
+### 2. Rewrite synthetic digest loop in `NotificationsDrawer.tsx`
 
-### UI
-- Header row: counts (Present / Absent / Late / Excused / Unmarked) and last-saved timestamp.
-- One row per student: name + class, status pill buttons (P/A/L/E), inline notes.
-- For PIC: a Save button (upsert on `(session_id, student_id)`, set `marked_by = auth.uid()`, `marked_at = now()`).
-- For non-PIC: same list rendered as read-only badges, no edit affordance.
-- Loading + empty states ("No students enrolled yet").
+Replace the `for (let weekOffset = 0; weekOffset < 2; weekOffset++)` block (~lines 222–300) with a single pass anchored to **today (local Asia/Kuala_Lumpur)**:
 
-### New hook
-`useCcaSessionAttendance(sessionId, { canEdit })` modelled on `useTeacherAttendance`:
-- Loads roster (enrollments or class fallback).
-- Loads existing attendance rows.
-- Exposes `setStudentStatus`, `setStudentNotes`, `save`, `summary`.
+```text
+const isMonday = today.getDay() === 1;   // 1 = Monday
+const weekStart = monday of this week;
+const weekEnd   = sunday of this week;
 
-### RLS
-`cca_session_attendance` currently lets any authenticated user read/insert/update. That is permissive enough to ship the UI today, but we should tighten it. Out of scope for this plan unless you say otherwise (see open question 2).
+if (isMonday):
+    emit "Week at a glance — Mon … Sun" with all events Mon→Sun (if any)
+    // no daily item today
+else:
+    emit "What's on — <today's weekday, date>" with today's events only (if any)
+```
 
-## 4. Out of scope
-- Bus list / `cca_bus_assignments` integration (mentioned as context only; treat as a follow-up).
-- Parent-side changes.
-- Admin CCA management pages.
-- Schema migrations beyond optional RLS hardening.
+That is the entire generator. No backfill loop, no next-week prefetch, no past-day "Daily recap", no future-day items.
 
-## Technical details
+### 3. Drop the now-dead filter
 
-Files touched:
-- `src/hooks/useCcaSessionsCalendar.ts` — add `scopeToTeacher` + `teacherYearLevels`/`teacherClassNames` inputs.
-- `src/hooks/useCcaActivities.ts` — optional `teacherYearLevels` filter (or filter inline in the page).
-- `src/pages/teacher/TeacherCalendarPage.tsx` — pass teacher scope; no UI restructuring.
-- `src/hooks/useCcaSessionAttendance.ts` — new.
-- `src/components/cca/SessionDetailsSheet.tsx` — add Classes Involved row + Attendance section; accept `canManageAttendance` prop.
-- `src/components/cca/SessionAttendanceList.tsx` — new presentational component (rows + save bar).
+`parseSyntheticAnchorDate` + the `anchor <= today` filter at lines 309–322 become unnecessary (we never emit future items). Keep the sort by id-anchor for stability, or just sort by `id` desc.
 
-Reused helpers: `getCcaBucket`, `getCcaTypePillColor`, `getCcaBucketIcon`, `formatClassDisplay`, `useTeacherScope`, `is_admin_like` (via existing role hooks).
+### 4. Backend fetch window can shrink
 
-## Open questions
+In `useNotifications.ts` the calendar query currently spans `weekStart … in14Days` (line 233–234). For the new logic we only need:
+- **If Monday:** Mon → Sun (this week).
+- **Otherwise:** today only.
 
-1. **Attendance status vocabulary.** Daily attendance uses `present / absent / late / excused`. For CCA events do you want the same four, or a simpler `present / absent` (plus notes)?
-2. **RLS hardening.** Right now any authenticated user can write `cca_session_attendance`. Want me to add a migration restricting writes to admin-like + activity PIC/sub-PIC in the same change, or leave it for a follow-up?
-3. **Event roster source.** For events with no `cca_session_enrollments` rows, should the roster be every student in `classes_involved`, or only those explicitly invited (e.g. via a future RSVP table)? Plan above assumes the class-based fallback.
+To keep the change small and avoid extra refetches across the day, leave the fetch window as `weekStartIso … weekEnd (Sunday)` — the drawer just filters down. No backend code change required beyond removing the +14d look-ahead (optional cleanup).
+
+## Files touched
+
+| File | Change |
+|---|---|
+| `supabase/migrations/<new>.sql` | Unschedule cron, drop function, delete existing rows |
+| `src/components/NotificationsDrawer.tsx` | Rewrite the `allSyntheticItems` generator; drop future-date filter |
+| `src/hooks/useNotifications.ts` *(optional)* | Tighten calendar event fetch window to current week only |
+
+## Out of scope
+
+- The synthetic CCA-session and teacher-PIC items (separate from weekly/daily digest — unchanged).
+- Real DB notifications (announcements, attendance-marked, etc.) — unchanged.
+- Adding a separate "tomorrow preview" — your spec explicitly says today-only for daily.
+
+## Open question
+
+When you say "Monday only shows Week at a glance" — if a brand-new event is **added** mid-week (say Wednesday), do you want Wednesday's "What's on" to include it (yes, that's automatic from calendar query), or do you also want a one-off "New event added" alert? I'll assume **no extra alert**; the Wednesday daily digest will just include it.
+
+Confirm and I'll implement.
