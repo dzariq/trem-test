@@ -4,6 +4,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { BottomSheet } from "@/components/ui/bottom-sheet";
+import { useBottomSheetSnap } from "@/components/ui/bottom-sheet";
 import {
   Tooltip,
   TooltipContent,
@@ -75,9 +76,43 @@ export function CcaDetailsSheet({
     onActivityUpdated?.();
   };
 
-  // Shared content for both mobile and desktop
-  const sheetContent = activity && perms.canView ? (
-    <>
+  // Shared content for both mobile and desktop. Wrapped in an inner
+  // component so it can consume the BottomSheet snap context to react to
+  // expand/collapse gestures (e.g. truncating the description when the
+  // sheet is minimized).
+  const ManageButton = canEdit ? (
+    <Button onClick={onManageSessions} className="w-full" size="sm">
+      <Settings className="h-4 w-4 mr-2" />
+      Manage Sessions
+    </Button>
+  ) : (
+    <TooltipProvider>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <div className="w-full">
+            <Button
+              variant="outline"
+              size="sm"
+              className="w-full opacity-50 cursor-not-allowed"
+              disabled
+            >
+              <Settings className="h-4 w-4 mr-2" />
+              Manage Sessions
+            </Button>
+          </div>
+        </TooltipTrigger>
+        <TooltipContent>
+          <p>Only PIC teachers can schedule/edit sessions.</p>
+        </TooltipContent>
+      </Tooltip>
+    </TooltipProvider>
+  );
+
+  const SheetBody = () => {
+    const { isFullSnap } = useBottomSheetSnap();
+    if (!activity || !perms.canView) return null;
+    return (
+      <>
       {/* Hero Image - Editable for PIC teachers */}
       {canEdit ? (
         <CcaImageUpload
@@ -100,7 +135,16 @@ export function CcaDetailsSheet({
         />
       )}
 
-      <p className="text-sm text-muted-foreground">
+      {/* Manage Sessions button: pinned high so it's reachable when the
+          sheet is at its minimized snap point. */}
+      <div>{ManageButton}</div>
+
+      <p
+        className={cn(
+          "text-sm text-muted-foreground",
+          !isFullSnap && "line-clamp-2",
+        )}
+      >
         {activity.publicDescription || "Details to be announced"}
       </p>
 
@@ -236,36 +280,12 @@ export function CcaDetailsSheet({
           </p>
         </div>
       )}
+      </>
+    );
+  };
 
-      <div className="pt-4 border-t">
-        {canEdit ? (
-          <Button onClick={onManageSessions} className="w-full">
-            <Settings className="h-4 w-4 mr-2" />
-            Manage Sessions
-          </Button>
-        ) : (
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <div className="w-full">
-                  <Button
-                    variant="outline"
-                    className="w-full opacity-50 cursor-not-allowed"
-                    disabled
-                  >
-                    <Settings className="h-4 w-4 mr-2" />
-                    Manage Sessions
-                  </Button>
-                </div>
-              </TooltipTrigger>
-              <TooltipContent>
-                <p>Only PIC teachers can schedule/edit sessions.</p>
-              </TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
-        )}
-      </div>
-    </>
+  const sheetContent = activity && perms.canView ? (
+    <SheetBody />
   ) : activity && !perms.canView ? (
     <div className="py-10 text-center text-sm text-muted-foreground">
       You don't have access to this activity.
@@ -302,8 +322,9 @@ export function CcaDetailsSheet({
     <BottomSheet
       open={open}
       onOpenChange={onOpenChange}
-      snapPoints={[0, 0.75, 1]}
-      defaultSnapPoint={0.75}
+      snapPoints={[0, 0.92, 1]}
+      defaultSnapPoint={0.92}
+      expandOnHeaderClick
       title={titleContent}
       description="CCA details"
       bodyClassName="px-4 py-3 space-y-4"
