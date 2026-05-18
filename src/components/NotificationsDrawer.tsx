@@ -219,83 +219,75 @@ export function NotificationsDrawer({ open, onOpenChange }: NotificationsDrawerP
 
     const items: Array<{ id: string; title: string; message: string; type: string }> = [];
 
-    // Backfill + forward-fill: render daily digests for every day in this week
-    // and next week that has events, plus a weekly digest for each Monday.
-    // This lets users see the full notification logic without waiting for the
-    // calendar to roll forward.
-    for (let weekOffset = 0; weekOffset < 2; weekOffset++) {
-      const weekStart = new Date(thisWeekStart);
-      weekStart.setDate(thisWeekStart.getDate() + weekOffset * 7);
+    // Schedule:
+    //  - Monday  → "Week at a glance" for Mon→Sun this week (NO daily digest today).
+    //  - Tue–Sun → "What's on — <today>" with today's events only.
+    // No past-day recaps and no future-day previews.
+    const isMonday = today.getDay() === 1;
+
+    if (isMonday) {
+      const weekStart = thisWeekStart;
       const weekEnd = new Date(weekStart);
       weekEnd.setDate(weekStart.getDate() + 7);
       const lastDay = new Date(weekEnd);
       lastDay.setDate(weekEnd.getDate() - 1);
       const weekKey = `week-${isoKey(weekStart)}`;
 
-      const weekEvents = notifications.filter((n) => {
-        if (!n.event_date) return false;
-        const d = new Date(n.event_date);
-        return d >= weekStart && d < weekEnd;
-      });
-
-      // Weekly digest (Monday)
-      if (weekEvents.length > 0 && !dismissedSynthetic[weekKey]) {
-        const groups = new Map<string, string[]>();
-        const sorted = [...weekEvents].sort(
-          (a, b) =>
-            new Date(a.event_date!).getTime() - new Date(b.event_date!).getTime(),
-        );
-        for (const e of sorted) {
-          const d = new Date(e.event_date!);
-          const key = fmtDay(d);
-          if (!groups.has(key)) groups.set(key, []);
-          groups.get(key)!.push(`[${e.type}] ${e.title}`);
+      if (!dismissedSynthetic[weekKey]) {
+        const weekEvents = notifications.filter((n) => {
+          if (!n.event_date) return false;
+          const d = new Date(n.event_date);
+          return d >= weekStart && d < weekEnd;
+        });
+        if (weekEvents.length > 0) {
+          const groups = new Map<string, string[]>();
+          const sorted = [...weekEvents].sort(
+            (a, b) =>
+              new Date(a.event_date!).getTime() - new Date(b.event_date!).getTime(),
+          );
+          for (const e of sorted) {
+            const d = new Date(e.event_date!);
+            const key = fmtDay(d);
+            if (!groups.has(key)) groups.set(key, []);
+            groups.get(key)!.push(`[${e.type}] ${e.title}`);
+          }
+          const lines = Array.from(groups.entries())
+            .map(
+              ([day, titles]) =>
+                `${day}\n${titles.map((t) => `  • ${t}`).join("\n")}`,
+            )
+            .join("\n\n");
+          items.push({
+            id: weekKey,
+            title: `Week at a glance — ${fmtDay(weekStart)} to ${fmtDay(lastDay)}`,
+            message: lines,
+            type: "weekly_digest",
+          });
         }
-        const lines = Array.from(groups.entries())
-          .map(
-            ([day, titles]) =>
-              `${day}\n${titles.map((t) => `  • ${t}`).join("\n")}`,
-          )
-          .join("\n\n");
-        const label = weekOffset === 0 ? "Week at a glance" : "Next week at a glance";
-        items.push({
-          id: weekKey,
-          title: `${label} — ${fmtDay(weekStart)} to ${fmtDay(lastDay)}`,
-          message: lines,
-          type: "weekly_digest",
-        });
       }
-
-      // Daily digests for each day in the week that has events
-      for (let i = 0; i < 7; i++) {
-        const day = new Date(weekStart);
-        day.setDate(weekStart.getDate() + i);
-        const dayEnd = new Date(day);
-        dayEnd.setDate(day.getDate() + 1);
-        const dayKey = `today-${isoKey(day)}`;
-        if (dismissedSynthetic[dayKey]) continue;
-
-        const dayEvents = weekEvents.filter((n) => {
-          const d = new Date(n.event_date!);
-          return d >= day && d < dayEnd;
+    } else {
+      const dayKey = `today-${isoKey(today)}`;
+      if (!dismissedSynthetic[dayKey]) {
+        const dayEnd = new Date(today);
+        dayEnd.setDate(today.getDate() + 1);
+        const dayEvents = notifications.filter((n) => {
+          if (!n.event_date) return false;
+          const d = new Date(n.event_date);
+          return d >= today && d < dayEnd;
         });
-        if (dayEvents.length === 0) continue;
-
-        const lines = dayEvents
-          .slice()
-          .sort((a, b) => (a.title || "").localeCompare(b.title || ""))
-          .map((e) => `• [${e.type}] ${e.title}`)
-          .join("\n");
-
-        const isToday = day.getTime() === today.getTime();
-        const isFuture = day.getTime() > today.getTime();
-        const prefix = isToday ? "What's on today" : isFuture ? "What's on" : "Daily recap";
-        items.push({
-          id: dayKey,
-          title: `${prefix} — ${fmtDay(day)}`,
-          message: lines,
-          type: "event",
-        });
+        if (dayEvents.length > 0) {
+          const lines = dayEvents
+            .slice()
+            .sort((a, b) => (a.title || "").localeCompare(b.title || ""))
+            .map((e) => `• [${e.type}] ${e.title}`)
+            .join("\n");
+          items.push({
+            id: dayKey,
+            title: `What's on today — ${fmtDay(today)}`,
+            message: lines,
+            type: "event",
+          });
+        }
       }
     }
 
@@ -306,14 +298,6 @@ export function NotificationsDrawer({ open, onOpenChange }: NotificationsDrawerP
     .filter((it) =>
       filter === "unread" ? !readSynthetic[it.id] : !!readSynthetic[it.id]
     )
-    .filter((it) => {
-      // Hide future-dated calendar digests; only show today or past.
-      const anchor = parseSyntheticAnchorDate(it.id);
-      if (!anchor) return true;
-      const now = new Date();
-      const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-      return anchor.getTime() <= today.getTime();
-    })
     .slice()
     .sort((a, b) => {
       const da = parseSyntheticAnchorDate(a.id)?.getTime() ?? 0;
