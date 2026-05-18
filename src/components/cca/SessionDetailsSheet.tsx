@@ -304,8 +304,8 @@ export function SessionDetailsSheet({
               />
             </div>
 
-            {/* Bus Attendance — outdoor activities only (teacher-only) */}
-            {isOutdoor && perms.canView && (
+            {/* Bus Attendance — outdoor activities only (teacher-only, no parents) */}
+            {isOutdoor && perms.canViewBuses && (
               <div className="pt-4 border-t">
                 <BusAttendanceList
                   activityId={session.activityId}

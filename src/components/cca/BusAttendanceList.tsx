@@ -27,7 +27,7 @@ export function BusAttendanceList({ activityId, activityPerms }: BusAttendanceLi
     markAttendance,
   } = useCcaOutdoorBuses(activityId, activityPerms.canView);
 
-  if (!activityPerms.canView) return null;
+  if (!activityPerms.canViewBuses) return null;
 
   return (
     <div className="space-y-3">

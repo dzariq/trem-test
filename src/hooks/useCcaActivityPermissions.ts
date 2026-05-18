@@ -29,6 +29,8 @@ export interface CcaActivityPermissions {
   canView: boolean;
   canEdit: boolean;
   canEditBuses: boolean;
+  /** Teacher-only bus list visibility: principal, activity PIC, or year overlap. Parents never see buses. */
+  canViewBuses: boolean;
 }
 
 const NO_PERMS: CcaActivityPermissions = {
@@ -38,6 +40,7 @@ const NO_PERMS: CcaActivityPermissions = {
   canView: false,
   canEdit: false,
   canEditBuses: false,
+  canViewBuses: false,
 };
 
 export function useCcaActivityPermissions(
@@ -104,6 +107,7 @@ export function useCcaActivityPermissions(
       canView,
       canEdit,
       canEditBuses: canEdit,
+      canViewBuses: isPrincipal || isActivityPIC || hasYearOverlap,
     };
   }, [activity, profile, user?.id, teacherYearLevels, teacherClassNames]);
 }
