@@ -58,7 +58,23 @@ export default function InvoicePage() {
   const filtered = useMemo(() => {
     if (filter === "outstanding") return invoices.filter((i) => i.status === "pending_payment");
     if (filter === "paid") return invoices.filter((i) => i.status === "paid");
-    return invoices;
+    // "All": outstanding first (longest overdue → most recent due),
+    // then paid (most recently paid → oldest), then everything else.
+    const dateVal = (s: string | null) => (s ? new Date(s).getTime() : 0);
+    const outstanding = invoices
+      .filter((i) => i.status === "pending_payment")
+      .sort((a, b) => {
+        const ad = dateVal(a.dueDate || a.invoiceDate);
+        const bd = dateVal(b.dueDate || b.invoiceDate);
+        return ad - bd; // oldest due first = longest overdue
+      });
+    const paid = invoices
+      .filter((i) => i.status === "paid")
+      .sort((a, b) => dateVal(b.invoiceDate) - dateVal(a.invoiceDate));
+    const others = invoices.filter(
+      (i) => i.status !== "pending_payment" && i.status !== "paid"
+    );
+    return [...outstanding, ...paid, ...others];
   }, [invoices, filter]);
 
   const currency = invoices[0]?.currency || "MYR";
