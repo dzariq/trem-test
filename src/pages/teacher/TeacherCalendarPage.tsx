@@ -593,8 +593,12 @@ export default function TeacherCalendarPage() {
           requirements: selectedSession.requirements,
           isCancelled: selectedSession.isCancelled,
           category: selectedSession.category,
+          kind: selectedSession.kind,
+          classesInvolved: selectedSession.classesInvolved,
         } : null}
         isPIC={selectedSession ? isTeacherPICOfSession(selectedSession) : false}
+        canManageAttendance={selectedSession ? isTeacherPICOfSession(selectedSession) : false}
+        campusCode={activeCampus}
       />
 
       <CalendarFiltersSheet
