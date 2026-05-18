@@ -5947,10 +5947,6 @@ export type Database = {
       can_write_grades: { Args: { p_period_id: string }; Returns: boolean }
       check_phone_exists: { Args: { phone_number: string }; Returns: Json }
       cleanup_audit_log: { Args: never; Returns: undefined }
-      create_weekly_calendar_digest: {
-        Args: { p_week_start?: string }
-        Returns: number
-      }
       current_user_role: { Args: never; Returns: string }
       delete_parent_cascade: {
         Args: { p_parents_row_id: string; p_user_id: string }
