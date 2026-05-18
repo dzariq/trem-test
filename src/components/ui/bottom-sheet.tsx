@@ -22,6 +22,28 @@ interface BottomSheetProps {
    * Bottom sheet behavior preserved on mobile.
    */
   centeredOnDesktop?: boolean;
+  /**
+   * When true, clicking the header/title area expands the sheet to the
+   * tallest snap point (or collapses back to the default snap if already
+   * fully expanded). Only active when snap points are in use (mobile).
+   */
+  expandOnHeaderClick?: boolean;
+}
+
+interface BottomSheetContextValue {
+  activeSnapPoint: number | string | null;
+  isFullSnap: boolean;
+  isMinSnap: boolean;
+}
+
+const BottomSheetContext = React.createContext<BottomSheetContextValue>({
+  activeSnapPoint: null,
+  isFullSnap: false,
+  isMinSnap: false,
+});
+
+export function useBottomSheetSnap() {
+  return React.useContext(BottomSheetContext);
 }
 
 export function BottomSheet({
@@ -38,6 +60,7 @@ export function BottomSheet({
   showHandle = true,
   modal = true,
   centeredOnDesktop = true,
+  expandOnHeaderClick = false,
 }: BottomSheetProps) {
   const isSmallScreen = useIsSmallScreen();
   const useSnapPoints = !centeredOnDesktop || isSmallScreen;
@@ -89,6 +112,10 @@ export function BottomSheet({
   const setActiveSnapPointProp = useSnapPoints ? setActiveSnapPoint : undefined;
   const isFullSnap = useSnapPoints && activeSnapPoint === 1;
   const shouldCenter = centeredOnDesktop && !useSnapPoints;
+  const isMinSnap = useSnapPoints && sortedSnapPoints && activeSnapPoint === sortedSnapPoints.find((sp) => {
+    const n = typeof sp === "number" ? sp : parseFloat(sp);
+    return !Number.isNaN(n) && n > 0;
+  });
 
   // Vaul defaults `fadeFromIndex` to the last snap point, which means the
   // background overlay only becomes visible at the tallest snap. We want it
@@ -149,7 +176,18 @@ export function BottomSheet({
             )}
 
             {(title || description) && (
-              <div className={cn("flex-shrink-0 px-4 pb-3 pt-3 border-b border-border", headerClassName)}>
+              <div
+                className={cn(
+                  "flex-shrink-0 px-4 pb-3 pt-3 border-b border-border",
+                  expandOnHeaderClick && useSnapPoints && "cursor-pointer select-none",
+                  headerClassName,
+                )}
+                onClick={
+                  expandOnHeaderClick && useSnapPoints
+                    ? () => setActiveSnapPoint(isFullSnap ? defaultSnapPoint : 1)
+                    : undefined
+                }
+              >
                 {title && (
                   <DrawerPrimitive.Title className="text-lg font-semibold flex items-center justify-center gap-2">
                     {title}
@@ -170,7 +208,11 @@ export function BottomSheet({
                 bodyClassName,
               )}
             >
-              {children}
+              <BottomSheetContext.Provider
+                value={{ activeSnapPoint, isFullSnap, isMinSnap: Boolean(isMinSnap) }}
+              >
+                {children}
+              </BottomSheetContext.Provider>
             </div>
           </DrawerPrimitive.Content>
         </div>
