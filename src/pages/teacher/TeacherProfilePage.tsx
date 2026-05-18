@@ -38,6 +38,9 @@ import { toast } from "@/hooks/use-toast";
 import { useMyProfile } from "@/hooks/useMyProfile";
 import { updateMyProfile } from "@/data/profile";
 
+// NOTE: Mock/demo data for UI demonstration only. These are NOT real credentials
+// and are not used for authentication anywhere in this app. Replace with a secure
+// backend-fetched credential vault before connecting to real third-party systems.
 const schoolAccounts = [
   {
     title: "Student Information System (SIS)",
