@@ -9,7 +9,7 @@ import { WelcomeTypingAnimation } from "@/components/home/WelcomeTypingAnimation
 import ParentWelcomeQuote from "@/components/home/ParentWelcomeQuote";
 import { StudentPillSelector } from "@/components/home/StudentPillSelector";
 import { Card, CardContent } from "@/components/ui/card";
-import schoolBadge from "@/assets/school-badge.png";
+import schoolBadge from "@/assets/header-logo.png";
 import heroBanner from "@/assets/hero-banner.png";
 import { listAnnouncements, markAnnouncementRead, type Announcement } from "@/data/announcements";
 import { getUpcomingEvents, listUpcomingEvents, type UpcomingEvent } from "@/data/calendar";
