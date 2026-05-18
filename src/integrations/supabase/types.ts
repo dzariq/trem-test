@@ -528,6 +528,39 @@ export type Database = {
         }
         Relationships: []
       }
+      auth_email_otps: {
+        Row: {
+          attempts: number
+          code_hash: string
+          consumed: boolean
+          created_at: string
+          email: string
+          expires_at: string
+          id: string
+          ip: string | null
+        }
+        Insert: {
+          attempts?: number
+          code_hash: string
+          consumed?: boolean
+          created_at?: string
+          email: string
+          expires_at: string
+          id?: string
+          ip?: string | null
+        }
+        Update: {
+          attempts?: number
+          code_hash?: string
+          consumed?: boolean
+          created_at?: string
+          email?: string
+          expires_at?: string
+          id?: string
+          ip?: string | null
+        }
+        Relationships: []
+      }
       behavioral_assessments: {
         Row: {
           academic_period_id: string

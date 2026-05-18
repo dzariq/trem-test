@@ -36,7 +36,7 @@ const DEFAULT_ISO2 = "my"; // Malaysia
 
 const OTP_REQUEST_URL = "https://collinz.app.n8n.cloud/webhook/login-otp";
 const OTP_VERIFY_URL = "https://collinz.app.n8n.cloud/webhook/verify-otp";
-const OTP_TTL_SECONDS = 60;
+const OTP_TTL_SECONDS = 300; // 5 minutes (must match send-email-otp server config)
 
 // Convert iso2 -> flag emoji
 const isoToFlag = (iso2: string) =>
@@ -88,7 +88,6 @@ export default function Login() {
   const [otp, setOtp] = useState("");
   const [otpExpiresAt, setOtpExpiresAt] = useState<number | null>(null);
   const [secondsLeft, setSecondsLeft] = useState(0);
-  const [generatedOtp, setGeneratedOtp] = useState<string>("");
 
   const selectedCountry =
     COUNTRIES.find((c) => c.iso2 === countryIso2) ?? COUNTRIES[0];
@@ -145,11 +144,6 @@ export default function Login() {
   const fullNumber = `+${selectedCountry.dialCode}${phone}`;
   const otpDestination = method === "email" ? email : fullNumber;
 
-  // Generate a 6-digit OTP code
-  const generateOtpCode = (): string => {
-    return Math.floor(100000 + Math.random() * 900000).toString();
-  };
-
   // Step 1: request OTP
   const handleRequestOtp = async () => {
     if (!portal) {
@@ -185,18 +179,12 @@ export default function Login() {
     setLoading(true);
 
     try {
-      const otpCode = generateOtpCode();
-
       if (method === "email") {
-        // Send OTP via Resend through our Supabase edge function.
+        // OTP is generated and stored server-side. We never see the code on the client.
         const { data, error: fnErr } = await supabase.functions.invoke(
           "send-email-otp",
           {
-            body: {
-              email,
-              otp: otpCode,
-              ttl_seconds: OTP_TTL_SECONDS,
-            },
+            body: { email },
           },
         );
 
@@ -224,6 +212,9 @@ export default function Login() {
         }
       } else {
         // Phone OTP still goes through the existing n8n webhook (Twilio etc).
+        // NOTE: phone path is verified upstream by n8n; server-side verification
+        // for the phone channel is tracked separately and not part of this edge function.
+        const otpCode = Math.floor(100000 + Math.random() * 900000).toString();
         const res = await fetch(OTP_REQUEST_URL, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -241,7 +232,6 @@ export default function Login() {
         }
       }
 
-      setGeneratedOtp(otpCode);
       setOtp("");
       setOtpExpiresAt(Date.now() + OTP_TTL_SECONDS * 1000);
       setStep("otp");
@@ -273,13 +263,7 @@ export default function Login() {
     setLoading(true);
 
     try {
-      if (method === "email") {
-        // Email OTP is generated client-side and delivered via Resend.
-        // Verify locally against the code we generated.
-        if (!generatedOtp || otp !== generatedOtp) {
-          throw new Error("Invalid OTP. Please try again.");
-        }
-      } else {
+      if (method !== "email") {
         const res = await fetch(OTP_VERIFY_URL, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -320,13 +304,14 @@ export default function Login() {
         }
       }
 
-      // Look up the parent by phone via edge function and mint a session token
+      // Server-side verification + session mint.
+      // For email path, phone-login verifies the OTP against auth_email_otps.
       const { data: loginData, error: loginErr } = await supabase.functions.invoke(
         "phone-login",
         {
           body:
             method === "email"
-              ? { email, portal }
+              ? { email, otp, portal }
               : {
                   phone,
                   country_code: `+${selectedCountry.dialCode}`,
