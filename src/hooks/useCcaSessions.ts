@@ -128,82 +128,8 @@ export function useCcaSessions({ activityId }: UseCcaSessionsOptions) {
           return false;
         }
 
-        // Create notification for CCA session
-        if (insertedSession) {
-          const { data: activity } = await supabase
-            .from("cca_activities")
-            .select("name")
-            .eq("id", activityId)
-            .single();
-
-          const sessionDate = new Date(formData.sessionDate);
-          const dateStr = sessionDate.toLocaleDateString("en-GB", { weekday: "short", day: "numeric", month: "short" });
-          const formatTime = (t: string | null) => {
-            if (!t) return "";
-            const [h, m] = t.split(":");
-            const hour = parseInt(h);
-            const ampm = hour >= 12 ? "PM" : "AM";
-            return `${hour % 12 || 12}:${m} ${ampm}`;
-          };
-          const timeStr = formData.startTime 
-            ? formData.endTime 
-              ? `${formatTime(formData.startTime)}–${formatTime(formData.endTime)}`
-              : formatTime(formData.startTime)
-            : "All Day";
-
-          const notificationMessage = `${activity?.name || "CCA"} session scheduled for ${dateStr}, ${timeStr}.`;
-
-          // Get PIC teachers for this activity
-          const { data: picTeachers } = await supabase
-            .from("cca_activity_teachers")
-            .select("teacher_user_id")
-            .eq("activity_id", activityId);
-
-          // Insert notifications for PIC teachers (teacher-targeted)
-          if (picTeachers && picTeachers.length > 0) {
-            const teacherNotifications = picTeachers.map((t) => ({
-              user_id: t.teacher_user_id,
-              title: "CCA Session Created",
-              message: notificationMessage,
-              type: "cca",
-              link_to: "/teacher/calendar",
-              target_audience: "teacher",
-            }));
-            await supabase.from("notifications").insert(teacherNotifications);
-          }
-
-          // Get parents of enrolled students for this activity
-          const { data: enrolledStudents } = await supabase
-            .from("student_cca_enrollments")
-            .select("student_id")
-            .eq("cca_activity_id", activityId)
-            .in("status", ["enrolled", "active"]);
-
-          if (enrolledStudents && enrolledStudents.length > 0) {
-            const studentIds = enrolledStudents.map((e) => e.student_id);
-            
-            // Get guardian user IDs for these students
-            const { data: guardians } = await supabase
-              .from("student_guardians")
-              .select("guardian_user_id")
-              .in("student_id", studentIds);
-
-            if (guardians && guardians.length > 0) {
-              // Deduplicate guardian IDs
-              const uniqueGuardianIds = [...new Set(guardians.map((g) => g.guardian_user_id))];
-              
-              const parentNotifications = uniqueGuardianIds.map((guardianId) => ({
-                user_id: guardianId,
-                title: "CCA Session Scheduled",
-                message: notificationMessage,
-                type: "cca",
-                link_to: "/parent/calendar",
-                target_audience: "parent",
-              }));
-              await supabase.from("notifications").insert(parentNotifications);
-            }
-          }
-        }
+        // CCA session notifications are created by the database trigger so
+        // clients cannot forge cross-audience notification records.
 
         toast({
           title: "Session saved",
