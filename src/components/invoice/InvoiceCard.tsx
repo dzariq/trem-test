@@ -17,6 +17,7 @@ export function InvoiceCard({ invoice, onClick }: Props) {
     invoice.status === "pending_payment" &&
     invoice.dueDate &&
     new Date(invoice.dueDate).getTime() < Date.now();
+  const isPaid = invoice.status === "paid";
 
   return (
     <Card
@@ -35,7 +36,13 @@ export function InvoiceCard({ invoice, onClick }: Props) {
               </span>
             )}
           </div>
-          <Badge variant={status.variant} className="border-0 shrink-0">
+          <Badge
+            variant={status.variant}
+            className={
+              "border-0 shrink-0 " +
+              (isPaid ? "bg-emerald-600 text-white hover:bg-emerald-600" : "")
+            }
+          >
             {isOverdue ? "Overdue" : status.label}
           </Badge>
         </div>
@@ -53,6 +60,8 @@ export function InvoiceCard({ invoice, onClick }: Props) {
                 "text-base font-semibold tabular-nums " +
                 (invoice.status === "pending_payment"
                   ? "text-destructive"
+                  : isPaid
+                  ? "text-emerald-600"
                   : "text-foreground")
               }
             >

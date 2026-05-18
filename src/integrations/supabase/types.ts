@@ -3668,6 +3668,7 @@ export type Database = {
           id: string
           is_malaysian: boolean
           is_primary_contact: boolean
+          login_channel: string | null
           name: string | null
           nationality: string | null
           parent_email: string | null
@@ -3685,6 +3686,7 @@ export type Database = {
           id?: string
           is_malaysian?: boolean
           is_primary_contact?: boolean
+          login_channel?: string | null
           name?: string | null
           nationality?: string | null
           parent_email?: string | null
@@ -3702,6 +3704,7 @@ export type Database = {
           id?: string
           is_malaysian?: boolean
           is_primary_contact?: boolean
+          login_channel?: string | null
           name?: string | null
           nationality?: string | null
           parent_email?: string | null
@@ -4451,6 +4454,7 @@ export type Database = {
           invoice_amount: string | null
           invoice_date: string | null
           outstanding_amount: string | null
+          overpayment: number
           payment_amount: string | null
           period_key: string | null
           status: string
@@ -4469,6 +4473,7 @@ export type Database = {
           invoice_amount?: string | null
           invoice_date?: string | null
           outstanding_amount?: string | null
+          overpayment?: number
           payment_amount?: string | null
           period_key?: string | null
           status: string
@@ -4487,6 +4492,7 @@ export type Database = {
           invoice_amount?: string | null
           invoice_date?: string | null
           outstanding_amount?: string | null
+          overpayment?: number
           payment_amount?: string | null
           period_key?: string | null
           status?: string
