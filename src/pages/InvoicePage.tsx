@@ -12,6 +12,7 @@ import { InvoiceDetailsSheet } from "@/components/invoice/InvoiceDetailsSheet";
 import { formatMoney } from "@/components/invoice/invoiceUtils";
 import type { ParentInvoice } from "@/data/invoices";
 import { cn } from "@/lib/utils";
+import schoolLogo from "@/assets/header-logo.png";
 
 type Filter = "all" | "outstanding" | "paid";
 
@@ -81,7 +82,15 @@ export default function InvoicePage() {
 
   return (
     <AppLayout>
-      <AppHeader title="Invoices" showChildSelector />
+      <AppHeader
+        showChildSelector
+        leftContent={
+          <div className="flex items-center gap-2">
+            <img src={schoolLogo} alt="School Logo" className="h-16 w-auto -my-3 drop-shadow-md" />
+            <h1 className="text-xl font-semibold text-foreground">Invoices</h1>
+          </div>
+        }
+      />
 
       <div className="px-4 py-4 space-y-4 pb-24">
         {/* Loading */}
