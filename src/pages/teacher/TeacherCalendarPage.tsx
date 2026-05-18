@@ -36,11 +36,21 @@ import { CalendarFiltersSheet } from "@/components/calendar/CalendarFiltersSheet
 import { usePullToRefresh } from "@/hooks/usePullToRefresh";
 import { PullToRefreshIndicator } from "@/components/calendar/PullToRefreshIndicator";
 import { TEACHER_CATEGORY_ORDER, mapDbToCategory, mapDbToSubtype } from "@/lib/calendarCategorySubtypes";
+import { useTeacherScope } from "@/hooks/useTeacherScope";
 import { cn } from "@/lib/utils";
 
 export default function TeacherCalendarPage() {
   const { user } = useAuth();
   const { activeCampus } = useCampus();
+  const teacherScope = useTeacherScope();
+  const teacherYearLevels = useMemo(
+    () => Array.from(new Set((teacherScope.allowedClassYears || []).map((c) => c.year_level).filter(Boolean))),
+    [teacherScope.allowedClassYears]
+  );
+  const teacherClassNames = useMemo(
+    () => Array.from(new Set((teacherScope.allowedClassYears || []).map((c) => c.class_name).filter(Boolean))),
+    [teacherScope.allowedClassYears]
+  );
   const today = new Date();
   const todayYmd = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
   const [selectedDay, setSelectedDay] = useState<string>(todayYmd);
@@ -67,6 +77,9 @@ export default function TeacherCalendarPage() {
     year: currentMonth.getFullYear(),
     month: currentMonth.getMonth() + 1,
     campusCode: activeCampus,
+    scopeToTeacher: teacherScope.isTeacher,
+    teacherYearLevels,
+    teacherClassNames,
   });
 
   const { sessions: upcomingCcaSessions } = useUpcomingCcaSessions({
@@ -255,7 +268,23 @@ export default function TeacherCalendarPage() {
     onRefresh: handleRefresh,
   });
 
-  const filteredCCA = filterByTypeId(ccaTypeFilter);
+  const filteredCCA = useMemo(() => {
+    const base = filterByTypeId(ccaTypeFilter);
+    if (!teacherScope.isTeacher) return base;
+    if (teacherYearLevels.length === 0 && teacherClassNames.length === 0) return [];
+    const ylSet = new Set(teacherYearLevels);
+    const cnSet = new Set(teacherClassNames);
+    return base.filter((a: any) => {
+      const kind = (a.kind || "").toLowerCase();
+      if (kind === "event") {
+        const involved: string[] = Array.isArray(a.classesInvolved) ? a.classesInvolved : [];
+        return involved.some((c) => cnSet.has(c));
+      }
+      // club / outdoor / unknown — match by year levels
+      const yls: string[] = Array.isArray(a.yearLevels) ? a.yearLevels : [];
+      return yls.some((y) => ylSet.has(y));
+    });
+  }, [filterByTypeId, ccaTypeFilter, teacherScope.isTeacher, teacherYearLevels, teacherClassNames]);
 
   const openEventDetails = (event: UpcomingEvent, triggerEl?: HTMLElement | null) => {
     triggerEl?.blur?.();
@@ -564,8 +593,12 @@ export default function TeacherCalendarPage() {
           requirements: selectedSession.requirements,
           isCancelled: selectedSession.isCancelled,
           category: selectedSession.category,
+          kind: selectedSession.kind,
+          classesInvolved: selectedSession.classesInvolved,
         } : null}
         isPIC={selectedSession ? isTeacherPICOfSession(selectedSession) : false}
+        canManageAttendance={selectedSession ? isTeacherPICOfSession(selectedSession) : false}
+        campusCode={activeCampus}
       />
 
       <CalendarFiltersSheet

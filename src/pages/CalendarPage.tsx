@@ -908,6 +908,7 @@ export default function CalendarPage() {
           typeName: selectedEnrolledCCA.typeName,
           kind: selectedEnrolledCCA.kind,
           yearLevels: [],
+          classesInvolved: [],
           meetingDay: selectedEnrolledCCA.meetingDay,
           meetingTime: selectedEnrolledCCA.meetingTime,
           location: selectedEnrolledCCA.location,

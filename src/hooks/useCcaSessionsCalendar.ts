@@ -30,9 +30,26 @@ interface UseCcaSessionsCalendarOptions {
   studentId?: string | null;
   /** Apply parent scoping when true and studentId provided */
   scopeToStudent?: boolean;
+  /**
+   * Apply teacher year-group scoping when true. Visible activities:
+   * - club/outdoor: cca_activities.year_levels intersects teacherYearLevels
+   * - event: cca_activities.classes_involved intersects teacherClassNames
+   */
+  scopeToTeacher?: boolean;
+  teacherYearLevels?: string[];
+  teacherClassNames?: string[];
 }
 
-export function useCcaSessionsCalendar({ year, month, campusCode, studentId, scopeToStudent }: UseCcaSessionsCalendarOptions) {
+export function useCcaSessionsCalendar({
+  year,
+  month,
+  campusCode,
+  studentId,
+  scopeToStudent,
+  scopeToTeacher,
+  teacherYearLevels,
+  teacherClassNames,
+}: UseCcaSessionsCalendarOptions) {
   const [sessions, setSessions] = useState<CcaCalendarSession[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -83,6 +100,47 @@ export function useCcaSessionsCalendar({ year, month, campusCode, studentId, sco
         }
 
         scopedActivityIds = Array.from(new Set([...enrolledIds, ...eventIds]));
+        if (scopedActivityIds.length === 0) {
+          setSessions([]);
+          setLoading(false);
+          return;
+        }
+      }
+
+      // Teacher scoping: limit to activities tied to the teacher's assigned
+      // year groups (clubs/outdoors via year_levels, events via classes_involved).
+      if (scopeToTeacher) {
+        const yls = (teacherYearLevels || []).filter(Boolean);
+        const cns = (teacherClassNames || []).filter(Boolean);
+        if (yls.length === 0 && cns.length === 0) {
+          setSessions([]);
+          setLoading(false);
+          return;
+        }
+
+        const ids = new Set<string>();
+        // Clubs / outdoors via year_levels overlap
+        if (yls.length > 0) {
+          const { data: coRows } = await supabase
+            .from("cca_activities")
+            .select("id")
+            .in("kind", ["club", "outdoor"])
+            .eq("is_active", true)
+            .overlaps("year_levels", yls);
+          (coRows || []).forEach((r: any) => r?.id && ids.add(r.id));
+        }
+        // Events via classes_involved overlap
+        if (cns.length > 0) {
+          const { data: evRows } = await supabase
+            .from("cca_activities")
+            .select("id")
+            .eq("kind", "event")
+            .eq("is_active", true)
+            .overlaps("classes_involved", cns);
+          (evRows || []).forEach((r: any) => r?.id && ids.add(r.id));
+        }
+
+        scopedActivityIds = Array.from(ids);
         if (scopedActivityIds.length === 0) {
           setSessions([]);
           setLoading(false);
@@ -159,7 +217,16 @@ export function useCcaSessionsCalendar({ year, month, campusCode, studentId, sco
     } finally {
       setLoading(false);
     }
-  }, [year, month, campusCode, studentId, scopeToStudent]);
+  }, [
+    year,
+    month,
+    campusCode,
+    studentId,
+    scopeToStudent,
+    scopeToTeacher,
+    (teacherYearLevels || []).join(","),
+    (teacherClassNames || []).join(","),
+  ]);
 
   useEffect(() => {
     fetchSessions();

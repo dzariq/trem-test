@@ -1,54 +1,79 @@
-## Issue
+# Teacher Calendar — Year-Group Scoped Events + Session Attendance
 
-On `/parent/calendar → CCA Activities`, the "Enrolled" and "Available" cards (and their detail sheets) were designed before the 3-kind taxonomy (Club / Outdoor / Event). They show a generic category badge and weekly meeting day/time — fine for clubs, but events have no recurring meeting day and parents currently see almost nothing useful for them. Other parent-relevant signals (kind bucket, upcoming session date for events, classes involved, requirements, capacity, coordinator email) are missing.
+Mirror the parent-side scoping logic for teachers, then add a session attendance flow (lead/sub PIC can mark, other involved teachers can view only).
 
-## Plan
+## 1. Scope teacher CCA visibility to assigned year groups
 
-### 1. Surface the kind bucket on cards (`src/components/cca/CcaActivityCard.tsx`)
+Today `TeacherCalendarPage` loads every CCA session and every CCA activity for the campus. Apply the same approach used on the parent side, but keyed on the teacher's assigned class_years instead of a single student.
 
-Replace the category-only badge on the hero image with a **kind bucket badge** (Club / Outdoor / Event) using existing `getCcaBucket`, `getCcaTypePillColor`, `getCcaBucketIcon` helpers — same visual language as the calendar capsules and the event details drawer. Keep `typeName` (subcategory like "Indoor CCA / Sports") as a smaller secondary line under the title.
+- `useCcaSessionsCalendar` already accepts `scopeToStudent`. Add a parallel `scopeToTeacher` mode:
+  - Inputs: teacher's `allowedClassYears` (from `useTeacherScope`) → derive an array of `year_level` codes and `class_name`s.
+  - Include a session when its parent activity is either:
+    - `kind in ('club','outdoor')` and the activity's `year_levels` intersects the teacher's year levels, OR
+    - `kind = 'event'` and `classes_involved` intersects the teacher's class names.
+  - If the teacher has no assignments → return `[]`.
+- `useCcaActivities` (teacher CCA Schedule tab): apply the same filter post-fetch so the list under "CCA Schedule" only shows activities tied to the teacher's year groups. Keep the existing "I am PIC" badge logic untouched.
 
-### 2. Make the card kind-aware (same file)
+## 2. Session detail drawer — show key info for events
 
-- **Clubs & Outdoor:** keep existing `meetingDay` + `meetingTime` row (weekly schedule).
-- **Events:** weekly meeting fields are usually blank. Show the **next upcoming session date** from `activity.sessions` instead (label "Next: Sat 23 May · 9:00 AM"), falling back to "Date to be announced" if none. Available on `CcaActivity.sessions` already.
-- **Capacity** (clubs/outdoor only, when `maxParticipants` is set): small "Up to N spots" hint under schedule. Skip for events.
-- Location, PIC teacher list: keep as-is.
+When the teacher taps a CCA event/outdoor/club session in the calendar grid or list, the existing `SessionDetailsSheet` opens. Extend it to surface:
 
-The enrolled-card branch shares the same component, so the same logic applies there. `EnrolledCcaActivity` doesn't carry `sessions`/`maxParticipants` — degrade gracefully (no Next row, no capacity hint).
+- Kind bucket pill (Club / Outdoor / Event) — reuse helpers already added on parent side.
+- Classes Involved chips (events only).
+- Requirements, description, location, start/end time (already present where applicable — verify).
+- A new **Attendance** section (see step 3).
 
-### 3. Enrich the Enrolled details sheet (`src/components/cca/CcaDetailsSheet.tsx`)
+No new drawer; we extend the existing one.
 
-- Replace the plain category badge in the title with the kind bucket pill (icon + Club/Outdoor/Event), keep subcategory as a small line.
-- Add **Upcoming Sessions** block (next up to 3 from `activity.sessions`, future-only, sorted ascending) showing date, time range, and location. Only render when there is at least one upcoming session.
-- Show **Capacity** row ("X spots") when `maxParticipants` is set.
-- Show **Contact** row with `coordinatorEmail` as a `mailto:` link when set.
-- Keep existing Requirements (use the *next upcoming* session's requirements, not `sessions[0]` which may be in the past).
-- Hide the Operational Notes block for parents (it's already gated by `isPIC`, leave as-is).
+## 3. CCA session attendance (focus: outdoor + event sessions)
 
-### 4. Enrich the Available details bottom sheet (inline in `src/pages/CalendarPage.tsx`)
+Add an attendance block inside `SessionDetailsSheet`.
 
-Mirror the same enrichments on the inline `BottomSheet` used for "Available CCA" cards:
-- Kind bucket pill in title (instead of the `getCcaCategoryColor` category badge).
-- For events: Upcoming Sessions block + Classes Involved chips (so the parent can confirm their child's class is in scope).
-- For clubs/outdoor: Capacity row when `maxParticipants` is set.
-- Coordinator email contact row when set.
+### Permissions
+- **Can mark / edit** (lead or sub PIC): teacher is in `cca_activity_teachers` for the session's activity with `is_primary = true` OR `role ILIKE 'pic'` OR `role ILIKE 'sub%'`. We already have this list loaded via `useCcaActivities`; derive `canManageAttendance` from it.
+- **Read-only**: any other teacher who can see the session (i.e. passed the year-group scope above).
+- Admin-like users always get write access.
 
-To support "Classes Involved" on this sheet for events, extend `useEligibleCcaActivities` to also select `classes_involved` and expose it on the `CcaActivity` type. No new query — single column add to the existing `.select(...)`.
+### Data
+- Table: `public.cca_session_attendance(session_id, student_id, status, notes, marked_by, marked_at, session_bus_id)`. Status values follow existing CCA pattern — start with `present | absent | late | excused` (confirm with the user if a different vocabulary is expected; see open question).
+- Roster = students currently enrolled in this session via `cca_session_enrollments` where `status='enrolled'`. For event-type activities without per-session enrollments, fall back to students whose `class` is in `cca_activities.classes_involved`.
 
-### 5. Out of scope
+### UI
+- Header row: counts (Present / Absent / Late / Excused / Unmarked) and last-saved timestamp.
+- One row per student: name + class, status pill buttons (P/A/L/E), inline notes.
+- For PIC: a Save button (upsert on `(session_id, student_id)`, set `marked_by = auth.uid()`, `marked_at = now()`).
+- For non-PIC: same list rendered as read-only badges, no edit affordance.
+- Loading + empty states ("No students enrolled yet").
 
-- Teacher CCA calendar — only the parent surfaces here.
-- New RLS / migrations / RPCs.
-- Restyling the card hero / image — only badges and info rows change.
-- Showing enrolled-student lists or attendance.
+### New hook
+`useCcaSessionAttendance(sessionId, { canEdit })` modelled on `useTeacherAttendance`:
+- Loads roster (enrollments or class fallback).
+- Loads existing attendance rows.
+- Exposes `setStudentStatus`, `setStudentNotes`, `save`, `summary`.
 
-### Technical notes
+### RLS
+`cca_session_attendance` currently lets any authenticated user read/insert/update. That is permissive enough to ship the UI today, but we should tighten it. Out of scope for this plan unless you say otherwise (see open question 2).
+
+## 4. Out of scope
+- Bus list / `cca_bus_assignments` integration (mentioned as context only; treat as a follow-up).
+- Parent-side changes.
+- Admin CCA management pages.
+- Schema migrations beyond optional RLS hardening.
+
+## Technical details
 
 Files touched:
-- `src/components/cca/CcaActivityCard.tsx` — bucket badge, kind-aware "Next" / weekly schedule row, capacity hint.
-- `src/components/cca/CcaDetailsSheet.tsx` — bucket pill in title, upcoming sessions block, capacity, coordinator email, requirements from next session.
-- `src/pages/CalendarPage.tsx` — same enrichments for the inline Available CCA bottom sheet; classes involved chips for events.
-- `src/hooks/useEligibleCcaActivities.ts` — add `classesInvolved: string[]` (select `classes_involved`).
+- `src/hooks/useCcaSessionsCalendar.ts` — add `scopeToTeacher` + `teacherYearLevels`/`teacherClassNames` inputs.
+- `src/hooks/useCcaActivities.ts` — optional `teacherYearLevels` filter (or filter inline in the page).
+- `src/pages/teacher/TeacherCalendarPage.tsx` — pass teacher scope; no UI restructuring.
+- `src/hooks/useCcaSessionAttendance.ts` — new.
+- `src/components/cca/SessionDetailsSheet.tsx` — add Classes Involved row + Attendance section; accept `canManageAttendance` prop.
+- `src/components/cca/SessionAttendanceList.tsx` — new presentational component (rows + save bar).
 
-No DB / schema / RLS changes.
+Reused helpers: `getCcaBucket`, `getCcaTypePillColor`, `getCcaBucketIcon`, `formatClassDisplay`, `useTeacherScope`, `is_admin_like` (via existing role hooks).
+
+## Open questions
+
+1. **Attendance status vocabulary.** Daily attendance uses `present / absent / late / excused`. For CCA events do you want the same four, or a simpler `present / absent` (plus notes)?
+2. **RLS hardening.** Right now any authenticated user can write `cca_session_attendance`. Want me to add a migration restricting writes to admin-like + activity PIC/sub-PIC in the same change, or leave it for a follow-up?
+3. **Event roster source.** For events with no `cca_session_enrollments` rows, should the roster be every student in `classes_involved`, or only those explicitly invited (e.g. via a future RSVP table)? Plan above assumes the class-based fallback.

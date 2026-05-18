@@ -34,6 +34,7 @@ export interface CcaActivity {
   typeName: string | null;
   kind?: string | null;
   yearLevels: string[];
+  classesInvolved: string[];
   meetingDay: string | null;
   meetingTime: string | null;
   location: string | null;
@@ -131,6 +132,8 @@ export function useCcaActivities(options: UseCcaActivitiesOptions = {}) {
           type_id,
           cca_activity_types(id, name),
           year_levels,
+          classes_involved,
+          kind,
           meeting_day,
           meeting_time,
           location,
@@ -280,7 +283,9 @@ export function useCcaActivities(options: UseCcaActivitiesOptions = {}) {
         category: a.category || "Other",
         typeId: a.type_id || null,
         typeName: a.cca_activity_types?.name || null,
+        kind: a.kind ?? null,
         yearLevels: normalizeYearLevels(a.year_levels),
+        classesInvolved: Array.isArray(a.classes_involved) ? a.classes_involved.filter(Boolean) : [],
         meetingDay: a.meeting_day,
         meetingTime: a.meeting_time,
         location: a.location,

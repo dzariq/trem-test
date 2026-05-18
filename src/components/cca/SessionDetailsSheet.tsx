@@ -9,10 +9,12 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { Calendar, Clock, MapPin, Users, FileText, Loader2 } from "lucide-react";
+import { Calendar, Clock, MapPin, Users, FileText, Loader2, GraduationCap } from "lucide-react";
 import { format, parseISO } from "date-fns";
 import { supabase } from "@/lib/supabase";
 import { ManageStudentsSheet } from "./ManageStudentsSheet";
+import { SessionAttendanceList } from "./SessionAttendanceList";
+import { formatClassDisplay } from "@/lib/utils";
 
 interface SessionDetailsSheetProps {
   open: boolean;
@@ -30,8 +32,13 @@ interface SessionDetailsSheetProps {
     requirements: string | null;
     isCancelled: boolean;
     category: string;
+    kind?: string | null;
+    classesInvolved?: string[];
   } | null;
   isPIC: boolean;
+  /** When true, current user can mark/edit attendance (lead/sub PIC or admin). */
+  canManageAttendance?: boolean;
+  campusCode?: string | null;
 }
 
 /**
@@ -43,6 +50,8 @@ export function SessionDetailsSheet({
   onOpenChange,
   session,
   isPIC,
+  canManageAttendance = false,
+  campusCode = null,
 }: SessionDetailsSheetProps) {
   const [enrollmentInfo, setEnrollmentInfo] = useState<{
     count: number;
@@ -198,6 +207,23 @@ export function SessionDetailsSheet({
               </div>
             )}
 
+            {/* Classes Involved (events) */}
+            {Array.isArray(session.classesInvolved) && session.classesInvolved.length > 0 && (
+              <div className="space-y-2">
+                <div className="flex items-center gap-2">
+                  <GraduationCap className="h-4 w-4 text-muted-foreground" />
+                  <span className="text-sm font-medium">Classes Involved</span>
+                </div>
+                <div className="flex flex-wrap gap-1.5 pl-6">
+                  {session.classesInvolved.map((c) => (
+                    <Badge key={c} variant="secondary" className="text-xs">
+                      {formatClassDisplay(c)}
+                    </Badge>
+                  ))}
+                </div>
+              </div>
+            )}
+
             {/* Enrollment Section */}
             <div className="pt-4 border-t space-y-3">
               <div className="flex items-center justify-between">
@@ -248,6 +274,18 @@ export function SessionDetailsSheet({
                   </Tooltip>
                 </TooltipProvider>
               )}
+            </div>
+
+            {/* Attendance Section */}
+            <div className="pt-4 border-t">
+              <SessionAttendanceList
+                sessionId={session.id}
+                activityId={session.activityId}
+                activityKind={session.kind ?? null}
+                classesInvolved={session.classesInvolved || []}
+                campusCode={campusCode}
+                canEdit={canManageAttendance && !session.isCancelled}
+              />
             </div>
           </>
         )}
