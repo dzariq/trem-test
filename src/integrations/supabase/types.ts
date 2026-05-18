@@ -6030,6 +6030,7 @@ export type Database = {
       is_cca_session_full: { Args: { p_session_id: string }; Returns: boolean }
       is_parent: { Args: never; Returns: boolean }
       is_parent_of_student: { Args: { p_student_id: string }; Returns: boolean }
+      is_principal: { Args: never; Returns: boolean }
       is_super_admin: { Args: never; Returns: boolean }
       is_teacher: { Args: never; Returns: boolean }
       is_teacher_assigned_to_cca: {
