@@ -412,7 +412,9 @@ export default function Login() {
     <div className="min-h-screen bg-background flex flex-col items-center justify-center p-6">
       <div className="text-center mb-10">
         <img src={schoolBadge} alt="School Badge" className="h-24 w-auto mx-auto mb-4" />
-        <h1 className="text-2xl font-bold text-foreground">Welcome to School Portal</h1>
+        <h1 className="text-2xl font-bold text-foreground whitespace-pre-line">
+          {"Welcome to\nSchool Portal"}
+        </h1>
         <p className="text-muted-foreground mt-2">{portalLabel}</p>
       </div>
 
