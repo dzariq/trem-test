@@ -268,7 +268,23 @@ export default function TeacherCalendarPage() {
     onRefresh: handleRefresh,
   });
 
-  const filteredCCA = filterByTypeId(ccaTypeFilter);
+  const filteredCCA = useMemo(() => {
+    const base = filterByTypeId(ccaTypeFilter);
+    if (!teacherScope.isTeacher) return base;
+    if (teacherYearLevels.length === 0 && teacherClassNames.length === 0) return [];
+    const ylSet = new Set(teacherYearLevels);
+    const cnSet = new Set(teacherClassNames);
+    return base.filter((a: any) => {
+      const kind = (a.kind || "").toLowerCase();
+      if (kind === "event") {
+        const involved: string[] = Array.isArray(a.classesInvolved) ? a.classesInvolved : [];
+        return involved.some((c) => cnSet.has(c));
+      }
+      // club / outdoor / unknown — match by year levels
+      const yls: string[] = Array.isArray(a.yearLevels) ? a.yearLevels : [];
+      return yls.some((y) => ylSet.has(y));
+    });
+  }, [filterByTypeId, ccaTypeFilter, teacherScope.isTeacher, teacherYearLevels, teacherClassNames]);
 
   const openEventDetails = (event: UpcomingEvent, triggerEl?: HTMLElement | null) => {
     triggerEl?.blur?.();
