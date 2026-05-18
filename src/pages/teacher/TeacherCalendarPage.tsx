@@ -36,11 +36,21 @@ import { CalendarFiltersSheet } from "@/components/calendar/CalendarFiltersSheet
 import { usePullToRefresh } from "@/hooks/usePullToRefresh";
 import { PullToRefreshIndicator } from "@/components/calendar/PullToRefreshIndicator";
 import { TEACHER_CATEGORY_ORDER, mapDbToCategory, mapDbToSubtype } from "@/lib/calendarCategorySubtypes";
+import { useTeacherScope } from "@/hooks/useTeacherScope";
 import { cn } from "@/lib/utils";
 
 export default function TeacherCalendarPage() {
   const { user } = useAuth();
   const { activeCampus } = useCampus();
+  const teacherScope = useTeacherScope();
+  const teacherYearLevels = useMemo(
+    () => Array.from(new Set((teacherScope.allowedClassYears || []).map((c) => c.year_level).filter(Boolean))),
+    [teacherScope.allowedClassYears]
+  );
+  const teacherClassNames = useMemo(
+    () => Array.from(new Set((teacherScope.allowedClassYears || []).map((c) => c.class_name).filter(Boolean))),
+    [teacherScope.allowedClassYears]
+  );
   const today = new Date();
   const todayYmd = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
   const [selectedDay, setSelectedDay] = useState<string>(todayYmd);
@@ -67,6 +77,9 @@ export default function TeacherCalendarPage() {
     year: currentMonth.getFullYear(),
     month: currentMonth.getMonth() + 1,
     campusCode: activeCampus,
+    scopeToTeacher: teacherScope.isTeacher,
+    teacherYearLevels,
+    teacherClassNames,
   });
 
   const { sessions: upcomingCcaSessions } = useUpcomingCcaSessions({
