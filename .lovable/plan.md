@@ -1,82 +1,152 @@
-# Notifications Module — Audit & Fix
+# CCA Permission Model — Audit & Implementation Plan
 
-## What's actually happening
+## What's already correct in the DB ✅
 
-Two parallel "digest" systems exist and are stepping on each other:
+The Supabase backend already matches most of the spec:
 
-| Source | What it produces | Where |
-|---|---|---|
-| **DB cron** `create_weekly_calendar_digest` (Sun 23:00) → writes to `notifications` table with type `weekly_digest` | "**This week at school** — 1 event (18 May – 24 May)…" | `supabase/migrations/20260515061346…sql` |
-| **Client synthetic** in `NotificationsDrawer.tsx` (computed at render time from calendar events) | "**Week at a glance** — Mon…" and "**What's on** — Tue, May 19" | `src/components/NotificationsDrawer.tsx` lines 220–300 |
+| Spec requirement | Current state |
+|---|---|
+| Tables `cca_activities`, `cca_activity_teachers` (with `is_primary`), `cca_club_year_eligibility`, `cca_outdoor_buses` (`teacher_pic_main` / `teacher_pic_sub`), `cca_bus_assignments` (with `attended`, `marked_by`, `marked_at`) | ✅ all exist |
+| Helper functions `is_admin_like()`, `is_teacher()`, `is_parent()`, `is_super_admin()`, `is_cca_pic(uuid)`, `teacher_assigned_to_cca(uuid)` | ✅ all exist |
+| `cca_outdoor_buses` writes → principal OR activity PIC | ✅ (`is_admin_like()` OR `is_cca_pic(activity_id)`) |
+| `cca_bus_assignments` writes → principal OR activity PIC OR bus PIC main/sub | ✅ exact match |
+| `cca_activity_teachers` writes → principal only | ✅ admin-only |
+| `cca_club_year_eligibility` writes → principal only | ✅ admin-only |
+| `cca_activities` UPDATE → principal OR activity PIC | ✅ |
+| SELECT on all CCA tables also allows `is_teacher()` for year-overlap reads | ✅ |
 
-So every Monday, parents see **both** "This week at school" (DB cron) and "Week at a glance" (client) — that's the duplicate in your screenshot.
+## Gaps to close
 
-Second bug — the client loop generates a "What's on — <day>" item for **every day of this week and next week that has any event**, then tries to hide future ones with a `<= today` filter (line 311-315). That filter is comparing local Date objects parsed from `dayKey` and is letting tomorrow leak through in the screenshot (Tue May 19 visible on May 18).
+### 1. DB — `is_principal()` alias
 
-Third issue — Monday currently shows both the weekly digest **and** a "What's on today" for Monday, double-coverage.
+Spec uses `is_principal()`. We have `is_admin_like()` (= `super_admin` ∨ `admin` ∨ `principal`). Two ways:
 
-## Desired behaviour (from your message)
+- **A.** Add `is_principal()` as `SECURITY DEFINER` returning `is_admin_like()`. Cheapest, keeps existing RLS valid. *(Recommended.)*
+- **B.** Add a strict `is_principal()` that returns true **only** for role `'principal'` and migrate every relevant RLS policy. Big blast radius across the school.
 
-- **Kill** "This week at school" entirely. Only "Week at a glance" survives as the weekly digest.
-- **Monday** → only **"Week at a glance"** for that week. **No Monday daily digest.**
-- **Tue–Sun** → only **"What's on — <that weekday>"** for **today**. No past days, no future days.
-- Rinse and repeat the next week (Monday again only weekly, etc.).
+Open question — which? See bottom.
 
-## Changes
+### 2. DB — INSERT policy on `cca_activities`
 
-### 1. Remove the DB weekly digest
+Current: `Admins or PICs can insert activities` has `WITH CHECK = is_admin_like() AND campus check` — i.e. **PICs cannot actually insert** despite the policy name. Spec says INSERT → principal only, so this is fine. Rename the policy to remove the misleading "or PICs".
 
-New migration:
-- `SELECT cron.unschedule('weekly-calendar-digest');`
-- `DROP FUNCTION public.create_weekly_calendar_digest(date);`
-- `DELETE FROM public.notifications WHERE type = 'weekly_digest' AND title = 'This week at school';` (clears the existing duplicates already in users' inboxes — including the read ones)
+### 3. Mobile app — single permission hook
 
-### 2. Rewrite synthetic digest loop in `NotificationsDrawer.tsx`
+Add `src/hooks/useCcaActivityPermissions.ts`:
 
-Replace the `for (let weekOffset = 0; weekOffset < 2; weekOffset++)` block (~lines 222–300) with a single pass anchored to **today (local Asia/Kuala_Lumpur)**:
-
-```text
-const isMonday = today.getDay() === 1;   // 1 = Monday
-const weekStart = monday of this week;
-const weekEnd   = sunday of this week;
-
-if (isMonday):
-    emit "Week at a glance — Mon … Sun" with all events Mon→Sun (if any)
-    // no daily item today
-else:
-    emit "What's on — <today's weekday, date>" with today's events only (if any)
+```ts
+useCcaActivityPermissions(activity) → {
+  isPrincipal,           // admin_like role from useMyProfile
+  isActivityPIC,         // row in cca_activity_teachers for auth.uid()
+  hasYearOverlap,        // teacher year-levels ∩ activity year set
+  canView,               // principal OR PIC OR yearOverlap
+  canEdit,               // principal OR PIC
+  canEditBuses,          // alias of canEdit (for non-bus-specific calls)
+}
 ```
 
-That is the entire generator. No backfill loop, no next-week prefetch, no past-day "Daily recap", no future-day items.
+Data sources reuse existing hooks: `useMyProfile`, `useTeacherScope`, `useCcaActivities` (already exposes `kind`, `year_levels`).
 
-### 3. Drop the now-dead filter
+For clubs, year set comes from `cca_club_year_eligibility`; for outdoor/event, from `cca_activities.year_levels`. The hook fetches eligibility lazily only when needed.
 
-`parseSyntheticAnchorDate` + the `anchor <= today` filter at lines 309–322 become unnecessary (we never emit future items). Keep the sort by id-anchor for stability, or just sort by `id` desc.
+### 4. Mobile app — per-bus permission hook
 
-### 4. Backend fetch window can shrink
+Add `src/hooks/useCcaBusPermissions.ts`:
 
-In `useNotifications.ts` the calendar query currently spans `weekStart … in14Days` (line 233–234). For the new logic we only need:
-- **If Monday:** Mon → Sun (this week).
-- **Otherwise:** today only.
+```ts
+useCcaBusPermissions(bus, activity) → {
+  canViewBus,    // canView(activity)
+  canManageBus,  // canEdit(activity) OR uid == bus.teacher_pic_main OR bus.teacher_pic_sub
+}
+```
 
-To keep the change small and avoid extra refetches across the day, leave the fetch window as `weekStartIso … weekEnd (Sunday)` — the drawer just filters down. No backend code change required beyond removing the +14d look-ahead (optional cleanup).
+### 5. Mobile app — list filter
 
-## Files touched
+Add `src/hooks/useCcaActivityFilter.ts`:
 
-| File | Change |
+- Principal → no filter.
+- Teacher → keep activities where they are PIC OR year overlap.
+- Parent → unchanged (eligibility hook already covers them).
+
+Apply in `useCcaActivities` (teacher path) and any list page. Hide "Add" / management buttons via `isPrincipal` from the permission hook.
+
+### 6. Mobile app — wire the hooks into existing surfaces
+
+| Surface | Change |
 |---|---|
-| `supabase/migrations/<new>.sql` | Unschedule cron, drop function, delete existing rows |
-| `src/components/NotificationsDrawer.tsx` | Rewrite the `allSyntheticItems` generator; drop future-date filter |
-| `src/hooks/useNotifications.ts` *(optional)* | Tighten calendar event fetch window to current week only |
+| `CcaDetailsSheet.tsx` | Deny render if `!canView`; pass `canEdit` to all child actions; hide PIC-only CTAs from year-overlap teachers |
+| `SessionDetailsSheet.tsx` | Replace ad-hoc PIC check in `useCcaSessionAttendance` with `canEdit` from the new hook |
+| `SessionAttendanceList.tsx` | Receive `canEdit` as prop; read-only when false |
+| New `BusListSection` (outdoor sessions only) | Render bus cards; for each, use `useCcaBusPermissions` to decide if mark-attendance is enabled |
+| `useCcaSessionsCalendar.ts` (teacher path) | Replace year-only filter with the unified `canView` rule (PIC OR yearOverlap) |
 
-## Out of scope
+### 7. Bus attendance UI (mobile, teacher only)
 
-- The synthetic CCA-session and teacher-PIC items (separate from weekly/daily digest — unchanged).
-- Real DB notifications (announcements, attendance-marked, etc.) — unchanged.
-- Adding a separate "tomorrow preview" — your spec explicitly says today-only for daily.
+This is the **new feature** beyond hooks. For each outdoor `cca_session`:
 
-## Open question
+- Fetch `cca_outdoor_buses` for the session's `activity_id`.
+- For each bus, fetch `cca_bus_assignments` (student + `attended`).
+- Render a bus card per bus showing name, capacity, PIC main/sub, assigned students with a present/absent toggle.
+- Disable the toggle when `useCcaBusPermissions(bus, activity).canManageBus === false`.
 
-When you say "Monday only shows Week at a glance" — if a brand-new event is **added** mid-week (say Wednesday), do you want Wednesday's "What's on" to include it (yes, that's automatic from calendar query), or do you also want a one-off "New event added" alert? I'll assume **no extra alert**; the Wednesday daily digest will just include it.
+Parents → still **not** shown. Buses are teacher-only.
 
-Confirm and I'll implement.
+## Files to add
+
+- `src/hooks/useCcaActivityPermissions.ts`
+- `src/hooks/useCcaBusPermissions.ts`
+- `src/hooks/useCcaActivityFilter.ts`
+- `src/hooks/useCcaOutdoorBuses.ts` (fetch buses + assignments + mark-attendance mutation)
+- `src/components/cca/BusListSection.tsx`
+- `src/components/cca/BusAttendanceList.tsx`
+
+## Files to edit
+
+- `src/hooks/useCcaActivities.ts` — apply `useCcaActivityFilter` for teachers
+- `src/hooks/useCcaSessionsCalendar.ts` — same filter for teacher calendar
+- `src/hooks/useCcaSessionAttendance.ts` — adopt `canEdit` from new hook
+- `src/components/cca/CcaDetailsSheet.tsx` — gate by `canView`, pass `canEdit` down
+- `src/components/cca/SessionDetailsSheet.tsx` — mount bus list when `kind === 'outdoor'`
+- `src/components/cca/SessionAttendanceList.tsx` — receive `canEdit` prop
+
+## Migration (small)
+
+```sql
+-- Optional alias matching spec's wording
+CREATE OR REPLACE FUNCTION public.is_principal()
+RETURNS boolean LANGUAGE sql STABLE SECURITY DEFINER
+SET search_path = public AS $$
+  SELECT public.is_admin_like();
+$$;
+
+-- Rename misleading policy on cca_activities (purely cosmetic)
+ALTER POLICY "Admins or PICs can insert activities" ON public.cca_activities
+  RENAME TO "Principals can insert activities";
+```
+
+## Test matrix (matches your table)
+
+| User | View club | Edit club | Bus attendance |
+|---|---|---|---|
+| Principal | ✅ | ✅ | ✅ all |
+| Activity PIC | ✅ | ✅ | ✅ all |
+| Year-overlap teacher | ✅ | ❌ | ❌ |
+| Bus PIC only (not activity PIC) | ✅ (via teacher SELECT) | ❌ | ✅ that bus only |
+| Unrelated teacher | ❌ | ❌ | ❌ |
+| Parent | ❌ (read-only summaries via eligibility hook) | ❌ | ❌ |
+
+The "Bus PIC only" row in the spec is already covered by the existing RLS using `b.teacher_pic_main = auth.uid() OR b.teacher_pic_sub = auth.uid()`. No gap.
+
+## Out of scope (confirm)
+
+- The admin web app (separate repo). Spec mentions tabs PICs / Roster / Budget / Awards / Venue / Sports / Roles — none of those tabs exist in **this** mobile project. I'll implement hooks + bus attendance here; admin-web tabs are a separate ticket.
+- Renaming `is_admin_like()` everywhere to `is_principal()` (only adding an alias).
+- Parent-side bus visibility (explicitly excluded by spec).
+
+## Open questions
+
+1. **`is_principal()` semantics** — alias of `is_admin_like()` (includes admin + super_admin + principal) ✓ recommended, OR strict-`'principal'` only? The latter changes who can edit clubs/activities across every existing app reading this DB.
+2. **Bus attendance UI scope** — do you want it built **now** in the mobile teacher calendar (alongside the existing session attendance list), or only the **permission scaffolding** and bus UI later?
+3. **Year-overlap teacher view of the activity detail sheet** — show all tabs as read-only, or hide tabs like Budget / Roles entirely?
+
+Answer those three and I'll implement.
