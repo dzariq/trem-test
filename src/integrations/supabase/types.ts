@@ -5370,6 +5370,45 @@ export type Database = {
           },
         ]
       }
+      teacher_subject_access: {
+        Row: {
+          category_id: string | null
+          created_at: string
+          id: string
+          subject_id: number | null
+          teacher_id: string
+        }
+        Insert: {
+          category_id?: string | null
+          created_at?: string
+          id?: string
+          subject_id?: number | null
+          teacher_id: string
+        }
+        Update: {
+          category_id?: string | null
+          created_at?: string
+          id?: string
+          subject_id?: number | null
+          teacher_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "teacher_subject_access_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "subject_categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "teacher_subject_access_subject_id_fkey"
+            columns: ["subject_id"]
+            isOneToOne: false
+            referencedRelation: "subjects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       term_configurations: {
         Row: {
           academic_year: number
@@ -6030,6 +6069,10 @@ export type Database = {
         Returns: boolean
       }
       has_role: { Args: { _role: string; _user_id: string }; Returns: boolean }
+      has_subject_access: {
+        Args: { _subject: number; _teacher: string }
+        Returns: boolean
+      }
       is_admin: { Args: never; Returns: boolean }
       is_admin_like: { Args: never; Returns: boolean }
       is_cca_pic: { Args: { _activity_id: string }; Returns: boolean }
