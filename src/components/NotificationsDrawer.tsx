@@ -298,14 +298,6 @@ export function NotificationsDrawer({ open, onOpenChange }: NotificationsDrawerP
     .filter((it) =>
       filter === "unread" ? !readSynthetic[it.id] : !!readSynthetic[it.id]
     )
-    .filter((it) => {
-      // Hide future-dated calendar digests; only show today or past.
-      const anchor = parseSyntheticAnchorDate(it.id);
-      if (!anchor) return true;
-      const now = new Date();
-      const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-      return anchor.getTime() <= today.getTime();
-    })
     .slice()
     .sort((a, b) => {
       const da = parseSyntheticAnchorDate(a.id)?.getTime() ?? 0;
