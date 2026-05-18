@@ -1,0 +1,1 @@
+REVOKE EXECUTE ON FUNCTION public.notify_cca_session_created() FROM PUBLIC, anon, authenticated;
