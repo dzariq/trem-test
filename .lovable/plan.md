@@ -1,53 +1,41 @@
 ## Goal
 
-Bus attendance for outdoor CCAs is a round trip, so it needs to be taken twice:
-1. **Outbound** — School → Venue (did the student board the bus at school)
-2. **Return** — Venue → School (did the student board the bus back at the venue)
+Allow teachers who are main **or** sub PIC of a CCA club to take attendance for that club's session, with the roster automatically populated from the students enrolled in the club.
 
-The DB already supports this (`cca_bus_assignments.departed_school` + `departed_venue`, plus matching `_at` / `_by` audit columns and `return_remark`). The current UI only writes the legacy single `attended` flag. This plan rewires the UI to use the two leg flags and presents them as two clearly separated sections.
+## Audit findings
+
+- `SessionDetailsSheet` already renders `<SessionAttendanceList>` and gates editing with `canManageAttendance`, which is wired from `TeacherCalendarPage.isTeacherPICOfSession`. That check is `isPrimary || role === 'pic'`, and **all** rows in `cca_activity_teachers` have `role = 'pic'`, so both main (`is_primary=true`) and sub (`is_primary=false`) PICs already pass. ✅ No change needed there.
+- `useCcaSessionAttendance` is **broken** today:
+  - It queries `cca_session_enrollments` and `cca_session_attendance`, but neither table exists in the live database (migration was authored but never applied here — confirmed via `to_regclass`).
+  - For clubs, the intended roster source is the club enrollment table `student_cca_enrollments` (status `active`, keyed by `cca_activity_id`), not session-level enrollments.
+- PIC information for clubs lives in `cca_activity_teachers` (`is_primary` true = main, false = sub), already loaded by `useCcaActivities`.
 
 ## Scope
 
-Frontend only. No schema changes. No RLS changes (existing bus-PIC write policy already covers all leg columns).
+1. **DB migration — create `public.cca_session_attendance`**
+   - Columns: `id uuid pk`, `session_id uuid not null → cca_sessions(id) on delete cascade`, `student_id uuid not null → students(id) on delete cascade`, `status text check in ('present','absent','late','excused')`, `notes text`, `marked_by uuid`, `marked_at timestamptz`, `created_at`, `updated_at`. Unique `(session_id, student_id)`.
+   - Index on `session_id` and on `student_id`.
+   - `update_updated_at` trigger (existing `public.update_updated_at_column` helper with `set search_path = public`).
+   - RLS enabled. Policies:
+     - **SELECT**: `is_admin_like()` OR `is_teacher()` OR parent of the student (via `student_guardians` join, matching the same pattern used on `cca_bus_assignments`).
+     - **INSERT / UPDATE / DELETE**: `is_admin_like()` OR `is_cca_pic(activity_id)` via join through `cca_sessions → cca_activities`. We use the existing `is_cca_pic(activity uuid)` helper that already counts every row in `cca_activity_teachers` (so both main and sub PIC are covered).
 
-## Audit findings (current state)
+2. **`src/hooks/useCcaSessionAttendance.ts`** — replace the roster query.
+   - **Clubs / outdoors** (`activityKind !== 'event'`): roster = students from `student_cca_enrollments` where `cca_activity_id = activityId` and `status = 'active'`.
+   - **Events** (`activityKind === 'event'`): keep the existing class-based fallback against `classes_involved`.
+   - Drop the `cca_session_enrollments` lookup entirely (table doesn't exist and event mode already has its own path).
+   - Existing-attendance read and save: keep using `cca_session_attendance` — now real.
+   - Keep the same exported API (`students`, `stateMap`, `summary`, `setStudentStatus`, `setStudentNotes`, `save`, etc.) so `SessionAttendanceList` doesn't need changes.
 
-- `BusAttendanceList.tsx` renders one Present/Absent toggle per student writing to `attended`. Per-bus summary chips count `attended` only.
-- `useCcaOutdoorBuses.ts` selects only `attended, marked_at, marked_by` and writes only those fields.
-- `departed_school`, `departed_venue`, `return_remark` are defined in `supabase/types.ts` but never read or written.
-- No leg-aware UI exists anywhere else.
+3. **No UI changes** to `SessionAttendanceList` or `SessionDetailsSheet`. The existing Present/Absent/Late/Excused row UI is reused. The "View only" badge keeps showing for non-PICs.
 
-## Changes
-
-1. **`src/hooks/useCcaOutdoorBuses.ts`**
-   - Extend `CcaBusAssignment` to include `departed_school: boolean | null` and `departed_venue: boolean | null` (drop reliance on legacy `attended` for new UI but keep it in the type for backward compat).
-   - Extend the `select(...)` to include the two leg flags + their `_at` / `_by` columns.
-   - Replace `markAttendance(assignment, attended)` with `markLeg(assignment, leg: "outbound" | "return", value: boolean | null)`. Internally maps:
-     - `outbound` → `{ departed_school, departed_school_at: now(), departed_school_by: uid }`
-     - `return`   → `{ departed_venue,  departed_venue_at:  now(), departed_venue_by:  uid }`
-   - Optimistic update and saving-by-assignment key becomes `"<assignmentId>:<leg>"` so the two legs can save independently without UI flicker.
-   - Reload query updated accordingly.
-
-2. **`src/components/cca/BusAttendanceList.tsx`** — restructure each bus card.
-   - Replace the single student row with **two stacked sections per bus**:
-     - **Section A — "Outbound · School → Venue"** with its own Present/Absent count chips (uses `departed_school`).
-     - **Section B — "Return · Venue → School"** with its own count chips (uses `departed_venue`).
-   - Each section shows the same student list; each row keeps the existing Take-Attendance icon button pair (green Check / red X, 48×40, tap-active to toggle off), bound to the relevant leg.
-   - Independent loading spinners per leg per row.
-   - Section header uses small lucide icons (`ArrowRight` for outbound, `ArrowLeft` for return) and the bus's own name only appears once at the top of the card.
-   - Read-only viewers (non-PIC) see two read-only status badges side by side, labelled `Out` and `Back`.
-   - Empty bus / no-assignment state unchanged.
-
-3. **Optional follow-up (NOT in this plan, flag for later)**: surface `return_remark` as an inline textarea per student in the Return section. Skipping for now to keep this change focused; will revisit if the user asks.
-
-4. **No changes** to RLS, migrations, `useIsBusPicForActivity`, `useCcaActivityPermissions`, or `SessionDetailsSheet`.
+4. **No changes** to `useCcaActivityPermissions`, `TeacherCalendarPage` PIC detection, or the bus attendance work.
 
 ## Verification
 
-- Open an outdoor session as activity PIC / bus PIC.
-- Each bus card now shows two sub-sections: Outbound and Return.
-- Marking Present in Outbound only updates `departed_school` (verify via DB read); Return remains unmarked. Same for the other leg.
-- Tapping the same active button clears the leg (writes `null`).
-- Count chips per section reflect that leg only.
-- Parents and non-bus teachers see no change (bus list still hidden for them).
-- Legacy `attended` column is left untouched (read-only legacy data).
+- Sign in as a teacher who is the **sub** PIC of a club → open a session → roster shows every student with `student_cca_enrollments.status='active'` for that club; status buttons enabled; Save persists rows to `cca_session_attendance`.
+- Same for main PIC.
+- Sign in as a teacher who is not PIC of the activity (no year overlap either) → roster still loads (RLS SELECT allows any teacher) but buttons are read-only.
+- Parent viewing the session → sees only their own student's row state via the parent SELECT policy.
+- Events still resolve roster from `classes_involved` (unchanged path).
+- Re-open after save → previously marked statuses re-hydrate from `cca_session_attendance`.
