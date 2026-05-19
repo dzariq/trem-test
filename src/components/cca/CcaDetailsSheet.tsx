@@ -59,8 +59,12 @@ export function CcaDetailsSheet({
   const perms = useCcaActivityPermissions(activity);
   const canEdit = perms.canEdit || isPIC;
 
-  // Use local state if updated, otherwise use activity's image
-  const displayImageUrl = localImageUrl !== undefined ? localImageUrl : activity?.imageUrl;
+  // Use local state if updated, otherwise prefer the club's own photo, then
+  // fall back to the tagged venue's image (e.g. art room, sports hall).
+  const displayImageUrl =
+    localImageUrl !== undefined
+      ? localImageUrl
+      : activity?.imageUrl || activity?.venue?.imageUrl || null;
 
   const bucket = activity ? getCcaBucket(activity.kind ?? activity.category) : "clubs";
   const BucketIcon = getCcaBucketIcon(bucket);
