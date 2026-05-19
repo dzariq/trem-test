@@ -38,38 +38,40 @@ import { toast } from "@/hooks/use-toast";
 import { useMyProfile } from "@/hooks/useMyProfile";
 import { updateMyProfile } from "@/data/profile";
 
-// NOTE: Mock/demo data for UI demonstration only. These are NOT real credentials
-// and are not used for authentication anywhere in this app. Replace with a secure
-// backend-fetched credential vault before connecting to real third-party systems.
+// NOTE: Mock/demo data for UI demonstration only. Passwords are intentionally
+// placeholder strings — they are NOT real credentials and are not used for
+// authentication anywhere in this app. Replace with a secure backend-fetched
+// credential vault before connecting to real third-party systems.
+const DEMO_PASSWORD_PLACEHOLDER = "Contact IT for credentials";
 const schoolAccounts = [
   {
     title: "Student Information System (SIS)",
     email: "teacher@sis.edu.sg",
-    password: "SIS2025Teacher!",
+    password: DEMO_PASSWORD_PLACEHOLDER,
     description: "Access student records, grades, and attendance data"
   },
   {
     title: "Learning Management System (LMS)",
     email: "teacher@lms.edu.sg",
-    password: "LMS@Teacher2025",
+    password: DEMO_PASSWORD_PLACEHOLDER,
     description: "Upload assignments, course materials, and track student progress"
   },
   {
     title: "Email & Calendar",
     email: "teacher@school.edu.sg",
-    password: "School2025!",
+    password: DEMO_PASSWORD_PLACEHOLDER,
     description: "School email, calendar, and meeting scheduling"
   },
   {
     title: "Library Portal",
     email: "teacher@library.edu.sg",
-    password: "LibAccess2025",
+    password: DEMO_PASSWORD_PLACEHOLDER,
     description: "Reserve books, access digital resources, and manage loans"
   },
   {
     title: "IT Helpdesk Portal",
     email: "teacher@support.edu.sg",
-    password: "ITSupport25!",
+    password: DEMO_PASSWORD_PLACEHOLDER,
     description: "Submit IT support tickets and track resolution status"
   }
 ];

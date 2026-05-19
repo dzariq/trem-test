@@ -6151,6 +6151,10 @@ export type Database = {
       }
       show_limit: { Args: never; Returns: number }
       show_trgm: { Args: { "": string }; Returns: string[] }
+      sync_event_roster_from_classes: {
+        Args: { p_activity_id: string }
+        Returns: undefined
+      }
       sync_parent_passport_summary: {
         Args: { p_parent_id: string }
         Returns: undefined
