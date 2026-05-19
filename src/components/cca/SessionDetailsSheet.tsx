@@ -17,6 +17,7 @@ import { SessionAttendanceList } from "./SessionAttendanceList";
 import { BusAttendanceList } from "./BusAttendanceList";
 import { useCcaActivities } from "@/hooks/useCcaActivities";
 import { useCcaActivityPermissions } from "@/hooks/useCcaActivityPermissions";
+import { useIsBusPicForActivity } from "@/hooks/useIsBusPicForActivity";
 import { formatClassDisplay } from "@/lib/utils";
 import { CcaActivityImage } from "@/components/cca/CcaActivityImage";
 
@@ -76,6 +77,16 @@ export function SessionDetailsSheet({
     : null;
   const perms = useCcaActivityPermissions(activity);
   const isOutdoor = (session?.kind || "").toLowerCase() === "outdoor";
+  // Bus PIC teachers (main/sub) who aren't activity PIC and have no year
+  // overlap should still see + manage their bus's attendance.
+  const isBusPicForActivity = useIsBusPicForActivity(
+    session?.activityId ?? null,
+    isOutdoor && open
+  );
+  const showBusList = isOutdoor && (perms.canViewBuses || isBusPicForActivity);
+  const busPerms = perms.canViewBuses
+    ? perms
+    : { ...perms, canViewBuses: true };
 
   // Hero image precedence: club's own photo → tagged venue image → placeholder.
   const heroImageUrl =
@@ -320,11 +331,11 @@ export function SessionDetailsSheet({
             </div>
 
             {/* Bus Attendance — outdoor activities only (teacher-only, no parents) */}
-            {isOutdoor && perms.canViewBuses && (
+            {showBusList && (
               <div className="pt-4 border-t">
                 <BusAttendanceList
                   activityId={session.activityId}
-                  activityPerms={perms}
+                  activityPerms={busPerms}
                 />
               </div>
             )}
