@@ -1,6 +1,7 @@
 // Mints a Supabase session for an existing user only after verifying:
 //   - email path: a valid, unconsumed, unexpired server-side OTP (auth_email_otps)
-//   - phone path: still uses upstream n8n verification (caller must have verified)
+//   - phone path: server re-verifies the OTP with the n8n verify webhook so the
+//     client cannot bypass the n8n step by calling this endpoint directly.
 // Returns a magic-link token_hash that the client uses with supabase.auth.verifyOtp.
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
@@ -13,6 +14,8 @@ const corsHeaders = {
 };
 
 const MAX_OTP_ATTEMPTS = 5;
+const PHONE_OTP_VERIFY_URL =
+  "https://collinz.app.n8n.cloud/webhook/verify-otp";
 
 function normalizeDigits(input: string | null | undefined): string {
   if (!input) return "";
@@ -53,6 +56,14 @@ Deno.serve(async (req) => {
     }
 
     if (emailInput && !/^\d{4,8}$/.test(otpInput)) {
+      return new Response(
+        JSON.stringify({ error: "OTP code is required" }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+      );
+    }
+
+    // Phone path: OTP is now mandatory and verified server-side via n8n.
+    if (!emailInput && !/^\d{4,8}$/.test(otpInput)) {
       return new Response(
         JSON.stringify({ error: "OTP code is required" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } },
@@ -124,6 +135,62 @@ Deno.serve(async (req) => {
     const dial = countryCodeRaw.replace(/\D+/g, "");
     const phoneDigits = normalizeDigits(phone);
     const fullDigits = `${dial}${phoneDigits}`;
+
+    // === PHONE PATH: server-side re-verification via n8n ===
+    if (!emailInput) {
+      try {
+        const verifyRes = await fetch(PHONE_OTP_VERIFY_URL, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            source: "phone",
+            phone,
+            otp: otpInput,
+          }),
+        });
+
+        const verifyText = await verifyRes.text();
+        let verifyData: any = null;
+        try {
+          verifyData = verifyText ? JSON.parse(verifyText) : null;
+        } catch {
+          // non-JSON response
+        }
+
+        if (!verifyRes.ok) {
+          return new Response(
+            JSON.stringify({
+              error:
+                (verifyData && (verifyData.message || verifyData.error)) ||
+                "Invalid OTP. Please try again.",
+            }),
+            { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+          );
+        }
+
+        const payload = Array.isArray(verifyData) ? verifyData[0] : verifyData;
+        const statusVal = payload?.status;
+        const statusOk =
+          statusVal === 1 || statusVal === "1" || statusVal === true;
+
+        if (!statusOk) {
+          return new Response(
+            JSON.stringify({
+              error:
+                (payload && (payload.message || payload.error)) ||
+                "Invalid OTP. Please try again.",
+            }),
+            { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+          );
+        }
+      } catch (e) {
+        console.error("[phone-login] phone OTP verification failed", e);
+        return new Response(
+          JSON.stringify({ error: "OTP verification service unavailable." }),
+          { status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+        );
+      }
+    }
 
     // Look up user profile
     let query = admin.from("user_profiles").select("user_id, email, phone, role, is_active");

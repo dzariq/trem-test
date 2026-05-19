@@ -315,6 +315,7 @@ export default function Login() {
               : {
                   phone,
                   country_code: `+${selectedCountry.dialCode}`,
+                  otp,
                   portal,
                 },
         },
