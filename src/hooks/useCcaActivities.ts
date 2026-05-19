@@ -44,6 +44,7 @@ export interface CcaActivity {
   coordinatorEmail: string | null;
   allowFreeText: boolean;
   imageUrl: string | null;
+  venue: { id: string; name: string; imageUrl: string | null } | null;
   picTeachers: CcaTeacher[];
   sessions: CcaSession[];
 }
@@ -142,7 +143,8 @@ export function useCcaActivities(options: UseCcaActivitiesOptions = {}) {
           coordinator_email,
           allow_free_text,
           image_url,
-          campus_code
+          campus_code,
+          venue:venues!cca_activities_venue_id_fkey(id, name, image_url)
         `);
 
       if (!includeInactive) {
@@ -294,6 +296,13 @@ export function useCcaActivities(options: UseCcaActivitiesOptions = {}) {
         coordinatorEmail: a.coordinator_email,
         allowFreeText: a.allow_free_text ?? false,
         imageUrl: a.image_url || null,
+        venue: a.venue
+          ? {
+              id: a.venue.id,
+              name: a.venue.name,
+              imageUrl: a.venue.image_url || null,
+            }
+          : null,
         picTeachers: picTeachersMap.get(a.id) || [],
         sessions: sessionsMap.get(a.id) || [],
       }));
