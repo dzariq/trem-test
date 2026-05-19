@@ -69,7 +69,7 @@ export function CcaActivityCard({
         }
       }}
     >
-      {/* Hero Image Section with Gradient Overlay */}
+      {/* Hero Image Section */}
       <div className="relative h-36 overflow-hidden">
         <CcaActivityImage
           imageUrl={activity.imageUrl}
@@ -80,17 +80,7 @@ export function CcaActivityCard({
           isEnrolled={isEnrolledState}
           className="w-full h-full rounded-none"
         />
-        
-        {/* Decorative gradient circles overlay - matching announcement layout */}
-        <div className="absolute inset-0 opacity-20 pointer-events-none">
-          <div className={`absolute top-4 left-8 w-16 h-16 rounded-full ${isEnrolledState ? "bg-primary/30" : "bg-gray-400/30"}`} />
-          <div className={`absolute top-12 right-12 w-24 h-24 rounded-full ${isEnrolledState ? "bg-secondary/30" : "bg-gray-300/30"}`} />
-          <div className={`absolute bottom-8 left-1/4 w-12 h-12 rounded-full ${isEnrolledState ? "bg-primary/20" : "bg-gray-400/20"}`} />
-        </div>
-        
-        {/* Gradient overlay that fades to background */}
-        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-card" />
-        
+
         {/* Overlaid Badges - positioned at top */}
         <div className="absolute top-3 left-3 right-3 flex justify-between items-start">
           {/* Enrolled Badge (left) */}
