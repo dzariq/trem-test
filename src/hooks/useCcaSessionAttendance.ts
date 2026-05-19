@@ -28,9 +28,10 @@ interface UseCcaSessionAttendanceOptions {
  * Loads the roster and existing attendance for a CCA session.
  *
  * Roster source:
- * - If the session has any cca_session_enrollments (status='enrolled'), use those.
- * - Otherwise (typical for event-type activities) fall back to all students whose
- *   class is listed in cca_activities.classes_involved.
+ * - Clubs / outdoors: students from `student_cca_enrollments` (status='active')
+ *   for this `activityId`.
+ * - Events: fall back to all students whose class is listed in
+ *   `cca_activities.classes_involved`.
  */
 export function useCcaSessionAttendance({
   sessionId,
@@ -56,19 +57,23 @@ export function useCcaSessionAttendance({
     setLoading(true);
     setError(null);
     try {
-      // 1) Enrollment-based roster
-      const { data: enrollRows, error: enrollErr } = await supabase
-        .from("cca_session_enrollments")
-        .select("student_id")
-        .eq("session_id", sessionId)
-        .eq("status", "enrolled");
-      if (enrollErr) throw enrollErr;
+      const isEvent = (activityKind || "").toLowerCase() === "event";
+      let studentIds: string[] = [];
 
-      let studentIds: string[] = (enrollRows || [])
-        .map((r: any) => r.student_id)
-        .filter(Boolean);
+      // 1) Club / outdoor roster: students enrolled in the activity
+      if (!isEvent && activityId) {
+        const { data: clubRows, error: clubErr } = await supabase
+          .from("student_cca_enrollments")
+          .select("student_id")
+          .eq("cca_activity_id", activityId)
+          .eq("status", "active");
+        if (clubErr) throw clubErr;
+        studentIds = (clubRows || [])
+          .map((r: any) => r.student_id)
+          .filter(Boolean);
+      }
 
-      // 2) Class-based fallback (typical for events)
+      // 2) Event fallback (or club with no enrollments): by classes_involved
       if (studentIds.length === 0 && (classesInvolved?.length ?? 0) > 0) {
         let q = supabase
           .from("students")
@@ -130,7 +135,7 @@ export function useCcaSessionAttendance({
     } finally {
       setLoading(false);
     }
-  }, [enabled, sessionId, (classesInvolved || []).join(","), campusCode]);
+  }, [enabled, sessionId, activityId, activityKind, (classesInvolved || []).join(","), campusCode]);
 
   useEffect(() => {
     reload();
