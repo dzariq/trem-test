@@ -357,6 +357,7 @@ export type Database = {
         Row: {
           campus_code: string | null
           campus_id: string | null
+          category: string
           content: string
           created_at: string
           created_by: string
@@ -380,6 +381,7 @@ export type Database = {
         Insert: {
           campus_code?: string | null
           campus_id?: string | null
+          category?: string
           content: string
           created_at?: string
           created_by: string
@@ -403,6 +405,7 @@ export type Database = {
         Update: {
           campus_code?: string | null
           campus_id?: string | null
+          category?: string
           content?: string
           created_at?: string
           created_by?: string

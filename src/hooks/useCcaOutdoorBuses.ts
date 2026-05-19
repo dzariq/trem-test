@@ -140,7 +140,7 @@ export function useCcaOutdoorBuses(activityId: string | null | undefined, enable
   }, [reload]);
 
   const markAttendance = useCallback(
-    async (assignment: CcaBusAssignment, attended: boolean) => {
+    async (assignment: CcaBusAssignment, attended: boolean | null) => {
       setSavingByAssignment((prev) => ({ ...prev, [assignment.id]: true }));
       // Optimistic update
       setAssignmentsByBus((prev) => {

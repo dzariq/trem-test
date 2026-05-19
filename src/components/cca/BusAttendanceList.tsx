@@ -1,4 +1,4 @@
-import { Bus, Loader2, User, Users } from "lucide-react";
+import { Bus, Check, Loader2, User, Users, X } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { cn, formatClassDisplay } from "@/lib/utils";
 import { useCcaOutdoorBuses } from "@/hooks/useCcaOutdoorBuses";
@@ -76,7 +76,7 @@ interface BusCardProps {
   savingByAssignment: Record<string, boolean>;
   onMark: (
     a: import("@/hooks/useCcaOutdoorBuses").CcaBusAssignment,
-    attended: boolean
+    attended: boolean | null
   ) => void;
 }
 
@@ -155,35 +155,35 @@ function BusCard({ bus, assignments, picNames, activityPerms, savingByAssignment
                   )}
                 </div>
                 {perms.canManageBus ? (
-                  <div className="flex gap-1 items-center">
-                    {saving && <Loader2 className="h-3 w-3 animate-spin text-muted-foreground" />}
+                  <div className="flex gap-2 items-center">
+                    {saving && <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />}
                     <button
                       type="button"
                       aria-label="Present"
                       disabled={saving}
-                      onClick={() => onMark(a, true)}
+                      onClick={() => onMark(a, present ? null : true)}
                       className={cn(
-                        "h-8 w-8 rounded-md border text-xs font-semibold transition",
+                        "w-12 h-10 rounded-lg flex items-center justify-center transition-all duration-200",
                         present
-                          ? "bg-emerald-100 text-emerald-700 border-emerald-300 dark:bg-emerald-900/30 dark:text-emerald-300"
-                          : "bg-background text-muted-foreground border-border hover:bg-muted"
+                          ? "bg-green-500 text-white"
+                          : "bg-muted hover:bg-muted/80 text-muted-foreground"
                       )}
                     >
-                      P
+                      <Check className="h-5 w-5" />
                     </button>
                     <button
                       type="button"
                       aria-label="Absent"
                       disabled={saving}
-                      onClick={() => onMark(a, false)}
+                      onClick={() => onMark(a, absent ? null : false)}
                       className={cn(
-                        "h-8 w-8 rounded-md border text-xs font-semibold transition",
+                        "w-12 h-10 rounded-lg flex items-center justify-center transition-all duration-200",
                         absent
-                          ? "bg-rose-100 text-rose-700 border-rose-300 dark:bg-rose-900/30 dark:text-rose-300"
-                          : "bg-background text-muted-foreground border-border hover:bg-muted"
+                          ? "bg-red-500 text-white"
+                          : "bg-muted hover:bg-muted/80 text-muted-foreground"
                       )}
                     >
-                      A
+                      <X className="h-5 w-5" />
                     </button>
                   </div>
                 ) : (
