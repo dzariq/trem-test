@@ -18,6 +18,7 @@ import { BusAttendanceList } from "./BusAttendanceList";
 import { useCcaActivities } from "@/hooks/useCcaActivities";
 import { useCcaActivityPermissions } from "@/hooks/useCcaActivityPermissions";
 import { formatClassDisplay } from "@/lib/utils";
+import { CcaActivityImage } from "@/components/cca/CcaActivityImage";
 
 interface SessionDetailsSheetProps {
   open: boolean;
@@ -75,6 +76,10 @@ export function SessionDetailsSheet({
     : null;
   const perms = useCcaActivityPermissions(activity);
   const isOutdoor = (session?.kind || "").toLowerCase() === "outdoor";
+
+  // Hero image precedence: club's own photo → tagged venue image → placeholder.
+  const heroImageUrl =
+    activity?.imageUrl || activity?.venue?.imageUrl || null;
 
   useEffect(() => {
     if (open && session?.id) {
@@ -160,6 +165,16 @@ export function SessionDetailsSheet({
       >
         {session && (
           <>
+            {/* Hero image — club photo, or venue image when tagged. */}
+            <CcaActivityImage
+              imageUrl={heroImageUrl}
+              activityName={session.activityName}
+              category={session.category}
+              typeName={activity?.typeName ?? null}
+              variant="details"
+              className="mb-2"
+            />
+
             {/* Session Title/Date */}
             <div>
               <h3 className="text-lg font-semibold text-foreground">
