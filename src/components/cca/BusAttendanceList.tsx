@@ -76,7 +76,7 @@ interface BusCardProps {
   savingByAssignment: Record<string, boolean>;
   onMark: (
     a: import("@/hooks/useCcaOutdoorBuses").CcaBusAssignment,
-    attended: boolean
+    attended: boolean | null
   ) => void;
 }
 
@@ -161,7 +161,7 @@ function BusCard({ bus, assignments, picNames, activityPerms, savingByAssignment
                       type="button"
                       aria-label="Present"
                       disabled={saving}
-                      onClick={() => onMark(a, present ? (null as unknown as boolean) : true)}
+                      onClick={() => onMark(a, present ? null : true)}
                       className={cn(
                         "w-12 h-10 rounded-lg flex items-center justify-center transition-all duration-200",
                         present
@@ -175,7 +175,7 @@ function BusCard({ bus, assignments, picNames, activityPerms, savingByAssignment
                       type="button"
                       aria-label="Absent"
                       disabled={saving}
-                      onClick={() => onMark(a, absent ? (null as unknown as boolean) : false)}
+                      onClick={() => onMark(a, absent ? null : false)}
                       className={cn(
                         "w-12 h-10 rounded-lg flex items-center justify-center transition-all duration-200",
                         absent
