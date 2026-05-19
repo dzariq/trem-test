@@ -918,6 +918,7 @@ export default function CalendarPage() {
           coordinatorEmail: null,
           allowFreeText: false,
           imageUrl: selectedEnrolledCCA.imageUrl,
+          venue: null,
           picTeachers: selectedEnrolledCCA.picTeachers.map((t, idx) => ({
             id: `teacher-${idx}`,
             teacherUserId: "",
