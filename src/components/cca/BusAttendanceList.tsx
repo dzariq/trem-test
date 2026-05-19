@@ -1,7 +1,12 @@
-import { Bus, Check, Loader2, User, Users, X } from "lucide-react";
+import { ArrowLeft, ArrowRight, Bus, Check, Loader2, User, Users, X } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { cn, formatClassDisplay } from "@/lib/utils";
-import { useCcaOutdoorBuses } from "@/hooks/useCcaOutdoorBuses";
+import {
+  useCcaOutdoorBuses,
+  type BusLeg,
+  type CcaBusAssignment,
+  type CcaOutdoorBus,
+} from "@/hooks/useCcaOutdoorBuses";
 import { useCcaBusPermissions } from "@/hooks/useCcaBusPermissions";
 import type { CcaActivityPermissions } from "@/hooks/useCcaActivityPermissions";
 
@@ -11,10 +16,11 @@ interface BusAttendanceListProps {
 }
 
 /**
- * Teacher-only bus list for outdoor CCA sessions. Renders one card per bus
- * with its assigned students and a per-student present/absent toggle.
- * Toggle is disabled unless the current user is principal, activity PIC,
- * or the bus's own PIC main/sub.
+ * Teacher-only bus list for outdoor CCA sessions. Each bus shows TWO
+ * attendance sections (one per leg of the round trip):
+ *   - Outbound: School → Venue   (writes `departed_school`)
+ *   - Return:   Venue → School   (writes `departed_venue`)
+ * Write access stays gated by RLS (principal, activity PIC, bus PIC main/sub).
  */
 export function BusAttendanceList({ activityId, activityPerms }: BusAttendanceListProps) {
   const {
@@ -24,7 +30,7 @@ export function BusAttendanceList({ activityId, activityPerms }: BusAttendanceLi
     loading,
     error,
     savingByAssignment,
-    markAttendance,
+    markLeg,
   } = useCcaOutdoorBuses(activityId, activityPerms.canView);
 
   if (!activityPerms.canViewBuses) return null;
@@ -59,7 +65,7 @@ export function BusAttendanceList({ activityId, activityPerms }: BusAttendanceLi
               picNames={picNames}
               activityPerms={activityPerms}
               savingByAssignment={savingByAssignment}
-              onMark={markAttendance}
+              onMarkLeg={markLeg}
             />
           ))}
         </ul>
@@ -69,27 +75,26 @@ export function BusAttendanceList({ activityId, activityPerms }: BusAttendanceLi
 }
 
 interface BusCardProps {
-  bus: import("@/hooks/useCcaOutdoorBuses").CcaOutdoorBus;
-  assignments: import("@/hooks/useCcaOutdoorBuses").CcaBusAssignment[];
+  bus: CcaOutdoorBus;
+  assignments: CcaBusAssignment[];
   picNames: Record<string, string>;
   activityPerms: CcaActivityPermissions;
   savingByAssignment: Record<string, boolean>;
-  onMark: (
-    a: import("@/hooks/useCcaOutdoorBuses").CcaBusAssignment,
-    attended: boolean | null
-  ) => void;
+  onMarkLeg: (a: CcaBusAssignment, leg: BusLeg, value: boolean | null) => void;
 }
 
-function BusCard({ bus, assignments, picNames, activityPerms, savingByAssignment, onMark }: BusCardProps) {
+function legValue(a: CcaBusAssignment, leg: BusLeg): boolean | null {
+  return leg === "outbound" ? a.departed_school : a.departed_venue;
+}
+
+function BusCard({ bus, assignments, picNames, activityPerms, savingByAssignment, onMarkLeg }: BusCardProps) {
   const perms = useCcaBusPermissions(bus, activityPerms);
-  const marked = assignments.filter((a) => a.attended !== null).length;
-  const present = assignments.filter((a) => a.attended === true).length;
-  const absent = assignments.filter((a) => a.attended === false).length;
   const mainName = bus.teacher_pic_main ? picNames[bus.teacher_pic_main] : null;
   const subName = bus.teacher_pic_sub ? picNames[bus.teacher_pic_sub] : null;
 
   return (
-    <li className="rounded-lg border border-border bg-card">
+    <li className="rounded-lg border border-border bg-card overflow-hidden">
+      {/* Bus header */}
       <div className="p-3 border-b">
         <div className="flex items-center justify-between gap-2">
           <div className="flex items-center gap-2 min-w-0">
@@ -122,87 +127,150 @@ function BusCard({ bus, assignments, picNames, activityPerms, savingByAssignment
             )}
           </div>
         )}
-        {assignments.length > 0 && (
-          <div className="mt-2 flex flex-wrap gap-1.5 text-[11px]">
-            <Badge variant="outline" className="border bg-emerald-100 text-emerald-700 border-emerald-300 dark:bg-emerald-900/30 dark:text-emerald-300">
-              Present: {present}
-            </Badge>
-            <Badge variant="outline" className="border bg-rose-100 text-rose-700 border-rose-300 dark:bg-rose-900/30 dark:text-rose-300">
-              Absent: {absent}
-            </Badge>
-            <Badge variant="outline">Unmarked: {assignments.length - marked}</Badge>
-          </div>
-        )}
       </div>
+
       {assignments.length === 0 ? (
         <div className="px-3 py-4 text-center text-xs text-muted-foreground">
           No students assigned to this bus.
         </div>
       ) : (
-        <ul className="divide-y">
-          {assignments.map((a) => {
-            const saving = !!savingByAssignment[a.id];
-            const present = a.attended === true;
-            const absent = a.attended === false;
-            return (
-              <li key={a.id} className="px-3 py-2 flex items-center justify-between gap-2">
-                <div className="min-w-0">
-                  <p className="text-sm font-medium text-foreground truncate">{a.student_name}</p>
-                  {a.student_class && (
-                    <p className="text-[11px] text-muted-foreground">
-                      {formatClassDisplay(a.student_class)}
-                    </p>
-                  )}
-                </div>
-                {perms.canManageBus ? (
-                  <div className="flex gap-2 items-center">
-                    {saving && <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />}
-                    <button
-                      type="button"
-                      aria-label="Present"
-                      disabled={saving}
-                      onClick={() => onMark(a, present ? null : true)}
-                      className={cn(
-                        "w-12 h-10 rounded-lg flex items-center justify-center transition-all duration-200",
-                        present
-                          ? "bg-green-500 text-white"
-                          : "bg-muted hover:bg-muted/80 text-muted-foreground"
-                      )}
-                    >
-                      <Check className="h-5 w-5" />
-                    </button>
-                    <button
-                      type="button"
-                      aria-label="Absent"
-                      disabled={saving}
-                      onClick={() => onMark(a, absent ? null : false)}
-                      className={cn(
-                        "w-12 h-10 rounded-lg flex items-center justify-center transition-all duration-200",
-                        absent
-                          ? "bg-red-500 text-white"
-                          : "bg-muted hover:bg-muted/80 text-muted-foreground"
-                      )}
-                    >
-                      <X className="h-5 w-5" />
-                    </button>
-                  </div>
-                ) : (
-                  <Badge
-                    variant="outline"
-                    className={cn(
-                      "text-xs",
-                      present && "bg-emerald-100 text-emerald-700 border-emerald-300 dark:bg-emerald-900/30 dark:text-emerald-300",
-                      absent && "bg-rose-100 text-rose-700 border-rose-300 dark:bg-rose-900/30 dark:text-rose-300"
-                    )}
-                  >
-                    {present ? "Present" : absent ? "Absent" : "Unmarked"}
-                  </Badge>
-                )}
-              </li>
-            );
-          })}
-        </ul>
+        <>
+          <LegSection
+            leg="outbound"
+            title="Outbound"
+            subtitle="School → Venue"
+            icon={<ArrowRight className="h-3.5 w-3.5" />}
+            assignments={assignments}
+            canManageBus={perms.canManageBus}
+            savingByAssignment={savingByAssignment}
+            onMarkLeg={onMarkLeg}
+          />
+          <LegSection
+            leg="return"
+            title="Return"
+            subtitle="Venue → School"
+            icon={<ArrowLeft className="h-3.5 w-3.5" />}
+            assignments={assignments}
+            canManageBus={perms.canManageBus}
+            savingByAssignment={savingByAssignment}
+            onMarkLeg={onMarkLeg}
+            divided
+          />
+        </>
       )}
     </li>
+  );
+}
+
+interface LegSectionProps {
+  leg: BusLeg;
+  title: string;
+  subtitle: string;
+  icon: React.ReactNode;
+  assignments: CcaBusAssignment[];
+  canManageBus: boolean;
+  savingByAssignment: Record<string, boolean>;
+  onMarkLeg: (a: CcaBusAssignment, leg: BusLeg, value: boolean | null) => void;
+  divided?: boolean;
+}
+
+function LegSection({
+  leg,
+  title,
+  subtitle,
+  icon,
+  assignments,
+  canManageBus,
+  savingByAssignment,
+  onMarkLeg,
+  divided,
+}: LegSectionProps) {
+  const present = assignments.filter((a) => legValue(a, leg) === true).length;
+  const absent = assignments.filter((a) => legValue(a, leg) === false).length;
+  const marked = present + absent;
+
+  return (
+    <div className={cn(divided && "border-t border-border")}>
+      <div className="px-3 py-2 bg-muted/40 flex items-center justify-between gap-2">
+        <div className="flex items-center gap-1.5 text-xs font-semibold text-foreground">
+          {icon}
+          <span>{title}</span>
+          <span className="text-[11px] font-normal text-muted-foreground">· {subtitle}</span>
+        </div>
+        <div className="flex flex-wrap gap-1.5 text-[11px]">
+          <Badge variant="outline" className="border bg-emerald-100 text-emerald-700 border-emerald-300 dark:bg-emerald-900/30 dark:text-emerald-300">
+            P: {present}
+          </Badge>
+          <Badge variant="outline" className="border bg-rose-100 text-rose-700 border-rose-300 dark:bg-rose-900/30 dark:text-rose-300">
+            A: {absent}
+          </Badge>
+          <Badge variant="outline">— {assignments.length - marked}</Badge>
+        </div>
+      </div>
+      <ul className="divide-y">
+        {assignments.map((a) => {
+          const value = legValue(a, leg);
+          const present = value === true;
+          const absent = value === false;
+          const saving = !!savingByAssignment[`${a.id}:${leg}`];
+          return (
+            <li key={a.id} className="px-3 py-2 flex items-center justify-between gap-2">
+              <div className="min-w-0">
+                <p className="text-sm font-medium text-foreground truncate">{a.student_name}</p>
+                {a.student_class && (
+                  <p className="text-[11px] text-muted-foreground">
+                    {formatClassDisplay(a.student_class)}
+                  </p>
+                )}
+              </div>
+              {canManageBus ? (
+                <div className="flex gap-2 items-center">
+                  {saving && <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />}
+                  <button
+                    type="button"
+                    aria-label="Present"
+                    disabled={saving}
+                    onClick={() => onMarkLeg(a, leg, present ? null : true)}
+                    className={cn(
+                      "w-12 h-10 rounded-lg flex items-center justify-center transition-all duration-200",
+                      present
+                        ? "bg-green-500 text-white"
+                        : "bg-muted hover:bg-muted/80 text-muted-foreground"
+                    )}
+                  >
+                    <Check className="h-5 w-5" />
+                  </button>
+                  <button
+                    type="button"
+                    aria-label="Absent"
+                    disabled={saving}
+                    onClick={() => onMarkLeg(a, leg, absent ? null : false)}
+                    className={cn(
+                      "w-12 h-10 rounded-lg flex items-center justify-center transition-all duration-200",
+                      absent
+                        ? "bg-red-500 text-white"
+                        : "bg-muted hover:bg-muted/80 text-muted-foreground"
+                    )}
+                  >
+                    <X className="h-5 w-5" />
+                  </button>
+                </div>
+              ) : (
+                <Badge
+                  variant="outline"
+                  className={cn(
+                    "text-xs",
+                    present && "bg-emerald-100 text-emerald-700 border-emerald-300 dark:bg-emerald-900/30 dark:text-emerald-300",
+                    absent && "bg-rose-100 text-rose-700 border-rose-300 dark:bg-rose-900/30 dark:text-rose-300"
+                  )}
+                >
+                  {present ? "Present" : absent ? "Absent" : "Unmarked"}
+                </Badge>
+              )}
+            </li>
+          );
+        })}
+      </ul>
+    </div>
   );
 }

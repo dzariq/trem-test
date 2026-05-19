@@ -12,13 +12,24 @@ export interface CcaOutdoorBus {
   notes: string | null;
 }
 
+export type BusLeg = "outbound" | "return";
+
 export interface CcaBusAssignment {
   id: string;
   bus_id: string;
   student_id: string;
+  /** @deprecated legacy single flag; kept for back-compat. */
   attended: boolean | null;
   marked_at: string | null;
   marked_by: string | null;
+  /** Outbound — school → venue. */
+  departed_school: boolean | null;
+  departed_school_at: string | null;
+  departed_school_by: string | null;
+  /** Return — venue → school. */
+  departed_venue: boolean | null;
+  departed_venue_at: string | null;
+  departed_venue_by: string | null;
   student_name: string;
   student_class: string | null;
 }
@@ -64,7 +75,9 @@ export function useCcaOutdoorBuses(activityId: string | null | undefined, enable
       const busIds = busList.map((b) => b.id);
       const { data: rawAssignments, error: aErr } = await supabase
         .from("cca_bus_assignments")
-        .select("id, bus_id, student_id, attended, marked_at, marked_by")
+        .select(
+          "id, bus_id, student_id, attended, marked_at, marked_by, departed_school, departed_school_at, departed_school_by, departed_venue, departed_venue_at, departed_venue_by"
+        )
         .in("bus_id", busIds);
       if (aErr) throw aErr;
 
@@ -95,6 +108,12 @@ export function useCcaOutdoorBuses(activityId: string | null | undefined, enable
           attended: r.attended,
           marked_at: r.marked_at,
           marked_by: r.marked_by,
+          departed_school: r.departed_school,
+          departed_school_at: r.departed_school_at,
+          departed_school_by: r.departed_school_by,
+          departed_venue: r.departed_venue,
+          departed_venue_at: r.departed_venue_at,
+          departed_venue_by: r.departed_venue_by,
           student_name: info?.name || "Unknown student",
           student_class: info?.class ?? null,
         });
@@ -139,33 +158,51 @@ export function useCcaOutdoorBuses(activityId: string | null | undefined, enable
     reload();
   }, [reload]);
 
-  const markAttendance = useCallback(
-    async (assignment: CcaBusAssignment, attended: boolean | null) => {
-      setSavingByAssignment((prev) => ({ ...prev, [assignment.id]: true }));
+  const markLeg = useCallback(
+    async (assignment: CcaBusAssignment, leg: BusLeg, value: boolean | null) => {
+      const key = `${assignment.id}:${leg}`;
+      setSavingByAssignment((prev) => ({ ...prev, [key]: true }));
+      const previous =
+        leg === "outbound" ? assignment.departed_school : assignment.departed_venue;
+
       // Optimistic update
       setAssignmentsByBus((prev) => {
         const list = prev[assignment.bus_id] || [];
         return {
           ...prev,
           [assignment.bus_id]: list.map((a) =>
-            a.id === assignment.id ? { ...a, attended } : a
+            a.id === assignment.id
+              ? leg === "outbound"
+                ? { ...a, departed_school: value }
+                : { ...a, departed_venue: value }
+              : a
           ),
         };
       });
+
       try {
         const userRes = await supabase.auth.getUser();
         const uid = userRes.data.user?.id || null;
+        const nowIso = new Date().toISOString();
+        const patch =
+          leg === "outbound"
+            ? {
+                departed_school: value,
+                departed_school_at: value === null ? null : nowIso,
+                departed_school_by: value === null ? null : uid,
+              }
+            : {
+                departed_venue: value,
+                departed_venue_at: value === null ? null : nowIso,
+                departed_venue_by: value === null ? null : uid,
+              };
         const { error: upErr } = await supabase
           .from("cca_bus_assignments")
-          .update({
-            attended,
-            marked_by: uid,
-            marked_at: new Date().toISOString(),
-          })
+          .update(patch)
           .eq("id", assignment.id);
         if (upErr) throw upErr;
       } catch (err: any) {
-        console.error("[useCcaOutdoorBuses] markAttendance failed:", err);
+        console.error("[useCcaOutdoorBuses] markLeg failed:", err);
         toast({
           title: "Could not save",
           description: err?.message || "Failed to mark attendance",
@@ -177,14 +214,18 @@ export function useCcaOutdoorBuses(activityId: string | null | undefined, enable
           return {
             ...prev,
             [assignment.bus_id]: list.map((a) =>
-              a.id === assignment.id ? { ...a, attended: assignment.attended } : a
+              a.id === assignment.id
+                ? leg === "outbound"
+                  ? { ...a, departed_school: previous }
+                  : { ...a, departed_venue: previous }
+                : a
             ),
           };
         });
       } finally {
         setSavingByAssignment((prev) => {
           const next = { ...prev };
-          delete next[assignment.id];
+          delete next[key];
           return next;
         });
       }
@@ -199,7 +240,7 @@ export function useCcaOutdoorBuses(activityId: string | null | undefined, enable
     loading,
     error,
     savingByAssignment,
-    markAttendance,
+    markLeg,
     reload,
   };
 }
