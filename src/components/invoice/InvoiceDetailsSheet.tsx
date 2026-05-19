@@ -29,7 +29,7 @@ export function InvoiceDetailsSheet({ invoice, open, onOpenChange }: Props) {
         </div>
       }
     >
-      <div className="space-y-5 px-1 pb-6">
+      <div className="space-y-5 px-4 pb-6">
         {/* Status + period */}
         <div className="flex items-center justify-between">
           <Badge variant={statusInfo.variant} className="border-0">
@@ -41,7 +41,7 @@ export function InvoiceDetailsSheet({ invoice, open, onOpenChange }: Props) {
         </div>
 
         {/* Amounts */}
-        <div className="rounded-xl border border-border bg-muted/30 p-4 space-y-2">
+        <div className="rounded-xl border border-border bg-muted/40 p-4 space-y-2">
           <div className="flex justify-between text-sm">
             <span className="text-muted-foreground">Total amount</span>
             <span className="font-medium text-foreground">
@@ -50,7 +50,7 @@ export function InvoiceDetailsSheet({ invoice, open, onOpenChange }: Props) {
           </div>
           <div className="flex justify-between text-sm">
             <span className="text-muted-foreground">Paid</span>
-            <span className="font-medium text-foreground">
+            <span className="font-medium text-emerald-600">
               {formatMoney(invoice.paidAmount, invoice.currency)}
             </span>
           </div>
