@@ -1821,6 +1821,9 @@ export type Database = {
           id: string
           marked_at: string | null
           marked_by: string | null
+          return_remark: string | null
+          return_remark_at: string | null
+          return_remark_by: string | null
           student_id: string
         }
         Insert: {
@@ -1836,6 +1839,9 @@ export type Database = {
           id?: string
           marked_at?: string | null
           marked_by?: string | null
+          return_remark?: string | null
+          return_remark_at?: string | null
+          return_remark_by?: string | null
           student_id: string
         }
         Update: {
@@ -1851,6 +1857,9 @@ export type Database = {
           id?: string
           marked_at?: string | null
           marked_by?: string | null
+          return_remark?: string | null
+          return_remark_at?: string | null
+          return_remark_by?: string | null
           student_id?: string
         }
         Relationships: [
@@ -1979,6 +1988,111 @@ export type Database = {
           description?: string | null
           id?: string
           name?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      cca_club_applications: {
+        Row: {
+          batch_id: string
+          campus_code: string
+          cca_activity_id: string
+          created_at: string
+          id: string
+          rank: number
+          review_notes: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: string
+          student_id: string | null
+          submitted_class: string | null
+          submitted_full_name: string
+          submitted_student_code: string | null
+        }
+        Insert: {
+          batch_id: string
+          campus_code: string
+          cca_activity_id: string
+          created_at?: string
+          id?: string
+          rank: number
+          review_notes?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          student_id?: string | null
+          submitted_class?: string | null
+          submitted_full_name: string
+          submitted_student_code?: string | null
+        }
+        Update: {
+          batch_id?: string
+          campus_code?: string
+          cca_activity_id?: string
+          created_at?: string
+          id?: string
+          rank?: number
+          review_notes?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          student_id?: string | null
+          submitted_class?: string | null
+          submitted_full_name?: string
+          submitted_student_code?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cca_club_applications_cca_activity_id_fkey"
+            columns: ["cca_activity_id"]
+            isOneToOne: false
+            referencedRelation: "cca_activities"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cca_club_applications_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      cca_club_signup_settings: {
+        Row: {
+          campus_code: string
+          created_at: string
+          deadline_date: string | null
+          deadline_note: string
+          form_title: string
+          instructions: string
+          is_open: boolean
+          terms_label: string
+          terms_url: string | null
+          updated_at: string
+        }
+        Insert: {
+          campus_code: string
+          created_at?: string
+          deadline_date?: string | null
+          deadline_note?: string
+          form_title?: string
+          instructions?: string
+          is_open?: boolean
+          terms_label?: string
+          terms_url?: string | null
+          updated_at?: string
+        }
+        Update: {
+          campus_code?: string
+          created_at?: string
+          deadline_date?: string | null
+          deadline_note?: string
+          form_title?: string
+          instructions?: string
+          is_open?: boolean
+          terms_label?: string
+          terms_url?: string | null
           updated_at?: string
         }
         Relationships: []
@@ -2691,6 +2805,128 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      event_rsvp_links: {
+        Row: {
+          close_at: string | null
+          created_at: string
+          created_by: string | null
+          event_activity_id: string
+          id: string
+          is_active: boolean
+          mode: string
+          token: string
+          updated_at: string
+        }
+        Insert: {
+          close_at?: string | null
+          created_at?: string
+          created_by?: string | null
+          event_activity_id: string
+          id?: string
+          is_active?: boolean
+          mode: string
+          token?: string
+          updated_at?: string
+        }
+        Update: {
+          close_at?: string | null
+          created_at?: string
+          created_by?: string | null
+          event_activity_id?: string
+          id?: string
+          is_active?: boolean
+          mode?: string
+          token?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "event_rsvp_links_event_activity_id_fkey"
+            columns: ["event_activity_id"]
+            isOneToOne: false
+            referencedRelation: "cca_activities"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      event_rsvp_responses: {
+        Row: {
+          attending: string
+          checked_in_at: string | null
+          checked_in_by: string | null
+          child_info: Json | null
+          created_at: string
+          edit_token: string
+          email: string | null
+          event_activity_id: string
+          full_name: string
+          guest_count: number
+          id: string
+          link_id: string
+          mobile: string
+          notes: string | null
+          relationship: string
+          responded_by_user_id: string | null
+          source: string
+          updated_at: string
+        }
+        Insert: {
+          attending: string
+          checked_in_at?: string | null
+          checked_in_by?: string | null
+          child_info?: Json | null
+          created_at?: string
+          edit_token?: string
+          email?: string | null
+          event_activity_id: string
+          full_name: string
+          guest_count?: number
+          id?: string
+          link_id: string
+          mobile: string
+          notes?: string | null
+          relationship: string
+          responded_by_user_id?: string | null
+          source: string
+          updated_at?: string
+        }
+        Update: {
+          attending?: string
+          checked_in_at?: string | null
+          checked_in_by?: string | null
+          child_info?: Json | null
+          created_at?: string
+          edit_token?: string
+          email?: string | null
+          event_activity_id?: string
+          full_name?: string
+          guest_count?: number
+          id?: string
+          link_id?: string
+          mobile?: string
+          notes?: string | null
+          relationship?: string
+          responded_by_user_id?: string | null
+          source?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "event_rsvp_responses_event_activity_id_fkey"
+            columns: ["event_activity_id"]
+            isOneToOne: false
+            referencedRelation: "cca_activities"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "event_rsvp_responses_link_id_fkey"
+            columns: ["link_id"]
+            isOneToOne: false
+            referencedRelation: "event_rsvp_links"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       examinations: {
         Row: {
@@ -5996,6 +6232,10 @@ export type Database = {
         }[]
       }
       activate_own_account: { Args: never; Returns: undefined }
+      approve_club_application: {
+        Args: { p_application_id: string }
+        Returns: Json
+      }
       approve_venue_booking: {
         Args: { _booking_id: string; _decision: string; _notes?: string }
         Returns: {
@@ -6035,7 +6275,15 @@ export type Database = {
         Args: { target_campus_id?: string; target_month_start: string }
         Returns: number
       }
+      can_manage_cca_application: {
+        Args: { p_activity_id: string }
+        Returns: boolean
+      }
       can_manage_cca_sessions: {
+        Args: { p_activity_id: string }
+        Returns: boolean
+      }
+      can_manage_event_rsvp: {
         Args: { p_activity_id: string }
         Returns: boolean
       }
@@ -6053,6 +6301,27 @@ export type Database = {
         Returns: string
       }
       get_campus_code: { Args: { p_campus_id: string }; Returns: string }
+      get_club_signup_settings: {
+        Args: { p_campus: string }
+        Returns: {
+          campus_code: string
+          created_at: string
+          deadline_date: string | null
+          deadline_note: string
+          form_title: string
+          instructions: string
+          is_open: boolean
+          terms_label: string
+          terms_url: string | null
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "cca_club_signup_settings"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       get_cohort_averages_by_year_level_and_period: {
         Args: { p_academic_period_id: string; p_year_level: string }
         Returns: {
@@ -6097,6 +6366,21 @@ export type Database = {
             }
             Returns: string
           }
+      get_public_clubs_for_campus: {
+        Args: { p_campus: string }
+        Returns: {
+          id: string
+          image_url: string
+          location: string
+          max_participants: number
+          meeting_day: string
+          meeting_time: string
+          name: string
+          public_description: string
+          year_levels: string[]
+        }[]
+      }
+      get_rsvp_link_by_token: { Args: { p_token: string }; Returns: Json }
       get_session_enrollment_count: {
         Args: { p_session_id: string }
         Returns: number
@@ -6149,7 +6433,15 @@ export type Database = {
         Args: { ticket_parent_email: string }
         Returns: boolean
       }
+      match_club_application_student: {
+        Args: { p_application_id: string; p_student_id: string }
+        Returns: Json
+      }
       refresh_visa_statuses: { Args: never; Returns: number }
+      reject_club_application: {
+        Args: { p_application_id: string; p_notes: string }
+        Returns: Json
+      }
       renumber_academic_year_weeks: {
         Args: { p_academic_year: number }
         Returns: undefined
@@ -6163,12 +6455,37 @@ export type Database = {
         }
         Returns: undefined
       }
+      rotate_rsvp_link_token: { Args: { p_link_id: string }; Returns: string }
       set_academic_period_status: {
         Args: { p_period_id: string; p_status: string }
         Returns: undefined
       }
       show_limit: { Args: never; Returns: number }
       show_trgm: { Args: { "": string }; Returns: string[] }
+      submit_club_applications: {
+        Args: {
+          p_campus: string
+          p_choices: string[]
+          p_class: string
+          p_full_name: string
+          p_student_code: string
+        }
+        Returns: Json
+      }
+      submit_rsvp_response: {
+        Args: {
+          p_attending: string
+          p_child_info: Json
+          p_email: string
+          p_full_name: string
+          p_guest_count: number
+          p_mobile: string
+          p_notes: string
+          p_relationship: string
+          p_token: string
+        }
+        Returns: Json
+      }
       sync_event_roster_from_classes: {
         Args: { p_activity_id: string }
         Returns: undefined
@@ -6197,6 +6514,15 @@ export type Database = {
           p_student_id: string
           p_to_campus_id: string
           p_transfer_date: string
+        }
+        Returns: Json
+      }
+      update_rsvp_response_by_edit_token: {
+        Args: {
+          p_attending: string
+          p_edit_token: string
+          p_guest_count: number
+          p_notes: string
         }
         Returns: Json
       }
