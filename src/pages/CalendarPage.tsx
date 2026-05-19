@@ -11,7 +11,7 @@ import { CalendarViewSwitcher, type CalendarViewMode } from "@/components/calend
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { BottomSheet } from "@/components/ui/bottom-sheet";
 import { MapPin, Clock, CalendarDays, User, Loader2, ArrowRightLeft, Users as UsersIcon, Mail, ClipboardList } from "lucide-react";
-import schoolLogo from "@/assets/header-logo.png";
+import schoolLogo from "@/assets/school-badge.png";
 import { TAG_CATEGORIES, type TagCategory, type CalendarTag } from "@/types/calendarTags";
 import {
   filterEventsByRole,
