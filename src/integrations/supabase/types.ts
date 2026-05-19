@@ -2268,6 +2268,54 @@ export type Database = {
           },
         ]
       }
+      cca_record_years: {
+        Row: {
+          academic_year: number
+          campus_code: string
+          closed_at: string | null
+          closed_by: string | null
+          created_at: string
+          id: string
+          is_open: boolean
+          is_published: boolean
+          opened_at: string | null
+          opened_by: string | null
+          published_at: string | null
+          published_by: string | null
+          updated_at: string
+        }
+        Insert: {
+          academic_year: number
+          campus_code: string
+          closed_at?: string | null
+          closed_by?: string | null
+          created_at?: string
+          id?: string
+          is_open?: boolean
+          is_published?: boolean
+          opened_at?: string | null
+          opened_by?: string | null
+          published_at?: string | null
+          published_by?: string | null
+          updated_at?: string
+        }
+        Update: {
+          academic_year?: number
+          campus_code?: string
+          closed_at?: string | null
+          closed_by?: string | null
+          created_at?: string
+          id?: string
+          is_open?: boolean
+          is_published?: boolean
+          opened_at?: string | null
+          opened_by?: string | null
+          published_at?: string | null
+          published_by?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       cca_role_types: {
         Row: {
           activity_id: string | null
@@ -4400,6 +4448,7 @@ export type Database = {
           academic_period_id: string
           award_level: string
           award_title: string
+          cca_year_id: string | null
           created_at: string
           created_by: string | null
           id: string
@@ -4412,6 +4461,7 @@ export type Database = {
           academic_period_id: string
           award_level?: string
           award_title?: string
+          cca_year_id?: string | null
           created_at?: string
           created_by?: string | null
           id?: string
@@ -4424,6 +4474,7 @@ export type Database = {
           academic_period_id?: string
           award_level?: string
           award_title?: string
+          cca_year_id?: string | null
           created_at?: string
           created_by?: string | null
           id?: string
@@ -4438,6 +4489,13 @@ export type Database = {
             columns: ["academic_period_id"]
             isOneToOne: false
             referencedRelation: "academic_periods"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "student_additional_achievements_cca_year_id_fkey"
+            columns: ["cca_year_id"]
+            isOneToOne: false
+            referencedRelation: "cca_record_years"
             referencedColumns: ["id"]
           },
           {
