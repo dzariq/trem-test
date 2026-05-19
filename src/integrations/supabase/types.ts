@@ -1812,6 +1812,12 @@ export type Database = {
           attended: boolean | null
           bus_id: string
           created_at: string
+          departed_school: boolean | null
+          departed_school_at: string | null
+          departed_school_by: string | null
+          departed_venue: boolean | null
+          departed_venue_at: string | null
+          departed_venue_by: string | null
           id: string
           marked_at: string | null
           marked_by: string | null
@@ -1821,6 +1827,12 @@ export type Database = {
           attended?: boolean | null
           bus_id: string
           created_at?: string
+          departed_school?: boolean | null
+          departed_school_at?: string | null
+          departed_school_by?: string | null
+          departed_venue?: boolean | null
+          departed_venue_at?: string | null
+          departed_venue_by?: string | null
           id?: string
           marked_at?: string | null
           marked_by?: string | null
@@ -1830,6 +1842,12 @@ export type Database = {
           attended?: boolean | null
           bus_id?: string
           created_at?: string
+          departed_school?: boolean | null
+          departed_school_at?: string | null
+          departed_school_by?: string | null
+          departed_venue?: boolean | null
+          departed_venue_at?: string | null
+          departed_venue_by?: string | null
           id?: string
           marked_at?: string | null
           marked_by?: string | null
