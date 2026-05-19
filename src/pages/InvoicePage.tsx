@@ -12,7 +12,7 @@ import { InvoiceDetailsSheet } from "@/components/invoice/InvoiceDetailsSheet";
 import { formatMoney } from "@/components/invoice/invoiceUtils";
 import type { ParentInvoice } from "@/data/invoices";
 import { cn } from "@/lib/utils";
-import schoolLogo from "@/assets/header-logo.png";
+import schoolLogo from "@/assets/school-badge.png";
 
 type Filter = "all" | "outstanding" | "paid";
 
