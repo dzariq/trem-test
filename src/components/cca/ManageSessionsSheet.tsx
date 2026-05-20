@@ -24,6 +24,7 @@ interface ManageSessionsSheetProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   activity: CcaActivity;
+  campusCode?: string | null;
 }
 
 /**
@@ -35,6 +36,7 @@ export function ManageSessionsSheet({
   open,
   onOpenChange,
   activity,
+  campusCode = null,
 }: ManageSessionsSheetProps) {
   const {
     sessions,
@@ -329,7 +331,7 @@ export function ManageSessionsSheet({
         }
         isPIC
         canManageAttendance
-        campusCode={activity.campusCode ?? null}
+        campusCode={campusCode}
       />
 
       {/* Delete Confirmation */}
