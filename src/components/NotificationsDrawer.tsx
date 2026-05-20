@@ -81,7 +81,8 @@ type NotificationType =
   | "cca"
   | "holiday"
   | "exam"
-  | "weekly_digest";
+  | "weekly_digest"
+  | "visa";
 
 interface NotificationsDrawerProps {
   open: boolean;
