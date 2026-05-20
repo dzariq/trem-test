@@ -31,6 +31,7 @@ import AwardsPage from "./pages/AwardsPage";
 import StudentHandbookPage from "./pages/StudentHandbookPage";
 import HomeworkPage from "./pages/HomeworkPage";
 import InvoicePage from "./pages/InvoicePage";
+import VisaPage from "./pages/VisaPage";
 import ParentStudentGuard from "./components/auth/ParentStudentGuard";
 
 // Teacher Pages
@@ -124,6 +125,7 @@ const App = () => (
                   <Route path="/parent/contact" element={<ContactPage />} />
                   <Route path="/parent/awards" element={<AwardsPage />} />
                   <Route path="/parent/handbook" element={<StudentHandbookPage />} />
+                  <Route path="/parent/visa" element={<VisaPage />} />
                   {FEATURES.homeworkParent && (
                     <Route path="/parent/homework" element={<HomeworkPage />} />
                   )}

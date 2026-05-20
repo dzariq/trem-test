@@ -1,41 +1,44 @@
-## Goal
+# Visa Module — Parent App
 
-Allow teachers who are main **or** sub PIC of a CCA club to take attendance for that club's session, with the roster automatically populated from the students enrolled in the club.
+Per the uploaded spec. Tables (`parent_visa_records`, `parent_visa_periods`, `student_visa_records`, `student_visa_periods`) already exist in Supabase — read-only from parent app.
 
-## Audit findings
+> Note: you mentioned "DNA, grades, handbook, timetable" but the actual home quick row currently shows **Info, Support, Awards, CCA** (and Grades when the feature flag is on). The Visa icon will be added to this same row.
 
-- `SessionDetailsSheet` already renders `<SessionAttendanceList>` and gates editing with `canManageAttendance`, which is wired from `TeacherCalendarPage.isTeacherPICOfSession`. That check is `isPrimary || role === 'pic'`, and **all** rows in `cca_activity_teachers` have `role = 'pic'`, so both main (`is_primary=true`) and sub (`is_primary=false`) PICs already pass. ✅ No change needed there.
-- `useCcaSessionAttendance` is **broken** today:
-  - It queries `cca_session_enrollments` and `cca_session_attendance`, but neither table exists in the live database (migration was authored but never applied here — confirmed via `to_regclass`).
-  - For clubs, the intended roster source is the club enrollment table `student_cca_enrollments` (status `active`, keyed by `cca_activity_id`), not session-level enrollments.
-- PIC information for clubs lives in `cca_activity_teachers` (`is_primary` true = main, false = sub), already loaded by `useCcaActivities`.
+## 1. Gating hook
+Create `src/hooks/useHasVisaModule.ts`:
+- React Query, `staleTime: Infinity`, keyed by `user.id`
+- Returns `true` if parent has any row in `parent_visa_records` OR any of their linked students (via `student_guardians`) has a row in `student_visa_records`
+- Hidden entirely otherwise — no nationality check
 
-## Scope
+## 2. Dynamic quick-link row (the main ask)
+Edit `src/components/home/QuickLinks.tsx`:
+- Build the `quickLinks` array inside the component so it can react to `useHasVisaModule()` and the existing `FEATURES.gradeAnalysisParent` flag
+- Append a Visa item only when the hook returns true:
+  - icon: `Stamp` (lucide), label: `Visa`, path: `/parent/visa`
+  - colors: `bg-sky-100` / `text-sky-600` (distinct from existing tiles)
+- Keep everything on **one row** as count grows (4 → 5 → 6):
+  - Container stays `flex justify-around`
+  - Switch the tile sizing to responsive: icon box `w-12 h-12 sm:w-14 sm:h-14`, icon `h-6 w-6 sm:h-7 sm:w-7`, gap `gap-0.5`
+  - Tighten horizontal padding (`px-0.5`) so 6 tiles fit on a 360px width without wrapping
+- No layout change when Visa is hidden — current look preserved
 
-1. **DB migration — create `public.cca_session_attendance`**
-   - Columns: `id uuid pk`, `session_id uuid not null → cca_sessions(id) on delete cascade`, `student_id uuid not null → students(id) on delete cascade`, `status text check in ('present','absent','late','excused')`, `notes text`, `marked_by uuid`, `marked_at timestamptz`, `created_at`, `updated_at`. Unique `(session_id, student_id)`.
-   - Index on `session_id` and on `student_id`.
-   - `update_updated_at` trigger (existing `public.update_updated_at_column` helper with `set search_path = public`).
-   - RLS enabled. Policies:
-     - **SELECT**: `is_admin_like()` OR `is_teacher()` OR parent of the student (via `student_guardians` join, matching the same pattern used on `cca_bus_assignments`).
-     - **INSERT / UPDATE / DELETE**: `is_admin_like()` OR `is_cca_pic(activity_id)` via join through `cca_sessions → cca_activities`. We use the existing `is_cca_pic(activity uuid)` helper that already counts every row in `cca_activity_teachers` (so both main and sub PIC are covered).
+## 3. `/parent/visa` page
+New `src/pages/VisaPage.tsx` + route in `src/App.tsx` (under the parent layout), guarded by `useHasVisaModule()` (redirect to `/` when false):
+- **My Visa** section (only if parent has records) — list `parent_visa_periods` newest first: pathway badge, sticker/ref no, issue → expiry, status chip (Active / Expiring / Expired / Renewal in progress / Cancelled), bond + insurance summary, notes
+- **My Children's Visas** — one section per linked student that has `student_visa_records`, same card layout, student name as header
+- Footer note: *"To update visa details, please contact the school office."* No edit controls
+- React Query `staleTime: Infinity` + `postgres_changes` subscriptions on both `*_periods` tables invalidating the queries
+- Status → token mapping per spec: overdue/≤7d → destructive, 8–30d → warning, 31–90d → muted, pending_renewal → sky/info, cancelled → muted + strikethrough
 
-2. **`src/hooks/useCcaSessionAttendance.ts`** — replace the roster query.
-   - **Clubs / outdoors** (`activityKind !== 'event'`): roster = students from `student_cca_enrollments` where `cca_activity_id = activityId` and `status = 'active'`.
-   - **Events** (`activityKind === 'event'`): keep the existing class-based fallback against `classes_involved`.
-   - Drop the `cca_session_enrollments` lookup entirely (table doesn't exist and event mode already has its own path).
-   - Existing-attendance read and save: keep using `cca_session_attendance` — now real.
-   - Keep the same exported API (`students`, `stateMap`, `summary`, `setStudentStatus`, `setStudentNotes`, `save`, etc.) so `SessionAttendanceList` doesn't need changes.
+## 4. Notifications integration
+In the existing notifications list/drawer (`useNotifications` consumers — `NotificationsDrawer`, `NotificationsPage`):
+- When `type === 'visa'` render a `Stamp` icon
+- Tap routes to `link_to` (already `/parent/visa`) — confirm existing deep-link handler covers this
 
-3. **No UI changes** to `SessionAttendanceList` or `SessionDetailsSheet`. The existing Present/Absent/Late/Excused row UI is reused. The "View only" badge keeps showing for non-PICs.
+## Out of scope
+Editing visa data, bond/insurance expiry tracking, push triggers (admin app already dispatches).
 
-4. **No changes** to `useCcaActivityPermissions`, `TeacherCalendarPage` PIC detection, or the bus attendance work.
-
-## Verification
-
-- Sign in as a teacher who is the **sub** PIC of a club → open a session → roster shows every student with `student_cca_enrollments.status='active'` for that club; status buttons enabled; Save persists rows to `cca_session_attendance`.
-- Same for main PIC.
-- Sign in as a teacher who is not PIC of the activity (no year overlap either) → roster still loads (RLS SELECT allows any teacher) but buttons are read-only.
-- Parent viewing the session → sees only their own student's row state via the parent SELECT policy.
-- Events still resolve roster from `classes_involved` (unchanged path).
-- Re-open after save → previously marked statuses re-hydrate from `cca_session_attendance`.
+## Technical notes
+- Pure read-only — no migrations
+- Hook lives in `src/hooks/`, data fetchers in `src/data/visa.ts`
+- Reuse `AppLayout` + `AppHeader` for page chrome to match other parent pages
