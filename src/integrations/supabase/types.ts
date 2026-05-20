@@ -14,6 +14,75 @@ export type Database = {
   }
   public: {
     Tables: {
+      _backup_cca_activity_roles_prune_2026_05_20: {
+        Row: {
+          academic_period_id: string | null
+          activity_id: string | null
+          created_at: string | null
+          created_by: string | null
+          duration_end: string | null
+          duration_start: string | null
+          id: string | null
+          notes: string | null
+          role_label: string | null
+          student_id: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          academic_period_id?: string | null
+          activity_id?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          duration_end?: string | null
+          duration_start?: string | null
+          id?: string | null
+          notes?: string | null
+          role_label?: string | null
+          student_id?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          academic_period_id?: string | null
+          activity_id?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          duration_end?: string | null
+          duration_start?: string | null
+          id?: string | null
+          notes?: string | null
+          role_label?: string | null
+          student_id?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      _backup_cca_enrollments_prune_2026_05_20: {
+        Row: {
+          cca_activity_id: string | null
+          created_at: string | null
+          created_by: string | null
+          id: string | null
+          status: string | null
+          student_id: string | null
+        }
+        Insert: {
+          cca_activity_id?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          id?: string | null
+          status?: string | null
+          student_id?: string | null
+        }
+        Update: {
+          cca_activity_id?: string | null
+          created_at?: string | null
+          created_by?: string | null
+          id?: string | null
+          status?: string | null
+          student_id?: string | null
+        }
+        Relationships: []
+      }
       academic_periods: {
         Row: {
           academic_year: number | null
@@ -3113,6 +3182,27 @@ export type Database = {
         }
         Relationships: []
       }
+      family: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       grade_configurations: {
         Row: {
           academic_period_id: string | null
@@ -4097,6 +4187,7 @@ export type Database = {
       parents: {
         Row: {
           created_at: string
+          family_id: string | null
           ic_number: string | null
           id: string
           is_malaysian: boolean
@@ -4115,6 +4206,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          family_id?: string | null
           ic_number?: string | null
           id?: string
           is_malaysian?: boolean
@@ -4133,6 +4225,7 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          family_id?: string | null
           ic_number?: string | null
           id?: string
           is_malaysian?: boolean
@@ -4149,7 +4242,15 @@ export type Database = {
           updated_at?: string
           visa_expiry_date?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "parents_family_id_fkey"
+            columns: ["family_id"]
+            isOneToOne: false
+            referencedRelation: "family"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       payment_terms: {
         Row: {
@@ -5567,6 +5668,13 @@ export type Database = {
             columns: ["campus_id"]
             isOneToOne: false
             referencedRelation: "campuses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "students_family_id_fkey"
+            columns: ["family_id"]
+            isOneToOne: false
+            referencedRelation: "family"
             referencedColumns: ["id"]
           },
         ]
