@@ -97,14 +97,22 @@ export default function Login() {
     if (authLoading) return;
     
     if (user && profile) {
-      // User is already logged in with a profile, redirect based on role
-      if (["teacher", "admin", "super_admin"].includes(profile.role)) {
+      // Honor the portal the user selected at login. Users with multiple
+      // roles (e.g. parent + teacher) can switch from the profile page.
+      if (storedPortal === "teacher") {
         navigate("/teacher", { replace: true });
-      } else {
+      } else if (storedPortal === "family") {
         navigate("/portal", { replace: true });
+      } else {
+        // No portal chosen — fall back to role-based default
+        if (["teacher", "admin", "super_admin"].includes(profile.role)) {
+          navigate("/teacher", { replace: true });
+        } else {
+          navigate("/portal", { replace: true });
+        }
       }
     }
-  }, [user, profile, authLoading, navigate]);
+  }, [user, profile, authLoading, navigate, storedPortal]);
 
   // If no portal selected, redirect to portal selector
   useEffect(() => {
