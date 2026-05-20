@@ -4104,8 +4104,11 @@ export type Database = {
           created_at: string
           expiry_date: string | null
           id: string
+          issue_date: string | null
           notes: string | null
           parent_id: string
+          pass_number: string | null
+          pathway: Database["public"]["Enums"]["parent_visa_pathway"]
           period_no: number
           sent_for_renewal_date: string | null
           status: Database["public"]["Enums"]["visa_status"]
@@ -4116,8 +4119,11 @@ export type Database = {
           created_at?: string
           expiry_date?: string | null
           id?: string
+          issue_date?: string | null
           notes?: string | null
           parent_id: string
+          pass_number?: string | null
+          pathway?: Database["public"]["Enums"]["parent_visa_pathway"]
           period_no: number
           sent_for_renewal_date?: string | null
           status?: Database["public"]["Enums"]["visa_status"]
@@ -4128,8 +4134,11 @@ export type Database = {
           created_at?: string
           expiry_date?: string | null
           id?: string
+          issue_date?: string | null
           notes?: string | null
           parent_id?: string
+          pass_number?: string | null
+          pathway?: Database["public"]["Enums"]["parent_visa_pathway"]
           period_no?: number
           sent_for_renewal_date?: string | null
           status?: Database["public"]["Enums"]["visa_status"]
@@ -6574,11 +6583,24 @@ export type Database = {
       can_write_grades: { Args: { p_period_id: string }; Returns: boolean }
       check_phone_exists: { Args: { phone_number: string }; Returns: Json }
       cleanup_audit_log: { Args: never; Returns: undefined }
+      cleanup_visa_period_notifications: {
+        Args: { p_period_id: string; p_scope: string }
+        Returns: undefined
+      }
       current_user_role: { Args: never; Returns: string }
       delete_parent_cascade: {
         Args: { p_parents_row_id: string; p_user_id: string }
         Returns: undefined
       }
+      dispatch_parent_visa_period_notifications: {
+        Args: { p_period_id: string }
+        Returns: undefined
+      }
+      dispatch_student_visa_period_notifications: {
+        Args: { p_period_id: string }
+        Returns: undefined
+      }
+      dispatch_visa_notifications: { Args: never; Returns: number }
       generate_student_code: {
         Args: { p_campus_code: string; p_graduation_year: number }
         Returns: string
@@ -6839,19 +6861,24 @@ export type Database = {
           student_year_level: string
         }[]
       }
+      visa_expiry_tier: { Args: { p_expiry: string }; Returns: string }
     }
     Enums: {
       cca_pic_role: "lead" | "sub"
       invoice_status: "pending_payment" | "paid"
+      parent_visa_pathway: "MM2H" | "EP_I" | "EP_II" | "EP_III"
       student_invoice_status: "pending_payment" | "paid" | "draft"
       student_invoice_type: "enrolment" | "fees" | "others"
-      visa_pathway: "PTS" | "STUDENT_PASS"
+      visa_pathway: "PTS" | "STUDENT_PASS" | "DEPENDENT_PASS"
       visa_status:
         | "active"
         | "expiring_soon"
         | "expired"
         | "pending_renewal"
         | "cancelled"
+        | "renewal_due"
+        | "urgent"
+        | "critical"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -6981,15 +7008,19 @@ export const Constants = {
     Enums: {
       cca_pic_role: ["lead", "sub"],
       invoice_status: ["pending_payment", "paid"],
+      parent_visa_pathway: ["MM2H", "EP_I", "EP_II", "EP_III"],
       student_invoice_status: ["pending_payment", "paid", "draft"],
       student_invoice_type: ["enrolment", "fees", "others"],
-      visa_pathway: ["PTS", "STUDENT_PASS"],
+      visa_pathway: ["PTS", "STUDENT_PASS", "DEPENDENT_PASS"],
       visa_status: [
         "active",
         "expiring_soon",
         "expired",
         "pending_renewal",
         "cancelled",
+        "renewal_due",
+        "urgent",
+        "critical",
       ],
     },
   },
