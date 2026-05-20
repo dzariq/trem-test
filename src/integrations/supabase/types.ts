@@ -2437,6 +2437,7 @@ export type Database = {
           file_type: string | null
           file_url: string | null
           id: string
+          is_primary: boolean
           session_id: string
           storage_path: string
           uploaded_by: string | null
@@ -2448,6 +2449,7 @@ export type Database = {
           file_type?: string | null
           file_url?: string | null
           id?: string
+          is_primary?: boolean
           session_id: string
           storage_path: string
           uploaded_by?: string | null
@@ -2459,6 +2461,7 @@ export type Database = {
           file_type?: string | null
           file_url?: string | null
           id?: string
+          is_primary?: boolean
           session_id?: string
           storage_path?: string
           uploaded_by?: string | null
@@ -2622,6 +2625,7 @@ export type Database = {
         Row: {
           activity_id: string
           allowed_classes: string[]
+          body_html: string | null
           bus_label: string | null
           created_at: string
           custom_title: string | null
@@ -2644,6 +2648,7 @@ export type Database = {
         Insert: {
           activity_id: string
           allowed_classes?: string[]
+          body_html?: string | null
           bus_label?: string | null
           created_at?: string
           custom_title?: string | null
@@ -2666,6 +2671,7 @@ export type Database = {
         Update: {
           activity_id?: string
           allowed_classes?: string[]
+          body_html?: string | null
           bus_label?: string | null
           created_at?: string
           custom_title?: string | null
@@ -5002,6 +5008,7 @@ export type Database = {
           payment_amount: string | null
           period_key: string | null
           status: string
+          title: string | null
           type: Database["public"]["Enums"]["student_invoice_type"]
           updated_at: string
           url: string | null
@@ -5021,6 +5028,7 @@ export type Database = {
           payment_amount?: string | null
           period_key?: string | null
           status: string
+          title?: string | null
           type?: Database["public"]["Enums"]["student_invoice_type"]
           updated_at?: string
           url?: string | null
@@ -5040,6 +5048,7 @@ export type Database = {
           payment_amount?: string | null
           period_key?: string | null
           status?: string
+          title?: string | null
           type?: Database["public"]["Enums"]["student_invoice_type"]
           updated_at?: string
           url?: string | null
