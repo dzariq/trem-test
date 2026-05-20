@@ -7,21 +7,26 @@ import { useAuth } from "@/contexts/AuthContext";
 
 export default function RoleSelectionPage() {
   const navigate = useNavigate();
-  const { user, profile, loading, setPortal } = useAuth();
+  const { user, profile, loading, setPortal, portal } = useAuth();
 
   // If user is already authenticated, redirect to appropriate portal
   useEffect(() => {
     if (loading) return;
 
     if (user && profile) {
-      // User is logged in with a valid profile, redirect to their portal
-      if (["teacher", "admin", "super_admin"].includes(profile.role)) {
+      // Honor the portal the user selected at login. Users with multiple
+      // roles (parent + teacher) can switch between portals from their profile.
+      if (portal === "teacher") {
+        navigate("/teacher", { replace: true });
+      } else if (portal === "family") {
+        navigate("/portal", { replace: true });
+      } else if (["teacher", "admin", "super_admin"].includes(profile.role)) {
         navigate("/teacher", { replace: true });
       } else {
         navigate("/portal", { replace: true });
       }
     }
-  }, [user, profile, loading, navigate]);
+  }, [user, profile, loading, navigate, portal]);
 
   const handlePortalSelect = (portalType: "teacher" | "family") => {
     setPortal(portalType);
