@@ -27,7 +27,8 @@ import {
   PenLine,
   X,
   Sparkles,
-  Clock
+  Clock,
+  Stamp
 } from "lucide-react";
 import { useState, useMemo, useEffect } from "react";
 
@@ -159,6 +160,7 @@ export function NotificationsDrawer({ open, onOpenChange }: NotificationsDrawerP
       case "holiday": return Palmtree;
       case "exam": return PenLine;
       case "weekly_digest": return CalendarRange;
+      case "visa": return Stamp;
       default: return Bell;
     }
   };
@@ -184,6 +186,7 @@ export function NotificationsDrawer({ open, onOpenChange }: NotificationsDrawerP
       case "holiday": return "bg-teal-500 text-white";
       case "exam": return "bg-rose-500 text-white";
       case "weekly_digest": return "bg-emerald-600 text-white";
+      case "visa": return "bg-sky-500 text-white";
       default: return "bg-muted text-muted-foreground";
     }
   };
