@@ -6247,6 +6247,27 @@ export type Database = {
           },
         ]
       }
+      user_roles: {
+        Row: {
+          created_at: string
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
       venue_availability: {
         Row: {
           created_at: string
@@ -6708,7 +6729,15 @@ export type Database = {
         Args: { p_module_key: string }
         Returns: boolean
       }
-      has_role: { Args: { _role: string; _user_id: string }; Returns: boolean }
+      has_role:
+        | {
+            Args: {
+              _role: Database["public"]["Enums"]["app_role"]
+              _user_id: string
+            }
+            Returns: boolean
+          }
+        | { Args: { _role: string; _user_id: string }; Returns: boolean }
       has_subject_access: {
         Args: { _subject: number; _teacher: string }
         Returns: boolean
@@ -6864,6 +6893,14 @@ export type Database = {
       visa_expiry_tier: { Args: { p_expiry: string }; Returns: string }
     }
     Enums: {
+      app_role:
+        | "super_admin"
+        | "admin"
+        | "principal"
+        | "teacher"
+        | "parent"
+        | "student"
+        | "user"
       cca_pic_role: "lead" | "sub"
       invoice_status: "pending_payment" | "paid"
       parent_visa_pathway: "MM2H" | "EP_I" | "EP_II" | "EP_III"
@@ -7006,6 +7043,15 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      app_role: [
+        "super_admin",
+        "admin",
+        "principal",
+        "teacher",
+        "parent",
+        "student",
+        "user",
+      ],
       cca_pic_role: ["lead", "sub"],
       invoice_status: ["pending_payment", "paid"],
       parent_visa_pathway: ["MM2H", "EP_I", "EP_II", "EP_III"],
