@@ -552,6 +552,7 @@ export default function TeacherCalendarPage() {
             }
           }}
           activity={manageSessionsActivity}
+          campusCode={activeCampus}
         />
       )}
 
