@@ -404,7 +404,7 @@ export function useNotifications() {
               updated_at: now.toISOString(),
               source_key: sourceKey,
               is_read: readSyntheticKeys.has(sourceKey),
-              event_date: p.expiry_date,
+              event_date: null,
             });
           }
         }
@@ -443,7 +443,7 @@ export function useNotifications() {
               updated_at: now.toISOString(),
               source_key: sourceKey,
               is_read: readSyntheticKeys.has(sourceKey),
-              event_date: r.expiry_date,
+              event_date: null,
             });
           }
         }
