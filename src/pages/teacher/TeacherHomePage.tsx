@@ -407,11 +407,6 @@ export default function TeacherHomePage() {
         }
       />
 
-      {/* Campus Toggle - only for multi-campus teachers */}
-      <div className="px-4 pt-3 pb-2 flex justify-center">
-        <CampusToggle size="md" />
-      </div>
-
       {/* Hero Banner */}
       <div className="relative w-screen left-1/2 right-1/2 -ml-[50vw] -mr-[50vw] overflow-hidden">
         <img 
@@ -419,6 +414,10 @@ export default function TeacherHomePage() {
           alt="School Banner" 
           className="block w-full h-auto hero-breathe"
         />
+        {/* Campus Toggle - overlaid top-left, only for multi-campus teachers */}
+        <div className="absolute top-2 left-3 z-20">
+          <CampusToggle size="sm" />
+        </div>
         <TeacherWelcomeQuote />
       </div>
 

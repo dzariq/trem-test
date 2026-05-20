@@ -4107,6 +4107,7 @@ export type Database = {
           notes: string | null
           parent_id: string
           period_no: number
+          sent_for_renewal_date: string | null
           status: Database["public"]["Enums"]["visa_status"]
           updated_at: string
           updated_by: string | null
@@ -4118,6 +4119,7 @@ export type Database = {
           notes?: string | null
           parent_id: string
           period_no: number
+          sent_for_renewal_date?: string | null
           status?: Database["public"]["Enums"]["visa_status"]
           updated_at?: string
           updated_by?: string | null
@@ -4129,6 +4131,7 @@ export type Database = {
           notes?: string | null
           parent_id?: string
           period_no?: number
+          sent_for_renewal_date?: string | null
           status?: Database["public"]["Enums"]["visa_status"]
           updated_at?: string
           updated_by?: string | null
@@ -5373,6 +5376,7 @@ export type Database = {
           pathway: Database["public"]["Enums"]["visa_pathway"]
           period_no: number
           personal_bond_amount: number | null
+          sent_for_renewal_date: string | null
           status: Database["public"]["Enums"]["visa_status"]
           student_id: string
           updated_at: string
@@ -5394,6 +5398,7 @@ export type Database = {
           pathway: Database["public"]["Enums"]["visa_pathway"]
           period_no: number
           personal_bond_amount?: number | null
+          sent_for_renewal_date?: string | null
           status?: Database["public"]["Enums"]["visa_status"]
           student_id: string
           updated_at?: string
@@ -5415,6 +5420,7 @@ export type Database = {
           pathway?: Database["public"]["Enums"]["visa_pathway"]
           period_no?: number
           personal_bond_amount?: number | null
+          sent_for_renewal_date?: string | null
           status?: Database["public"]["Enums"]["visa_status"]
           student_id?: string
           updated_at?: string
