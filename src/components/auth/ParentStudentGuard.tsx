@@ -1,12 +1,14 @@
 import { useEffect, useRef } from "react";
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
+import { useUserRoles } from "@/hooks/useUserRoles";
 import { Loader2 } from "lucide-react";
 
 const allowedRoles = new Set(["parent", "student", "user"]);
 
 export default function ParentStudentGuard() {
   const { loading, user, profile } = useAuth();
+  const { hasParentRole, isLoading: rolesLoading } = useUserRoles();
   const navigate = useNavigate();
   const location = useLocation();
   const didRedirect = useRef(false);
@@ -18,7 +20,7 @@ export default function ParentStudentGuard() {
   );
 
   useEffect(() => {
-    if (loading) return;
+    if (loading || rolesLoading) return;
     
     // If no user, redirect to login
     if (!user) {
@@ -30,20 +32,21 @@ export default function ParentStudentGuard() {
     // Do not blank or redirect the parent portal until the role is actually known.
     if (!profile) return;
     
-    // If wrong role, redirect silently (no warning toast)
-    if (!allowedRoles.has(profile.role)) {
+    // Allow access if the user has the parent role in user_roles
+    // OR a legacy parent/student/user role on user_profiles.
+    const allowed = hasParentRole || allowedRoles.has(profile.role);
+    if (!allowed) {
       if (!didRedirect.current) {
         didRedirect.current = true;
-        // Removed the incorrect warning toast - auth routing handles role mismatches
       }
       navigate("/", { replace: true, state: { from: location.pathname } });
     }
-  }, [loading, user, profile, navigate, location.pathname]);
+  }, [loading, rolesLoading, hasParentRole, user, profile, navigate, location.pathname]);
 
   // Show loading spinner while checking auth
-  if (loading || !user || !profile) return loadingScreen;
+  if (loading || rolesLoading || !user || !profile) return loadingScreen;
   
-  if (!allowedRoles.has(profile.role)) return loadingScreen;
+  if (!hasParentRole && !allowedRoles.has(profile.role)) return loadingScreen;
 
   return <Outlet />;
 }
