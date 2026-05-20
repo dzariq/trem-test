@@ -563,6 +563,16 @@ export default function ProfilePage() {
         </Card>
 
         {/* Logout Button */}
+        {hasTeacherRole && (
+          <Button
+            variant="outline"
+            className="w-full"
+            onClick={handleSwitchToTeacher}
+          >
+            <GraduationCap className="h-4 w-4 mr-2" />
+            Switch to Teacher Portal
+          </Button>
+        )}
         <Button 
           variant="outline" 
           className="w-full border-destructive/50 text-destructive hover:bg-destructive/10"
