@@ -192,13 +192,12 @@ Deno.serve(async (req) => {
       }
     }
 
-    // Look up user profile
+    // Look up user profile (role validation happens via user_roles below)
     let query = admin.from("user_profiles").select("user_id, email, phone, role, is_active");
     if (emailInput) {
       query = query.ilike("email", emailInput);
     } else {
       query = query
-        .in("role", allowedRoles)
         .not("phone", "is", null)
         .eq("is_active", true);
     }
@@ -212,35 +211,16 @@ Deno.serve(async (req) => {
       );
     }
 
-    const match = emailInput
-      ? (profiles ?? []).find((p: any) =>
-          (p.email ?? "").toLowerCase() === emailInput &&
-          allowedRoles.includes(p.role),
-        )
-      : (profiles ?? []).find((p: any) => {
+    // Find the profile by contact info (email or phone)
+    const candidates = emailInput
+      ? (profiles ?? []).filter((p: any) => (p.email ?? "").toLowerCase() === emailInput)
+      : (profiles ?? []).filter((p: any) => {
           const stored = normalizeDigits(p.phone);
           if (!stored) return false;
           return stored === fullDigits || stored === phoneDigits;
         });
 
-    if (!match) {
-      if (emailInput) {
-        const wrongPortalMatch = (profiles ?? []).find(
-          (p: any) => (p.email ?? "").toLowerCase() === emailInput,
-        );
-        if (wrongPortalMatch) {
-          const isTeacherSide = ["teacher", "admin", "super_admin"].includes(
-            wrongPortalMatch.role,
-          );
-          const correctPortal = isTeacherSide ? "Teacher" : "Parent / Student";
-          return new Response(
-            JSON.stringify({
-              error: `This email belongs to a ${wrongPortalMatch.role} account. Please sign in via the ${correctPortal} portal.`,
-            }),
-            { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } },
-          );
-        }
-      }
+    if (candidates.length === 0) {
       return new Response(
         JSON.stringify({
           error: emailInput
@@ -248,6 +228,49 @@ Deno.serve(async (req) => {
             : `No ${portal === "teacher" ? "teacher" : "parent"} account found for this phone number.`,
         }),
         { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+      );
+    }
+
+    // Authoritative role check via user_roles table
+    const candidateIds = candidates.map((c: any) => c.user_id);
+    const { data: roleRows, error: rolesErr } = await admin
+      .from("user_roles")
+      .select("user_id, role")
+      .in("user_id", candidateIds);
+
+    if (rolesErr) {
+      console.error("[phone-login] user_roles lookup failed", rolesErr);
+      return new Response(
+        JSON.stringify({ error: "Role lookup failed" }),
+        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+      );
+    }
+
+    const rolesByUser = new Map<string, string[]>();
+    for (const r of roleRows ?? []) {
+      const list = rolesByUser.get(r.user_id) ?? [];
+      list.push(r.role);
+      rolesByUser.set(r.user_id, list);
+    }
+
+    const match = candidates.find((c: any) =>
+      (rolesByUser.get(c.user_id) ?? []).some((r) => allowedRoles.includes(r)),
+    );
+
+    if (!match) {
+      const wrongPortalCandidate = candidates[0];
+      const otherRoles = rolesByUser.get(wrongPortalCandidate.user_id) ?? [];
+      const isTeacherSide = otherRoles.some((r) =>
+        ["teacher", "admin", "super_admin"].includes(r),
+      );
+      const correctPortal = isTeacherSide ? "Teacher" : "Parent / Student";
+      return new Response(
+        JSON.stringify({
+          error: otherRoles.length
+            ? `This account does not have ${portal === "teacher" ? "teacher" : "parent"} access. Please sign in via the ${correctPortal} portal.`
+            : `No ${portal === "teacher" ? "teacher" : "parent"} role assigned to this account.`,
+        }),
+        { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } },
       );
     }
 
