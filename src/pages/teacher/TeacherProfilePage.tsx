@@ -37,6 +37,8 @@ import { useNavigate } from "react-router-dom";
 import { toast } from "@/hooks/use-toast";
 import { useMyProfile } from "@/hooks/useMyProfile";
 import { updateMyProfile } from "@/data/profile";
+import { useUserRoles } from "@/hooks/useUserRoles";
+import { Users } from "lucide-react";
 
 // NOTE: Mock/demo data for UI demonstration only. Passwords are intentionally
 // placeholder strings — they are NOT real credentials and are not used for
@@ -80,6 +82,8 @@ export default function TeacherProfilePage() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const { signOut } = useAuth();
+  const { setPortal } = useAuth();
+  const { hasParentRole } = useUserRoles();
   const { profile, loading: profileLoading, error: profileError, refetch } = useMyProfile();
   const { isMultiCampus } = useCampus();
   const [isEditOpen, setIsEditOpen] = useState(false);
@@ -91,6 +95,12 @@ export default function TeacherProfilePage() {
     queryClient.clear();
     navigate("/", { replace: true });
   }, [signOut, queryClient, navigate]);
+
+  const handleSwitchToParent = useCallback(() => {
+    setPortal("family");
+    queryClient.clear();
+    navigate("/portal", { replace: true });
+  }, [setPortal, queryClient, navigate]);
   
   const [formProfile, setFormProfile] = useState({
     name: "",
@@ -319,6 +329,16 @@ export default function TeacherProfilePage() {
         </Card>
 
         {/* Logout Button */}
+        {hasParentRole && (
+          <Button
+            variant="outline"
+            className="w-full"
+            onClick={handleSwitchToParent}
+          >
+            <Users className="h-4 w-4 mr-2" />
+            Switch to Parent Portal
+          </Button>
+        )}
         <Button 
           variant="outline" 
           className="w-full border-destructive/50 text-destructive hover:bg-destructive/10"
