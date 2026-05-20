@@ -121,16 +121,16 @@ export async function fetchMyChildrenVisa(): Promise<StudentVisaBundle[]> {
       .order("issue_date", { ascending: false, nullsFirst: false }),
     supabase
       .from("students")
-      .select("id, full_name")
+      .select("id, name")
       .in("id", studentIds),
   ]);
   if (periodsRes.error) throw new Error(periodsRes.error.message);
   if (studentsRes.error) throw new Error(studentsRes.error.message);
   const periods = (periodsRes.data ?? []) as StudentVisaPeriod[];
-  const students = (studentsRes.data ?? []) as Array<{ id: string; full_name: string | null }>;
+  const students = (studentsRes.data ?? []) as Array<{ id: string; name: string | null }>;
 
   return students.map((s) => ({
-    student: s,
+    student: { id: s.id, full_name: s.name },
     record: recs.find((r) => r.student_id === s.id) ?? null,
     periods: periods.filter((p) => p.student_id === s.id),
   }));
