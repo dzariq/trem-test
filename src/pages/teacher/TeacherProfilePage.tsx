@@ -329,6 +329,16 @@ export default function TeacherProfilePage() {
         </Card>
 
         {/* Logout Button */}
+        {hasParentRole && (
+          <Button
+            variant="outline"
+            className="w-full"
+            onClick={handleSwitchToParent}
+          >
+            <Users className="h-4 w-4 mr-2" />
+            Switch to Parent Portal
+          </Button>
+        )}
         <Button 
           variant="outline" 
           className="w-full border-destructive/50 text-destructive hover:bg-destructive/10"
