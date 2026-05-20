@@ -11,6 +11,7 @@ import { TeacherQuickLinks } from "@/components/home/TeacherQuickLinks";
 import TeacherWelcomeQuote from "@/components/home/TeacherWelcomeQuote";
 import { PDFViewerDialog } from "@/components/PDFViewerDialog";
 import { GeometricBackgroundPattern } from "@/components/home/GeometricBackgroundPattern";
+import { CampusToggle } from "@/components/campus/CampusToggle";
 import { BookOpen, Users, Clock, FileText, Calendar, AlertTriangle, ClipboardList, ChevronDown, ChevronUp } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import schoolBadge from "@/assets/school-badge.png";
@@ -405,6 +406,11 @@ export default function TeacherHomePage() {
           </div>
         }
       />
+
+      {/* Campus Toggle - only for multi-campus teachers */}
+      <div className="px-4 pt-3 pb-2 flex justify-center">
+        <CampusToggle size="md" />
+      </div>
 
       {/* Hero Banner */}
       <div className="relative w-screen left-1/2 right-1/2 -ml-[50vw] -mr-[50vw] overflow-hidden">
