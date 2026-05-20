@@ -37,7 +37,8 @@ const emptySyntheticState = (): SyntheticNotificationState => ({
 const isSyntheticNotificationId = (notificationId: string) =>
   notificationId.startsWith("cca-") ||
   notificationId.startsWith("event-") ||
-  notificationId.startsWith("teacher-");
+  notificationId.startsWith("teacher-") ||
+  notificationId.startsWith("visa-");
 
 const getNotificationTrackingKey = (notification: Pick<Notification, "id" | "source_key">) =>
   notification.source_key || notification.id;
@@ -349,6 +350,100 @@ export function useNotifications() {
               source_key: sourceKey,
               is_read: readSyntheticKeys.has(sourceKey),
               event_date: session.session_date,
+            });
+          }
+        }
+      }
+
+      // ── Visa deadline notifications (parent role) ──
+      if (userRole === "parent") {
+        const deadlineStatuses = [
+          "expiring_soon",
+          "renewal_due",
+          "urgent",
+          "critical",
+          "expired",
+          "pending_renewal",
+        ];
+        const statusLabel: Record<string, string> = {
+          expiring_soon: "Expiring soon",
+          renewal_due: "Renewal due",
+          urgent: "Urgent",
+          critical: "Critical",
+          expired: "Expired",
+          pending_renewal: "Renewal in progress",
+        };
+        const fmtDateShort = (d: string | null) => {
+          if (!d) return "";
+          const dt = new Date(d);
+          if (isNaN(dt.getTime())) return d;
+          return dt.toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" });
+        };
+
+        // Parent's own visa periods (RLS already scopes to current parent)
+        const { data: parentPeriods } = await supabase
+          .from("parent_visa_periods")
+          .select("id, pathway, pass_number, expiry_date, status")
+          .in("status", deadlineStatuses);
+
+        if (parentPeriods) {
+          for (const p of parentPeriods as any[]) {
+            const sourceKey = `visa-parent-period:${p.id}`;
+            if (dismissedSyntheticKeys.has(sourceKey)) continue;
+            const pathway = p.pathway ? String(p.pathway).replace(/_/g, " ") : "Visa";
+            const exp = p.expiry_date ? ` — expires ${fmtDateShort(p.expiry_date)}` : "";
+            allNotifications.push({
+              id: `visa-parent-period-${p.id}`,
+              user_id: null,
+              title: `${pathway} — ${statusLabel[p.status] ?? p.status}`,
+              message: `Your visa pass${p.pass_number ? ` (${p.pass_number})` : ""}${exp}`,
+              type: "visa",
+              link_to: "/parent/visa",
+              target_audience: "parent",
+              created_at: now.toISOString(),
+              updated_at: now.toISOString(),
+              source_key: sourceKey,
+              is_read: readSyntheticKeys.has(sourceKey),
+              event_date: null,
+            });
+          }
+        }
+
+        // Children's visa records (RLS scopes to parent's students)
+        const { data: studentRecords } = await supabase
+          .from("student_visa_records")
+          .select("id, student_id, current_pathway, pass_number, expiry_date, status")
+          .in("status", deadlineStatuses);
+
+        if (studentRecords && studentRecords.length > 0) {
+          const ids = Array.from(new Set((studentRecords as any[]).map((r) => r.student_id)));
+          const { data: studentNames } = await supabase
+            .from("students")
+            .select("id, name")
+            .in("id", ids);
+          const nameById = new Map<string, string>(
+            (studentNames ?? []).map((s: any) => [s.id, s.name ?? "Student"])
+          );
+
+          for (const r of studentRecords as any[]) {
+            const sourceKey = `visa-student-record:${r.id}`;
+            if (dismissedSyntheticKeys.has(sourceKey)) continue;
+            const childName = nameById.get(r.student_id) ?? "Your child";
+            const pathway = r.current_pathway ? String(r.current_pathway).replace(/_/g, " ") : "Visa";
+            const exp = r.expiry_date ? ` — expires ${fmtDateShort(r.expiry_date)}` : "";
+            allNotifications.push({
+              id: `visa-student-record-${r.id}`,
+              user_id: null,
+              title: `${childName}: ${pathway} — ${statusLabel[r.status] ?? r.status}`,
+              message: `Visa pass${r.pass_number ? ` (${r.pass_number})` : ""}${exp}`,
+              type: "visa",
+              link_to: "/parent/visa",
+              target_audience: "parent",
+              created_at: now.toISOString(),
+              updated_at: now.toISOString(),
+              source_key: sourceKey,
+              is_read: readSyntheticKeys.has(sourceKey),
+              event_date: null,
             });
           }
         }
