@@ -69,6 +69,7 @@ import { HandbookReportDialog } from "@/components/HandbookReportDialog";
 import { studentHandbookData } from "@/data/studentHandbookData";
 import { cn } from "@/lib/utils";
 import { useMyProfile } from "@/hooks/useMyProfile";
+import { useUserRoles } from "@/hooks/useUserRoles";
 import { type LinkedStudent } from "@/data/students";
 import { updateMyProfile } from "@/data/profile";
 import { useStudentSelection } from "@/hooks/useStudentSelection";
@@ -90,7 +91,8 @@ export default function ProfilePage() {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const queryClient = useQueryClient();
-  const { signOut } = useAuth();
+  const { signOut, setPortal } = useAuth();
+  const { hasTeacherRole } = useUserRoles();
   const { profile, loading: profileLoading, error: profileError, refetch } = useMyProfile();
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [isPdfOpen, setIsPdfOpen] = useState(false);
@@ -100,6 +102,12 @@ export default function ProfilePage() {
     queryClient.clear();
     navigate("/", { replace: true });
   }, [signOut, queryClient, navigate]);
+
+  const handleSwitchToTeacher = useCallback(() => {
+    setPortal("teacher");
+    queryClient.clear();
+    navigate("/teacher", { replace: true });
+  }, [setPortal, queryClient, navigate]);
   const [isTimetablePdfOpen, setIsTimetablePdfOpen] = useState(false);
   const [selectedStudent, setSelectedStudent] = useState<LinkedStudent | null>(null);
   const [isPhotoEditOpen, setIsPhotoEditOpen] = useState(false);
