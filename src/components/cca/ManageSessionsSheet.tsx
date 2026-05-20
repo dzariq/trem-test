@@ -13,16 +13,18 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Calendar, Clock, MapPin, Plus, Pencil, Trash2, Loader2, XCircle, RotateCcw } from "lucide-react";
+import { Calendar, Clock, MapPin, Plus, Pencil, Trash2, Loader2, XCircle, RotateCcw, ClipboardList } from "lucide-react";
 import { format, parseISO } from "date-fns";
 import { useCcaSessions, type CcaSession, type CcaSessionFormData } from "@/hooks/useCcaSessions";
 import { SessionFormDialog } from "./SessionFormDialog";
+import { SessionDetailsSheet } from "./SessionDetailsSheet";
 import type { CcaActivity } from "@/hooks/useCcaActivities";
 
 interface ManageSessionsSheetProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   activity: CcaActivity;
+  campusCode?: string | null;
 }
 
 /**
@@ -34,6 +36,7 @@ export function ManageSessionsSheet({
   open,
   onOpenChange,
   activity,
+  campusCode = null,
 }: ManageSessionsSheetProps) {
   const {
     sessions,
@@ -49,6 +52,7 @@ export function ManageSessionsSheet({
   const [formDialogOpen, setFormDialogOpen] = useState(false);
   const [editingSession, setEditingSession] = useState<CcaSession | null>(null);
   const [deleteConfirmSession, setDeleteConfirmSession] = useState<CcaSession | null>(null);
+  const [attendanceSession, setAttendanceSession] = useState<CcaSession | null>(null);
 
   useEffect(() => {
     if (open) {
@@ -191,6 +195,16 @@ export function ManageSessionsSheet({
                       <Button
                         variant="ghost"
                         size="icon"
+                        className="h-8 w-8 text-primary hover:text-primary hover:bg-primary/10"
+                        onClick={() => setAttendanceSession(session)}
+                        disabled={saving}
+                        title="Take attendance"
+                      >
+                        <ClipboardList className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
                         className="h-8 w-8"
                         onClick={() => handleEdit(session)}
                         disabled={saving}
@@ -287,6 +301,37 @@ export function ManageSessionsSheet({
         saving={saving}
         onSave={handleSave}
         allowFreeText={activity.allowFreeText}
+      />
+
+      {/* Session Details Sheet — opens attendance for the selected session */}
+      <SessionDetailsSheet
+        open={!!attendanceSession}
+        onOpenChange={(open) => {
+          if (!open) setAttendanceSession(null);
+        }}
+        session={
+          attendanceSession
+            ? {
+                id: attendanceSession.id,
+                activityId: activity.id,
+                activityName: activity.name,
+                sessionDate: attendanceSession.sessionDate,
+                startTime: attendanceSession.startTime,
+                endTime: attendanceSession.endTime,
+                locationName: attendanceSession.locationName,
+                customTitle: attendanceSession.customTitle,
+                description: attendanceSession.description,
+                requirements: attendanceSession.requirements,
+                isCancelled: attendanceSession.isCancelled,
+                category: activity.category,
+                kind: activity.kind ?? null,
+                classesInvolved: activity.classesInvolved || [],
+              }
+            : null
+        }
+        isPIC
+        canManageAttendance
+        campusCode={campusCode}
       />
 
       {/* Delete Confirmation */}
