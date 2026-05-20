@@ -37,7 +37,8 @@ const emptySyntheticState = (): SyntheticNotificationState => ({
 const isSyntheticNotificationId = (notificationId: string) =>
   notificationId.startsWith("cca-") ||
   notificationId.startsWith("event-") ||
-  notificationId.startsWith("teacher-");
+  notificationId.startsWith("teacher-") ||
+  notificationId.startsWith("visa-");
 
 const getNotificationTrackingKey = (notification: Pick<Notification, "id" | "source_key">) =>
   notification.source_key || notification.id;
