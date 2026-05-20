@@ -31,6 +31,7 @@ import AwardsPage from "./pages/AwardsPage";
 import StudentHandbookPage from "./pages/StudentHandbookPage";
 import HomeworkPage from "./pages/HomeworkPage";
 import InvoicePage from "./pages/InvoicePage";
+import VisaPage from "./pages/VisaPage";
 import ParentStudentGuard from "./components/auth/ParentStudentGuard";
 
 // Teacher Pages
