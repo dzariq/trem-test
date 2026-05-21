@@ -884,7 +884,7 @@ function AttendancePanel({
         </Button>
         <div className="rounded-lg border bg-muted/30 p-3">
           <p className="text-sm font-medium">
-            {selected.customTitle || formatSessionDate(selected.sessionDate)}
+            {sessionHeading(selected, activity.name)}
           </p>
           {formatTime(selected.startTime, selected.endTime) && (
             <p className="text-xs text-muted-foreground">
@@ -918,7 +918,7 @@ function AttendancePanel({
           <div className="flex items-center justify-between gap-2">
             <div className="min-w-0">
               <p className="text-sm font-medium text-foreground truncate">
-                {s.customTitle || formatSessionDate(s.sessionDate)}
+                {sessionHeading(s, activity.name)}
               </p>
               <div className="flex flex-wrap gap-3 text-xs text-muted-foreground mt-0.5">
                 {formatTime(s.startTime, s.endTime) && (
