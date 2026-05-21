@@ -10,6 +10,7 @@ import {
   PARENT_HIDDEN_TAGS,
 } from "@/types/calendarTags";
 import { mapDbToCategory } from "@/lib/calendarCategorySubtypes";
+import { resolveEventHex, getEventChipStyle as chipStyle } from "@/lib/calendarTaxonomy";
 
 // Reverse lookup: display name (e.g. "Internal Event") -> tag slug (e.g. "internal-event")
 const DISPLAY_NAME_TO_TAG: Record<string, CalendarTag> = Object.entries(TAG_DISPLAY_NAMES)
@@ -94,6 +95,27 @@ export function getEventBadgeColor(
   if (!category) return "bg-muted text-muted-foreground";
   return getCategoryColor(category);
 }
+
+/**
+ * Resolve a saturated hex color for an event chip/badge.
+ * Priority: admin-defined event_categories.color → subtype color → group color.
+ */
+export function getEventBadgeHex(
+  tag: string | null | undefined,
+  eventCategory?: string | null,
+  eventType?: string | null,
+  fkColor?: string | null,
+  title?: string | null
+): string {
+  return resolveEventHex({
+    fkColor,
+    tag: tag ?? null,
+    category: eventCategory ?? eventType ?? null,
+    title: title ?? null,
+  });
+}
+
+export const getEventChipStyle = chipStyle;
 
 // Returns a human label: known tag → display name, otherwise the raw tag/category text.
 export function getEventBadgeLabel(
