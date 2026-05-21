@@ -28,6 +28,8 @@ interface SessionFormDialogProps {
   saving: boolean;
   onSave: (data: CcaSessionFormData) => Promise<boolean>;
   allowFreeText?: boolean;
+  /** Parent activity name; used to suppress redundant custom titles. */
+  activityName?: string;
 }
 
 export function SessionFormDialog({
@@ -37,6 +39,7 @@ export function SessionFormDialog({
   saving,
   onSave,
   allowFreeText = false,
+  activityName,
 }: SessionFormDialogProps) {
   const { locations, loading: locationsLoading } = useSchoolLocations();
   
@@ -92,13 +95,23 @@ export function SessionFormDialog({
       ? selectedLocation.name 
       : (allowFreeText ? formData.locationFreeText : null);
 
+    // Drop the custom title when it just repeats the activity name.
+    const cleanedTitle = (() => {
+      const t = formData.customTitle?.trim();
+      if (!t) return null;
+      if (activityName && t.toLowerCase() === activityName.trim().toLowerCase()) {
+        return null;
+      }
+      return t;
+    })();
+
     const success = await onSave({
       sessionDate: formData.sessionDate,
       startTime: formData.startTime || null,
       endTime: formData.endTime || null,
       locationId,
       location: locationText || null,
-      customTitle: formData.customTitle || null,
+      customTitle: cleanedTitle,
       description: formData.description || null,
       requirements: formData.requirements || null,
     });
@@ -217,6 +230,11 @@ export function SessionFormDialog({
           {/* Custom Title */}
           <div className="space-y-2">
             <Label htmlFor="customTitle">Custom Title (optional)</Label>
+            <p className="text-xs text-muted-foreground">
+              Leave empty for regular sessions. Use only when this session has a
+              different name from the activity (e.g. "Watercolour Week",
+              "Term 1 Showcase").
+            </p>
             <Input
               id="customTitle"
               placeholder="e.g., Practice Match, Performance Prep"
