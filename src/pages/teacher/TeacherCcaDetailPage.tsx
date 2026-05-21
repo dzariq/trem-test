@@ -558,9 +558,9 @@ function SchedulePanel({
                 <div className="flex items-start justify-between gap-2">
                   <div className="flex-1 min-w-0">
                     <p className="font-medium text-foreground">
-                      {s.customTitle || formatSessionDate(s.sessionDate)}
+                      {sessionHeading(s, activity.name)}
                     </p>
-                    {s.customTitle && (
+                    {hasMeaningfulTitle(s.customTitle, activity.name) && (
                       <p className="text-xs text-muted-foreground">
                         {formatSessionDate(s.sessionDate)}
                       </p>
@@ -632,7 +632,7 @@ function SchedulePanel({
               <CardContent className="p-3 flex items-start justify-between gap-2">
                 <div className="flex-1 min-w-0">
                   <p className="font-medium text-muted-foreground line-through">
-                    {s.customTitle || formatSessionDate(s.sessionDate)}
+                    {sessionHeading(s, activity.name)}
                   </p>
                 </div>
                 {canEdit && (
