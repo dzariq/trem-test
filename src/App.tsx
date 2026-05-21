@@ -49,6 +49,7 @@ import TeacherLessonPlansListPage from "./pages/teacher/TeacherLessonPlansListPa
 import TeacherMLPDetailPage from "./pages/teacher/TeacherMLPDetailPage";
 import WeekConfigPage from "./pages/teacher/WeekConfigPage";
 import TeacherGuard from "./components/auth/TeacherGuard";
+import TeacherCcaPage from "./pages/teacher/TeacherCcaPage";
 
 import NotFound from "./pages/NotFound";
 
@@ -158,6 +159,7 @@ const App = () => (
                     path="/teacher/lesson-plans/:id"
                     element={<TeacherMLPDetailPage />}
                   />
+                  <Route path="/teacher/cca" element={<TeacherCcaPage />} />
                   <Route path="/teacher/week-config" element={<WeekConfigPage />} />
                   <Route
                     path="/teacher/security-privacy"
