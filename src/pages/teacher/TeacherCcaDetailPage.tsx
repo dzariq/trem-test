@@ -141,6 +141,16 @@ function formatTime(s: string | null, e: string | null) {
   return formatSessionTimeRange(s, e) || null;
 }
 
+function initials(name: string) {
+  return name
+    .split(/\s+/)
+    .map((p) => p[0])
+    .filter(Boolean)
+    .slice(0, 2)
+    .join("")
+    .toUpperCase();
+}
+
 /**
  * Treat a session's custom title as meaningful only when it differs from
  * the parent activity name (case/whitespace-insensitive). Otherwise the
@@ -759,15 +769,6 @@ function MembersPanel({ activityId, active }: { activityId: string; active: bool
     return acc;
   }, {});
   const classNames = Object.keys(grouped).sort();
-
-  const initials = (name: string) =>
-    name
-      .split(/\s+/)
-      .map((p) => p[0])
-      .filter(Boolean)
-      .slice(0, 2)
-      .join("")
-      .toUpperCase();
 
   return (
     <div className="space-y-3">
