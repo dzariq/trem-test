@@ -49,6 +49,7 @@ import {
 } from "@/hooks/useTeacherInvolvedCcas";
 import { useCcaActivityPermissions } from "@/hooks/useCcaActivityPermissions";
 import { useCcaSessions, type CcaSession, type CcaSessionFormData } from "@/hooks/useCcaSessions";
+import { useCcaActivityAttendanceSummary } from "@/hooks/useCcaActivityAttendanceSummary";
 import { supabase } from "@/lib/supabase";
 import { formatSessionTimeRange } from "@/lib/ccaSessionFormat";
 
