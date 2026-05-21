@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { Loader2, Users, Save, ClipboardList } from "lucide-react";
+import { Loader2, Users, Save, ClipboardList, Check, X } from "lucide-react";
 import { cn, formatClassDisplay } from "@/lib/utils";
 import { toast } from "@/hooks/use-toast";
 import {
@@ -19,11 +19,27 @@ interface SessionAttendanceListProps {
   canEdit: boolean;
 }
 
-const STATUSES: { value: CcaAttendanceStatus; label: string; short: string; tone: string }[] = [
-  { value: "present", label: "Present", short: "P", tone: "bg-emerald-100 text-emerald-700 border-emerald-300 dark:bg-emerald-900/30 dark:text-emerald-300" },
-  { value: "absent", label: "Absent", short: "A", tone: "bg-rose-100 text-rose-700 border-rose-300 dark:bg-rose-900/30 dark:text-rose-300" },
-  { value: "late", label: "Late", short: "L", tone: "bg-amber-100 text-amber-700 border-amber-300 dark:bg-amber-900/30 dark:text-amber-300" },
-  { value: "excused", label: "Excused", short: "E", tone: "bg-sky-100 text-sky-700 border-sky-300 dark:bg-sky-900/30 dark:text-sky-300" },
+const STATUSES: {
+  value: CcaAttendanceStatus;
+  label: string;
+  short: string;
+  tone: string;
+  Icon: typeof Check;
+}[] = [
+  {
+    value: "present",
+    label: "Present",
+    short: "P",
+    tone: "bg-emerald-100 text-emerald-700 border-emerald-300 dark:bg-emerald-900/30 dark:text-emerald-300",
+    Icon: Check,
+  },
+  {
+    value: "absent",
+    label: "Absent",
+    short: "A",
+    tone: "bg-rose-100 text-rose-700 border-rose-300 dark:bg-rose-900/30 dark:text-rose-300",
+    Icon: X,
+  },
 ];
 
 export function SessionAttendanceList({
@@ -90,11 +106,12 @@ export function SessionAttendanceList({
         <>
           {/* Summary chips */}
           <div className="flex flex-wrap gap-1.5 text-xs">
-            {STATUSES.map((s) => (
-              <Badge key={s.value} variant="outline" className={cn("border", s.tone)}>
-                {s.short}: {summary[s.value]}
-              </Badge>
-            ))}
+            <Badge variant="outline" className={cn("border gap-1", STATUSES[0].tone)}>
+              <Check className="h-3 w-3" /> {summary.present}
+            </Badge>
+            <Badge variant="outline" className={cn("border gap-1", STATUSES[1].tone)}>
+              <X className="h-3 w-3" /> {summary.absent}
+            </Badge>
             <Badge variant="outline">Unmarked: {summary.unmarked}</Badge>
           </div>
 
@@ -115,9 +132,10 @@ export function SessionAttendanceList({
                       )}
                     </div>
                     {canEdit ? (
-                      <div className="flex gap-1">
+                      <div className="flex gap-2">
                         {STATUSES.map((opt) => {
                           const active = cur === opt.value;
+                          const Icon = opt.Icon;
                           return (
                             <button
                               key={opt.value}
@@ -127,13 +145,13 @@ export function SessionAttendanceList({
                                 setStudentStatus(s.id, active ? null : opt.value)
                               }
                               className={cn(
-                                "h-8 w-8 rounded-md border text-xs font-semibold transition",
+                                "h-10 w-10 rounded-full border-2 flex items-center justify-center transition",
                                 active
-                                  ? opt.tone
-                                  : "bg-background text-muted-foreground border-border hover:bg-muted"
+                                  ? cn(opt.tone, "border-current shadow-sm")
+                                  : "bg-background text-muted-foreground border-border hover:bg-muted",
                               )}
                             >
-                              {opt.short}
+                              <Icon className="h-5 w-5" strokeWidth={3} />
                             </button>
                           );
                         })}
