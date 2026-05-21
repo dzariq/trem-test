@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import {
   ChevronLeft,
@@ -17,14 +17,17 @@ import {
   Trash2,
   Loader2,
   Image as ImageIcon,
-  Wallet,
   ChevronRight,
+  Search,
+  X,
 } from "lucide-react";
 import { TeacherAppLayout } from "@/components/layout/TeacherAppLayout";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Input } from "@/components/ui/input";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -35,7 +38,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { format, parseISO } from "date-fns";
+import { format, parseISO, isSameDay } from "date-fns";
 import { cn } from "@/lib/utils";
 
 import { useCampus } from "@/contexts/CampusContext";
@@ -56,7 +59,7 @@ import { BusAttendanceList } from "@/components/cca/BusAttendanceList";
 import { getCcaBucket, getCcaBucketIcon, getCcaTypePillColor } from "@/components/cca/CcaTypeTabs";
 import { CCA_BUCKET_LABEL } from "@/lib/ccaSessionFormat";
 
-type TabId = "overview" | "schedule" | "members" | "attendance" | "venue" | "budget";
+type TabId = "overview" | "schedule" | "members" | "attendance" | "venue";
 
 interface RosterStudent {
   id: string;
@@ -140,6 +143,23 @@ export default function TeacherCcaDetailPage() {
 
   const [tab, setTab] = useState<TabId>("overview");
   const [localImageUrl, setLocalImageUrl] = useState<string | null | undefined>(undefined);
+  const [imageOpen, setImageOpen] = useState(false);
+
+  // Hoisted: single sessions source for Schedule + Attendance tabs.
+  const sessionsHook = useCcaSessions({ activityId: activityId ?? "" });
+  const { fetchSessions } = sessionsHook;
+  useEffect(() => {
+    if (activityId) fetchSessions();
+  }, [activityId, fetchSessions]);
+
+  // Auto-scroll active tab pill into view on change
+  const tabBarRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const el = tabBarRef.current?.querySelector<HTMLButtonElement>(
+      `[data-tab-id="${tab}"]`
+    );
+    el?.scrollIntoView({ behavior: "smooth", inline: "center", block: "nearest" });
+  }, [tab]);
 
   const displayImageUrl =
     localImageUrl !== undefined
@@ -178,18 +198,20 @@ export default function TeacherCcaDetailPage() {
   const bucketLabel = CCA_BUCKET_LABEL[bucket];
   const bucketPill = getCcaTypePillColor(activity.kind ?? activity.category);
 
-  const tabs: { id: TabId; label: string; hidden?: boolean }[] = [
+  // Outdoor activities use Bus list as their attendance flow — hide
+  // generic Attendance tab to avoid two competing flows. Budget is
+  // hidden until a backend exists.
+  const tabs: { id: TabId; label: string }[] = [
     { id: "overview", label: "Overview" },
     { id: "schedule", label: "Schedule" },
     { id: "members", label: isOutdoor ? "Bus list" : "Members" },
-    { id: "attendance", label: "Attendance" },
+    ...(isOutdoor ? [] : [{ id: "attendance" as TabId, label: "Attendance" }]),
     { id: "venue", label: "Venue" },
-    { id: "budget", label: "Budget" },
   ];
 
   return (
     <TeacherAppLayout>
-      <DetailHeader onBack={() => navigate("/teacher/cca")} title="My CCA" />
+      <DetailHeader onBack={() => navigate("/teacher/cca")} title={activity.name} />
 
       {/* Hero + title */}
       <div className="px-4 pt-3">
@@ -207,22 +229,28 @@ export default function TeacherCcaDetailPage() {
             className="mb-3"
           />
         ) : (
-          <CcaActivityImage
-            imageUrl={displayImageUrl}
-            activityName={activity.name}
-            category={activity.category}
-            typeName={activity.typeName}
-            variant="details"
-            className="mb-3"
-          />
+          <button
+            type="button"
+            onClick={() => displayImageUrl && setImageOpen(true)}
+            className="block w-full mb-3 rounded-xl overflow-hidden"
+            aria-label="View hero image"
+          >
+            <CcaActivityImage
+              imageUrl={displayImageUrl}
+              activityName={activity.name}
+              category={activity.category}
+              typeName={activity.typeName}
+              variant="details"
+            />
+          </button>
         )}
 
         <div className="flex flex-wrap items-center gap-2">
           <h1 className="text-xl font-bold text-foreground">{activity.name}</h1>
           {perms.isActivityPIC && (
-            <Badge variant="default" className="text-[10px]">PIC</Badge>
+            <Badge variant="default" className="text-xs">PIC</Badge>
           )}
-          <Badge className={cn(bucketPill, "border gap-1")} variant="outline">
+          <Badge className={cn(bucketPill, "border gap-1 text-xs")} variant="outline">
             <BucketIcon className="h-3 w-3" />
             {bucketLabel}
           </Badge>
@@ -232,14 +260,18 @@ export default function TeacherCcaDetailPage() {
         )}
       </div>
 
-      {/* Sticky tab bar */}
-      <div className="sticky top-[calc(env(safe-area-inset-top)+56px)] z-30 bg-background/95 backdrop-blur-sm border-b border-border mt-4">
-        <div className="flex gap-2 px-4 py-3 overflow-x-auto scrollbar-hide">
+      {/* Sticky tab bar with fade-edges */}
+      <div className="sticky top-[calc(env(safe-area-inset-top)+56px)] z-30 bg-background/95 backdrop-blur-sm border-b border-border mt-4 relative">
+        <div
+          ref={tabBarRef}
+          className="flex gap-2 px-4 py-3 overflow-x-auto scrollbar-hide"
+        >
           {tabs.map((t) => {
             const active = tab === t.id;
             return (
               <button
                 key={t.id}
+                data-tab-id={t.id}
                 onClick={() => setTab(t.id)}
                 className={cn(
                   "shrink-0 rounded-full px-4 py-1.5 text-sm font-medium border transition-all",
@@ -253,23 +285,44 @@ export default function TeacherCcaDetailPage() {
             );
           })}
         </div>
+        {/* right-edge fade hint */}
+        <div className="pointer-events-none absolute right-0 top-0 bottom-0 w-6 bg-gradient-to-l from-background/95 to-transparent" />
       </div>
 
-      <div className="px-4 py-4 pb-24">
+      <div className="px-4 py-4 pb-[calc(6rem+env(safe-area-inset-bottom))]">
         {tab === "overview" && <OverviewPanel activity={activity} />}
-        {tab === "schedule" && <SchedulePanel activity={activity} canEdit={canEdit} />}
+        {tab === "schedule" && (
+          <SchedulePanel activity={activity} canEdit={canEdit} sessionsHook={sessionsHook} />
+        )}
         {tab === "members" && !isOutdoor && (
           <MembersPanel activityId={activity.id} active={tab === "members"} />
         )}
         {tab === "members" && isOutdoor && (
           <BusAttendanceList activityId={activity.id} activityPerms={perms} />
         )}
-        {tab === "attendance" && (
-          <AttendancePanel activity={activity} canEdit={canEdit} campusCode={activeCampus} />
+        {tab === "attendance" && !isOutdoor && (
+          <AttendancePanel
+            activity={activity}
+            canEdit={canEdit}
+            campusCode={activeCampus}
+            sessionsHook={sessionsHook}
+          />
         )}
         {tab === "venue" && <VenuePanel activity={activity} />}
-        {tab === "budget" && <BudgetPanel />}
       </div>
+
+      {/* Hero image lightbox */}
+      <Dialog open={imageOpen} onOpenChange={setImageOpen}>
+        <DialogContent className="max-w-[95vw] p-0 bg-black/90 border-0">
+          {displayImageUrl && (
+            <img
+              src={displayImageUrl}
+              alt={activity.name}
+              className="w-full h-auto max-h-[85vh] object-contain"
+            />
+          )}
+        </DialogContent>
+      </Dialog>
     </TeacherAppLayout>
   );
 }
