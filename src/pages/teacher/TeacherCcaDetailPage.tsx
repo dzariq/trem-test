@@ -422,13 +422,13 @@ function InfoRow({
   children: React.ReactNode;
 }) {
   return (
-    <div className="flex items-center gap-3">
-      <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
+    <div className="flex items-start gap-3">
+      <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0 mt-0.5">
         {icon}
       </div>
-      <div className="min-w-0">
+      <div className="min-w-0 flex-1">
         <p className="text-xs text-muted-foreground">{label}</p>
-        <p className="text-sm font-medium truncate">{children}</p>
+        <p className="text-sm font-medium break-words">{children}</p>
       </div>
     </div>
   );
@@ -438,28 +438,25 @@ function InfoRow({
 function SchedulePanel({
   activity,
   canEdit,
+  sessionsHook,
 }: {
   activity: InvolvedCcaActivity;
   canEdit: boolean;
+  sessionsHook: ReturnType<typeof useCcaSessions>;
 }) {
   const {
     sessions,
     loading,
     saving,
-    fetchSessions,
     createSession,
     updateSession,
     deleteSession,
     cancelSession,
-  } = useCcaSessions({ activityId: activity.id });
+  } = sessionsHook;
 
   const [formOpen, setFormOpen] = useState(false);
   const [editing, setEditing] = useState<CcaSession | null>(null);
   const [deleteConfirm, setDeleteConfirm] = useState<CcaSession | null>(null);
-
-  useEffect(() => {
-    fetchSessions();
-  }, [fetchSessions]);
 
   const active = sessions.filter((s) => !s.isCancelled);
   const cancelled = sessions.filter((s) => s.isCancelled);
