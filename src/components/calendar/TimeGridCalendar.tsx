@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState, type MouseEvent } from "react";
 import { ChevronLeft, ChevronRight, ArrowLeft, SlidersHorizontal, ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { getEventBadgeColor } from "@/lib/calendarUtils";
+import { getEventBadgeHex, getEventChipStyle } from "@/lib/calendarUtils";
 import { getCcaTypePillColor, getCcaBucketIcon } from "@/components/cca/CcaTypeTabs";
 import type { UpcomingEvent } from "@/data/calendar";
 import type { CcaCalendarSession } from "@/hooks/useCcaSessionsCalendar";
@@ -61,7 +61,7 @@ const startOfWeek = (d: Date) => {
 };
 
 type Block =
-  | { kind: "event"; id: string; title: string; colorClass: string; startMin: number; endMin: number; payload: UpcomingEvent }
+  | { kind: "event"; id: string; title: string; colorHex: string; startMin: number; endMin: number; payload: UpcomingEvent }
   | { kind: "cca"; id: string; title: string; colorClass: string; startMin: number; endMin: number; payload: CcaCalendarSession };
 
 const parseHHMM = (s: string | null | undefined): number | null => {
@@ -147,10 +147,12 @@ export function TimeGridCalendar({
       const start = parseYmd(event.startDay);
       const end = event.endDay ? parseYmd(event.endDay) : start;
       if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) return;
-      const colorClass = getEventBadgeColor(
+      const colorHex = getEventBadgeHex(
         event.tags?.[0] != null ? String(event.tags[0]) : undefined,
         event.category,
         (event as any).eventType,
+        (event as any).categoryColor,
+        event.title,
       );
       const hasTime =
         !event.allDay && event.start instanceof Date && !Number.isNaN(event.start.getTime());
@@ -167,7 +169,7 @@ export function TimeGridCalendar({
               kind: "event",
               id: String(event.id),
               title: event.title || "Event",
-              colorClass,
+              colorHex,
               startMin,
               endMin: Math.max(endMin, startMin + 30),
               payload: event,
@@ -177,7 +179,7 @@ export function TimeGridCalendar({
               kind: "event",
               id: String(event.id),
               title: event.title || "Event",
-              colorClass,
+              colorHex,
               startMin: 0,
               endMin: 0,
               payload: event,
@@ -549,9 +551,10 @@ export function TimeGridCalendar({
                           "h-[26px] text-[9px] font-medium truncate text-left no-callout [touch-action:manipulation]",
                           b.kind === "cca"
                             ? "flex items-center gap-1 px-1.5 rounded-full border leading-none"
-                            : "px-1.5 rounded-md leading-[26px] border border-transparent",
-                          b.colorClass,
+                            : "px-1.5 rounded-md leading-[26px] border",
+                          b.kind === "cca" ? b.colorClass : undefined,
                         )}
+                        style={b.kind === "event" ? getEventChipStyle(b.colorHex) : undefined}
                       >
                         {b.kind === "cca" && (() => {
                           const Icon = getCcaBucketIcon((b.payload as any).category);
@@ -651,13 +654,17 @@ export function TimeGridCalendar({
                           "absolute px-1.5 py-0.5 text-[10px] font-medium text-left overflow-hidden shadow-sm z-10 no-callout",
                           b.kind === "cca"
                             ? "rounded-2xl border-2"
-                            : "rounded-md border border-transparent",
+                            : "rounded-md border",
                           mode === "day"
                             ? cn("left-1.5 right-1.5", b.kind === "cca" ? "rounded-2xl" : "rounded-lg")
                             : "left-0.5 right-0.5",
-                          b.colorClass,
+                          b.kind === "cca" ? b.colorClass : undefined,
                         )}
-                        style={{ top: clampedTop, height }}
+                        style={{
+                          top: clampedTop,
+                          height,
+                          ...(b.kind === "event" ? getEventChipStyle(b.colorHex) : {}),
+                        }}
                       >
                         <div className="truncate flex items-center gap-1">
                           {b.kind === "cca" && (() => {

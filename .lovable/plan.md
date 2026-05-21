@@ -1,45 +1,46 @@
-# Art Club Schedule Audit
+## Goal
 
-## What the database actually shows
+In the mobile app's Month grid (and the "What's Coming Up" badges), most event chips currently render in grey because their DB `event_category` doesn't match our hard-coded tag enum (e.g. "PH 7", "Y1-8 MYE", "TSM/Workshop", "Term 2 Start", "Open Day 3"). The reference admin project (`collinz-app-school`) renders these in saturated category colors. Mirror that color system here so chips look the same across both apps.
 
-I queried `cca_sessions` for Art Club (`7908db09…`). There are **4 distinct rows — no real duplicates**:
+## Color palette to mirror (from `collinz-app-school/src/lib/calendarTaxonomy.ts`)
 
-| # | Date | Time | Location | `custom_title` (entered by user) | Notes |
-|---|------|------|----------|----------------------------------|-------|
-| 1 | Thu, Jan 22, 2026 | 15:12 – 16:13 | Main Hall | **"Pratice"** | Typo of "Practice"; weird minute-level times (15:**12** / 16:**13**) — looks like test data |
-| 2 | Mon, Jan 26, 2026 | 08:00 – 09:00 | Science Lab | **"Art Club"** | `custom_title` is the same as the activity name; description = `dsasdadsasaddsa` (garbage test text) |
-| 3 | Fri, Feb 6, 2026 | 08:00 – 09:00 | Art Room | **"Art Club"** | Same — `custom_title` re-types the activity name; description = `test` |
-| 4 | Wed, May 20, 2026 | 15:30 – 16:30 | Art Room | *(null)* | Clean, no title set — correctly renders as the date |
+| Group | Color |
+|---|---|
+| Exams | `#dc2626` red |
+| Holidays | `#22c55e` green |
+| Events | `#8b5cf6` purple |
+| Staff & Admin | `#f97316` orange |
+| Due Dates | `#f43f5e` rose |
+| Students | `#06b6d4` cyan |
+| Parents | `#ec4899` pink |
 
-So the entries are **not duplicated in the DB**. The two reasons it *looks* wrong:
+Plus the per-subtype shades (e.g. Cambridge `#991b1b`, Replacement PH `#16a34a`, Internal Event `#a78bfa`, etc.) for finer matching when a known subtype is detected.
 
-1. **`custom_title` = "Art Club"** was typed in twice. `custom_title` is meant for a session-specific label (e.g. "Watercolour Week", "Term 1 Showcase"); typing the activity name there is redundant and that's why "Art Club" repeats in the card titles.
-2. **"Pratice"** is a typo and its times (15:12, 16:13) look like accidental test input.
-3. **Times render with seconds** (`15:12:00 - 16:13:00`) because the card uses the raw `start_time`/`end_time` strings instead of the existing `formatSessionTimeRange()` helper from `src/lib/ccaSessionFormat.ts`.
+## Changes
 
-The data is clean from a duplication standpoint — what you're seeing is messy user input + a display bug.
+1. **`src/lib/calendarTaxonomy.ts` (new)** — port the reference's `CALENDAR_TAXONOMY`, `getSubtypeColor`, and `getCategoryGroupColor` (the keyword-based fuzzy mapper that handles "exam/cambridge/igcse/checkpoint", "holiday/break", "event/trip/competition/open day", "meeting/admin/staff/bog/bts", "due/deadline", "student…", "parent/ptc/family"). Same hex values as the reference for visual parity.
 
-## Cleanup plan
+2. **`src/lib/calendarCategorySubtypes.ts`** — extend `mapDbToCategory` so keyword-based names that come from the DB `event_categories.name` (and not just our enum slugs) resolve to a `TagCategory`. In particular: titles/categories starting with "PH"/containing "public holiday" → holidays; "MYE"/"YEE"/"Cambridge"/"IGCSE"/"Checkpoint" → exams; "TSM"/"AHM"/"OHM"/"meeting" → staff-admin; "Open Day"/"BTS"/"Term … Start"/"Orientation" → events / staff-admin as appropriate.
 
-### 1. UI fixes (`src/pages/teacher/TeacherCcaDetailPage.tsx`)
-- **Stop showing `custom_title` when it equals the activity name.** Treat `customTitle === activity.name` as "no custom title" so the card falls back to the formatted date as the heading. Removes the "Art Club / Art Club / Art Club" repetition for cleanly-named sessions too.
-- **Use `formatSessionTimeRange(start, end)`** (already exists) instead of rendering raw `HH:MM:SS` strings. Schedule cards will show `3:12 PM – 4:13 PM`.
-- Apply both fixes everywhere session cards render (UPCOMING list, PAST list, attendance picker, session details sheet — the 5 spots `grep` found).
+3. **`src/lib/calendarUtils.ts`** — rework `getEventBadgeColor` (and add `getEventBadgeHex`) so it returns:
+   - A real hex from `event_categories.color` when present (new: read it from the row, see step 4), else
+   - The taxonomy subtype color from `getSubtypeColor(tag/title)`, else
+   - The group color from `getCategoryGroupColor(category)` (the fuzzy matcher), else
+   - The current default.
+   Replace the current pale `bg-*-200 text-*-900` Tailwind output with a saturated chip style:
+   - For Month-grid chips: inline `style={{ backgroundColor: hex, color: readableTextColor(hex) }}` with a translucent fill (`hex + "33"` for background, full hex for text/border) so chips look like the reference's pill style rather than muted grey rectangles.
+   - For category pills/badges elsewhere: keep the Tailwind class API but back it by the new resolver so unmapped categories no longer fall through to `bg-muted`.
 
-### 2. Form guardrail (`src/components/cca/SessionFormDialog.tsx`)
-- Add helper text under "Session title" explaining it's optional and should only be set when the session differs from the activity (e.g. "Watercolour Week").
-- On save, if the entered title (trimmed, case-insensitive) equals the activity name, store `null` instead — prevents the same bad data going in again.
+4. **`src/data/calendar.ts`** — extend `mapCalendarRow` to also read `row.event_categories?.color` (if the join is present) and surface it as `categoryColor` on `UpcomingEvent`. Update the Supabase select used by `listCalendarEvents` / `listUpcomingEvents` to include `event_categories(name,color)`. This gives admin-defined colors first-class priority and matches what the reference's "0. Prefer FK color" branch does.
 
-### 3. Data cleanup for this Art Club (one-off)
-Offer the user two options after the UI fix lands:
-- **Option A (recommended):** I run a one-off SQL update to:
-  - Null out `custom_title` on the two "Art Club" rows (Jan 26, Feb 6).
-  - Fix the typo `Pratice` → `Practice` on the Jan 22 row (or null it if it was just a test).
-  - Clear the obvious junk descriptions (`dsasdadsasaddsa`, `dsasdasad`, `test`).
-- **Option B:** Leave the data alone; the UI changes above already hide the redundancy. You can edit/delete the rows yourself via the pencil/trash icons.
+5. **`src/components/calendar/MonthGridCalendar.tsx`** — switch the chip from `colorClass` (Tailwind) to a resolved hex via the new helper. CCA chips keep their existing yellow/orange/light-yellow palette (already aligned with the reference's `CCA_COLOR_BY_KIND`). Non-CCA chips render with the new saturated style. Ensure text stays legible (use `getReadableTextColor` helper ported from the reference's `pastelColors.ts`).
 
-I'll wait for your pick on Option A vs B before touching the data.
+6. **`src/components/calendar/UpcomingEventsSection.tsx`** and any other place using `getEventBadgeColor` — pass through the new resolver so list-view badges match the grid chips.
 
-## Technical notes
-- No schema changes. No RLS changes. No mobile-app/web-app cross impact since both apps read the same `cca_sessions` and would both benefit from the display fix (heads-up: the sibling mobile project at `9164cec1…` will want the same UI tweak applied).
-- Helper `formatSessionTimeRange` already exists in `src/lib/ccaSessionFormat.ts`; no new utilities needed.
+7. **Out of scope:** CCA color logic (already correct), filter sheet pill colors (already saturated), holiday detail sheet styling, dark-mode tweaks beyond what the new hex+alpha already supports.
+
+## Verification
+
+- Reload `/calendar` and confirm: "PH 7" green, "Term 2 Start" orange/blue, "Y1-8 MYE" red, "TSM/Workshop" orange, "Open Day 3" purple, "Comm…" / "Art Club" / "Board" remain yellow CCA pills.
+- Check `/teacher/calendar` (admin-like role) renders the same colors.
+- Confirm no grey chips remain for events whose category/title matches a taxonomy keyword.

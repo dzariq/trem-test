@@ -2,14 +2,14 @@ import { useMemo, useState, type MouseEvent } from "react";
 import { ChevronLeft, ChevronRight, SlidersHorizontal, ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { getEventBadgeColor } from "@/lib/calendarUtils";
+import { getEventBadgeHex, getEventChipStyle } from "@/lib/calendarUtils";
 import { getCcaTypePillColor, getCcaBucketIcon } from "@/components/cca/CcaTypeTabs";
 import type { UpcomingEvent } from "@/data/calendar";
 import type { CcaCalendarSession } from "@/hooks/useCcaSessionsCalendar";
 import { CalendarViewDropdown, type CalendarViewMode } from "./CalendarViewSwitcher";
 
 type ChipItem =
-  | { kind: "event"; id: string; title: string; colorClass: string; sortKey: string; payload: UpcomingEvent }
+  | { kind: "event"; id: string; title: string; colorHex: string; sortKey: string; payload: UpcomingEvent }
   | { kind: "cca"; id: string; title: string; colorClass: string; sortKey: string; payload: CcaCalendarSession };
 
 interface MonthGridCalendarProps {
@@ -92,10 +92,12 @@ export function MonthGridCalendar({
           kind: "event",
           id: String(event.id),
           title: event.title || "Event",
-          colorClass: getEventBadgeColor(
+          colorHex: getEventBadgeHex(
             event.tags?.[0] != null ? String(event.tags[0]) : undefined,
             event.category,
             (event as any).eventType,
+            (event as any).categoryColor,
+            event.title,
           ),
           sortKey,
           payload: event,
@@ -338,9 +340,10 @@ export function MonthGridCalendar({
                       "h-[16px] text-[9px] sm:text-[10px] leading-[14px] font-medium truncate no-callout",
                       item.kind === "cca"
                         ? "flex items-center gap-1 px-1 rounded-full border"
-                        : "px-0.5 rounded-[3px] border border-transparent",
-                      item.colorClass,
+                        : "px-1 rounded-[3px] border",
+                      item.kind === "cca" ? item.colorClass : undefined,
                     )}
+                    style={item.kind === "event" ? getEventChipStyle(item.colorHex) : undefined}
                   >
                     {item.kind === "cca" && (() => {
                       const Icon = getCcaBucketIcon((item.payload as CcaCalendarSession).category);
