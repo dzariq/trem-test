@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
+import { Capacitor } from "@capacitor/core";
 import {
   ChevronLeft,
   CalendarDays,
@@ -58,6 +59,18 @@ import { SessionAttendanceList } from "@/components/cca/SessionAttendanceList";
 import { BusAttendanceList } from "@/components/cca/BusAttendanceList";
 import { getCcaBucket, getCcaBucketIcon, getCcaTypePillColor } from "@/components/cca/CcaTypeTabs";
 import { CCA_BUCKET_LABEL } from "@/lib/ccaSessionFormat";
+import { usePullToRefresh } from "@/hooks/usePullToRefresh";
+import { PullToRefreshIndicator } from "@/components/calendar/PullToRefreshIndicator";
+
+async function lightHaptic() {
+  if (!Capacitor.isNativePlatform()) return;
+  try {
+    const { Haptics, ImpactStyle } = await import("@capacitor/haptics");
+    await Haptics.impact({ style: ImpactStyle.Light });
+  } catch {
+    /* plugin not installed yet — no-op */
+  }
+}
 
 type TabId = "overview" | "schedule" | "members" | "attendance" | "venue";
 
@@ -152,6 +165,13 @@ export default function TeacherCcaDetailPage() {
     if (activityId) fetchSessions();
   }, [activityId, fetchSessions]);
 
+  // Pull-to-refresh: refetch activities + sessions
+  const { ref: ptrRef, pullDistance, refreshing } = usePullToRefresh<HTMLDivElement>({
+    onRefresh: async () => {
+      await Promise.all([refetch(), fetchSessions()]);
+    },
+  });
+
   // Auto-scroll active tab pill into view on change
   const tabBarRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
@@ -212,6 +232,8 @@ export default function TeacherCcaDetailPage() {
   return (
     <TeacherAppLayout>
       <DetailHeader onBack={() => navigate("/teacher/cca")} title={activity.name} />
+      <div ref={ptrRef}>
+      <PullToRefreshIndicator pullDistance={pullDistance} refreshing={refreshing} />
 
       {/* Hero + title */}
       <div className="px-4 pt-3">
@@ -272,7 +294,10 @@ export default function TeacherCcaDetailPage() {
               <button
                 key={t.id}
                 data-tab-id={t.id}
-                onClick={() => setTab(t.id)}
+                onClick={() => {
+                  setTab(t.id);
+                  lightHaptic();
+                }}
                 className={cn(
                   "shrink-0 rounded-full px-4 py-1.5 text-sm font-medium border transition-all",
                   active
@@ -323,6 +348,7 @@ export default function TeacherCcaDetailPage() {
           )}
         </DialogContent>
       </Dialog>
+      </div>
     </TeacherAppLayout>
   );
 }
