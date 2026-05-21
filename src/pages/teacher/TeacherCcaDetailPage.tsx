@@ -671,6 +671,7 @@ function SchedulePanel({
         saving={saving}
         onSave={handleSave}
         allowFreeText={activity.allowFreeText}
+        activityName={activity.name}
       />
 
       {/* Sticky FAB for PIC quick-add */}
