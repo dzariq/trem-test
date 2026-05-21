@@ -38,6 +38,11 @@ interface UseCcaSessionsCalendarOptions {
   scopeToTeacher?: boolean;
   teacherYearLevels?: string[];
   teacherClassNames?: string[];
+  /**
+   * When provided alongside scopeToTeacher, also include activities where
+   * this user is a PIC / co-PIC / bus-PIC (regardless of year-group overlap).
+   */
+  teacherUserId?: string | null;
 }
 
 export function useCcaSessionsCalendar({
@@ -49,6 +54,7 @@ export function useCcaSessionsCalendar({
   scopeToTeacher,
   teacherYearLevels,
   teacherClassNames,
+  teacherUserId,
 }: UseCcaSessionsCalendarOptions) {
   const [sessions, setSessions] = useState<CcaCalendarSession[]>([]);
   const [loading, setLoading] = useState(false);
@@ -112,13 +118,27 @@ export function useCcaSessionsCalendar({
       if (scopeToTeacher) {
         const yls = (teacherYearLevels || []).filter(Boolean);
         const cns = (teacherClassNames || []).filter(Boolean);
-        if (yls.length === 0 && cns.length === 0) {
+        if (yls.length === 0 && cns.length === 0 && !teacherUserId) {
           setSessions([]);
           setLoading(false);
           return;
         }
 
         const ids = new Set<string>();
+        // Activities where the teacher is PIC / co-PIC (any activity kind)
+        if (teacherUserId) {
+          const { data: picRows } = await supabase
+            .from("cca_activity_teachers")
+            .select("activity_id")
+            .eq("teacher_user_id", teacherUserId);
+          (picRows || []).forEach((r: any) => r?.activity_id && ids.add(r.activity_id));
+          // Activities where teacher is bus PIC (outdoor)
+          const { data: busRows } = await supabase
+            .from("cca_outdoor_buses")
+            .select("activity_id")
+            .eq("pic_teacher_user_id", teacherUserId);
+          (busRows || []).forEach((r: any) => r?.activity_id && ids.add(r.activity_id));
+        }
         // Clubs / outdoors via year_levels overlap
         if (yls.length > 0) {
           const { data: coRows } = await supabase
@@ -226,6 +246,7 @@ export function useCcaSessionsCalendar({
     scopeToTeacher,
     (teacherYearLevels || []).join(","),
     (teacherClassNames || []).join(","),
+    teacherUserId,
   ]);
 
   useEffect(() => {

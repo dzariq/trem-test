@@ -81,6 +81,7 @@ export default function TeacherCalendarPage() {
     scopeToTeacher: teacherScope.isTeacher,
     teacherYearLevels,
     teacherClassNames,
+    teacherUserId: user?.id ?? null,
   });
 
   const { sessions: upcomingCcaSessions } = useUpcomingCcaSessions({
