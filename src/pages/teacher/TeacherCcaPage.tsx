@@ -1,16 +1,15 @@
 import { useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { TeacherAppLayout } from "@/components/layout/TeacherAppLayout";
 import { AppHeader } from "@/components/layout/AppHeader";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { CcaActivityCard } from "@/components/cca/CcaActivityCard";
-import { CcaDetailsSheet } from "@/components/cca/CcaDetailsSheet";
 import { useCampus } from "@/contexts/CampusContext";
 import { useAuth } from "@/contexts/AuthContext";
 import {
   useTeacherInvolvedCcas,
-  type InvolvedCcaActivity,
   type MyCcaRole,
 } from "@/hooks/useTeacherInvolvedCcas";
 import { cn } from "@/lib/utils";
@@ -33,18 +32,13 @@ const ROLE_META: Record<MyCcaRole, { label: string; className: string }> = {
 
 export default function TeacherCcaPage() {
   const { activeCampus } = useCampus();
-  const { user } = useAuth();
+  const navigate = useNavigate();
   const { activities, loading, counts, filterByKind } =
     useTeacherInvolvedCcas(activeCampus);
 
   const [tab, setTab] = useState<KindFilter>("all");
-  const [selected, setSelected] = useState<InvolvedCcaActivity | null>(null);
 
   const visible = useMemo(() => filterByKind(tab), [filterByKind, tab]);
-
-  const isPicForSelected =
-    !!selected && !!user?.id &&
-    selected.picTeachers.some((t) => t.teacherUserId === user.id);
 
   return (
     <TeacherAppLayout>
@@ -130,19 +124,12 @@ export default function TeacherCcaPage() {
                 <CcaActivityCard
                   activity={a as any}
                   variant="available"
-                  onClick={() => setSelected(a)}
+                  onClick={() => navigate(`/teacher/cca/${a.id}`)}
                 />
               </div>
             );
           })}
       </div>
-
-      <CcaDetailsSheet
-        open={!!selected}
-        onOpenChange={(open) => !open && setSelected(null)}
-        activity={selected as any}
-        isPIC={isPicForSelected}
-      />
     </TeacherAppLayout>
   );
 }
