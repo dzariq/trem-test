@@ -3,6 +3,8 @@
  * web project (collinz-app-school) so chip colors match across apps.
  */
 
+import type * as React from "react";
+
 export interface TaxonomySubtype {
   name: string;
   color: string;
@@ -207,6 +209,3 @@ export const getEventChipStyle = (hex: string): React.CSSProperties => {
     borderColor: `${safe}66`, // ~40% alpha border
   };
 };
-
-// React import lives at runtime; this file is pure TS so just re-export the type.
-import type * as React from "react";
