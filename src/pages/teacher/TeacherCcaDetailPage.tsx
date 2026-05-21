@@ -922,6 +922,38 @@ function AttendancePanel({
 
   return (
     <div className="space-y-5">
+      {/* ---- Take attendance CTA (PIC quick action) ---- */}
+      {canEdit && (() => {
+        // Prefer today's session, then most recent past, then next upcoming.
+        const todays = active.find((s) => s.sessionDate === todayStr);
+        const mostRecentPast = [...pastSessions].sort((a, b) =>
+          (b.sessionDate || "").localeCompare(a.sessionDate || ""),
+        )[0];
+        const nextUpcoming = [...upcomingSessions].sort((a, b) =>
+          (a.sessionDate || "").localeCompare(b.sessionDate || ""),
+        )[0];
+        const target = todays ?? mostRecentPast ?? nextUpcoming;
+        if (!target) return null;
+        const label = todays
+          ? "Take attendance for today"
+          : mostRecentPast
+            ? `Take attendance · ${format(parseISO(mostRecentPast.sessionDate!), "EEE d MMM")}`
+            : `Take attendance · ${format(parseISO(nextUpcoming!.sessionDate!), "EEE d MMM")}`;
+        return (
+          <Button
+            onClick={() => {
+              lightHaptic();
+              setSelectedId(target.id);
+            }}
+            className="w-full h-12 text-sm font-semibold gap-2"
+            size="lg"
+          >
+            <ClipboardCheck className="h-5 w-5" />
+            {label}
+          </Button>
+        );
+      })()}
+
       {/* ---- Per-student attendance summary ---- */}
       <section className="space-y-2">
         <div className="flex items-baseline justify-between">
