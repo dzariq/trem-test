@@ -5,7 +5,7 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Clock, MapPin } from "lucide-react";
 import type { UpcomingEvent } from "@/data/calendar";
 import type { UpcomingCcaSession } from "@/hooks/useUpcomingCcaSessions";
-import { getEventBadgeColor, getEventBadgeLabel } from "@/lib/calendarUtils";
+import { getEventBadgeHex, getEventChipStyle, getEventBadgeLabel } from "@/lib/calendarUtils";
 import { getCcaTypePillColor, getCcaBucketIcon, getCcaBucket } from "@/components/cca/CcaTypeTabs";
 import {
   UPCOMING_TABS,
@@ -216,10 +216,18 @@ export function UpcomingEventsSection({ events, ccaSessions = [], onEventClick, 
                   ).map((tag, idx) => {
                     let displayText = getEventBadgeLabel(tag, event.category);
                     if (displayText.toUpperCase() === "HOLIDAY") displayText = "Holidays";
+                    const hex = getEventBadgeHex(
+                      typeof tag === "string" ? tag : undefined,
+                      event.category,
+                      (event as any).eventType,
+                      (event as any).categoryColor,
+                      event.title,
+                    );
                     return (
                       <Badge
                         key={`${tag}-${idx}`}
-                        className={`text-xs border-transparent ${getEventBadgeColor(tag, event.category, (event as any).eventType)}`}
+                        className="text-xs border"
+                        style={getEventChipStyle(hex)}
                       >
                         {displayText}
                       </Badge>
