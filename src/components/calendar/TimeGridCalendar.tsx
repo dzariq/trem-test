@@ -147,10 +147,12 @@ export function TimeGridCalendar({
       const start = parseYmd(event.startDay);
       const end = event.endDay ? parseYmd(event.endDay) : start;
       if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) return;
-      const colorClass = getEventBadgeColor(
+      const colorHex = getEventBadgeHex(
         event.tags?.[0] != null ? String(event.tags[0]) : undefined,
         event.category,
         (event as any).eventType,
+        (event as any).categoryColor,
+        event.title,
       );
       const hasTime =
         !event.allDay && event.start instanceof Date && !Number.isNaN(event.start.getTime());
@@ -167,7 +169,7 @@ export function TimeGridCalendar({
               kind: "event",
               id: String(event.id),
               title: event.title || "Event",
-              colorClass,
+              colorHex,
               startMin,
               endMin: Math.max(endMin, startMin + 30),
               payload: event,
@@ -177,7 +179,7 @@ export function TimeGridCalendar({
               kind: "event",
               id: String(event.id),
               title: event.title || "Event",
-              colorClass,
+              colorHex,
               startMin: 0,
               endMin: 0,
               payload: event,
