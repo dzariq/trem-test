@@ -551,9 +551,10 @@ export function TimeGridCalendar({
                           "h-[26px] text-[9px] font-medium truncate text-left no-callout [touch-action:manipulation]",
                           b.kind === "cca"
                             ? "flex items-center gap-1 px-1.5 rounded-full border leading-none"
-                            : "px-1.5 rounded-md leading-[26px] border border-transparent",
-                          b.colorClass,
+                            : "px-1.5 rounded-md leading-[26px] border",
+                          b.kind === "cca" ? b.colorClass : undefined,
                         )}
+                        style={b.kind === "event" ? getEventChipStyle(b.colorHex) : undefined}
                       >
                         {b.kind === "cca" && (() => {
                           const Icon = getCcaBucketIcon((b.payload as any).category);
