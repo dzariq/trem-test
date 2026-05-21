@@ -173,7 +173,7 @@ function hasMeaningfulTitle(
 export default function TeacherCcaDetailPage() {
   const { activityId } = useParams<{ activityId: string }>();
   const navigate = useNavigate();
-  const { activeCampus: _activeCampus } = useCampus();
+  const { activeCampus } = useCampus();
   const { activity, status, refetch } = useCcaActivityById(activityId ?? null);
 
   const perms = useCcaActivityPermissions(activity);
