@@ -21,7 +21,6 @@ import {
   ChevronRight,
   Search,
   X,
-  ClipboardCheck,
 } from "lucide-react";
 import { TeacherAppLayout } from "@/components/layout/TeacherAppLayout";
 import { Button } from "@/components/ui/button";
@@ -50,7 +49,6 @@ import {
 } from "@/hooks/useTeacherInvolvedCcas";
 import { useCcaActivityPermissions } from "@/hooks/useCcaActivityPermissions";
 import { useCcaSessions, type CcaSession, type CcaSessionFormData } from "@/hooks/useCcaSessions";
-import { useCcaActivityAttendanceSummary } from "@/hooks/useCcaActivityAttendanceSummary";
 import { supabase } from "@/lib/supabase";
 import { formatSessionTimeRange } from "@/lib/ccaSessionFormat";
 
@@ -843,7 +841,6 @@ function AttendancePanel({
 }) {
   const { sessions, loading } = sessionsHook;
   const [selectedId, setSelectedId] = useState<string | null>(null);
-  const [refreshKey, setRefreshKey] = useState(0);
 
   const active = useMemo(() => sessions.filter((s) => !s.isCancelled), [sessions]);
 
@@ -856,15 +853,6 @@ function AttendancePanel({
     () => active.filter((s) => s.sessionDate && s.sessionDate > todayStr),
     [active, todayStr],
   );
-
-  const summary = useCcaActivityAttendanceSummary({
-    activityId: activity.id,
-    activityKind: activity.kind ?? null,
-    classesInvolved: activity.classesInvolved || [],
-    campusCode,
-    sessions: active,
-    refreshKey,
-  });
 
   const selected = active.find((s) => s.id === selectedId) ?? null;
 
@@ -890,13 +878,9 @@ function AttendancePanel({
         <Button
           variant="ghost"
           size="sm"
-          onClick={() => {
-            // Bump refresh so the summary on the back screen reflects any saves
-            setRefreshKey((k) => k + 1);
-            setSelectedId(null);
-          }}
+          onClick={() => setSelectedId(null)}
         >
-          <ChevronLeft className="h-4 w-4 mr-1" /> Back to summary
+          <ChevronLeft className="h-4 w-4 mr-1" /> Back to sessions
         </Button>
         <div className="rounded-lg border bg-muted/30 p-3">
           <p className="text-sm font-medium">
@@ -921,143 +905,39 @@ function AttendancePanel({
   }
 
   return (
-    <div className="space-y-5">
-      {/* ---- Take attendance CTA (PIC quick action) ---- */}
-      {canEdit && (() => {
-        // Prefer today's session, then most recent past, then next upcoming.
-        const todays = active.find((s) => s.sessionDate === todayStr);
-        const mostRecentPast = [...pastSessions].sort((a, b) =>
-          (b.sessionDate || "").localeCompare(a.sessionDate || ""),
-        )[0];
-        const nextUpcoming = [...upcomingSessions].sort((a, b) =>
-          (a.sessionDate || "").localeCompare(b.sessionDate || ""),
-        )[0];
-        const target = todays ?? mostRecentPast ?? nextUpcoming;
-        if (!target) return null;
-        const label = todays
-          ? "Take attendance for today"
-          : mostRecentPast
-            ? `Take attendance · ${format(parseISO(mostRecentPast.sessionDate!), "EEE d MMM")}`
-            : `Take attendance · ${format(parseISO(nextUpcoming!.sessionDate!), "EEE d MMM")}`;
-        return (
-          <Button
-            onClick={() => {
-              lightHaptic();
-              setSelectedId(target.id);
-            }}
-            className="w-full h-12 text-sm font-semibold gap-2"
-            size="lg"
-          >
-            <ClipboardCheck className="h-5 w-5" />
-            {label}
-          </Button>
-        );
-      })()}
-
-      {/* ---- Per-student attendance summary ---- */}
-      <section className="space-y-2">
-        <div className="flex items-baseline justify-between">
-          <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-            Student attendance
+    <div className="space-y-4">
+      <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+        Tap a session to take attendance
+      </p>
+      {pastSessions.length > 0 && (
+        <section className="space-y-2">
+          {[...pastSessions].reverse().map((s) => (
+            <SessionPickerRow
+              key={s.id}
+              session={s}
+              activityName={activity.name}
+              onClick={() => setSelectedId(s.id)}
+              tone="past"
+            />
+          ))}
+        </section>
+      )}
+      {upcomingSessions.length > 0 && (
+        <section className="space-y-2">
+          <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide pt-1">
+            Upcoming
           </p>
-          <p className="text-[11px] text-muted-foreground">
-            {summary.totalPastSessions} session
-            {summary.totalPastSessions === 1 ? "" : "s"} so far
-          </p>
-        </div>
-
-        {summary.loading ? (
-          <div className="flex items-center justify-center py-6 text-muted-foreground text-sm">
-            <Loader2 className="h-4 w-4 animate-spin mr-2" /> Loading roster…
-          </div>
-        ) : summary.rows.length === 0 ? (
-          <div className="rounded-lg border bg-muted/30 p-4 text-center text-xs text-muted-foreground">
-            No students enrolled yet.
-          </div>
-        ) : (
-          <Card className="rounded-xl overflow-hidden">
-            <ul className="divide-y">
-              {summary.rows.map((r) => {
-                const pct = r.percent;
-                const barColor =
-                  pct >= 80
-                    ? "bg-emerald-500"
-                    : pct >= 50
-                      ? "bg-amber-500"
-                      : "bg-destructive";
-                const pctColor =
-                  pct >= 80
-                    ? "text-emerald-600"
-                    : pct >= 50
-                      ? "text-amber-600"
-                      : "text-destructive";
-                return (
-                  <li key={r.studentId} className="px-3 py-2.5">
-                    <div className="flex items-center gap-3">
-                      <div className="h-9 w-9 rounded-full bg-primary/10 text-primary text-xs font-semibold flex items-center justify-center flex-shrink-0">
-                        {initials(r.name)}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-foreground truncate">
-                          {r.name}
-                        </p>
-                        <p className="text-[11px] text-muted-foreground truncate">
-                          {r.className || "—"} ·{" "}
-                          {r.presentCount}/{r.totalPastSessions} attended
-                          {r.absentCount > 0 ? ` · ${r.absentCount} absent` : ""}
-                        </p>
-                      </div>
-                      <div className={cn("text-sm font-semibold tabular-nums", pctColor)}>
-                        {r.totalPastSessions > 0 ? `${pct}%` : "—"}
-                      </div>
-                    </div>
-                    {r.totalPastSessions > 0 && (
-                      <div className="mt-1.5 h-1 w-full rounded-full bg-muted overflow-hidden">
-                        <div
-                          className={cn("h-full", barColor)}
-                          style={{ width: `${pct}%` }}
-                        />
-                      </div>
-                    )}
-                  </li>
-                );
-              })}
-            </ul>
-          </Card>
-        )}
-      </section>
-
-      {/* ---- Session list (take / edit attendance) ---- */}
-      <section className="space-y-2">
-        <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-          Sessions — tap to mark
-        </p>
-        {[...pastSessions].reverse().map((s) => (
-          <SessionPickerRow
-            key={s.id}
-            session={s}
-            activityName={activity.name}
-            onClick={() => setSelectedId(s.id)}
-            tone="past"
-          />
-        ))}
-        {upcomingSessions.length > 0 && (
-          <>
-            <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide pt-2">
-              Upcoming
-            </p>
-            {upcomingSessions.map((s) => (
-              <SessionPickerRow
-                key={s.id}
-                session={s}
-                activityName={activity.name}
-                onClick={() => setSelectedId(s.id)}
-                tone="upcoming"
-              />
-            ))}
-          </>
-        )}
-      </section>
+          {upcomingSessions.map((s) => (
+            <SessionPickerRow
+              key={s.id}
+              session={s}
+              activityName={activity.name}
+              onClick={() => setSelectedId(s.id)}
+              tone="upcoming"
+            />
+          ))}
+        </section>
+      )}
     </div>
   );
 }
