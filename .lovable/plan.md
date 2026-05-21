@@ -1,107 +1,82 @@
-# Teacher nav refactor + My CCAs module
+# My CCAs → Full-page Club Detail with Tabs
 
-## 1. Bottom nav: collapse to 5 tabs with a "More" sheet
+## Problems to fix
+1. Tapping a CCA card on `/teacher/cca` opens a bottom sheet, **Manage Sessions** does nothing (no `onManageSessions` handler wired in `TeacherCcaPage.tsx`).
+2. The drawer header ("CCA details" label) sits flush left with no padding.
+3. The drawer is cramped — user wants a full page like the web dashboard with tabs for the important areas.
 
-New `TeacherBottomNavigation` layout (left → right):
+## Solution
 
-```text
-[ Home ] [ Attend ] [ Academic ] [ Calendar ] [ More ☰ ]
-```
+Replace the bottom-sheet flow with a dedicated **full-page route** for each CCA, mobile-first, with a tab switcher.
 
-- "Lesson" and "My CCAs" move OUT of the bottom bar and INTO a "More" sheet (rightmost hamburger).
-- "More" opens a bottom sheet (`@/components/ui/bottom-sheet`) at 75vh per the standardized draggable-bottom-sheet rule, with a grid of large tap targets:
-  - Lesson Plans → `/teacher/lesson-plans`
-  - My CCAs → `/teacher/cca` (new)
-  - Handbook → `/teacher/handbook`
-  - DNA → `/teacher/dna`
-  - Timetable → `/teacher/timetable`
-  - Announcements → `/teacher/announcements`
-- "More" tab shows an active state while the user is on any route listed inside it.
-- Icon: `Menu` from lucide-react. Sheet uses `z-[100]` and the safe-area bottom rule.
+### Routing
+- New route: `/teacher/cca/:activityId` (inside `TeacherGuard` in `App.tsx`).
+- `TeacherCcaPage.tsx`: change `onClick={() => setSelected(a)}` to `navigate(\`/teacher/cca/${a.id}\`)`. Remove the `<CcaDetailsSheet>` usage on this page.
 
-## 2. New route: `/teacher/cca` — "My CCAs"
+### New page: `src/pages/teacher/TeacherCcaDetailPage.tsx`
 
-Add route inside `<TeacherGuard>` in `src/App.tsx`, lazy or direct import of a new `src/pages/teacher/TeacherCcaPage.tsx`.
-
-### Visibility rule (teacher-only "My CCAs")
-
-A CCA shows up only if the logged-in teacher is **involved**. Involvement = ANY of:
-
-1. Listed as PIC on `cca_activity_teachers` for the activity (`teacher_user_id = auth.uid()`), OR
-2. Listed on a bus for the activity as `cca_outdoor_buses.teacher_pic_main` or `teacher_pic_sub` (covers outdoor CCAs where teacher is bus PIC only).
-
-Principals/admins are NOT auto-included here — this page is "**my** CCAs", not "all CCAs". They can still see the existing `useCcaActivityFilter` pages.
-
-Scoped to current campus via `CampusContext` (`campus_code` filter) to stay consistent with other teacher pages.
-
-### Page structure (mobile-first, 390px viewport)
+Layout (390px-first):
 
 ```text
-─────────────────────────────
- AppHeader: "My CCAs"
-─────────────────────────────
- Segmented tabs (sticky):
-  [ All ] [ Clubs ] [ Outdoor ] [ Events ]
-─────────────────────────────
- CCA cards (vertical stack):
-  ┌───────────────────────────┐
-  │  hero image (16:9)         │
-  │  ── gradient overlay ──   │
-  │  TYPE PILL · role chip    │
-  ├───────────────────────────┤
-  │  Activity name (lg, bold) │
-  │  Next session · Sat 23 May│
-  │  9:00 AM – 10:30 AM       │
-  │  Venue · 18/25 enrolled   │
-  │  ──────────────────────   │
-  │  Primary action (varies)  │
-  └───────────────────────────┘
+┌──────────────────────────────┐
+│ ← Back            (header)   │
+├──────────────────────────────┤
+│  [Hero image — editable PIC] │
+│  Art Club  [PIC] [Club pill] │
+│  Wed · 15:30 · Art Room      │
+├──────────────────────────────┤
+│ ▸ Sticky tab bar (scrollable)│
+│  Overview | Schedule |       │
+│  Members | Attendance |      │
+│  Venue   | Budget            │
+├──────────────────────────────┤
+│  <Tab content>               │
+└──────────────────────────────┘
 ```
 
-Role chip on each card (so teacher knows why they see it):
-- "PIC" (purple) if activity PIC
-- "Bus PIC" (amber) if only bus PIC
-- "Co-PIC" if `is_primary = false`
+- Fetch the activity via existing `useTeacherInvolvedCcas(activeCampus)` and find by `:activityId`; while loading, render skeleton. If not found → empty state with "Back to My CCAs".
+- Tab bar: horizontally scrollable pill tabs (same style as the filter tabs already on the list page), sticky under header.
 
-Primary action per kind:
-- **Outdoor** → "Take Bus Attendance" → opens bus list sheet → session attendance flow (reuses `BusAttendanceList` + `SessionAttendanceList`)
-- **Club** → "Manage" → opens existing `ManageStudentsSheet` / `ManageSessionsSheet`
-- **Event** → "View Event" → opens `EventDetailsSheet`
+### Tabs
 
-Empty state: friendly illustration + "You're not assigned to any CCAs yet. Ask the CCA coordinator to add you as a PIC."
+| Tab | Content (mobile-first) | Source |
+|---|---|---|
+| **Overview** | Description, meeting day/time, location, capacity, PIC list, contact email, requirements, internal notes (PIC only). Reuse the body of the current `CcaDetailsSheet` (extract to `CcaOverviewPanel`). | Existing `activity` data |
+| **Schedule** | Sessions list (active + cancelled) with add/edit/cancel/delete actions for PIC. Inline — no nested sheet. Reuse logic from `ManageSessionsSheet.tsx` (extract to `CcaSchedulePanel`). | `useCcaSessions` |
+| **Members** | Enrolled student list with avatar, class, status. PIC actions later (read-only for now if no manage hook for clubs). | `useStudentCcaEnrollments` (already exists) |
+| **Attendance** | Picker: pick a session → show `SessionAttendanceList` for marking. PIC-only. | `useCcaSessionAttendance` |
+| **Venue** | Venue card (name + image if any) and `activity.location` text. Read-only. | `activity.venue` |
+| **Budget** | Placeholder card "Coming soon — budget tracking will appear here." (no schema yet). | — |
 
-Loading: 3 skeleton cards.
+For outdoor CCAs, replace **Members** with **Bus Attendance** (already used elsewhere via `BusAttendanceList`).
 
-### Data hooks
+### Manage Sessions fix
+- The button in `CcaDetailsSheet` becomes unused on mobile (sheet is no longer the entry point from the My CCAs page). Keep the sheet as-is for other callers (parent app uses it). No behavior change there.
+- In the new `CcaSchedulePanel`, the "+ Add Session" button is always visible at the top for PIC; non-PIC sees the list read-only with a small note.
 
-New `src/hooks/useTeacherInvolvedCcas.ts`:
-- Query `cca_activity_teachers` where `teacher_user_id = uid` → activityIds set A.
-- Query `cca_outdoor_buses` where `teacher_pic_main = uid OR teacher_pic_sub = uid` → activityIds set B.
-- Union, then fetch full activity rows (reuse the shape from `useEligibleCcaActivities` — name, image, venue, sessions, picTeachers, kind, type) filtered by `campus_code`.
-- Returns `{ activities, loading, error, refetch, filterByKind }` plus a per-activity `myRole: "pic" | "co-pic" | "bus-pic"`.
+### Padding fix
+- New full-page layout already uses `px-4`. The legacy sheet's "CCA details" subtitle is unaffected by the new flow, but as a small polish add `px-4` to the BottomSheet header description in `CcaDetailsSheet.tsx` so other callers also look right.
 
-No DB migration required — existing RLS already lets teachers SELECT their own `cca_activity_teachers` and outdoor buses.
-
-## 3. Design system
-
-- Reuse `CcaActivityCard` styling (hero image + gradient overlay + type-color mapping per memory).
-- Card radius, paddings, and shadows match existing CCA list pages.
-- Tabs styled like Calendar's non-sticky tabs but **sticky here** (top, under header) since this page is a single scrollable list.
-- All colors via semantic tokens.
+### Permissions
+- Reuse `useCcaActivityPermissions(activity)` → `canEdit` gates: image upload, session add/edit/delete, attendance marking.
 
 ## Files
 
-Created:
-- `src/pages/teacher/TeacherCcaPage.tsx`
-- `src/hooks/useTeacherInvolvedCcas.ts`
-- `src/components/layout/TeacherMoreSheet.tsx`
+**Create**
+- `src/pages/teacher/TeacherCcaDetailPage.tsx` — full page shell + tab switcher
+- `src/components/cca/panels/CcaOverviewPanel.tsx`
+- `src/components/cca/panels/CcaSchedulePanel.tsx`
+- `src/components/cca/panels/CcaMembersPanel.tsx`
+- `src/components/cca/panels/CcaAttendancePanel.tsx`
+- `src/components/cca/panels/CcaVenuePanel.tsx`
+- `src/components/cca/panels/CcaBudgetPanel.tsx`
 
-Edited:
-- `src/components/layout/TeacherBottomNavigation.tsx` (5 tabs, More button + sheet state)
-- `src/App.tsx` (add `/teacher/cca` route)
+**Edit**
+- `src/App.tsx` — add `/teacher/cca/:activityId` route
+- `src/pages/teacher/TeacherCcaPage.tsx` — card click navigates; remove sheet
+- `src/components/cca/CcaDetailsSheet.tsx` — small padding fix only
 
 ## Out of scope
-
-- No changes to parent CCA flows.
-- No changes to existing principal/admin CCA list pages.
-- No DB migrations or RLS edits (shared Supabase backend — mobile app unaffected).
+- No DB schema or RLS changes.
+- No edits to parent-app flows; the existing `CcaDetailsSheet` continues to work for parent.
+- Budget tab is a placeholder until a schema is introduced.
