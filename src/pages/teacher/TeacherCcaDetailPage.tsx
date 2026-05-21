@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import {
   ChevronLeft,
@@ -17,14 +17,17 @@ import {
   Trash2,
   Loader2,
   Image as ImageIcon,
-  Wallet,
   ChevronRight,
+  Search,
+  X,
 } from "lucide-react";
 import { TeacherAppLayout } from "@/components/layout/TeacherAppLayout";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Input } from "@/components/ui/input";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -35,7 +38,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { format, parseISO } from "date-fns";
+import { format, parseISO, isSameDay } from "date-fns";
 import { cn } from "@/lib/utils";
 
 import { useCampus } from "@/contexts/CampusContext";
@@ -56,7 +59,7 @@ import { BusAttendanceList } from "@/components/cca/BusAttendanceList";
 import { getCcaBucket, getCcaBucketIcon, getCcaTypePillColor } from "@/components/cca/CcaTypeTabs";
 import { CCA_BUCKET_LABEL } from "@/lib/ccaSessionFormat";
 
-type TabId = "overview" | "schedule" | "members" | "attendance" | "venue" | "budget";
+type TabId = "overview" | "schedule" | "members" | "attendance" | "venue";
 
 interface RosterStudent {
   id: string;
@@ -140,6 +143,23 @@ export default function TeacherCcaDetailPage() {
 
   const [tab, setTab] = useState<TabId>("overview");
   const [localImageUrl, setLocalImageUrl] = useState<string | null | undefined>(undefined);
+  const [imageOpen, setImageOpen] = useState(false);
+
+  // Hoisted: single sessions source for Schedule + Attendance tabs.
+  const sessionsHook = useCcaSessions({ activityId: activityId ?? "" });
+  const { fetchSessions } = sessionsHook;
+  useEffect(() => {
+    if (activityId) fetchSessions();
+  }, [activityId, fetchSessions]);
+
+  // Auto-scroll active tab pill into view on change
+  const tabBarRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const el = tabBarRef.current?.querySelector<HTMLButtonElement>(
+      `[data-tab-id="${tab}"]`
+    );
+    el?.scrollIntoView({ behavior: "smooth", inline: "center", block: "nearest" });
+  }, [tab]);
 
   const displayImageUrl =
     localImageUrl !== undefined
@@ -178,18 +198,20 @@ export default function TeacherCcaDetailPage() {
   const bucketLabel = CCA_BUCKET_LABEL[bucket];
   const bucketPill = getCcaTypePillColor(activity.kind ?? activity.category);
 
-  const tabs: { id: TabId; label: string; hidden?: boolean }[] = [
+  // Outdoor activities use Bus list as their attendance flow — hide
+  // generic Attendance tab to avoid two competing flows. Budget is
+  // hidden until a backend exists.
+  const tabs: { id: TabId; label: string }[] = [
     { id: "overview", label: "Overview" },
     { id: "schedule", label: "Schedule" },
     { id: "members", label: isOutdoor ? "Bus list" : "Members" },
-    { id: "attendance", label: "Attendance" },
+    ...(isOutdoor ? [] : [{ id: "attendance" as TabId, label: "Attendance" }]),
     { id: "venue", label: "Venue" },
-    { id: "budget", label: "Budget" },
   ];
 
   return (
     <TeacherAppLayout>
-      <DetailHeader onBack={() => navigate("/teacher/cca")} title="My CCA" />
+      <DetailHeader onBack={() => navigate("/teacher/cca")} title={activity.name} />
 
       {/* Hero + title */}
       <div className="px-4 pt-3">
@@ -207,22 +229,28 @@ export default function TeacherCcaDetailPage() {
             className="mb-3"
           />
         ) : (
-          <CcaActivityImage
-            imageUrl={displayImageUrl}
-            activityName={activity.name}
-            category={activity.category}
-            typeName={activity.typeName}
-            variant="details"
-            className="mb-3"
-          />
+          <button
+            type="button"
+            onClick={() => displayImageUrl && setImageOpen(true)}
+            className="block w-full mb-3 rounded-xl overflow-hidden"
+            aria-label="View hero image"
+          >
+            <CcaActivityImage
+              imageUrl={displayImageUrl}
+              activityName={activity.name}
+              category={activity.category}
+              typeName={activity.typeName}
+              variant="details"
+            />
+          </button>
         )}
 
         <div className="flex flex-wrap items-center gap-2">
           <h1 className="text-xl font-bold text-foreground">{activity.name}</h1>
           {perms.isActivityPIC && (
-            <Badge variant="default" className="text-[10px]">PIC</Badge>
+            <Badge variant="default" className="text-xs">PIC</Badge>
           )}
-          <Badge className={cn(bucketPill, "border gap-1")} variant="outline">
+          <Badge className={cn(bucketPill, "border gap-1 text-xs")} variant="outline">
             <BucketIcon className="h-3 w-3" />
             {bucketLabel}
           </Badge>
@@ -232,14 +260,18 @@ export default function TeacherCcaDetailPage() {
         )}
       </div>
 
-      {/* Sticky tab bar */}
-      <div className="sticky top-[calc(env(safe-area-inset-top)+56px)] z-30 bg-background/95 backdrop-blur-sm border-b border-border mt-4">
-        <div className="flex gap-2 px-4 py-3 overflow-x-auto scrollbar-hide">
+      {/* Sticky tab bar with fade-edges */}
+      <div className="sticky top-[calc(env(safe-area-inset-top)+56px)] z-30 bg-background/95 backdrop-blur-sm border-b border-border mt-4 relative">
+        <div
+          ref={tabBarRef}
+          className="flex gap-2 px-4 py-3 overflow-x-auto scrollbar-hide"
+        >
           {tabs.map((t) => {
             const active = tab === t.id;
             return (
               <button
                 key={t.id}
+                data-tab-id={t.id}
                 onClick={() => setTab(t.id)}
                 className={cn(
                   "shrink-0 rounded-full px-4 py-1.5 text-sm font-medium border transition-all",
@@ -253,23 +285,44 @@ export default function TeacherCcaDetailPage() {
             );
           })}
         </div>
+        {/* right-edge fade hint */}
+        <div className="pointer-events-none absolute right-0 top-0 bottom-0 w-6 bg-gradient-to-l from-background/95 to-transparent" />
       </div>
 
-      <div className="px-4 py-4 pb-24">
+      <div className="px-4 py-4 pb-[calc(6rem+env(safe-area-inset-bottom))]">
         {tab === "overview" && <OverviewPanel activity={activity} />}
-        {tab === "schedule" && <SchedulePanel activity={activity} canEdit={canEdit} />}
+        {tab === "schedule" && (
+          <SchedulePanel activity={activity} canEdit={canEdit} sessionsHook={sessionsHook} />
+        )}
         {tab === "members" && !isOutdoor && (
           <MembersPanel activityId={activity.id} active={tab === "members"} />
         )}
         {tab === "members" && isOutdoor && (
           <BusAttendanceList activityId={activity.id} activityPerms={perms} />
         )}
-        {tab === "attendance" && (
-          <AttendancePanel activity={activity} canEdit={canEdit} campusCode={activeCampus} />
+        {tab === "attendance" && !isOutdoor && (
+          <AttendancePanel
+            activity={activity}
+            canEdit={canEdit}
+            campusCode={activeCampus}
+            sessionsHook={sessionsHook}
+          />
         )}
         {tab === "venue" && <VenuePanel activity={activity} />}
-        {tab === "budget" && <BudgetPanel />}
       </div>
+
+      {/* Hero image lightbox */}
+      <Dialog open={imageOpen} onOpenChange={setImageOpen}>
+        <DialogContent className="max-w-[95vw] p-0 bg-black/90 border-0">
+          {displayImageUrl && (
+            <img
+              src={displayImageUrl}
+              alt={activity.name}
+              className="w-full h-auto max-h-[85vh] object-contain"
+            />
+          )}
+        </DialogContent>
+      </Dialog>
     </TeacherAppLayout>
   );
 }
@@ -369,13 +422,13 @@ function InfoRow({
   children: React.ReactNode;
 }) {
   return (
-    <div className="flex items-center gap-3">
-      <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
+    <div className="flex items-start gap-3">
+      <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0 mt-0.5">
         {icon}
       </div>
-      <div className="min-w-0">
+      <div className="min-w-0 flex-1">
         <p className="text-xs text-muted-foreground">{label}</p>
-        <p className="text-sm font-medium truncate">{children}</p>
+        <p className="text-sm font-medium break-words">{children}</p>
       </div>
     </div>
   );
@@ -385,28 +438,25 @@ function InfoRow({
 function SchedulePanel({
   activity,
   canEdit,
+  sessionsHook,
 }: {
   activity: InvolvedCcaActivity;
   canEdit: boolean;
+  sessionsHook: ReturnType<typeof useCcaSessions>;
 }) {
   const {
     sessions,
     loading,
     saving,
-    fetchSessions,
     createSession,
     updateSession,
     deleteSession,
     cancelSession,
-  } = useCcaSessions({ activityId: activity.id });
+  } = sessionsHook;
 
   const [formOpen, setFormOpen] = useState(false);
   const [editing, setEditing] = useState<CcaSession | null>(null);
   const [deleteConfirm, setDeleteConfirm] = useState<CcaSession | null>(null);
-
-  useEffect(() => {
-    fetchSessions();
-  }, [fetchSessions]);
 
   const active = sessions.filter((s) => !s.isCancelled);
   const cancelled = sessions.filter((s) => s.isCancelled);
@@ -608,6 +658,8 @@ function SchedulePanel({
 /* -------- Members -------- */
 function MembersPanel({ activityId, active }: { activityId: string; active: boolean }) {
   const { students, loading } = useActivityRoster(activityId, active);
+  const [q, setQ] = useState("");
+
   if (loading) {
     return (
       <div className="flex items-center justify-center py-8 text-muted-foreground">
@@ -623,26 +675,88 @@ function MembersPanel({ activityId, active }: { activityId: string; active: bool
       </div>
     );
   }
+
+  const needle = q.trim().toLowerCase();
+  const filtered = needle
+    ? students.filter(
+        (s) =>
+          s.name.toLowerCase().includes(needle) ||
+          (s.className ?? "").toLowerCase().includes(needle),
+      )
+    : students;
+
+  // Group by class for easier scanning
+  const grouped = filtered.reduce<Record<string, RosterStudent[]>>((acc, s) => {
+    const key = s.className || "Unassigned";
+    (acc[key] ||= []).push(s);
+    return acc;
+  }, {});
+  const classNames = Object.keys(grouped).sort();
+
+  const initials = (name: string) =>
+    name
+      .split(/\s+/)
+      .map((p) => p[0])
+      .filter(Boolean)
+      .slice(0, 2)
+      .join("")
+      .toUpperCase();
+
   return (
-    <Card className="rounded-xl">
-      <CardContent className="p-0">
-        <div className="px-4 py-3 border-b text-xs font-medium text-muted-foreground uppercase tracking-wide">
-          Enrolled ({students.length})
-        </div>
-        <ul className="divide-y">
-          {students.map((s) => (
-            <li key={s.id} className="px-4 py-3 flex items-center justify-between gap-2">
-              <div className="min-w-0">
-                <p className="text-sm font-medium text-foreground truncate">{s.name}</p>
-                {s.className && (
-                  <p className="text-xs text-muted-foreground">{s.className}</p>
-                )}
+    <div className="space-y-3">
+      <div className="relative">
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+        <Input
+          value={q}
+          onChange={(e) => setQ(e.target.value)}
+          placeholder={`Search ${students.length} members…`}
+          className="pl-9 pr-9 h-10"
+        />
+        {q && (
+          <button
+            type="button"
+            onClick={() => setQ("")}
+            className="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-muted-foreground hover:text-foreground"
+            aria-label="Clear search"
+          >
+            <X className="h-4 w-4" />
+          </button>
+        )}
+      </div>
+
+      {filtered.length === 0 ? (
+        <p className="text-center text-sm text-muted-foreground py-6">
+          No members match "{q}".
+        </p>
+      ) : (
+        classNames.map((cls) => (
+          <Card key={cls} className="rounded-xl">
+            <CardContent className="p-0">
+              <div className="px-4 py-2.5 border-b flex items-center justify-between">
+                <span className="text-xs font-semibold text-foreground uppercase tracking-wide">
+                  {cls}
+                </span>
+                <span className="text-xs text-muted-foreground">
+                  {grouped[cls].length}
+                </span>
               </div>
-            </li>
-          ))}
-        </ul>
-      </CardContent>
-    </Card>
+              <ul className="divide-y">
+                {grouped[cls].map((s) => (
+                  <li key={s.id} className="px-4 py-3 flex items-center gap-3">
+                    <div className="h-9 w-9 rounded-full bg-primary/10 text-primary text-xs font-semibold flex items-center justify-center flex-shrink-0">
+                      {initials(s.name)}
+                    </div>
+                    <p className="text-sm font-medium text-foreground truncate">
+                      {s.name}
+                    </p>
+                  </li>
+                ))}
+              </ul>
+            </CardContent>
+          </Card>
+        ))
+      )}
+    </div>
   );
 }
 
@@ -651,19 +765,34 @@ function AttendancePanel({
   activity,
   canEdit,
   campusCode,
+  sessionsHook,
 }: {
   activity: InvolvedCcaActivity;
   canEdit: boolean;
   campusCode: string | null;
+  sessionsHook: ReturnType<typeof useCcaSessions>;
 }) {
-  const { sessions, loading, fetchSessions } = useCcaSessions({ activityId: activity.id });
+  const { sessions, loading } = sessionsHook;
   const [selectedId, setSelectedId] = useState<string | null>(null);
-
-  useEffect(() => {
-    fetchSessions();
-  }, [fetchSessions]);
+  const [autoPicked, setAutoPicked] = useState(false);
 
   const active = useMemo(() => sessions.filter((s) => !s.isCancelled), [sessions]);
+
+  // Auto-select today's session on first load when present
+  useEffect(() => {
+    if (autoPicked || selectedId || active.length === 0) return;
+    const today = new Date();
+    const todays = active.find((s) => {
+      try {
+        return isSameDay(parseISO(s.sessionDate), today);
+      } catch {
+        return false;
+      }
+    });
+    if (todays) setSelectedId(todays.id);
+    setAutoPicked(true);
+  }, [active, selectedId, autoPicked]);
+
   const selected = active.find((s) => s.id === selectedId) ?? null;
 
   if (loading) {
@@ -789,19 +918,3 @@ function VenuePanel({ activity }: { activity: InvolvedCcaActivity }) {
   );
 }
 
-/* -------- Budget (placeholder) -------- */
-function BudgetPanel() {
-  return (
-    <Card className="rounded-xl">
-      <CardContent className="p-6 text-center space-y-2">
-        <div className="h-12 w-12 mx-auto rounded-2xl bg-primary/10 flex items-center justify-center">
-          <Wallet className="h-6 w-6 text-primary" />
-        </div>
-        <h3 className="font-semibold text-foreground">Budget tracking</h3>
-        <p className="text-sm text-muted-foreground max-w-xs mx-auto">
-          Coming soon — track allocations, expenses and receipts for this CCA right here.
-        </p>
-      </CardContent>
-    </Card>
-  );
-}
