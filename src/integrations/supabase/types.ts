@@ -5561,6 +5561,7 @@ export type Database = {
           malaysian_citizen: boolean | null
           name: string
           nationality: string | null
+          next_destination: string | null
           passport_expiry_date: string | null
           passport_number: string | null
           payment_type: string | null
@@ -5612,6 +5613,7 @@ export type Database = {
           malaysian_citizen?: boolean | null
           name: string
           nationality?: string | null
+          next_destination?: string | null
           passport_expiry_date?: string | null
           passport_number?: string | null
           payment_type?: string | null
@@ -5663,6 +5665,7 @@ export type Database = {
           malaysian_citizen?: boolean | null
           name?: string
           nationality?: string | null
+          next_destination?: string | null
           passport_expiry_date?: string | null
           passport_number?: string | null
           payment_type?: string | null
