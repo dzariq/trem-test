@@ -4103,6 +4103,7 @@ export type Database = {
         Row: {
           created_at: string
           expiry_date: string | null
+          guardian_slot: number | null
           id: string
           issue_date: string | null
           notes: string | null
@@ -4118,6 +4119,7 @@ export type Database = {
         Insert: {
           created_at?: string
           expiry_date?: string | null
+          guardian_slot?: number | null
           id?: string
           issue_date?: string | null
           notes?: string | null
@@ -4133,6 +4135,7 @@ export type Database = {
         Update: {
           created_at?: string
           expiry_date?: string | null
+          guardian_slot?: number | null
           id?: string
           issue_date?: string | null
           notes?: string | null
