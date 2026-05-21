@@ -7,7 +7,6 @@ import { Card } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { CcaActivityCard } from "@/components/cca/CcaActivityCard";
 import { useCampus } from "@/contexts/CampusContext";
-import { useAuth } from "@/contexts/AuthContext";
 import {
   useTeacherInvolvedCcas,
   type MyCcaRole,
