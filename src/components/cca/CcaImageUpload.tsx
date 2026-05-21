@@ -1,5 +1,6 @@
 import { useState, useRef } from "react";
-import { Camera, X, Upload, Loader2 } from "lucide-react";
+import { Camera, X, Upload, Loader2, Image as ImageIcon } from "lucide-react";
+import { Capacitor } from "@capacitor/core";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -39,6 +40,8 @@ export function CcaImageUpload({
   
   const { uploadImage, deleteImage, state } = useCcaImageUpload();
 
+  const isNative = Capacitor.isNativePlatform();
+
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -47,6 +50,31 @@ export function CcaImageUpload({
     const url = URL.createObjectURL(file);
     setPreviewUrl(url);
     setSelectedFile(file);
+  };
+
+  const pickFromCamera = async () => {
+    try {
+      const { Camera: CapCamera, CameraResultType, CameraSource } = await import(
+        "@capacitor/camera"
+      );
+      const photo = await CapCamera.getPhoto({
+        quality: 80,
+        allowEditing: false,
+        resultType: CameraResultType.DataUrl,
+        source: CameraSource.Camera,
+      });
+      if (!photo.dataUrl) return;
+      const res = await fetch(photo.dataUrl);
+      const blob = await res.blob();
+      const ext = (photo.format || "jpeg").toLowerCase();
+      const file = new File([blob], `cca-${activityId}-${Date.now()}.${ext}`, {
+        type: blob.type || "image/jpeg",
+      });
+      setPreviewUrl(URL.createObjectURL(file));
+      setSelectedFile(file);
+    } catch (err) {
+      console.error("[CcaImageUpload] camera failed", err);
+    }
   };
 
   const handleUpload = async () => {
@@ -191,14 +219,29 @@ export function CcaImageUpload({
             <div className="flex gap-2">
               {!selectedFile ? (
                 <>
+                  {isNative && (
+                    <Button
+                      variant="outline"
+                      className="flex-1"
+                      onClick={pickFromCamera}
+                      disabled={state.isUploading}
+                    >
+                      <Camera className="h-4 w-4 mr-2" />
+                      Take Photo
+                    </Button>
+                  )}
                   <Button
                     variant="outline"
                     className="flex-1"
                     onClick={() => fileInputRef.current?.click()}
                     disabled={state.isUploading}
                   >
-                    <Upload className="h-4 w-4 mr-2" />
-                    Select Image
+                    {isNative ? (
+                      <ImageIcon className="h-4 w-4 mr-2" />
+                    ) : (
+                      <Upload className="h-4 w-4 mr-2" />
+                    )}
+                    {isNative ? "Gallery" : "Select Image"}
                   </Button>
                   {currentImageUrl && (
                     <Button
