@@ -43,10 +43,8 @@ import { format, parseISO, isSameDay } from "date-fns";
 import { cn } from "@/lib/utils";
 
 import { useCampus } from "@/contexts/CampusContext";
-import {
-  useTeacherInvolvedCcas,
-  type InvolvedCcaActivity,
-} from "@/hooks/useTeacherInvolvedCcas";
+import type { InvolvedCcaActivity } from "@/hooks/useTeacherInvolvedCcas";
+import { useCcaActivityById } from "@/hooks/useCcaActivityById";
 import { useCcaActivityPermissions } from "@/hooks/useCcaActivityPermissions";
 import { useCcaSessions, type CcaSession, type CcaSessionFormData } from "@/hooks/useCcaSessions";
 import { supabase } from "@/lib/supabase";
@@ -175,13 +173,8 @@ function hasMeaningfulTitle(
 export default function TeacherCcaDetailPage() {
   const { activityId } = useParams<{ activityId: string }>();
   const navigate = useNavigate();
-  const { activeCampus } = useCampus();
-  const { activities, loading, refetch } = useTeacherInvolvedCcas(activeCampus);
-
-  const activity: InvolvedCcaActivity | null = useMemo(
-    () => activities.find((a) => a.id === activityId) ?? null,
-    [activities, activityId]
-  );
+  const { activeCampus: _activeCampus } = useCampus();
+  const { activity, status, refetch } = useCcaActivityById(activityId ?? null);
 
   const perms = useCcaActivityPermissions(activity);
   const canEdit = perms.canEdit;
@@ -219,7 +212,7 @@ export default function TeacherCcaDetailPage() {
       ? localImageUrl
       : activity?.imageUrl || activity?.venue?.imageUrl || null;
 
-  if (loading && !activity) {
+  if (status === "loading" && !activity) {
     return (
       <TeacherAppLayout>
         <DetailHeader onBack={() => navigate("/teacher/cca")} title="Loading…" />
@@ -227,6 +220,21 @@ export default function TeacherCcaDetailPage() {
           <Skeleton className="h-40 w-full rounded-xl" />
           <Skeleton className="h-6 w-2/3" />
           <Skeleton className="h-4 w-1/2" />
+        </div>
+      </TeacherAppLayout>
+    );
+  }
+
+  if (status === "error" && !activity) {
+    return (
+      <TeacherAppLayout>
+        <DetailHeader onBack={() => navigate("/teacher/cca")} title="Couldn't load" />
+        <div className="p-6 text-center text-sm text-muted-foreground space-y-3">
+          <p>We couldn't load this CCA. Check your connection and try again.</p>
+          <div className="flex justify-center gap-2">
+            <Button variant="outline" onClick={() => refetch()}>Retry</Button>
+            <Button onClick={() => navigate("/teacher/cca")}>Back to My CCAs</Button>
+          </div>
         </div>
       </TeacherAppLayout>
     );
