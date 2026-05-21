@@ -50,6 +50,7 @@ import {
 import { useCcaActivityPermissions } from "@/hooks/useCcaActivityPermissions";
 import { useCcaSessions, type CcaSession, type CcaSessionFormData } from "@/hooks/useCcaSessions";
 import { supabase } from "@/lib/supabase";
+import { formatSessionTimeRange } from "@/lib/ccaSessionFormat";
 
 import { CcaActivityImage } from "@/components/cca/CcaActivityImage";
 import { CcaImageUpload } from "@/components/cca/CcaImageUpload";
@@ -136,7 +137,29 @@ function formatSessionDate(dateStr: string) {
 }
 function formatTime(s: string | null, e: string | null) {
   if (!s && !e) return null;
-  return `${s || "--:--"} - ${e || "--:--"}`;
+  return formatSessionTimeRange(s, e) || null;
+}
+
+/**
+ * Treat a session's custom title as meaningful only when it differs from
+ * the parent activity name (case/whitespace-insensitive). Otherwise the
+ * card heading falls back to the formatted session date.
+ */
+function sessionHeading(
+  s: { customTitle: string | null; sessionDate: string },
+  activityName: string,
+) {
+  const t = s.customTitle?.trim();
+  if (t && t.toLowerCase() !== activityName.trim().toLowerCase()) return t;
+  return formatSessionDate(s.sessionDate);
+}
+
+function hasMeaningfulTitle(
+  customTitle: string | null,
+  activityName: string,
+) {
+  const t = customTitle?.trim();
+  return !!t && t.toLowerCase() !== activityName.trim().toLowerCase();
 }
 
 export default function TeacherCcaDetailPage() {
