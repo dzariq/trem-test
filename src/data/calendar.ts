@@ -24,6 +24,7 @@ export type UpcomingEvent = {
   studentId?: string | null;
   campusId?: string | null;
   schoolLevel?: string | null;
+  categoryColor?: string | null;
 };
 
 export type ListUpcomingEventsParams = {
@@ -143,6 +144,7 @@ const mapCalendarRow = (row: any): UpcomingEvent => {
     studentId: row.student_id ?? null,
     campusId: row.campus_id ?? null,
     schoolLevel: row.school_level ?? null,
+    categoryColor: row.event_categories?.color ?? null,
   };
 };
 
