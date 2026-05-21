@@ -882,7 +882,7 @@ function AttendancePanel({
         >
           <ChevronLeft className="h-4 w-4 mr-1" /> Back to sessions
         </Button>
-        <div className="rounded-lg border bg-muted/30 p-3">
+        <div className="rounded-xl border bg-card p-3 shadow-sm">
           <p className="text-sm font-medium">
             {sessionHeading(selected, activity.name)}
           </p>
