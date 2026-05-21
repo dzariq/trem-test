@@ -274,3 +274,14 @@ All colors MUST be HSL.
   .hero-breathe { animation: none; }
 }
 
+/* Hide scrollbars for horizontally scrollable rows (tabs, chips). */
+.scrollbar-hide {
+  -ms-overflow-style: none; /* IE/Edge */
+  scrollbar-width: none;    /* Firefox */
+}
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;            /* Chrome/Safari/WebKit */
+  width: 0;
+  height: 0;
+}
+

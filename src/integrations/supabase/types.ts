@@ -4217,6 +4217,7 @@ export type Database = {
           parent_user_id: string | null
           passport_expiry_date: string | null
           passport_number: string | null
+          person_group_id: string | null
           phone: string | null
           relationship: string | null
           updated_at: string
@@ -4236,6 +4237,7 @@ export type Database = {
           parent_user_id?: string | null
           passport_expiry_date?: string | null
           passport_number?: string | null
+          person_group_id?: string | null
           phone?: string | null
           relationship?: string | null
           updated_at?: string
@@ -4255,6 +4257,7 @@ export type Database = {
           parent_user_id?: string | null
           passport_expiry_date?: string | null
           passport_number?: string | null
+          person_group_id?: string | null
           phone?: string | null
           relationship?: string | null
           updated_at?: string
@@ -6796,6 +6799,10 @@ export type Database = {
       set_academic_period_status: {
         Args: { p_period_id: string; p_status: string }
         Returns: undefined
+      }
+      share_parent_to_family: {
+        Args: { p_source_parent_id: string; p_target_family_id: string }
+        Returns: string
       }
       show_limit: { Args: never; Returns: number }
       show_trgm: { Args: { "": string }; Returns: string[] }
