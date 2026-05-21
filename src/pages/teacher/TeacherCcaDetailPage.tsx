@@ -50,6 +50,7 @@ import {
 import { useCcaActivityPermissions } from "@/hooks/useCcaActivityPermissions";
 import { useCcaSessions, type CcaSession, type CcaSessionFormData } from "@/hooks/useCcaSessions";
 import { supabase } from "@/lib/supabase";
+import { formatSessionTimeRange } from "@/lib/ccaSessionFormat";
 
 import { CcaActivityImage } from "@/components/cca/CcaActivityImage";
 import { CcaImageUpload } from "@/components/cca/CcaImageUpload";
@@ -136,7 +137,29 @@ function formatSessionDate(dateStr: string) {
 }
 function formatTime(s: string | null, e: string | null) {
   if (!s && !e) return null;
-  return `${s || "--:--"} - ${e || "--:--"}`;
+  return formatSessionTimeRange(s, e) || null;
+}
+
+/**
+ * Treat a session's custom title as meaningful only when it differs from
+ * the parent activity name (case/whitespace-insensitive). Otherwise the
+ * card heading falls back to the formatted session date.
+ */
+function sessionHeading(
+  s: { customTitle: string | null; sessionDate: string },
+  activityName: string,
+) {
+  const t = s.customTitle?.trim();
+  if (t && t.toLowerCase() !== activityName.trim().toLowerCase()) return t;
+  return formatSessionDate(s.sessionDate);
+}
+
+function hasMeaningfulTitle(
+  customTitle: string | null,
+  activityName: string,
+) {
+  const t = customTitle?.trim();
+  return !!t && t.toLowerCase() !== activityName.trim().toLowerCase();
 }
 
 export default function TeacherCcaDetailPage() {
@@ -535,9 +558,9 @@ function SchedulePanel({
                 <div className="flex items-start justify-between gap-2">
                   <div className="flex-1 min-w-0">
                     <p className="font-medium text-foreground">
-                      {s.customTitle || formatSessionDate(s.sessionDate)}
+                      {sessionHeading(s, activity.name)}
                     </p>
-                    {s.customTitle && (
+                    {hasMeaningfulTitle(s.customTitle, activity.name) && (
                       <p className="text-xs text-muted-foreground">
                         {formatSessionDate(s.sessionDate)}
                       </p>
@@ -609,7 +632,7 @@ function SchedulePanel({
               <CardContent className="p-3 flex items-start justify-between gap-2">
                 <div className="flex-1 min-w-0">
                   <p className="font-medium text-muted-foreground line-through">
-                    {s.customTitle || formatSessionDate(s.sessionDate)}
+                    {sessionHeading(s, activity.name)}
                   </p>
                 </div>
                 {canEdit && (
@@ -648,6 +671,7 @@ function SchedulePanel({
         saving={saving}
         onSave={handleSave}
         allowFreeText={activity.allowFreeText}
+        activityName={activity.name}
       />
 
       {/* Sticky FAB for PIC quick-add */}
@@ -861,7 +885,7 @@ function AttendancePanel({
         </Button>
         <div className="rounded-lg border bg-muted/30 p-3">
           <p className="text-sm font-medium">
-            {selected.customTitle || formatSessionDate(selected.sessionDate)}
+            {sessionHeading(selected, activity.name)}
           </p>
           {formatTime(selected.startTime, selected.endTime) && (
             <p className="text-xs text-muted-foreground">
@@ -895,7 +919,7 @@ function AttendancePanel({
           <div className="flex items-center justify-between gap-2">
             <div className="min-w-0">
               <p className="text-sm font-medium text-foreground truncate">
-                {s.customTitle || formatSessionDate(s.sessionDate)}
+                {sessionHeading(s, activity.name)}
               </p>
               <div className="flex flex-wrap gap-3 text-xs text-muted-foreground mt-0.5">
                 {formatTime(s.startTime, s.endTime) && (

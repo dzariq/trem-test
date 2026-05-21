@@ -1,118 +1,45 @@
-# Teacher CCA Detail Page — Audit & Mobile Improvement Plan
+# Art Club Schedule Audit
 
-## 1. What's working well
+## What the database actually shows
 
-- **Architecture**: Single source of truth via `useTeacherInvolvedCcas` + `useCcaActivityPermissions`. Tab-switched layout avoids deep drawer nesting.
-- **Permissions**: PIC-only actions (edit image, add/edit/cancel/delete sessions, take attendance) are correctly gated by `perms.canEdit`.
-- **Outdoor support**: Members tab auto-swaps to `BusAttendanceList` when `kind === "outdoor"`.
-- **Schedule UX**: Active vs cancelled split, restore button, confirm-delete dialog.
-- **Reuse**: Pulls in existing `SessionAttendanceList`, `BusAttendanceList`, `CcaImageUpload`, `PICTeachersList`, `SessionFormDialog`, `CcaActivityImage` — no duplication.
+I queried `cca_sessions` for Art Club (`7908db09…`). There are **4 distinct rows — no real duplicates**:
 
-## 2. Audit findings (issues, in priority order)
+| # | Date | Time | Location | `custom_title` (entered by user) | Notes |
+|---|------|------|----------|----------------------------------|-------|
+| 1 | Thu, Jan 22, 2026 | 15:12 – 16:13 | Main Hall | **"Pratice"** | Typo of "Practice"; weird minute-level times (15:**12** / 16:**13**) — looks like test data |
+| 2 | Mon, Jan 26, 2026 | 08:00 – 09:00 | Science Lab | **"Art Club"** | `custom_title` is the same as the activity name; description = `dsasdadsasaddsa` (garbage test text) |
+| 3 | Fri, Feb 6, 2026 | 08:00 – 09:00 | Art Room | **"Art Club"** | Same — `custom_title` re-types the activity name; description = `test` |
+| 4 | Wed, May 20, 2026 | 15:30 – 16:30 | Art Room | *(null)* | Clean, no title set — correctly renders as the date |
 
-### Critical / High
+So the entries are **not duplicated in the DB**. The two reasons it *looks* wrong:
 
-1. **Sticky tab bar collides with sticky header** — both use `sticky top-[calc(env(safe-area-inset-top)+56px)]`. `TeacherAppLayout` also has its own top chrome. On iOS notch devices the tab bar ends up sitting *behind* the header strip when scrolled. Needs measured offset or `position: sticky; top: 0` inside a scroll container.
-2. **Page-level header is duplicated** — `DetailHeader` is rendered *inside* `TeacherAppLayout`, which already renders `AppHeader` on most teacher routes. Result: on some entry points there are two stacked headers eating ~120px of vertical space (huge on a 390×673 viewport).
-3. **`fetchSessions` is called from two tabs independently** (`SchedulePanel` and `AttendancePanel`). Switching tabs re-fetches each time → duplicate network calls, flashes loading state. Should hoist sessions to page level or cache via React Query.
-4. **No back-swipe / safe-area on bottom** — `pb-24` is hardcoded; doesn't account for iOS home indicator (`env(safe-area-inset-bottom)`). Tab navigation bar will overlap last session card.
-5. **Hero image not tap-to-enlarge** on mobile — PIC sees upload affordance but normal teachers can't view full-res image; on Capacitor users expect pinch-zoom.
+1. **`custom_title` = "Art Club"** was typed in twice. `custom_title` is meant for a session-specific label (e.g. "Watercolour Week", "Term 1 Showcase"); typing the activity name there is redundant and that's why "Art Club" repeats in the card titles.
+2. **"Pratice"** is a typo and its times (15:12, 16:13) look like accidental test input.
+3. **Times render with seconds** (`15:12:00 - 16:13:00`) because the card uses the raw `start_time`/`end_time` strings instead of the existing `formatSessionTimeRange()` helper from `src/lib/ccaSessionFormat.ts`.
 
-### Medium
+The data is clean from a duplication standpoint — what you're seeing is messy user input + a display bug.
 
-6. **Tab strip overflow on small screens**: 6 pills (Overview / Schedule / Members / Attendance / Venue / Budget) overflow horizontal scroll without any scroll-snap or scroll-into-view-on-select. Hidden tabs to the right are invisible — no fade/chevron hint.
-7. **Members tab has no search / no avatars / no class grouping / no count by class**. For a 25-student club it's fine; for an event with 100+ students it's a flat list.
-8. **Attendance tab requires two taps (pick session → mark)** but doesn't auto-select today's session. PIC opens it expecting today.
-9. **Schedule "Add Session" button is full-width outline** but the more important PIC action is buried below. Consider a sticky FAB on Capacitor.
-10. **Image upload** on Capacitor uses `<input type="file">` — opens file picker, not native camera. Should use `@capacitor/camera` plugin to give "Take photo / Choose from gallery".
-11. **Pull-to-refresh missing** — Capacitor users expect to pull to refetch sessions/roster/permissions.
-12. **No haptics** — tab switches, save, delete confirms should `Haptics.impact()` on native.
-13. **Budget tab is a placeholder** — currently always visible even though empty. Either hide for now or label "Coming soon" in the tab pill.
-14. **Status bar styling** — Capacitor config has no `StatusBar` plugin entry. On Android the system bar overlaps the sticky header.
-15. **InfoRow truncates with `truncate`** — long venue / coordinator emails get cut without tooltip. On mobile this hides info.
-16. **`isOutdoor` swap silently relabels Members → Bus list**, but Attendance tab still uses generic `SessionAttendanceList` — outdoor activities should hide that tab (bus attendance lives in Members) to avoid two competing flows.
+## Cleanup plan
 
-### Low / Polish
+### 1. UI fixes (`src/pages/teacher/TeacherCcaDetailPage.tsx`)
+- **Stop showing `custom_title` when it equals the activity name.** Treat `customTitle === activity.name` as "no custom title" so the card falls back to the formatted date as the heading. Removes the "Art Club / Art Club / Art Club" repetition for cleanly-named sessions too.
+- **Use `formatSessionTimeRange(start, end)`** (already exists) instead of rendering raw `HH:MM:SS` strings. Schedule cards will show `3:12 PM – 4:13 PM`.
+- Apply both fixes everywhere session cards render (UPCOMING list, PAST list, attendance picker, session details sheet — the 5 spots `grep` found).
 
-17. PIC pill uses `text-[10px]` while bucket pill uses default — visual mismatch.
-18. Schedule cards use `bg-card` while overview uses an emerald card — inconsistent panel styling.
-19. No empty-state CTA on Members ("Invite students" / "Open enrollment").
-20. `DetailHeader` title is hardcoded "My CCA" — should show CCA name truncated so user sees context when sticky.
-21. Cancelled-session restore icon is `RotateCcw` (looks like undo) — fine, but no tooltip on mobile.
+### 2. Form guardrail (`src/components/cca/SessionFormDialog.tsx`)
+- Add helper text under "Session title" explaining it's optional and should only be set when the session differs from the activity (e.g. "Watercolour Week").
+- On save, if the entered title (trimmed, case-insensitive) equals the activity name, store `null` instead — prevents the same bad data going in again.
 
-## 3. Capacitor-specific check
+### 3. Data cleanup for this Art Club (one-off)
+Offer the user two options after the UI fix lands:
+- **Option A (recommended):** I run a one-off SQL update to:
+  - Null out `custom_title` on the two "Art Club" rows (Jan 26, Feb 6).
+  - Fix the typo `Pratice` → `Practice` on the Jan 22 row (or null it if it was just a test).
+  - Clear the obvious junk descriptions (`dsasdadsasaddsa`, `dsasdasad`, `test`).
+- **Option B:** Leave the data alone; the UI changes above already hide the redundancy. You can edit/delete the rows yourself via the pencil/trash icons.
 
-- `capacitor.config.ts` is minimal: only `SplashScreen` configured. Missing:
-  - `StatusBar` plugin (style + background color matching theme)
-  - `Keyboard` plugin (`resize: "body"` to avoid form pushing tabs offscreen)
-  - `Haptics` plugin
-  - `Camera` plugin (for hero image upload)
-  - `App` listener for hardware back button (Android: pressing back inside detail page exits the app instead of going to `/teacher/cca`)
-- `ios.contentInset: "always"` is correct, but no `webView` background color set → white flash on navigation.
-- No deep-link / universal link config for `/teacher/cca/:id` notifications.
-- `webDir: "dist"` ok. No `bundledWebRuntime` issue.
+I'll wait for your pick on Option A vs B before touching the data.
 
-## 4. Proposed improvement plan
-
-### Phase A — Layout & safe-area (highest ROI, low risk)
-
-1. Remove duplicate `DetailHeader` when `TeacherAppLayout` already renders its own; or pass `hideHeader` to layout on this route.
-2. Replace hardcoded `pb-24` with `pb-[calc(6rem+env(safe-area-inset-bottom))]`.
-3. Fix sticky tab top offset: measure header height via `ResizeObserver` OR move tabs into a non-sticky position right under hero and rely on a thin sticky strip only when scrolled past hero.
-4. Show CCA name in sticky header (replace "My CCA").
-5. Add fade-edge / chevron hint on horizontal tab strip; auto-scroll active pill into view.
-
-### Phase B — Performance & data
-
-6. Hoist `useCcaSessions` to `TeacherCcaDetailPage` and pass down to both Schedule + Attendance. One fetch per visit.
-7. Migrate `useActivityRoster` to TanStack Query with `staleTime: 60s` so tab-switching is instant.
-8. Add pull-to-refresh wrapper (lightweight: `react-pull-to-refresh` or custom touch handler) → calls `refetch()` + invalidate.
-
-### Phase C — Mobile interactions
-
-9. Attendance: auto-select today's session if present; otherwise show picker.
-10. Sticky FAB (`Plus`) bottom-right on Schedule tab for PIC (replaces full-width outline button).
-11. Tap hero image → open `Dialog` with full-screen image (pinch-zoom on Capacitor).
-12. Hide Attendance tab when outdoor (bus list is the attendance flow); hide Budget tab until backend exists.
-13. Members tab: search input, group by class, show count per class header, show student initial avatar.
-
-### Phase D — Capacitor native polish
-
-14. Add and configure plugins in `capacitor.config.ts`:
-    - `StatusBar` (style `LIGHT` for primary header, background = theme bg)
-    - `Keyboard` (`resize: "body"`)
-    - `Haptics`
-    - `Camera` — wire to `CcaImageUpload` with "Take photo / Choose from gallery / Cancel" action sheet
-    - `App` — listen for `backButton` and route to `/teacher/cca` instead of exiting
-15. Add `Haptics.impact({ style: "light" })` on: tab change, save session, confirm delete, mark attendance.
-16. Set Capacitor webview background to design `--background` token to remove white flash.
-17. Register deep link `collinz://teacher/cca/:activityId` for push notifications opening the right CCA.
-
-### Phase E — Visual polish
-
-18. Unify pill sizes (PIC, bucket, role) at `text-xs`.
-19. Use consistent card surface for all panels (drop emerald-only overview card; promote shared tokenized `Card`).
-20. Long-press a session card → action sheet (Edit / Cancel / Delete) — fewer icons in card row, cleaner.
-21. Empty-state CTAs (Members → link to enrollment; Schedule → "Add your first session").
-
-## 5. Out of scope (flag, don't build)
-
-- Budget tab data model + schema (needs design first).
-- CCA attendance analytics / charts.
-- Photo gallery from past sessions (would need new table).
-
-## 6. Suggested rollout order
-
-```text
-A1 → A2 → A3 → A4   (layout, ~1 patch)
-B1 → B2             (data hoist, ~1 patch)
-C1 → C2 → C3 → C4   (mobile UX, ~1 patch)
-D1 → D2 → D3        (Capacitor plugins, ~1 patch)
-E (polish)          (last)
-```
-
-No database / RLS changes required for any of the above. Parent mobile app contract is untouched.
-
----
-
-**Ask before implementing**: Do you want me to ship **all of Phase A + B + the Capacitor plugin setup (D)** in the first pass — i.e. the things that visibly fix layout, double-fetching, and native feel — and leave the Members search / FAB / camera wiring for a second pass? Or pick a different subset.
+## Technical notes
+- No schema changes. No RLS changes. No mobile-app/web-app cross impact since both apps read the same `cca_sessions` and would both benefit from the display fix (heads-up: the sibling mobile project at `9164cec1…` will want the same UI tweak applied).
+- Helper `formatSessionTimeRange` already exists in `src/lib/ccaSessionFormat.ts`; no new utilities needed.
