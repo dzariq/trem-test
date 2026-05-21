@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { Loader2, Users, Save, ClipboardList, Check, X } from "lucide-react";
+import { Loader2, Users, Save, ClipboardList, Check, X, Filter } from "lucide-react";
 import { cn, formatClassDisplay } from "@/lib/utils";
 import { toast } from "@/hooks/use-toast";
 import {
@@ -70,6 +70,11 @@ export function SessionAttendanceList({
   });
 
   const [notesOpen, setNotesOpen] = useState<Record<string, boolean>>({});
+  const [showUnmarkedOnly, setShowUnmarkedOnly] = useState(false);
+
+  const handleMarkAllPresent = () => {
+    students.forEach((s) => setStudentStatus(s.id, "present"));
+  };
 
   const handleSave = async () => {
     const res = await save();
@@ -115,8 +120,49 @@ export function SessionAttendanceList({
             <Badge variant="outline">Unmarked: {summary.unmarked}</Badge>
           </div>
 
-          <ul className="divide-y rounded-xl border bg-card shadow-sm overflow-hidden">
-            {students.map((s) => {
+          {canEdit && (
+            <div className="grid grid-cols-2 gap-2">
+              <button
+                type="button"
+                onClick={handleMarkAllPresent}
+                title="Mark all as present"
+                disabled={saving || students.length === 0}
+                className="inline-flex items-center justify-center gap-1.5 h-10 w-full rounded-xl border border-emerald-200 bg-emerald-50 text-emerald-700 text-sm font-medium transition-colors hover:bg-emerald-100 disabled:opacity-50"
+              >
+                <Check className="h-4 w-4" />
+                Mark all
+              </button>
+              <button
+                type="button"
+                onClick={() => setShowUnmarkedOnly((v) => !v)}
+                title={showUnmarkedOnly ? "Show all students" : "Show only unmarked"}
+                className={cn(
+                  "inline-flex items-center justify-center gap-1.5 h-10 w-full rounded-xl border text-sm font-medium transition-colors",
+                  showUnmarkedOnly
+                    ? "border-primary/40 bg-primary/10 text-primary"
+                    : "border-border bg-background text-muted-foreground hover:text-foreground"
+                )}
+              >
+                <Filter className="h-4 w-4" />
+                {summary.unmarked > 0 ? `${summary.unmarked} unmarked` : "Unmarked"}
+              </button>
+            </div>
+          )}
+
+          {(() => {
+            const visible = showUnmarkedOnly
+              ? students.filter((s) => !stateMap[s.id]?.status)
+              : students;
+            if (visible.length === 0) {
+              return (
+                <div className="py-8 text-center text-muted-foreground text-sm">
+                  All students marked. 🎉
+                </div>
+              );
+            }
+            return (
+              <ul className="divide-y rounded-xl border bg-card shadow-sm overflow-hidden">
+                {visible.map((s) => {
               const cur = stateMap[s.id]?.status ?? null;
               const note = stateMap[s.id]?.notes ?? "";
               const showNotes = !!notesOpen[s.id] || !!note;
@@ -195,8 +241,10 @@ export function SessionAttendanceList({
                   )}
                 </li>
               );
-            })}
-          </ul>
+                })}
+              </ul>
+            );
+          })()}
 
           {canEdit && (
             <div className="flex items-center justify-between pt-1">

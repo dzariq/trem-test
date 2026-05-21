@@ -1,46 +1,34 @@
 ## Goal
 
-In the mobile app's Month grid (and the "What's Coming Up" badges), most event chips currently render in grey because their DB `event_category` doesn't match our hard-coded tag enum (e.g. "PH 7", "Y1-8 MYE", "TSM/Workshop", "Term 2 Start", "Open Day 3"). The reference admin project (`collinz-app-school`) renders these in saturated category colors. Mirror that color system here so chips look the same across both apps.
+Bring the same two quick-action buttons from the class Attendance module into the CCA session attendance view (used for both Clubs and Outdoor activities), so teachers can take club/outdoor attendance faster.
 
-## Color palette to mirror (from `collinz-app-school/src/lib/calendarTaxonomy.ts`)
+## Reference (existing pattern in `TeacherAttendancePage.tsx`)
 
-| Group | Color |
-|---|---|
-| Exams | `#dc2626` red |
-| Holidays | `#22c55e` green |
-| Events | `#8b5cf6` purple |
-| Staff & Admin | `#f97316` orange |
-| Due Dates | `#f43f5e` rose |
-| Students | `#06b6d4` cyan |
-| Parents | `#ec4899` pink |
+Two side-by-side buttons above the student list:
 
-Plus the per-subtype shades (e.g. Cambridge `#991b1b`, Replacement PH `#16a34a`, Internal Event `#a78bfa`, etc.) for finer matching when a known subtype is detected.
+1. **Mark all** — green outlined pill that sets every student to `present` in one tap.
+2. **N unsaved / Unsaved** — toggle pill that filters the list down to only students who haven't been marked yet (and shows the remaining count). Active state uses the primary tint.
 
 ## Changes
 
-1. **`src/lib/calendarTaxonomy.ts` (new)** — port the reference's `CALENDAR_TAXONOMY`, `getSubtypeColor`, and `getCategoryGroupColor` (the keyword-based fuzzy mapper that handles "exam/cambridge/igcse/checkpoint", "holiday/break", "event/trip/competition/open day", "meeting/admin/staff/bog/bts", "due/deadline", "student…", "parent/ptc/family"). Same hex values as the reference for visual parity.
+### `src/components/cca/SessionAttendanceList.tsx`
+- Add local state `showUnmarkedOnly` (boolean).
+- Add `handleMarkAllPresent()` that loops through `students` and calls `setStudentStatus(s.id, "present")` for each.
+- Above the student `<ul>`, render a `grid grid-cols-2 gap-2` row with two buttons matching the visual style from `TeacherAttendancePage.tsx` lines 591–621:
+  - "Mark all" (emerald outline, Check icon) — disabled while `saving` or when `students.length === 0` or `!canEdit`.
+  - "{N} unmarked" / "Unmarked" toggle (Filter icon) — active styling when on; count derived from `students.filter(s => !stateMap[s.id]?.status).length`.
+- Replace the current `students.map(...)` with a filtered `visible` list:
+  - When `showUnmarkedOnly` is true → only students whose `stateMap[s.id]?.status` is null.
+  - Empty-state message: "All students marked. 🎉"
+- Buttons only show when `canEdit` is true (parents/view-only see the existing summary chips only).
+- Keep the existing summary chips, notes input, and Save button untouched.
 
-2. **`src/lib/calendarCategorySubtypes.ts`** — extend `mapDbToCategory` so keyword-based names that come from the DB `event_categories.name` (and not just our enum slugs) resolve to a `TagCategory`. In particular: titles/categories starting with "PH"/containing "public holiday" → holidays; "MYE"/"YEE"/"Cambridge"/"IGCSE"/"Checkpoint" → exams; "TSM"/"AHM"/"OHM"/"meeting" → staff-admin; "Open Day"/"BTS"/"Term … Start"/"Orientation" → events / staff-admin as appropriate.
+### No other files
 
-3. **`src/lib/calendarUtils.ts`** — rework `getEventBadgeColor` (and add `getEventBadgeHex`) so it returns:
-   - A real hex from `event_categories.color` when present (new: read it from the row, see step 4), else
-   - The taxonomy subtype color from `getSubtypeColor(tag/title)`, else
-   - The group color from `getCategoryGroupColor(category)` (the fuzzy matcher), else
-   - The current default.
-   Replace the current pale `bg-*-200 text-*-900` Tailwind output with a saturated chip style:
-   - For Month-grid chips: inline `style={{ backgroundColor: hex, color: readableTextColor(hex) }}` with a translucent fill (`hex + "33"` for background, full hex for text/border) so chips look like the reference's pill style rather than muted grey rectangles.
-   - For category pills/badges elsewhere: keep the Tailwind class API but back it by the new resolver so unmapped categories no longer fall through to `bg-muted`.
-
-4. **`src/data/calendar.ts`** — extend `mapCalendarRow` to also read `row.event_categories?.color` (if the join is present) and surface it as `categoryColor` on `UpcomingEvent`. Update the Supabase select used by `listCalendarEvents` / `listUpcomingEvents` to include `event_categories(name,color)`. This gives admin-defined colors first-class priority and matches what the reference's "0. Prefer FK color" branch does.
-
-5. **`src/components/calendar/MonthGridCalendar.tsx`** — switch the chip from `colorClass` (Tailwind) to a resolved hex via the new helper. CCA chips keep their existing yellow/orange/light-yellow palette (already aligned with the reference's `CCA_COLOR_BY_KIND`). Non-CCA chips render with the new saturated style. Ensure text stays legible (use `getReadableTextColor` helper ported from the reference's `pastelColors.ts`).
-
-6. **`src/components/calendar/UpcomingEventsSection.tsx`** and any other place using `getEventBadgeColor` — pass through the new resolver so list-view badges match the grid chips.
-
-7. **Out of scope:** CCA color logic (already correct), filter sheet pill colors (already saturated), holiday detail sheet styling, dark-mode tweaks beyond what the new hex+alpha already supports.
+Both Clubs and Outdoor session attendance render through `SessionAttendanceList`, so this single component change covers both flows. Bus attendance (`BusAttendanceList`) is a separate per-leg flow and is out of scope unless you want it added too.
 
 ## Verification
 
-- Reload `/calendar` and confirm: "PH 7" green, "Term 2 Start" orange/blue, "Y1-8 MYE" red, "TSM/Workshop" orange, "Open Day 3" purple, "Comm…" / "Art Club" / "Board" remain yellow CCA pills.
-- Check `/teacher/calendar` (admin-like role) renders the same colors.
-- Confirm no grey chips remain for events whose category/title matches a taxonomy keyword.
+- Open a Club session detail → see two new buttons; tap "Mark all" → every row turns green Present; tap "Unmarked" → list empties with the "All marked" message; un-mark one student → toggle shows "1 unmarked" and filter reveals only that student.
+- Repeat on an Outdoor session.
+- Parent / view-only role: buttons are hidden.
