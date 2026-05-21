@@ -21,7 +21,6 @@ import {
   ChevronRight,
   Search,
   X,
-  ClipboardCheck,
 } from "lucide-react";
 import { TeacherAppLayout } from "@/components/layout/TeacherAppLayout";
 import { Button } from "@/components/ui/button";
