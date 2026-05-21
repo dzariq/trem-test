@@ -654,13 +654,17 @@ export function TimeGridCalendar({
                           "absolute px-1.5 py-0.5 text-[10px] font-medium text-left overflow-hidden shadow-sm z-10 no-callout",
                           b.kind === "cca"
                             ? "rounded-2xl border-2"
-                            : "rounded-md border border-transparent",
+                            : "rounded-md border",
                           mode === "day"
                             ? cn("left-1.5 right-1.5", b.kind === "cca" ? "rounded-2xl" : "rounded-lg")
                             : "left-0.5 right-0.5",
-                          b.colorClass,
+                          b.kind === "cca" ? b.colorClass : undefined,
                         )}
-                        style={{ top: clampedTop, height }}
+                        style={{
+                          top: clampedTop,
+                          height,
+                          ...(b.kind === "event" ? getEventChipStyle(b.colorHex) : {}),
+                        }}
                       >
                         <div className="truncate flex items-center gap-1">
                           {b.kind === "cca" && (() => {
