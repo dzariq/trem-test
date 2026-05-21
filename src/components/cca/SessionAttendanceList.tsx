@@ -115,7 +115,7 @@ export function SessionAttendanceList({
             <Badge variant="outline">Unmarked: {summary.unmarked}</Badge>
           </div>
 
-          <ul className="divide-y rounded-md border">
+          <ul className="divide-y rounded-xl border bg-card shadow-sm overflow-hidden">
             {students.map((s) => {
               const cur = stateMap[s.id]?.status ?? null;
               const note = stateMap[s.id]?.notes ?? "";
