@@ -494,20 +494,7 @@ function SchedulePanel({
 
   return (
     <div className="space-y-4">
-      {canEdit ? (
-        <Button
-          onClick={() => {
-            setEditing(null);
-            setFormOpen(true);
-          }}
-          className="w-full"
-          variant="outline"
-          disabled={saving}
-        >
-          <Plus className="h-4 w-4 mr-2" />
-          Add Session
-        </Button>
-      ) : (
+      {!canEdit && (
         <p className="text-xs text-muted-foreground text-center">
           Only PIC teachers can add or edit sessions.
         </p>
@@ -520,9 +507,20 @@ function SchedulePanel({
       )}
 
       {!loading && sessions.length === 0 && (
-        <div className="text-center py-8 text-muted-foreground">
+        <div className="text-center py-10 text-muted-foreground">
           <CalendarDays className="h-12 w-12 mx-auto mb-3 opacity-30" />
-          <p>No sessions scheduled yet</p>
+          <p className="text-sm">No sessions scheduled yet</p>
+          {canEdit && (
+            <Button
+              className="mt-4"
+              onClick={() => {
+                setEditing(null);
+                setFormOpen(true);
+              }}
+            >
+              <Plus className="h-4 w-4 mr-2" /> Add your first session
+            </Button>
+          )}
         </div>
       )}
 
@@ -651,6 +649,24 @@ function SchedulePanel({
         onSave={handleSave}
         allowFreeText={activity.allowFreeText}
       />
+
+      {/* Sticky FAB for PIC quick-add */}
+      {canEdit && (
+        <button
+          type="button"
+          onClick={() => {
+            lightHaptic();
+            setEditing(null);
+            setFormOpen(true);
+          }}
+          disabled={saving}
+          aria-label="Add session"
+          className="fixed right-4 z-40 h-14 w-14 rounded-full bg-primary text-primary-foreground shadow-lg flex items-center justify-center active:scale-95 transition disabled:opacity-50"
+          style={{ bottom: "calc(5.5rem + env(safe-area-inset-bottom))" }}
+        >
+          <Plus className="h-6 w-6" />
+        </button>
+      )}
 
       <AlertDialog
         open={!!deleteConfirm}
