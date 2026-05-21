@@ -73,7 +73,11 @@ export function SessionAttendanceList({
   const [showUnmarkedOnly, setShowUnmarkedOnly] = useState(false);
 
   const handleMarkAllPresent = () => {
-    students.forEach((s) => setStudentStatus(s.id, "present"));
+    students.forEach((s) => {
+      if (!stateMap[s.id]?.status) {
+        setStudentStatus(s.id, "present");
+      }
+    });
   };
 
   const handleSave = async () => {
