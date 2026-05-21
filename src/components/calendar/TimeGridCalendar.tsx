@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState, type MouseEvent } from "react";
 import { ChevronLeft, ChevronRight, ArrowLeft, SlidersHorizontal, ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { getEventBadgeColor } from "@/lib/calendarUtils";
+import { getEventBadgeHex, getEventChipStyle } from "@/lib/calendarUtils";
 import { getCcaTypePillColor, getCcaBucketIcon } from "@/components/cca/CcaTypeTabs";
 import type { UpcomingEvent } from "@/data/calendar";
 import type { CcaCalendarSession } from "@/hooks/useCcaSessionsCalendar";
@@ -61,7 +61,7 @@ const startOfWeek = (d: Date) => {
 };
 
 type Block =
-  | { kind: "event"; id: string; title: string; colorClass: string; startMin: number; endMin: number; payload: UpcomingEvent }
+  | { kind: "event"; id: string; title: string; colorHex: string; startMin: number; endMin: number; payload: UpcomingEvent }
   | { kind: "cca"; id: string; title: string; colorClass: string; startMin: number; endMin: number; payload: CcaCalendarSession };
 
 const parseHHMM = (s: string | null | undefined): number | null => {
