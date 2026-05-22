@@ -57,6 +57,7 @@ import { CcaActivityImage } from "@/components/cca/CcaActivityImage";
 import { CcaImageUpload } from "@/components/cca/CcaImageUpload";
 import { PICTeachersList } from "@/components/cca/PICTeacherPill";
 import { SessionFormDialog } from "@/components/cca/SessionFormDialog";
+import { SessionNotesSheet } from "@/components/cca/SessionNotesSheet";
 import { SessionAttendanceList } from "@/components/cca/SessionAttendanceList";
 import { BusAttendanceList } from "@/components/cca/BusAttendanceList";
 import { SportsPanel } from "@/components/cca/SportsPanel";
@@ -305,12 +306,14 @@ export default function TeacherCcaDetailPage() {
   const tabs: { id: TabId; label: string }[] = isOutdoor
     ? [
         { id: "overview", label: "Overview" },
+        { id: "schedule", label: "Schedule" },
         { id: "sports", label: "Sports" },
         { id: "venue", label: "Venue" },
         { id: "members", label: "Buses" },
       ]
     : [
         { id: "overview", label: "Overview" },
+        { id: "schedule", label: "Schedule" },
         { id: "members", label: "Members" },
         { id: "attendance", label: "Attendance" },
         { id: "venue", label: "Venue" },
@@ -416,20 +419,14 @@ export default function TeacherCcaDetailPage() {
                 <SportsPanel activityId={activity.id} />
               </div>
             )}
-            <div className="space-y-3">
-              <div className="flex items-center gap-2">
-                <CalendarDays className="h-4 w-4 text-primary" />
-                <h2 className="text-sm font-semibold text-foreground uppercase tracking-wide">
-                  Schedule
-                </h2>
-              </div>
-              <SchedulePanel
-                activity={activity}
-                canEdit={canEdit}
-                sessionsHook={sessionsHook}
-              />
-            </div>
           </div>
+        )}
+        {tab === "schedule" && (
+          <SchedulePanel
+            activity={activity}
+            canEdit={canEdit}
+            sessionsHook={sessionsHook}
+          />
         )}
         {tab === "members" && !isOutdoor && (
           <MembersPanel activityId={activity.id} active={tab === "members"} />
