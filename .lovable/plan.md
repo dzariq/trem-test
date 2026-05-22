@@ -1,60 +1,39 @@
-## Outdoor CCA — display & permission audit
+## Goal
 
-### Problem
-The mobile "My CCAs" list treats every outdoor activity the same as a club, so a bus PIC sees a giant "Basketball · PIC" card with no trip date and no indication that their actual role is "Bus A · Main". It also currently allows the bus PIC to take regular session attendance, which should be gated by sport-PIC vs bus-PIC roles.
+For outdoor activity detail page, give every teacher with any outdoor role (bus main/sub PIC, sport main/sub PIC, trip PIC/Co-PIC) the same unified view with exactly four tabs:
 
-### Data model recap
+1. **Overview** — trip summary + Schedule rendered inline (already inline today)
+2. **Sports** — list of sub-sports for the trip with their leads, venue, capacity
+3. **Venue** — trip venue card (unchanged)
+4. **Buses** — bus list with rosters and outbound/return attendance (current "Bus list" tab, renamed)
 
-```text
-cca_activities (kind='outdoor')   ← the trip (e.g. "Basketball" on 21 May)
- ├─ cca_sessions                  ← one row per trip date (sport_activity_ids[] = sub-sports)
- │   └─ cca_session_sport_pics    ← per-session, per-sport lead teachers
- ├─ cca_outdoor_buses             ← buses for the trip (teacher_pic_main / teacher_pic_sub)
- │   └─ cca_bus_assignments       ← students on each bus + outbound/return marks
- └─ cca_activity_teachers         ← parent-trip PIC/Co-PIC (separate from bus + sport)
-```
+The detail page renders identically regardless of which outdoor role the teacher holds. Permission gating stays at the action level (e.g. only that bus' Main/Sub PIC can mark its attendance), not at the tab/visibility level.
 
-### Changes
+## Changes
 
-**1. Card display (`TeacherCcaPage` + `CcaActivityCard`)**
+### 1. `src/pages/teacher/TeacherCcaDetailPage.tsx`
+- Replace the outdoor tab array with: `Overview`, `Sports`, `Venue`, `Buses` (in this order).
+- Keep non-outdoor activities on their existing tab set (`Overview`, `Members`, `Attendance`, `Venue`) — unchanged.
+- Rename outdoor "Bus list" label to **Buses**; tab id can stay `members` internally to avoid a large refactor, but the rendered label and order change.
+- Add a new tab id `sports` for outdoor only.
+- Overview already renders Schedule inline — no change needed there.
 
-For outdoor cards only:
-- Title becomes `"<Trip name> · <Next trip date>"` (e.g. `"Basketball · 21 May 2026"`); fall back to trip name only when no upcoming session.
-- Replace the role badge with the user's *actual* outdoor role, in priority order:
-  - `Bus A · Main` / `Bus B · Sub` (from `cca_outdoor_buses`)
-  - `Sport PIC` (from `cca_session_sport_pics`) with one chip per sport they lead (`Pickleball`, `Ping Pong`, …)
-  - `PIC` / `Co-PIC` (from `cca_activity_teachers`) — fallback for parent-trip PICs
-- A teacher who is both bus PIC and sport PIC sees the bus chip first, sport chips underneath.
+### 2. New `SportsPanel` (inline in same file or `src/components/cca/SportsPanel.tsx`)
+Reads sub-sports for the outdoor trip:
+- Source: distinct `sport_activity_ids` across all `cca_sessions` of the trip, joined to `cca_activities` for name/venue, and to `cca_session_sport_pics` for sport leads (main/sub).
+- Each row shows: sport name, lead teachers (chips with Main/Sub), session date(s), capacity if available.
+- Read-only for everyone in this iteration (no attendance taking from this tab).
 
-**2. Hook (`useTeacherInvolvedCcas`)**
+### 3. No permission changes
+- All four tabs are visible to any teacher returned by `useTeacherInvolvedCcas` for that trip.
+- Bus attendance buttons in the Buses tab keep the existing rule: only that bus' Main or Sub PIC can mark; others see roster read-only. (Already implemented in earlier step.)
 
-Extend the role resolution to additionally pull:
-- `cca_session_sport_pics` rows for this user → enriches activity with `sportRoles: { activityId, sportName }[]`
-- `cca_outdoor_buses` → already pulled; add the `bus_name` and which slot (`main` / `sub`) so the chip can render.
-- Add `nextSessionDate` to the activity (already partly available via `sessions` array — pick the soonest future one).
-- The composite role becomes an array (`myRoles: OutdoorRole[]`) so a single trip card can describe multiple involvements.
+## Out of scope
+- Card display on the My CCAs list — already handled in the prior change.
+- Sport-session attendance taking — Sports tab is read-only for now.
+- Parent / student-facing views.
 
-**3. Outdoor detail page permissions (`TeacherCcaDetailPage`)**
-
-For activities with `kind='outdoor'`:
-- Everyone with any outdoor role (bus PIC, sport PIC, activity PIC) can view Overview / Schedule / Sports / Venue / Buses tabs (read-only).
-- **Bus attendance (outbound + return)**: only the `teacher_pic_main` or `teacher_pic_sub` of *that specific bus* can mark. Sport PICs and other bus PICs see the roster read-only.
-- **Sport-session attendance**: hidden for outdoor trips (the existing "Attendance" tab is repurposed to the Buses tab for outdoor kind).
-- The detail page already drops the Attendance tab for outdoor — keep that and surface a "Buses" tab instead, with per-bus expanders that show the roster + outbound/return mark buttons (disabled when not a PIC of that bus).
-
-**4. Permission helpers**
-
-Add a small `useCcaOutdoorRoles(activityId)` hook that returns:
-```ts
-{ isBusMainOf: Set<busId>, isBusSubOf: Set<busId>, sportLeadFor: Set<activityId>, isTripPic: boolean }
-```
-Used by the card, the detail header, and the bus attendance buttons.
-
-### Out of scope (will not touch this round)
-- The other project's admin assignment sync that is currently auto-adding the bus PIC as `cca_activity_teachers` PIC. We'll only consume what's in the DB — but the new card design means even if that stale PIC row exists, the bus chip is shown first so the user sees their real role.
-- New tables or RLS. All needed tables/policies already exist.
-
-### Acceptance
-- Junhan sees `Basketball · 21 May 2026` with chip `Bus A · Main` instead of a misleading `PIC` badge.
-- Junhan sees `Badminton · 18 May 2026` with chips `Bus B · Sub`, `Sport PIC: Badminton`, `Pickleball`, `Ping Pong`.
-- On the Basketball outdoor detail page, the Outbound / Return mark buttons are enabled only on Bus A's roster; all other buses are read-only.
+## Technical notes
+- `TabId` type gets a new `"sports"` member; switch block adds `{tab === "sports" && isOutdoor && <SportsPanel activityId={activity.id} />}`.
+- `SportsPanel` uses a `useQuery` that fetches sessions → derives unique sport activity ids → fetches activity names + sport pics in two parallel queries, memoizes the joined view model.
+- No DB schema, no RLS, no new tables.
