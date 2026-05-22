@@ -137,6 +137,20 @@ export function useNotifications() {
       const weekStart = new Date(now);
       weekStart.setDate(now.getDate() - dayOfWeek);
       const weekStartIso = weekStart.toISOString().split("T")[0];
+      // CCA reminders only fire at exactly T-3 and T-0 (today).
+      const ccaReminderDates = (() => {
+        const t0 = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+        const t3 = new Date(t0);
+        t3.setDate(t0.getDate() + 3);
+        const fmt = (d: Date) =>
+          `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+        return { todayLocal: fmt(t0), in3Local: fmt(t3) };
+      })();
+      const ccaReminderTrigger = (sessionDate: string): "t-0" | "t-3" | null => {
+        if (sessionDate === ccaReminderDates.todayLocal) return "t-0";
+        if (sessionDate === ccaReminderDates.in3Local) return "t-3";
+        return null;
+      };
       const syntheticState = getSyntheticNotificationState(user.id);
       const readSyntheticKeys = new Set(syntheticState.read);
       const dismissedSyntheticKeys = new Set(syntheticState.dismissed);
@@ -204,16 +218,20 @@ export function useNotifications() {
             if (session.session_date < weekStartIso || session.session_date > in14Days) continue;
             if (seenSessions.has(session.id)) continue;
             seenSessions.add(session.id);
-            
+
+            const trigger = ccaReminderTrigger(session.session_date);
+            if (!trigger) continue;
+
             const activityName = session.activity?.name || session.custom_title || "CCA Session";
             const startTime = session.start_time ? ` at ${session.start_time.slice(0, 5)}` : "";
-            const sourceKey = `cca-session:${session.id}`;
+            const sourceKey = `cca-session:${session.id}:${trigger}`;
             if (dismissedSyntheticKeys.has(sourceKey)) continue;
 
+            const titlePrefix = trigger === "t-0" ? "🔔 Today" : "⏰ In 3 days";
             allNotifications.push({
-              id: `cca-session-${session.id}`,
+              id: `cca-session-${session.id}-${trigger}`,
               user_id: null,
-              title: `${activityName}`,
+              title: `${titlePrefix} · ${activityName}`,
               message: `${formatEventDate(session.session_date)}${startTime}`,
               type: "cca",
               link_to: "/parent/calendar",
@@ -331,16 +349,20 @@ export function useNotifications() {
             const session = pic.session as any;
             if (!session || !session.session_date) continue;
             if (session.session_date < weekStartIso || session.session_date > in14Days) continue;
-            
+
+            const trigger = ccaReminderTrigger(session.session_date);
+            if (!trigger) continue;
+
             const activityName = session.activity?.name || session.custom_title || "CCA Session";
             const startTime = session.start_time ? ` at ${session.start_time.slice(0, 5)}` : "";
-            const sourceKey = `teacher-cca:${session.id}`;
+            const sourceKey = `teacher-cca:${session.id}:${trigger}`;
             if (dismissedSyntheticKeys.has(sourceKey)) continue;
 
+            const titlePrefix = trigger === "t-0" ? "🔔 Today" : "⏰ In 3 days";
             allNotifications.push({
-              id: `teacher-cca-${session.id}`,
+              id: `teacher-cca-${session.id}-${trigger}`,
               user_id: null,
-              title: `📋 ${activityName} (PIC)`,
+              title: `${titlePrefix} · ${activityName} (PIC)`,
               message: `${formatEventDate(session.session_date)}${startTime}`,
               type: "cca",
               link_to: "/teacher/calendar",
