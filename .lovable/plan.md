@@ -1,76 +1,35 @@
-## Goal
+# Audit: Session Notes Sheet on mobile
 
-Promote **Schedule** to a top-level tab on the teacher CCA detail page. Each date in the schedule opens a session-notes view where PICs can edit a session title, remarks/notes, attach images, and attach PDFs. Parents/teachers without edit rights see the same view in read-only mode.
+I read `src/components/cca/SessionNotesSheet.tsx` end-to-end. Structurally it's already mobile-aware (bottom sheet, `flex-1 overflow-y-auto`, safe-area bottom padding, truncating title, 3-col image grid). But there are 6 real issues on phones that I want to clean up. Nothing else should change.
 
-## Tab changes (`TeacherCcaDetailPage.tsx`)
+## Issues found
 
-Add `Schedule` between `Overview` and `Members/Attendance`:
+1. **Top safe-area not respected.** On notched phones the header title sits under the status bar / notch. We use `env(safe-area-inset-bottom)` at the bottom but nothing at the top.
+2. **Header gets cramped in edit mode on narrow screens (≤375px).** Title + Cancel(X) + Save buttons compete for space. Sometimes Save's label gets clipped next to a long custom title.
+3. **PDF row is overloaded on small screens.** Filename link + external-open button + delete button = 3 tap targets on one row. On 320–360px widths the filename truncates aggressively and the two trailing icon buttons feel like they collide. The whole row is already a link too, so the external-link icon is redundant.
+4. **Image lightbox has no visible close button.** Tapping outside on mobile is unreliable — users get stuck.
+5. **Image delete button only appears on hover.** No hover on touch, so on mobile the delete control is effectively hidden until you tap the image (which opens the lightbox instead). It needs to be always visible on touch devices.
+6. **Section labels jump in edit vs view mode** because edit mode renders an Input/Textarea (taller) while view mode renders a `<p>`. Not a bug, but the textareas should get `resize-none` so they don't introduce a desktop-style drag handle on mobile.
 
-- Clubs/Events: `Overview · Schedule · Members · Attendance · Venue`
-- Outdoor:     `Overview · Schedule · Sports · Venue · Buses`
+## Fixes (all inside `src/components/cca/SessionNotesSheet.tsx`)
 
-Remove the inline `<SchedulePanel />` block currently rendered under Overview (Overview keeps description, schedule summary card, PIC list, etc., but the dedicated session list moves out).
-
-## Schedule tab UX
-
-A new `ScheduleTab` panel renders the existing session cards from `useCcaSessions`. Behaviour:
-
-- Each session card becomes tappable; tapping opens a **Session Notes** sheet (bottom sheet, 75vh standard, `z-[100]`).
-- PIC-only `+ Add session` button stays at top-right (reuses `SessionFormDialog` for date/time/location creation).
-- Past sessions stay collapsed under a "Past sessions" group; upcoming first.
-
-### Session Notes sheet
-
-Header: session date + optional custom title chip. PIC sees a small `Edit` pencil; everyone sees the content.
-
-Sections (all optional):
-
-1. **Title** – text input, maps to `cca_sessions.custom_title`.
-2. **Remarks / Notes** – multiline textarea, maps to `cca_sessions.description`.
-3. **Requirements** – existing textarea, maps to `cca_sessions.requirements` (kept for parity).
-4. **Images** – grid of thumbnails with add/delete. Stored in Supabase Storage bucket `cca-session-attachments`, indexed by a new `cca_session_attachments` table (`kind = 'image'`). Tap thumbnail = lightbox.
-5. **PDF attachments** – list of file rows with name + size + open/delete. Same bucket + table (`kind = 'pdf'`). Tap = open via existing PDF viewer pattern.
-
-Edit mode toggles inline; Save writes via `useCcaSessions.updateSession` for title/description/requirements, and via a new `useCcaSessionAttachments` hook for file ops. Read-only mode hides inputs and delete buttons.
-
-## Backend changes
-
-New table `public.cca_session_attachments`:
-
-- `session_id uuid` → `cca_sessions(id)` on delete cascade
-- `kind text check (kind in ('image','pdf'))`
-- `storage_path text` (path inside the bucket)
-- `file_name text`
-- `mime_type text`
-- `size_bytes bigint`
-- `uploaded_by uuid` → `auth.users(id)`
-- standard `id`, `created_at`
-
-RLS:
-
-- **Select**: anyone who can view the parent activity (mirrors `cca_sessions` select policy — principal/admin, activity PIC, year-overlap teacher, enrolled student's parent).
-- **Insert / Delete**: only `is_admin_like()` or users in `cca_activity_teachers` for the parent activity (same rule used for editing sessions).
-- **Update**: not needed (files are immutable; users delete + re-upload).
-
-New Storage bucket `cca-session-attachments` (private), with policies that mirror the table RLS using the first path segment = `activity_id`.
-
-## Frontend technical detail
-
-New files:
-
-- `src/hooks/useCcaSessionAttachments.ts` – fetch/list, upload (image/pdf), delete; returns `images`, `pdfs`, `uploading`, action helpers. Generates signed URLs for display.
-- `src/components/cca/SessionNotesSheet.tsx` – the bottom sheet described above (uses existing `bottom-sheet` primitive, follows the standardized draggable 75vh + `h-[100dvh]` pattern from memory).
-- `src/components/cca/ScheduleTab.tsx` – list + add button + opens `SessionNotesSheet`.
-
-Edits:
-
-- `TeacherCcaDetailPage.tsx` – add `schedule` to `tabs`, remove the inline Schedule block from Overview, render `<ScheduleTab />` when `tab === 'schedule'`. Reuse the existing hoisted `sessionsHook`.
-- `src/components/cca/SessionFormDialog.tsx` – unchanged (still used for creating the calendar entry; attachments live in the new sheet).
-
-Parent CCA detail (`ParentCcaDetailPage`, if applicable) is read-only by existing rules — same `ScheduleTab` works because edit affordances key off `canEdit`.
+1. Add `pt-[calc(env(safe-area-inset-top)+1rem)]` to `SheetHeader` (replacing the current `pt-4`).
+2. In the header action area:
+   - Drop the "Save" text on `< sm` (icon-only) and keep the label from `sm` up.
+   - Use `flex-wrap` on the outer header row so edit controls drop under the title block instead of squeezing it.
+3. PDF row redesign:
+   - Remove the standalone external-link `<a>` button (the row's filename link already opens the PDF).
+   - Make the whole row a single tappable surface (`<a>` wrapping filename + size, `min-h-11` for a comfortable touch target).
+   - Keep the delete button to the right when `canEdit`.
+4. Image lightbox: add a fixed top-right close button (`X` icon, `h-9 w-9`, white on translucent black) inside `DialogContent`. Tapping it closes the preview.
+5. Image card delete button: switch from `opacity-0 group-hover:opacity-100` to always-visible on touch — `opacity-100 sm:opacity-0 sm:group-hover:opacity-100`. Also bump its hit area to `h-7 w-7`.
+6. Add `resize-none` to both `<Textarea>` instances (notes + requirements).
 
 ## Out of scope
 
-- No changes to attendance flow.
-- No new notification types (existing session-create trigger still fires).
-- PDF preview uses existing `PDFViewerDialog`; we don't build a new viewer.
+- No schema, data, or RLS changes.
+- No edits to `ScheduleTab`, `useCcaSessionAttachments`, or the storage bucket.
+- No new components — all changes are inside `SessionNotesSheet.tsx`.
+- Sheet height stays `h-[100dvh] sm:h-[75vh]` per the existing draggable-bottom-sheet standard for full-content editors.
+
+After implementation I'll verify by opening the sheet at 375×812 (iPhone), checking the header doesn't clip under the notch, the PDF row sits cleanly, the lightbox has a visible X, and the image trash icon is tappable without hover.
