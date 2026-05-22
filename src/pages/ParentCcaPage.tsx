@@ -12,6 +12,18 @@ import { useStudentCcaEnrollments } from "@/hooks/useStudentCcaEnrollments";
 import { useStudentSelection } from "@/contexts/StudentSelectionContext";
 import { cn } from "@/lib/utils";
 
+const UPCOMING_WINDOW_DAYS = 7;
+function isUpcomingDate(dateStr: string | null | undefined): boolean {
+  if (!dateStr) return false;
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const target = new Date(dateStr);
+  if (Number.isNaN(target.getTime())) return false;
+  target.setHours(0, 0, 0, 0);
+  const diff = Math.round((target.getTime() - today.getTime()) / 86400000);
+  return diff >= 0 && diff <= UPCOMING_WINDOW_DAYS;
+}
+
 export default function ParentCcaPage() {
   const navigate = useNavigate();
   const { selectedStudentId, selectedStudent } = useStudentSelection();
@@ -70,11 +82,17 @@ export default function ParentCcaPage() {
               const BucketIcon = getCcaBucketIcon(bucket);
               const bucketLabel = CCA_BUCKET_LABEL[bucket];
               const pill = getCcaTypePillColor(e.kind ?? e.category);
+              const upcoming = isUpcomingDate(e.nextSessionDate);
               return (
                 <li key={e.enrollmentId}>
                   <Link
                     to={`/parent/cca/${e.activityId}`}
-                    className="block rounded-xl overflow-hidden bg-card border border-border shadow-sm active:scale-[0.99] transition"
+                    className={cn(
+                      "block rounded-xl overflow-hidden border shadow-sm active:scale-[0.99] transition",
+                      upcoming
+                        ? "bg-amber-50 border-amber-200 ring-1 ring-amber-200"
+                        : "bg-card border-border"
+                    )}
                   >
                     <CcaActivityImage
                       imageUrl={e.imageUrl}
