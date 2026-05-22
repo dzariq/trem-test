@@ -593,6 +593,7 @@ function SchedulePanel({
   const [formOpen, setFormOpen] = useState(false);
   const [editing, setEditing] = useState<CcaSession | null>(null);
   const [deleteConfirm, setDeleteConfirm] = useState<CcaSession | null>(null);
+  const [notesSession, setNotesSession] = useState<CcaSession | null>(null);
 
   const active = sessions.filter((s) => !s.isCancelled);
   const cancelled = sessions.filter((s) => s.isCancelled);
@@ -640,7 +641,19 @@ function SchedulePanel({
             Upcoming ({active.length})
           </p>
           {active.map((s) => (
-            <Card key={s.id} className="bg-card border-border">
+            <Card
+              key={s.id}
+              className="bg-card border-border cursor-pointer transition-all active:scale-[0.99] hover:shadow-sm"
+              onClick={() => setNotesSession(s)}
+              role="button"
+              tabIndex={0}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === " ") {
+                  e.preventDefault();
+                  setNotesSession(s);
+                }
+              }}
+            >
               <CardContent className="p-3">
                 <div className="flex items-start justify-between gap-2">
                   <div className="flex-1 min-w-0">
@@ -668,7 +681,10 @@ function SchedulePanel({
                     </div>
                   </div>
                   {canEdit && (
-                    <div className="flex items-center gap-1 flex-shrink-0">
+                    <div
+                      className="flex items-center gap-1 flex-shrink-0"
+                      onClick={(e) => e.stopPropagation()}
+                    >
                       <Button
                         variant="ghost"
                         size="icon"
@@ -759,6 +775,17 @@ function SchedulePanel({
         onSave={handleSave}
         allowFreeText={activity.allowFreeText}
         activityName={activity.name}
+      />
+
+      <SessionNotesSheet
+        open={!!notesSession}
+        onOpenChange={(o) => !o && setNotesSession(null)}
+        session={notesSession}
+        activityId={activity.id}
+        activityName={activity.name}
+        canEdit={canEdit}
+        saving={saving}
+        onSave={updateSession}
       />
 
       {/* Sticky FAB for PIC quick-add */}
