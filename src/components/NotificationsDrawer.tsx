@@ -25,6 +25,8 @@ import {
   Palette,
   Palmtree,
   PenLine,
+  Tent,
+  PartyPopper,
   X,
   Sparkles,
   Clock,
