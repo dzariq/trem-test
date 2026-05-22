@@ -56,6 +56,7 @@ import { PICTeachersList } from "@/components/cca/PICTeacherPill";
 import { SessionFormDialog } from "@/components/cca/SessionFormDialog";
 import { SessionAttendanceList } from "@/components/cca/SessionAttendanceList";
 import { BusAttendanceList } from "@/components/cca/BusAttendanceList";
+import { SportsPanel } from "@/components/cca/SportsPanel";
 import { getCcaBucket, getCcaBucketIcon, getCcaTypePillColor } from "@/components/cca/CcaTypeTabs";
 import { CCA_BUCKET_LABEL } from "@/lib/ccaSessionFormat";
 import { usePullToRefresh } from "@/hooks/usePullToRefresh";
@@ -71,7 +72,7 @@ async function lightHaptic() {
   }
 }
 
-type TabId = "overview" | "schedule" | "members" | "attendance" | "venue";
+type TabId = "overview" | "schedule" | "members" | "attendance" | "venue" | "sports";
 
 interface RosterStudent {
   id: string;
@@ -263,12 +264,19 @@ export default function TeacherCcaDetailPage() {
   // generic Attendance tab to avoid two competing flows. Budget is
   // hidden until a backend exists.
   // Schedule is now rendered inline under Overview to reduce tab clutter.
-  const tabs: { id: TabId; label: string }[] = [
-    { id: "overview", label: "Overview" },
-    { id: "members", label: isOutdoor ? "Bus list" : "Members" },
-    ...(isOutdoor ? [] : [{ id: "attendance" as TabId, label: "Attendance" }]),
-    { id: "venue", label: "Venue" },
-  ];
+  const tabs: { id: TabId; label: string }[] = isOutdoor
+    ? [
+        { id: "overview", label: "Overview" },
+        { id: "sports", label: "Sports" },
+        { id: "venue", label: "Venue" },
+        { id: "members", label: "Buses" },
+      ]
+    : [
+        { id: "overview", label: "Overview" },
+        { id: "members", label: "Members" },
+        { id: "attendance", label: "Attendance" },
+        { id: "venue", label: "Venue" },
+      ];
 
   return (
     <TeacherAppLayout>
@@ -389,6 +397,7 @@ export default function TeacherCcaDetailPage() {
           />
         )}
         {tab === "venue" && <VenuePanel activity={activity} />}
+        {tab === "sports" && isOutdoor && <SportsPanel activityId={activity.id} />}
       </div>
 
       {/* Hero image lightbox */}
