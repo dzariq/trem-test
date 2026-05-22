@@ -10,6 +10,8 @@ import type { InvolvedCcaActivity } from "@/hooks/useTeacherInvolvedCcas";
 interface OutdoorCcaCardProps {
   activity: InvolvedCcaActivity;
   onClick?: () => void;
+  /** Adds an "Upcoming" pill (top-left of hero) and a soft yellow card highlight. */
+  isUpcoming?: boolean;
 }
 
 /**
@@ -20,7 +22,7 @@ interface OutdoorCcaCardProps {
  *   - Sport PIC chips for each sport they lead inside the trip
  *   - Fallback "Trip PIC" / "Co-PIC" badge when no bus/sport involvement
  */
-export function OutdoorCcaCard({ activity, onClick }: OutdoorCcaCardProps) {
+export function OutdoorCcaCard({ activity, onClick, isUpcoming = false }: OutdoorCcaCardProps) {
   const bucketPill = getCcaTypePillColor(activity.kind ?? activity.category);
 
   const buses = activity.outdoorBusRoles ?? [];
@@ -37,7 +39,10 @@ export function OutdoorCcaCard({ activity, onClick }: OutdoorCcaCardProps) {
 
   return (
     <Card
-      className="overflow-hidden cursor-pointer transition-all active:scale-[0.99] bg-card border-border hover:shadow-md"
+      className={cn(
+        "overflow-hidden cursor-pointer transition-all active:scale-[0.99] bg-card border-border hover:shadow-md",
+        isUpcoming && "bg-amber-50 border-amber-200 ring-1 ring-amber-200"
+      )}
       onClick={onClick}
       role="button"
       tabIndex={0}
@@ -58,7 +63,14 @@ export function OutdoorCcaCard({ activity, onClick }: OutdoorCcaCardProps) {
           variant="details"
           className="w-full h-full rounded-none"
         />
-        <div className="absolute top-3 right-3">
+        <div className="absolute top-3 left-3 right-3 flex justify-between items-start">
+          {isUpcoming ? (
+            <Badge className="bg-amber-400 text-amber-950 shadow-md border-0">
+              Upcoming
+            </Badge>
+          ) : (
+            <div />
+          )}
           <Badge
             className={cn(bucketPill, "border shadow-md gap-1")}
             variant="outline"
