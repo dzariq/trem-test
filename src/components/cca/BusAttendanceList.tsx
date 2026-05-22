@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { ArrowLeft, ArrowRight, Bus, Check, Loader2, User, Users, X } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { cn, formatClassDisplay } from "@/lib/utils";
@@ -91,6 +92,7 @@ function BusCard({ bus, assignments, picNames, activityPerms, savingByAssignment
   const perms = useCcaBusPermissions(bus, activityPerms);
   const mainName = bus.teacher_pic_main ? picNames[bus.teacher_pic_main] : null;
   const subName = bus.teacher_pic_sub ? picNames[bus.teacher_pic_sub] : null;
+  const [activeLeg, setActiveLeg] = useState<BusLeg>("outbound");
 
   return (
     <li className="rounded-lg border border-border bg-card overflow-hidden">
@@ -135,26 +137,40 @@ function BusCard({ bus, assignments, picNames, activityPerms, savingByAssignment
         </div>
       ) : (
         <>
+          {/* Outbound / Return switcher */}
+          <div className="px-3 pt-3 pb-2 flex gap-2">
+            {([
+              { id: "outbound" as BusLeg, label: "Outbound", icon: <ArrowRight className="h-3.5 w-3.5" /> },
+              { id: "return" as BusLeg, label: "Return", icon: <ArrowLeft className="h-3.5 w-3.5" /> },
+            ]).map((t) => {
+              const active = activeLeg === t.id;
+              return (
+                <button
+                  key={t.id}
+                  type="button"
+                  onClick={() => setActiveLeg(t.id)}
+                  className={cn(
+                    "flex-1 inline-flex items-center justify-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium border transition-colors",
+                    active
+                      ? "bg-sky-100 text-sky-800 border-sky-300 dark:bg-sky-900/30 dark:text-sky-200 dark:border-sky-800"
+                      : "bg-card text-muted-foreground border-border hover:text-foreground"
+                  )}
+                >
+                  {t.icon}
+                  {t.label}
+                </button>
+              );
+            })}
+          </div>
           <LegSection
-            leg="outbound"
-            title="Outbound"
-            subtitle="School → Venue"
-            icon={<ArrowRight className="h-3.5 w-3.5" />}
+            leg={activeLeg}
+            title={activeLeg === "outbound" ? "Outbound" : "Return"}
+            subtitle={activeLeg === "outbound" ? "School → Venue" : "Venue → School"}
+            icon={activeLeg === "outbound" ? <ArrowRight className="h-3.5 w-3.5" /> : <ArrowLeft className="h-3.5 w-3.5" />}
             assignments={assignments}
             canManageBus={perms.canManageBus}
             savingByAssignment={savingByAssignment}
             onMarkLeg={onMarkLeg}
-          />
-          <LegSection
-            leg="return"
-            title="Return"
-            subtitle="Venue → School"
-            icon={<ArrowLeft className="h-3.5 w-3.5" />}
-            assignments={assignments}
-            canManageBus={perms.canManageBus}
-            savingByAssignment={savingByAssignment}
-            onMarkLeg={onMarkLeg}
-            divided
           />
         </>
       )}
@@ -191,7 +207,7 @@ function LegSection({
 
   return (
     <div className={cn(divided && "border-t border-border")}>
-      <div className="px-3 py-2 bg-muted/40 flex items-center justify-between gap-2">
+      <div className="px-3 py-2 bg-sky-50 dark:bg-sky-950/30 border-y border-sky-100 dark:border-sky-900/50 flex items-center justify-between gap-2">
         <div className="flex items-center gap-1.5 text-xs font-semibold text-foreground">
           {icon}
           <span>{title}</span>
