@@ -17,6 +17,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Loader2, Phone, ArrowLeft, Mail } from "lucide-react";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { allCountries } from "country-telephone-data";
+import { useUserRoles } from "@/hooks/useUserRoles";
 
 // Build a clean country list: { iso2, name, dialCode }
 // Deduplicate by iso2 and sort alphabetically by name.
@@ -49,6 +50,7 @@ type PortalType = "teacher" | "family";
 export default function Login() {
   const navigate = useNavigate();
   const { user, profile, loading: authLoading, portal: storedPortal, setPortal } = useAuth();
+  const { hasParentRole, hasStudentRole, isLoading: rolesLoading } = useUserRoles();
   const [searchParams] = useSearchParams();
   
   // Get portal from URL params first, fallback to stored portal
@@ -94,7 +96,7 @@ export default function Login() {
 
   // Redirect if already authenticated
   useEffect(() => {
-    if (authLoading) return;
+    if (authLoading || rolesLoading) return;
     
     if (user && profile) {
       // Honor the portal the user selected at login. Users with multiple
@@ -102,17 +104,23 @@ export default function Login() {
       if (storedPortal === "teacher") {
         navigate("/teacher", { replace: true });
       } else if (storedPortal === "family") {
-        navigate("/portal", { replace: true });
+        if (hasStudentRole && !hasParentRole) {
+          navigate("/students", { replace: true });
+        } else {
+          navigate("/portal", { replace: true });
+        }
       } else {
         // No portal chosen — fall back to role-based default
         if (["teacher", "admin", "super_admin"].includes(profile.role)) {
           navigate("/teacher", { replace: true });
+        } else if (hasStudentRole && !hasParentRole) {
+          navigate("/students", { replace: true });
         } else {
           navigate("/portal", { replace: true });
         }
       }
     }
-  }, [user, profile, authLoading, navigate, storedPortal]);
+  }, [user, profile, authLoading, rolesLoading, hasParentRole, hasStudentRole, navigate, storedPortal]);
 
   // If no portal selected, redirect to portal selector
   useEffect(() => {

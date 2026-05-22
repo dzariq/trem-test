@@ -27,6 +27,7 @@ export function useUserRoles() {
   return {
     roles,
     hasParentRole: roles.includes("parent"),
+    hasStudentRole: roles.includes("student" as AppRole),
     hasTeacherRole: roles.some((r) => TEACHER_SIDE.includes(r)),
     isLoading: query.isLoading,
   };
