@@ -20,6 +20,10 @@ interface CcaActivityCardProps {
   isEnrolled?: boolean;
   onClick?: () => void;
   className?: string;
+  /** Optional role badge rendered at the bottom-left of the hero image. */
+  roleBadge?: { label: string; className: string } | null;
+  /** Adds an "Upcoming" pill (top-left of hero) and a soft yellow card highlight. */
+  isUpcoming?: boolean;
 }
 
 /**
@@ -35,6 +39,8 @@ export function CcaActivityCard({
   isEnrolled = false,
   onClick,
   className,
+  roleBadge = null,
+  isUpcoming = false,
 }: CcaActivityCardProps) {
   const isEnrolledState = variant === "enrolled" || isEnrolled;
 
@@ -57,6 +63,7 @@ export function CcaActivityCard({
     <Card
       className={cn(
         "overflow-hidden cursor-pointer transition-all active:scale-[0.99] bg-card border-border hover:shadow-md",
+        isUpcoming && "bg-amber-50 border-amber-200 ring-1 ring-amber-200",
         className
       )}
       onClick={onClick}
@@ -83,15 +90,19 @@ export function CcaActivityCard({
 
         {/* Overlaid Badges - positioned at top */}
         <div className="absolute top-3 left-3 right-3 flex justify-between items-start">
-          {/* Enrolled Badge (left) */}
-          {isEnrolledState && (
-            <Badge
-              className="bg-primary text-primary-foreground shadow-md"
-            >
-              Enrolled
-            </Badge>
-          )}
-          {!isEnrolledState && <div />}
+          {/* Left badges: Enrolled and/or Upcoming */}
+          <div className="flex flex-col gap-1.5 items-start">
+            {isEnrolledState && (
+              <Badge className="bg-primary text-primary-foreground shadow-md">
+                Enrolled
+              </Badge>
+            )}
+            {isUpcoming && (
+              <Badge className="bg-amber-400 text-amber-950 shadow-md border-0">
+                Upcoming
+              </Badge>
+            )}
+          </div>
           
           {/* Kind Bucket Badge (right) */}
           <Badge
@@ -102,6 +113,18 @@ export function CcaActivityCard({
             {bucketLabel}
           </Badge>
         </div>
+
+        {/* Role badge - bottom left of hero */}
+        {roleBadge && (
+          <div className="absolute bottom-3 left-3">
+            <Badge
+              variant="outline"
+              className={cn("border shadow-md", roleBadge.className)}
+            >
+              {roleBadge.label}
+            </Badge>
+          </div>
+        )}
       </div>
 
       {/* Content Section */}

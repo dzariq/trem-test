@@ -15,6 +15,20 @@ import {
 import { cn } from "@/lib/utils";
 import { Sparkles } from "lucide-react";
 
+/** Days from today within which a session is considered "Upcoming". */
+const UPCOMING_WINDOW_DAYS = 7;
+
+function isUpcomingDate(dateStr: string | null | undefined): boolean {
+  if (!dateStr) return false;
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const target = new Date(dateStr);
+  if (Number.isNaN(target.getTime())) return false;
+  target.setHours(0, 0, 0, 0);
+  const diffDays = Math.round((target.getTime() - today.getTime()) / 86400000);
+  return diffDays >= 0 && diffDays <= UPCOMING_WINDOW_DAYS;
+}
+
 type KindFilter = "all" | "club" | "outdoor" | "event";
 
 const TABS: { id: KindFilter; label: string }[] = [
@@ -113,6 +127,7 @@ export default function TeacherCcaPage() {
           visible.map((a) => {
             const meta = ROLE_META[a.myRole];
             const isOutdoor = (a.kind || "").toLowerCase() === "outdoor";
+            const upcoming = isUpcomingDate((a as any).nextSessionDate);
 
             if (isOutdoor) {
               return (
@@ -120,26 +135,23 @@ export default function TeacherCcaPage() {
                   key={a.id}
                   activity={a}
                   onClick={() => navigate(`/teacher/cca/${a.id}`)}
+                  isUpcoming={upcoming}
                 />
               );
             }
 
             return (
-              <div key={a.id} className="space-y-1.5">
-                <div className="flex items-center gap-2 px-1">
-                  <Badge
-                    variant="outline"
-                    className={cn("border", meta.className)}
-                  >
-                    Your role · {meta.label}
-                  </Badge>
-                </div>
-                <CcaActivityCard
-                  activity={a as any}
-                  variant="available"
-                  onClick={() => navigate(`/teacher/cca/${a.id}`)}
-                />
-              </div>
+              <CcaActivityCard
+                key={a.id}
+                activity={a as any}
+                variant="available"
+                onClick={() => navigate(`/teacher/cca/${a.id}`)}
+                roleBadge={{
+                  label: `Your role · ${meta.label}`,
+                  className: meta.className,
+                }}
+                isUpcoming={upcoming}
+              />
             );
           })}
       </div>
