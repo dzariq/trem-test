@@ -151,6 +151,21 @@ export function useNotifications() {
         if (sessionDate === ccaReminderDates.in3Local) return "t-3";
         return null;
       };
+      const resolveCcaKind = (
+        kind: string | null | undefined,
+        activityName: string | null | undefined,
+        category: string | null | undefined,
+      ): { kindLabel: "Club" | "Outdoor" | "Event" | "Sport"; ccaType: string } => {
+        const k = (kind || "club").toLowerCase();
+        const sportRegex = /(sport|football|basketball|swim|rugby|cricket|netball|athletic|tennis|badminton|volleyball)/i;
+        const isSport =
+          k === "club" &&
+          (sportRegex.test(activityName || "") || /sport/i.test(category || ""));
+        if (k === "outdoor") return { kindLabel: "Outdoor", ccaType: "cca_outdoor" };
+        if (k === "event") return { kindLabel: "Event", ccaType: "cca_event" };
+        if (isSport) return { kindLabel: "Sport", ccaType: "cca_sport" };
+        return { kindLabel: "Club", ccaType: "cca_club" };
+      };
       const syntheticState = getSyntheticNotificationState(user.id);
       const readSyntheticKeys = new Set(syntheticState.read);
       const dismissedSyntheticKeys = new Set(syntheticState.dismissed);
