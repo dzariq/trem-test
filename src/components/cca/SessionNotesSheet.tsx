@@ -149,8 +149,8 @@ export function SessionNotesSheet({
           side="bottom"
           className="z-[100] h-[100dvh] sm:h-[75vh] sm:max-h-[75vh] rounded-t-2xl p-0 flex flex-col gap-0"
         >
-          <SheetHeader className="px-4 pt-4 pb-3 border-b border-border text-left">
-            <div className="flex items-start justify-between gap-3">
+          <SheetHeader className="px-4 pt-[calc(env(safe-area-inset-top)+1rem)] pb-3 border-b border-border text-left">
+            <div className="flex items-start justify-between gap-3 flex-wrap">
               <div className="min-w-0 flex-1">
                 <SheetTitle className="text-base font-semibold truncate">
                   {hasTitle ? session.customTitle : dateLabel}
@@ -205,8 +205,8 @@ export function SessionNotesSheet({
                       <Loader2 className="h-3.5 w-3.5 animate-spin" />
                     ) : (
                       <>
-                        <Save className="h-3.5 w-3.5 mr-1.5" />
-                        Save
+                        <Save className="h-3.5 w-3.5 sm:mr-1.5" />
+                        <span className="hidden sm:inline">Save</span>
                       </>
                     )}
                   </Button>
@@ -246,6 +246,7 @@ export function SessionNotesSheet({
                   onChange={(e) => setDescription(e.target.value)}
                   rows={5}
                   placeholder="Add session notes, remarks, what was covered…"
+                  className="resize-none"
                 />
               ) : (
                 <p className="text-sm text-foreground whitespace-pre-wrap">
@@ -267,6 +268,7 @@ export function SessionNotesSheet({
                   onChange={(e) => setRequirements(e.target.value)}
                   rows={3}
                   placeholder="What students should bring or prepare"
+                  className="resize-none"
                 />
               ) : (
                 <p className="text-sm text-foreground whitespace-pre-wrap">
@@ -342,10 +344,10 @@ export function SessionNotesSheet({
                         <button
                           type="button"
                           onClick={() => setDeleteTarget(img)}
-                          className="absolute top-1 right-1 h-6 w-6 rounded-full bg-black/60 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 active:opacity-100 transition"
+                          className="absolute top-1 right-1 h-7 w-7 rounded-full bg-black/60 text-white flex items-center justify-center opacity-100 sm:opacity-0 sm:group-hover:opacity-100 active:opacity-100 transition"
                           aria-label="Delete image"
                         >
-                          <Trash2 className="h-3 w-3" />
+                          <Trash2 className="h-3.5 w-3.5" />
                         </button>
                       )}
                     </div>
@@ -397,14 +399,14 @@ export function SessionNotesSheet({
                   {pdfs.map((p) => (
                     <li
                       key={p.id}
-                      className="flex items-center gap-2 rounded-lg border border-border bg-card px-3 py-2"
+                      className="flex items-center gap-2 rounded-lg border border-border bg-card pl-3 pr-2 min-h-11"
                     >
                       <FileText className="h-4 w-4 text-primary shrink-0" />
                       <a
                         href={p.url}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="flex-1 min-w-0"
+                        className="flex-1 min-w-0 py-2"
                       >
                         <p className="text-sm font-medium truncate text-foreground">
                           {p.fileName}
@@ -415,22 +417,11 @@ export function SessionNotesSheet({
                           </p>
                         )}
                       </a>
-                      <a
-                        href={p.url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className={cn(
-                          "h-8 w-8 rounded-md flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted",
-                        )}
-                        aria-label="Open PDF"
-                      >
-                        <ExternalLink className="h-4 w-4" />
-                      </a>
                       {canEdit && (
                         <button
                           type="button"
                           onClick={() => setDeleteTarget(p)}
-                          className="h-8 w-8 rounded-md flex items-center justify-center text-destructive hover:bg-destructive/10"
+                          className="h-9 w-9 rounded-md flex items-center justify-center text-destructive hover:bg-destructive/10 shrink-0"
                           aria-label="Delete PDF"
                         >
                           <Trash2 className="h-4 w-4" />
@@ -449,11 +440,21 @@ export function SessionNotesSheet({
       <Dialog open={!!previewImage} onOpenChange={(o) => !o && setPreviewImage(null)}>
         <DialogContent className="max-w-[95vw] p-0 bg-black/90 border-0 z-[110]">
           {previewImage && (
-            <img
-              src={previewImage.url}
-              alt={previewImage.fileName}
-              className="w-full h-auto max-h-[85vh] object-contain"
-            />
+            <>
+              <button
+                type="button"
+                onClick={() => setPreviewImage(null)}
+                className="absolute top-2 right-2 z-10 h-9 w-9 rounded-full bg-black/70 text-white flex items-center justify-center hover:bg-black/90"
+                aria-label="Close preview"
+              >
+                <X className="h-5 w-5" />
+              </button>
+              <img
+                src={previewImage.url}
+                alt={previewImage.fileName}
+                className="w-full h-auto max-h-[85vh] object-contain"
+              />
+            </>
           )}
         </DialogContent>
       </Dialog>
