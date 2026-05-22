@@ -58,6 +58,7 @@ import { RouteErrorBoundary } from "@/components/common/RouteErrorBoundary";
 export default function CalendarPage() {
   const { profile } = useMyProfile();
   const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
   const initialTab = searchParams.get("tab") || "calendar";
 
   const today = new Date();
@@ -930,6 +931,10 @@ export default function CalendarPage() {
           sessions: [],
         } : null}
         isPIC={false}
+        onViewFullDetails={(id) => {
+          setSelectedEnrolledCCA(null);
+          navigate(`/parent/cca/${id}`);
+        }}
       />
 
       <EventDetailsSheet
