@@ -477,7 +477,7 @@ function DetailHeader({ onBack, title }: { onBack: () => void; title: string }) 
 }
 
 /* -------- Overview -------- */
-function OverviewPanel({ activity }: { activity: InvolvedCcaActivity }) {
+export function OverviewPanel({ activity }: { activity: InvolvedCcaActivity }) {
   const isEvent = (activity.kind || "").toLowerCase() === "event";
   return (
     <div className="space-y-4">
@@ -571,7 +571,7 @@ function InfoRow({
 }
 
 /* -------- Schedule -------- */
-function SchedulePanel({
+export function SchedulePanel({
   activity,
   canEdit,
   sessionsHook,
@@ -1093,7 +1093,7 @@ function SessionPickerRow({
 }
 
 /* -------- Venue -------- */
-function VenuePanel({ activity }: { activity: InvolvedCcaActivity }) {
+export function VenuePanel({ activity }: { activity: InvolvedCcaActivity }) {
   const navigate = useNavigate();
   const [imgFailed, setImgFailed] = useState(false);
   const venue = activity.venue;
