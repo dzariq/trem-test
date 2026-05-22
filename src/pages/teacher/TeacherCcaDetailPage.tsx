@@ -1012,6 +1012,8 @@ function SessionPickerRow({
 
 /* -------- Venue -------- */
 function VenuePanel({ activity }: { activity: InvolvedCcaActivity }) {
+  const navigate = useNavigate();
+  const [imgFailed, setImgFailed] = useState(false);
   const venue = activity.venue;
   if (!venue && !activity.location) {
     return (
@@ -1021,14 +1023,23 @@ function VenuePanel({ activity }: { activity: InvolvedCcaActivity }) {
       </div>
     );
   }
+  const clickable = !!venue?.id;
   return (
-    <Card className="rounded-xl overflow-hidden">
-      {venue?.imageUrl ? (
+    <Card
+      className={cn(
+        "rounded-xl overflow-hidden",
+        clickable && "cursor-pointer hover:shadow-md transition-shadow active:scale-[0.99]",
+      )}
+      onClick={clickable ? () => navigate(`/teacher/venue/${venue!.id}`) : undefined}
+      role={clickable ? "button" : undefined}
+    >
+      {venue?.imageUrl && !imgFailed ? (
         <img
           src={venue.imageUrl}
           alt={venue.name}
           className="w-full h-44 object-cover"
           loading="lazy"
+          onError={() => setImgFailed(true)}
         />
       ) : (
         <div className="w-full h-32 bg-muted flex items-center justify-center">
@@ -1041,9 +1052,13 @@ function VenuePanel({ activity }: { activity: InvolvedCcaActivity }) {
           <h3 className="font-semibold text-foreground">
             {venue?.name || activity.location || "Venue"}
           </h3>
+          {clickable && <ChevronRight className="h-4 w-4 text-muted-foreground ml-auto" />}
         </div>
         {activity.location && venue?.name && venue.name !== activity.location && (
           <p className="text-xs text-muted-foreground">{activity.location}</p>
+        )}
+        {clickable && (
+          <p className="text-xs text-muted-foreground">Tap to view bookings</p>
         )}
       </CardContent>
     </Card>
