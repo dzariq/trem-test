@@ -74,7 +74,11 @@ export function useCcaSessionAttendance({
       }
 
       // 2) Event fallback (or club with no enrollments): by classes_involved
-      if (studentIds.length === 0 && (classesInvolved?.length ?? 0) > 0) {
+      // Only events fall back to class-based rosters. Clubs and outdoor
+      // activities are strictly enrollment-driven — showing class students
+      // when no one is enrolled creates the illusion of phantom members and
+      // disagrees with the Members tab.
+      if (isEvent && studentIds.length === 0 && (classesInvolved?.length ?? 0) > 0) {
         let q = supabase
           .from("students")
           .select("id, name, class")
