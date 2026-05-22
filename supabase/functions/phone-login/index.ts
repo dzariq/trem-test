@@ -46,7 +46,7 @@ Deno.serve(async (req) => {
     const portal = String(body?.portal ?? "family").trim().toLowerCase();
     const allowedRoles = portal === "teacher"
       ? ["teacher", "admin", "super_admin"]
-      : ["parent"];
+      : ["parent", "student"];
 
     if (!emailInput && (!phone || !countryCodeRaw)) {
       return new Response(
@@ -211,6 +211,70 @@ Deno.serve(async (req) => {
       );
     }
 
+    // Helper: student fallback (email path only, family portal only)
+    const tryStudentFallback = async () => {
+      if (!emailInput || portal === "teacher") return null;
+      const { data: studentRow, error: studentErr } = await admin
+        .from("students")
+        .select("id, name, email, user_id, archived")
+        .ilike("email", emailInput)
+        .eq("archived", false)
+        .limit(1)
+        .maybeSingle();
+      if (studentErr) {
+        console.error("[phone-login] student lookup failed", studentErr);
+        return null;
+      }
+      if (!studentRow) return null;
+
+      let userId = studentRow.user_id as string | null;
+      if (!userId) {
+        // Try to find an existing auth user with this email first
+        try {
+          const { data: list } = await admin.auth.admin.listUsers();
+          const existing = list?.users?.find(
+            (u: any) => (u.email ?? "").toLowerCase() === emailInput,
+          );
+          if (existing) userId = existing.id;
+        } catch (e) {
+          console.warn("[phone-login] listUsers failed", e);
+        }
+        if (!userId) {
+          const { data: created, error: createErr } = await admin.auth.admin.createUser({
+            email: emailInput,
+            email_confirm: true,
+          });
+          if (createErr || !created?.user) {
+            console.error("[phone-login] createUser failed", createErr);
+            return null;
+          }
+          userId = created.user.id;
+        }
+        await admin.from("students").update({ user_id: userId }).eq("id", studentRow.id);
+      }
+
+      // Ensure 'student' role exists
+      await admin
+        .from("user_roles")
+        .upsert({ user_id: userId, role: "student" }, { onConflict: "user_id,role" });
+
+      // Ensure user_profiles row exists (AuthContext depends on it)
+      await admin
+        .from("user_profiles")
+        .upsert(
+          {
+            user_id: userId,
+            email: emailInput,
+            full_name: studentRow.name ?? null,
+            role: "student",
+            is_active: true,
+          },
+          { onConflict: "user_id" },
+        );
+
+      return { user_id: userId, email: emailInput };
+    };
+
     // Find the profile by contact info (email or phone)
     const candidates = emailInput
       ? (profiles ?? []).filter((p: any) => (p.email ?? "").toLowerCase() === emailInput)
@@ -221,10 +285,33 @@ Deno.serve(async (req) => {
         });
 
     if (candidates.length === 0) {
+      const studentMatch = await tryStudentFallback();
+      if (studentMatch) {
+        const { data: linkData, error: linkErr } = await admin.auth.admin.generateLink({
+          type: "magiclink",
+          email: studentMatch.email,
+        });
+        if (linkErr || !linkData?.properties?.hashed_token) {
+          console.error("[phone-login] generateLink (student) failed", linkErr);
+          return new Response(
+            JSON.stringify({ error: "Failed to mint session token" }),
+            { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+          );
+        }
+        return new Response(
+          JSON.stringify({
+            email: studentMatch.email,
+            token_hash: linkData.properties.hashed_token,
+            user_id: studentMatch.user_id,
+            account_type: "student",
+          }),
+          { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+        );
+      }
       return new Response(
         JSON.stringify({
           error: emailInput
-            ? `No ${portal === "teacher" ? "teacher" : "parent"} account found for this email.`
+            ? `No ${portal === "teacher" ? "teacher" : "parent or student"} account found for this email.`
             : `No ${portal === "teacher" ? "teacher" : "parent"} account found for this phone number.`,
         }),
         { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } },
@@ -258,6 +345,25 @@ Deno.serve(async (req) => {
     );
 
     if (!match) {
+      // Last-chance student fallback (email path): user_profiles existed but no parent role
+      const studentMatch = await tryStudentFallback();
+      if (studentMatch) {
+        const { data: linkData, error: linkErr } = await admin.auth.admin.generateLink({
+          type: "magiclink",
+          email: studentMatch.email,
+        });
+        if (!linkErr && linkData?.properties?.hashed_token) {
+          return new Response(
+            JSON.stringify({
+              email: studentMatch.email,
+              token_hash: linkData.properties.hashed_token,
+              user_id: studentMatch.user_id,
+              account_type: "student",
+            }),
+            { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+          );
+        }
+      }
       const wrongPortalCandidate = candidates[0];
       const otherRoles = rolesByUser.get(wrongPortalCandidate.user_id) ?? [];
       const isTeacherSide = otherRoles.some((r) =>
