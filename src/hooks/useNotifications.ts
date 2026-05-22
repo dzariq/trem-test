@@ -204,7 +204,7 @@ export function useNotifications() {
               session_date,
               start_time,
               custom_title,
-              activity:cca_activities(name)
+              activity:cca_activities(name, kind, category)
             )
           `)
           .in("student_id", studentIds)
@@ -227,13 +227,21 @@ export function useNotifications() {
             const sourceKey = `cca-session:${session.id}:${trigger}`;
             if (dismissedSyntheticKeys.has(sourceKey)) continue;
 
-            const titlePrefix = trigger === "t-0" ? "🔔 Today" : "⏰ In 3 days";
+            const { kindLabel, ccaType } = resolveCcaKind(
+              session.activity?.kind,
+              session.activity?.name,
+              session.activity?.category,
+            );
+            const title =
+              trigger === "t-0"
+                ? `${activityName} is today`
+                : `${activityName} is in 3 days`;
             allNotifications.push({
               id: `cca-session-${session.id}-${trigger}`,
               user_id: null,
-              title: `${titlePrefix} · ${activityName}`,
-              message: `${formatEventDate(session.session_date)}${startTime}`,
-              type: "cca",
+              title,
+              message: `${kindLabel} · ${formatEventDate(session.session_date)}${startTime}`,
+              type: ccaType,
               link_to: "/parent/calendar",
               target_audience: "parent",
               created_at: now.toISOString(),
