@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { CalendarDays, MapPin, User, ClipboardList, FileText, Settings, Users as UsersIcon, Mail } from "lucide-react";
+import { CalendarDays, MapPin, User, ClipboardList, FileText, Settings, Users as UsersIcon, Mail, ChevronRight } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -33,6 +33,7 @@ interface CcaDetailsSheetProps {
   isPIC?: boolean;
   onManageSessions?: () => void;
   onActivityUpdated?: () => void;
+  onViewFullDetails?: (activityId: string) => void;
 }
 
 /**
@@ -50,6 +51,7 @@ export function CcaDetailsSheet({
   isPIC = false,
   onManageSessions,
   onActivityUpdated,
+  onViewFullDetails,
 }: CcaDetailsSheetProps) {
   const [localImageUrl, setLocalImageUrl] = useState<string | null | undefined>(undefined);
 
@@ -142,6 +144,18 @@ export function CcaDetailsSheet({
       {/* Manage Sessions button: pinned high so it's reachable when the
           sheet is at its minimized snap point. */}
       <div>{ManageButton}</div>
+
+      {onViewFullDetails && activity && (
+        <Button
+          variant="outline"
+          size="sm"
+          className="w-full justify-between"
+          onClick={() => onViewFullDetails(activity.id)}
+        >
+          View full details
+          <ChevronRight className="h-4 w-4" />
+        </Button>
+      )}
 
       <p
         className={cn(

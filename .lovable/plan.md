@@ -1,35 +1,58 @@
-# Audit: Session Notes Sheet on mobile
 
-I read `src/components/cca/SessionNotesSheet.tsx` end-to-end. Structurally it's already mobile-aware (bottom sheet, `flex-1 overflow-y-auto`, safe-area bottom padding, truncating title, 3-col image grid). But there are 6 real issues on phones that I want to clean up. Nothing else should change.
+## Parent / Student CCA pages
 
-## Issues found
+Adds a read-only parent-side mirror of the teacher CCA experience: a list of the selected child's enrolled CCAs, plus a tabbed detail page. Built by reusing existing components (`OverviewPanel`, `SchedulePanel`, `VenuePanel`, `SessionNotesSheet`) in read-only mode and a new child-scoped attendance panel.
 
-1. **Top safe-area not respected.** On notched phones the header title sits under the status bar / notch. We use `env(safe-area-inset-bottom)` at the bottom but nothing at the top.
-2. **Header gets cramped in edit mode on narrow screens (≤375px).** Title + Cancel(X) + Save buttons compete for space. Sometimes Save's label gets clipped next to a long custom title.
-3. **PDF row is overloaded on small screens.** Filename link + external-open button + delete button = 3 tap targets on one row. On 320–360px widths the filename truncates aggressively and the two trailing icon buttons feel like they collide. The whole row is already a link too, so the external-link icon is redundant.
-4. **Image lightbox has no visible close button.** Tapping outside on mobile is unreliable — users get stuck.
-5. **Image delete button only appears on hover.** No hover on touch, so on mobile the delete control is effectively hidden until you tap the image (which opens the lightbox instead). It needs to be always visible on touch devices.
-6. **Section labels jump in edit vs view mode** because edit mode renders an Input/Textarea (taller) while view mode renders a `<p>`. Not a bug, but the textareas should get `resize-none` so they don't introduce a desktop-style drag handle on mobile.
+### Tabs (parent view)
 
-## Fixes (all inside `src/components/cca/SessionNotesSheet.tsx`)
+Per request — no Members tab.
 
-1. Add `pt-[calc(env(safe-area-inset-top)+1rem)]` to `SheetHeader` (replacing the current `pt-4`).
-2. In the header action area:
-   - Drop the "Save" text on `< sm` (icon-only) and keep the label from `sm` up.
-   - Use `flex-wrap` on the outer header row so edit controls drop under the title block instead of squeezing it.
-3. PDF row redesign:
-   - Remove the standalone external-link `<a>` button (the row's filename link already opens the PDF).
-   - Make the whole row a single tappable surface (`<a>` wrapping filename + size, `min-h-11` for a comfortable touch target).
-   - Keep the delete button to the right when `canEdit`.
-4. Image lightbox: add a fixed top-right close button (`X` icon, `h-9 w-9`, white on translucent black) inside `DialogContent`. Tapping it closes the preview.
-5. Image card delete button: switch from `opacity-0 group-hover:opacity-100` to always-visible on touch — `opacity-100 sm:opacity-0 sm:group-hover:opacity-100`. Also bump its hit area to `h-7 w-7`.
-6. Add `resize-none` to both `<Textarea>` instances (notes + requirements).
+- **Overview** — same content as teacher Overview (description, schedule, venue, capacity, PIC, contact, requirements). Internal notes hidden.
+- **Schedule** — same `SchedulePanel` but read-only: no "Add session", no edit/cancel actions, sessions remain tappable to open `SessionNotesSheet` in read-only mode (view title/notes/images/PDFs only, no edit/save/upload/delete).
+- **Attendance** — per-session list scoped to the currently selected child only. Each row shows session date · time · venue · the child's status pill (Present / Absent / Late / Excused / —). Read-only.
+- **Venue** — same `VenuePanel` as teacher.
 
-## Out of scope
+Hero image, header chips (bucket pill, type name), and pull-to-refresh behave the same. PIC badge / "View only" badge replaced by a simple "Enrolled" pill when applicable.
 
-- No schema, data, or RLS changes.
-- No edits to `ScheduleTab`, `useCcaSessionAttachments`, or the storage bucket.
-- No new components — all changes are inside `SessionNotesSheet.tsx`.
-- Sheet height stays `h-[100dvh] sm:h-[75vh]` per the existing draggable-bottom-sheet standard for full-content editors.
+### Routes & entry points
 
-After implementation I'll verify by opening the sheet at 375×812 (iPhone), checking the header doesn't clip under the notch, the PDF row sits cleanly, the lightbox has a visible X, and the image trash icon is tappable without hover.
+New routes under existing `ParentStudentGuard`:
+
+- `/parent/cca` — list of the selected child's enrolled CCAs (cards).
+- `/parent/cca/:activityId` — detail page.
+
+Entry points:
+
+1. **Bottom nav / list page** — add a "CCAs" tab (or, if bottom-nav slots are full, surface via Home quick-action and Calendar). Default plan: add to a parent "More" surface and link from Home + Calendar; bottom-nav stays as today to avoid crowding. (Confirm before shipping if you want it in the bottom bar.)
+2. **Home** — the existing `useUpcomingCcaSessions` widget rows on `HomePage.tsx` become tappable and deep-link to `/parent/cca/:activityId`.
+3. **Calendar** — `CcaDetailsSheet` (used in `src/pages/CalendarPage.tsx`) gets a "View full details" button that navigates to `/parent/cca/:activityId` and closes the sheet.
+
+### Files
+
+**New**
+- `src/pages/ParentCcaPage.tsx` — list of enrolled CCAs for `selectedStudentId` (uses `useStudentCcaEnrollments`). Reuses `CcaActivityCard` in a read-only variant.
+- `src/pages/ParentCcaDetailPage.tsx` — tabbed shell mirroring `TeacherCcaDetailPage` but with `tabs = [overview, schedule, attendance, venue]`, no edit affordances, wraps in `AppLayout` (parent layout) instead of `TeacherAppLayout`.
+- `src/components/cca/ParentAttendancePanel.tsx` — fetches `cca_attendance` rows for `activityId + studentId` joined to sessions; renders a sorted list (most recent first) with status pills. Empty state when no sessions yet.
+
+**Edited**
+- `src/App.tsx` — register the two new routes inside the `ParentStudentGuard` block.
+- `src/pages/HomePage.tsx` — wrap upcoming CCA rows in a `Link` to `/parent/cca/:activityId`.
+- `src/pages/CalendarPage.tsx` + `src/components/cca/CcaDetailsSheet.tsx` — add an optional `onViewFullDetails` action to the sheet; CalendarPage passes a handler that navigates to the detail route.
+- `src/components/cca/SessionNotesSheet.tsx` — accept a `readOnly` prop; when true, hide edit controls, save button, image upload, image delete, and PDF delete (view + open only).
+- `src/components/cca/SchedulePanel` (currently inside `TeacherCcaDetailPage.tsx`) — extract to `src/components/cca/SchedulePanel.tsx` and accept a `canEdit` prop so it can be reused by the parent page in read-only mode. Teacher page imports the extracted module.
+
+### Permissions & data
+
+- All reads use existing tables (`cca_activities`, `cca_activity_teachers`, `cca_sessions`, `cca_session_attachments`, `cca_attendance`, `student_cca_enrollments`). Existing parent RLS already covers these (per `mem://security/cca-enrollment-rls`, `mem://features/parent-cca-read-only-access`, and the `get_teacher_public_info` RPC). No migration needed.
+- The parent detail page must verify the selected child is actually enrolled in the activity before rendering content; if not, show "Not enrolled" empty state and a back link.
+- Attendance query filters strictly on `student_id = selectedStudentId` AND `cca_activity_id = activityId` (or via the session join). No cross-child leakage.
+- Uses `StudentSelectionContext` for the active child; switching the child on the detail page refetches attendance and the enrolled check.
+
+### Mobile-app sibling impact
+
+Read-only, additive — no schema or RLS changes. Safe for the shared Supabase backend; the sibling mobile app is unaffected.
+
+### Out of scope
+
+- No Members tab, no enrollment management, no editing, no uploads.
+- Bottom-nav slot reshuffle (will confirm separately if you want CCA promoted there).

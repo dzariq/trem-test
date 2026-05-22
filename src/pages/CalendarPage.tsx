@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState, type KeyboardEvent } from "react";
-import { useSearchParams } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { AppHeader } from "@/components/layout/AppHeader";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -58,6 +58,7 @@ import { RouteErrorBoundary } from "@/components/common/RouteErrorBoundary";
 export default function CalendarPage() {
   const { profile } = useMyProfile();
   const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
   const initialTab = searchParams.get("tab") || "calendar";
 
   const today = new Date();
@@ -930,6 +931,10 @@ export default function CalendarPage() {
           sessions: [],
         } : null}
         isPIC={false}
+        onViewFullDetails={(id) => {
+          setSelectedEnrolledCCA(null);
+          navigate(`/parent/cca/${id}`);
+        }}
       />
 
       <EventDetailsSheet
