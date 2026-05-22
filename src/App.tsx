@@ -139,6 +139,29 @@ const App = () => (
                   {FEATURES.lessonPlanParent && (
                     <Route path="/parent/lesson-plans" element={<NotFound />} />
                   )}
+
+                  {/* Student Routes - same components as Parent */}
+                  <Route path="/students" element={<HomePage />} />
+                  <Route path="/students/attendance" element={<AttendancePage />} />
+                  <Route path="/students/academic" element={<AcademicPage />} />
+                  <Route path="/students/calendar" element={<CalendarPage />} />
+                  <Route path="/students/invoice" element={<InvoicePage />} />
+                  <Route path="/students/support" element={<SupportPage />} />
+                  <Route path="/students/profile" element={<ProfilePage />} />
+                  <Route path="/students/notifications" element={<NotificationsPage />} />
+                  <Route path="/students/announcements" element={<AnnouncementsPage />} />
+                  <Route path="/students/announcements/:id" element={<AnnouncementDetailPage />} />
+                  <Route path="/students/security-privacy" element={<SecurityPrivacyPage />} />
+                  <Route path="/students/privacy-policy" element={<PrivacyPolicyPage />} />
+                  <Route path="/students/contact" element={<ContactPage />} />
+                  <Route path="/students/awards" element={<AwardsPage />} />
+                  <Route path="/students/handbook" element={<StudentHandbookPage />} />
+                  <Route path="/students/visa" element={<VisaPage />} />
+                  <Route path="/students/cca" element={<ParentCcaPage />} />
+                  <Route path="/students/cca/:activityId" element={<ParentCcaDetailPage />} />
+                  {FEATURES.homeworkParent && (
+                    <Route path="/students/homework" element={<HomeworkPage />} />
+                  )}
                 </Route>
                 <Route path="/privacy-policy" element={<PrivacyPolicyPage />} />
 
