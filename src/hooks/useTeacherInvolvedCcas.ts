@@ -1,6 +1,7 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/contexts/AuthContext";
+import { useCampus } from "@/contexts/CampusContext";
 import type { CcaActivity, CcaSession, CcaTeacher } from "@/hooks/useCcaActivities";
 
 export type MyCcaRole = "pic" | "co-pic" | "bus-pic" | "sport-pic";
@@ -50,17 +51,21 @@ function pickNextSessionDate(sessions: CcaSession[]): string | null {
  */
 export function useTeacherInvolvedCcas(campusCode: string | null) {
   const { user } = useAuth();
+  const { loading: campusLoading } = useCampus();
   const uid = user?.id ?? null;
 
   const [activities, setActivities] = useState<InvolvedCcaActivity[]>([]);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const requestIdRef = useRef(0);
 
   const fetchAll = useCallback(async () => {
     if (!uid) {
       setActivities([]);
+      setLoading(false);
       return;
     }
+    const requestId = ++requestIdRef.current;
     setLoading(true);
     setError(null);
     try {
@@ -126,8 +131,10 @@ export function useTeacherInvolvedCcas(campusCode: string | null) {
 
       const activityIds = Array.from(roleMap.keys());
       if (activityIds.length === 0) {
-        setActivities([]);
-        setLoading(false);
+        if (requestId === requestIdRef.current) {
+          setActivities([]);
+          setLoading(false);
+        }
         return;
       }
 
@@ -249,19 +256,31 @@ export function useTeacherInvolvedCcas(campusCode: string | null) {
       }));
 
       mapped.sort((a, b) => a.name.localeCompare(b.name));
-      setActivities(mapped);
+      if (requestId === requestIdRef.current) {
+        setActivities(mapped);
+      }
     } catch (e: any) {
       console.error("[useTeacherInvolvedCcas] error:", e);
-      setError(e?.message ?? "Failed to load CCAs");
-      setActivities([]);
+      if (requestId === requestIdRef.current) {
+        setError(e?.message ?? "Failed to load CCAs");
+        setActivities([]);
+      }
     } finally {
-      setLoading(false);
+      if (requestId === requestIdRef.current) {
+        setLoading(false);
+      }
     }
   }, [uid, campusCode]);
 
   useEffect(() => {
+    // Wait for campus context to finish loading so we don't fire an
+    // unfiltered fetch that can race-overwrite the campus-filtered one.
+    if (campusLoading) {
+      setLoading(true);
+      return;
+    }
     fetchAll();
-  }, [fetchAll]);
+  }, [fetchAll, campusLoading]);
 
   const filterByKind = useCallback(
     (kind: "all" | "club" | "outdoor" | "event") => {

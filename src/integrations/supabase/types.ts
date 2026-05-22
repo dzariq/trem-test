@@ -6617,6 +6617,25 @@ export type Database = {
         Args: { p_period_id: string; p_scope: string }
         Returns: undefined
       }
+      clone_event_activity: {
+        Args: {
+          p_copy_pics?: boolean
+          p_copy_sessions?: boolean
+          p_new_name: string
+          p_new_start_date: string
+          p_source_activity_id: string
+        }
+        Returns: string
+      }
+      clone_outdoor_activity: {
+        Args: {
+          p_new_date: string
+          p_new_end?: string
+          p_new_start?: string
+          p_source_activity_id: string
+        }
+        Returns: string
+      }
       current_user_role: { Args: never; Returns: string }
       delete_parent_cascade: {
         Args: { p_parents_row_id: string; p_user_id: string }
