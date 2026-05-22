@@ -21,6 +21,7 @@ import {
   ChevronRight,
   Search,
   X,
+  Trophy,
 } from "lucide-react";
 import { TeacherAppLayout } from "@/components/layout/TeacherAppLayout";
 import { Button } from "@/components/ui/button";
