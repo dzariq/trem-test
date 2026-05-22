@@ -17,12 +17,19 @@ export interface OutdoorSportRole {
   sportName: string;
 }
 
+export interface OutdoorTripSport {
+  sportActivityId: string;
+  sportName: string;
+}
+
 export interface InvolvedCcaActivity extends CcaActivity {
   myRole: MyCcaRole;
   /** Outdoor-only: buses this user is main/sub PIC of, for this trip. */
   outdoorBusRoles: OutdoorBusRole[];
   /** Outdoor-only: sports this user is lead PIC of, within this trip. */
   outdoorSportRoles: OutdoorSportRole[];
+  /** Outdoor-only: ALL sports tagged in this trip (regardless of user role). */
+  outdoorAllSports: OutdoorTripSport[];
   /** Soonest upcoming session (YYYY-MM-DD) or null. */
   nextSessionDate: string | null;
 }
@@ -199,13 +206,16 @@ export function useTeacherInvolvedCcas(campusCode: string | null) {
 
       // 5. Upcoming sessions
       const sessionsMap = new Map<string, CcaSession[]>();
+      const sportsByTrip = new Map<string, OutdoorTripSport[]>();
       if (ids.length > 0) {
         const { data: sessionRows } = await supabase
           .from("cca_sessions")
-          .select("id, activity_id, session_date, start_time, end_time, location, is_cancelled, description, custom_title, requirements")
+          .select("id, activity_id, session_date, start_time, end_time, location, is_cancelled, description, custom_title, requirements, sport_activity_ids")
           .in("activity_id", ids)
           .eq("is_cancelled", false)
           .order("session_date", { ascending: true });
+        // Collect unique sport activity ids per trip
+        const sportIdsByTrip = new Map<string, Set<string>>();
         (sessionRows ?? []).forEach((s: any) => {
           const list = sessionsMap.get(s.activity_id) ?? [];
           list.push({
@@ -221,7 +231,34 @@ export function useTeacherInvolvedCcas(campusCode: string | null) {
             requirements: s.requirements,
           });
           sessionsMap.set(s.activity_id, list);
+          const sids: string[] = Array.isArray(s.sport_activity_ids) ? s.sport_activity_ids : [];
+          if (sids.length > 0) {
+            const set = sportIdsByTrip.get(s.activity_id) ?? new Set<string>();
+            sids.forEach((id) => id && set.add(id));
+            sportIdsByTrip.set(s.activity_id, set);
+          }
         });
+
+        // Fetch sport names in one batch
+        const allSportIds = Array.from(
+          new Set(Array.from(sportIdsByTrip.values()).flatMap((s) => Array.from(s)))
+        );
+        if (allSportIds.length > 0) {
+          const { data: sportActs } = await supabase
+            .from("cca_activities")
+            .select("id, name")
+            .in("id", allSportIds);
+          const nameById = new Map<string, string>(
+            (sportActs ?? []).map((a: any) => [a.id, a.name as string])
+          );
+          sportIdsByTrip.forEach((set, tripId) => {
+            const arr: OutdoorTripSport[] = Array.from(set)
+              .map((sid) => ({ sportActivityId: sid, sportName: nameById.get(sid) || "" }))
+              .filter((s) => !!s.sportName)
+              .sort((a, b) => a.sportName.localeCompare(b.sportName));
+            sportsByTrip.set(tripId, arr);
+          });
+        }
       }
 
       const mapped: InvolvedCcaActivity[] = rawActs.map((a: any) => ({
@@ -252,6 +289,7 @@ export function useTeacherInvolvedCcas(campusCode: string | null) {
         myRole: roleMap.get(a.id) ?? "co-pic",
         outdoorBusRoles: busesByActivity.get(a.id) ?? [],
         outdoorSportRoles: sportsByActivity.get(a.id) ?? [],
+        outdoorAllSports: sportsByTrip.get(a.id) ?? [],
         nextSessionDate: pickNextSessionDate(sessionsMap.get(a.id) ?? []),
       }));
 
