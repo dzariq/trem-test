@@ -25,6 +25,8 @@ export function OutdoorCcaCard({ activity, onClick }: OutdoorCcaCardProps) {
 
   const buses = activity.outdoorBusRoles ?? [];
   const sports = activity.outdoorSportRoles ?? [];
+  const allSports = activity.outdoorAllSports ?? [];
+  const myLeadIds = new Set(sports.map((s) => s.sportActivityId));
   const isTripPic =
     activity.myRole === "pic" || activity.myRole === "co-pic";
 
@@ -93,15 +95,6 @@ export function OutdoorCcaCard({ activity, onClick }: OutdoorCcaCardProps) {
               {b.busName} · {b.slot === "main" ? "Main" : "Sub"}
             </Badge>
           ))}
-          {sports.map((s) => (
-            <Badge
-              key={s.sportActivityId}
-              variant="outline"
-              className="border bg-emerald-100 text-emerald-700 border-emerald-200"
-            >
-              Sport PIC · {s.sportName}
-            </Badge>
-          ))}
           {/* Only fall back to the activity-level PIC chip if no bus/sport
               involvement exists. A bus PIC is shown ONLY as their bus,
               never as a misleading parent-trip PIC. */}
@@ -114,6 +107,35 @@ export function OutdoorCcaCard({ activity, onClick }: OutdoorCcaCardProps) {
             </Badge>
           )}
         </div>
+
+        {/* All sports tagged in this trip (everyone sees the same list) */}
+        {allSports.length > 0 && (
+          <div className="space-y-1">
+            <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wide">
+              Sports
+            </p>
+            <div className="flex flex-wrap gap-1.5">
+              {allSports.map((s) => {
+                const mine = myLeadIds.has(s.sportActivityId);
+                return (
+                  <Badge
+                    key={s.sportActivityId}
+                    variant="outline"
+                    className={cn(
+                      "border",
+                      mine
+                        ? "bg-emerald-100 text-emerald-700 border-emerald-200"
+                        : "bg-muted/40 text-foreground border-border"
+                    )}
+                  >
+                    {s.sportName}
+                    {mine && <span className="ml-1 text-[10px] opacity-80">· PIC</span>}
+                  </Badge>
+                );
+              })}
+            </div>
+          </div>
+        )}
 
         {/* Meta */}
         {dateLabel && (
