@@ -58,10 +58,11 @@ export function BusAttendanceList({ activityId, activityPerms }: BusAttendanceLi
         </div>
       ) : (
         <ul className="space-y-3">
-          {buses.map((bus) => (
+          {buses.map((bus, idx) => (
             <BusCard
               key={bus.id}
               bus={bus}
+              busIndex={idx}
               assignments={assignmentsByBus[bus.id] || []}
               picNames={picNames}
               activityPerms={activityPerms}
@@ -77,6 +78,7 @@ export function BusAttendanceList({ activityId, activityPerms }: BusAttendanceLi
 
 interface BusCardProps {
   bus: CcaOutdoorBus;
+  busIndex: number;
   assignments: CcaBusAssignment[];
   picNames: Record<string, string>;
   activityPerms: CcaActivityPermissions;
@@ -88,19 +90,40 @@ function legValue(a: CcaBusAssignment, leg: BusLeg): boolean | null {
   return leg === "outbound" ? a.departed_school : a.departed_venue;
 }
 
-function BusCard({ bus, assignments, picNames, activityPerms, savingByAssignment, onMarkLeg }: BusCardProps) {
+const BUS_THEMES = [
+  { header: "bg-sky-50 dark:bg-sky-950/30 border-sky-200 dark:border-sky-900/60", icon: "text-sky-600 dark:text-sky-400" },
+  { header: "bg-violet-50 dark:bg-violet-950/30 border-violet-200 dark:border-violet-900/60", icon: "text-violet-600 dark:text-violet-400" },
+  { header: "bg-amber-50 dark:bg-amber-950/30 border-amber-200 dark:border-amber-900/60", icon: "text-amber-600 dark:text-amber-400" },
+  { header: "bg-rose-50 dark:bg-rose-950/30 border-rose-200 dark:border-rose-900/60", icon: "text-rose-600 dark:text-rose-400" },
+  { header: "bg-teal-50 dark:bg-teal-950/30 border-teal-200 dark:border-teal-900/60", icon: "text-teal-600 dark:text-teal-400" },
+  { header: "bg-fuchsia-50 dark:bg-fuchsia-950/30 border-fuchsia-200 dark:border-fuchsia-900/60", icon: "text-fuchsia-600 dark:text-fuchsia-400" },
+];
+
+const LEG_THEMES: Record<BusLeg, { active: string; strip: string }> = {
+  outbound: {
+    active: "bg-sky-100 text-sky-800 border-sky-300 dark:bg-sky-900/30 dark:text-sky-200 dark:border-sky-800",
+    strip: "bg-sky-50 dark:bg-sky-950/30 border-y border-sky-100 dark:border-sky-900/50",
+  },
+  return: {
+    active: "bg-orange-100 text-orange-800 border-orange-300 dark:bg-orange-900/30 dark:text-orange-200 dark:border-orange-800",
+    strip: "bg-orange-50 dark:bg-orange-950/30 border-y border-orange-100 dark:border-orange-900/50",
+  },
+};
+
+function BusCard({ bus, busIndex, assignments, picNames, activityPerms, savingByAssignment, onMarkLeg }: BusCardProps) {
   const perms = useCcaBusPermissions(bus, activityPerms);
   const mainName = bus.teacher_pic_main ? picNames[bus.teacher_pic_main] : null;
   const subName = bus.teacher_pic_sub ? picNames[bus.teacher_pic_sub] : null;
   const [activeLeg, setActiveLeg] = useState<BusLeg>("outbound");
+  const theme = BUS_THEMES[busIndex % BUS_THEMES.length];
 
   return (
     <li className="rounded-lg border border-border bg-card overflow-hidden">
       {/* Bus header */}
-      <div className="p-3 border-b">
+      <div className={cn("p-3 border-b", theme.header)}>
         <div className="flex items-center justify-between gap-2">
           <div className="flex items-center gap-2 min-w-0">
-            <Bus className="h-4 w-4 text-primary shrink-0" />
+            <Bus className={cn("h-4 w-4 shrink-0", theme.icon)} />
             <span className="text-sm font-semibold text-foreground truncate">{bus.name}</span>
             {!perms.canManageBus && (
               <Badge variant="secondary" className="text-[10px] shrink-0">View only</Badge>
@@ -152,7 +175,7 @@ function BusCard({ bus, assignments, picNames, activityPerms, savingByAssignment
                   className={cn(
                     "flex-1 inline-flex items-center justify-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium border transition-colors",
                     active
-                      ? "bg-sky-100 text-sky-800 border-sky-300 dark:bg-sky-900/30 dark:text-sky-200 dark:border-sky-800"
+                      ? LEG_THEMES[t.id].active
                       : "bg-card text-muted-foreground border-border hover:text-foreground"
                   )}
                 >
@@ -171,6 +194,7 @@ function BusCard({ bus, assignments, picNames, activityPerms, savingByAssignment
             canManageBus={perms.canManageBus}
             savingByAssignment={savingByAssignment}
             onMarkLeg={onMarkLeg}
+            stripClass={LEG_THEMES[activeLeg].strip}
           />
         </>
       )}
@@ -188,6 +212,7 @@ interface LegSectionProps {
   savingByAssignment: Record<string, boolean>;
   onMarkLeg: (a: CcaBusAssignment, leg: BusLeg, value: boolean | null) => void;
   divided?: boolean;
+  stripClass?: string;
 }
 
 function LegSection({
@@ -200,6 +225,7 @@ function LegSection({
   savingByAssignment,
   onMarkLeg,
   divided,
+  stripClass,
 }: LegSectionProps) {
   const present = assignments.filter((a) => legValue(a, leg) === true).length;
   const absent = assignments.filter((a) => legValue(a, leg) === false).length;
@@ -207,7 +233,10 @@ function LegSection({
 
   return (
     <div className={cn(divided && "border-t border-border")}>
-      <div className="px-3 py-2 bg-sky-50 dark:bg-sky-950/30 border-y border-sky-100 dark:border-sky-900/50 flex items-center justify-between gap-2">
+      <div className={cn(
+        "px-3 py-2 flex items-center justify-between gap-2",
+        stripClass || "bg-muted/40"
+      )}>
         <div className="flex items-center gap-1.5 text-xs font-semibold text-foreground">
           {icon}
           <span>{title}</span>
