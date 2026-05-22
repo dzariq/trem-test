@@ -26,6 +26,20 @@ export interface InvolvedCcaActivity extends CcaActivity {
   nextSessionDate: string | null;
 }
 
+function pickNextSessionDate(sessions: CcaSession[]): string | null {
+  if (!sessions.length) return null;
+  const today = new Date().toISOString().slice(0, 10);
+  const future = sessions
+    .filter((s) => !s.isCancelled && s.sessionDate && s.sessionDate >= today)
+    .sort((a, b) => (a.sessionDate || "").localeCompare(b.sessionDate || ""));
+  if (future.length > 0) return future[0].sessionDate;
+  // Fall back to the most recent past session if no upcoming exists
+  const past = sessions
+    .filter((s) => s.sessionDate)
+    .sort((a, b) => (b.sessionDate || "").localeCompare(a.sessionDate || ""));
+  return past[0]?.sessionDate ?? null;
+}
+
 /**
  * Fetch CCA activities where the logged-in teacher is INVOLVED:
  *   - PIC on cca_activity_teachers, OR
