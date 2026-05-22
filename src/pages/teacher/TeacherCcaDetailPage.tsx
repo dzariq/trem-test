@@ -46,6 +46,8 @@ import { useCampus } from "@/contexts/CampusContext";
 import type { InvolvedCcaActivity } from "@/hooks/useTeacherInvolvedCcas";
 import { useCcaActivityById } from "@/hooks/useCcaActivityById";
 import { useCcaActivityPermissions } from "@/hooks/useCcaActivityPermissions";
+import { useIsBusPicForActivity } from "@/hooks/useIsBusPicForActivity";
+import { useIsSportPicForActivity } from "@/hooks/useIsSportPicForActivity";
 import { useCcaSessions, type CcaSession, type CcaSessionFormData } from "@/hooks/useCcaSessions";
 import { supabase } from "@/lib/supabase";
 import { formatSessionTimeRange } from "@/lib/ccaSessionFormat";
@@ -177,9 +179,21 @@ export default function TeacherCcaDetailPage() {
   const { activeCampus } = useCampus();
   const { activity, status, refetch } = useCcaActivityById(activityId ?? null);
 
-  const perms = useCcaActivityPermissions(activity);
-  const canEdit = perms.canEdit;
+  const basePerms = useCcaActivityPermissions(activity);
   const isOutdoor = (activity?.kind || "").toLowerCase() === "outdoor";
+  const isBusPicForActivity = useIsBusPicForActivity(activityId, isOutdoor);
+  const isSportPicForActivity = useIsSportPicForActivity(activityId, isOutdoor);
+  // Outdoor: bus PICs and sport PICs always get full view + read-only bus list,
+  // even when they have no year overlap and aren't on cca_activity_teachers.
+  // Edit/manage capabilities remain gated by the underlying role checks.
+  const perms = useMemo(() => {
+    if (!isOutdoor) return basePerms;
+    if (isBusPicForActivity || isSportPicForActivity) {
+      return { ...basePerms, canView: true, canViewBuses: true };
+    }
+    return basePerms;
+  }, [basePerms, isOutdoor, isBusPicForActivity, isSportPicForActivity]);
+  const canEdit = perms.canEdit;
 
   const [tab, setTab] = useState<TabId>("overview");
   const [localImageUrl, setLocalImageUrl] = useState<string | null | undefined>(undefined);
