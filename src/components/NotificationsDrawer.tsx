@@ -723,7 +723,8 @@ function DigestPopup({
             return group.items.map((item, ii) => {
               // Extract optional [type] prefix
               const typeMatch = item.match(/^\[([a-z_]+)\]\s*(.*)$/i);
-              const itemType = typeMatch ? typeMatch[1].toLowerCase() : "event";
+              const rawItemType = typeMatch ? typeMatch[1].toLowerCase() : "event";
+              const itemType = rawItemType.startsWith("cca") ? "cca" : rawItemType;
               const rest = typeMatch ? typeMatch[2] : item;
               // Strip leading emoji / pictographs and stray whitespace
               const cleaned = rest
