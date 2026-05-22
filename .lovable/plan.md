@@ -1,58 +1,74 @@
+## Goal
 
-## Parent / Student CCA pages
+When a user logs in via **Email OTP** on the Parent / Student portal:
+1. First try the existing parent lookup (user_profiles + `parent` role).
+2. If no parent match, look up `students.email` for that email.
+3. If a student is found, mint a Supabase session for that student and route them to a new `/students` area that reuses all parent pages/layouts.
 
-Adds a read-only parent-side mirror of the teacher CCA experience: a list of the selected child's enrolled CCAs, plus a tabbed detail page. Built by reusing existing components (`OverviewPanel`, `SchedulePanel`, `VenuePanel`, `SessionNotesSheet`) in read-only mode and a new child-scoped attendance panel.
+## Backend — `supabase/functions/phone-login/index.ts`
 
-### Tabs (parent view)
+Email path only (phone path unchanged):
 
-Per request — no Members tab.
+1. After the current parent lookup fails with "No parent account found":
+   - Query `students` where `lower(email) = emailInput` and `archived = false`.
+   - If 0 rows → return the existing "no account" error.
+   - If found:
+     - If `students.user_id` is null:
+       - `admin.auth.admin.createUser({ email, email_confirm: true })` (or `getUserByEmail` first if it exists).
+       - Update `students.user_id = newAuthUser.id`.
+     - Ensure a `user_roles` row exists with `role = 'student'` for that `user_id` (insert-on-conflict-do-nothing).
+     - Ensure a minimal `user_profiles` row exists (`user_id`, `email`, `role='student'`, `is_active=true`, `full_name = students.name`) — upsert by `user_id`. This is needed because `AuthContext` fetches `user_profiles`.
+   - Call `admin.auth.admin.generateLink({ type: 'magiclink', email })` and return `{ email, token_hash, user_id, account_type: 'student' }`.
 
-- **Overview** — same content as teacher Overview (description, schedule, venue, capacity, PIC, contact, requirements). Internal notes hidden.
-- **Schedule** — same `SchedulePanel` but read-only: no "Add session", no edit/cancel actions, sessions remain tappable to open `SessionNotesSheet` in read-only mode (view title/notes/images/PDFs only, no edit/save/upload/delete).
-- **Attendance** — per-session list scoped to the currently selected child only. Each row shows session date · time · venue · the child's status pill (Present / Absent / Late / Excused / —). Read-only.
-- **Venue** — same `VenuePanel` as teacher.
+No schema migration is required — `students.user_id`, `user_roles.role='student'`, and `user_profiles` already exist.
 
-Hero image, header chips (bucket pill, type name), and pull-to-refresh behave the same. PIC badge / "View only" badge replaced by a simple "Enrolled" pill when applicable.
+## Frontend
 
-### Routes & entry points
+### `src/hooks/useUserRoles.ts`
+- Add `hasStudentRole = roles.includes('student')`.
 
-New routes under existing `ParentStudentGuard`:
+### `src/components/auth/ParentStudentGuard.tsx`
+- Allow access when `hasParentRole || hasStudentRole || allowedRoles.has(profile.role)`. (Already allows legacy `student`/`user` profile.role, this adds the authoritative `user_roles` check.)
 
-- `/parent/cca` — list of the selected child's enrolled CCAs (cards).
-- `/parent/cca/:activityId` — detail page.
+### `src/contexts/StudentSelectionContext.tsx`
+- If `hasStudentRole && !hasParentRole`, instead of `listMyLinkedStudents()` (which uses guardian links), load the single `students` row where `user_id = auth.uid()` and treat it as the only "linked student". Selector UI then naturally shows just themselves.
+- Helper added to `src/data/students.ts`: `getMyStudentSelfRecord()`.
 
-Entry points:
+### `src/pages/Login.tsx`
+- Redirect logic: if `hasStudentRole && !hasParentRole` → `navigate('/students')`. Otherwise unchanged.
 
-1. **Bottom nav / list page** — add a "CCAs" tab (or, if bottom-nav slots are full, surface via Home quick-action and Calendar). Default plan: add to a parent "More" surface and link from Home + Calendar; bottom-nav stays as today to avoid crowding. (Confirm before shipping if you want it in the bottom bar.)
-2. **Home** — the existing `useUpcomingCcaSessions` widget rows on `HomePage.tsx` become tappable and deep-link to `/parent/cca/:activityId`.
-3. **Calendar** — `CcaDetailsSheet` (used in `src/pages/CalendarPage.tsx`) gets a "View full details" button that navigates to `/parent/cca/:activityId` and closes the sheet.
+### `src/App.tsx` — new `/students` route group
+Reuses **the exact same parent page components**, wrapped in the same `ParentStudentGuard`:
 
-### Files
+```
+/students                  → HomePage
+/students/attendance       → AttendancePage
+/students/academic         → AcademicPage
+/students/calendar         → CalendarPage
+/students/invoice          → InvoicePage
+/students/support          → SupportPage
+/students/profile          → ProfilePage
+/students/notifications    → NotificationsPage
+/students/announcements    → AnnouncementsPage
+/students/announcements/:id→ AnnouncementDetailPage
+/students/security-privacy → SecurityPrivacyPage
+/students/privacy-policy   → PrivacyPolicyPage
+/students/contact          → ContactPage
+/students/awards           → AwardsPage
+/students/handbook         → StudentHandbookPage
+/students/visa             → VisaPage
+/students/cca              → ParentCcaPage
+/students/cca/:activityId  → ParentCcaDetailPage
+```
 
-**New**
-- `src/pages/ParentCcaPage.tsx` — list of enrolled CCAs for `selectedStudentId` (uses `useStudentCcaEnrollments`). Reuses `CcaActivityCard` in a read-only variant.
-- `src/pages/ParentCcaDetailPage.tsx` — tabbed shell mirroring `TeacherCcaDetailPage` but with `tabs = [overview, schedule, attendance, venue]`, no edit affordances, wraps in `AppLayout` (parent layout) instead of `TeacherAppLayout`.
-- `src/components/cca/ParentAttendancePanel.tsx` — fetches `cca_attendance` rows for `activityId + studentId` joined to sessions; renders a sorted list (most recent first) with status pills. Empty state when no sessions yet.
+No changes to the page components themselves — they continue to read `selectedStudentId` from `StudentSelectionContext`, which now resolves to the student's own record.
 
-**Edited**
-- `src/App.tsx` — register the two new routes inside the `ParentStudentGuard` block.
-- `src/pages/HomePage.tsx` — wrap upcoming CCA rows in a `Link` to `/parent/cca/:activityId`.
-- `src/pages/CalendarPage.tsx` + `src/components/cca/CcaDetailsSheet.tsx` — add an optional `onViewFullDetails` action to the sheet; CalendarPage passes a handler that navigates to the detail route.
-- `src/components/cca/SessionNotesSheet.tsx` — accept a `readOnly` prop; when true, hide edit controls, save button, image upload, image delete, and PDF delete (view + open only).
-- `src/components/cca/SchedulePanel` (currently inside `TeacherCcaDetailPage.tsx`) — extract to `src/components/cca/SchedulePanel.tsx` and accept a `canEdit` prop so it can be reused by the parent page in read-only mode. Teacher page imports the extracted module.
+### Navigation
+- `BottomNavigation` and `AppHeader` link prefixes today are hard-coded to `/parent/*`. For the first pass, leave them as-is — the routes will still work because both groups render the same components and resolve to the same data. (Optional follow-up: dynamic prefix based on `hasStudentRole`.)
 
-### Permissions & data
+## Out of scope
+- No changes to teacher portal.
+- No new tables, no RLS changes (`students` SELECT already restricted; the student's own row is visible via existing `user_id = auth.uid()` policies).
+- Phone OTP login path is unchanged.
 
-- All reads use existing tables (`cca_activities`, `cca_activity_teachers`, `cca_sessions`, `cca_session_attachments`, `cca_attendance`, `student_cca_enrollments`). Existing parent RLS already covers these (per `mem://security/cca-enrollment-rls`, `mem://features/parent-cca-read-only-access`, and the `get_teacher_public_info` RPC). No migration needed.
-- The parent detail page must verify the selected child is actually enrolled in the activity before rendering content; if not, show "Not enrolled" empty state and a back link.
-- Attendance query filters strictly on `student_id = selectedStudentId` AND `cca_activity_id = activityId` (or via the session join). No cross-child leakage.
-- Uses `StudentSelectionContext` for the active child; switching the child on the detail page refetches attendance and the enrolled check.
-
-### Mobile-app sibling impact
-
-Read-only, additive — no schema or RLS changes. Safe for the shared Supabase backend; the sibling mobile app is unaffected.
-
-### Out of scope
-
-- No Members tab, no enrollment management, no editing, no uploads.
-- Bottom-nav slot reshuffle (will confirm separately if you want CCA promoted there).
+Confirm and I'll implement.
