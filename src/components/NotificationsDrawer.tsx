@@ -25,6 +25,8 @@ import {
   Palette,
   Palmtree,
   PenLine,
+  Tent,
+  PartyPopper,
   X,
   Sparkles,
   Clock,
@@ -79,6 +81,10 @@ type NotificationType =
   | "ptm"
   | "message"
   | "cca"
+  | "cca_club"
+  | "cca_outdoor"
+  | "cca_event"
+  | "cca_sport"
   | "holiday"
   | "exam"
   | "weekly_digest"
@@ -158,6 +164,10 @@ export function NotificationsDrawer({ open, onOpenChange }: NotificationsDrawerP
       case "ptm": return MessageSquare;
       case "message": return MessageSquare;
       case "cca": return Palette;
+      case "cca_club": return Palette;
+      case "cca_outdoor": return Tent;
+      case "cca_event": return PartyPopper;
+      case "cca_sport": return Trophy;
       case "holiday": return Palmtree;
       case "exam": return PenLine;
       case "weekly_digest": return CalendarRange;
@@ -184,6 +194,10 @@ export function NotificationsDrawer({ open, onOpenChange }: NotificationsDrawerP
       case "ptm": return "bg-violet-500 text-white";
       case "message": return "bg-sky-500 text-white";
       case "cca": return "bg-emerald-500 text-white";
+      case "cca_club": return "bg-emerald-500 text-white";
+      case "cca_outdoor": return "bg-amber-600 text-white";
+      case "cca_event": return "bg-fuchsia-500 text-white";
+      case "cca_sport": return "bg-orange-500 text-white";
       case "holiday": return "bg-teal-500 text-white";
       case "exam": return "bg-rose-500 text-white";
       case "weekly_digest": return "bg-emerald-600 text-white";
@@ -709,7 +723,8 @@ function DigestPopup({
             return group.items.map((item, ii) => {
               // Extract optional [type] prefix
               const typeMatch = item.match(/^\[([a-z_]+)\]\s*(.*)$/i);
-              const itemType = typeMatch ? typeMatch[1].toLowerCase() : "event";
+              const rawItemType = typeMatch ? typeMatch[1].toLowerCase() : "event";
+              const itemType = rawItemType.startsWith("cca") ? "cca" : rawItemType;
               const rest = typeMatch ? typeMatch[2] : item;
               // Strip leading emoji / pictographs and stray whitespace
               const cleaned = rest

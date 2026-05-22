@@ -1,67 +1,71 @@
 ## Goal
 
-For every CCA session a user is involved in (teachers as PIC/co-PIC/bus/sport PIC; parents for enrolled children), surface a reminder **3 days before** the session and again **on the day**. Reminders appear in the in-app Notifications bell AND fire as a native local push on mobile.
+Make "CCA Session Created" notifications more student/parent-friendly and visually distinguishable by CCA kind (Club / Outdoor / Event / Sport), in:
+- The DB-trigger notification fired when a new CCA session is created
+- The T-3 / on-the-day reminder synthetic notifications (parent + teacher)
+- The native local-push reminders
 
-## Scope
+## New wording
 
-- Audience: teachers + parents (per their CCAs).
-- Triggers per session: `T-3` and `T-0` (morning of, default 07:00 device-local).
-- No backend cron / no FCM/APNs setup. Push is handled by Capacitor **Local Notifications** scheduled on the device when the app opens / refocuses. This keeps it inside the existing "shared Supabase backend" contract — no schema changes needed.
+Created (DB trigger):
+- Title: `{Activity Name}` (e.g. `Board Games`) — activity name front-and-centre instead of "CCA Session Created"
+- Message: `New {Kind} session · Fri, 31 Jul · 3:30 PM–4:30 PM` (parent) / `New {Kind} session you're leading · Fri, 31 Jul · 3:30 PM–4:30 PM` (teacher)
 
-## In-app bell changes (`src/hooks/useNotifications.ts`)
+T-3 reminder:
+- Title: `{Activity Name} is in 3 days`
+- Message: `{Kind} · Fri, 31 Jul at 3:30 PM`
 
-Today the hook already pulls upcoming CCA sessions for parents (`cca_session_enrollments`) and teachers (`cca_session_pics`) within a ~14-day window and emits synthetic notifications. We tighten the emit rule:
+On the day (T-0):
+- Title: `{Activity Name} is today`
+- Message: `{Kind} · 3:30 PM at {location?}` (location only if present in DB synthetic path; native push keeps just the time)
 
-- For each upcoming session, compute `daysOut = sessionDate − today` in local time.
-- Only emit a synthetic notification when `daysOut === 3` OR `daysOut === 0`.
-- Use two distinct `source_key`s per session so each trigger is independently read/dismissed:
-  - `cca-session:{id}:t-3` and `cca-session:{id}:t-0` (parents)
-  - `teacher-cca:{id}:t-3` and `teacher-cca:{id}:t-0` (teachers)
-- Title prefix reflects the trigger so it's scannable:
-  - `T-3` → `⏰ In 3 days · {Activity name}`
-  - `T-0` → `🔔 Today · {Activity name}`
-- Message keeps date + start time as today.
+"Kind" label uses Title Case: `Club`, `Outdoor`, `Event`, `Sport`.
 
-Existing dismissal/read storage (`synthetic-notification-state` in localStorage) works as-is — the new source_keys just slot in.
+## Icon + colour per kind
 
-## Native push (Capacitor Local Notifications)
+Introduce four new notification `type` values so the bell list can render distinct icons + colours:
 
-New small module + hook:
+| type           | icon (lucide) | colour class                           |
+|----------------|---------------|----------------------------------------|
+| `cca_club`     | `Palette`     | `bg-emerald-500 text-white` (current)  |
+| `cca_outdoor`  | `Tent`        | `bg-amber-600 text-white`              |
+| `cca_event`    | `PartyPopper` | `bg-fuchsia-500 text-white`            |
+| `cca_sport`    | `Trophy`      | `bg-orange-500 text-white`             |
 
-- Install `@capacitor/local-notifications` and register the plugin (`npx cap sync` reminder for the user after deploy).
-- `src/lib/native/ccaLocalNotifications.ts`
-  - `scheduleCcaReminders(sessions: Array<{ id, title, sessionDate, startTime }>)`:
-    - For each session, schedule two local notifications:
-      - At `sessionDate − 3 days` at 07:00 local
-      - At `sessionDate` at 07:00 local
-    - Notification id is a deterministic 31-bit hash of `${role}:${sessionId}:${trigger}` so re-scheduling is idempotent.
-    - Skip scheduling if the trigger time is already in the past.
-    - Persist scheduled ids in localStorage (`cca-local-notif-ids`) so we can cancel stale ones when the session list shrinks.
-  - `cancelStaleCcaReminders(currentIds)` removes notifications for sessions no longer in the active list.
-  - All calls are no-ops on web (`Capacitor.isNativePlatform()` guard).
-- `src/hooks/useCcaPushReminders.ts`
-  - Runs in `AppLayout` / `TeacherAppLayout` (already mounted for logged-in users).
-  - Fetches the same teacher/parent CCA session lists already used by `useNotifications` (within the next 30 days) and calls `scheduleCcaReminders` + `cancelStaleCcaReminders`.
-  - Re-runs on auth change, on app resume (Capacitor `App` `resume` event), and on a 6-hour interval.
-- Permission: request `LocalNotifications.requestPermissions()` once on first native run; gracefully ignore denial.
+Legacy `type === "cca"` rows keep current Palette/emerald rendering (back-compat).
 
-## Files to touch
+Kind resolution:
+- DB trigger / synthetic hooks read `cca_activities.kind` (`club` | `outdoor` | `event`).
+- "Sport" is detected when `kind = 'club'` AND activity name/category matches `/sport|football|basketball|swim|rugby|cricket|netball|athletic|tennis|badminton|volleyball/i` — only used for icon/colour selection and the `Sport` label.
 
-- `src/hooks/useNotifications.ts` — gate CCA synthetic emits to `daysOut ∈ {0, 3}`, new source_key + title format (parent + teacher branches).
-- `src/lib/native/ccaLocalNotifications.ts` — new helper (schedule/cancel + hash + localStorage).
-- `src/hooks/useCcaPushReminders.ts` — new hook (fetch + schedule, resume listener).
-- `src/components/layout/AppLayout.tsx` and `src/components/layout/TeacherAppLayout.tsx` — mount the hook.
-- `package.json` — add `@capacitor/local-notifications`.
+## Files to change
+
+Database
+- `supabase/migrations/{new}.sql` — replace `public.notify_cca_session_created()` so it:
+  - Joins `cca_activities` to read `kind` (and name for sport detection)
+  - Maps kind → `cca_club` / `cca_outdoor` / `cca_event` / `cca_sport` and a friendly kind label
+  - Writes the new title/message shape above for both teacher and parent inserts
+  - Preserves existing `dedupe_key`s so re-running the trigger updates the same rows
+
+Frontend
+- `src/hooks/useNotifications.ts` — for both the parent (`cca_session_enrollments`) and teacher (`cca_session_pics`) T-3/T-0 blocks:
+  - Also `select` `activity:cca_activities(name, kind, category)`
+  - Compute `cca_*` type + kind label
+  - Emit the new title/message shape; keep existing `source_key` so dismissals/read-state survive
+- `src/components/NotificationsDrawer.tsx` — extend `getTypeIcon` and `getTypeColor` with the four new `cca_*` types (keep `cca` fallback)
+- `src/pages/NotificationsPage.tsx` and `src/pages/teacher/TeacherNotificationsPage.tsx` — mirror the same icon/colour mapping if they maintain their own (will be verified before editing)
+
+Native push
+- `src/lib/native/ccaLocalNotifications.ts` — accept optional `kind` on `CcaReminderInput`; produce the matching title (`{name} is in 3 days` / `{name} is today`) and body (`{Kind} session at {time}`)
+- `src/hooks/useCcaPushReminders.ts` — pull `kind` from the `cca_activities` join and pass it into `scheduleCcaReminders`
 
 ## Out of scope
 
-- Server-driven push (FCM/APNs, edge-function senders, `pg_cron`) — not needed for the requested 3-day/day-of reminders.
-- New database tables, RLS changes, or edge-function changes.
-- Changing the existing 14-day "upcoming events" listing in the bell; we only narrow the auto-emitted reminder set.
-- iOS/Android native build wiring — user runs `npx cap sync` themselves per existing project flow.
+- No new DB columns, RLS, or edge-function changes.
+- No new "kind" entity beyond mapping `club + sporty name → sport` for visuals.
+- No change to dismissal / read-state behaviour or to the 3-day + on-the-day cadence.
 
-## Notes / risks
+## Verification
 
-- Local notifications fire only if the device has granted permission and the app has been opened at least once since the session was created. Acceptable for this product per the chosen "In-app + push (native mobile)" delivery option.
-- 07:00 local fire time is a sensible default; we can expose a setting later if needed.
-- The shared Supabase backend is untouched, so the sibling mobile-app project is unaffected.
+- After the migration deploys, insert a test row into `cca_sessions` for each kind (club / outdoor / event, plus a sport-named club) and confirm rows appear in `notifications` with the new `type`, title, and message.
+- In preview, open the bell on `/teacher/cca` and `/parent/calendar` and confirm each kind shows the correct icon + colour and the rephrased copy.

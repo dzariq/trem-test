@@ -151,6 +151,21 @@ export function useNotifications() {
         if (sessionDate === ccaReminderDates.in3Local) return "t-3";
         return null;
       };
+      const resolveCcaKind = (
+        kind: string | null | undefined,
+        activityName: string | null | undefined,
+        category: string | null | undefined,
+      ): { kindLabel: "Club" | "Outdoor" | "Event" | "Sport"; ccaType: string } => {
+        const k = (kind || "club").toLowerCase();
+        const sportRegex = /(sport|football|basketball|swim|rugby|cricket|netball|athletic|tennis|badminton|volleyball)/i;
+        const isSport =
+          k === "club" &&
+          (sportRegex.test(activityName || "") || /sport/i.test(category || ""));
+        if (k === "outdoor") return { kindLabel: "Outdoor", ccaType: "cca_outdoor" };
+        if (k === "event") return { kindLabel: "Event", ccaType: "cca_event" };
+        if (isSport) return { kindLabel: "Sport", ccaType: "cca_sport" };
+        return { kindLabel: "Club", ccaType: "cca_club" };
+      };
       const syntheticState = getSyntheticNotificationState(user.id);
       const readSyntheticKeys = new Set(syntheticState.read);
       const dismissedSyntheticKeys = new Set(syntheticState.dismissed);
@@ -204,7 +219,7 @@ export function useNotifications() {
               session_date,
               start_time,
               custom_title,
-              activity:cca_activities(name)
+              activity:cca_activities(name, kind, category)
             )
           `)
           .in("student_id", studentIds)
@@ -227,13 +242,21 @@ export function useNotifications() {
             const sourceKey = `cca-session:${session.id}:${trigger}`;
             if (dismissedSyntheticKeys.has(sourceKey)) continue;
 
-            const titlePrefix = trigger === "t-0" ? "🔔 Today" : "⏰ In 3 days";
+            const { kindLabel, ccaType } = resolveCcaKind(
+              session.activity?.kind,
+              session.activity?.name,
+              session.activity?.category,
+            );
+            const title =
+              trigger === "t-0"
+                ? `${activityName} is today`
+                : `${activityName} is in 3 days`;
             allNotifications.push({
               id: `cca-session-${session.id}-${trigger}`,
               user_id: null,
-              title: `${titlePrefix} · ${activityName}`,
-              message: `${formatEventDate(session.session_date)}${startTime}`,
-              type: "cca",
+              title,
+              message: `${kindLabel} · ${formatEventDate(session.session_date)}${startTime}`,
+              type: ccaType,
               link_to: "/parent/calendar",
               target_audience: "parent",
               created_at: now.toISOString(),
@@ -339,7 +362,7 @@ export function useNotifications() {
               session_date,
               start_time,
               custom_title,
-              activity:cca_activities(name)
+              activity:cca_activities(name, kind, category)
             )
           `)
           .eq("teacher_user_id", user.id);
@@ -358,13 +381,21 @@ export function useNotifications() {
             const sourceKey = `teacher-cca:${session.id}:${trigger}`;
             if (dismissedSyntheticKeys.has(sourceKey)) continue;
 
-            const titlePrefix = trigger === "t-0" ? "🔔 Today" : "⏰ In 3 days";
+            const { kindLabel, ccaType } = resolveCcaKind(
+              session.activity?.kind,
+              session.activity?.name,
+              session.activity?.category,
+            );
+            const title =
+              trigger === "t-0"
+                ? `${activityName} is today`
+                : `${activityName} is in 3 days`;
             allNotifications.push({
               id: `teacher-cca-${session.id}-${trigger}`,
               user_id: null,
-              title: `${titlePrefix} · ${activityName} (PIC)`,
-              message: `${formatEventDate(session.session_date)}${startTime}`,
-              type: "cca",
+              title,
+              message: `${kindLabel} · ${formatEventDate(session.session_date)}${startTime} · You're leading`,
+              type: ccaType,
               link_to: "/teacher/calendar",
               target_audience: "teacher",
               created_at: now.toISOString(),
