@@ -362,7 +362,7 @@ export function useNotifications() {
               session_date,
               start_time,
               custom_title,
-              activity:cca_activities(name)
+              activity:cca_activities(name, kind, category)
             )
           `)
           .eq("teacher_user_id", user.id);
@@ -381,13 +381,21 @@ export function useNotifications() {
             const sourceKey = `teacher-cca:${session.id}:${trigger}`;
             if (dismissedSyntheticKeys.has(sourceKey)) continue;
 
-            const titlePrefix = trigger === "t-0" ? "🔔 Today" : "⏰ In 3 days";
+            const { kindLabel, ccaType } = resolveCcaKind(
+              session.activity?.kind,
+              session.activity?.name,
+              session.activity?.category,
+            );
+            const title =
+              trigger === "t-0"
+                ? `${activityName} is today`
+                : `${activityName} is in 3 days`;
             allNotifications.push({
               id: `teacher-cca-${session.id}-${trigger}`,
               user_id: null,
-              title: `${titlePrefix} · ${activityName} (PIC)`,
-              message: `${formatEventDate(session.session_date)}${startTime}`,
-              type: "cca",
+              title,
+              message: `${kindLabel} · ${formatEventDate(session.session_date)}${startTime} · You're leading`,
+              type: ccaType,
               link_to: "/teacher/calendar",
               target_audience: "teacher",
               created_at: now.toISOString(),
