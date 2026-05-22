@@ -293,7 +293,16 @@ export function useTeacherInvolvedCcas(campusCode: string | null) {
         nextSessionDate: pickNextSessionDate(sessionsMap.get(a.id) ?? []),
       }));
 
-      mapped.sort((a, b) => a.name.localeCompare(b.name));
+      // Sort by soonest upcoming session first (nulls last), then by name.
+      const today = new Date().toISOString().slice(0, 10);
+      const upcomingKey = (d: string | null) =>
+        d && d >= today ? d : "\uffff";
+      mapped.sort((a, b) => {
+        const ak = upcomingKey(a.nextSessionDate);
+        const bk = upcomingKey(b.nextSessionDate);
+        if (ak !== bk) return ak.localeCompare(bk);
+        return a.name.localeCompare(b.name);
+      });
       if (requestId === requestIdRef.current) {
         setActivities(mapped);
       }
