@@ -217,6 +217,9 @@ export function useCcaActivityById(
         picTeachers,
         sessions,
         myRole,
+        outdoorBusRoles: [],
+        outdoorSportRoles: [],
+        nextSessionDate: null,
       };
 
       setActivity(mapped);

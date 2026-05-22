@@ -3,16 +3,48 @@ import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/contexts/AuthContext";
 import type { CcaActivity, CcaSession, CcaTeacher } from "@/hooks/useCcaActivities";
 
-export type MyCcaRole = "pic" | "co-pic" | "bus-pic";
+export type MyCcaRole = "pic" | "co-pic" | "bus-pic" | "sport-pic";
+
+export interface OutdoorBusRole {
+  busId: string;
+  busName: string;
+  slot: "main" | "sub";
+}
+
+export interface OutdoorSportRole {
+  sportActivityId: string;
+  sportName: string;
+}
 
 export interface InvolvedCcaActivity extends CcaActivity {
   myRole: MyCcaRole;
+  /** Outdoor-only: buses this user is main/sub PIC of, for this trip. */
+  outdoorBusRoles: OutdoorBusRole[];
+  /** Outdoor-only: sports this user is lead PIC of, within this trip. */
+  outdoorSportRoles: OutdoorSportRole[];
+  /** Soonest upcoming session (YYYY-MM-DD) or null. */
+  nextSessionDate: string | null;
+}
+
+function pickNextSessionDate(sessions: CcaSession[]): string | null {
+  if (!sessions.length) return null;
+  const today = new Date().toISOString().slice(0, 10);
+  const future = sessions
+    .filter((s) => !s.isCancelled && s.sessionDate && s.sessionDate >= today)
+    .sort((a, b) => (a.sessionDate || "").localeCompare(b.sessionDate || ""));
+  if (future.length > 0) return future[0].sessionDate;
+  // Fall back to the most recent past session if no upcoming exists
+  const past = sessions
+    .filter((s) => s.sessionDate)
+    .sort((a, b) => (b.sessionDate || "").localeCompare(a.sessionDate || ""));
+  return past[0]?.sessionDate ?? null;
 }
 
 /**
  * Fetch CCA activities where the logged-in teacher is INVOLVED:
  *   - PIC on cca_activity_teachers, OR
- *   - teacher_pic_main / teacher_pic_sub on cca_outdoor_buses
+ *   - teacher_pic_main / teacher_pic_sub on cca_outdoor_buses, OR
+ *   - sport lead on cca_session_sport_pics (parent trip resolved via the session)
  *
  * Scoped to the given campus (with NULL campus also included for global rows).
  */
@@ -39,20 +71,57 @@ export function useTeacherInvolvedCcas(campusCode: string | null) {
         .eq("teacher_user_id", uid);
       if (picErr) throw picErr;
 
-      // 2. Outdoor bus assignments
+      // 2. Outdoor bus assignments (capture bus name + slot for the card chip)
       const { data: busRows, error: busErr } = await supabase
         .from("cca_outdoor_buses")
-        .select("activity_id, teacher_pic_main, teacher_pic_sub")
+        .select("id, name, activity_id, teacher_pic_main, teacher_pic_sub")
         .or(`teacher_pic_main.eq.${uid},teacher_pic_sub.eq.${uid}`);
       if (busErr) throw busErr;
 
-      // Build role map (PIC takes precedence over Bus PIC)
+      // 3. Sport PIC assignments — resolve parent trip via session
+      const { data: sportRows, error: sportErr } = await supabase
+        .from("cca_session_sport_pics")
+        .select(
+          "session_id, activity_id, cca_sessions!cca_session_sport_pics_session_id_fkey(activity_id), cca_activities!cca_session_sport_pics_activity_id_fkey(name)"
+        )
+        .eq("teacher_user_id", uid);
+      if (sportErr) throw sportErr;
+
+      // Build per-trip aggregates
+      const busesByActivity = new Map<string, OutdoorBusRole[]>();
+      (busRows ?? []).forEach((r: any) => {
+        const slot: "main" | "sub" =
+          r.teacher_pic_main === uid ? "main" : "sub";
+        const list = busesByActivity.get(r.activity_id) ?? [];
+        list.push({ busId: r.id, busName: r.name || "Bus", slot });
+        busesByActivity.set(r.activity_id, list);
+      });
+
+      const sportsByActivity = new Map<string, OutdoorSportRole[]>();
+      (sportRows ?? []).forEach((r: any) => {
+        const parentId = r.cca_sessions?.activity_id;
+        const sportName = r.cca_activities?.name;
+        if (!parentId || !sportName) return;
+        const list = sportsByActivity.get(parentId) ?? [];
+        // Dedup by sport activity id
+        if (!list.some((s) => s.sportActivityId === r.activity_id)) {
+          list.push({ sportActivityId: r.activity_id, sportName });
+        }
+        sportsByActivity.set(parentId, list);
+      });
+
+      // Build role map. Priority: activity PIC > bus PIC > sport PIC.
+      // (Display chips can still show all involvements via outdoorBusRoles /
+      // outdoorSportRoles regardless of which one "wins" the badge.)
       const roleMap = new Map<string, MyCcaRole>();
       (picRows ?? []).forEach((r: any) => {
         roleMap.set(r.activity_id, r.is_primary ? "pic" : "co-pic");
       });
-      (busRows ?? []).forEach((r: any) => {
-        if (!roleMap.has(r.activity_id)) roleMap.set(r.activity_id, "bus-pic");
+      busesByActivity.forEach((_v, aid) => {
+        if (!roleMap.has(aid)) roleMap.set(aid, "bus-pic");
+      });
+      sportsByActivity.forEach((_v, aid) => {
+        if (!roleMap.has(aid)) roleMap.set(aid, "sport-pic");
       });
 
       const activityIds = Array.from(roleMap.keys());
@@ -174,6 +243,9 @@ export function useTeacherInvolvedCcas(campusCode: string | null) {
         picTeachers: picTeachersMap.get(a.id) || [],
         sessions: sessionsMap.get(a.id) || [],
         myRole: roleMap.get(a.id) ?? "co-pic",
+        outdoorBusRoles: busesByActivity.get(a.id) ?? [],
+        outdoorSportRoles: sportsByActivity.get(a.id) ?? [],
+        nextSessionDate: pickNextSessionDate(sessionsMap.get(a.id) ?? []),
       }));
 
       mapped.sort((a, b) => a.name.localeCompare(b.name));

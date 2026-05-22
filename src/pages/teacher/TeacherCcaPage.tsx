@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { CcaActivityCard } from "@/components/cca/CcaActivityCard";
+import { OutdoorCcaCard } from "@/components/cca/OutdoorCcaCard";
 import { useCampus } from "@/contexts/CampusContext";
 import {
   useTeacherInvolvedCcas,
@@ -27,6 +28,7 @@ const ROLE_META: Record<MyCcaRole, { label: string; className: string }> = {
   pic: { label: "PIC", className: "bg-purple-100 text-purple-700 border-purple-200" },
   "co-pic": { label: "Co-PIC", className: "bg-sky-100 text-sky-700 border-sky-200" },
   "bus-pic": { label: "Bus PIC", className: "bg-amber-100 text-amber-700 border-amber-200" },
+  "sport-pic": { label: "Sport PIC", className: "bg-emerald-100 text-emerald-700 border-emerald-200" },
 };
 
 export default function TeacherCcaPage() {
@@ -110,6 +112,18 @@ export default function TeacherCcaPage() {
         {!loading &&
           visible.map((a) => {
             const meta = ROLE_META[a.myRole];
+            const isOutdoor = (a.kind || "").toLowerCase() === "outdoor";
+
+            if (isOutdoor) {
+              return (
+                <OutdoorCcaCard
+                  key={a.id}
+                  activity={a}
+                  onClick={() => navigate(`/teacher/cca/${a.id}`)}
+                />
+              );
+            }
+
             return (
               <div key={a.id} className="space-y-1.5">
                 <div className="flex items-center gap-2 px-1">
