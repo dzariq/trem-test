@@ -8,6 +8,21 @@ import { scheduleCcaReminders, type CcaReminderInput } from "@/lib/native/ccaLoc
 
 const REFRESH_INTERVAL_MS = 6 * 60 * 60 * 1000; // 6 hours
 
+type CcaKindLabel = "Club" | "Outdoor" | "Event" | "Sport";
+
+function resolveKindLabel(
+  kind: string | null | undefined,
+  activityName: string | null | undefined,
+  category: string | null | undefined,
+): CcaKindLabel {
+  const k = (kind || "club").toLowerCase();
+  const sportRegex = /(sport|football|basketball|swim|rugby|cricket|netball|athletic|tennis|badminton|volleyball)/i;
+  if (k === "outdoor") return "Outdoor";
+  if (k === "event") return "Event";
+  if (k === "club" && (sportRegex.test(activityName || "") || /sport/i.test(category || ""))) return "Sport";
+  return "Club";
+}
+
 /**
  * On native platforms, schedule T-3 and T-0 local push reminders for the
  * user's upcoming CCA sessions (next 30 days). Re-runs on auth change, app
@@ -42,7 +57,7 @@ export function useCcaPushReminders() {
           const { data } = await supabase
             .from("cca_session_pics")
             .select(
-              `session:cca_sessions(id, session_date, start_time, custom_title, activity:cca_activities(name))`,
+              `session:cca_sessions(id, session_date, start_time, custom_title, activity:cca_activities(name, kind, category))`,
             )
             .eq("teacher_user_id", user.id);
           for (const row of data || []) {
@@ -56,13 +71,14 @@ export function useCcaPushReminders() {
               sessionDate: s.session_date,
               startTime: s.start_time,
               link: "/teacher/calendar",
+              kindLabel: resolveKindLabel(s.activity?.kind, s.activity?.name, s.activity?.category),
             });
           }
         } else if (studentIds.length > 0) {
           const { data } = await supabase
             .from("cca_session_enrollments")
             .select(
-              `session:cca_sessions(id, session_date, start_time, custom_title, activity:cca_activities(name))`,
+              `session:cca_sessions(id, session_date, start_time, custom_title, activity:cca_activities(name, kind, category))`,
             )
             .in("student_id", studentIds)
             .eq("status", "enrolled");
@@ -79,6 +95,7 @@ export function useCcaPushReminders() {
               sessionDate: s.session_date,
               startTime: s.start_time,
               link: "/parent/calendar",
+              kindLabel: resolveKindLabel(s.activity?.kind, s.activity?.name, s.activity?.category),
             });
           }
         }
