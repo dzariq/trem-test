@@ -7,6 +7,7 @@ export interface CcaReminderInput {
   startTime?: string | null; // HH:MM(:SS)
   role: "teacher" | "parent";
   link?: string | null;
+  kindLabel?: "Club" | "Outdoor" | "Event" | "Sport";
 }
 
 const STORAGE_KEY = "cca-local-notif-ids";
@@ -89,12 +90,20 @@ export async function scheduleCcaReminders(sessions: CcaReminderInput[]): Promis
       if (!at) continue;
       if (at.getTime() <= now.getTime()) continue;
       const id = hash31(`${s.role}:${s.sessionId}:${trigger}`);
-      const prefix = trigger === "t-0" ? "Today" : "In 3 days";
       const time = s.startTime ? ` at ${String(s.startTime).slice(0, 5)}` : "";
+      const kind = s.kindLabel || "CCA";
+      const title =
+        trigger === "t-0"
+          ? `${s.activityName} is today`
+          : `${s.activityName} is in 3 days`;
+      const body =
+        trigger === "t-0"
+          ? `${kind} session today${time}.`
+          : `${kind} session in 3 days${time}.`;
       desired.push({
         id,
-        title: `${prefix}: ${s.activityName}`,
-        body: `Your CCA session is ${trigger === "t-0" ? "today" : "in 3 days"}${time}.`,
+        title,
+        body,
         schedule: { at },
         extra: { url: s.link ?? null },
       });
