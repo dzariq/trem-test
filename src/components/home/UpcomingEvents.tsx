@@ -141,12 +141,26 @@ export function UpcomingEvents({ events, ccaSessions, seeAllPath = "/parent/cale
     event: MergedEvent | null
   ) => {
     if (!event) return;
+    if (event.isCca && !isTeacher) {
+      const ccaSession = event as UpcomingCcaSession;
+      if (ccaSession.activityId) {
+        navigate(`/parent/cca/${ccaSession.activityId}`);
+        return;
+      }
+    }
     openDetails(event, mouseEvent.currentTarget);
   };
 
   const handleKeyDown = (keyboardEvent: KeyboardEvent, item: MergedEvent) => {
     if (keyboardEvent.key === "Enter" || keyboardEvent.key === " ") {
       keyboardEvent.preventDefault();
+      if (item.isCca && !isTeacher) {
+        const ccaSession = item as UpcomingCcaSession;
+        if (ccaSession.activityId) {
+          navigate(`/parent/cca/${ccaSession.activityId}`);
+          return;
+        }
+      }
       openDetails(item, keyboardEvent.currentTarget as HTMLElement | null);
     }
   };
