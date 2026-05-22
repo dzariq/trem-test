@@ -166,6 +166,10 @@ const App = () => (
                     path="/teacher/cca/:activityId"
                     element={<TeacherCcaDetailPage />}
                   />
+                  <Route
+                    path="/teacher/venue/:venueId"
+                    element={<TeacherVenueDetailPage />}
+                  />
                   <Route path="/teacher/week-config" element={<WeekConfigPage />} />
                   <Route
                     path="/teacher/security-privacy"
