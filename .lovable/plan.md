@@ -1,39 +1,76 @@
 ## Goal
 
-For outdoor activity detail page, give every teacher with any outdoor role (bus main/sub PIC, sport main/sub PIC, trip PIC/Co-PIC) the same unified view with exactly four tabs:
+Promote **Schedule** to a top-level tab on the teacher CCA detail page. Each date in the schedule opens a session-notes view where PICs can edit a session title, remarks/notes, attach images, and attach PDFs. Parents/teachers without edit rights see the same view in read-only mode.
 
-1. **Overview** — trip summary + Schedule rendered inline (already inline today)
-2. **Sports** — list of sub-sports for the trip with their leads, venue, capacity
-3. **Venue** — trip venue card (unchanged)
-4. **Buses** — bus list with rosters and outbound/return attendance (current "Bus list" tab, renamed)
+## Tab changes (`TeacherCcaDetailPage.tsx`)
 
-The detail page renders identically regardless of which outdoor role the teacher holds. Permission gating stays at the action level (e.g. only that bus' Main/Sub PIC can mark its attendance), not at the tab/visibility level.
+Add `Schedule` between `Overview` and `Members/Attendance`:
 
-## Changes
+- Clubs/Events: `Overview · Schedule · Members · Attendance · Venue`
+- Outdoor:     `Overview · Schedule · Sports · Venue · Buses`
 
-### 1. `src/pages/teacher/TeacherCcaDetailPage.tsx`
-- Replace the outdoor tab array with: `Overview`, `Sports`, `Venue`, `Buses` (in this order).
-- Keep non-outdoor activities on their existing tab set (`Overview`, `Members`, `Attendance`, `Venue`) — unchanged.
-- Rename outdoor "Bus list" label to **Buses**; tab id can stay `members` internally to avoid a large refactor, but the rendered label and order change.
-- Add a new tab id `sports` for outdoor only.
-- Overview already renders Schedule inline — no change needed there.
+Remove the inline `<SchedulePanel />` block currently rendered under Overview (Overview keeps description, schedule summary card, PIC list, etc., but the dedicated session list moves out).
 
-### 2. New `SportsPanel` (inline in same file or `src/components/cca/SportsPanel.tsx`)
-Reads sub-sports for the outdoor trip:
-- Source: distinct `sport_activity_ids` across all `cca_sessions` of the trip, joined to `cca_activities` for name/venue, and to `cca_session_sport_pics` for sport leads (main/sub).
-- Each row shows: sport name, lead teachers (chips with Main/Sub), session date(s), capacity if available.
-- Read-only for everyone in this iteration (no attendance taking from this tab).
+## Schedule tab UX
 
-### 3. No permission changes
-- All four tabs are visible to any teacher returned by `useTeacherInvolvedCcas` for that trip.
-- Bus attendance buttons in the Buses tab keep the existing rule: only that bus' Main or Sub PIC can mark; others see roster read-only. (Already implemented in earlier step.)
+A new `ScheduleTab` panel renders the existing session cards from `useCcaSessions`. Behaviour:
+
+- Each session card becomes tappable; tapping opens a **Session Notes** sheet (bottom sheet, 75vh standard, `z-[100]`).
+- PIC-only `+ Add session` button stays at top-right (reuses `SessionFormDialog` for date/time/location creation).
+- Past sessions stay collapsed under a "Past sessions" group; upcoming first.
+
+### Session Notes sheet
+
+Header: session date + optional custom title chip. PIC sees a small `Edit` pencil; everyone sees the content.
+
+Sections (all optional):
+
+1. **Title** – text input, maps to `cca_sessions.custom_title`.
+2. **Remarks / Notes** – multiline textarea, maps to `cca_sessions.description`.
+3. **Requirements** – existing textarea, maps to `cca_sessions.requirements` (kept for parity).
+4. **Images** – grid of thumbnails with add/delete. Stored in Supabase Storage bucket `cca-session-attachments`, indexed by a new `cca_session_attachments` table (`kind = 'image'`). Tap thumbnail = lightbox.
+5. **PDF attachments** – list of file rows with name + size + open/delete. Same bucket + table (`kind = 'pdf'`). Tap = open via existing PDF viewer pattern.
+
+Edit mode toggles inline; Save writes via `useCcaSessions.updateSession` for title/description/requirements, and via a new `useCcaSessionAttachments` hook for file ops. Read-only mode hides inputs and delete buttons.
+
+## Backend changes
+
+New table `public.cca_session_attachments`:
+
+- `session_id uuid` → `cca_sessions(id)` on delete cascade
+- `kind text check (kind in ('image','pdf'))`
+- `storage_path text` (path inside the bucket)
+- `file_name text`
+- `mime_type text`
+- `size_bytes bigint`
+- `uploaded_by uuid` → `auth.users(id)`
+- standard `id`, `created_at`
+
+RLS:
+
+- **Select**: anyone who can view the parent activity (mirrors `cca_sessions` select policy — principal/admin, activity PIC, year-overlap teacher, enrolled student's parent).
+- **Insert / Delete**: only `is_admin_like()` or users in `cca_activity_teachers` for the parent activity (same rule used for editing sessions).
+- **Update**: not needed (files are immutable; users delete + re-upload).
+
+New Storage bucket `cca-session-attachments` (private), with policies that mirror the table RLS using the first path segment = `activity_id`.
+
+## Frontend technical detail
+
+New files:
+
+- `src/hooks/useCcaSessionAttachments.ts` – fetch/list, upload (image/pdf), delete; returns `images`, `pdfs`, `uploading`, action helpers. Generates signed URLs for display.
+- `src/components/cca/SessionNotesSheet.tsx` – the bottom sheet described above (uses existing `bottom-sheet` primitive, follows the standardized draggable 75vh + `h-[100dvh]` pattern from memory).
+- `src/components/cca/ScheduleTab.tsx` – list + add button + opens `SessionNotesSheet`.
+
+Edits:
+
+- `TeacherCcaDetailPage.tsx` – add `schedule` to `tabs`, remove the inline Schedule block from Overview, render `<ScheduleTab />` when `tab === 'schedule'`. Reuse the existing hoisted `sessionsHook`.
+- `src/components/cca/SessionFormDialog.tsx` – unchanged (still used for creating the calendar entry; attachments live in the new sheet).
+
+Parent CCA detail (`ParentCcaDetailPage`, if applicable) is read-only by existing rules — same `ScheduleTab` works because edit affordances key off `canEdit`.
 
 ## Out of scope
-- Card display on the My CCAs list — already handled in the prior change.
-- Sport-session attendance taking — Sports tab is read-only for now.
-- Parent / student-facing views.
 
-## Technical notes
-- `TabId` type gets a new `"sports"` member; switch block adds `{tab === "sports" && isOutdoor && <SportsPanel activityId={activity.id} />}`.
-- `SportsPanel` uses a `useQuery` that fetches sessions → derives unique sport activity ids → fetches activity names + sport pics in two parallel queries, memoizes the joined view model.
-- No DB schema, no RLS, no new tables.
+- No changes to attendance flow.
+- No new notification types (existing session-create trigger still fires).
+- PDF preview uses existing `PDFViewerDialog`; we don't build a new viewer.
