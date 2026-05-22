@@ -175,7 +175,7 @@ function BusCard({ bus, busIndex, assignments, picNames, activityPerms, savingBy
                   className={cn(
                     "flex-1 inline-flex items-center justify-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium border transition-colors",
                     active
-                      ? "bg-sky-100 text-sky-800 border-sky-300 dark:bg-sky-900/30 dark:text-sky-200 dark:border-sky-800"
+                      ? LEG_THEMES[t.id].active
                       : "bg-card text-muted-foreground border-border hover:text-foreground"
                   )}
                 >
@@ -194,6 +194,7 @@ function BusCard({ bus, busIndex, assignments, picNames, activityPerms, savingBy
             canManageBus={perms.canManageBus}
             savingByAssignment={savingByAssignment}
             onMarkLeg={onMarkLeg}
+            stripClass={LEG_THEMES[activeLeg].strip}
           />
         </>
       )}
@@ -211,6 +212,7 @@ interface LegSectionProps {
   savingByAssignment: Record<string, boolean>;
   onMarkLeg: (a: CcaBusAssignment, leg: BusLeg, value: boolean | null) => void;
   divided?: boolean;
+  stripClass?: string;
 }
 
 function LegSection({
@@ -223,6 +225,7 @@ function LegSection({
   savingByAssignment,
   onMarkLeg,
   divided,
+  stripClass,
 }: LegSectionProps) {
   const present = assignments.filter((a) => legValue(a, leg) === true).length;
   const absent = assignments.filter((a) => legValue(a, leg) === false).length;
@@ -230,7 +233,10 @@ function LegSection({
 
   return (
     <div className={cn(divided && "border-t border-border")}>
-      <div className="px-3 py-2 bg-sky-50 dark:bg-sky-950/30 border-y border-sky-100 dark:border-sky-900/50 flex items-center justify-between gap-2">
+      <div className={cn(
+        "px-3 py-2 flex items-center justify-between gap-2",
+        stripClass || "bg-muted/40"
+      )}>
         <div className="flex items-center gap-1.5 text-xs font-semibold text-foreground">
           {icon}
           <span>{title}</span>
