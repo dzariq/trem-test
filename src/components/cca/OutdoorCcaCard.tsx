@@ -83,31 +83,6 @@ export function OutdoorCcaCard({ activity, onClick }: OutdoorCcaCardProps) {
           )}
         </div>
 
-        {/* Role chips */}
-        <div className="flex flex-wrap gap-1.5">
-          {buses.map((b) => (
-            <Badge
-              key={b.busId}
-              variant="outline"
-              className="border bg-amber-100 text-amber-700 border-amber-200 gap-1"
-            >
-              <Bus className="h-3 w-3" />
-              {b.busName} · {b.slot === "main" ? "Main" : "Sub"}
-            </Badge>
-          ))}
-          {/* Only fall back to the activity-level PIC chip if no bus/sport
-              involvement exists. A bus PIC is shown ONLY as their bus,
-              never as a misleading parent-trip PIC. */}
-          {buses.length === 0 && sports.length === 0 && isTripPic && (
-            <Badge
-              variant="outline"
-              className="border bg-purple-100 text-purple-700 border-purple-200"
-            >
-              {activity.myRole === "pic" ? "Trip PIC" : "Trip Co-PIC"}
-            </Badge>
-          )}
-        </div>
-
         {/* All sports tagged in this trip (everyone sees the same list) */}
         {allSports.length > 0 && (
           <div className="space-y-1">
@@ -136,6 +111,28 @@ export function OutdoorCcaCard({ activity, onClick }: OutdoorCcaCardProps) {
             </div>
           </div>
         )}
+
+        {/* Role chips (buses / fallback trip PIC) */}
+        <div className="flex flex-wrap gap-1.5">
+          {buses.map((b) => (
+            <Badge
+              key={b.busId}
+              variant="outline"
+              className="border bg-amber-100 text-amber-700 border-amber-200 gap-1"
+            >
+              <Bus className="h-3 w-3" />
+              {b.busName} · {b.slot === "main" ? "Main" : "Sub"}
+            </Badge>
+          ))}
+          {buses.length === 0 && sports.length === 0 && isTripPic && (
+            <Badge
+              variant="outline"
+              className="border bg-purple-100 text-purple-700 border-purple-200"
+            >
+              {activity.myRole === "pic" ? "Trip PIC" : "Trip Co-PIC"}
+            </Badge>
+          )}
+        </div>
 
         {/* Meta */}
         {dateLabel && (
