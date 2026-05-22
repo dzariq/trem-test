@@ -262,9 +262,9 @@ export default function TeacherCcaDetailPage() {
   // Outdoor activities use Bus list as their attendance flow — hide
   // generic Attendance tab to avoid two competing flows. Budget is
   // hidden until a backend exists.
+  // Schedule is now rendered inline under Overview to reduce tab clutter.
   const tabs: { id: TabId; label: string }[] = [
     { id: "overview", label: "Overview" },
-    { id: "schedule", label: "Schedule" },
     { id: "members", label: isOutdoor ? "Bus list" : "Members" },
     ...(isOutdoor ? [] : [{ id: "attendance" as TabId, label: "Attendance" }]),
     { id: "venue", label: "Venue" },
@@ -356,9 +356,23 @@ export default function TeacherCcaDetailPage() {
       </div>
 
       <div className="px-4 py-4 pb-[calc(6rem+env(safe-area-inset-bottom))]">
-        {tab === "overview" && <OverviewPanel activity={activity} />}
-        {tab === "schedule" && (
-          <SchedulePanel activity={activity} canEdit={canEdit} sessionsHook={sessionsHook} />
+        {tab === "overview" && (
+          <div className="space-y-6">
+            <OverviewPanel activity={activity} />
+            <div className="space-y-3">
+              <div className="flex items-center gap-2">
+                <CalendarDays className="h-4 w-4 text-primary" />
+                <h2 className="text-sm font-semibold text-foreground uppercase tracking-wide">
+                  Schedule
+                </h2>
+              </div>
+              <SchedulePanel
+                activity={activity}
+                canEdit={canEdit}
+                sessionsHook={sessionsHook}
+              />
+            </div>
+          </div>
         )}
         {tab === "members" && !isOutdoor && (
           <MembersPanel activityId={activity.id} active={tab === "members"} />
