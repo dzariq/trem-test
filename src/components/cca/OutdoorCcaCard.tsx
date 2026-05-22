@@ -31,6 +31,7 @@ export function OutdoorCcaCard({ activity, onClick }: OutdoorCcaCardProps) {
   const dateLabel = activity.nextSessionDate
     ? format(parseISO(activity.nextSessionDate), "d MMM yyyy")
     : null;
+  const titleLabel = dateLabel ? `${dateLabel} · Outdoor` : "Outdoor Trip";
 
   return (
     <Card
@@ -67,18 +68,11 @@ export function OutdoorCcaCard({ activity, onClick }: OutdoorCcaCardProps) {
       </div>
 
       <CardContent className="p-4 space-y-3">
-        {/* Date hero + trip name inline */}
+        {/* Date-led title */}
         <div className="space-y-1">
-          <div className="flex items-baseline gap-2 flex-wrap">
-            <h3 className="font-semibold text-foreground text-base line-clamp-1">
-              {activity.name}
-            </h3>
-            {dateLabel && (
-              <span className="text-muted-foreground text-sm">
-                · {dateLabel}
-              </span>
-            )}
-          </div>
+          <h3 className="font-semibold text-foreground text-base line-clamp-1">
+            {titleLabel}
+          </h3>
           {activity.location && (
             <p className="text-xs text-muted-foreground flex items-center gap-1">
               <MapPin className="h-3 w-3" />
