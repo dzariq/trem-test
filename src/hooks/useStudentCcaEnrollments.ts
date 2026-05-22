@@ -22,6 +22,8 @@ export interface EnrolledCcaActivity {
     isPrimary?: boolean;
     role?: string;
   }[];
+  /** Soonest upcoming non-cancelled session date (YYYY-MM-DD) or null. */
+  nextSessionDate: string | null;
 }
 
 interface UseStudentCcaEnrollmentsOptions {
@@ -138,6 +140,22 @@ export function useStudentCcaEnrollments({ studentId }: UseStudentCcaEnrollments
         });
       });
 
+      // Fetch upcoming sessions to compute nextSessionDate per activity
+      const todayStr = new Date().toISOString().slice(0, 10);
+      const nextByActivity: Record<string, string> = {};
+      const { data: sessionRows } = await supabase
+        .from("cca_sessions")
+        .select("activity_id, session_date, is_cancelled")
+        .in("activity_id", activeEnrollments)
+        .eq("is_cancelled", false)
+        .gte("session_date", todayStr)
+        .order("session_date", { ascending: true });
+      (sessionRows || []).forEach((s: any) => {
+        if (!nextByActivity[s.activity_id]) {
+          nextByActivity[s.activity_id] = s.session_date;
+        }
+      });
+
       // Map enrollments to our shape
       const mapped: EnrolledCcaActivity[] = (data || [])
         .filter((e: any) => e.cca_activities?.is_active !== false)
@@ -157,7 +175,16 @@ export function useStudentCcaEnrollments({ studentId }: UseStudentCcaEnrollments
           enrollmentStatus: e.status,
           imageUrl: e.cca_activities?.image_url || null,
           picTeachers: teachersByActivity[e.cca_activity_id] || [],
+          nextSessionDate: nextByActivity[e.cca_activity_id] || null,
         }));
+
+      // Sort: soonest upcoming first (nulls last), then by name
+      mapped.sort((a, b) => {
+        const ak = a.nextSessionDate ?? "\uffff";
+        const bk = b.nextSessionDate ?? "\uffff";
+        if (ak !== bk) return ak.localeCompare(bk);
+        return a.name.localeCompare(b.name);
+      });
 
       setEnrollments(mapped);
     } catch (err: any) {
