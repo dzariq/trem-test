@@ -51,6 +51,7 @@ import WeekConfigPage from "./pages/teacher/WeekConfigPage";
 import TeacherGuard from "./components/auth/TeacherGuard";
 import TeacherCcaPage from "./pages/teacher/TeacherCcaPage";
 import TeacherCcaDetailPage from "./pages/teacher/TeacherCcaDetailPage";
+import TeacherVenueDetailPage from "./pages/teacher/TeacherVenueDetailPage";
 
 import NotFound from "./pages/NotFound";
 
