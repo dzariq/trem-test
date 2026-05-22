@@ -219,6 +219,7 @@ export function useCcaActivityById(
         myRole,
         outdoorBusRoles: [],
         outdoorSportRoles: [],
+        outdoorAllSports: [],
         nextSessionDate: null,
       };
 
