@@ -17,7 +17,11 @@ export interface CcaBusPermissions {
  * Per-bus permissions for outdoor CCAs.
  *
  *  canViewBus   = activity.canView (teachers always allowed via SELECT RLS)
- *  canManageBus = activity.canEdit OR uid == bus.teacher_pic_main/sub
+ *  canManageBus = principal/admin OR uid == bus.teacher_pic_main/sub
+ *
+ *  Note: a regular activity PIC who is NOT the bus's main/sub PIC is
+ *  view-only. Only the bus's actual PICs (or system principals) can take
+ *  outbound/return attendance. Sport PICs are always view-only.
  */
 export function useCcaBusPermissions(
   bus: CcaBusLike | null | undefined,
@@ -35,7 +39,7 @@ export function useCcaBusPermissions(
 
   return {
     canViewBus: activityPerms.canView,
-    canManageBus: activityPerms.canEdit || isBusPic,
+    canManageBus: activityPerms.isPrincipal || isBusPic,
     isBusPic,
   };
 }
