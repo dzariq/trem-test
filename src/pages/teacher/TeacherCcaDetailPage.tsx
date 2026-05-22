@@ -21,6 +21,7 @@ import {
   ChevronRight,
   Search,
   X,
+  Trophy,
 } from "lucide-react";
 import { TeacherAppLayout } from "@/components/layout/TeacherAppLayout";
 import { Button } from "@/components/ui/button";
@@ -274,6 +275,29 @@ export default function TeacherCcaDetailPage() {
   const bucketLabel = CCA_BUCKET_LABEL[bucket];
   const bucketPill = getCcaTypePillColor(activity.kind ?? activity.category);
 
+  // For outdoor trips, use "<date> · Outdoor" as the display title in place
+  // of the (sport) activity name, so bus PICs / sport PICs see a uniform
+  // trip-centric label.
+  const outdoorDateLabel = (() => {
+    if (!isOutdoor) return null;
+    const all = sessionsHook.sessions ?? activity.sessions ?? [];
+    const dates = all
+      .filter((s: any) => !s.isCancelled && (s.sessionDate || s.session_date))
+      .map((s: any) => s.sessionDate || s.session_date) as string[];
+    if (dates.length === 0) return null;
+    const today = new Date().toISOString().slice(0, 10);
+    const upcoming = dates.filter((d) => d >= today).sort();
+    const chosen = upcoming[0] ?? dates.sort().slice(-1)[0];
+    try {
+      return format(parseISO(chosen), "d MMM yyyy");
+    } catch {
+      return chosen;
+    }
+  })();
+  const displayTitle = isOutdoor && outdoorDateLabel
+    ? `${outdoorDateLabel} · Outdoor`
+    : activity.name;
+
   // Outdoor activities use Bus list as their attendance flow — hide
   // generic Attendance tab to avoid two competing flows. Budget is
   // hidden until a backend exists.
@@ -294,7 +318,7 @@ export default function TeacherCcaDetailPage() {
 
   return (
     <TeacherAppLayout>
-      <DetailHeader onBack={() => navigate("/teacher/cca")} title={activity.name} />
+      <DetailHeader onBack={() => navigate("/teacher/cca")} title={displayTitle} />
       <div ref={ptrRef}>
       <PullToRefreshIndicator pullDistance={pullDistance} refreshing={refreshing} />
 
@@ -331,7 +355,7 @@ export default function TeacherCcaDetailPage() {
         )}
 
         <div className="flex flex-wrap items-center gap-2">
-          <h1 className="text-xl font-bold text-foreground">{activity.name}</h1>
+          <h1 className="text-xl font-bold text-foreground">{displayTitle}</h1>
           {perms.isActivityPIC && (
             <Badge variant="default" className="text-xs">PIC</Badge>
           )}
@@ -381,6 +405,17 @@ export default function TeacherCcaDetailPage() {
         {tab === "overview" && (
           <div className="space-y-6">
             <OverviewPanel activity={activity} />
+            {isOutdoor && (
+              <div className="space-y-3">
+                <div className="flex items-center gap-2">
+                  <Trophy className="h-4 w-4 text-primary" />
+                  <h2 className="text-sm font-semibold text-foreground uppercase tracking-wide">
+                    Sports
+                  </h2>
+                </div>
+                <SportsPanel activityId={activity.id} />
+              </div>
+            )}
             <div className="space-y-3">
               <div className="flex items-center gap-2">
                 <CalendarDays className="h-4 w-4 text-primary" />
