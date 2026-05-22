@@ -8,7 +8,7 @@ const allowedRoles = new Set(["parent", "student", "user"]);
 
 export default function ParentStudentGuard() {
   const { loading, user, profile } = useAuth();
-  const { hasParentRole, isLoading: rolesLoading } = useUserRoles();
+  const { hasParentRole, hasStudentRole, isLoading: rolesLoading } = useUserRoles();
   const navigate = useNavigate();
   const location = useLocation();
   const didRedirect = useRef(false);
@@ -34,19 +34,19 @@ export default function ParentStudentGuard() {
     
     // Allow access if the user has the parent role in user_roles
     // OR a legacy parent/student/user role on user_profiles.
-    const allowed = hasParentRole || allowedRoles.has(profile.role);
+    const allowed = hasParentRole || hasStudentRole || allowedRoles.has(profile.role);
     if (!allowed) {
       if (!didRedirect.current) {
         didRedirect.current = true;
       }
       navigate("/", { replace: true, state: { from: location.pathname } });
     }
-  }, [loading, rolesLoading, hasParentRole, user, profile, navigate, location.pathname]);
+  }, [loading, rolesLoading, hasParentRole, hasStudentRole, user, profile, navigate, location.pathname]);
 
   // Show loading spinner while checking auth
   if (loading || rolesLoading || !user || !profile) return loadingScreen;
   
-  if (!hasParentRole && !allowedRoles.has(profile.role)) return loadingScreen;
+  if (!hasParentRole && !hasStudentRole && !allowedRoles.has(profile.role)) return loadingScreen;
 
   return <Outlet />;
 }
