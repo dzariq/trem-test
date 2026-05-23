@@ -438,25 +438,7 @@ export default function CalendarPage() {
 
       <section className="px-4 pt-3" ref={pullRef}>
         <PullToRefreshIndicator pullDistance={pullDistance} refreshing={refreshing} />
-        <Tabs defaultValue={initialTab} className="w-full">
-          <div className="pb-2">
-            <TabsList className="grid w-full grid-cols-2 rounded-md bg-muted/40 p-1">
-              <TabsTrigger
-                value="calendar"
-                className="rounded-md text-sm data-[state=active]:bg-background data-[state=active]:shadow-sm"
-              >
-                Main Calendar
-              </TabsTrigger>
-              <TabsTrigger
-                value="cca"
-                className="rounded-md text-sm data-[state=active]:bg-background data-[state=active]:shadow-sm"
-              >
-                CCA Activities
-              </TabsTrigger>
-            </TabsList>
-          </div>
-
-          <TabsContent value="calendar" className="mt-3 space-y-4">
+        <div className="mt-3 space-y-4">
             {/* Calendar Component */}
             {view === "month" && (
               <MonthGridCalendar
