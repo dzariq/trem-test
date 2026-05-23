@@ -454,8 +454,7 @@ export default function CalendarPage() {
                 ccaSessions={gridCcaSessions}
                 onEventClick={openEventDetails}
                 onSessionClick={(session) => {
-                  setSelectedEventDetails(session);
-                  setEventDetailsOpen(true);
+                  if (session.activityId) navigate(`/parent/cca/${session.activityId}`);
                 }}
                 view={view}
                 onViewChange={setView}
@@ -499,8 +498,7 @@ export default function CalendarPage() {
                 ccaSessions={gridCcaSessions}
                 onEventClick={openEventDetails}
                 onSessionClick={(session) => {
-                  setSelectedEventDetails(session);
-                  setEventDetailsOpen(true);
+                  if (session.activityId) navigate(`/parent/cca/${session.activityId}`);
                 }}
                 view={view}
                 onViewChange={setView}
@@ -518,8 +516,7 @@ export default function CalendarPage() {
                 onEventClick={openEventDetails}
                 onCcaSessionClick={(session, el) => {
                   el?.blur?.();
-                  setSelectedEventDetails(session);
-                  setEventDetailsOpen(true);
+                  if (session.activityId) navigate(`/parent/cca/${session.activityId}`);
                 }}
               />
             )}
