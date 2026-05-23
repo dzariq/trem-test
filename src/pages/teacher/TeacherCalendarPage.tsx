@@ -304,25 +304,7 @@ export default function TeacherCalendarPage() {
 
       <section className="px-4 pt-3" ref={pullRef}>
         <PullToRefreshIndicator pullDistance={pullDistance} refreshing={refreshing} />
-        <Tabs defaultValue="calendar" className="w-full">
-          <div className="pb-2">
-            <TabsList className="grid w-full grid-cols-2 rounded-md bg-muted/40 p-1">
-              <TabsTrigger
-                value="calendar"
-                className="rounded-md text-sm data-[state=active]:bg-background data-[state=active]:shadow-sm"
-              >
-                Calendar
-              </TabsTrigger>
-              <TabsTrigger
-                value="cca"
-                className="rounded-md text-sm data-[state=active]:bg-background data-[state=active]:shadow-sm"
-              >
-                CCA Schedule
-              </TabsTrigger>
-            </TabsList>
-          </div>
-
-          <TabsContent value="calendar" className="mt-3 space-y-4">
+        <div className="mt-3 space-y-4">
             {/* Calendar Component */}
             {view === "month" && (
               <MonthGridCalendar
@@ -407,125 +389,7 @@ export default function TeacherCalendarPage() {
                 }}
               />
             )}
-          </TabsContent>
-
-          <TabsContent value="cca" className="mt-4 space-y-4">
-            <div className="flex items-center justify-between gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                className="gap-2"
-                onClick={() => setCcaFilterOpen(true)}
-              >
-                <SlidersHorizontal className="h-4 w-4" />
-                <span className="text-sm">{selectedTypeName}</span>
-              </Button>
-              {ccaTypeFilter !== "all" && (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="gap-1 text-muted-foreground"
-                  onClick={() => setCcaTypeFilter("all")}
-                >
-                  <X className="h-3.5 w-3.5" /> Clear
-                </Button>
-              )}
-            </div>
-            <CcaFilterSheet
-              open={ccaFilterOpen}
-              onOpenChange={setCcaFilterOpen}
-              selectedTypeId={ccaTypeFilter}
-              onSelectType={(id) => {
-                setCcaTypeFilter(id);
-                setCcaFilterOpen(false);
-              }}
-              campusCode={activeCampus}
-            />
-
-            {/* CCA List */}
-            <div className="space-y-3">
-              {ccaLoading && (
-                <div className="flex items-center justify-center py-8">
-                  <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
-                  <span className="ml-2 text-muted-foreground">Loading CCA activities...</span>
-                </div>
-              )}
-
-              {ccaError && (
-                <div className="text-center py-8 text-destructive">
-                  <p>Failed to load CCA activities</p>
-                  <p className="text-sm">{ccaError}</p>
-                </div>
-              )}
-
-              {!ccaLoading && !ccaError && filteredCCA.length === 0 && (
-                <div className="text-center py-8 text-muted-foreground">
-                  <p>No CCA activities found</p>
-                </div>
-              )}
-
-              {!ccaLoading && !ccaError && filteredCCA.map((activity) => {
-                const isPIC = isCurrentTeacherPIC(activity);
-                return (
-                  <Card key={activity.id} className="bg-card border-border shadow-sm">
-                    <CardContent className="p-4">
-                      <div className="flex items-start justify-between mb-3">
-                        <div className="flex flex-wrap items-center gap-2">
-                          <h3 className="font-semibold text-foreground">{activity.name}</h3>
-                          {isPIC && (
-                            <Badge variant="default" className="text-xs">
-                              PIC
-                            </Badge>
-                          )}
-                        </div>
-                        <Badge className={getCcaCategoryColor(activity.category)} variant="secondary">
-                          {activity.category}
-                        </Badge>
-                      </div>
-
-                      <div className="space-y-2 text-sm text-muted-foreground">
-                        {(activity.meetingDay || activity.meetingTime) && (
-                          <div className="flex items-center gap-2">
-                            <Clock className="h-4 w-4" />
-                            <span>
-                              {activity.meetingDay || "TBD"}
-                              {activity.meetingTime ? `, ${activity.meetingTime}` : ""}
-                            </span>
-                          </div>
-                        )}
-                        {activity.location && (
-                          <div className="flex items-center gap-2">
-                            <MapPin className="h-4 w-4" />
-                            <span>{activity.location}</span>
-                          </div>
-                        )}
-                        {(activity.picTeachers.length > 0 || activity.coordinatorName) && (
-                          <div className="flex items-start gap-2">
-                            <User className="h-4 w-4 mt-0.5" />
-                            <span>
-                              {activity.picTeachers.length > 0
-                                ? activity.picTeachers.map((t) => t.fullName).join(", ")
-                                : activity.coordinatorName}
-                            </span>
-                          </div>
-                        )}
-                      </div>
-
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="w-full mt-4"
-                        onClick={() => setSelectedCCA(activity)}
-                      >
-                        View Details
-                      </Button>
-                    </CardContent>
-                  </Card>
-                );
-              })}
-            </div>
-          </TabsContent>
-        </Tabs>
+        </div>
       </section>
 
       {/* CCA Details - Responsive: BottomSheet on mobile, centered Dialog on desktop */}
