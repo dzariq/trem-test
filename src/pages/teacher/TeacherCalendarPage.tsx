@@ -1,4 +1,5 @@
 import { useEffect, useState, useMemo, type KeyboardEvent } from "react";
+import { useNavigate } from "react-router-dom";
 import { useCampus } from "@/contexts/CampusContext";
 import { TeacherAppLayout } from "@/components/layout/TeacherAppLayout";
 import { AppHeader } from "@/components/layout/AppHeader";
@@ -42,6 +43,7 @@ import { cn } from "@/lib/utils";
 
 export default function TeacherCalendarPage() {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const { activeCampus } = useCampus();
   const teacherScope = useTeacherScope();
   const teacherYearLevels = useMemo(
@@ -320,8 +322,7 @@ export default function TeacherCalendarPage() {
                 ccaSessions={gridCcaSessions}
                 onEventClick={openEventDetails}
                 onSessionClick={(session) => {
-                  setSelectedSession(session);
-                  setSessionDetailsOpen(true);
+                  if (session.activityId) navigate(`/teacher/cca/${session.activityId}`);
                 }}
                 view={view}
                 onViewChange={setView}
@@ -365,8 +366,7 @@ export default function TeacherCalendarPage() {
                 ccaSessions={gridCcaSessions}
                 onEventClick={openEventDetails}
                 onSessionClick={(session) => {
-                  setSelectedSession(session);
-                  setSessionDetailsOpen(true);
+                  if (session.activityId) navigate(`/teacher/cca/${session.activityId}`);
                 }}
                 view={view}
                 onViewChange={setView}
@@ -384,8 +384,7 @@ export default function TeacherCalendarPage() {
                 onEventClick={openEventDetails}
                 onCcaSessionClick={(session, el) => {
                   el?.blur?.();
-                  setSelectedEventDetails(session);
-                  setEventDetailsOpen(true);
+                  if (session.activityId) navigate(`/teacher/cca/${session.activityId}`);
                 }}
               />
             )}
