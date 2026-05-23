@@ -304,25 +304,7 @@ export default function TeacherCalendarPage() {
 
       <section className="px-4 pt-3" ref={pullRef}>
         <PullToRefreshIndicator pullDistance={pullDistance} refreshing={refreshing} />
-        <Tabs defaultValue="calendar" className="w-full">
-          <div className="pb-2">
-            <TabsList className="grid w-full grid-cols-2 rounded-md bg-muted/40 p-1">
-              <TabsTrigger
-                value="calendar"
-                className="rounded-md text-sm data-[state=active]:bg-background data-[state=active]:shadow-sm"
-              >
-                Calendar
-              </TabsTrigger>
-              <TabsTrigger
-                value="cca"
-                className="rounded-md text-sm data-[state=active]:bg-background data-[state=active]:shadow-sm"
-              >
-                CCA Schedule
-              </TabsTrigger>
-            </TabsList>
-          </div>
-
-          <TabsContent value="calendar" className="mt-3 space-y-4">
+        <div className="mt-3 space-y-4">
             {/* Calendar Component */}
             {view === "month" && (
               <MonthGridCalendar
@@ -407,9 +389,9 @@ export default function TeacherCalendarPage() {
                 }}
               />
             )}
-          </TabsContent>
-
-          <TabsContent value="cca" className="mt-4 space-y-4">
+        </div>
+        {false && (
+          <div className="mt-4 space-y-4">
             <div className="flex items-center justify-between gap-2">
               <Button
                 variant="outline"
@@ -524,8 +506,8 @@ export default function TeacherCalendarPage() {
                 );
               })}
             </div>
-          </TabsContent>
-        </Tabs>
+          </div>
+        )}
       </section>
 
       {/* CCA Details - Responsive: BottomSheet on mobile, centered Dialog on desktop */}
