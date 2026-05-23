@@ -83,6 +83,27 @@ export type Database = {
         }
         Relationships: []
       }
+      _ks4_stg: {
+        Row: {
+          club_name: string
+          present: number
+          session_date: string
+          src_name: string
+        }
+        Insert: {
+          club_name: string
+          present: number
+          session_date: string
+          src_name: string
+        }
+        Update: {
+          club_name?: string
+          present?: number
+          session_date?: string
+          src_name?: string
+        }
+        Relationships: []
+      }
       academic_periods: {
         Row: {
           academic_year: number | null
@@ -5539,6 +5560,7 @@ export type Database = {
           address: string | null
           allergy_notes: string | null
           archived: boolean
+          blacklisted: boolean | null
           campus_code: string | null
           campus_id: string | null
           city: string | null
@@ -5553,6 +5575,7 @@ export type Database = {
           deposit_refund_date: string | null
           discount_type: string | null
           dob: string | null
+          due_alert: boolean
           early_lockin_amount: string | null
           early_lockin_discount: boolean | null
           email: string | null
@@ -5591,6 +5614,7 @@ export type Database = {
           address?: string | null
           allergy_notes?: string | null
           archived?: boolean
+          blacklisted?: boolean | null
           campus_code?: string | null
           campus_id?: string | null
           city?: string | null
@@ -5605,6 +5629,7 @@ export type Database = {
           deposit_refund_date?: string | null
           discount_type?: string | null
           dob?: string | null
+          due_alert?: boolean
           early_lockin_amount?: string | null
           early_lockin_discount?: boolean | null
           email?: string | null
@@ -5643,6 +5668,7 @@ export type Database = {
           address?: string | null
           allergy_notes?: string | null
           archived?: boolean
+          blacklisted?: boolean | null
           campus_code?: string | null
           campus_id?: string | null
           city?: string | null
@@ -5657,6 +5683,7 @@ export type Database = {
           deposit_refund_date?: string | null
           discount_type?: string | null
           dob?: string | null
+          due_alert?: boolean
           early_lockin_amount?: string | null
           early_lockin_discount?: boolean | null
           email?: string | null
