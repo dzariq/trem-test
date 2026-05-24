@@ -437,6 +437,7 @@ Deno.serve(async (req) => {
       }),
       { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } },
     );
+    // (logged above before response is built — see below)
   } catch (err) {
     console.error("[phone-login] unexpected error", err);
     return new Response(
