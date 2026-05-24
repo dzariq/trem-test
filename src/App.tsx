@@ -31,6 +31,7 @@ import StudentHandbookPage from "./pages/StudentHandbookPage";
 import HomeworkPage from "./pages/HomeworkPage";
 import InvoicePage from "./pages/InvoicePage";
 import VisaPage from "./pages/VisaPage";
+import ParentTimetablePage from "./pages/ParentTimetablePage";
 import ParentCcaPage from "./pages/ParentCcaPage";
 import ParentCcaDetailPage from "./pages/ParentCcaDetailPage";
 import ParentStudentGuard from "./components/auth/ParentStudentGuard";
