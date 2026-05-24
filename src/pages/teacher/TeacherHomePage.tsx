@@ -419,6 +419,10 @@ export default function TeacherHomePage() {
         <div className="absolute top-2 left-3 z-20">
           <CampusToggle size="sm" />
         </div>
+        {/* Portal Switcher - overlaid top-right, only for dual-role users */}
+        <div className="absolute top-2 right-3 z-20">
+          <PortalSwitcher size="sm" />
+        </div>
         <TeacherWelcomeQuote />
       </div>
 
