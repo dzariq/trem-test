@@ -609,10 +609,10 @@ export default function Login() {
                   <button
                     type="button"
                     onClick={handleRequestOtp}
-                    disabled={loading || secondsLeft > 0}
+                    disabled={loading || resendCooldown > 0}
                     className="text-primary disabled:text-muted-foreground disabled:cursor-not-allowed hover:underline"
                   >
-                    Resend OTP
+                    {resendCooldown > 0 ? `Resend in ${resendCooldown}s` : "Resend OTP"}
                   </button>
                 </div>
               </div>
