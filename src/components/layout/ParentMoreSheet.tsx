@@ -3,17 +3,13 @@ import {
   Sparkles,
   Megaphone,
   Receipt,
-  BookOpen,
-  BookMarked,
-  Award,
+  CalendarClock,
   Plane,
   Headphones,
   type LucideIcon,
 } from "lucide-react";
 import { BottomSheet } from "@/components/ui/bottom-sheet";
 import { cn } from "@/lib/utils";
-import { FEATURES } from "@/config/featureFlags";
-import { useHasVisaModule } from "@/hooks/useHasVisaModule";
 
 export type ParentMoreRoute = {
   to: string;
@@ -26,12 +22,12 @@ export type ParentMoreRoute = {
 
 const ALL_ROUTES: ParentMoreRoute[] = [
   {
-    to: "/parent/cca",
-    label: "My Children's CCAs",
-    icon: Sparkles,
-    iconBg: "bg-amber-100",
-    iconColor: "text-amber-600",
-    description: "Enrolled clubs and upcoming sessions",
+    to: "/parent/invoice",
+    label: "Invoice",
+    icon: Receipt,
+    iconBg: "bg-emerald-100",
+    iconColor: "text-emerald-600",
+    description: "Fees and payment history",
   },
   {
     to: "/parent/announcements",
@@ -42,36 +38,20 @@ const ALL_ROUTES: ParentMoreRoute[] = [
     description: "School-wide updates",
   },
   {
-    to: "/parent/invoice",
-    label: "Invoice",
-    icon: Receipt,
-    iconBg: "bg-emerald-100",
-    iconColor: "text-emerald-600",
-    description: "Fees and payment history",
+    to: "/parent/cca",
+    label: "My Children's CCAs",
+    icon: Sparkles,
+    iconBg: "bg-amber-100",
+    iconColor: "text-amber-600",
+    description: "Enrolled clubs and upcoming sessions",
   },
   {
-    to: "/parent/homework",
-    label: "Homework",
-    icon: BookOpen,
-    iconBg: "bg-blue-100",
-    iconColor: "text-blue-600",
-    description: "Track assignments",
-  },
-  {
-    to: "/parent/handbook",
-    label: "Handbook",
-    icon: BookMarked,
+    to: "/parent/timetable",
+    label: "Timetable",
+    icon: CalendarClock,
     iconBg: "bg-purple-100",
     iconColor: "text-purple-600",
-    description: "Student handbook",
-  },
-  {
-    to: "/parent/awards",
-    label: "Awards",
-    icon: Award,
-    iconBg: "bg-yellow-100",
-    iconColor: "text-yellow-600",
-    description: "Achievements and certificates",
+    description: "Weekly class schedule",
   },
   {
     to: "/parent/visa",
@@ -92,12 +72,7 @@ const ALL_ROUTES: ParentMoreRoute[] = [
 ];
 
 export function useParentMoreRoutes(): ParentMoreRoute[] {
-  const hasVisa = useHasVisaModule();
-  return ALL_ROUTES.filter((r) => {
-    if (r.to === "/parent/homework") return FEATURES.homeworkParent;
-    if (r.to === "/parent/visa") return hasVisa;
-    return true;
-  });
+  return ALL_ROUTES;
 }
 
 interface ParentMoreSheetProps {
@@ -120,8 +95,8 @@ export function ParentMoreSheet({ open, onOpenChange }: ParentMoreSheetProps) {
       open={open}
       onOpenChange={onOpenChange}
       title="More"
-      snapPoints={[0, 0.75, 1]}
-      defaultSnapPoint={0.75}
+      snapPoints={[0, 1]}
+      defaultSnapPoint={1}
     >
       <div className="px-4 py-4 grid grid-cols-2 gap-3">
         {routes.map((r) => {
