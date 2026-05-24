@@ -43,10 +43,14 @@ Deno.serve(async (req) => {
     const otpInput = String(body?.otp ?? "").trim();
     const phone = String(body?.phone ?? "").trim();
     const countryCodeRaw = String(body?.country_code ?? "").trim();
-    const portal = String(body?.portal ?? "family").trim().toLowerCase();
+    const rawPortal = body?.portal == null ? "" : String(body.portal).trim().toLowerCase();
+    const portalProvided = rawPortal === "teacher" || rawPortal === "family";
+    const portal = portalProvided ? rawPortal : "any";
     const allowedRoles = portal === "teacher"
       ? ["teacher", "admin", "super_admin"]
-      : ["parent", "student"];
+      : portal === "family"
+        ? ["parent", "student"]
+        : ["parent", "student", "teacher", "admin", "super_admin"];
 
     if (!emailInput && (!phone || !countryCodeRaw)) {
       return new Response(
@@ -311,8 +315,8 @@ Deno.serve(async (req) => {
       return new Response(
         JSON.stringify({
           error: emailInput
-            ? `No ${portal === "teacher" ? "teacher" : "parent or student"} account found for this email.`
-            : `No ${portal === "teacher" ? "teacher" : "parent"} account found for this phone number.`,
+            ? `No account found for this email.`
+            : `No account found for this phone number.`,
         }),
         { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } },
       );
@@ -366,6 +370,14 @@ Deno.serve(async (req) => {
       }
       const wrongPortalCandidate = candidates[0];
       const otherRoles = rolesByUser.get(wrongPortalCandidate.user_id) ?? [];
+      if (!portalProvided) {
+        return new Response(
+          JSON.stringify({
+            error: "No role assigned to this account. Please contact the school.",
+          }),
+          { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+        );
+      }
       const isTeacherSide = otherRoles.some((r) =>
         ["teacher", "admin", "super_admin"].includes(r),
       );

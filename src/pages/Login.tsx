@@ -49,33 +49,9 @@ type PortalType = "teacher" | "family";
 
 export default function Login() {
   const navigate = useNavigate();
-  const { user, profile, loading: authLoading, portal: storedPortal, setPortal } = useAuth();
-  const { hasParentRole, hasStudentRole, isLoading: rolesLoading } = useUserRoles();
-  const [searchParams] = useSearchParams();
-  
-  // Get portal from URL params first, fallback to stored portal
-  const portal = useMemo<PortalType | null>(() => {
-    const urlPortal = searchParams.get("portal");
-    if (urlPortal === "teacher" || urlPortal === "family") {
-      return urlPortal;
-    }
-    // Fallback to stored portal
-    if (storedPortal === "teacher" || storedPortal === "family") {
-      return storedPortal;
-    }
-    return null;
-  }, [searchParams, storedPortal]);
-
-  // Update stored portal when URL portal changes
-  useEffect(() => {
-    const urlPortal = searchParams.get("portal");
-    if (urlPortal === "teacher" || urlPortal === "family") {
-      setPortal(urlPortal);
-    }
-  }, [searchParams, setPortal]);
-
-  const portalLabel =
-    portal === "teacher" ? "Teacher Portal" : "Parent / Student Portal";
+  const { user, profile, loading: authLoading, setPortal } = useAuth();
+  const { hasParentRole, hasStudentRole, hasTeacherRole, isLoading: rolesLoading } = useUserRoles();
+  useSearchParams(); // kept for back-compat with deep links containing ?portal=
 
   // Login state
   const [countryIso2, setCountryIso2] = useState<string>(DEFAULT_ISO2);
@@ -97,38 +73,28 @@ export default function Login() {
   // Redirect if already authenticated
   useEffect(() => {
     if (authLoading || rolesLoading) return;
-    
+
     if (user && profile) {
-      // Honor the portal the user selected at login. Users with multiple
-      // roles (e.g. parent + teacher) can switch from the profile page.
-      if (storedPortal === "teacher") {
+      // Role-based default landing. Dual-role users land on Parent and can
+      // flip via the PortalSwitcher pill on the home page.
+      if (hasParentRole) {
+        setPortal("family");
+        navigate("/portal", { replace: true });
+      } else if (hasTeacherRole) {
+        setPortal("teacher");
         navigate("/teacher", { replace: true });
-      } else if (storedPortal === "family") {
-        if (hasStudentRole && !hasParentRole) {
-          navigate("/students", { replace: true });
-        } else {
-          navigate("/portal", { replace: true });
-        }
+      } else if (hasStudentRole) {
+        setPortal("family");
+        navigate("/students", { replace: true });
+      } else if (["teacher", "admin", "super_admin"].includes(profile.role)) {
+        setPortal("teacher");
+        navigate("/teacher", { replace: true });
       } else {
-        // No portal chosen — fall back to role-based default
-        if (["teacher", "admin", "super_admin"].includes(profile.role)) {
-          navigate("/teacher", { replace: true });
-        } else if (hasStudentRole && !hasParentRole) {
-          navigate("/students", { replace: true });
-        } else {
-          navigate("/portal", { replace: true });
-        }
+        setPortal("family");
+        navigate("/portal", { replace: true });
       }
     }
-  }, [user, profile, authLoading, rolesLoading, hasParentRole, hasStudentRole, navigate, storedPortal]);
-
-  // If no portal selected, redirect to portal selector
-  useEffect(() => {
-    if (authLoading) return;
-    if (!user && !portal) {
-      navigate("/", { replace: true });
-    }
-  }, [user, portal, authLoading, navigate]);
+  }, [user, profile, authLoading, rolesLoading, hasParentRole, hasStudentRole, hasTeacherRole, navigate, setPortal]);
 
   // Phone-only sanitizer: digits only, must not start with 0,
   // strips spaces, dashes, parentheses, plus signs, and any other non-digits.
@@ -162,11 +128,6 @@ export default function Login() {
 
   // Step 1: request OTP
   const handleRequestOtp = async () => {
-    if (!portal) {
-      setError("Please select a portal to continue.");
-      return;
-    }
-
     if (method === "phone") {
       if (!phone) {
         setError("Please enter your phone number.");
@@ -327,12 +288,11 @@ export default function Login() {
         {
           body:
             method === "email"
-              ? { email, otp, portal }
+              ? { email, otp }
               : {
                   phone,
                   country_code: `+${selectedCountry.dialCode}`,
                   otp,
-                  portal,
                 },
         },
       );
@@ -417,7 +377,7 @@ export default function Login() {
         <h1 className="text-2xl font-bold text-foreground whitespace-pre-line">
           {"Welcome to\nSchool Portal"}
         </h1>
-        <p className="text-muted-foreground mt-2">{portalLabel}</p>
+        <p className="text-muted-foreground mt-2">Sign in to continue</p>
       </div>
 
       <div className="grid gap-6 w-full max-w-md">
