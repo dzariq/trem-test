@@ -188,6 +188,15 @@ export default function Login() {
     return () => window.clearInterval(id);
   }, [step, otpExpiresAt]);
 
+  // Countdown ticker for resend cooldown
+  useEffect(() => {
+    if (step !== "otp" || resendCooldown <= 0) return;
+    const id = window.setInterval(() => {
+      setResendCooldown((prev) => Math.max(0, prev - 1));
+    }, 1000);
+    return () => window.clearInterval(id);
+  }, [step, resendCooldown]);
+
   const fullNumber = `+${selectedCountry.dialCode}${phone}`;
   const otpDestination = method === "email" ? email : fullNumber;
 
