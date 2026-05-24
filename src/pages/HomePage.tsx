@@ -131,12 +131,17 @@ export default function HomePage() {
         showNotifications 
         showProfile 
         leftContent={
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 min-w-0 max-w-[55vw]">
             <img 
               src={schoolBadge} 
               alt="School Badge" 
-              className="h-16 w-auto -my-3 drop-shadow-md" 
+              className="h-16 w-auto -my-3 drop-shadow-md shrink-0" 
             />
+            {profile?.full_name && (
+              <span className="text-sm font-semibold text-foreground truncate">
+                {profile.full_name}
+              </span>
+            )}
           </div>
         }
         rightContent={<StudentPillSelector />}
