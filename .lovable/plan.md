@@ -1,41 +1,37 @@
-## Issue
+## Goal
 
-Parent **Test.junhan** (`junhan@collinz.edu.my`, user `4682ce70…`, parent `bc6d836b…`) was moved from the **Tang** family (`00e3f532…`, GL) to the **Tee** family (`adfe8db6…`, BO). The parent's own row was updated, but the stale links to the 3 Tang children were never removed, so the mobile app still shows all 6 students under "Your Children".
+When a parent opens a CCA session that has no notes posted yet, replace the row-by-row "No title set / No notes yet / None / No images attached / No PDFs attached" placeholders with a single friendly empty state.
 
-Current state in DB:
-- `parents.family_id` → Tee family ✅ (correct)
-- `student_parent` → 6 rows (3 Tang + 3 Tee) ❌
-- `student_guardians` → 6 rows (3 Tang + 3 Tee) ❌
+Teachers (edit mode) keep seeing every section so they can still fill them in.
 
-## Fix
+## Scope
 
-Run a one-time cleanup migration to delete the 3 stale Tang links from both `student_parent` and `student_guardians` for this parent:
+File: `src/components/cca/SessionNotesSheet.tsx` — body area only. Header (date, time, location) is unchanged.
 
-Tang student IDs to detach:
-- `ff1f5640-d2fa-40c9-84a4-3cc9a71e4de3` — Tang Yican (Doris)
-- `aba24874-9ece-4cd9-ae38-ee3e73b34e8d` — Tang Dylan
-- `89c03bec-0fd5-476e-a979-c9fe2d7c4718` — Tang Jiaxiang (Felix)
+## Logic
 
-```sql
-DELETE FROM public.student_parent
-WHERE parent_id = 'bc6d836b-bc70-4d8c-943c-8bb9a993b2a8'
-  AND student_id IN (
-    'ff1f5640-d2fa-40c9-84a4-3cc9a71e4de3',
-    'aba24874-9ece-4cd9-ae38-ee3e73b34e8d',
-    '89c03bec-0fd5-476e-a979-c9fe2d7c4718'
-  );
+In the body, compute:
 
-DELETE FROM public.student_guardians
-WHERE guardian_user_id = '4682ce70-d878-43da-80a5-0d939ae69740'
-  AND student_id IN (
-    'ff1f5640-d2fa-40c9-84a4-3cc9a71e4de3',
-    'aba24874-9ece-4cd9-ae38-ee3e73b34e8d',
-    '89c03bec-0fd5-476e-a979-c9fe2d7c4718'
-  );
+```ts
+const isParentView = !canEdit;
+const hasAnyContent =
+  hasTitle ||
+  !!session.description?.trim() ||
+  !!session.requirements?.trim() ||
+  images.length > 0 ||
+  pdfs.length > 0;
+const showEmptyState = isParentView && !attLoading && !hasAnyContent;
 ```
 
-After running, the parent's "Your Children" list will only show Tee Pak Jun, Tee Yan Pei, Tee Yan Zhen.
+- If `showEmptyState` is true → render a single centered empty state in place of the 5 sections:
+  - Soft icon (e.g. `FileText` in a muted circle)
+  - Heading: "No notes for this session yet"
+  - Sub-text: "The teacher hasn't shared any notes, requirements, or attachments for this session. Check back later."
+- Otherwise → render the existing sections exactly as today (so teachers, and parents on sessions that do have content, keep current behaviour).
 
-## Note (not in this fix)
+Per-section "No images attached" / "No PDFs attached" italic lines stay only in the teacher (canEdit) view; for the parent view we already short-circuit via the empty state, so no extra branching needed there.
 
-The root cause is the parent-swap flow in admin/backoffice: it doesn't sweep `student_parent` / `student_guardians` when moving a parent between families. If you want, I can follow up with a code fix (trigger or admin function) so this stops happening on future swaps — let me know.
+## Out of scope
+
+- No changes to `SessionDetailsSheet`, attachments hook, or data model.
+- No copy changes for teachers.

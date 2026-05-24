@@ -115,6 +115,15 @@ export function SessionNotesSheet({
   const hasTitle = !!(session.customTitle?.trim() &&
     session.customTitle.trim().toLowerCase() !== activityName.trim().toLowerCase());
 
+  const isParentView = !canEdit;
+  const hasAnyContent =
+    hasTitle ||
+    !!session.description?.trim() ||
+    !!session.requirements?.trim() ||
+    images.length > 0 ||
+    pdfs.length > 0;
+  const showParentEmptyState = isParentView && !attLoading && !hasAnyContent;
+
   const handleSave = async () => {
     const ok = await onSave(session.id, {
       sessionDate: session.sessionDate,
@@ -216,6 +225,20 @@ export function SessionNotesSheet({
           </SheetHeader>
 
           <div className="flex-1 overflow-y-auto px-4 py-4 space-y-5 pb-[calc(env(safe-area-inset-bottom)+2rem)]">
+            {showParentEmptyState ? (
+              <div className="flex flex-col items-center justify-center text-center py-12 px-6">
+                <div className="h-14 w-14 rounded-full bg-muted flex items-center justify-center mb-4">
+                  <FileText className="h-6 w-6 text-muted-foreground" />
+                </div>
+                <p className="text-base font-semibold text-foreground">
+                  No notes for this session yet
+                </p>
+                <p className="mt-1.5 text-sm text-muted-foreground max-w-xs">
+                  The teacher hasn't shared any notes, requirements, or attachments for this session. Please check back later.
+                </p>
+              </div>
+            ) : (
+              <>
             {/* Title */}
             <section className="space-y-1.5">
               <label className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
@@ -432,6 +455,8 @@ export function SessionNotesSheet({
                 </ul>
               )}
             </section>
+              </>
+            )}
           </div>
         </SheetContent>
       </Sheet>
