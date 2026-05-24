@@ -1,4 +1,4 @@
-import { useMemo, useState, useEffect } from "react";
+import { useMemo, useState, useEffect, useRef } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -50,8 +50,9 @@ type PortalType = "teacher" | "family";
 export default function Login() {
   const navigate = useNavigate();
   const { user, profile, loading: authLoading, setPortal } = useAuth();
-  const { hasParentRole, hasStudentRole, hasTeacherRole, isLoading: rolesLoading } = useUserRoles();
+  const { hasParentRole, hasStudentRole, hasTeacherRole, isLoading: rolesLoading, isFetched: rolesFetched } = useUserRoles();
   useSearchParams(); // kept for back-compat with deep links containing ?portal=
+  const didRedirect = useRef(false);
 
   // Login state
   const [countryIso2, setCountryIso2] = useState<string>(DEFAULT_ISO2);
@@ -72,29 +73,42 @@ export default function Login() {
 
   // Redirect if already authenticated
   useEffect(() => {
-    if (authLoading || rolesLoading) return;
+    console.log("[auth-debug] Login redirect effect", {
+      authLoading,
+      rolesLoading,
+      rolesFetched,
+      hasUser: !!user,
+      profileRole: profile?.role ?? null,
+      hasParentRole,
+      hasTeacherRole,
+      hasStudentRole,
+      didRedirect: didRedirect.current,
+    });
+    if (didRedirect.current) return;
+    if (authLoading) return;
+    if (!user) return;
+    if (!profile) return;
+    // Wait for roles query to actually settle before deciding portal.
+    if (rolesLoading || !rolesFetched) return;
 
-    if (user && profile) {
-      // Role-based default landing. Dual-role users land on Parent and can
-      // flip via the PortalSwitcher pill on the home page.
-      if (hasParentRole) {
-        setPortal("family");
-        navigate("/portal", { replace: true });
-      } else if (hasTeacherRole) {
-        setPortal("teacher");
-        navigate("/teacher", { replace: true });
-      } else if (hasStudentRole) {
-        setPortal("family");
-        navigate("/students", { replace: true });
-      } else if (["teacher", "admin", "super_admin"].includes(profile.role)) {
-        setPortal("teacher");
-        navigate("/teacher", { replace: true });
-      } else {
-        setPortal("family");
-        navigate("/portal", { replace: true });
-      }
+    let target = "/portal";
+    let portalChoice: "family" | "teacher" = "family";
+    if (hasParentRole) {
+      portalChoice = "family"; target = "/portal";
+    } else if (hasTeacherRole) {
+      portalChoice = "teacher"; target = "/teacher";
+    } else if (hasStudentRole) {
+      portalChoice = "family"; target = "/students";
+    } else if (["teacher", "admin", "super_admin"].includes(profile.role)) {
+      portalChoice = "teacher"; target = "/teacher";
+    } else {
+      portalChoice = "family"; target = "/portal";
     }
-  }, [user, profile, authLoading, rolesLoading, hasParentRole, hasStudentRole, hasTeacherRole, navigate, setPortal]);
+    console.log("[auth-debug] Login redirect -> navigate", { target, portalChoice });
+    didRedirect.current = true;
+    setPortal(portalChoice);
+    navigate(target, { replace: true });
+  }, [user, profile, authLoading, rolesLoading, rolesFetched, hasParentRole, hasStudentRole, hasTeacherRole, navigate, setPortal]);
 
   // Phone-only sanitizer: digits only, must not start with 0,
   // strips spaces, dashes, parentheses, plus signs, and any other non-digits.
@@ -331,7 +345,12 @@ export default function Login() {
         throw new Error(verifyErr.message || "Failed to create session.");
       }
 
-      // AuthContext will pick up the new session and redirect via useEffect.
+      // Proactively ensure the new session is on the client before relying on
+      // the auth listener — avoids a race where the listener fires after the
+      // redirect effect has already evaluated with profile=null.
+      const { data: sess } = await supabase.auth.getSession();
+      console.log("[auth-debug] post-verify getSession", { hasSession: !!sess?.session, userId: sess?.session?.user?.id });
+      // AuthContext listener will pick up the session and the redirect effect will fire.
     } catch (err) {
       console.error("[Login] OTP verify failed:", err);
       setError(

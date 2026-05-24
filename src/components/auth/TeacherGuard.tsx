@@ -7,7 +7,7 @@ import { Loader2 } from "lucide-react";
 
 export default function TeacherGuard() {
   const { loading, user, profile } = useAuth();
-  const { hasTeacherRole, isLoading: rolesLoading } = useUserRoles();
+  const { hasTeacherRole, isLoading: rolesLoading, isFetched: rolesFetched } = useUserRoles();
   const navigate = useNavigate();
   const location = useLocation();
   const didRedirect = useRef(false);
@@ -16,7 +16,7 @@ export default function TeacherGuard() {
   const profileStillLoading = !loading && !!user && !profile;
 
   useEffect(() => {
-    if (loading || profileStillLoading || rolesLoading) return;
+    if (loading || profileStillLoading || rolesLoading || !rolesFetched) return;
     
     // If no user, redirect to login
     if (!user) {
@@ -28,17 +28,19 @@ export default function TeacherGuard() {
     // Treat admin-like roles (admin, super_admin) as teacher for portal access.
     const teacherLike = new Set(["teacher", "admin", "super_admin"]);
     const allowed = hasTeacherRole || (profile && teacherLike.has(profile.role));
+    console.log("[auth-debug] TeacherGuard evaluate", { allowed, hasTeacherRole, profileRole: profile?.role, rolesFetched });
     if (profile && !allowed) {
       if (!didRedirect.current) {
         didRedirect.current = true;
         toast.error("This portal is only available to teacher accounts.");
       }
+      console.log("[auth-debug] TeacherGuard -> redirect /");
       navigate("/", { replace: true, state: { from: location.pathname } });
     }
-  }, [loading, profileStillLoading, rolesLoading, hasTeacherRole, user, profile, navigate, location.pathname]);
+  }, [loading, profileStillLoading, rolesLoading, rolesFetched, hasTeacherRole, user, profile, navigate, location.pathname]);
 
   // Show loading spinner while checking auth or profile
-  if (loading || profileStillLoading || rolesLoading) {
+  if (loading || profileStillLoading || rolesLoading || !rolesFetched) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />

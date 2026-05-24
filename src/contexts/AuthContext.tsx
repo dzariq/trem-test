@@ -89,6 +89,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       (event, currentSession) => {
         if (!isMounted) return;
 
+        console.log("[auth-debug] onAuthStateChange", { event, hasSession: !!currentSession, userId: currentSession?.user?.id });
         setSession(currentSession);
         setUser(currentSession?.user ?? null);
 
@@ -107,6 +108,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           setTimeout(() => {
             fetchProfile(currentSession.user.id).then((p) => {
               if (isMounted) {
+                console.log("[auth-debug] fetchProfile(listener) result", { userId: currentSession.user.id, profileRole: p?.role ?? null, isActive: p?.is_active ?? null });
                 setProfile(p);
                 setLoading(false);
               }
@@ -122,12 +124,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     supabase.auth.getSession().then(({ data: { session: currentSession } }) => {
       if (!isMounted) return;
 
+      console.log("[auth-debug] getSession(initial)", { hasSession: !!currentSession, userId: currentSession?.user?.id });
       setSession(currentSession);
       setUser(currentSession?.user ?? null);
 
       if (currentSession?.user) {
         fetchProfile(currentSession.user.id).then((p) => {
           if (isMounted) {
+            console.log("[auth-debug] fetchProfile(initial) result", { userId: currentSession.user.id, profileRole: p?.role ?? null, isActive: p?.is_active ?? null });
             setProfile(p);
             setLoading(false);
           }

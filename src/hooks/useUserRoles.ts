@@ -30,5 +30,6 @@ export function useUserRoles() {
     hasStudentRole: roles.includes("student" as AppRole),
     hasTeacherRole: roles.some((r) => TEACHER_SIDE.includes(r)),
     isLoading: query.isLoading,
+    isFetched: query.isFetched,
   };
 }

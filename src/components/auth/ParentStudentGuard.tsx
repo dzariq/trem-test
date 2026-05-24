@@ -8,7 +8,7 @@ const allowedRoles = new Set(["parent", "student", "user"]);
 
 export default function ParentStudentGuard() {
   const { loading, user, profile } = useAuth();
-  const { hasParentRole, hasStudentRole, isLoading: rolesLoading } = useUserRoles();
+  const { hasParentRole, hasStudentRole, isLoading: rolesLoading, isFetched: rolesFetched } = useUserRoles();
   const navigate = useNavigate();
   const location = useLocation();
   const didRedirect = useRef(false);
@@ -20,7 +20,7 @@ export default function ParentStudentGuard() {
   );
 
   useEffect(() => {
-    if (loading || rolesLoading) return;
+    if (loading || rolesLoading || !rolesFetched) return;
     
     // If no user, redirect to login
     if (!user) {
@@ -35,16 +35,18 @@ export default function ParentStudentGuard() {
     // Allow access if the user has the parent role in user_roles
     // OR a legacy parent/student/user role on user_profiles.
     const allowed = hasParentRole || hasStudentRole || allowedRoles.has(profile.role);
+    console.log("[auth-debug] ParentStudentGuard evaluate", { allowed, hasParentRole, hasStudentRole, profileRole: profile?.role, rolesFetched });
     if (!allowed) {
       if (!didRedirect.current) {
         didRedirect.current = true;
       }
+      console.log("[auth-debug] ParentStudentGuard -> redirect /");
       navigate("/", { replace: true, state: { from: location.pathname } });
     }
-  }, [loading, rolesLoading, hasParentRole, hasStudentRole, user, profile, navigate, location.pathname]);
+  }, [loading, rolesLoading, rolesFetched, hasParentRole, hasStudentRole, user, profile, navigate, location.pathname]);
 
   // Show loading spinner while checking auth
-  if (loading || rolesLoading || !user || !profile) return loadingScreen;
+  if (loading || rolesLoading || !rolesFetched || !user || !profile) return loadingScreen;
   
   if (!hasParentRole && !hasStudentRole && !allowedRoles.has(profile.role)) return loadingScreen;
 

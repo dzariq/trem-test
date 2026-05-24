@@ -429,6 +429,15 @@ Deno.serve(async (req) => {
       );
     }
 
+    console.log("[phone-login] success", {
+      emailInput,
+      portalProvided,
+      portal,
+      matchedUserId: match.user_id,
+      matchedRoles: rolesByUser.get(match.user_id) ?? [],
+      profileRole: match.role,
+    });
+
     return new Response(
       JSON.stringify({
         email: match.email,
