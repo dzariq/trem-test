@@ -4494,6 +4494,66 @@ export type Database = {
           },
         ]
       }
+      school_documents: {
+        Row: {
+          academic_year_id: string | null
+          campus_code: string | null
+          class_id: string | null
+          created_at: string
+          description: string | null
+          doc_type: Database["public"]["Enums"]["school_document_type"]
+          file_path: string
+          file_size: number | null
+          id: string
+          is_active: boolean
+          mime_type: string | null
+          published_at: string | null
+          title: string
+          updated_at: string
+          uploaded_by: string | null
+          version: number
+          year_level: string | null
+        }
+        Insert: {
+          academic_year_id?: string | null
+          campus_code?: string | null
+          class_id?: string | null
+          created_at?: string
+          description?: string | null
+          doc_type: Database["public"]["Enums"]["school_document_type"]
+          file_path: string
+          file_size?: number | null
+          id?: string
+          is_active?: boolean
+          mime_type?: string | null
+          published_at?: string | null
+          title: string
+          updated_at?: string
+          uploaded_by?: string | null
+          version?: number
+          year_level?: string | null
+        }
+        Update: {
+          academic_year_id?: string | null
+          campus_code?: string | null
+          class_id?: string | null
+          created_at?: string
+          description?: string | null
+          doc_type?: Database["public"]["Enums"]["school_document_type"]
+          file_path?: string
+          file_size?: number | null
+          id?: string
+          is_active?: boolean
+          mime_type?: string | null
+          published_at?: string | null
+          title?: string
+          updated_at?: string
+          uploaded_by?: string | null
+          version?: number
+          year_level?: string | null
+        }
+        Relationships: []
+      }
       school_holidays: {
         Row: {
           academic_year: number
@@ -7069,6 +7129,7 @@ export type Database = {
         }
         Returns: undefined
       }
+      user_can_see_campus: { Args: { _campus_code: string }; Returns: boolean }
       user_has_role: { Args: { check_role: string }; Returns: boolean }
       validate_cca_enrollment_eligibility: {
         Args: { p_activity_id: string; p_student_id: string }
@@ -7094,6 +7155,11 @@ export type Database = {
       cca_pic_role: "lead" | "sub"
       invoice_status: "pending_payment" | "paid"
       parent_visa_pathway: "MM2H" | "EP_I" | "EP_II" | "EP_III"
+      school_document_type:
+        | "student_handbook"
+        | "teacher_handbook"
+        | "student_timetable"
+        | "teacher_timetable"
       student_invoice_status: "pending_payment" | "paid" | "draft"
       student_invoice_type: "enrolment" | "fees" | "others"
       visa_pathway: "PTS" | "STUDENT_PASS" | "DEPENDENT_PASS"
@@ -7245,6 +7311,12 @@ export const Constants = {
       cca_pic_role: ["lead", "sub"],
       invoice_status: ["pending_payment", "paid"],
       parent_visa_pathway: ["MM2H", "EP_I", "EP_II", "EP_III"],
+      school_document_type: [
+        "student_handbook",
+        "teacher_handbook",
+        "student_timetable",
+        "teacher_timetable",
+      ],
       student_invoice_status: ["pending_payment", "paid", "draft"],
       student_invoice_type: ["enrolment", "fees", "others"],
       visa_pathway: ["PTS", "STUDENT_PASS", "DEPENDENT_PASS"],
