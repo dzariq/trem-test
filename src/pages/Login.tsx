@@ -285,6 +285,7 @@ export default function Login() {
 
       setOtp("");
       setOtpExpiresAt(Date.now() + OTP_TTL_SECONDS * 1000);
+      setResendCooldown(RESEND_COOLDOWN_SECONDS);
       setStep("otp");
     } catch (err) {
       console.error("[Login] OTP request failed:", err);
