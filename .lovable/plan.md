@@ -1,35 +1,41 @@
 ## Goal
 
-Mirror the web project's "same email can be both parent and teacher" capability on mobile by exposing a quick portal switcher in the header area — styled like the existing `CampusToggle` segmented pill — so dual-role users can flip between the Parent and Teacher portals without going into Profile.
-
-The underlying logic already exists: `useAuth().setPortal()` plus the manual "Switch to Parent / Teacher" buttons inside the two Profile pages. We just need a always-visible shortcut.
+Remove the portal selection step before login. The user lands directly on a single login screen (email or phone OTP). The portal is auto-detected from their `user_roles` after authentication. Dual-role users land on Parent by default and use the existing `PortalSwitcher` pill to flip.
 
 ## Changes
 
-### 1. New `src/components/layout/PortalSwitcher.tsx`
-- Segmented two-pill toggle (`Parent` / `Teacher`), same visual language as `CampusToggle`.
-- Reads `useAuth()` for current `portal` and `useUserRoles()` for `hasParentRole` / `hasTeacherRole`.
-- Renders **nothing** unless the user has **both** roles (single-role users see no toggle — preserves the current strict guard behavior).
-- On click of the inactive side:
-  1. `setPortal("family" | "teacher")`
-  2. `queryClient.clear()` (avoid leaking data between contexts)
-  3. `navigate("/portal" | "/teacher", { replace: true })`
-- Icons: `Users` for Parent, `GraduationCap` for Teacher (matches `RoleSelectionPage`).
+### 1. Routing (`src/App.tsx`)
+- Make `/` render `Login` directly (drop `RoleSelectionPage` as landing).
+- Keep `/login` pointing to `Login` for back-compat (deep links, profile "switch" flows).
+- Leave `RoleSelectionPage` file in place but unreferenced (or delete it — pick one; plan keeps the file to avoid churn).
 
-### 2. `src/pages/teacher/TeacherHomePage.tsx`
-- In the hero banner overlay, render `<PortalSwitcher />` next to the existing `<CampusToggle />`.
-- Keep `CampusToggle` on the left; place `PortalSwitcher` on the right side of the hero (`absolute top-2 right-3 z-20`) so they sit on opposite corners and don't collide when both are visible.
+### 2. Login page (`src/pages/Login.tsx`)
+- Remove `portal` derivation from URL/stored preference and remove the "Please select a portal" guard.
+- Remove the "redirect to `/` if no portal" effect.
+- Remove `portalLabel` subtitle (replace with a neutral subtitle like "Sign in to continue").
+- Stop sending `portal` in the `phone-login` invoke body. Backend will determine roles.
+- Post-login redirect logic (new):
+  - If `hasTeacherRole && !hasParentRole && !hasStudentRole` → `/teacher`
+  - Else if `hasParentRole` → `/portal` and `setPortal("family")`
+  - Else if `hasStudentRole` → `/students` and `setPortal("family")`
+  - Else if dual (parent + teacher) → default to `/portal`, `setPortal("family")` (user can flip via `PortalSwitcher`)
+  - Else fall back to legacy `profile.role` check.
 
-### 3. `src/pages/HomePage.tsx` (parent home)
-- Add the same `<PortalSwitcher />` overlaid on the parent hero banner (`absolute top-2 right-3 z-20`), so a dual-role user signed into the family portal has a symmetric way back to the teacher side. Parent home has no campus toggle today, so there's no collision.
+### 3. Edge function (`supabase/functions/phone-login/index.ts`)
+- Make `portal` optional. When omitted, accept ANY role (`parent`, `student`, `teacher`, `admin`, `super_admin`) as valid.
+- When omitted, skip the "wrong portal" 403 branch — if a `user_profiles` row exists for the email/phone AND has any role in `user_roles`, mint the session.
+- Keep current behavior when `portal` IS provided (back-compat for any caller still passing it).
+- Student fallback path stays unchanged (only triggers on email lookup miss).
 
-### 4. No changes to
-- `AuthContext`, `ParentStudentGuard`, `TeacherGuard`, routing, RLS, or edge functions. The web project already handled the data-layer re-link; mobile only needs the UX shortcut.
-- Profile pages keep their existing "Switch to Parent / Teacher" rows as a secondary entry point.
+### 4. RoleSelectionPage (`src/pages/RoleSelectionPage.tsx`)
+- No longer used as landing. Leave file untouched to keep the diff small; it becomes dead code reachable only by direct URL `/role` (which doesn't exist). Safe to delete in a follow-up.
+
+## Out of scope
+- `PortalSwitcher` already works for dual-role users post-login — no change.
+- Auth guards (`ParentStudentGuard`, `TeacherGuard`) already accept roles from `user_roles` — no change.
+- Profile pages' "Switch to Teacher/Parent" buttons keep working.
 
 ## Technical notes
-
-- Single-role users: component returns `null`, so nothing changes for them.
-- Dual-role detection uses `useUserRoles()` which already powers both guards.
-- `queryClient.clear()` is the same call used by the existing profile-page switchers, so cache hygiene stays consistent.
-- Visual sizing matches `CampusToggle size="sm"` (`px-2 py-0.5 text-[11px]`) to keep the hero overlay compact.
+- `setPortal("family")` is still called on successful login so the cache/UI know which side to render first; dual-role users can swap with the pill.
+- No DB migration required.
+- Edge function change is backward compatible — old clients still passing `portal` continue to work.

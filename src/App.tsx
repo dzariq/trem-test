@@ -10,8 +10,7 @@ import { StudentSelectionProvider } from "@/contexts/StudentSelectionContext";
 import { useAndroidBackButton } from "@/hooks/useAndroidBackButton";
 import { RouteErrorBoundary } from "@/components/common/RouteErrorBoundary";
 
-// Role Selection
-import RoleSelectionPage from "./pages/RoleSelectionPage";
+// Login
 import Login from "./pages/Login";
 
 // Parent/Student Pages
@@ -102,8 +101,8 @@ const App = () => (
               <RouteScrollRestoration />
               <RouteErrorBoundary>
               <Routes>
-                {/* Role Selection - Landing Page */}
-                <Route path="/" element={<RoleSelectionPage />} />
+                {/* Unified Login - Landing Page */}
+                <Route path="/" element={<Login />} />
                 <Route path="/login" element={<Login />} />
 
                 {/* Parent/Student Routes - Protected */}
