@@ -87,6 +87,7 @@ const DEFAULT_ISO2 = "my"; // Malaysia
 const OTP_REQUEST_URL = "https://collinz.app.n8n.cloud/webhook/login-otp";
 const OTP_VERIFY_URL = "https://collinz.app.n8n.cloud/webhook/verify-otp";
 const OTP_TTL_SECONDS = 300; // 5 minutes (must match send-email-otp server config)
+const RESEND_COOLDOWN_SECONDS = 60; // 1-minute cooldown between resend attempts
 
 // Convert iso2 -> flag emoji
 const isoToFlag = (iso2: string) =>
