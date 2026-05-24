@@ -22,14 +22,6 @@ export type ParentMoreRoute = {
 
 const ALL_ROUTES: ParentMoreRoute[] = [
   {
-    to: "/parent/invoice",
-    label: "Invoice",
-    icon: Receipt,
-    iconBg: "bg-emerald-100",
-    iconColor: "text-emerald-600",
-    description: "Fees and payment history",
-  },
-  {
     to: "/parent/announcements",
     label: "Announcements",
     icon: Megaphone,
@@ -44,6 +36,14 @@ const ALL_ROUTES: ParentMoreRoute[] = [
     iconBg: "bg-amber-100",
     iconColor: "text-amber-600",
     description: "Enrolled clubs and upcoming sessions",
+  },
+  {
+    to: "/parent/invoice",
+    label: "Invoice",
+    icon: Receipt,
+    iconBg: "bg-emerald-100",
+    iconColor: "text-emerald-600",
+    description: "Fees and payment history",
   },
   {
     to: "/parent/timetable",
