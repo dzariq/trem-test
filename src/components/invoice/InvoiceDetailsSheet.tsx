@@ -93,7 +93,7 @@ export function InvoiceDetailsSheet({ invoice, open, onOpenChange }: Props) {
             <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
               Items
             </h4>
-            <div className="rounded-xl border border-border divide-y divide-border">
+            <div className="border border-border divide-y divide-border">
               {invoice.lineItems.map((it, idx) => (
                 <div key={idx} className="flex items-start justify-between gap-3 p-3 bg-slate-100 border-0 border-none rounded-none">
                   <p className="text-sm text-foreground flex-1">{it.description}</p>
