@@ -427,6 +427,7 @@ export default function Login() {
     setOtp("");
     setOtpExpiresAt(null);
     setSecondsLeft(0);
+    setResendCooldown(0);
     setError(null);
   };
 
