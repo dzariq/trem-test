@@ -5,6 +5,8 @@ import { Button } from "@/components/ui/button";
 import { FileText, Target, BookOpen, HandHeart, Backpack, Clock, Shirt, Users, Utensils, ClipboardList, Scale, FileSignature } from "lucide-react";
 import { HandbookReportDialog } from "@/components/HandbookReportDialog";
 import { studentHandbookData } from "@/data/studentHandbookData";
+import { useStudentSelection } from "@/contexts/StudentSelectionContext";
+import { useSchoolDocument } from "@/hooks/useSchoolDocument";
 import {
   Accordion,
   AccordionContent,
@@ -73,6 +75,11 @@ const studentHandbookSections = studentHandbookData.sections.map((section) => ({
 
 export default function StudentHandbookPage() {
   const [reportOpen, setReportOpen] = useState(false);
+  const { selectedStudent } = useStudentSelection();
+  const { data: uploadedDoc } = useSchoolDocument({
+    docType: "student_handbook",
+    campusCode: selectedStudent?.campus_code ?? null,
+  });
 
   return (
     <AppLayout>
@@ -162,12 +169,14 @@ export default function StudentHandbookPage() {
       <HandbookReportDialog
         open={reportOpen}
         onOpenChange={setReportOpen}
-        title="Student Handbook 2026"
+        title={uploadedDoc?.title ?? "Student Handbook 2026"}
         subtitle="School vision, mission, core values, rules, and discipline policies"
         sections={studentHandbookSections}
-        downloadFileName="Student_Handbook_2026.pdf"
+        downloadFileName={
+          uploadedDoc ? `${uploadedDoc.title.replace(/\s+/g, "_")}.pdf` : "Student_Handbook_2026.pdf"
+        }
         sectionImages={studentSectionImageMap}
-        originalPdfUrl="/documents/student-handbook.pdf"
+        originalPdfUrl={uploadedDoc?.signedUrl ?? "/documents/student-handbook.pdf"}
       />
     </AppLayout>
   );

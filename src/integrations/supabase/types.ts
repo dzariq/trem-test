@@ -4496,9 +4496,11 @@ export type Database = {
       }
       school_documents: {
         Row: {
+          academic_year: number | null
           academic_year_id: string | null
           campus_code: string | null
           class_id: string | null
+          class_year_id: number | null
           created_at: string
           description: string | null
           doc_type: Database["public"]["Enums"]["school_document_type"]
@@ -4515,9 +4517,11 @@ export type Database = {
           year_level: string | null
         }
         Insert: {
+          academic_year?: number | null
           academic_year_id?: string | null
           campus_code?: string | null
           class_id?: string | null
+          class_year_id?: number | null
           created_at?: string
           description?: string | null
           doc_type: Database["public"]["Enums"]["school_document_type"]
@@ -4534,9 +4538,11 @@ export type Database = {
           year_level?: string | null
         }
         Update: {
+          academic_year?: number | null
           academic_year_id?: string | null
           campus_code?: string | null
           class_id?: string | null
+          class_year_id?: number | null
           created_at?: string
           description?: string | null
           doc_type?: Database["public"]["Enums"]["school_document_type"]
@@ -4552,7 +4558,15 @@ export type Database = {
           version?: number
           year_level?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "school_documents_class_year_id_fkey"
+            columns: ["class_year_id"]
+            isOneToOne: false
+            referencedRelation: "class_years"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       school_holidays: {
         Row: {
