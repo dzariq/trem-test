@@ -1,9 +1,9 @@
 import { useState, useEffect, useRef } from "react";
-import { Home, UserCheck, Calendar, BookOpen, Receipt, LucideIcon } from "lucide-react";
-import { NavLink } from "react-router-dom";
+import { Home, UserCheck, Calendar, Menu, LucideIcon } from "lucide-react";
+import { NavLink, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
-import { FEATURES } from "@/config/featureFlags";
 import academicOwlIcon from "@/assets/academic-owl-icon.png";
+import { ParentMoreSheet, useParentMoreRoutes } from "./ParentMoreSheet";
 
 type NavItem = {
   to: string;
@@ -17,12 +17,13 @@ const navItems: NavItem[] = [
   { to: "/parent/attendance", icon: UserCheck, label: "Attend" },
   { to: "/parent/academic", customIcon: academicOwlIcon, label: "Academic" },
   { to: "/parent/calendar", icon: Calendar, label: "Calendar" },
-  { to: "/parent/invoice", icon: Receipt, label: "Invoice" },
-  ...(FEATURES.homeworkParent ? [{ to: "/parent/homework", icon: BookOpen, label: "Homework" }] : []),
 ];
 
 export function BottomNavigation() {
   const [isVisible, setIsVisible] = useState(true);
+  const [moreOpen, setMoreOpen] = useState(false);
+  const location = useLocation();
+  const moreRoutes = useParentMoreRoutes();
   const lastScrollYRef = useRef(0);
 
   useEffect(() => {
@@ -50,44 +51,69 @@ export function BottomNavigation() {
     return () => target.removeEventListener("scroll", handleScroll);
   }, []);
 
+  const isMoreActive = moreRoutes.some(
+    (r) => location.pathname === r.to || location.pathname.startsWith(r.to + "/")
+  );
+
   return (
-    <nav 
-      className={cn(
-        "fixed bottom-0 left-0 right-0 bg-card border-t border-border shadow-lg z-50 transition-transform duration-300 bottom-tabbar",
-        isVisible ? "translate-y-0" : "translate-y-full"
-      )}
-    >
-      <div
-        className="max-w-lg mx-auto grid items-stretch py-2 px-1"
-        style={{ gridTemplateColumns: `repeat(${navItems.length}, minmax(0, 1fr))` }}
+    <>
+      <nav
+        className={cn(
+          "fixed bottom-0 left-0 right-0 bg-card border-t border-border shadow-lg z-50 transition-transform duration-300 bottom-tabbar",
+          isVisible ? "translate-y-0" : "translate-y-full"
+        )}
       >
-        {navItems.map((item) => (
-          <NavLink
-            key={item.to}
-            to={item.to}
-            end={item.to === "/parent"}
-            className={({ isActive }) =>
-              cn(
-                "flex flex-col items-center justify-center py-2 px-1 rounded-lg transition-all duration-200 w-full",
-                isActive
-                  ? "text-primary bg-accent"
-                  : "text-muted-foreground hover:text-foreground hover:bg-accent/50"
-              )
-            }
-          >
-            {({ isActive }) => (
-              <>
-                {item.customIcon ? (
-                  <img src={item.customIcon} alt={item.label} className="h-5 w-5 mb-1" />
-                ) : item.icon ? (
-                  <item.icon className={cn("h-5 w-5 mb-1", isActive && "stroke-[2.5px]")} />
-                ) : null}
-                <span className="text-xs font-medium">{item.label}</span>
-              </>
+        <div className="max-w-lg mx-auto grid grid-cols-5 items-stretch py-2 px-1">
+          {navItems.map((item) => (
+            <NavLink
+              key={item.to}
+              to={item.to}
+              end={item.to === "/parent"}
+              className={({ isActive }) =>
+                cn(
+                  "flex flex-col items-center justify-center py-2 px-1 rounded-lg transition-all duration-200 w-full",
+                  isActive
+                    ? "text-primary bg-accent"
+                    : "text-muted-foreground hover:text-foreground hover:bg-accent/50"
+                )
+              }
+            >
+              {({ isActive }) => (
+                <>
+                  {item.customIcon ? (
+                    <img src={item.customIcon} alt={item.label} className="h-5 w-5 mb-1" />
+                  ) : item.icon ? (
+                    <item.icon className={cn("h-5 w-5 mb-1", isActive && "stroke-[2.5px]")} />
+                  ) : null}
+                  <span className="text-xs font-medium">{item.label}</span>
+                </>
+              )}
+            </NavLink>
+          ))}
+
+          <button
+            type="button"
+            onClick={() => setMoreOpen(true)}
+            className={cn(
+              "flex flex-col items-center justify-center py-2 px-1 rounded-lg transition-all duration-200 w-full",
+              isMoreActive || moreOpen
+                ? "text-primary bg-accent"
+                : "text-muted-foreground hover:text-foreground hover:bg-accent/50"
             )}
-          </NavLink>
-        ))}
-      </div>
-    </nav>
+            aria-label="More options"
+          >
+            <Menu
+              className={cn(
+                "h-5 w-5 mb-1",
+                (isMoreActive || moreOpen) && "stroke-[2.5px]"
+              )}
+            />
+            <span className="text-xs font-medium">More</span>
+          </button>
+        </div>
+      </nav>
+
+      <ParentMoreSheet open={moreOpen} onOpenChange={setMoreOpen} />
+    </>
   );
 }
