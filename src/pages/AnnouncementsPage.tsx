@@ -134,7 +134,6 @@ export default function AnnouncementsPage() {
                   {linkedStudents.map((s) => (
                     <SelectItem key={s.id} value={s.id}>
                       {s.name}
-                      {s.className ? ` · ${s.className}` : ""}
                     </SelectItem>
                   ))}
                 </SelectContent>
