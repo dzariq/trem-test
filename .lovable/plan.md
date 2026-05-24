@@ -1,48 +1,48 @@
-## What the audit found
+## Goal
 
-Backend is healthy for `junhan@collinz.edu.my`:
+Move the **Campus Toggle** (GL/BO) and **Portal Switcher** (Parent/Teacher) out of the hero-banner overlay into a dedicated **secondary nav row** that sits directly below the main `AppHeader`. The row only renders when at least one of the two controls has something to show; otherwise it disappears entirely (no empty bar, no spacing).
 
-- `user_profiles`: `role='teacher'`, `is_active=true`, `user_id=4682ce70-…`
-- `user_roles`: `['teacher']`
-- RLS on `user_profiles` allows `user_id = auth.uid()` → own profile readable
-- `phone-login` edge function: `portal` is optional; teacher role is in the default `allowedRoles` set → should mint a `token_hash` and return 200
+## Behaviour
 
-So the OTP + token mint path is fine. The bounce-back-to-login is a **client-side handoff bug** after `supabase.auth.verifyOtp` succeeds — the session is set but the Login page either (a) never gets a `(user && profile)` snapshot that triggers the redirect, or (b) `TeacherGuard` rejects on first render before `useUserRoles` resolves.
+- **Visibility rule:** render only if `(campuses.length >= 2)` OR `(hasParentRole && hasTeacherRole)`. If neither is true → return `null` (no DOM, no height).
+- **Layout:** sticky just under the header, full width, slightly tinted background (`bg-muted/40` with `backdrop-blur-sm` and a hairline `border-b border-border/60`) so it reads as a distinct band but stays subtle.
+- **Content:** Campus toggle on the left, Portal switcher on the right, `px-4 py-2`, both aligned to the same row. If only one of them qualifies, that single control sits on the left and the right side stays empty.
+- **Hero banner:** remove the two `absolute` overlay blocks (`CampusToggle` top-left, `PortalSwitcher` top-right). Keep the welcome quote and banner image untouched.
 
-## Most likely root causes
+## New component
 
-1. **Race in `useUserRoles` query key change.** When `user` flips from `null → defined` after `verifyOtp`, the query refetches but `isLoading` resets briefly. In `TeacherGuard`, `rolesLoading=true` returns the spinner — fine — but the **redirect-already-fired path in `Login.tsx`** could trigger `navigate('/')` indirectly if any intermediate render shows `user` truthy + `profile` truthy + `hasTeacherRole=false` (because roles haven't refetched yet) + `profile.role === 'teacher'` legacy fallback matches → navigate `/teacher`. That part is OK.
-2. **Session not flushed to localStorage in time.** `verifyOtp` returns, listener fires `SIGNED_IN`, but the `Login` redirect `useEffect` may run before `setProfile` finishes (profile still `null`) — and meanwhile something re-renders the form. Less likely given the existing `if (user && profile) return spinner` guard, but worth instrumenting.
-3. **`useUserRoles` cache hydration.** Query key `["user-roles", user?.id]` — if the previous session left a cached `[]` under a stale id, the new id gets a clean fetch, but during the fetch `hasTeacherRole=false`. The Login redirect's fallback `["teacher","admin","super_admin"].includes(profile.role)` catches it — so this branch should still fire `/teacher`. Need a log to confirm it actually runs.
+`src/components/layout/SecondaryNavBar.tsx`
+- Reads `useCampus()` for `campuses` length and `useUserRoles()` for `hasParentRole` / `hasTeacherRole`.
+- Computes `shouldRender = campuses.length >= 2 || (hasParentRole && hasTeacherRole)`. Returns `null` if false.
+- Renders:
+  ```
+  <div className="sticky top-[var(--header-h,56px)] z-30 bg-muted/40 backdrop-blur-sm border-b border-border/60">
+    <div className="flex items-center justify-between px-4 py-2">
+      <CampusToggle size="sm" />     // self-hides if single-campus
+      <PortalSwitcher size="sm" />   // self-hides if not dual-role
+    </div>
+  </div>
+  ```
+  (Both child components already early-return `null` when their condition isn't met, so the inner row collapses gracefully when only one applies.)
 
-## Plan
+## Wiring
 
-### 1. Add scoped diagnostic logs (temporary, prefixed `[auth-debug]`)
-- `AuthContext`: log every `onAuthStateChange` event + whether profile was fetched + `profile.role`
-- `Login.tsx` redirect effect: log `{ authLoading, rolesLoading, user: !!user, profile: profile?.role, hasParentRole, hasTeacherRole, hasStudentRole }` on every run and which branch navigates
-- `TeacherGuard` / `ParentStudentGuard`: log `{ loading, rolesLoading, hasTeacherRole, hasParentRole, profile: profile?.role, allowed }` and the redirect target when one fires
-- `phone-login` edge function: log `{ emailInput, portalProvided, matchedUserId, matchedRoles }` before returning 200
+- **`src/pages/teacher/TeacherHomePage.tsx`**
+  - Remove the two `absolute top-2 left-3` / `top-2 right-3` overlay divs inside the hero block.
+  - Render `<SecondaryNavBar />` immediately after `<AppHeader />` (before the hero `<div>`).
+- **`src/pages/HomePage.tsx`** (parent home)
+  - Remove the `<div className="absolute top-2 right-3 z-20"><PortalSwitcher … /></div>` overlay on the hero.
+  - Render `<SecondaryNavBar />` immediately after `<AppHeader />`.
+- No changes to `CampusToggle`, `PortalSwitcher`, `AppHeader`, `useCampus`, or `useUserRoles` — they already expose the right state.
 
-### 2. Harden Login → Guard handoff
-- In `Login.tsx`: after `verifyOtp` succeeds, **proactively `await supabase.auth.getSession()`** to ensure the new session is on the client before relying on the listener, then manually call the same redirect logic (don't depend solely on the `useEffect` re-running).
-- In `TeacherGuard` and `ParentStudentGuard`: while `rolesLoading` is true, do **not** redirect — already the case, but tighten by also waiting for the React Query cache to have a settled value (`isFetched`) before evaluating "not allowed", to remove any first-paint race that could land on `/`.
-- In `Login.tsx`: guard the redirect effect with `didRedirect` ref so it can't double-fire and cause flicker.
+## Out of scope
 
-### 3. Verify in preview
-- Reproduce login with `junhan@collinz.edu.my`
-- Read `code--read_console_logs` for the `[auth-debug]` prefix
-- Pull `phone-login` edge function logs to confirm the 200 response and roles matched
-- Confirm landing on `/teacher` with `TeacherHomePage` rendered
+- No changes to other teacher/parent pages right now (header on inner pages doesn't currently show these toggles). If you want the secondary nav on every screen later, we can lift it into `AppLayout` / `TeacherAppLayout` as a follow-up.
+- No change to roles in the database — `junhan@collinz.edu.my` still has only the teacher role, so the Portal switcher will remain hidden for that account until a parent role is granted. (Flagged separately.)
+- No change to the shared Supabase backend or the mobile-app project.
 
-### 4. Remove debug logs after the fix is confirmed working
+## Files touched
 
-## Files to touch
-
-- `src/contexts/AuthContext.tsx` — debug logs only
-- `src/pages/Login.tsx` — debug logs + proactive `getSession()` + `didRedirect` guard
-- `src/components/auth/TeacherGuard.tsx` — debug logs + `isFetched` race fix
-- `src/components/auth/ParentStudentGuard.tsx` — debug logs + `isFetched` race fix
-- `src/hooks/useUserRoles.ts` — expose `isFetched` alongside `isLoading`
-- `supabase/functions/phone-login/index.ts` — add structured success log
-
-No DB migration, no RLS change, no behaviour change for working accounts.
+- `src/components/layout/SecondaryNavBar.tsx` (new)
+- `src/pages/teacher/TeacherHomePage.tsx` (remove overlays, add bar)
+- `src/pages/HomePage.tsx` (remove overlay, add bar)
