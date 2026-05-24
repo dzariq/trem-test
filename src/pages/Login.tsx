@@ -377,7 +377,7 @@ export default function Login() {
         <h1 className="text-2xl font-bold text-foreground whitespace-pre-line">
           {"Welcome to\nSchool Portal"}
         </h1>
-        <p className="text-muted-foreground mt-2">{portalLabel}</p>
+        <p className="text-muted-foreground mt-2">Sign in to continue</p>
       </div>
 
       <div className="grid gap-6 w-full max-w-md">
