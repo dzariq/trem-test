@@ -1,5 +1,9 @@
 import { useCampus } from "@/contexts/CampusContext";
 import { useUserRoles } from "@/hooks/useUserRoles";
+import { useAuth } from "@/contexts/AuthContext";
+import { useStudentSelection } from "@/hooks/useStudentSelection";
+import { useLocation } from "react-router-dom";
+import { useMemo } from "react";
 import { CampusToggle } from "@/components/campus/CampusToggle";
 import { PortalSwitcher } from "@/components/layout/PortalSwitcher";
 
@@ -12,14 +16,30 @@ import { PortalSwitcher } from "@/components/layout/PortalSwitcher";
 export function SecondaryNavBar() {
   const { campuses } = useCampus();
   const { hasParentRole, hasTeacherRole } = useUserRoles();
+  const { portal } = useAuth();
+  const { linkedStudents } = useStudentSelection();
+  const location = useLocation();
 
-  const showCampus = campuses.length >= 2;
+  const onTeacherRoute = location.pathname.startsWith("/teacher");
+  const isTeacherPortal = portal ? portal === "teacher" : onTeacherRoute;
+
+  const parentCampusCount = useMemo(() => {
+    const codes = new Set<string>();
+    linkedStudents.forEach((s) => {
+      if (s.campus_code) codes.add(s.campus_code);
+    });
+    return codes.size;
+  }, [linkedStudents]);
+
+  const showCampus = isTeacherPortal
+    ? campuses.length >= 2
+    : parentCampusCount >= 2;
   const showPortal = hasParentRole && hasTeacherRole;
 
   if (!showCampus && !showPortal) return null;
 
   return (
-    <div className="sticky top-0 z-30 w-full bg-muted/50 backdrop-blur-sm border-b border-border/60">
+    <div className="sticky top-0 z-30 w-full bg-muted/20 backdrop-blur-sm border-y border-border/60">
       <div className="flex items-center justify-between px-4 py-2">
         <div className="flex items-center">
           {showCampus && <CampusToggle size="sm" />}

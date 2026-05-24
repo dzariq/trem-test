@@ -237,5 +237,18 @@ export async function listMyLinkedStudents(): Promise<LinkedStudent[]> {
     return listViaStudentGuardians(authUserId);
   }
 
+  // Dual-role accounts (e.g. teacher who is also a parent) carry a
+  // teacher/admin role on user_profiles but still have a 'parent' entry in
+  // user_roles. Fall back to that table so the parent portal can resolve
+  // their linked children.
+  const { data: rolesRows } = await supabase
+    .from("user_roles")
+    .select("role")
+    .eq("user_id", authUserId);
+  const hasParentRole = (rolesRows ?? []).some((r: any) => r.role === "parent");
+  if (hasParentRole) {
+    return listViaStudentGuardians(authUserId);
+  }
+
   return [];
 }
