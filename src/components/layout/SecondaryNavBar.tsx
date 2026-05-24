@@ -42,11 +42,8 @@ export function SecondaryNavBar() {
     <div
       className="sticky top-0 z-30 w-full border-y border-black/30 shadow-sm"
       style={{
-        backgroundColor: "hsl(150 30% 15%)",
         backgroundImage:
-          "linear-gradient(45deg, rgba(255,255,255,0.04) 25%, transparent 25%, transparent 75%, rgba(255,255,255,0.04) 75%), linear-gradient(45deg, rgba(255,255,255,0.04) 25%, transparent 25%, transparent 75%, rgba(255,255,255,0.04) 75%)",
-        backgroundSize: "14px 14px",
-        backgroundPosition: "0 0, 7px 7px",
+          "linear-gradient(135deg, hsl(150 35% 18%) 0%, hsl(155 40% 12%) 100%)",
       }}
     >
       <div className="flex items-center justify-between px-4 py-2">
