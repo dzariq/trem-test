@@ -288,12 +288,11 @@ export default function Login() {
         {
           body:
             method === "email"
-              ? { email, otp, portal }
+              ? { email, otp }
               : {
                   phone,
                   country_code: `+${selectedCountry.dialCode}`,
                   otp,
-                  portal,
                 },
         },
       );
