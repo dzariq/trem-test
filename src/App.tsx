@@ -131,6 +131,7 @@ const App = () => (
                   <Route path="/parent/awards" element={<AwardsPage />} />
                   <Route path="/parent/handbook" element={<StudentHandbookPage />} />
                   <Route path="/parent/visa" element={<VisaPage />} />
+                  <Route path="/parent/timetable" element={<ParentTimetablePage />} />
                   <Route path="/parent/cca" element={<ParentCcaPage />} />
                   <Route path="/parent/cca/:activityId" element={<ParentCcaDetailPage />} />
                   {FEATURES.homeworkParent && (
