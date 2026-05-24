@@ -6950,6 +6950,10 @@ export type Database = {
         Args: { p_student_id: string }
         Returns: undefined
       }
+      reconcile_parent_campuses: {
+        Args: { p_parent_user_id: string }
+        Returns: string[]
+      }
       refresh_visa_statuses: { Args: never; Returns: number }
       reject_club_application: {
         Args: { p_application_id: string; p_notes: string }
