@@ -429,6 +429,15 @@ Deno.serve(async (req) => {
       );
     }
 
+    console.log("[phone-login] success", {
+      emailInput,
+      portalProvided,
+      portal,
+      matchedUserId: match.user_id,
+      matchedRoles: rolesByUser.get(match.user_id) ?? [],
+      profileRole: match.role,
+    });
+
     return new Response(
       JSON.stringify({
         email: match.email,
@@ -437,7 +446,6 @@ Deno.serve(async (req) => {
       }),
       { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } },
     );
-    // (logged above before response is built — see below)
   } catch (err) {
     console.error("[phone-login] unexpected error", err);
     return new Response(
