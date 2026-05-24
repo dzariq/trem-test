@@ -18,6 +18,55 @@ import { Loader2, Phone, ArrowLeft, Mail } from "lucide-react";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { allCountries } from "country-telephone-data";
 import { useUserRoles } from "@/hooks/useUserRoles";
+import { toast } from "sonner";
+
+// Map raw server/auth errors to user-friendly messages.
+function friendlyAuthError(raw: string): { title: string; description?: string } {
+  const msg = (raw || "").toLowerCase();
+  if (msg.includes("invalid otp") || msg.includes("invalid code")) {
+    return {
+      title: "Wrong code",
+      description: "The code you entered is incorrect. Please double-check and try again.",
+    };
+  }
+  if (msg.includes("expired")) {
+    return {
+      title: "Code expired",
+      description: "Your code has expired. Please request a new one.",
+    };
+  }
+  if (msg.includes("too many")) {
+    return {
+      title: "Too many attempts",
+      description: "Please request a new code and try again.",
+    };
+  }
+  if (msg.includes("no otp issued")) {
+    return {
+      title: "No code found",
+      description: "Please request a new code first.",
+    };
+  }
+  if (msg.includes("no account") || msg.includes("not found")) {
+    return {
+      title: "Account not found",
+      description: "We couldn't find an account with these details. Please contact the school.",
+    };
+  }
+  if (msg.includes("inactive")) {
+    return {
+      title: "Account inactive",
+      description: "Your account is inactive. Please contact the school.",
+    };
+  }
+  if (msg.includes("invalid login") || msg.includes("invalid password") || msg.includes("invalid credentials")) {
+    return {
+      title: "Wrong password",
+      description: "The password you entered is incorrect. Please try again.",
+    };
+  }
+  return { title: "Sign-in failed", description: raw || "Please try again." };
+}
 
 // Build a clean country list: { iso2, name, dialCode }
 // Deduplicate by iso2 and sort alphabetically by name.
@@ -228,11 +277,10 @@ export default function Login() {
       setStep("otp");
     } catch (err) {
       console.error("[Login] OTP request failed:", err);
-      setError(
-        err instanceof Error
-          ? `Failed to send OTP: ${err.message}`
-          : "Failed to send OTP. Please try again.",
-      );
+      const raw = err instanceof Error ? err.message : "Failed to send OTP.";
+      const { title, description } = friendlyAuthError(raw);
+      setError(description ?? title);
+      toast.error(title, { description });
     } finally {
       setLoading(false);
     }
@@ -353,11 +401,10 @@ export default function Login() {
       // AuthContext listener will pick up the session and the redirect effect will fire.
     } catch (err) {
       console.error("[Login] OTP verify failed:", err);
-      setError(
-        err instanceof Error
-          ? err.message
-          : "Invalid OTP. Please try again.",
-      );
+      const raw = err instanceof Error ? err.message : "Invalid OTP. Please try again.";
+      const { title, description } = friendlyAuthError(raw);
+      setError(description ?? title);
+      toast.error(title, { description });
     } finally {
       setLoading(false);
     }
