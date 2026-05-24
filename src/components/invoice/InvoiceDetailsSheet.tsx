@@ -41,7 +41,7 @@ export function InvoiceDetailsSheet({ invoice, open, onOpenChange }: Props) {
         </div>
 
         {/* Amounts */}
-        <div className="rounded-xl border border-border bg-muted/40 p-4 space-y-2">
+        <div className="rounded-xl border border-border bg-muted/40 p-4 space-y-2 bg-slate-100">
           <div className="flex justify-between text-sm">
             <span className="text-muted-foreground">Total amount</span>
             <span className="font-medium text-foreground">
@@ -95,7 +95,7 @@ export function InvoiceDetailsSheet({ invoice, open, onOpenChange }: Props) {
             </h4>
             <div className="rounded-xl border border-border divide-y divide-border">
               {invoice.lineItems.map((it, idx) => (
-                <div key={idx} className="flex items-start justify-between gap-3 p-3">
+                <div key={idx} className="flex items-start justify-between gap-3 p-3 bg-slate-100 border-0 border-none rounded-none">
                   <p className="text-sm text-foreground flex-1">{it.description}</p>
                   <p
                     className={
