@@ -6,6 +6,8 @@ import { Button } from "@/components/ui/button";
 import { teacherHandbookData, sectionColors } from "@/data/teacherHandbookData";
 import { cn } from "@/lib/utils";
 import { HandbookReportDialog } from "@/components/HandbookReportDialog";
+import { useCampus } from "@/contexts/CampusContext";
+import { useSchoolDocument } from "@/hooks/useSchoolDocument";
 import schoolBadge from "@/assets/school-badge.png";
 import {
   Compass, Shield, BookOpen, Home, Users, Building, Clock,
@@ -74,6 +76,11 @@ const teacherHandbookSections = teacherHandbookData.sections.map((section) => ({
 
 export default function TeacherHandbookPage() {
   const [isReportOpen, setIsReportOpen] = useState(false);
+  const { activeCampus } = useCampus();
+  const { data: uploadedDoc } = useSchoolDocument({
+    docType: "teacher_handbook",
+    campusCode: activeCampus,
+  });
 
   return (
     <TeacherAppLayout>
@@ -175,12 +182,14 @@ export default function TeacherHandbookPage() {
       <HandbookReportDialog
         open={isReportOpen}
         onOpenChange={setIsReportOpen}
-        title="Teacher Handbook 2026"
+        title={uploadedDoc?.title ?? "Teacher Handbook 2026"}
         subtitle={teacherHandbookData.purpose}
         sections={teacherHandbookSections}
-        downloadFileName="Teacher_Handbook_2026.pdf"
+        downloadFileName={
+          uploadedDoc ? `${uploadedDoc.title.replace(/\s+/g, "_")}.pdf` : "Teacher_Handbook_2026.pdf"
+        }
         sectionImages={teacherSectionImageMap}
-        originalPdfUrl="/documents/teacher-handbook.pdf"
+        originalPdfUrl={uploadedDoc?.signedUrl ?? "/documents/teacher-handbook.pdf"}
       />
     </TeacherAppLayout>
   );
