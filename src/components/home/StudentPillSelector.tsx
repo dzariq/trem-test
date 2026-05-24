@@ -75,7 +75,13 @@ export function StudentPillSelector({ onStudentChange }: StudentPillSelectorProp
   };
 
   const getInitials = (name: string) =>
-    name.split(" ").map((n) => n[0]).join("");
+    name
+      .split(/\s+/)
+      .map((part) => part.replace(/[^A-Za-z]/g, "")[0])
+      .filter(Boolean)
+      .slice(0, 3)
+      .join("")
+      .toUpperCase();
 
   const maxVisible = 4;
   const visibleStudents = students.slice(0, maxVisible);
