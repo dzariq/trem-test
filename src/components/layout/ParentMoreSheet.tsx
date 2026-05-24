@@ -95,10 +95,10 @@ export function ParentMoreSheet({ open, onOpenChange }: ParentMoreSheetProps) {
       open={open}
       onOpenChange={onOpenChange}
       title="More"
-      snapPoints={[0, 1]}
-      defaultSnapPoint={1}
+      snapPoints={[0, 0.85]}
+      defaultSnapPoint={0.85}
     >
-      <div className="px-4 py-4 grid grid-cols-2 gap-3">
+      <div className="px-4 py-4 pb-8 grid grid-cols-2 gap-3">
         {routes.map((r) => {
           const Icon = r.icon;
           const active =
