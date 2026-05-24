@@ -12,6 +12,7 @@ import TeacherWelcomeQuote from "@/components/home/TeacherWelcomeQuote";
 import { PDFViewerDialog } from "@/components/PDFViewerDialog";
 import { GeometricBackgroundPattern } from "@/components/home/GeometricBackgroundPattern";
 import { CampusToggle } from "@/components/campus/CampusToggle";
+import { PortalSwitcher } from "@/components/layout/PortalSwitcher";
 import { BookOpen, Users, Clock, FileText, Calendar, AlertTriangle, ClipboardList, ChevronDown, ChevronUp } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import schoolBadge from "@/assets/school-badge.png";
