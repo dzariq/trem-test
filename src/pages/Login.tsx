@@ -117,6 +117,7 @@ export default function Login() {
   const [otp, setOtp] = useState("");
   const [otpExpiresAt, setOtpExpiresAt] = useState<number | null>(null);
   const [secondsLeft, setSecondsLeft] = useState(0);
+  const [resendCooldown, setResendCooldown] = useState(0);
 
   const selectedCountry =
     COUNTRIES.find((c) => c.iso2 === countryIso2) ?? COUNTRIES[0];
