@@ -1,5 +1,5 @@
 import { useCallback } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
 import { Users, GraduationCap } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
@@ -23,20 +23,24 @@ const INACTIVE_STYLE =
  */
 export function PortalSwitcher({ size = "sm", className }: PortalSwitcherProps) {
   const navigate = useNavigate();
+  const location = useLocation();
   const queryClient = useQueryClient();
   const { portal, setPortal } = useAuth();
   const { hasParentRole, hasTeacherRole, isLoading } = useUserRoles();
 
-  const isTeacher = portal === "teacher";
+  // Derive active state from current route so the pill is correct even when
+  // portal preference is null (legacy sessions, first visit, etc.)
+  const onTeacherRoute = location.pathname.startsWith("/teacher");
+  const isTeacher = portal ? portal === "teacher" : onTeacherRoute;
 
   const switchTo = useCallback(
     (target: "family" | "teacher") => {
-      if ((target === "family" && portal === "family") || (target === "teacher" && portal === "teacher")) return;
+      if ((target === "family" && isTeacher === false) || (target === "teacher" && isTeacher === true)) return;
       setPortal(target);
       queryClient.clear();
       navigate(target === "teacher" ? "/teacher" : "/portal", { replace: true });
     },
-    [portal, setPortal, queryClient, navigate]
+    [isTeacher, setPortal, queryClient, navigate]
   );
 
   if (isLoading) return null;
