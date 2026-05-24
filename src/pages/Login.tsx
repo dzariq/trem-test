@@ -87,6 +87,7 @@ const DEFAULT_ISO2 = "my"; // Malaysia
 const OTP_REQUEST_URL = "https://collinz.app.n8n.cloud/webhook/login-otp";
 const OTP_VERIFY_URL = "https://collinz.app.n8n.cloud/webhook/verify-otp";
 const OTP_TTL_SECONDS = 300; // 5 minutes (must match send-email-otp server config)
+const RESEND_COOLDOWN_SECONDS = 60; // 1-minute cooldown between resend attempts
 
 // Convert iso2 -> flag emoji
 const isoToFlag = (iso2: string) =>
@@ -116,6 +117,7 @@ export default function Login() {
   const [otp, setOtp] = useState("");
   const [otpExpiresAt, setOtpExpiresAt] = useState<number | null>(null);
   const [secondsLeft, setSecondsLeft] = useState(0);
+  const [resendCooldown, setResendCooldown] = useState(0);
 
   const selectedCountry =
     COUNTRIES.find((c) => c.iso2 === countryIso2) ?? COUNTRIES[0];
@@ -185,6 +187,15 @@ export default function Login() {
     const id = window.setInterval(tick, 250);
     return () => window.clearInterval(id);
   }, [step, otpExpiresAt]);
+
+  // Countdown ticker for resend cooldown
+  useEffect(() => {
+    if (step !== "otp" || resendCooldown <= 0) return;
+    const id = window.setInterval(() => {
+      setResendCooldown((prev) => Math.max(0, prev - 1));
+    }, 1000);
+    return () => window.clearInterval(id);
+  }, [step, resendCooldown]);
 
   const fullNumber = `+${selectedCountry.dialCode}${phone}`;
   const otpDestination = method === "email" ? email : fullNumber;
@@ -274,6 +285,7 @@ export default function Login() {
 
       setOtp("");
       setOtpExpiresAt(Date.now() + OTP_TTL_SECONDS * 1000);
+      setResendCooldown(RESEND_COOLDOWN_SECONDS);
       setStep("otp");
     } catch (err) {
       console.error("[Login] OTP request failed:", err);
@@ -415,6 +427,7 @@ export default function Login() {
     setOtp("");
     setOtpExpiresAt(null);
     setSecondsLeft(0);
+    setResendCooldown(0);
     setError(null);
   };
 
@@ -596,10 +609,10 @@ export default function Login() {
                   <button
                     type="button"
                     onClick={handleRequestOtp}
-                    disabled={loading || secondsLeft > 0}
+                    disabled={loading || resendCooldown > 0}
                     className="text-primary disabled:text-muted-foreground disabled:cursor-not-allowed hover:underline"
                   >
-                    Resend OTP
+                    {resendCooldown > 0 ? `Resend in ${resendCooldown}s` : "Resend OTP"}
                   </button>
                 </div>
               </div>
