@@ -11,8 +11,7 @@ import { TeacherQuickLinks } from "@/components/home/TeacherQuickLinks";
 import TeacherWelcomeQuote from "@/components/home/TeacherWelcomeQuote";
 import { PDFViewerDialog } from "@/components/PDFViewerDialog";
 import { GeometricBackgroundPattern } from "@/components/home/GeometricBackgroundPattern";
-import { CampusToggle } from "@/components/campus/CampusToggle";
-import { PortalSwitcher } from "@/components/layout/PortalSwitcher";
+import { SecondaryNavBar } from "@/components/layout/SecondaryNavBar";
 import { BookOpen, Users, Clock, FileText, Calendar, AlertTriangle, ClipboardList, ChevronDown, ChevronUp } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import schoolBadge from "@/assets/school-badge.png";
@@ -408,6 +407,8 @@ export default function TeacherHomePage() {
         }
       />
 
+      <SecondaryNavBar />
+
       {/* Hero Banner */}
       <div className="relative w-screen left-1/2 right-1/2 -ml-[50vw] -mr-[50vw] overflow-hidden">
         <img 
@@ -415,14 +416,6 @@ export default function TeacherHomePage() {
           alt="School Banner" 
           className="block w-full h-auto hero-breathe"
         />
-        {/* Campus Toggle - overlaid top-left, only for multi-campus teachers */}
-        <div className="absolute top-2 left-3 z-20">
-          <CampusToggle size="sm" />
-        </div>
-        {/* Portal Switcher - overlaid top-right, only for dual-role users */}
-        <div className="absolute top-2 right-3 z-20">
-          <PortalSwitcher size="sm" />
-        </div>
         <TeacherWelcomeQuote />
       </div>
 
