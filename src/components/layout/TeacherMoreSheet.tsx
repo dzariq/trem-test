@@ -22,12 +22,12 @@ export type MoreRoute = {
 
 export const MORE_ROUTES: MoreRoute[] = [
   {
-    to: "/teacher/lesson-plans",
-    label: "Lesson Plans",
-    icon: ClipboardList,
-    iconBg: "bg-blue-100",
-    iconColor: "text-blue-600",
-    description: "Plan and reflect on lessons",
+    to: "/teacher/announcements",
+    label: "Announcements",
+    icon: Megaphone,
+    iconBg: "bg-sky-100",
+    iconColor: "text-sky-600",
+    description: "School-wide updates",
   },
   {
     to: "/teacher/cca",
@@ -36,6 +36,22 @@ export const MORE_ROUTES: MoreRoute[] = [
     iconBg: "bg-amber-100",
     iconColor: "text-amber-600",
     description: "Clubs, outdoor and events you lead",
+  },
+  {
+    to: "/teacher/lesson-plans",
+    label: "Lesson Plans",
+    icon: ClipboardList,
+    iconBg: "bg-blue-100",
+    iconColor: "text-blue-600",
+    description: "Plan and reflect on lessons",
+  },
+  {
+    to: "/teacher/timetable",
+    label: "Timetable",
+    icon: CalendarClock,
+    iconBg: "bg-emerald-100",
+    iconColor: "text-emerald-600",
+    description: "Your weekly schedule",
   },
   {
     to: "/teacher/handbook",
@@ -52,22 +68,6 @@ export const MORE_ROUTES: MoreRoute[] = [
     iconBg: "bg-rose-100",
     iconColor: "text-rose-500",
     description: "Core values",
-  },
-  {
-    to: "/teacher/timetable",
-    label: "Timetable",
-    icon: CalendarClock,
-    iconBg: "bg-emerald-100",
-    iconColor: "text-emerald-600",
-    description: "Your weekly schedule",
-  },
-  {
-    to: "/teacher/announcements",
-    label: "Announcements",
-    icon: Megaphone,
-    iconBg: "bg-sky-100",
-    iconColor: "text-sky-600",
-    description: "School-wide updates",
   },
 ];
 
@@ -90,10 +90,10 @@ export function TeacherMoreSheet({ open, onOpenChange }: TeacherMoreSheetProps) 
       open={open}
       onOpenChange={onOpenChange}
       title="More"
-      snapPoints={[0, 0.75, 1]}
-      defaultSnapPoint={0.75}
+      snapPoints={[0, 0.85]}
+      defaultSnapPoint={0.85}
     >
-      <div className="px-4 py-4 grid grid-cols-2 gap-3">
+      <div className="px-4 py-4 pb-8 grid grid-cols-2 gap-3">
         {MORE_ROUTES.map((r) => {
           const Icon = r.icon;
           const active =
