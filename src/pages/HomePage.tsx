@@ -11,6 +11,7 @@ import { StudentPillSelector } from "@/components/home/StudentPillSelector";
 import { Card, CardContent } from "@/components/ui/card";
 import schoolBadge from "@/assets/school-badge.png";
 import heroBanner from "@/assets/hero-banner.png";
+import { PortalSwitcher } from "@/components/layout/PortalSwitcher";
 import { listAnnouncements, markAnnouncementRead, type Announcement } from "@/data/announcements";
 import { getUpcomingEvents, listUpcomingEvents, type UpcomingEvent } from "@/data/calendar";
 import { useNavigate } from "react-router-dom";
@@ -144,6 +145,9 @@ export default function HomePage() {
       <div className="w-full relative">
         <img src={heroBanner} alt="School banner" className="w-full h-auto" />
         <ParentWelcomeQuote />
+        <div className="absolute top-2 right-3 z-20">
+          <PortalSwitcher size="sm" />
+        </div>
       </div>
       
       <QuickLinks />
