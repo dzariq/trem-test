@@ -39,7 +39,16 @@ export function SecondaryNavBar() {
   if (!showCampus && !showPortal) return null;
 
   return (
-    <div className="sticky top-0 z-30 w-full bg-muted/20 backdrop-blur-sm border-y border-border/60">
+    <div
+      className="sticky top-0 z-30 w-full border-y border-black/30 shadow-sm"
+      style={{
+        backgroundColor: "hsl(150 30% 15%)",
+        backgroundImage:
+          "linear-gradient(45deg, rgba(255,255,255,0.04) 25%, transparent 25%, transparent 75%, rgba(255,255,255,0.04) 75%), linear-gradient(45deg, rgba(255,255,255,0.04) 25%, transparent 25%, transparent 75%, rgba(255,255,255,0.04) 75%)",
+        backgroundSize: "14px 14px",
+        backgroundPosition: "0 0, 7px 7px",
+      }}
+    >
       <div className="flex items-center justify-between px-4 py-2">
         <div className="flex items-center">
           {showCampus && <CampusToggle size="sm" />}
