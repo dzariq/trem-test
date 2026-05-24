@@ -6773,6 +6773,15 @@ export type Database = {
         Args: { p_student_id: string }
         Returns: number
       }
+      get_student_invoice_outstanding_totals: {
+        Args: never
+        Returns: {
+          currency: string
+          outstanding: number
+          overpayment: number
+          student_id: string
+        }[]
+      }
       get_teacher_public_info: {
         Args: { p_teacher_user_id: string }
         Returns: {
@@ -6828,6 +6837,10 @@ export type Database = {
       match_club_application_student: {
         Args: { p_application_id: string; p_student_id: string }
         Returns: Json
+      }
+      recompute_student_due_alert: {
+        Args: { p_student_id: string }
+        Returns: undefined
       }
       refresh_visa_statuses: { Args: never; Returns: number }
       reject_club_application: {
