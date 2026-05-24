@@ -44,7 +44,7 @@ export function SecondaryNavBar() {
       style={{
         backgroundImage: isTeacherPortal
           ? "linear-gradient(135deg, hsl(150 35% 18%) 0%, hsl(155 40% 12%) 100%)"
-          : "linear-gradient(135deg, hsl(28 40% 28%) 0%, hsl(22 45% 18%) 100%)",
+          : "linear-gradient(135deg, hsl(45 85% 58%) 0%, hsl(38 78% 42%) 50%, hsl(33 72% 32%) 100%)",
       }}
     >
       <div className="flex items-center justify-between px-4 py-2">
