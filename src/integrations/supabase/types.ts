@@ -3478,6 +3478,7 @@ export type Database = {
           followup_attempt_count: number | null
           how_did_you_know: string | null
           id: string
+          inquiry_id: string | null
           intended_year_level: string | null
           intended_year_of_admission: string | null
           is_starred: boolean | null
@@ -3513,6 +3514,7 @@ export type Database = {
           followup_attempt_count?: number | null
           how_did_you_know?: string | null
           id?: string
+          inquiry_id?: string | null
           intended_year_level?: string | null
           intended_year_of_admission?: string | null
           is_starred?: boolean | null
@@ -3548,6 +3550,7 @@ export type Database = {
           followup_attempt_count?: number | null
           how_did_you_know?: string | null
           id?: string
+          inquiry_id?: string | null
           intended_year_level?: string | null
           intended_year_of_admission?: string | null
           is_starred?: boolean | null
