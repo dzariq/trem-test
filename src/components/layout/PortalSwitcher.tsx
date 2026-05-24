@@ -1,0 +1,88 @@
+import { useCallback } from "react";
+import { useNavigate } from "react-router-dom";
+import { useQueryClient } from "@tanstack/react-query";
+import { Users, GraduationCap } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
+import { useUserRoles } from "@/hooks/useUserRoles";
+import { cn } from "@/lib/utils";
+
+interface PortalSwitcherProps {
+  size?: "sm" | "md";
+  className?: string;
+}
+
+const ACTIVE_STYLE = "bg-primary/10 text-primary border-primary/40";
+const INACTIVE_STYLE =
+  "bg-transparent text-muted-foreground border-transparent hover:text-foreground";
+
+/**
+ * Segmented Parent / Teacher portal toggle. Only renders for users that
+ * carry BOTH the parent and teacher roles in user_roles. Clicking the
+ * inactive side flips the stored portal preference, clears the query
+ * cache, and routes to the matching portal landing page.
+ */
+export function PortalSwitcher({ size = "sm", className }: PortalSwitcherProps) {
+  const navigate = useNavigate();
+  const queryClient = useQueryClient();
+  const { portal, setPortal } = useAuth();
+  const { hasParentRole, hasTeacherRole, isLoading } = useUserRoles();
+
+  const isTeacher = portal === "teacher";
+
+  const switchTo = useCallback(
+    (target: "family" | "teacher") => {
+      if ((target === "family" && portal === "family") || (target === "teacher" && portal === "teacher")) return;
+      setPortal(target);
+      queryClient.clear();
+      navigate(target === "teacher" ? "/teacher" : "/portal", { replace: true });
+    },
+    [portal, setPortal, queryClient, navigate]
+  );
+
+  if (isLoading) return null;
+  if (!hasParentRole || !hasTeacherRole) return null;
+
+  const sizeClasses =
+    size === "sm" ? "px-2 py-0.5 text-[11px]" : "px-3 py-1 text-xs";
+  const iconSize = size === "sm" ? "h-3 w-3" : "h-3.5 w-3.5";
+
+  return (
+    <div
+      role="group"
+      aria-label="Active portal"
+      className={cn(
+        "inline-flex items-center gap-0.5 rounded-md border-2 border-border bg-background p-0.5 shadow-sm",
+        className
+      )}
+    >
+      <button
+        type="button"
+        onClick={() => switchTo("family")}
+        aria-pressed={!isTeacher}
+        title="Parent portal"
+        className={cn(
+          "inline-flex items-center gap-1 rounded-sm border-2 font-semibold transition-colors",
+          sizeClasses,
+          !isTeacher ? ACTIVE_STYLE : INACTIVE_STYLE
+        )}
+      >
+        <Users className={iconSize} />
+        Parent
+      </button>
+      <button
+        type="button"
+        onClick={() => switchTo("teacher")}
+        aria-pressed={isTeacher}
+        title="Teacher portal"
+        className={cn(
+          "inline-flex items-center gap-1 rounded-sm border-2 font-semibold transition-colors",
+          sizeClasses,
+          isTeacher ? ACTIVE_STYLE : INACTIVE_STYLE
+        )}
+      >
+        <GraduationCap className={iconSize} />
+        Teacher
+      </button>
+    </div>
+  );
+}
