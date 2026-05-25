@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
+import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/contexts/AuthContext";
 
 export type AppRole = "parent" | "teacher" | "admin" | "super_admin";
@@ -21,13 +21,25 @@ export function useUserRoles() {
     refetchOnReconnect: true,
     retry: 2,
     queryFn: async (): Promise<AppRole[]> => {
-      const { data, error } = await supabase
+      // Ensure the auth session is hydrated (important on Android WebView,
+      // where Capacitor Preferences storage is async) before querying.
+      await supabase.auth.getSession();
+      let { data, error } = await supabase
         .from("user_roles")
         .select("role")
         .eq("user_id", user!.id);
       if (error) {
-        console.error("[useUserRoles] fetch error", error);
-        throw error;
+        console.warn("[useUserRoles] first attempt error, retrying", error);
+        await supabase.auth.getSession();
+        const retry = await supabase
+          .from("user_roles")
+          .select("role")
+          .eq("user_id", user!.id);
+        if (retry.error) {
+          console.error("[useUserRoles] fetch error", retry.error);
+          throw retry.error;
+        }
+        data = retry.data;
       }
       const roles = (data ?? []).map((r: any) => r.role as AppRole);
       console.log("[useUserRoles] fetched", { userId: user!.id, roles });
