@@ -6864,6 +6864,10 @@ export type Database = {
         Args: { p_parent_id: string }
         Returns: Json
       }
+      detach_student_from_family: {
+        Args: { p_student_id: string }
+        Returns: Json
+      }
       dispatch_parent_visa_period_notifications: {
         Args: { p_period_id: string }
         Returns: undefined
@@ -7031,8 +7035,16 @@ export type Database = {
         Args: { p_application_id: string; p_student_id: string }
         Returns: Json
       }
+      merge_families: {
+        Args: { p_source_family_id: string; p_target_family_id: string }
+        Returns: Json
+      }
       move_parent_to_family: {
         Args: { p_parent_id: string; p_target_family_id: string }
+        Returns: Json
+      }
+      move_student_to_family: {
+        Args: { p_student_id: string; p_target_family_id: string }
         Returns: Json
       }
       recompute_student_due_alert: {
