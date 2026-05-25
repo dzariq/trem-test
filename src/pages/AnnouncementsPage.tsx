@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { AppHeader } from "@/components/layout/AppHeader";
 import { Button } from "@/components/ui/button";
-import { Megaphone, ChevronLeft, Pin, MailOpen, Users, Flag, ArrowDownUp } from "lucide-react";
+import { Megaphone, ChevronLeft, Pin, MailOpen, Flag, ArrowDownUp } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { AnnouncementDrawer } from "@/components/AnnouncementDrawer";
 import { listAnnouncements, markAnnouncementRead, type Announcement } from "@/data/announcements";
@@ -35,8 +35,6 @@ export default function AnnouncementsPage() {
   const {
     selectedStudentId,
     selectedStudent,
-    linkedStudents,
-    setSelectedStudentId,
   } = useStudentSelection();
   const parentCampusCode = selectedStudent?.campus_code ?? null;
 
@@ -104,6 +102,7 @@ export default function AnnouncementsPage() {
   return (
     <AppLayout>
       <AppHeader
+        showChildSelector
         leftContent={
           <div className="flex items-center gap-2">
             <Button variant="ghost" size="icon" onClick={() => navigate(-1)}>
@@ -117,28 +116,8 @@ export default function AnnouncementsPage() {
       <section className="px-4 py-4">
         {/* Filters */}
         <div className="space-y-3 mb-4">
-          {/* Row 1: Student + Unread */}
+          {/* Unread + Priority + Sort in one row */}
           <div className="flex items-center gap-2">
-            {linkedStudents.length > 0 && (
-              <Select
-                value={selectedStudentId ?? undefined}
-                onValueChange={(v) => setSelectedStudentId(v)}
-              >
-                <SelectTrigger className="h-9 flex-1 min-w-0">
-                  <div className="flex items-center gap-2 min-w-0">
-                    <Users className="h-4 w-4 text-muted-foreground shrink-0" />
-                    <SelectValue placeholder="Select student" />
-                  </div>
-                </SelectTrigger>
-                <SelectContent>
-                  {linkedStudents.map((s) => (
-                    <SelectItem key={s.id} value={s.id}>
-                      {s.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            )}
             <Button
               type="button"
               variant={unreadOnly ? "default" : "outline"}
@@ -149,10 +128,6 @@ export default function AnnouncementsPage() {
               <MailOpen className="h-4 w-4" />
               Unread
             </Button>
-          </div>
-
-          {/* Row 2: Priority + Sort */}
-          <div className="flex items-center gap-2">
             <Select
               value={priorityFilter}
               onValueChange={(v) => setPriorityFilter(v as PriorityFilter)}
@@ -181,8 +156,8 @@ export default function AnnouncementsPage() {
                 </div>
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="newest">Newest first</SelectItem>
-                <SelectItem value="oldest">Oldest first</SelectItem>
+                <SelectItem value="newest">Newest</SelectItem>
+                <SelectItem value="oldest">Oldest</SelectItem>
               </SelectContent>
             </Select>
           </div>
