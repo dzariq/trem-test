@@ -133,25 +133,19 @@ Every workflow run produces **two** APK artifacts:
 The release APK is unsigned and is only useful once a release keystore +
 signing step is wired into the workflow.
 
-### Debugging what URL the app is on (debug bar + Chrome DevTools)
+### Debugging what URL the app is on (Chrome DevTools)
 
-The patched `MainActivity` adds a **dark sticky bar at the top of the
-screen** that displays the current WebView URL and document `<title>`,
-polled every 400ms. Tap the bar once to collapse it to a thin sliver;
-tap again to expand. Use this to confirm exactly where the WebView
-lands after a Supabase login redirect, an OAuth callback, or any
-React Router navigation.
-
-The same URL transitions are also logged to **logcat** under tag
-`CollinzNav`, so if you have ADB available you can stream them with:
+The cache-busting reloads and any SW-assassin kills are logged to
+**logcat** under tag `CollinzNav`. If you have ADB available you can
+stream them with:
 
 ```sh
 adb logcat -s CollinzNav
 ```
 
-For full DevTools (network panel, console, DOM inspector, breakpoints),
-the debug APK already has `setWebContentsDebuggingEnabled(true)`. To
-connect:
+For full DevTools (network panel, console, DOM inspector, breakpoints,
+URL bar), the debug APK already has `setWebContentsDebuggingEnabled(true)`.
+To connect:
 
 1. Enable **Developer options → USB debugging** on the phone.
 2. Plug the phone into your PC via USB. Approve the RSA prompt.
@@ -191,9 +185,10 @@ the cache lives upstream of the device. Walk through in order:
 
 1. **Uninstall the app from the device first.** Some Android skins keep
    the old WebView data dir around when reinstalling on top.
-2. **Re-launch the new APK.** Watch the URL overlay — if it briefly
-   shows a URL, vanishes, and reappears, that means the in-app SW purge
-   ran and hard-reloaded. After this point the WebView is clean.
+2. **Re-launch the new APK.** The cache-busted URL is loaded on every
+   cold start (`?_cb=<timestamp>`), and the in-app SW assassin kills any
+   Service Worker / Cache Storage entries every 3 seconds. Watch logcat
+   (`adb logcat -s CollinzNav`) to confirm.
 3. **Confirm `https://collinz.app` is actually serving the new build.**
    Open the URL on a desktop browser with DevTools open → Network tab,
    tick "Disable cache", hard-reload. If you *still* see the old build

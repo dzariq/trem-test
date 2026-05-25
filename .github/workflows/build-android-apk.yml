@@ -103,7 +103,7 @@ jobs:
             --splashBackgroundColor "#ffffff" \
             --splashBackgroundColorDark "#1a1a1a"
 
-      - name: Patch MainActivity with NUCLEAR no-cache + debug URL bar
+      - name: Patch MainActivity with NUCLEAR no-cache (URL overlay removed)
         run: |
           set -e
           APP_PKG_DIR="android/app/src/main/java/com/collinz/school"
@@ -115,32 +115,27 @@ jobs:
           cat > "$APP_PKG_DIR/MainActivity.java" << 'EOF'
           package com.collinz.school;
 
-          import android.graphics.Color;
           import android.os.Build;
           import android.os.Bundle;
           import android.os.Handler;
           import android.os.Looper;
           import android.util.Log;
-          import android.view.Gravity;
-          import android.view.ViewGroup;
           import android.webkit.CookieManager;
           import android.webkit.ServiceWorkerController;
           import android.webkit.ServiceWorkerWebSettings;
           import android.webkit.WebSettings;
           import android.webkit.WebStorage;
           import android.webkit.WebView;
-          import android.widget.FrameLayout;
-          import android.widget.TextView;
 
           import com.getcapacitor.BridgeActivity;
 
           /**
            * Thin live-wrapper activity for https://collinz.app.
            *
-           * THIS IS THE NUCLEAR DEBUG VARIANT. Every cache layer the Android
-           * WebView has is wiped on every cold start, including cookies and
-           * DOM storage. The user WILL be logged out every time the app is
-           * fully closed -- this is the trade-off for guaranteed-fresh UI.
+           * Every cache layer the Android WebView has is wiped on every cold
+           * start, including cookies and DOM storage. The user WILL be
+           * logged out every time the app is fully closed -- this is the
+           * trade-off for guaranteed-fresh UI.
            *
            * Layers nuked on each onCreate:
            *   - HTTP cache  : WebSettings LOAD_NO_CACHE + clearCache(true)
@@ -157,7 +152,7 @@ jobs:
            *                   navigator.serviceWorker registration and
            *                   caches.delete() on every Cache Storage entry
            *
-           * Also enables chrome://inspect and renders a sticky URL overlay.
+           * Also enables chrome://inspect for remote DevTools.
            *
            * Reload the URL with a millisecond cache-buster query string so
            * any URL-keyed CDN cache also misses.
@@ -185,23 +180,15 @@ jobs:
                   webView.clearSslPreferences();
 
                   // ===== STEP 2: All DOM storage =====
-                  // This includes localStorage, IndexedDB, WebSQL, AppCache,
-                  // and the Service Worker registration database -- so the
-                  // SW is unregistered on the storage layer before the page
-                  // even gets a chance to re-register it.
                   WebStorage.getInstance().deleteAllData();
 
                   // ===== STEP 3: All cookies =====
-                  // This logs the user out every cold start. Acceptable for
-                  // a debug build that prioritises freshness over UX.
                   CookieManager cookieManager = CookieManager.getInstance();
                   cookieManager.removeAllCookies(null);
                   cookieManager.removeSessionCookies(null);
                   cookieManager.flush();
 
                   // ===== STEP 4: Service Worker controller no-cache =====
-                  // Forces any Service Worker that re-registers during this
-                  // session to also bypass the HTTP cache for its own fetches.
                   if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
                       ServiceWorkerController swController = ServiceWorkerController.getInstance();
                       ServiceWorkerWebSettings swSettings = swController.getServiceWorkerWebSettings();
@@ -212,11 +199,6 @@ jobs:
                   WebView.setWebContentsDebuggingEnabled(true);
 
                   // ===== STEP 6: Force-reload with cache-busted URL =====
-                  // Capacitor's BridgeActivity has already queued a loadUrl
-                  // for server.url. We replace that with a URL carrying a
-                  // millisecond cache-busting query, so any URL-keyed
-                  // intermediate cache (CDN edge, proxy, WebView memory)
-                  // misses on cold start.
                   webView.post(new Runnable() {
                       @Override
                       public void run() {
@@ -227,43 +209,13 @@ jobs:
                       }
                   });
 
-                  // --- Sticky URL overlay (debug aid) ---
-                  final TextView urlBar = new TextView(this);
-                  urlBar.setText("Loading…");
-                  urlBar.setTextColor(Color.WHITE);
-                  urlBar.setBackgroundColor(0xCC0F172A);
-                  float density = getResources().getDisplayMetrics().density;
-                  int paddingPx = (int) (10 * density);
-                  urlBar.setPadding(paddingPx, paddingPx, paddingPx, paddingPx);
-                  urlBar.setTextSize(11);
-                  urlBar.setMaxLines(3);
-                  urlBar.setEllipsize(android.text.TextUtils.TruncateAt.MIDDLE);
-
-                  FrameLayout.LayoutParams urlBarParams = new FrameLayout.LayoutParams(
-                      ViewGroup.LayoutParams.MATCH_PARENT,
-                      ViewGroup.LayoutParams.WRAP_CONTENT,
-                      Gravity.TOP
-                  );
-                  urlBarParams.topMargin = (int) (28 * density);
-                  addContentView(urlBar, urlBarParams);
-
-                  urlBar.setOnClickListener(v -> {
-                      if (urlBar.getMaxLines() == 0) {
-                          urlBar.setMaxLines(3);
-                      } else {
-                          urlBar.setMaxLines(0);
-                      }
-                  });
-
                   final Handler handler = new Handler(Looper.getMainLooper());
 
                   // ===== STEP 7: Periodic SW + Cache Storage assassin =====
-                  // Runs every 3 seconds for the entire app lifetime. If a
-                  // page (or any future deploy that adds vite-plugin-pwa)
-                  // registers a Service Worker, this kills it on the next
-                  // tick. The result is logged so we can confirm from
-                  // logcat (`adb logcat -s CollinzNav`) whether any SW
-                  // ever appears.
+                  // Runs every 3 seconds for the entire app lifetime. Kills
+                  // any Service Worker that re-registers, and deletes every
+                  // Cache Storage entry. Logged to logcat via:
+                  //   adb logcat -s CollinzNav
                   final Runnable swAssassin = new Runnable() {
                       @Override
                       public void run() {
@@ -293,22 +245,6 @@ jobs:
                       }
                   };
                   handler.postDelayed(swAssassin, 1500);
-
-                  // --- URL polling overlay (every 400 ms) ---
-                  final String[] lastUrl = {""};
-                  handler.post(new Runnable() {
-                      @Override
-                      public void run() {
-                          String currentUrl = webView.getUrl();
-                          String title = webView.getTitle();
-                          if (currentUrl != null && !currentUrl.equals(lastUrl[0])) {
-                              lastUrl[0] = currentUrl;
-                              Log.i(TAG, "URL: " + currentUrl + "  |  title: " + title);
-                              urlBar.setText("URL  " + currentUrl + "\nTITLE  " + (title == null ? "" : title));
-                          }
-                          handler.postDelayed(this, 400);
-                      }
-                  });
               }
           }
           EOF
