@@ -21,7 +21,7 @@ export default function ParentTimetablePage() {
 
   return (
     <AppLayout>
-      <AppHeader title="Timetable" showBack showNotifications />
+      <AppHeader title="Timetable" showBack showNotifications showChildSelector />
       <div className="px-4 py-6 space-y-4">
         {doc && (
           <Card>
