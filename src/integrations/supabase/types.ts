@@ -6923,6 +6923,30 @@ export type Database = {
           activity_id: string
         }[]
       }
+      get_my_family_parents: {
+        Args: never
+        Returns: {
+          family_id: string
+          id: string
+          is_primary_contact: boolean
+          name: string
+          nationality: string
+          parent_user_id: string
+          passport_expiry_date: string
+          passport_number: string
+        }[]
+      }
+      get_my_family_students: {
+        Args: never
+        Returns: {
+          family_id: string
+          id: string
+          name: string
+          nationality: string
+          passport_expiry_date: string
+          passport_number: string
+        }[]
+      }
       get_or_create_admission_entry: {
         Args: { target_campus_id?: string; target_month_start: string }
         Returns: string
