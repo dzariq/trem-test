@@ -1,51 +1,41 @@
-# Simplify & expand the Visa page
+# Fix: Visa module empty even though student profile shows visa
 
-Tightens the parent-facing Visa view so everything (parents + children passport + visa) is visible at a glance, without noisy placeholder text.
+## Root cause
 
-## Scope
-File: `src/pages/VisaPage.tsx` + `src/data/visa.ts` (data layer).
+The last fix added `get_my_family_parents()` / `get_my_family_students()` RPCs so the page can *list* parents and students across every family the logged-in user is linked to. But the follow-up queries against the visa tables still go through their original RLS policies:
 
-## Changes
+- `student_visa_records` / `student_visa_periods` — `USING is_parent_of_student(student_id)` (i.e. only rows where the user is in `student_guardians`)
+- `parent_visa_records` / `parent_visa_periods` — `USING parents.parent_user_id = auth.uid()` (only your own parent row)
 
-### 1. Validity line — smarter formatting
-In `PeriodCard`, replace:
-```
-Validity: — → 11 Mar 2027
-```
-with logic:
-- Both dates → `Validity: 11 Mar 2025 → 11 Mar 2027`
-- Only expiry → `Valid until: 11 Mar 2027`
-- Only issue → `Issued: 11 Mar 2025`
-- Neither → hide the line entirely
+So for a parent linked to a 2nd family without a `student_guardians` backfill (e.g. user `4682ce70` → Bevan), the RPC returns the student, but `.in("student_id", ids)` on `student_visa_records` returns nothing — hence the Visa module stays empty while the student-profile dialog (which reads the single `students.visa_expiry_date` column) still shows a date.
 
-### 2. Remove "Backfilled from student record" noise
-Drop the `notes` rendering when the note equals "Backfilled from student record" (case-insensitive). Real teacher/admin notes still show.
+## Fix
 
-### 3. Add passport + nationality summary for each person
-New compact "Passport" mini-section rendered above the visa period card(s) for:
+Add two more SECURITY DEFINER RPCs that return visa rows scoped to the caller's families (bypassing the narrow per-record RLS, but only for IDs that already pass the family scope). Then have the data layer fetch visa data via those RPCs instead of direct table queries.
 
-**Parent (self):** name, nationality, passport number, passport expiry.
-**Each child:** name, nationality, passport number, passport expiry.
+### Migration
 
-Pulled from existing columns (no schema change):
-- `parents`: `passport_number`, `passport_expiry_date`, `nationality`
-- `students`: `passport_number`, `passport_expiry_date`, `nationality`
+1. `get_my_family_student_visa()` → returns rows from `student_visa_records` where `student_id` is in `get_my_family_students()`.
+2. `get_my_family_student_visa_periods()` → same scope, from `student_visa_periods`, ordered by `issue_date desc nulls last`.
+3. `get_my_family_parent_visa()` → returns rows from `parent_visa_records` where `parent_id` is in `get_my_family_parents()`.
+4. `get_my_family_parent_visa_periods()` → same scope, from `parent_visa_periods`, ordered by `issue_date desc nulls last`.
 
-If passport expiry is within 90 days → amber chip "Expiring soon"; if past → red "Expired".
+All four: `language sql stable security definer set search_path = public`, `grant execute … to authenticated`. No RLS changes — existing per-record policies stay intact (mobile app contract preserved, admin tools unaffected).
 
-### 4. Always show sections (even without visa periods)
-Currently "My Visa" only shows if parent has a `parent_visa_records` row. Change so that:
-- If the parent has *any* passport info OR visa record → show "My Visa" section with passport header + (visa cards or a soft "No immigration pass recorded yet").
-- Children section already iterates by visa record; switch to iterating over *all linked children* so passport-only kids still appear.
+### `src/data/visa.ts`
 
-### 5. Empty state
-Only show the big "No visa records yet" empty state when both parent and all children have neither passport nor visa data.
+- `fetchMyFamilyParentsVisa` — replace `.from("parent_visa_records")` / `.from("parent_visa_periods")` with `supabase.rpc("get_my_family_parent_visa")` / `supabase.rpc("get_my_family_parent_visa_periods")`. Drop the `.in("parent_id", parentIds)` filter (RPC already scopes).
+- `fetchMyChildrenVisa` — same swap to `get_my_family_student_visa` / `get_my_family_student_visa_periods`.
 
-## Data layer (`src/data/visa.ts`)
+### Out of scope
 
-- Extend `fetchMyParentVisa` to also fetch the parent's `parents` row (`passport_number, passport_expiry_date, nationality, full_name`) for the authenticated user and return it as `self`.
-- Replace `fetchMyChildrenVisa` student-list source: query the parent's linked students directly (same join used elsewhere in the app, e.g. `useStudentSelection`) selecting `id, name, passport_number, passport_expiry_date, nationality`, then left-join visa records/periods. This guarantees every child shows up.
+- No UI changes to `VisaPage.tsx`.
+- No RLS changes on visa tables.
+- No backfill of `student_guardians`.
+- Sibling mobile project — same RPCs will be available; will update the existing handoff note after this lands.
 
-## Out of scope
-- No DB migrations, no RLS changes, no edits to teacher/admin visa management screens.
-- Mobile-app schema contract preserved (read-only additive use of existing columns).
+## Why this is safe for the shared mobile app
+
+- Purely additive: new RPCs, no renames, no dropped policies.
+- Mobile app's current direct table queries keep working unchanged.
+- Mobile app can later swap to the same RPCs to get the same family-wide visibility fix.

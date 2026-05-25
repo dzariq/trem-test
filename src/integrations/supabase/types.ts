@@ -6923,6 +6923,52 @@ export type Database = {
           activity_id: string
         }[]
       }
+      get_my_family_parent_visa: {
+        Args: never
+        Returns: {
+          created_at: string
+          expiry_date: string | null
+          id: string
+          issue_date: string | null
+          notes: string | null
+          parent_id: string
+          pass_number: string | null
+          status: Database["public"]["Enums"]["visa_status"]
+          updated_at: string
+          updated_by: string | null
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "parent_visa_records"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
+      get_my_family_parent_visa_periods: {
+        Args: never
+        Returns: {
+          created_at: string
+          expiry_date: string | null
+          guardian_slot: number | null
+          id: string
+          issue_date: string | null
+          notes: string | null
+          parent_id: string
+          pass_number: string | null
+          pathway: Database["public"]["Enums"]["parent_visa_pathway"]
+          period_no: number
+          sent_for_renewal_date: string | null
+          status: Database["public"]["Enums"]["visa_status"]
+          updated_at: string
+          updated_by: string | null
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "parent_visa_periods"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
       get_my_family_parents: {
         Args: never
         Returns: {
@@ -6935,6 +6981,69 @@ export type Database = {
           passport_expiry_date: string
           passport_number: string
         }[]
+      }
+      get_my_family_student_visa: {
+        Args: never
+        Returns: {
+          created_at: string
+          current_pathway: Database["public"]["Enums"]["visa_pathway"]
+          expiry_date: string | null
+          id: string
+          immigration_sticker_ref: string | null
+          insurance_expiry: string | null
+          insurance_policy_no: string | null
+          insurance_provider: string | null
+          issue_date: string | null
+          moe_letter_date: string | null
+          moe_letter_ref: string | null
+          notes: string | null
+          parent_mm2h_expiry: string | null
+          parent_mm2h_holder_name: string | null
+          parent_mm2h_pass_number: string | null
+          pass_number: string | null
+          personal_bond_amount: number | null
+          status: Database["public"]["Enums"]["visa_status"]
+          student_id: string
+          updated_at: string
+          updated_by: string | null
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "student_visa_records"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
+      get_my_family_student_visa_periods: {
+        Args: never
+        Returns: {
+          created_at: string
+          expiry_date: string | null
+          id: string
+          insurance_expiry: string | null
+          insurance_policy_no: string | null
+          insurance_provider: string | null
+          issue_date: string | null
+          notes: string | null
+          parent_mm2h_expiry: string | null
+          parent_mm2h_holder_name: string | null
+          parent_mm2h_pass_number: string | null
+          pass_number: string | null
+          pathway: Database["public"]["Enums"]["visa_pathway"]
+          period_no: number
+          personal_bond_amount: number | null
+          sent_for_renewal_date: string | null
+          status: Database["public"]["Enums"]["visa_status"]
+          student_id: string
+          updated_at: string
+          updated_by: string | null
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "student_visa_periods"
+          isOneToOne: false
+          isSetofReturn: true
+        }
       }
       get_my_family_students: {
         Args: never
