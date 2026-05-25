@@ -135,7 +135,7 @@ export default function TeacherNotificationsPage() {
 
   return (
     <TeacherAppLayout>
-      <AppHeader title="Notifications" />
+      <AppHeader title="Notifications" showNotifications={false} />
 
       <section className="px-4 py-4">
         {/* Filter and Actions */}
