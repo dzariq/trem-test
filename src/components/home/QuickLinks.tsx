@@ -31,7 +31,7 @@ export function QuickLinks() {
     { icon: Info, label: "Info", action: "info-dialog", bgColor: "bg-emerald-100", iconColor: "text-emerald-600" },
     { icon: HeadphonesIcon, label: "Support", path: "/parent/support", bgColor: "bg-blue-100", iconColor: "text-blue-600" },
     { icon: Award, label: "Awards", path: "/parent/awards", bgColor: "bg-purple-100", iconColor: "text-purple-600" },
-    { icon: Dumbbell, label: "CCA", path: "/parent/calendar?tab=cca", bgColor: "bg-amber-100", iconColor: "text-amber-600" },
+    { icon: Dumbbell, label: "CCA", path: "/parent/cca", bgColor: "bg-amber-100", iconColor: "text-amber-600" },
     ...(FEATURES.gradeAnalysisParent ? [{ icon: BarChart3, label: "Grades", path: "/parent/academic?section=analysis", bgColor: "bg-rose-100", iconColor: "text-rose-600" }] : []),
     ...(hasVisa ? [{ icon: Stamp, label: "Visa", path: "/parent/visa", bgColor: "bg-sky-100", iconColor: "text-sky-600" }] : []),
   ];
