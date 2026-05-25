@@ -230,6 +230,11 @@ function LegSection({
   const present = assignments.filter((a) => legValue(a, leg) === true).length;
   const absent = assignments.filter((a) => legValue(a, leg) === false).length;
   const marked = present + absent;
+  const unmarked = assignments.filter((a) => legValue(a, leg) === null);
+
+  const handleMarkAllPresent = () => {
+    unmarked.forEach((a) => onMarkLeg(a, leg, true));
+  };
 
   return (
     <div className={cn(divided && "border-t border-border")}>
@@ -252,6 +257,21 @@ function LegSection({
           <Badge variant="outline">— {assignments.length - marked}</Badge>
         </div>
       </div>
+      {canManageBus && unmarked.length > 0 && (
+        <div className="px-3 py-2 border-t border-border/60 bg-background flex items-center justify-between gap-2">
+          <span className="text-[11px] text-muted-foreground">
+            {unmarked.length} unmarked · keeps existing absences
+          </span>
+          <button
+            type="button"
+            onClick={handleMarkAllPresent}
+            className="inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-medium bg-emerald-600 text-white hover:bg-emerald-700 transition-colors"
+          >
+            <Check className="h-3.5 w-3.5" />
+            Mark all present
+          </button>
+        </div>
+      )}
       <ul className="divide-y">
         {assignments.map((a) => {
           const value = legValue(a, leg);
