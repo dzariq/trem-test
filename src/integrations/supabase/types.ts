@@ -111,11 +111,13 @@ export type Database = {
           code: string
           created_at: string
           end_date: string | null
+          first_published_at: string | null
           id: string
           is_active: boolean
           is_open_for_grading: boolean
           last_marks_changed_at: string | null
           name: string
+          published_to_parents: boolean
           sort_order: number | null
           start_date: string | null
           status: string
@@ -127,11 +129,13 @@ export type Database = {
           code: string
           created_at?: string
           end_date?: string | null
+          first_published_at?: string | null
           id?: string
           is_active?: boolean
           is_open_for_grading?: boolean
           last_marks_changed_at?: string | null
           name: string
+          published_to_parents?: boolean
           sort_order?: number | null
           start_date?: string | null
           status?: string
@@ -143,11 +147,13 @@ export type Database = {
           code?: string
           created_at?: string
           end_date?: string | null
+          first_published_at?: string | null
           id?: string
           is_active?: boolean
           is_open_for_grading?: boolean
           last_marks_changed_at?: string | null
           name?: string
+          published_to_parents?: boolean
           sort_order?: number | null
           start_date?: string | null
           status?: string
@@ -3177,6 +3183,7 @@ export type Database = {
         Row: {
           academic_period_id: string
           created_at: string
+          event_type: string
           id: string
           notes: string | null
           published_at: string
@@ -3186,6 +3193,7 @@ export type Database = {
         Insert: {
           academic_period_id: string
           created_at?: string
+          event_type?: string
           id?: string
           notes?: string | null
           published_at?: string
@@ -3195,6 +3203,7 @@ export type Database = {
         Update: {
           academic_period_id?: string
           created_at?: string
+          event_type?: string
           id?: string
           notes?: string | null
           published_at?: string
@@ -7034,8 +7043,8 @@ export type Database = {
           academic_period_id: string
           academic_year: number
           campus_code: string
+          first_published_at: string
           last_marks_changed_at: string
-          last_published_at: string
           period_code: string
           period_name: string
           student_id: string
@@ -7142,6 +7151,7 @@ export type Database = {
         Returns: {
           academic_period_id: string
           created_at: string
+          event_type: string
           id: string
           notes: string | null
           published_at: string
@@ -7246,6 +7256,25 @@ export type Database = {
           p_transfer_date: string
         }
         Returns: Json
+      }
+      unpublish_exam_period: {
+        Args: { p_period_id: string }
+        Returns: {
+          academic_period_id: string
+          created_at: string
+          event_type: string
+          id: string
+          notes: string | null
+          published_at: string
+          published_by: string | null
+          student_count: number
+        }
+        SetofOptions: {
+          from: "*"
+          to: "exam_period_publications"
+          isOneToOne: true
+          isSetofReturn: false
+        }
       }
       update_rsvp_response_by_edit_token: {
         Args: {
