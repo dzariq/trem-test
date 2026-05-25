@@ -219,31 +219,32 @@ export function useStudentReportCard(
         }
 
         // Gate parent-visible report-card periods on the existence of an
-        // exam_period_publications row. The sibling (admin/web) project
-        // creates these rows when results are officially published.
-        // If the table is not yet readable by parents (RLS), fall back to
-        // showing all periods and log a warning so we know to add an RPC.
+        // exam_period_publications row. Parents call the sibling project's
+        // RPC `get_published_periods_for_my_children` which returns only the
+        // academic_period_ids that have been officially published for the
+        // parent's linked children.
         let publishedPeriodIds: Set<string> | null = null;
         try {
-          const { data: pubs, error: pubsError } = await supabase
-            .from("exam_period_publications")
-            .select("academic_period_id")
-            .in("academic_period_id", uniquePeriodIds);
+          const { data: pubs, error: pubsError } = await supabase.rpc(
+            "get_published_periods_for_my_children" as any
+          );
 
           if (pubsError) {
             console.warn(
-              "[useStudentReportCard] exam_period_publications not readable by parent — falling back to all periods. Add a parent-readable view/RPC on the sibling project.",
+              "[useStudentReportCard] get_published_periods_for_my_children RPC failed — falling back to all periods.",
               pubsError
             );
           } else {
             publishedPeriodIds = new Set(
-              (pubs || [])
-                .map((row: any) => row.academic_period_id)
+              (pubs as any[] | null || [])
+                .map((row: any) =>
+                  typeof row === "string" ? row : row?.academic_period_id ?? row?.id
+                )
                 .filter((id: any): id is string => typeof id === "string")
             );
           }
         } catch (e) {
-          console.warn("[useStudentReportCard] exam_period_publications query threw — falling back.", e);
+          console.warn("[useStudentReportCard] get_published_periods_for_my_children threw — falling back.", e);
         }
 
         const filteredPeriods = publishedPeriodIds
