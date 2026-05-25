@@ -7028,6 +7028,20 @@ export type Database = {
           year_levels: string[]
         }[]
       }
+      get_published_periods_for_my_children: {
+        Args: never
+        Returns: {
+          academic_period_id: string
+          academic_year: number
+          campus_code: string
+          last_marks_changed_at: string
+          last_published_at: string
+          period_code: string
+          period_name: string
+          student_id: string
+          student_name: string
+        }[]
+      }
       get_rsvp_link_by_token: { Args: { p_token: string }; Returns: Json }
       get_session_enrollment_count: {
         Args: { p_session_id: string }

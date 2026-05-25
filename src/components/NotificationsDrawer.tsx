@@ -33,6 +33,11 @@ import {
   Stamp
 } from "lucide-react";
 import { useState, useMemo, useEffect } from "react";
+import {
+  parsePublicationIdFromSourceKey,
+  getViewedPublicationIds,
+  markPublicationViewed,
+} from "@/lib/notifications/examPublishViewed";
 
 // Format a date relative to today, e.g. "today", "in 3 days", "2 days ago".
 function formatRelativeDays(date: Date): string {
@@ -72,6 +77,7 @@ type NotificationType =
   | "attendance" 
   | "grade"
   | "report_card"
+  | "exam_results_published"
   | "award"
   | "payment"
   | "transport"
@@ -155,6 +161,7 @@ export function NotificationsDrawer({ open, onOpenChange }: NotificationsDrawerP
       case "attendance": return Users;
       case "grade": return BookOpen;
       case "report_card": return FileText;
+      case "exam_results_published": return FileText;
       case "award": return Trophy;
       case "payment": return CreditCard;
       case "transport": return Bus;
@@ -185,6 +192,7 @@ export function NotificationsDrawer({ open, onOpenChange }: NotificationsDrawerP
       case "attendance": return "bg-emerald-500 text-white";
       case "grade": return "bg-purple-500 text-white";
       case "report_card": return "bg-amber-500 text-white";
+      case "exam_results_published": return "bg-amber-500 text-white";
       case "award": return "bg-yellow-500 text-white";
       case "payment": return "bg-rose-500 text-white";
       case "transport": return "bg-cyan-500 text-white";
@@ -206,16 +214,35 @@ export function NotificationsDrawer({ open, onOpenChange }: NotificationsDrawerP
     }
   };
 
-  const handleNotificationClick = (notification: { id: string; link_to: string | null; is_read: boolean }) => {
+  const handleNotificationClick = (notification: {
+    id: string;
+    link_to: string | null;
+    is_read: boolean;
+    type?: string;
+    source_key?: string | null;
+  }) => {
     // Mark as read if not already
     if (!notification.is_read) {
       markAsRead(notification.id);
     }
-    
+
+    // Exam-result publish: remap shared backend link (/report-cards) to the
+    // parent app's actual report-card route, and remember the viewed
+    // publication so we can flag future re-publishes as "Updated results".
+    let targetLink = notification.link_to;
+    if (notification.type === "exam_results_published") {
+      const pubId = parsePublicationIdFromSourceKey(notification.source_key ?? null);
+      if (pubId) {
+        markPublicationViewed(pubId);
+      }
+      const query = pubId ? `?section=report-card&publication=${pubId}` : "?section=report-card";
+      targetLink = `/parent/academic${query}`;
+    }
+
     // Navigate if there's a link
-    if (notification.link_to) {
+    if (targetLink) {
       onOpenChange(false);
-      navigate(notification.link_to);
+      navigate(targetLink);
     }
   };
 
@@ -471,6 +498,11 @@ export function NotificationsDrawer({ open, onOpenChange }: NotificationsDrawerP
       },
     );
 
+  // For "Updated results" badging: detect users who already viewed any prior
+  // exam-result publish, so we can surface newer (unviewed) publishes as updates.
+  const viewedPublicationIds = useMemo(() => getViewedPublicationIds(), [notifications]);
+  const hasAnyViewedExamPublish = viewedPublicationIds.size > 0;
+
   const renderItem = (notification: typeof filteredNotifications[number]) => {
     const Icon = getTypeIcon(notification.type);
     const hasLink = !!notification.link_to;
@@ -505,6 +537,20 @@ export function NotificationsDrawer({ open, onOpenChange }: NotificationsDrawerP
         .replace(/\s*on\s+\d{1,2}\s+[A-Za-z]+\s+\d{4}\b/, "")
         .replace(/\s+/g, " ")
         .trim();
+    }
+
+    // Re-publish badge: surface "Updated results" on exam-result notifications
+    // whose publication_id is unseen, when the parent already viewed any prior
+    // exam-result publish.
+    if (notification.type === "exam_results_published" && hasAnyViewedExamPublish) {
+      const pubId = parsePublicationIdFromSourceKey(notification.source_key ?? null);
+      if (pubId && !viewedPublicationIds.has(pubId)) {
+        const updatedTag = {
+          label: "Updated results",
+          className: "bg-amber-100 text-amber-800 border-amber-200",
+        };
+        tags = tags ? [updatedTag, ...tags] : [updatedTag];
+      }
     }
 
     return (
