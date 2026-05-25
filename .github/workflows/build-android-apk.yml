@@ -128,30 +128,57 @@ jobs:
         working-directory: android
         run: chmod +x ./gradlew
 
-      - name: Build unsigned release APK
+      - name: Build debug APK (auto-signed with debug keystore, installable on any device)
         working-directory: android
-        run: ./gradlew assembleRelease --no-daemon --stacktrace
+        run: ./gradlew assembleDebug --no-daemon --stacktrace
 
-      - name: Locate built APK
-        id: locate
+      - name: Locate debug APK
+        id: locate_debug
         run: |
-          APK_PATH=$(find android/app/build/outputs/apk/release -name "*.apk" | head -n 1)
+          APK_PATH=$(find android/app/build/outputs/apk/debug -name "*.apk" | head -n 1)
           if [ -z "$APK_PATH" ]; then
-            echo "No APK was produced."
-            ls -la android/app/build/outputs/apk/release || true
+            echo "No debug APK was produced."
+            ls -la android/app/build/outputs/apk/debug || true
             exit 1
           fi
-          echo "Found APK: $APK_PATH"
+          echo "Found debug APK: $APK_PATH"
           SIZE=$(du -h "$APK_PATH" | cut -f1)
           echo "Size: $SIZE"
           echo "apk_path=$APK_PATH" >> "$GITHUB_OUTPUT"
           echo "apk_size=$SIZE" >> "$GITHUB_OUTPUT"
 
-      - name: Upload APK artifact
+      - name: Upload debug APK artifact (USE THIS to install on phones)
         uses: actions/upload-artifact@v4
         with:
-          name: collinz-school-${{ github.event.inputs.build_mode || 'production' }}-unsigned-apk
-          path: ${{ steps.locate.outputs.apk_path }}
+          name: collinz-school-${{ github.event.inputs.build_mode || 'production' }}-DEBUG-apk
+          path: ${{ steps.locate_debug.outputs.apk_path }}
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: Build unsigned release APK (NOT installable -- for later signing only)
+        working-directory: android
+        run: ./gradlew assembleRelease --no-daemon --stacktrace
+
+      - name: Locate unsigned release APK
+        id: locate_release
+        run: |
+          APK_PATH=$(find android/app/build/outputs/apk/release -name "*.apk" | head -n 1)
+          if [ -z "$APK_PATH" ]; then
+            echo "No release APK was produced."
+            ls -la android/app/build/outputs/apk/release || true
+            exit 1
+          fi
+          echo "Found unsigned release APK: $APK_PATH"
+          SIZE=$(du -h "$APK_PATH" | cut -f1)
+          echo "Size: $SIZE"
+          echo "apk_path=$APK_PATH" >> "$GITHUB_OUTPUT"
+          echo "apk_size=$SIZE" >> "$GITHUB_OUTPUT"
+
+      - name: Upload unsigned release APK artifact (for later signing -- cannot be installed directly)
+        uses: actions/upload-artifact@v4
+        with:
+          name: collinz-school-${{ github.event.inputs.build_mode || 'production' }}-unsigned-release-apk
+          path: ${{ steps.locate_release.outputs.apk_path }}
           if-no-files-found: error
           retention-days: 30
 
@@ -163,10 +190,23 @@ jobs:
             echo ""
             echo "- **Mode:** \`${{ github.event.inputs.build_mode || 'production' }}\`"
             echo "- **Status:** ${{ job.status }}"
-            if [ -n "${{ steps.locate.outputs.apk_path }}" ]; then
-              echo "- **APK:** \`${{ steps.locate.outputs.apk_path }}\`"
-              echo "- **Size:** ${{ steps.locate.outputs.apk_size }}"
+            echo ""
+            echo "### Artifacts produced"
+            echo ""
+            if [ -n "${{ steps.locate_debug.outputs.apk_path }}" ]; then
+              echo "#### 1. \`collinz-school-...-DEBUG-apk\` (${{ steps.locate_debug.outputs.apk_size }}) — **install this**"
               echo ""
-              echo "Download from the **Artifacts** section at the top of this run."
+              echo "- Signed with the universal Android debug keystore."
+              echo "- Can be side-loaded onto any Android device with \"Install unknown apps\" enabled."
+              echo "- Use for personal testing, demos, internal QA."
+              echo ""
             fi
+            if [ -n "${{ steps.locate_release.outputs.apk_path }}" ]; then
+              echo "#### 2. \`collinz-school-...-unsigned-release-apk\` (${{ steps.locate_release.outputs.apk_size }}) — for signing later"
+              echo ""
+              echo "- **Cannot be installed directly** — Android rejects unsigned APKs (\"package appears to be invalid\")."
+              echo "- Use this as the input to a release-signing step / Play Store upload after generating a keystore."
+            fi
+            echo ""
+            echo "Download from the **Artifacts** section at the top of this run."
           } >> "$GITHUB_STEP_SUMMARY"

@@ -109,12 +109,31 @@ npm run android:apk
 This runs: build web → add Android platform → sync → assemble release APK.
 Output: `android/app/build/outputs/apk/release/app-release-unsigned.apk`.
 
-### Installing the unsigned APK on a device
+### Which APK should I install?
 
-Android blocks installs of unsigned APKs by default. Either:
+Every workflow run produces **two** APK artifacts:
 
-- Enable **Developer options → Install unknown apps** on the target phone, or
-- Sign the APK before distributing (see the Play Store signing guide).
+| Artifact | Filename inside | Installable on phones? | Purpose |
+|---|---|---|---|
+| `collinz-school-<mode>-DEBUG-apk` | `app-debug.apk` | ✅ **Yes** — auto-signed with Android's debug keystore | Personal testing, demos, internal QA |
+| `collinz-school-<mode>-unsigned-release-apk` | `app-release-unsigned.apk` | ❌ **No** — Android 7+ rejects unsigned APKs ("Package appears to be invalid") | Input to a release-signing step / Play Store later |
+
+**For installing on your own phone, always download the `-DEBUG-apk` artifact.**
+The release APK is unsigned and is only useful once you've set up a release
+keystore + signing step in the workflow.
+
+### Installing the debug APK on a device
+
+1. Download the `collinz-school-<mode>-DEBUG-apk` artifact zip from the workflow run.
+2. Unzip → you get `app-debug.apk`.
+3. Transfer to the phone (USB, Google Drive, WhatsApp, etc.).
+4. On the phone: **Settings → Apps → Special access → Install unknown apps**
+   → enable the source you're using (file manager, browser, etc.).
+5. Open `app-debug.apk` on the phone → tap **Install**.
+
+If you previously installed a release/signed version of the app with the same
+package name (`com.collinz.school`), uninstall it first — Android won't allow
+overwriting an installed app with a differently-signed APK.
 
 ---
 
