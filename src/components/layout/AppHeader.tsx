@@ -81,7 +81,7 @@ export function AppHeader({
         </div>
         {/* Prominent child selector row below the header (parent routes only) */}
         {showChildSelector && !isTeacherPortal && (
-          <div className="px-4 pb-3 pt-1 border-t border-border/60 bg-card/95">
+          <div className="px-4 py-3 border-t border-border/60 bg-card/95">
             <ChildSelectorDropdown variant="bar" />
           </div>
         )}
