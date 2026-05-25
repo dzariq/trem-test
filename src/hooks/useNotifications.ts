@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useEffect } from "react";
+import { useLocation } from "react-router-dom";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/contexts/AuthContext";
 import { useMyProfile } from "@/hooks/useMyProfile";
@@ -113,8 +114,12 @@ export function useNotifications() {
   const { linkedStudents } = useStudentSelection();
   const { activeCampus } = useCampus();
   const queryClient = useQueryClient();
-  
-  const userRole = profile?.role || "parent";
+  const location = useLocation();
+
+  // Detect active portal from route so multi-role users (parent + teacher)
+  // get the right notification audience even when profile.role is the opposite.
+  const isTeacherPortal = location.pathname.startsWith("/teacher");
+  const userRole = isTeacherPortal ? "teacher" : "parent";
   const studentIds = linkedStudents?.map(s => s.id) || [];
   const scopedCampusCode =
     userRole === "teacher"
@@ -190,7 +195,16 @@ export function useNotifications() {
         for (const n of dbNotifications) {
           const isDismissed = Array.isArray((n as any).notification_dismissals) && (n as any).notification_dismissals.length > 0;
           if (isDismissed) continue;
-          
+
+          // Parent-portal suppression list: internal/teacher-facing notifications
+          // that accidentally have target_audience = 'all' or that parents
+          // should not see (per product decision).
+          if (userRole === "parent") {
+            const title = String(n.title || "");
+            if (/^Grading Period Open/i.test(title)) continue;
+            if (/^CCA Session Created/i.test(title)) continue;
+          }
+
           allNotifications.push({
             id: n.id,
             user_id: n.user_id,
