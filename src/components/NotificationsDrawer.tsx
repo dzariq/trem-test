@@ -498,6 +498,11 @@ export function NotificationsDrawer({ open, onOpenChange }: NotificationsDrawerP
       },
     );
 
+  // For "Updated results" badging: detect users who already viewed any prior
+  // exam-result publish, so we can surface newer (unviewed) publishes as updates.
+  const viewedPublicationIds = useMemo(() => getViewedPublicationIds(), [notifications]);
+  const hasAnyViewedExamPublish = viewedPublicationIds.size > 0;
+
   const renderItem = (notification: typeof filteredNotifications[number]) => {
     const Icon = getTypeIcon(notification.type);
     const hasLink = !!notification.link_to;
@@ -532,6 +537,20 @@ export function NotificationsDrawer({ open, onOpenChange }: NotificationsDrawerP
         .replace(/\s*on\s+\d{1,2}\s+[A-Za-z]+\s+\d{4}\b/, "")
         .replace(/\s+/g, " ")
         .trim();
+    }
+
+    // Re-publish badge: surface "Updated results" on exam-result notifications
+    // whose publication_id is unseen, when the parent already viewed any prior
+    // exam-result publish.
+    if (notification.type === "exam_results_published" && hasAnyViewedExamPublish) {
+      const pubId = parsePublicationIdFromSourceKey(notification.source_key ?? null);
+      if (pubId && !viewedPublicationIds.has(pubId)) {
+        const updatedTag = {
+          label: "Updated results",
+          className: "bg-amber-100 text-amber-800 border-amber-200",
+        };
+        tags = tags ? [updatedTag, ...tags] : [updatedTag];
+      }
     }
 
     return (
