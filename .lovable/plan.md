@@ -1,41 +1,42 @@
-# Visa page refresh
+## 1. Audit: Student Details drawer (Profile → tap a student)
 
-## Goals
-1. Only show people who actually have visa info.
-2. Sort "has visa" entries before "passport only" entries.
-3. Replace the grey passport container with a light-blue treatment.
-4. Tighten the overall layout so it reads cleaner on mobile.
+I cross-checked every field rendered in the drawer (`src/pages/ProfilePage.tsx` lines 708-980) against the source data in `src/data/students.ts` and the live `students` / `student_cca_enrollments` tables.
 
-## Behavior changes (`src/pages/VisaPage.tsx` only — no data/RPC changes)
+### Verdict per field
+- **Name / Student ID / Email** — sourced from `students.name` / `student_code` / `email`. ✅ Correct.
+- **Enrolled / Class / Graduation cards** — `enrollment_date`, `class`, `graduation_year`. ✅ Correct data, but **Class shows `BO-Y1C`** instead of `Y1C`. `formatClassDisplay()` in `src/lib/utils.ts` is currently a no-op, which violates the project rule "Strip campus prefixes from class names." Same bug surfaces anywhere `className` is shown.
+- **Visa & Passport block** — only renders when `malaysian_citizen === false`. ✅ Correct (Tang Jia Hao is Malaysian so it's hidden; Bevan/Maya are foreign so it shows). Nationality, visa expiry, passport expiry + number all map correctly. Status pills (Expired / Expiring in Xd / Valid) compute correctly.
+- **Meal Plan / Sports House** — `meal_plan` column **does not exist** on `students` (confirmed via DB). The mapping in `students.ts` reads `row.meal_plan ?? row.has_meal_plan` and both are missing, so the Meal Plan tile silently never renders. Either drop the tile or wire it to the correct table/column (need confirmation from you on the source of truth).
+- **CCA Clubs & Activities** — uses `useStudentCcaEnrollments(student.id)` (the rich `CcaActivityCard` list) with a badge fallback. DB check confirms Tang Jia Hao really has zero active enrollments → "No clubs joined" is **truthful**, not a bug. Maya Joy Varghese has Taekwondo Club active and will render correctly when selected. ✅
 
-### Filtering
-- **Guardians**: hide any parent bundle where `records.length === 0 && periods.length === 0` AND there is no passport info (`nationality / passport_number / passport_expiry_date` all empty). A parent with only a passport but no visa record is also hidden — per request "only show available visa details".
-- **Students**: same rule — hide students with no `record` and no `periods` (passport-only students hidden).
-- If nothing remains for a section, hide the section header entirely.
-- Empty-state card shows when both sections are empty.
+### Fixes to apply
+1. Make `formatClassDisplay` actually strip leading `BO-` / `GL-` (case-insensitive) prefixes in `src/lib/utils.ts`. This automatically cleans up the drawer card and every other place that already calls it.
+2. Decide on Meal Plan:
+   - Option A (default): remove the Meal Plan tile from the drawer since the column doesn't exist.
+   - Option B: tell me which table/column holds meal plan and I'll wire it in.
 
-### Sorting
-- Within Guardians: `(has periods or record) ? 0 : 1` first, then `isSelf`, then `is_primary_contact`, then name.
-- Within Students: students with `periods.length > 0 || record` first, then alphabetical by name.
+   I'll proceed with **Option A** unless you say otherwise.
 
-### Passport card restyle
-- Swap `bg-muted/30 border-border` → light-blue tokens: `bg-sky-50/70 border-sky-100`.
-- Icon chip becomes `bg-sky-100 text-sky-700`.
-- Section eyebrow label uses `text-sky-700`.
-- Keep typography/spacing; add subtle `rounded-xl` consistency.
+No changes needed to the Visa & Passport section or the CCA section logic — those are already correct.
 
-### Layout / UX polish
-- Group each person into a single bordered "person card" wrapper (`rounded-2xl border bg-card p-3 space-y-3`) so name + passport + visa periods read as one unit instead of floating fragments.
-- Person header row: avatar circle with initials (sky-tinted) · name · `You` / `Primary` pills · count badge ("2 passes" / "Passport only").
-- Visa period cards stay as-is but lose the outer card border when nested (use `bg-background border-sky-100` for softer nesting).
-- Section headers gain a small count: "Guardians · 2", "Students · 1".
-- Tighten vertical rhythm: `space-y-4` between people, `space-y-5` between sections.
-- Top "Visa records" info banner kept; copy unchanged.
+## 2. My CCAs page — add student selector top-right
 
-## Out of scope
-- No SQL / RPC / RLS changes.
-- No changes to `src/data/visa.ts`.
-- No changes to student-profile dialog or other pages.
+Update `src/pages/ParentCcaPage.tsx` header so the existing `<ChildSelectorDropdown />` (already used in the home header) sits on the top-right of the sticky header, next to the title.
 
-## Files touched
-- `src/pages/VisaPage.tsx` (single file)
+```text
+┌───────────────────────────────────────────────┐
+│  ‹  My CCAs                 [ Tang Jia Hao ▾ ]│
+└───────────────────────────────────────────────┘
+```
+
+Behavior:
+- Uses the global `StudentSelectionContext`, so switching here updates the same selected student used by Home, Calendar, Attendance, etc. (consistent with the existing pattern shown in your Calendar screenshot).
+- Removes the redundant "Showing CCAs for {name}" caption beneath the header since the dropdown already shows the name.
+- Empty state already reads "{name} isn't enrolled in any CCAs yet." — kept as-is.
+
+### Files to touch
+- `src/lib/utils.ts` — fix `formatClassDisplay` to strip `BO-` / `GL-` prefixes.
+- `src/pages/ProfilePage.tsx` — remove the Meal Plan tile (Option A).
+- `src/pages/ParentCcaPage.tsx` — add `<ChildSelectorDropdown />` in the header, drop the caption row.
+
+No backend / RLS / migration changes.
