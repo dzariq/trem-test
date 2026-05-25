@@ -7112,6 +7112,7 @@ export type Database = {
       is_parent: { Args: never; Returns: boolean }
       is_parent_of_student: { Args: { p_student_id: string }; Returns: boolean }
       is_principal: { Args: never; Returns: boolean }
+      is_school_leader: { Args: never; Returns: boolean }
       is_super_admin: { Args: never; Returns: boolean }
       is_teacher: { Args: never; Returns: boolean }
       is_teacher_assigned_to_cca: {
@@ -7322,7 +7323,7 @@ export type Database = {
       app_role:
         | "super_admin"
         | "admin"
-        | "principal"
+        | "school_leader"
         | "teacher"
         | "parent"
         | "student"
@@ -7477,7 +7478,7 @@ export const Constants = {
       app_role: [
         "super_admin",
         "admin",
-        "principal",
+        "school_leader",
         "teacher",
         "parent",
         "student",
