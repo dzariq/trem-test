@@ -1,14 +1,12 @@
 import { useEffect } from "react";
-import { Navigate } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { AppHeader } from "@/components/layout/AppHeader";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, Stamp, ShieldCheck } from "lucide-react";
+import { Loader2, Stamp, ShieldCheck, Plane } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
-import { useHasVisaModule } from "@/hooks/useHasVisaModule";
 import { useAuth } from "@/contexts/AuthContext";
 import {
   fetchMyParentVisa,
@@ -107,7 +105,6 @@ function PeriodCard({
 }
 
 export default function VisaPage() {
-  const hasVisa = useHasVisaModule();
   const { user } = useAuth();
   const queryClient = useQueryClient();
 
@@ -147,10 +144,6 @@ export default function VisaPage() {
       supabase.removeChannel(channel);
     };
   }, [user?.id, queryClient]);
-
-  if (!hasVisa && !parentQuery.isLoading && !childrenQuery.isLoading) {
-    return <Navigate to="/parent" replace />;
-  }
 
   const loading = parentQuery.isLoading || childrenQuery.isLoading;
   const parentRecords: ParentVisaRecord[] = parentQuery.data?.records ?? [];
@@ -259,9 +252,17 @@ export default function VisaPage() {
         )}
 
         {!loading && parentRecords.length === 0 && children.length === 0 && (
-          <Card>
-            <CardContent className="p-6 text-center text-sm text-muted-foreground">
-              No visa records found.
+          <Card className="border-dashed">
+            <CardContent className="p-8 flex flex-col items-center text-center">
+              <div className="h-14 w-14 rounded-full bg-muted flex items-center justify-center mb-4">
+                <Plane className="h-6 w-6 text-muted-foreground" />
+              </div>
+              <p className="text-base font-semibold text-foreground">
+                No visa records yet
+              </p>
+              <p className="mt-1.5 text-sm text-muted-foreground max-w-xs">
+                Your family doesn't have any visa records on file. Once the school adds them, your passes and renewal status will appear here.
+              </p>
             </CardContent>
           </Card>
         )}
