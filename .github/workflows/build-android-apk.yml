@@ -1,0 +1,121 @@
+name: Build Android APK
+
+on:
+  workflow_dispatch:
+    inputs:
+      build_mode:
+        description: "Vite build mode (production / staging / development)"
+        required: true
+        default: "production"
+        type: choice
+        options:
+          - production
+          - staging
+          - development
+  push:
+    branches: [main]
+    paths:
+      - "src/**"
+      - "public/**"
+      - "resources/**"
+      - "index.html"
+      - "package.json"
+      - "package-lock.json"
+      - "capacitor.config.ts"
+      - "vite.config.ts"
+      - "tailwind.config.ts"
+      - ".github/workflows/build-android-apk.yml"
+
+concurrency:
+  group: android-apk-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Build unsigned release APK
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build web app (${{ github.event.inputs.build_mode || 'production' }})
+        run: npm run build:${{ github.event.inputs.build_mode || 'production' }}
+
+      - name: Setup JDK 21 (Temurin)
+        uses: actions/setup-java@v4
+        with:
+          distribution: "temurin"
+          java-version: "21"
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+        with:
+          packages: "platform-tools platforms;android-35 build-tools;35.0.0"
+
+      - name: Add Capacitor Android platform
+        run: npx cap add android
+
+      - name: Generate Android icons & splash screens
+        run: npx capacitor-assets generate --android
+        continue-on-error: true
+
+      - name: Sync web build into Android project
+        run: npx cap sync android
+
+      - name: Make gradlew executable
+        working-directory: android
+        run: chmod +x ./gradlew
+
+      - name: Build unsigned release APK
+        working-directory: android
+        run: ./gradlew assembleRelease --no-daemon --stacktrace
+
+      - name: Locate built APK
+        id: locate
+        run: |
+          APK_PATH=$(find android/app/build/outputs/apk/release -name "*.apk" | head -n 1)
+          if [ -z "$APK_PATH" ]; then
+            echo "No APK was produced."
+            ls -la android/app/build/outputs/apk/release || true
+            exit 1
+          fi
+          echo "Found APK: $APK_PATH"
+          SIZE=$(du -h "$APK_PATH" | cut -f1)
+          echo "Size: $SIZE"
+          echo "apk_path=$APK_PATH" >> "$GITHUB_OUTPUT"
+          echo "apk_size=$SIZE" >> "$GITHUB_OUTPUT"
+
+      - name: Upload APK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: collinz-school-${{ github.event.inputs.build_mode || 'production' }}-unsigned-apk
+          path: ${{ steps.locate.outputs.apk_path }}
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: Build summary
+        if: always()
+        run: |
+          {
+            echo "## Android APK Build"
+            echo ""
+            echo "- **Mode:** \`${{ github.event.inputs.build_mode || 'production' }}\`"
+            echo "- **Status:** ${{ job.status }}"
+            if [ -n "${{ steps.locate.outputs.apk_path }}" ]; then
+              echo "- **APK:** \`${{ steps.locate.outputs.apk_path }}\`"
+              echo "- **Size:** ${{ steps.locate.outputs.apk_size }}"
+              echo ""
+              echo "Download from the **Artifacts** section at the top of this run."
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"

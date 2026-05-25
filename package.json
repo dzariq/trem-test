@@ -13,8 +13,10 @@
     "build:cap:staging": "npm run build:staging && npx cap sync",
     "build:cap:production": "npm run build:production && npx cap sync",
     "cap:sync": "npx cap sync",
+    "cap:add:android": "npx cap add android",
     "lint": "eslint .",
     "android": "npx cap open android",
+    "android:apk": "npm run build:production && (npx cap add android || echo android already added) && npx cap sync android && cd android && ./gradlew assembleRelease",
     "preview": "vite preview"
   },
   "dependencies": {

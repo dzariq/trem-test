@@ -60,17 +60,61 @@ This project is built with:
 - shadcn-ui
 - Tailwind CSS
 
-## Capacitor (Android)
+## Android APK builds
 
-Quick setup for Android builds:
+This project is wrapped as a native Android app using **Capacitor** (the
+existing web UI runs inside a native WebView — no React Native rewrite
+required).
+
+### Option 1 — Build in the cloud via GitHub Actions (recommended)
+
+No local Android tooling required. The workflow at
+`.github/workflows/build-android-apk.yml`:
+
+1. Builds the web app with Vite.
+2. Adds the Capacitor Android platform.
+3. Generates icons & splash from `resources/icon.png` and `resources/splash.png`.
+4. Compiles an **unsigned release APK** with Gradle.
+5. Uploads the APK as a workflow artifact.
+
+How to trigger a build:
+
+- **Manual:** GitHub → Actions → "Build Android APK" → "Run workflow" →
+  pick `production`, `staging`, or `development`.
+- **Automatic:** any push to `main` that touches `src/`, `public/`,
+  `resources/`, `capacitor.config.ts`, or related config files.
+
+How to download the APK:
+
+- Open the completed workflow run on GitHub.
+- Scroll to the **Artifacts** section at the bottom.
+- Download `collinz-school-<mode>-unsigned-apk.zip`, unzip → install on device.
+
+### Option 2 — Build locally (Windows)
+
+Requires installing:
+
+- **Node.js 20+** (https://nodejs.org)
+- **JDK 21** — Temurin/Adoptium (https://adoptium.net)
+- **Android Studio** with Android SDK 35 + build-tools 35.0.0
+- Set `JAVA_HOME` and `ANDROID_HOME` environment variables.
+
+Then:
 
 ```sh
 npm install
-npm run build:cap
-npm run android
+npm run android:apk
 ```
 
-In Android Studio: Build -> Build APK(s).
+This runs: build web → add Android platform → sync → assemble release APK.
+Output: `android/app/build/outputs/apk/release/app-release-unsigned.apk`.
+
+### Installing the unsigned APK on a device
+
+Android blocks installs of unsigned APKs by default. Either:
+
+- Enable **Developer options → Install unknown apps** on the target phone, or
+- Sign the APK before distributing (see the Play Store signing guide).
 
 ## How can I deploy this project?
 
