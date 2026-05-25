@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { NotificationsDrawer } from "@/components/NotificationsDrawer";
 import { useNotifications } from "@/hooks/useNotifications";
 import { ChildSelectorDropdown } from "@/components/home/ChildSelectorDropdown";
+import { SecondaryNavBar } from "@/components/layout/SecondaryNavBar";
 
 interface AppHeaderProps {
   title?: string;
@@ -86,6 +87,7 @@ export function AppHeader({
           </div>
         )}
       </header>
+      <SecondaryNavBar />
 
       <NotificationsDrawer 
         open={isNotificationsOpen} 
