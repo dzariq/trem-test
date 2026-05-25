@@ -4,7 +4,7 @@ import { AppLayout } from "@/components/layout/AppLayout";
 import { AppHeader } from "@/components/layout/AppHeader";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, Stamp, ShieldCheck, Plane } from "lucide-react";
+import { Loader2, Stamp, ShieldCheck, Plane, BookUser } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -26,6 +26,99 @@ function StatusChip({ status }: { status: ParentVisaPeriod["status"] }) {
     <Badge variant="outline" className={cn("text-xs font-medium", meta.className, meta.strike && "line-through")}>
       {meta.label}
     </Badge>
+  );
+}
+
+function ValidityLine({ issueDate, expiryDate, strike }: { issueDate: string | null; expiryDate: string | null; strike?: boolean }) {
+  if (!issueDate && !expiryDate) return null;
+  let label = "";
+  let value = "";
+  if (issueDate && expiryDate) {
+    label = "Validity:";
+    value = `${formatDate(issueDate)} → ${formatDate(expiryDate)}`;
+  } else if (expiryDate) {
+    label = "Valid until:";
+    value = formatDate(expiryDate);
+  } else {
+    label = "Issued:";
+    value = formatDate(issueDate);
+  }
+  return (
+    <div className={cn("text-sm text-foreground", strike && "line-through")}>
+      <span className="text-muted-foreground">{label}</span> {value}
+    </div>
+  );
+}
+
+const BACKFILL_NOTE = "backfilled from student record";
+function cleanNotes(notes: string | null): string | null {
+  if (!notes) return null;
+  if (notes.trim().toLowerCase() === BACKFILL_NOTE) return null;
+  return notes;
+}
+
+function passportExpiryMeta(dateStr: string | null) {
+  if (!dateStr) return null;
+  const dt = new Date(dateStr);
+  if (isNaN(dt.getTime())) return null;
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const diff = Math.round((dt.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+  if (diff < 0) return { label: "Expired", className: "bg-destructive/15 text-destructive border-destructive/30" };
+  if (diff <= 90) return { label: "Expiring soon", className: "bg-amber-100 text-amber-700 border-amber-200" };
+  return null;
+}
+
+function PassportSummary({
+  name,
+  nationality,
+  passportNumber,
+  passportExpiry,
+}: {
+  name: string | null;
+  nationality: string | null;
+  passportNumber: string | null;
+  passportExpiry: string | null;
+}) {
+  const hasAny = nationality || passportNumber || passportExpiry;
+  if (!hasAny) return null;
+  const expMeta = passportExpiryMeta(passportExpiry);
+  return (
+    <Card className="border-border bg-muted/30">
+      <CardContent className="p-3 space-y-1.5">
+        <div className="flex items-center gap-2">
+          <BookUser className="h-4 w-4 text-muted-foreground" />
+          <span className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Passport</span>
+        </div>
+        <div className="grid grid-cols-1 gap-y-1 text-sm">
+          {nationality && (
+            <div>
+              <span className="text-muted-foreground">Nationality: </span>
+              <span className="text-foreground">{nationality}</span>
+            </div>
+          )}
+          {passportNumber && (
+            <div>
+              <span className="text-muted-foreground">Passport No: </span>
+              <span className="font-mono text-foreground">{passportNumber}</span>
+            </div>
+          )}
+          {passportExpiry && (
+            <div className="flex items-center gap-2 flex-wrap">
+              <div>
+                <span className="text-muted-foreground">Expiry: </span>
+                <span className="text-foreground">{formatDate(passportExpiry)}</span>
+              </div>
+              {expMeta && (
+                <Badge variant="outline" className={cn("text-[10px] font-medium", expMeta.className)}>
+                  {expMeta.label}
+                </Badge>
+              )}
+            </div>
+          )}
+        </div>
+      </CardContent>
+    </Card>
   );
 }
 
@@ -77,6 +170,7 @@ function PeriodCard({
   insuranceExpiry?: string | null;
   strike?: boolean;
 }) {
+  const cleanedNotes = cleanNotes(notes);
   return (
     <Card className="border-border">
       <CardContent className={cn("p-4 space-y-2", strike && "opacity-70")}>
@@ -89,16 +183,14 @@ function PeriodCard({
           </div>
           <StatusChip status={status} />
         </div>
-        <div className={cn("text-sm text-foreground", strike && "line-through")}>
-          <span className="text-muted-foreground">Validity:</span> {formatDate(issueDate)} → {formatDate(expiryDate)}
-        </div>
+        <ValidityLine issueDate={issueDate} expiryDate={expiryDate} strike={strike} />
         <BondInsuranceLine
           bond={bond}
           provider={insuranceProvider}
           policyNo={insurancePolicyNo}
           insuranceExpiry={insuranceExpiry}
         />
-        {notes && <div className="text-xs text-muted-foreground mt-1 whitespace-pre-wrap">{notes}</div>}
+        {cleanedNotes && <div className="text-xs text-muted-foreground mt-1 whitespace-pre-wrap">{cleanedNotes}</div>}
       </CardContent>
     </Card>
   );
@@ -146,9 +238,22 @@ export default function VisaPage() {
   }, [user?.id, queryClient]);
 
   const loading = parentQuery.isLoading || childrenQuery.isLoading;
+  const parentSelf = parentQuery.data?.self ?? null;
   const parentRecords: ParentVisaRecord[] = parentQuery.data?.records ?? [];
   const parentPeriods: ParentVisaPeriod[] = parentQuery.data?.periods ?? [];
   const children = childrenQuery.data ?? [];
+
+  const parentHasPassport = !!(parentSelf && (parentSelf.nationality || parentSelf.passport_number || parentSelf.passport_expiry_date));
+  const showParentSection = parentHasPassport || parentRecords.length > 0 || parentPeriods.length > 0;
+  const childrenHaveAnything = children.some(
+    (c) =>
+      c.student.nationality ||
+      c.student.passport_number ||
+      c.student.passport_expiry_date ||
+      c.record ||
+      c.periods.length > 0,
+  );
+  const showEmptyState = !loading && !showParentSection && !childrenHaveAnything;
 
   return (
     <AppLayout>
@@ -170,15 +275,21 @@ export default function VisaPage() {
           </div>
         )}
 
-        {!loading && parentRecords.length > 0 && (
+        {!loading && showParentSection && (
           <section className="space-y-3">
             <h2 className="text-base font-semibold text-foreground flex items-center gap-2">
               <ShieldCheck className="h-4 w-4 text-sky-600" /> My Visa
             </h2>
+            <PassportSummary
+              name={parentSelf?.name ?? null}
+              nationality={parentSelf?.nationality ?? null}
+              passportNumber={parentSelf?.passport_number ?? null}
+              passportExpiry={parentSelf?.passport_expiry_date ?? null}
+            />
             {parentPeriods.length === 0 ? (
               <Card className="border-dashed">
                 <CardContent className="p-4 text-sm text-muted-foreground">
-                  No issued periods on record yet.
+                  No immigration pass recorded yet.
                 </CardContent>
               </Card>
             ) : (
@@ -206,6 +317,12 @@ export default function VisaPage() {
             {children.map((c) => (
               <div key={c.student.id} className="space-y-2">
                 <div className="text-sm font-medium text-foreground">{c.student.full_name ?? "Student"}</div>
+                <PassportSummary
+                  name={c.student.full_name}
+                  nationality={c.student.nationality}
+                  passportNumber={c.student.passport_number}
+                  passportExpiry={c.student.passport_expiry_date}
+                />
                 {c.periods.length === 0 ? (
                   c.record ? (
                     <PeriodCard
@@ -224,7 +341,7 @@ export default function VisaPage() {
                   ) : (
                     <Card className="border-dashed">
                       <CardContent className="p-4 text-sm text-muted-foreground">
-                        No issued periods on record yet.
+                        No immigration pass recorded yet.
                       </CardContent>
                     </Card>
                   )
@@ -251,7 +368,7 @@ export default function VisaPage() {
           </section>
         )}
 
-        {!loading && parentRecords.length === 0 && children.length === 0 && (
+        {showEmptyState && (
           <Card className="border-dashed">
             <CardContent className="p-8 flex flex-col items-center text-center">
               <div className="h-14 w-14 rounded-full bg-muted flex items-center justify-center mb-4">
