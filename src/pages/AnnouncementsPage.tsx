@@ -76,11 +76,14 @@ export default function AnnouncementsPage() {
   const unreadRegular = regular.filter(a => !a.is_read);
   const readRegular = regular.filter(a => a.is_read);
 
-  // Build a flat list for the drawer navigation (featured first, then pinned, then regular)
+  // Build a flat list for the drawer navigation from the FULL (unfiltered) list
+  // so prev/next navigation isn't broken when items get marked read while
+  // the "Unread only" filter is active.
+  const drawerBase = categorizeAnnouncements(announcements);
   const drawerList = [
-    ...(featured ? [featured] : []),
-    ...pinned,
-    ...regular,
+    ...(drawerBase.featured ? [drawerBase.featured] : []),
+    ...drawerBase.pinned,
+    ...drawerBase.regular,
   ];
 
   const handleAnnouncementClick = (announcement: Announcement) => {
