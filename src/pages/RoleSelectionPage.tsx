@@ -20,7 +20,7 @@ export default function RoleSelectionPage() {
         navigate("/teacher", { replace: true });
       } else if (portal === "family") {
         navigate("/portal", { replace: true });
-      } else if (["teacher", "admin", "super_admin"].includes(profile.role)) {
+      } else if (["teacher", "admin", "super_admin", "school_leader"].includes(profile.role)) {
         navigate("/teacher", { replace: true });
       } else {
         navigate("/portal", { replace: true });

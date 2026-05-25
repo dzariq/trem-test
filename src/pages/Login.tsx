@@ -150,7 +150,7 @@ export default function Login() {
       portalChoice = "teacher"; target = "/teacher";
     } else if (hasStudentRole) {
       portalChoice = "family"; target = "/students";
-    } else if (["teacher", "admin", "super_admin"].includes(profile.role)) {
+    } else if (["teacher", "admin", "super_admin", "school_leader"].includes(profile.role)) {
       portalChoice = "teacher"; target = "/teacher";
     } else {
       portalChoice = "family"; target = "/portal";
