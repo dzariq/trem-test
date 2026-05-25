@@ -114,6 +114,7 @@ export type Database = {
           id: string
           is_active: boolean
           is_open_for_grading: boolean
+          last_marks_changed_at: string | null
           name: string
           sort_order: number | null
           start_date: string | null
@@ -129,6 +130,7 @@ export type Database = {
           id?: string
           is_active?: boolean
           is_open_for_grading?: boolean
+          last_marks_changed_at?: string | null
           name: string
           sort_order?: number | null
           start_date?: string | null
@@ -144,6 +146,7 @@ export type Database = {
           id?: string
           is_active?: boolean
           is_open_for_grading?: boolean
+          last_marks_changed_at?: string | null
           name?: string
           sort_order?: number | null
           start_date?: string | null
@@ -3166,6 +3169,44 @@ export type Database = {
             columns: ["link_id"]
             isOneToOne: false
             referencedRelation: "event_rsvp_links"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      exam_period_publications: {
+        Row: {
+          academic_period_id: string
+          created_at: string
+          id: string
+          notes: string | null
+          published_at: string
+          published_by: string | null
+          student_count: number
+        }
+        Insert: {
+          academic_period_id: string
+          created_at?: string
+          id?: string
+          notes?: string | null
+          published_at?: string
+          published_by?: string | null
+          student_count?: number
+        }
+        Update: {
+          academic_period_id?: string
+          created_at?: string
+          id?: string
+          notes?: string | null
+          published_at?: string
+          published_by?: string | null
+          student_count?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "exam_period_publications_academic_period_id_fkey"
+            columns: ["academic_period_id"]
+            isOneToOne: false
+            referencedRelation: "academic_periods"
             referencedColumns: ["id"]
           },
         ]
@@ -7081,6 +7122,24 @@ export type Database = {
       move_student_to_family: {
         Args: { p_student_id: string; p_target_family_id: string }
         Returns: Json
+      }
+      publish_exam_period_to_parents: {
+        Args: { p_period_id: string }
+        Returns: {
+          academic_period_id: string
+          created_at: string
+          id: string
+          notes: string | null
+          published_at: string
+          published_by: string | null
+          student_count: number
+        }
+        SetofOptions: {
+          from: "*"
+          to: "exam_period_publications"
+          isOneToOne: true
+          isSetofReturn: false
+        }
       }
       recompute_student_due_alert: {
         Args: { p_student_id: string }
