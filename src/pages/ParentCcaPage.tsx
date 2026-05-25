@@ -10,6 +10,7 @@ import { getCcaBucket, getCcaBucketIcon, getCcaTypePillColor } from "@/component
 import { CCA_BUCKET_LABEL } from "@/lib/ccaSessionFormat";
 import { useStudentCcaEnrollments } from "@/hooks/useStudentCcaEnrollments";
 import { useStudentSelection } from "@/contexts/StudentSelectionContext";
+import { ChildSelectorDropdown } from "@/components/home/ChildSelectorDropdown";
 import { cn } from "@/lib/utils";
 
 const UPCOMING_WINDOW_DAYS = 7;
@@ -43,22 +44,14 @@ export default function ParentCcaPage() {
           >
             <ChevronLeft className="h-5 w-5" />
           </Button>
-          <h1 className="text-base font-semibold text-foreground truncate">
+          <h1 className="text-base font-semibold text-foreground truncate flex-1">
             My CCAs
           </h1>
+          <ChildSelectorDropdown className="shrink-0" />
         </div>
       </header>
 
       <div className="px-4 py-4 space-y-3">
-        {selectedStudent && (
-          <p className="text-xs text-muted-foreground">
-            Showing CCAs for{" "}
-            <span className="font-medium text-foreground">
-              {selectedStudent.name}
-            </span>
-          </p>
-        )}
-
         {loading && (
           <div className="space-y-3">
             <Skeleton className="h-32 rounded-xl" />

@@ -21,5 +21,6 @@ export const stripCampusPrefix = (className: string): string => {
  */
 export const formatClassDisplay = (className: string | null | undefined): string => {
   if (!className) return '';
-  return className;
+  // Strip leading campus prefix (BO-, GL-) — case-insensitive
+  return className.replace(/^(bo|gl)-/i, '');
 };

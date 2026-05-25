@@ -45,7 +45,6 @@ import {
   Upload,
   Trash2,
   BookOpen,
-  Utensils,
   Flag,
   CalendarDays,
   School,
@@ -888,30 +887,12 @@ export default function ProfilePage() {
                 </>
               )}
 
-              {/* Student Options - Meal Plan, Sports House */}
-              {(typeof selectedStudent.mealPlan === "boolean" || selectedStudent.sportsHouse) && (
+              {/* Student Options - Sports House */}
+              {selectedStudent.sportsHouse && (
                 <>
                 <div className="space-y-3">
                   <span className="font-medium text-foreground">Student Options</span>
-                  <div className="grid grid-cols-2 gap-3">
-                    {/* Meal Plan */}
-                    {typeof selectedStudent.mealPlan === "boolean" && (
-                      <div className="flex flex-col items-center gap-1.5 p-3 rounded-lg bg-muted/50 border border-border">
-                        <Utensils className="w-5 h-5 text-muted-foreground" />
-                        <span className="text-xs font-medium text-muted-foreground text-center">Meal Plan</span>
-                        <div className={cn(
-                          "w-6 h-6 rounded-full flex items-center justify-center",
-                          selectedStudent.mealPlan ? "bg-green-500" : "bg-muted"
-                        )}>
-                          {selectedStudent.mealPlan ? (
-                            <Check className="w-4 h-4 text-white" />
-                          ) : (
-                            <X className="w-4 h-4 text-muted-foreground" />
-                          )}
-                        </div>
-                      </div>
-                    )}
-                    
+                  <div className="grid grid-cols-1 gap-3">
                     {/* Sports House - always show if available */}
                     {selectedStudent.sportsHouse && (
                       <div className="flex flex-col items-center gap-1.5 p-3 rounded-lg bg-muted/50 border border-border">
