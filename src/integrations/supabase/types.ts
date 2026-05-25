@@ -6351,6 +6351,7 @@ export type Database = {
       }
       user_module_access: {
         Row: {
+          can_delete: boolean
           can_edit: boolean
           can_manage: boolean
           can_view: boolean
@@ -6361,6 +6362,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          can_delete?: boolean
           can_edit?: boolean
           can_manage?: boolean
           can_view?: boolean
@@ -6371,6 +6373,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          can_delete?: boolean
           can_edit?: boolean
           can_manage?: boolean
           can_view?: boolean
@@ -6385,6 +6388,8 @@ export type Database = {
       user_profiles: {
         Row: {
           account_status: string
+          ai_can_amend: boolean
+          ai_can_query: boolean
           assigned_campus_id: string | null
           can_access_all_campuses: boolean
           can_create_users: boolean
@@ -6411,6 +6416,8 @@ export type Database = {
         }
         Insert: {
           account_status?: string
+          ai_can_amend?: boolean
+          ai_can_query?: boolean
           assigned_campus_id?: string | null
           can_access_all_campuses?: boolean
           can_create_users?: boolean
@@ -6437,6 +6444,8 @@ export type Database = {
         }
         Update: {
           account_status?: string
+          ai_can_amend?: boolean
+          ai_can_query?: boolean
           assigned_campus_id?: string | null
           can_access_all_campuses?: boolean
           can_create_users?: boolean

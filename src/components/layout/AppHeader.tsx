@@ -20,7 +20,7 @@ interface AppHeaderProps {
 
 export function AppHeader({ 
   title, 
-  showNotifications = false, 
+  showNotifications = true, 
   showProfile = false,
   showBack = false,
   showChildSelector = false,
