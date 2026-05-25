@@ -15,15 +15,16 @@ export function formatMoney(amount: number, currency: string = "MYR"): string {
 
 export function statusLabel(
   status: InvoiceStatus
-): { label: string; variant: "default" | "secondary" | "destructive" | "outline" } {
+): { label: string; className: string } {
+  const base = "rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-wide border-0";
   switch (status) {
     case "paid":
-      return { label: "Paid", variant: "secondary" };
+      return { label: "Paid", className: `${base} bg-emerald-600 text-white hover:bg-emerald-600` };
     case "pending_payment":
-      return { label: "Outstanding", variant: "destructive" };
+      return { label: "Outstanding", className: `${base} bg-destructive text-destructive-foreground hover:bg-destructive` };
     case "draft":
-      return { label: "Draft", variant: "outline" };
+      return { label: "Draft", className: `${base} bg-muted text-muted-foreground` };
     case "cancelled":
-      return { label: "Cancelled", variant: "outline" };
+      return { label: "Cancelled", className: `${base} bg-muted text-muted-foreground` };
   }
 }

@@ -37,11 +37,7 @@ export function InvoiceCard({ invoice, onClick }: Props) {
             )}
           </div>
           <Badge
-            variant={status.variant}
-            className={
-              "border-0 shrink-0 " +
-              (isPaid ? "bg-emerald-600 text-white hover:bg-emerald-600" : "")
-            }
+            className={status.className + " shrink-0"}
           >
             {isOverdue ? "Overdue" : status.label}
           </Badge>
