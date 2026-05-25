@@ -412,7 +412,7 @@ export default function TeacherHomePage() {
         <img 
           src={heroBanner} 
           alt="School Banner" 
-          className="block w-full h-auto hero-breathe"
+          className="block w-full h-40 sm:h-48 object-cover hero-breathe"
         />
         <TeacherWelcomeQuote />
       </div>

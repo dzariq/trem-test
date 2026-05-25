@@ -148,7 +148,7 @@ export default function HomePage() {
       />
 
       <div className="w-full relative">
-        <img src={heroBanner} alt="School banner" className="w-full h-auto" />
+        <img src={heroBanner} alt="School banner" className="w-full h-40 sm:h-48 object-cover" />
         <ParentWelcomeQuote />
       </div>
       
