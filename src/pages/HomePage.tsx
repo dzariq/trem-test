@@ -147,8 +147,6 @@ export default function HomePage() {
         rightContent={<StudentPillSelector />}
       />
 
-      <SecondaryNavBar />
-
       <div className="w-full relative">
         <img src={heroBanner} alt="School banner" className="w-full h-auto" />
         <ParentWelcomeQuote />
