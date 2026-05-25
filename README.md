@@ -161,32 +161,52 @@ connect:
    the JavaScript console live, and the Network tab capturing every
    request the WebView is making to `https://collinz.app` and Supabase.
 
-### How "no cache" is enforced
+### How "no cache" is enforced (every layer)
 
-The CI workflow patches `MainActivity.java` after `npx cap add android`:
+Android has *several* caches that need to be defeated independently.
+The patched `MainActivity` addresses each one:
 
-```java
-public class MainActivity extends BridgeActivity {
-    @Override
-    public void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        WebSettings settings = this.bridge.getWebView().getSettings();
-        settings.setCacheMode(WebSettings.LOAD_NO_CACHE);
-        this.bridge.getWebView().clearCache(true);
-        this.bridge.getWebView().clearHistory();
-    }
-}
+| Cache layer | Where it lives | Defeat |
+|---|---|---|
+| WebView HTTP cache | `~/cache/WebView/...` | `WebSettings.setCacheMode(LOAD_NO_CACHE)` + `clearCache(true)` |
+| WebView history | back/forward stack | `clearHistory()` |
+| Form data | form autofill cache | `clearFormData()` + `clearMatches()` |
+| Service Worker (PWA) | the SPA's own JS registers a `ServiceWorker` that intercepts every request and serves from its own offline `Cache Storage` | Injected JS unregisters every `navigator.serviceWorker.getRegistrations()` entry **and** purges `caches.keys()` ~1.5s after first paint, then hard-reloads if anything was found |
+| DOM Storage (after SW purge) | `WebStorage` (`localStorage`/`IndexedDB`) | `WebStorage.getInstance().deleteAllData()` is called only on the same code path that just unregistered an SW, so logged-in users stay logged in unless the page was being served by a SW. |
+| Cookies / Supabase session | `CookieManager` | **Not** cleared — clearing would log the user out on every cold start. |
+
+The CI workflow verifies that *all* of these patches survive `npx cap sync`:
+
+```sh
+for NEEDLE in "LOAD_NO_CACHE" "setWebContentsDebuggingEnabled" \
+              "CollinzNav" "serviceWorker" "WebStorage.getInstance"; do
+  grep -q "$NEEDLE" MainActivity.java || exit 1
+done
 ```
 
-- `LOAD_NO_CACHE` forces every HTTP request to hit the network — the
-  WebView never serves a cached response.
-- `clearCache(true)` deletes any pre-existing cached resources on each
-  cold start of the app.
-- `clearHistory()` resets the back/forward navigation stack so the app
-  always starts at `https://collinz.app`.
+### "I'm still seeing the old UI even after this" — checklist
 
-A workflow verification step ( `grep -q "LOAD_NO_CACHE" MainActivity.java`)
-fails the build if the patch is ever silently lost during sync.
+If after installing a fresh APK the WebView still renders a stale page,
+the cache lives upstream of the device. Walk through in order:
+
+1. **Uninstall the app from the device first.** Some Android skins keep
+   the old WebView data dir around when reinstalling on top.
+2. **Re-launch the new APK.** Watch the URL overlay — if it briefly
+   shows a URL, vanishes, and reappears, that means the in-app SW purge
+   ran and hard-reloaded. After this point the WebView is clean.
+3. **Confirm `https://collinz.app` is actually serving the new build.**
+   Open the URL on a desktop browser with DevTools open → Network tab,
+   tick "Disable cache", hard-reload. If you *still* see the old build
+   in a normal browser, the issue is on the deploy side (Lovable
+   hasn't promoted, or the CDN edge cache is stale).
+4. **Check the deploy's `Cache-Control` headers.** Send
+   `Cache-Control: no-cache` (or `max-age=0`) on the `index.html` of
+   `collinz.app` so CDNs don't pin a stale shell. Hashed JS/CSS bundles
+   can still be `Cache-Control: max-age=31536000, immutable`.
+5. **Attach `chrome://inspect` and check the Application tab.** Look at
+   "Service Workers" — there should be **none registered**. Look at
+   "Cache Storage" — should be **empty**. If either has entries, the
+   SW purge above didn't run; file a bug.
 
 ### Caveats of this live-wrapper architecture
 

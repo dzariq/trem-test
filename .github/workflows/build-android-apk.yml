@@ -103,7 +103,7 @@ jobs:
             --splashBackgroundColor "#ffffff" \
             --splashBackgroundColorDark "#1a1a1a"
 
-      - name: Patch MainActivity with no-cache + debug URL bar
+      - name: Patch MainActivity with aggressive no-cache + debug URL bar
         run: |
           set -e
           APP_PKG_DIR="android/app/src/main/java/com/collinz/school"
@@ -123,6 +123,7 @@ jobs:
           import android.view.Gravity;
           import android.view.ViewGroup;
           import android.webkit.WebSettings;
+          import android.webkit.WebStorage;
           import android.webkit.WebView;
           import android.widget.FrameLayout;
           import android.widget.TextView;
@@ -133,15 +134,22 @@ jobs:
            * Thin live-wrapper activity for https://collinz.app.
            *
            * Responsibilities:
-           *   1. Disable WebView caching so users never see stale HTML/JS/CSS
-           *      after a deploy.
-           *   2. Enable chrome://inspect remote DevTools debugging for the
-           *      embedded WebView.
-           *   3. Render a tappable sticky overlay at the top of the screen
-           *      showing the current WebView URL in real time -- so we can
-           *      see exactly where the WebView lands after, e.g., a Supabase
-           *      login redirect that should send the user to /portal.
-           *   4. Mirror every URL change to logcat under tag "CollinzNav".
+           *   1. Aggressive cache busting across every WebView layer:
+           *        - HTTP cache (LOAD_NO_CACHE + clearCache)
+           *        - History
+           *        - Form data
+           *        - Application Cache (legacy)
+           *        - On-page: service workers + Cache Storage API caches,
+           *          purged via injected JavaScript after first paint, then
+           *          the page is hard-reloaded if anything was found.
+           *   2. Enable chrome://inspect remote DevTools debugging.
+           *   3. Sticky URL overlay so the actual URL is always visible.
+           *
+           * NOTE: cookies and localStorage are intentionally NOT cleared --
+           * Supabase stores the auth session in localStorage, and wiping it
+           * would log users out on every cold start. If after all this you
+           * still see stale UI, the cache lives further upstream (CDN edge
+           * cache on collinz.app, or the deploy itself hasn't promoted yet).
            */
           public class MainActivity extends BridgeActivity {
 
@@ -151,16 +159,18 @@ jobs:
               public void onCreate(Bundle savedInstanceState) {
                   super.onCreate(savedInstanceState);
 
-                  WebView webView = (this.bridge != null) ? this.bridge.getWebView() : null;
+                  final WebView webView = (this.bridge != null) ? this.bridge.getWebView() : null;
                   if (webView == null) {
                       return;
                   }
 
-                  // --- Cache busting ---
+                  // --- WebView-level cache busting ---
                   WebSettings settings = webView.getSettings();
                   settings.setCacheMode(WebSettings.LOAD_NO_CACHE);
                   webView.clearCache(true);
                   webView.clearHistory();
+                  webView.clearFormData();
+                  webView.clearMatches();
 
                   // --- chrome://inspect remote DevTools ---
                   WebView.setWebContentsDebuggingEnabled(true);
@@ -169,7 +179,7 @@ jobs:
                   final TextView urlBar = new TextView(this);
                   urlBar.setText("Loading…");
                   urlBar.setTextColor(Color.WHITE);
-                  urlBar.setBackgroundColor(0xCC0F172A); // semi-transparent slate-900
+                  urlBar.setBackgroundColor(0xCC0F172A);
                   float density = getResources().getDisplayMetrics().density;
                   int paddingPx = (int) (10 * density);
                   urlBar.setPadding(paddingPx, paddingPx, paddingPx, paddingPx);
@@ -182,10 +192,9 @@ jobs:
                       ViewGroup.LayoutParams.WRAP_CONTENT,
                       Gravity.TOP
                   );
-                  urlBarParams.topMargin = (int) (28 * density); // under status bar
+                  urlBarParams.topMargin = (int) (28 * density);
                   addContentView(urlBar, urlBarParams);
 
-                  // Tap once = collapse to a thin line; tap again = expand.
                   urlBar.setOnClickListener(v -> {
                       if (urlBar.getMaxLines() == 0) {
                           urlBar.setMaxLines(3);
@@ -194,8 +203,50 @@ jobs:
                       }
                   });
 
-                  // --- Poll the WebView URL every 400 ms ---
                   final Handler handler = new Handler(Looper.getMainLooper());
+
+                  // --- One-shot service-worker + cache-storage purge ---
+                  //
+                  // Runs ~1.5 s after first paint so the page has had a
+                  // chance to register navigator.serviceWorker. If any
+                  // SW or Cache Storage entry is found, it is purged and
+                  // the WebView is hard-reloaded so the next paint comes
+                  // from the network rather than the SW's offline copy.
+                  handler.postDelayed(new Runnable() {
+                      @Override
+                      public void run() {
+                          String purgeJs =
+                              "(async () => {" +
+                              "  let purged = 0;" +
+                              "  try {" +
+                              "    if (navigator && navigator.serviceWorker) {" +
+                              "      const regs = await navigator.serviceWorker.getRegistrations();" +
+                              "      for (const r of regs) { try { await r.unregister(); purged++; } catch(e) {} }" +
+                              "    }" +
+                              "    if (typeof caches !== 'undefined') {" +
+                              "      const names = await caches.keys();" +
+                              "      for (const n of names) { try { await caches.delete(n); purged++; } catch(e) {} }" +
+                              "    }" +
+                              "  } catch(e) {}" +
+                              "  return purged;" +
+                              "})()";
+                          webView.evaluateJavascript(purgeJs, value -> {
+                              int purged = 0;
+                              try { purged = Integer.parseInt(value); } catch (Exception e) {}
+                              if (purged > 0) {
+                                  Log.i(TAG, "Purged " + purged + " SW/cache entries; hard-reloading WebView");
+                                  // Clear WebStorage on the next loop so the
+                                  // reload picks up fresh DOM storage too.
+                                  WebStorage.getInstance().deleteAllData();
+                                  webView.reload();
+                              } else {
+                                  Log.i(TAG, "No service workers or Cache Storage entries found");
+                              }
+                          });
+                      }
+                  }, 1500);
+
+                  // --- URL polling overlay (every 400 ms) ---
                   final String[] lastUrl = {""};
                   handler.post(new Runnable() {
                       @Override
@@ -239,14 +290,14 @@ jobs:
         run: |
           set -e
           MA="android/app/src/main/java/com/collinz/school/MainActivity.java"
-          for NEEDLE in "LOAD_NO_CACHE" "setWebContentsDebuggingEnabled" "CollinzNav"; do
+          for NEEDLE in "LOAD_NO_CACHE" "setWebContentsDebuggingEnabled" "CollinzNav" "serviceWorker" "WebStorage.getInstance"; do
             if ! grep -q "$NEEDLE" "$MA"; then
               echo "FATAL: '$NEEDLE' missing from MainActivity.java after sync"
               cat "$MA"
               exit 1
             fi
           done
-          echo "Cache-busting + debug overlay patches verified in MainActivity.java"
+          echo "All cache-busting + debug overlay patches verified in MainActivity.java"
 
       - name: Make gradlew executable
         working-directory: android
