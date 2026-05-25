@@ -1,43 +1,42 @@
 import type { CapacitorConfig } from "@capacitor/cli";
 
-// CAP_SERVER_URL controls whether the app loads the web bundle from the APK
-// (the default) or loads it live from a remote URL.
-//
-// - Production / Play Store builds: leave CAP_SERVER_URL unset so the app
-//   ships a fully-bundled web build (works offline, faster cold start, all
-//   plugins behave normally, App Store-safe).
-// - Development / staging / internal QA: set CAP_SERVER_URL to a live URL
-//   (e.g. https://collinz.app) so the WebView always reflects the latest
-//   web deploy without reinstalling the APK.
-//
-// Set locally:    set CAP_SERVER_URL=https://collinz.app && npm run android:apk
-// Set in CI:      handled by .github/workflows/build-android-apk.yml based
-//                 on the build_mode workflow input.
-const liveServerUrl = process.env.CAP_SERVER_URL?.trim();
+// The Collinz mobile app is a *thin native wrapper* around https://collinz.app.
+// It does not ship any application code, UI, env vars, or business logic —
+// every pixel and every line of JavaScript is fetched live from the URL above
+// on each launch. This means:
+//   - Updating the web app instantly updates every installed device.
+//   - Capacitor plugins (camera, filesystem, notifications, etc.) still work
+//     because the native bridge is injected into the WebView regardless of
+//     the origin the WebView is loading.
+//   - The app *requires* internet — there is no offline fallback by design.
+const LIVE_URL = "https://collinz.app";
 
 const config: CapacitorConfig = {
   appId: "com.collinz.school",
   appName: "Collinz School",
+  // `webDir` still needs to point at something for `cap sync` to succeed,
+  // but the contents are effectively ignored at runtime because `server.url`
+  // takes precedence. The CI workflow writes a one-line redirect placeholder
+  // into this directory in case Android ever falls back to it.
   webDir: "dist",
   server: {
     androidScheme: "https",
     iosScheme: "https",
-    ...(liveServerUrl
-      ? {
-          // Live mode: WebView loads UI from the remote URL on every launch.
-          // The web bundle inside the APK is ignored.
-          url: liveServerUrl,
-          cleartext: false,
-        }
-      : {}),
+    url: LIVE_URL,
+    cleartext: false,
+    // Allow the WebView to navigate to Supabase and any *.collinz.app
+    // subdomain without bouncing out to an external browser.
+    allowNavigation: [
+      "collinz.app",
+      "*.collinz.app",
+      "*.supabase.co",
+      "*.supabase.in",
+    ],
   },
   plugins: {
     SplashScreen: {
       launchShowDuration: 2000,
       launchAutoHide: true,
-      // White matches the Collinz crest's background in resources/splash.png
-      // so there is no visible seam between the system launch screen and the
-      // Capacitor splash drawable.
       backgroundColor: "#ffffff",
       androidSplashResourceName: "splash",
       androidScaleType: "CENTER_CROP",

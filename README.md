@@ -60,36 +60,46 @@ This project is built with:
 - shadcn-ui
 - Tailwind CSS
 
-## Android APK builds
+## Android APK builds — live wrapper for `https://collinz.app`
 
-This project is wrapped as a native Android app using **Capacitor** (the
-existing web UI runs inside a native WebView — no React Native rewrite
-required).
+The mobile app is a **thin native shell**. It does not ship any React
+code, Vite bundle, env vars, or UI. Every byte that renders on screen is
+fetched live from `https://collinz.app` on each launch. Updating the web
+app instantly updates every installed device — no APK rebuild required.
 
-### Option 1 — Build in the cloud via GitHub Actions (recommended)
+What's inside the APK:
 
-No local Android tooling required. The workflow at
-`.github/workflows/build-android-apk.yml`:
+- Capacitor native runtime (the bridge that exposes camera, filesystem,
+  notifications, etc. to JavaScript).
+- A custom `MainActivity` that disables the WebView HTTP cache
+  (`WebSettings.LOAD_NO_CACHE`) and clears any prior cached resources on
+  every cold start, so users never see stale assets.
+- Collinz crest icons and splash drawables generated from
+  `resources/icon.png` and `resources/splash.png`.
+- A 30-line `dist/index.html` redirect-to-`https://collinz.app` page
+  that only exists as a defensive fallback for the (extremely unlikely)
+  case where the WebView fails to honour `server.url`.
 
-1. Builds the web app with Vite.
-2. Adds the Capacitor Android platform.
-3. Generates icons & splash from `resources/icon.png` and `resources/splash.png`.
-4. Compiles an **unsigned release APK** with Gradle.
-5. Uploads the APK as a workflow artifact.
+What's **not** inside:
 
-How to trigger a build:
+- No compiled React / Vite output.
+- No Supabase keys baked into the APK (the live app at collinz.app
+  carries its own env config).
+- No Tailwind, no shadcn, no PDF libraries — those all live on the web.
 
-- **Manual only:** GitHub → Actions → "Build Android APK" → "Run workflow" →
-  pick `production`, `staging`, or `development`.
-- The workflow is **not** triggered automatically on push. Re-add a
-  `push:` block to `.github/workflows/build-android-apk.yml` if you ever
-  want CI to rebuild the APK on every commit.
+### Trigger a build
 
-How to download the APK:
+- GitHub → Actions → "Build Android APK (live wrapper for collinz.app)"
+  → **Run workflow** → Run.
+- Manual only — no push trigger.
+
+### Download the APK
 
 - Open the completed workflow run on GitHub.
-- Scroll to the **Artifacts** section at the bottom.
-- Download `collinz-school-<mode>-unsigned-apk.zip`, unzip → install on device.
+- Scroll to the **Artifacts** section.
+- Download **`collinz-school-LIVE-DEBUG-apk`** → unzip → install on
+  device. (The `collinz-school-LIVE-unsigned-release-apk` artifact is
+  for future Play Store signing only — it cannot be installed directly.)
 
 ### Option 2 — Build locally (Windows)
 
@@ -110,43 +120,70 @@ npm run android:apk
 This runs: build web → add Android platform → sync → assemble release APK.
 Output: `android/app/build/outputs/apk/release/app-release-unsigned.apk`.
 
-### BUNDLED vs LIVE — web update strategy
-
-Each build is one of two **variants**, selected automatically based on
-`build_mode`:
-
-| Variant | When | Web bundle source | Web updates auto-reflect? | Works offline? |
-|---|---|---|---|---|
-| `BUNDLED` | `build_mode = production` | Baked into the APK at build time | ❌ No — needs new APK + reinstall | ✅ Yes |
-| `LIVE` | `build_mode = development` or `staging` | Loaded from `https://collinz.app` at launch | ✅ Yes — every deploy is reflected on next app open | ❌ No (blank if offline) |
-
-Use `LIVE` when iterating with Lovable / staging — push web changes, reopen
-the app, see them immediately without rebuilding. Use `BUNDLED` for
-production releases that ship to real users, the Play Store, or anywhere
-offline support and App Store compliance matter.
-
-The mechanism: `capacitor.config.ts` reads the `CAP_SERVER_URL` environment
-variable. When set, Capacitor configures the WebView to load that URL.
-When unset, the WebView loads the locally-bundled `dist/` files. The
-workflow sets `CAP_SERVER_URL=https://collinz.app` automatically for
-non-production builds.
-
 ### Which APK should I install?
 
 Every workflow run produces **two** APK artifacts:
 
 | Artifact | Filename inside | Installable on phones? | Purpose |
 |---|---|---|---|
-| `collinz-school-<mode>-<variant>-DEBUG-apk` | `app-debug.apk` | ✅ **Yes** — auto-signed with Android's debug keystore | Personal testing, demos, internal QA |
-| `collinz-school-<mode>-<variant>-unsigned-release-apk` | `app-release-unsigned.apk` | ❌ **No** — Android 7+ rejects unsigned APKs ("Package appears to be invalid") | Input to a release-signing step / Play Store later |
+| `collinz-school-LIVE-DEBUG-apk` | `app-debug.apk` | ✅ **Yes** — auto-signed with Android's debug keystore | Side-loading on test phones |
+| `collinz-school-LIVE-unsigned-release-apk` | `app-release-unsigned.apk` | ❌ **No** — Android 7+ rejects unsigned APKs ("Package appears to be invalid") | Input to a future release-signing step / Play Store |
 
-**For installing on your own phone, always download the `-DEBUG-apk` artifact.**
-The release APK is unsigned and is only useful once you've set up a release
-keystore + signing step in the workflow.
+**For installing on a phone, always download the `-DEBUG-apk` artifact.**
+The release APK is unsigned and is only useful once a release keystore +
+signing step is wired into the workflow.
 
-Example artifact names:
-- `collinz-school-production-BUNDLED-DEBUG-apk` — offline-capable, production web build
-- `collinz-school-development-LIVE-DEBUG-apk` — live-loads from `https://collinz.app`
+### How "no cache" is enforced
+
+The CI workflow patches `MainActivity.java` after `npx cap add android`:
+
+```java
+public class MainActivity extends BridgeActivity {
+    @Override
+    public void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        WebSettings settings = this.bridge.getWebView().getSettings();
+        settings.setCacheMode(WebSettings.LOAD_NO_CACHE);
+        this.bridge.getWebView().clearCache(true);
+        this.bridge.getWebView().clearHistory();
+    }
+}
+```
+
+- `LOAD_NO_CACHE` forces every HTTP request to hit the network — the
+  WebView never serves a cached response.
+- `clearCache(true)` deletes any pre-existing cached resources on each
+  cold start of the app.
+- `clearHistory()` resets the back/forward navigation stack so the app
+  always starts at `https://collinz.app`.
+
+A workflow verification step ( `grep -q "LOAD_NO_CACHE" MainActivity.java`)
+fails the build if the patch is ever silently lost during sync.
+
+### Caveats of this live-wrapper architecture
+
+- **Requires internet on every launch.** Cold-starting the app without
+  network connectivity shows only the redirect placeholder briefly,
+  then a WebView error. There is no offline mode.
+- **First page load is slower than a bundled app** because the WebView
+  must download HTML, JS, and CSS from `collinz.app` on each cold start
+  (subsequent in-session navigations are fast).
+- **App Store risk.** Apple's review guideline 4.2.7 explicitly forbids
+  apps that are "just web wrappers" — this architecture is rejection-
+  prone on iOS. Google Play is more permissive. If iOS distribution
+  becomes important, switch to a bundled build for the App Store
+  variant (the same repo can produce both).
+- **`https://collinz.app` must serve everything the app needs.** The
+  domain must be reachable, must serve HTTPS, must not block embedding
+  via `Content-Security-Policy: frame-ancestors`, and must allow the
+  Capacitor bridge to inject its JavaScript (no
+  `Content-Security-Policy: script-src 'self'` without `'unsafe-inline'`
+  or similar restrictions).
+- **Supabase Auth redirect URLs.** Make sure both
+  `https://collinz.app` and `capacitor://localhost` are added to
+  Supabase → Authentication → URL Configuration → Site URL / Redirect
+  URLs, otherwise OAuth and password-reset flows will break inside the
+  WebView.
 
 ### Installing the debug APK on a device
 

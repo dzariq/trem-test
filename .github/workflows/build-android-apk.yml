@@ -1,27 +1,24 @@
-name: Build Android APK
+name: Build Android APK (live wrapper for collinz.app)
 
+# Pure-LIVE build: the APK is a thin native shell that loads
+# https://collinz.app on every launch. There is no bundled web build,
+# no env vars baked in, and no local UI. WebView caching is disabled
+# so users always see the latest deploy.
+#
+# Manual-only trigger.
 on:
-  # Manual-only trigger: no auto-build on push. Re-add a `push:` block
-  # here if you ever want CI to rebuild the APK on every commit to main.
   workflow_dispatch:
-    inputs:
-      build_mode:
-        description: "Vite build mode (production / staging / development)"
-        required: true
-        default: "production"
-        type: choice
-        options:
-          - production
-          - staging
-          - development
 
 concurrency:
   group: android-apk-${{ github.ref }}
   cancel-in-progress: true
 
+env:
+  LIVE_URL: https://collinz.app
+
 jobs:
   build:
-    name: Build unsigned release APK
+    name: Build live-wrapper APK
     runs-on: ubuntu-latest
     timeout-minutes: 30
 
@@ -35,28 +32,53 @@ jobs:
           node-version: "22"
           cache: "npm"
 
-      - name: Install dependencies
-        # Use `npm install` (not `npm ci`) because the committed
-        # package-lock.json is currently out of sync with package.json
-        # (Lovable/bun-managed lockfile drift). `install` will resolve
-        # and refresh the lockfile in the runner without failing.
+      - name: Install dependencies (Capacitor CLI + assets only)
+        # The full dependency tree is still installed so capacitor-assets,
+        # @capacitor/cli, and @capacitor/android can run. The actual app
+        # source tree is *not* compiled because the app is a live wrapper.
         run: npm install --no-audit --no-fund --legacy-peer-deps
 
-      - name: Build web app (${{ github.event.inputs.build_mode || 'production' }})
-        run: npm run build:${{ github.event.inputs.build_mode || 'production' }}
-
-      - name: Configure live server URL (development & staging only)
-        if: github.event.inputs.build_mode != 'production' && github.event.inputs.build_mode != ''
+      - name: Write minimal redirect placeholder into dist/
+        # capacitor sync requires webDir to exist. We intentionally do NOT
+        # run `npm run build` -- no React, no Vite output, no env vars
+        # land in the APK. This file only exists as a defensive fallback
+        # in case server.url ever fails to load.
         run: |
-          echo "CAP_SERVER_URL=https://collinz.app" >> "$GITHUB_ENV"
-          echo "BUILD_VARIANT_TAG=LIVE" >> "$GITHUB_ENV"
-          echo "App will load UI live from https://collinz.app on every launch."
+          mkdir -p dist
+          cat > dist/index.html << 'EOF'
+          <!DOCTYPE html>
+          <html lang="en">
+          <head>
+            <meta charset="utf-8" />
+            <meta name="viewport" content="width=device-width, initial-scale=1" />
+            <meta http-equiv="refresh" content="0; url=https://collinz.app" />
+            <title>Collinz School</title>
+            <style>
+              html, body { margin: 0; padding: 0; height: 100%; background: #ffffff; font-family: system-ui, sans-serif; }
+              .wrap { display: flex; align-items: center; justify-content: center; height: 100%; flex-direction: column; }
+              .wrap p { color: #666; font-size: 14px; margin-top: 12px; }
+            </style>
+          </head>
+          <body>
+            <div class="wrap">
+              <p>Loading Collinz School…</p>
+              <noscript>
+                Please enable JavaScript and ensure you have an internet connection.
+                <a href="https://collinz.app">Open in browser</a>.
+              </noscript>
+            </div>
+            <script>window.location.replace('https://collinz.app');</script>
+          </body>
+          </html>
+          EOF
+          echo "Placeholder webDir contents:"
+          ls -la dist/
 
-      - name: Note bundled mode (production)
-        if: github.event.inputs.build_mode == 'production' || github.event.inputs.build_mode == ''
+      - name: Verify Collinz brand assets exist
         run: |
-          echo "BUILD_VARIANT_TAG=BUNDLED" >> "$GITHUB_ENV"
-          echo "App will ship with the web bundle baked into the APK (offline-capable)."
+          set -e
+          test -f resources/icon.png || { echo "Missing resources/icon.png"; exit 1; }
+          test -f resources/splash.png || { echo "Missing resources/splash.png"; exit 1; }
 
       - name: Setup JDK 21 (Temurin)
         uses: actions/setup-java@v4
@@ -72,16 +94,7 @@ jobs:
       - name: Add Capacitor Android platform
         run: npx cap add android
 
-      - name: Verify Collinz brand assets exist
-        run: |
-          set -e
-          test -f resources/icon.png || { echo "Missing resources/icon.png"; exit 1; }
-          test -f resources/splash.png || { echo "Missing resources/splash.png"; exit 1; }
-          ls -la resources/
-
-      - name: Generate Android icons & splash screens from Collinz logo
-        # Hard-fail if asset generation breaks so the splash never silently
-        # falls back to the default Capacitor splash again.
+      - name: Generate Android icons & splash from Collinz logo
         run: |
           npx capacitor-assets generate \
             --android \
@@ -90,47 +103,83 @@ jobs:
             --splashBackgroundColor "#ffffff" \
             --splashBackgroundColorDark "#1a1a1a"
 
+      - name: Patch MainActivity to disable WebView cache
+        # Force the WebView to bypass HTTP cache and clear any prior cache
+        # on every launch. Without this, Android's WebView happily serves
+        # stale assets after a collinz.app deploy.
+        run: |
+          set -e
+          APP_PKG_DIR="android/app/src/main/java/com/collinz/school"
+          if [ ! -d "$APP_PKG_DIR" ]; then
+            echo "Expected MainActivity dir at $APP_PKG_DIR"
+            find android/app/src/main/java -type d
+            exit 1
+          fi
+          cat > "$APP_PKG_DIR/MainActivity.java" << 'EOF'
+          package com.collinz.school;
+
+          import android.os.Bundle;
+          import android.webkit.WebSettings;
+
+          import com.getcapacitor.BridgeActivity;
+
+          /**
+           * Thin live-wrapper activity. Configures the embedded WebView so it
+           * never serves stale HTML/JS/CSS after a deploy of https://collinz.app.
+           */
+          public class MainActivity extends BridgeActivity {
+              @Override
+              public void onCreate(Bundle savedInstanceState) {
+                  super.onCreate(savedInstanceState);
+
+                  if (this.bridge != null && this.bridge.getWebView() != null) {
+                      WebSettings settings = this.bridge.getWebView().getSettings();
+                      // Always go to the network, never use the HTTP cache.
+                      settings.setCacheMode(WebSettings.LOAD_NO_CACHE);
+                      // Wipe any previously-cached resources on every cold start.
+                      this.bridge.getWebView().clearCache(true);
+                      this.bridge.getWebView().clearHistory();
+                  }
+              }
+          }
+          EOF
+          echo "Patched MainActivity.java:"
+          cat "$APP_PKG_DIR/MainActivity.java"
+
       - name: Verify generated Android splash & launcher icon resources
         run: |
           set -e
           RES_DIR="android/app/src/main/res"
-          echo "--- Generated resource folders ---"
-          ls -la "$RES_DIR" | grep -E "drawable|mipmap" || true
-
-          # The SplashScreen plugin reads from androidSplashResourceName="splash"
           if ! find "$RES_DIR" -name "splash.png" | grep -q .; then
-            echo "FATAL: No splash.png was generated in android/app/src/main/res/drawable-*"
+            echo "FATAL: No splash.png was generated"
             exit 1
           fi
-          echo ""
-          echo "Splash drawable files:"
-          find "$RES_DIR" -name "splash.png" -exec ls -la {} \;
-
-          # Launcher icons (the home-screen / app drawer icon)
-          # Capacitor-assets writes these to mipmap-*/ic_launcher*.png
-          MISSING_ICONS=0
           for NAME in ic_launcher.png ic_launcher_round.png ic_launcher_foreground.png; do
             if ! find "$RES_DIR" -name "$NAME" | grep -q .; then
-              echo "FATAL: $NAME not generated in mipmap-*"
-              MISSING_ICONS=1
+              echo "FATAL: $NAME not generated"
+              exit 1
             fi
           done
-          if [ "$MISSING_ICONS" -ne 0 ]; then
-            echo "Launcher icon generation failed -- the APK would ship with the default Capacitor icon."
+          echo "Splash + launcher icons (Collinz crest) verified."
+
+      - name: Sync placeholder webDir into Android project
+        run: npx cap sync android
+
+      - name: Verify MainActivity cache patch survived sync
+        run: |
+          set -e
+          if ! grep -q "LOAD_NO_CACHE" android/app/src/main/java/com/collinz/school/MainActivity.java; then
+            echo "FATAL: WebView cache patch missing from MainActivity after sync"
+            cat android/app/src/main/java/com/collinz/school/MainActivity.java
             exit 1
           fi
-          echo ""
-          echo "Launcher icon files (Collinz crest):"
-          find "$RES_DIR" -name "ic_launcher.png" -exec ls -la {} \;
-
-      - name: Sync web build into Android project
-        run: npx cap sync android
+          echo "Cache-busting patch verified in MainActivity.java"
 
       - name: Make gradlew executable
         working-directory: android
         run: chmod +x ./gradlew
 
-      - name: Build debug APK (auto-signed with debug keystore, installable on any device)
+      - name: Build debug APK (auto-signed, installable on any device)
         working-directory: android
         run: ./gradlew assembleDebug --no-daemon --stacktrace
 
@@ -149,15 +198,15 @@ jobs:
           echo "apk_path=$APK_PATH" >> "$GITHUB_OUTPUT"
           echo "apk_size=$SIZE" >> "$GITHUB_OUTPUT"
 
-      - name: Upload debug APK artifact (USE THIS to install on phones)
+      - name: Upload debug APK artifact
         uses: actions/upload-artifact@v4
         with:
-          name: collinz-school-${{ github.event.inputs.build_mode || 'production' }}-${{ env.BUILD_VARIANT_TAG }}-DEBUG-apk
+          name: collinz-school-LIVE-DEBUG-apk
           path: ${{ steps.locate_debug.outputs.apk_path }}
           if-no-files-found: error
           retention-days: 30
 
-      - name: Build unsigned release APK (NOT installable -- for later signing only)
+      - name: Build unsigned release APK (for future Play Store signing)
         working-directory: android
         run: ./gradlew assembleRelease --no-daemon --stacktrace
 
@@ -170,16 +219,14 @@ jobs:
             ls -la android/app/build/outputs/apk/release || true
             exit 1
           fi
-          echo "Found unsigned release APK: $APK_PATH"
           SIZE=$(du -h "$APK_PATH" | cut -f1)
-          echo "Size: $SIZE"
           echo "apk_path=$APK_PATH" >> "$GITHUB_OUTPUT"
           echo "apk_size=$SIZE" >> "$GITHUB_OUTPUT"
 
-      - name: Upload unsigned release APK artifact (for later signing -- cannot be installed directly)
+      - name: Upload unsigned release APK artifact
         uses: actions/upload-artifact@v4
         with:
-          name: collinz-school-${{ github.event.inputs.build_mode || 'production' }}-${{ env.BUILD_VARIANT_TAG }}-unsigned-release-apk
+          name: collinz-school-LIVE-unsigned-release-apk
           path: ${{ steps.locate_release.outputs.apk_path }}
           if-no-files-found: error
           retention-days: 30
@@ -188,35 +235,21 @@ jobs:
         if: always()
         run: |
           {
-            echo "## Android APK Build"
+            echo "## Android APK Build — live wrapper"
             echo ""
-            echo "- **Mode:** \`${{ github.event.inputs.build_mode || 'production' }}\`"
-            echo "- **Variant:** \`${{ env.BUILD_VARIANT_TAG }}\`"
-            if [ -n "${{ env.CAP_SERVER_URL }}" ]; then
-              echo "- **Live URL:** \`${{ env.CAP_SERVER_URL }}\` — the app will load UI from this URL on every launch."
-              echo "- **Web updates:** auto-reflected (no APK rebuild needed)."
-            else
-              echo "- **Web bundle:** bundled inside the APK (works offline)."
-              echo "- **Web updates:** require a new APK build + reinstall."
-            fi
+            echo "- **Loads:** \`${{ env.LIVE_URL }}\` (every launch, every time)"
+            echo "- **Web cache:** disabled at WebView level (LOAD_NO_CACHE + clearCache on start)"
+            echo "- **Bundled web code:** none — only a redirect placeholder in case the URL ever fails"
             echo "- **Status:** ${{ job.status }}"
             echo ""
-            echo "### Artifacts produced"
+            echo "### Artifacts"
             echo ""
             if [ -n "${{ steps.locate_debug.outputs.apk_path }}" ]; then
-              echo "#### 1. \`collinz-school-...-${{ env.BUILD_VARIANT_TAG }}-DEBUG-apk\` (${{ steps.locate_debug.outputs.apk_size }}) — **install this**"
-              echo ""
-              echo "- Signed with the universal Android debug keystore."
-              echo "- Can be side-loaded onto any Android device with \"Install unknown apps\" enabled."
-              echo "- Use for personal testing, demos, internal QA."
-              echo ""
+              echo "- **\`collinz-school-LIVE-DEBUG-apk\`** (${{ steps.locate_debug.outputs.apk_size }}) — install this on phones."
             fi
             if [ -n "${{ steps.locate_release.outputs.apk_path }}" ]; then
-              echo "#### 2. \`collinz-school-...-${{ env.BUILD_VARIANT_TAG }}-unsigned-release-apk\` (${{ steps.locate_release.outputs.apk_size }}) — for signing later"
-              echo ""
-              echo "- **Cannot be installed directly** — Android rejects unsigned APKs (\"package appears to be invalid\")."
-              echo "- Use this as the input to a release-signing step / Play Store upload after generating a keystore."
+              echo "- \`collinz-school-LIVE-unsigned-release-apk\` (${{ steps.locate_release.outputs.apk_size }}) — keep for Play Store signing later."
             fi
             echo ""
-            echo "Download from the **Artifacts** section at the top of this run."
+            echo "Pushing changes to https://collinz.app is now sufficient to update every installed device on next launch — no rebuild required."
           } >> "$GITHUB_STEP_SUMMARY"
