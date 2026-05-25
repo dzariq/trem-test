@@ -109,18 +109,43 @@ npm run android:apk
 This runs: build web → add Android platform → sync → assemble release APK.
 Output: `android/app/build/outputs/apk/release/app-release-unsigned.apk`.
 
+### BUNDLED vs LIVE — web update strategy
+
+Each build is one of two **variants**, selected automatically based on
+`build_mode`:
+
+| Variant | When | Web bundle source | Web updates auto-reflect? | Works offline? |
+|---|---|---|---|---|
+| `BUNDLED` | `build_mode = production` | Baked into the APK at build time | ❌ No — needs new APK + reinstall | ✅ Yes |
+| `LIVE` | `build_mode = development` or `staging` | Loaded from `https://collinz.app` at launch | ✅ Yes — every deploy is reflected on next app open | ❌ No (blank if offline) |
+
+Use `LIVE` when iterating with Lovable / staging — push web changes, reopen
+the app, see them immediately without rebuilding. Use `BUNDLED` for
+production releases that ship to real users, the Play Store, or anywhere
+offline support and App Store compliance matter.
+
+The mechanism: `capacitor.config.ts` reads the `CAP_SERVER_URL` environment
+variable. When set, Capacitor configures the WebView to load that URL.
+When unset, the WebView loads the locally-bundled `dist/` files. The
+workflow sets `CAP_SERVER_URL=https://collinz.app` automatically for
+non-production builds.
+
 ### Which APK should I install?
 
 Every workflow run produces **two** APK artifacts:
 
 | Artifact | Filename inside | Installable on phones? | Purpose |
 |---|---|---|---|
-| `collinz-school-<mode>-DEBUG-apk` | `app-debug.apk` | ✅ **Yes** — auto-signed with Android's debug keystore | Personal testing, demos, internal QA |
-| `collinz-school-<mode>-unsigned-release-apk` | `app-release-unsigned.apk` | ❌ **No** — Android 7+ rejects unsigned APKs ("Package appears to be invalid") | Input to a release-signing step / Play Store later |
+| `collinz-school-<mode>-<variant>-DEBUG-apk` | `app-debug.apk` | ✅ **Yes** — auto-signed with Android's debug keystore | Personal testing, demos, internal QA |
+| `collinz-school-<mode>-<variant>-unsigned-release-apk` | `app-release-unsigned.apk` | ❌ **No** — Android 7+ rejects unsigned APKs ("Package appears to be invalid") | Input to a release-signing step / Play Store later |
 
 **For installing on your own phone, always download the `-DEBUG-apk` artifact.**
 The release APK is unsigned and is only useful once you've set up a release
 keystore + signing step in the workflow.
+
+Example artifact names:
+- `collinz-school-production-BUNDLED-DEBUG-apk` — offline-capable, production web build
+- `collinz-school-development-LIVE-DEBUG-apk` — live-loads from `https://collinz.app`
 
 ### Installing the debug APK on a device
 

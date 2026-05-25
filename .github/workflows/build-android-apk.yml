@@ -56,6 +56,19 @@ jobs:
       - name: Build web app (${{ github.event.inputs.build_mode || 'production' }})
         run: npm run build:${{ github.event.inputs.build_mode || 'production' }}
 
+      - name: Configure live server URL (development & staging only)
+        if: github.event.inputs.build_mode != 'production' && github.event.inputs.build_mode != ''
+        run: |
+          echo "CAP_SERVER_URL=https://collinz.app" >> "$GITHUB_ENV"
+          echo "BUILD_VARIANT_TAG=LIVE" >> "$GITHUB_ENV"
+          echo "App will load UI live from https://collinz.app on every launch."
+
+      - name: Note bundled mode (production)
+        if: github.event.inputs.build_mode == 'production' || github.event.inputs.build_mode == ''
+        run: |
+          echo "BUILD_VARIANT_TAG=BUNDLED" >> "$GITHUB_ENV"
+          echo "App will ship with the web bundle baked into the APK (offline-capable)."
+
       - name: Setup JDK 21 (Temurin)
         uses: actions/setup-java@v4
         with:
@@ -150,7 +163,7 @@ jobs:
       - name: Upload debug APK artifact (USE THIS to install on phones)
         uses: actions/upload-artifact@v4
         with:
-          name: collinz-school-${{ github.event.inputs.build_mode || 'production' }}-DEBUG-apk
+          name: collinz-school-${{ github.event.inputs.build_mode || 'production' }}-${{ env.BUILD_VARIANT_TAG }}-DEBUG-apk
           path: ${{ steps.locate_debug.outputs.apk_path }}
           if-no-files-found: error
           retention-days: 30
@@ -177,7 +190,7 @@ jobs:
       - name: Upload unsigned release APK artifact (for later signing -- cannot be installed directly)
         uses: actions/upload-artifact@v4
         with:
-          name: collinz-school-${{ github.event.inputs.build_mode || 'production' }}-unsigned-release-apk
+          name: collinz-school-${{ github.event.inputs.build_mode || 'production' }}-${{ env.BUILD_VARIANT_TAG }}-unsigned-release-apk
           path: ${{ steps.locate_release.outputs.apk_path }}
           if-no-files-found: error
           retention-days: 30
@@ -189,12 +202,20 @@ jobs:
             echo "## Android APK Build"
             echo ""
             echo "- **Mode:** \`${{ github.event.inputs.build_mode || 'production' }}\`"
+            echo "- **Variant:** \`${{ env.BUILD_VARIANT_TAG }}\`"
+            if [ -n "${{ env.CAP_SERVER_URL }}" ]; then
+              echo "- **Live URL:** \`${{ env.CAP_SERVER_URL }}\` — the app will load UI from this URL on every launch."
+              echo "- **Web updates:** auto-reflected (no APK rebuild needed)."
+            else
+              echo "- **Web bundle:** bundled inside the APK (works offline)."
+              echo "- **Web updates:** require a new APK build + reinstall."
+            fi
             echo "- **Status:** ${{ job.status }}"
             echo ""
             echo "### Artifacts produced"
             echo ""
             if [ -n "${{ steps.locate_debug.outputs.apk_path }}" ]; then
-              echo "#### 1. \`collinz-school-...-DEBUG-apk\` (${{ steps.locate_debug.outputs.apk_size }}) — **install this**"
+              echo "#### 1. \`collinz-school-...-${{ env.BUILD_VARIANT_TAG }}-DEBUG-apk\` (${{ steps.locate_debug.outputs.apk_size }}) — **install this**"
               echo ""
               echo "- Signed with the universal Android debug keystore."
               echo "- Can be side-loaded onto any Android device with \"Install unknown apps\" enabled."
@@ -202,7 +223,7 @@ jobs:
               echo ""
             fi
             if [ -n "${{ steps.locate_release.outputs.apk_path }}" ]; then
-              echo "#### 2. \`collinz-school-...-unsigned-release-apk\` (${{ steps.locate_release.outputs.apk_size }}) — for signing later"
+              echo "#### 2. \`collinz-school-...-${{ env.BUILD_VARIANT_TAG }}-unsigned-release-apk\` (${{ steps.locate_release.outputs.apk_size }}) — for signing later"
               echo ""
               echo "- **Cannot be installed directly** — Android rejects unsigned APKs (\"package appears to be invalid\")."
               echo "- Use this as the input to a release-signing step / Play Store upload after generating a keystore."

@@ -63,6 +63,12 @@ jobs:
       - name: Build web app (${{ github.event.inputs.build_mode }})
         run: npm run build:${{ github.event.inputs.build_mode }}
 
+      - name: Configure live server URL (staging only)
+        if: github.event.inputs.build_mode == 'staging'
+        run: |
+          echo "CAP_SERVER_URL=https://collinz.app" >> "$GITHUB_ENV"
+          echo "App will load UI live from https://collinz.app on every launch."
+
       - name: Select Xcode 16
         run: sudo xcode-select -s /Applications/Xcode_16.app/Contents/Developer
 
