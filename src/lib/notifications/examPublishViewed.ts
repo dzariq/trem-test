@@ -1,20 +1,19 @@
 const STORAGE_KEY = "exam_publish_viewed";
 
-type ViewedMap = Record<string, string>; // academic_period_id -> publication_id
-
-function read(): ViewedMap {
-  if (typeof window === "undefined") return {};
+function readViewed(): string[] {
+  if (typeof window === "undefined") return [];
   try {
-    return JSON.parse(localStorage.getItem(STORAGE_KEY) || "{}") as ViewedMap;
+    const raw = JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
+    return Array.isArray(raw) ? raw.filter((x): x is string => typeof x === "string") : [];
   } catch {
-    return {};
+    return [];
   }
 }
 
-function write(map: ViewedMap) {
+function writeViewed(ids: string[]) {
   if (typeof window === "undefined") return;
   try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(map));
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(ids.slice(-200)));
   } catch {}
 }
 
@@ -25,22 +24,14 @@ export function parsePublicationIdFromSourceKey(sourceKey: string | null | undef
   return m ? m[1] : null;
 }
 
-export function getViewedPublicationId(academicPeriodId: string): string | null {
-  return read()[academicPeriodId] ?? null;
+export function getViewedPublicationIds(): Set<string> {
+  return new Set(readViewed());
 }
 
-export function markPublicationViewed(academicPeriodId: string, publicationId: string) {
-  const map = read();
-  map[academicPeriodId] = publicationId;
-  write(map);
-}
-
-/**
- * Returns true when the user has previously viewed a publication for this
- * academic period AND the incoming publication id is different (i.e. a
- * re-publish has happened since their last view).
- */
-export function isRepublishUnseen(academicPeriodId: string, publicationId: string): boolean {
-  const seen = getViewedPublicationId(academicPeriodId);
-  return Boolean(seen) && seen !== publicationId;
+export function markPublicationViewed(publicationId: string) {
+  const ids = readViewed();
+  if (!ids.includes(publicationId)) {
+    ids.push(publicationId);
+    writeViewed(ids);
+  }
 }
