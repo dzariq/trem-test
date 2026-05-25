@@ -70,9 +70,37 @@ jobs:
       - name: Add Capacitor Android platform
         run: npx cap add android
 
-      - name: Generate Android icons & splash screens
-        run: npx capacitor-assets generate --android
-        continue-on-error: true
+      - name: Verify Collinz brand assets exist
+        run: |
+          set -e
+          test -f resources/icon.png || { echo "Missing resources/icon.png"; exit 1; }
+          test -f resources/splash.png || { echo "Missing resources/splash.png"; exit 1; }
+          ls -la resources/
+
+      - name: Generate Android icons & splash screens from Collinz logo
+        # Hard-fail if asset generation breaks so the splash never silently
+        # falls back to the default Capacitor splash again.
+        run: |
+          npx capacitor-assets generate \
+            --android \
+            --iconBackgroundColor "#ffffff" \
+            --iconBackgroundColorDark "#1a1a1a" \
+            --splashBackgroundColor "#ffffff" \
+            --splashBackgroundColorDark "#1a1a1a"
+
+      - name: Verify generated Android splash resources
+        run: |
+          set -e
+          SPLASH_DIR="android/app/src/main/res"
+          echo "--- Generated drawable folders ---"
+          ls -la "$SPLASH_DIR" | grep -E "drawable|mipmap" || true
+          # The SplashScreen plugin reads from androidSplashResourceName="splash"
+          if ! find "$SPLASH_DIR" -name "splash.png" | grep -q .; then
+            echo "FATAL: No splash.png was generated in android/app/src/main/res/drawable-*"
+            exit 1
+          fi
+          echo "Splash drawable files:"
+          find "$SPLASH_DIR" -name "splash.png" -exec ls -la {} \;
 
       - name: Sync web build into Android project
         run: npx cap sync android

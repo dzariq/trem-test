@@ -72,9 +72,32 @@ jobs:
       - name: Add Capacitor iOS platform
         run: npx cap add ios
 
-      - name: Generate iOS icons & splash
-        run: npx capacitor-assets generate --ios
-        continue-on-error: true
+      - name: Verify Collinz brand assets exist
+        run: |
+          set -e
+          test -f resources/icon.png || { echo "Missing resources/icon.png"; exit 1; }
+          test -f resources/splash.png || { echo "Missing resources/splash.png"; exit 1; }
+
+      - name: Generate iOS icons & splash from Collinz logo
+        run: |
+          npx capacitor-assets generate \
+            --ios \
+            --iconBackgroundColor "#ffffff" \
+            --iconBackgroundColorDark "#1a1a1a" \
+            --splashBackgroundColor "#ffffff" \
+            --splashBackgroundColorDark "#1a1a1a"
+
+      - name: Verify generated iOS splash assets
+        run: |
+          set -e
+          ASSETS_DIR="ios/App/App/Assets.xcassets"
+          if [ ! -d "$ASSETS_DIR/Splash.imageset" ] && [ ! -d "$ASSETS_DIR/AppIcon.appiconset" ]; then
+            echo "FATAL: capacitor-assets did not generate iOS asset catalogs"
+            ls -la "$ASSETS_DIR" || true
+            exit 1
+          fi
+          echo "Generated iOS asset catalogs:"
+          ls -la "$ASSETS_DIR"
 
       - name: Sync web build into iOS project
         run: npx cap sync ios

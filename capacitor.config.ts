@@ -12,9 +12,12 @@ const config: CapacitorConfig = {
   },
   plugins: {
     SplashScreen: {
-      launchShowDuration: 1500,
+      launchShowDuration: 2000,
       launchAutoHide: true,
-      backgroundColor: "#f5f5f5",
+      // White matches the Collinz crest's background in resources/splash.png
+      // so there is no visible seam between the system launch screen and the
+      // Capacitor splash drawable.
+      backgroundColor: "#ffffff",
       androidSplashResourceName: "splash",
       androidScaleType: "CENTER_CROP",
       showSpinner: false,
