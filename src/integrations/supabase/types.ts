@@ -6795,6 +6795,10 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      assign_parent_to_family: {
+        Args: { p_parent_id: string; p_target_family_id: string }
+        Returns: Json
+      }
       auto_generate_term_weeks: {
         Args: {
           p_block_length_days?: number
@@ -6855,6 +6859,10 @@ export type Database = {
       delete_parent_cascade: {
         Args: { p_parents_row_id: string; p_user_id: string }
         Returns: undefined
+      }
+      detach_parent_from_family: {
+        Args: { p_parent_id: string }
+        Returns: Json
       }
       dispatch_parent_visa_period_notifications: {
         Args: { p_period_id: string }
@@ -7021,6 +7029,10 @@ export type Database = {
       }
       match_club_application_student: {
         Args: { p_application_id: string; p_student_id: string }
+        Returns: Json
+      }
+      move_parent_to_family: {
+        Args: { p_parent_id: string; p_target_family_id: string }
         Returns: Json
       }
       recompute_student_due_alert: {
