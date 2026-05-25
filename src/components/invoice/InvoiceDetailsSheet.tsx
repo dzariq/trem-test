@@ -34,11 +34,13 @@ export function InvoiceDetailsSheet({ invoice, open, onOpenChange }: Props) {
       <div className="space-y-5 px-4 pb-6">
         {/* Status + period */}
         <div className="flex items-center justify-between">
-          <Badge variant={statusInfo.variant} className="border-0">
+          <Badge className={statusInfo.className}>
             {statusInfo.label}
           </Badge>
           {invoice.periodKey && (
-            <span className="text-xs text-muted-foreground">{invoice.periodKey}</span>
+            <span className="rounded-full border border-border bg-muted px-3 py-1 text-xs font-semibold tracking-wide text-foreground">
+              {invoice.periodKey}
+            </span>
           )}
         </div>
 
