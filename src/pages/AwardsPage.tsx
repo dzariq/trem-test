@@ -5,34 +5,29 @@ import { Award, Calendar, ChevronLeft } from "lucide-react";
 import dnaBanner from "@/assets/dna-banner.png";
 import { students } from "@/data/mockData";
 import { awardTypes, awardColors, getStudentAwards } from "@/data/awardsData";
-import { useState } from "react";
 import { cn } from "@/lib/utils";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
+import { useStudentSelection } from "@/hooks/useStudentSelection";
 
 export default function AwardsPage() {
   const navigate = useNavigate();
-  const [selectedStudentId, setSelectedStudentId] = useState(students[0]?.id || "1");
-  const earnedAwards = getStudentAwards(selectedStudentId);
+  const { selectedStudent } = useStudentSelection();
+  // Map the globally-selected student to the mock awards dataset by name.
+  const matchedMockId =
+    students.find((s) => s.name === selectedStudent?.name)?.id ||
+    students[0]?.id ||
+    "1";
+  const earnedAwards = getStudentAwards(matchedMockId);
   
   return <AppLayout>
-      <AppHeader leftContent={<div className="flex items-center gap-2">
+      <AppHeader showChildSelector leftContent={<div className="flex items-center gap-2">
             <Button variant="ghost" size="icon" className="h-9 w-9" onClick={() => navigate(-1)}>
               <ChevronLeft className="h-5 w-5" />
             </Button>
             <h1 className="text-lg font-semibold text-foreground">Students Award</h1>
-          </div>} rightContent={<Select value={selectedStudentId} onValueChange={setSelectedStudentId}>
-            <SelectTrigger className="w-32 h-8 text-sm">
-              <SelectValue placeholder="Student" />
-            </SelectTrigger>
-            <SelectContent className="bg-card">
-              {students.map(student => <SelectItem key={student.id} value={student.id}>
-                  {student.name.split(' ')[0]} {student.name.split(' ')[1]?.[0]}.
-                </SelectItem>)}
-            </SelectContent>
-          </Select>} />
+          </div>} />
 
       <div className="px-4 py-4 space-y-4">
         {/* Banner Image */}
