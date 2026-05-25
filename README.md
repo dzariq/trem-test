@@ -79,10 +79,11 @@ No local Android tooling required. The workflow at
 
 How to trigger a build:
 
-- **Manual:** GitHub → Actions → "Build Android APK" → "Run workflow" →
+- **Manual only:** GitHub → Actions → "Build Android APK" → "Run workflow" →
   pick `production`, `staging`, or `development`.
-- **Automatic:** any push to `main` that touches `src/`, `public/`,
-  `resources/`, `capacitor.config.ts`, or related config files.
+- The workflow is **not** triggered automatically on push. Re-add a
+  `push:` block to `.github/workflows/build-android-apk.yml` if you ever
+  want CI to rebuild the APK on every commit.
 
 How to download the APK:
 

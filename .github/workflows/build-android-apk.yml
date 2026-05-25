@@ -1,6 +1,8 @@
 name: Build Android APK
 
 on:
+  # Manual-only trigger: no auto-build on push. Re-add a `push:` block
+  # here if you ever want CI to rebuild the APK on every commit to main.
   workflow_dispatch:
     inputs:
       build_mode:
@@ -12,19 +14,6 @@ on:
           - production
           - staging
           - development
-  push:
-    branches: [main]
-    paths:
-      - "src/**"
-      - "public/**"
-      - "resources/**"
-      - "index.html"
-      - "package.json"
-      - "package-lock.json"
-      - "capacitor.config.ts"
-      - "vite.config.ts"
-      - "tailwind.config.ts"
-      - ".github/workflows/build-android-apk.yml"
 
 concurrency:
   group: android-apk-${{ github.ref }}
