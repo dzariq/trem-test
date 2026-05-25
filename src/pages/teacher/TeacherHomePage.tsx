@@ -407,8 +407,6 @@ export default function TeacherHomePage() {
         }
       />
 
-      <SecondaryNavBar />
-
       {/* Hero Banner */}
       <div className="relative w-screen left-1/2 right-1/2 -ml-[50vw] -mr-[50vw] overflow-hidden">
         <img 
