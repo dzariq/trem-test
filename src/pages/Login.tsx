@@ -560,14 +560,6 @@ export default function Login() {
                 "Send OTP"
               )}
             </Button>
-
-            <Button
-              variant="outline"
-              className="w-full"
-              onClick={() => navigate("/")}
-            >
-              Back to Portal Selection
-            </Button>
             </>
             )}
 

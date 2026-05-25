@@ -6786,6 +6786,22 @@ export type Database = {
         }
         Returns: string
       }
+      create_next_academic_year: {
+        Args: {
+          p_new_year: number
+          p_shift_days?: number
+          p_template_year: number
+        }
+        Returns: {
+          academic_year: number
+          code: string
+          end_date: string
+          id: string
+          name: string
+          start_date: string
+          status: string
+        }[]
+      }
       current_user_role: { Args: never; Returns: string }
       delete_parent_cascade: {
         Args: { p_parents_row_id: string; p_user_id: string }
