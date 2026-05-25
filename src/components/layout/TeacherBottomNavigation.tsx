@@ -58,7 +58,7 @@ export function TeacherBottomNavigation() {
           isVisible ? "translate-y-0" : "translate-y-full"
         )}
       >
-        <div className="grid grid-cols-5 items-stretch py-2 px-2">
+        <div className="max-w-lg mx-auto grid grid-cols-5 items-stretch py-2 px-2">
           {navItems.map((item) => (
             <NavLink
               key={item.to}

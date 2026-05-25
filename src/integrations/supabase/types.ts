@@ -7059,6 +7059,15 @@ export type Database = {
           student_id: string
         }[]
       }
+      get_teacher_family_view: {
+        Args: never
+        Returns: {
+          children: Json
+          family_id: string
+          family_name: string
+          parents: Json
+        }[]
+      }
       get_teacher_public_info: {
         Args: { p_teacher_user_id: string }
         Returns: {

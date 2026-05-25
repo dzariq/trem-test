@@ -408,7 +408,7 @@ export default function TeacherHomePage() {
       />
 
       {/* Hero Banner */}
-      <div className="relative w-screen left-1/2 right-1/2 -ml-[50vw] -mr-[50vw] overflow-hidden">
+      <div className="relative w-full overflow-hidden">
         <img 
           src={heroBanner} 
           alt="School Banner" 
