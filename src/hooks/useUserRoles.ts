@@ -2,9 +2,9 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/contexts/AuthContext";
 
-export type AppRole = "parent" | "teacher" | "admin" | "super_admin";
+export type AppRole = "parent" | "teacher" | "admin" | "super_admin" | "school_leader";
 
-const TEACHER_SIDE: AppRole[] = ["teacher", "admin", "super_admin"];
+const TEACHER_SIDE: AppRole[] = ["teacher", "admin", "super_admin", "school_leader"];
 
 export function useUserRoles() {
   const { user } = useAuth();

@@ -73,7 +73,7 @@ export function useCcaActivityPermissions(
 
     const role = profile.role ?? "";
     const isPrincipal =
-      role === "super_admin" || role === "admin" || role === "principal";
+      role === "super_admin" || role === "admin" || role === "school_leader";
     const isParent = role === "parent";
 
     const uid = user?.id ?? null;

@@ -17,7 +17,7 @@ export function useCcaActivityFilter() {
 
   const role = profile?.role ?? "";
   const isPrincipal =
-    role === "super_admin" || role === "admin" || role === "principal";
+    role === "super_admin" || role === "admin" || role === "school_leader";
   const isTeacher = role === "teacher";
   const uid = user?.id ?? null;
 
