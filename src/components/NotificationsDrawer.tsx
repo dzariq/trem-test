@@ -35,7 +35,7 @@ import {
 import { useState, useMemo, useEffect } from "react";
 import {
   parsePublicationIdFromSourceKey,
-  getViewedPublicationId,
+  getViewedPublicationIds,
   markPublicationViewed,
 } from "@/lib/notifications/examPublishViewed";
 
@@ -233,7 +233,7 @@ export function NotificationsDrawer({ open, onOpenChange }: NotificationsDrawerP
     if (notification.type === "exam_results_published") {
       const pubId = parsePublicationIdFromSourceKey(notification.source_key ?? null);
       if (pubId) {
-        markPublicationViewed(pubId, pubId);
+        markPublicationViewed(pubId);
       }
       const query = pubId ? `?section=report-card&publication=${pubId}` : "?section=report-card";
       targetLink = `/parent/academic${query}`;
