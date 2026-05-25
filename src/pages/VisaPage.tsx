@@ -4,7 +4,7 @@ import { AppLayout } from "@/components/layout/AppLayout";
 import { AppHeader } from "@/components/layout/AppHeader";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, Stamp, ShieldCheck, Plane, BookUser, GraduationCap, Users } from "lucide-react";
+import { Loader2, Stamp, Plane, BookUser, GraduationCap, Users } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
