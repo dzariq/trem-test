@@ -12,14 +12,26 @@ export function useUserRoles() {
   const query = useQuery({
     queryKey: ["user-roles", user?.id],
     enabled: !!user?.id,
-    staleTime: Infinity,
+    // Always refetch on mount / window focus so the mobile WebView
+    // never reuses a stale roles list after a role is added in the DB.
+    staleTime: 0,
+    gcTime: 0,
+    refetchOnMount: "always",
+    refetchOnWindowFocus: true,
+    refetchOnReconnect: true,
+    retry: 2,
     queryFn: async (): Promise<AppRole[]> => {
       const { data, error } = await supabase
         .from("user_roles")
         .select("role")
         .eq("user_id", user!.id);
-      if (error) throw error;
-      return (data ?? []).map((r: any) => r.role as AppRole);
+      if (error) {
+        console.error("[useUserRoles] fetch error", error);
+        throw error;
+      }
+      const roles = (data ?? []).map((r: any) => r.role as AppRole);
+      console.log("[useUserRoles] fetched", { userId: user!.id, roles });
+      return roles;
     },
   });
 
