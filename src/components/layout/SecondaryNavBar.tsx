@@ -23,6 +23,9 @@ export function SecondaryNavBar() {
   const onTeacherRoute = location.pathname.startsWith("/teacher");
   const isTeacherPortal = portal ? portal === "teacher" : onTeacherRoute;
 
+  const HOME_ROUTES = new Set(["/portal", "/parent", "/students", "/teacher"]);
+  if (!HOME_ROUTES.has(location.pathname)) return null;
+
   const parentCampusCount = useMemo(() => {
     const codes = new Set<string>();
     linkedStudents.forEach((s) => {
