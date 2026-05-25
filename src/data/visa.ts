@@ -77,61 +77,102 @@ export type StudentVisaPeriod = {
   notes: string | null;
 };
 
+export type ParentSelfInfo = {
+  id: string;
+  name: string | null;
+  nationality: string | null;
+  passport_number: string | null;
+  passport_expiry_date: string | null;
+};
+
 export async function fetchMyParentVisa(): Promise<{
+  self: ParentSelfInfo | null;
   records: ParentVisaRecord[];
   periods: ParentVisaPeriod[];
 }> {
-  const [recordsRes, periodsRes] = await Promise.all([
+  const [recordsRes, periodsRes, selfRes] = await Promise.all([
     supabase.from("parent_visa_records").select("*"),
     supabase
       .from("parent_visa_periods")
       .select("*")
       .order("issue_date", { ascending: false, nullsFirst: false }),
+    supabase
+      .from("parents")
+      .select("id, name, nationality, passport_number, passport_expiry_date, is_primary_contact")
+      .order("is_primary_contact", { ascending: false, nullsFirst: false })
+      .limit(1)
+      .maybeSingle(),
   ]);
   if (recordsRes.error) throw new Error(recordsRes.error.message);
   if (periodsRes.error) throw new Error(periodsRes.error.message);
+  const selfRow = selfRes.data as any;
+  const self: ParentSelfInfo | null = selfRow
+    ? {
+        id: String(selfRow.id),
+        name: selfRow.name ?? null,
+        nationality: selfRow.nationality ?? null,
+        passport_number: selfRow.passport_number ?? null,
+        passport_expiry_date: selfRow.passport_expiry_date ?? null,
+      }
+    : null;
   return {
+    self,
     records: (recordsRes.data ?? []) as ParentVisaRecord[],
     periods: (periodsRes.data ?? []) as ParentVisaPeriod[],
   };
 }
 
 export type StudentVisaBundle = {
-  student: { id: string; full_name: string | null };
+  student: {
+    id: string;
+    full_name: string | null;
+    nationality: string | null;
+    passport_number: string | null;
+    passport_expiry_date: string | null;
+  };
   record: StudentVisaRecord | null;
   periods: StudentVisaPeriod[];
 };
 
 export async function fetchMyChildrenVisa(): Promise<StudentVisaBundle[]> {
-  // RLS scopes student_visa_records to children of the parent. Use it as the
-  // source of truth for which students have visa tracking activated.
-  const { data: records, error } = await supabase
-    .from("student_visa_records")
-    .select("*");
-  if (error) throw new Error(error.message);
-  const recs = (records ?? []) as StudentVisaRecord[];
-  if (!recs.length) return [];
+  // Use the parent's linked children (RLS-scoped) as source of truth so even
+  // kids without visa records still show with their passport info.
+  const studentsRes = await supabase
+    .from("students")
+    .select("id, name, nationality, passport_number, passport_expiry_date");
+  if (studentsRes.error) throw new Error(studentsRes.error.message);
+  const students = (studentsRes.data ?? []) as Array<{
+    id: string;
+    name: string | null;
+    nationality: string | null;
+    passport_number: string | null;
+    passport_expiry_date: string | null;
+  }>;
+  if (!students.length) return [];
 
-  const studentIds = Array.from(new Set(recs.map((r) => r.student_id)));
-  const [periodsRes, studentsRes] = await Promise.all([
+  const studentIds = students.map((s) => s.id);
+  const [recordsRes, periodsRes] = await Promise.all([
+    supabase.from("student_visa_records").select("*").in("student_id", studentIds),
     supabase
       .from("student_visa_periods")
       .select("*")
       .in("student_id", studentIds)
       .order("issue_date", { ascending: false, nullsFirst: false }),
-    supabase
-      .from("students")
-      .select("id, name")
-      .in("id", studentIds),
   ]);
+  if (recordsRes.error) throw new Error(recordsRes.error.message);
   if (periodsRes.error) throw new Error(periodsRes.error.message);
-  if (studentsRes.error) throw new Error(studentsRes.error.message);
+  const records = (recordsRes.data ?? []) as StudentVisaRecord[];
   const periods = (periodsRes.data ?? []) as StudentVisaPeriod[];
-  const students = (studentsRes.data ?? []) as Array<{ id: string; name: string | null }>;
 
   return students.map((s) => ({
-    student: { id: s.id, full_name: s.name },
-    record: recs.find((r) => r.student_id === s.id) ?? null,
+    student: {
+      id: s.id,
+      full_name: s.name,
+      nationality: s.nationality,
+      passport_number: s.passport_number,
+      passport_expiry_date: s.passport_expiry_date,
+    },
+    record: records.find((r) => r.student_id === s.id) ?? null,
     periods: periods.filter((p) => p.student_id === s.id),
   }));
 }
