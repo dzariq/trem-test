@@ -9,14 +9,13 @@ import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import {
-  fetchMyParentVisa,
+  fetchMyFamilyParentsVisa,
   fetchMyChildrenVisa,
   pathwayLabel,
   statusMeta,
   formatDate,
   type ParentVisaPeriod,
   type StudentVisaPeriod,
-  type ParentVisaRecord,
   type StudentVisaRecord,
 } from "@/data/visa";
 
@@ -204,7 +203,7 @@ export default function VisaPage() {
     queryKey: ["visa", "parent", user?.id],
     enabled: !!user?.id,
     staleTime: Infinity,
-    queryFn: fetchMyParentVisa,
+    queryFn: fetchMyFamilyParentsVisa,
   });
 
   const childrenQuery = useQuery({
@@ -238,13 +237,17 @@ export default function VisaPage() {
   }, [user?.id, queryClient]);
 
   const loading = parentQuery.isLoading || childrenQuery.isLoading;
-  const parentSelf = parentQuery.data?.self ?? null;
-  const parentRecords: ParentVisaRecord[] = parentQuery.data?.records ?? [];
-  const parentPeriods: ParentVisaPeriod[] = parentQuery.data?.periods ?? [];
+  const parents = parentQuery.data ?? [];
   const children = childrenQuery.data ?? [];
 
-  const parentHasPassport = !!(parentSelf && (parentSelf.nationality || parentSelf.passport_number || parentSelf.passport_expiry_date));
-  const showParentSection = parentHasPassport || parentRecords.length > 0 || parentPeriods.length > 0;
+  const showParentSection = parents.some(
+    (b) =>
+      b.parent.nationality ||
+      b.parent.passport_number ||
+      b.parent.passport_expiry_date ||
+      b.records.length > 0 ||
+      b.periods.length > 0,
+  );
   const childrenHaveAnything = children.some(
     (c) =>
       c.student.nationality ||
@@ -278,41 +281,55 @@ export default function VisaPage() {
         {!loading && showParentSection && (
           <section className="space-y-3">
             <h2 className="text-base font-semibold text-foreground flex items-center gap-2">
-              <ShieldCheck className="h-4 w-4 text-sky-600" /> My Visa
+              <ShieldCheck className="h-4 w-4 text-sky-600" /> Guardians
             </h2>
-            <PassportSummary
-              name={parentSelf?.name ?? null}
-              nationality={parentSelf?.nationality ?? null}
-              passportNumber={parentSelf?.passport_number ?? null}
-              passportExpiry={parentSelf?.passport_expiry_date ?? null}
-            />
-            {parentPeriods.length === 0 ? (
-              <Card className="border-dashed">
-                <CardContent className="p-4 text-sm text-muted-foreground">
-                  No immigration pass recorded yet.
-                </CardContent>
-              </Card>
-            ) : (
-              parentPeriods.map((p) => (
-                <PeriodCard
-                  key={p.id}
-                  pathway={pathwayLabel(p.pathway)}
-                  passNumber={p.pass_number}
-                  issueDate={p.issue_date}
-                  expiryDate={p.expiry_date}
-                  status={p.status}
-                  notes={p.notes}
-                  strike={p.status === "cancelled"}
+            {parents.map((b) => (
+              <div key={b.parent.id} className="space-y-2">
+                <div className="flex items-center gap-2">
+                  <span className="text-sm font-medium text-foreground">
+                    {b.parent.name ?? "Guardian"}
+                  </span>
+                  {b.isSelf && (
+                    <Badge variant="outline" className="text-[10px] font-medium bg-sky-50 text-sky-700 border-sky-200">
+                      You
+                    </Badge>
+                  )}
+                </div>
+                <PassportSummary
+                  name={b.parent.name}
+                  nationality={b.parent.nationality}
+                  passportNumber={b.parent.passport_number}
+                  passportExpiry={b.parent.passport_expiry_date}
                 />
-              ))
-            )}
+                {b.periods.length === 0 ? (
+                  <Card className="border-dashed">
+                    <CardContent className="p-4 text-sm text-muted-foreground">
+                      No immigration pass recorded yet.
+                    </CardContent>
+                  </Card>
+                ) : (
+                  b.periods.map((p: ParentVisaPeriod) => (
+                    <PeriodCard
+                      key={p.id}
+                      pathway={pathwayLabel(p.pathway)}
+                      passNumber={p.pass_number}
+                      issueDate={p.issue_date}
+                      expiryDate={p.expiry_date}
+                      status={p.status}
+                      notes={p.notes}
+                      strike={p.status === "cancelled"}
+                    />
+                  ))
+                )}
+              </div>
+            ))}
           </section>
         )}
 
         {!loading && children.length > 0 && (
           <section className="space-y-4">
             <h2 className="text-base font-semibold text-foreground flex items-center gap-2">
-              <ShieldCheck className="h-4 w-4 text-sky-600" /> My Children's Visas
+              <ShieldCheck className="h-4 w-4 text-sky-600" /> Students
             </h2>
             {children.map((c) => (
               <div key={c.student.id} className="space-y-2">
