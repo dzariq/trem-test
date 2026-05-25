@@ -10,6 +10,42 @@ interface Props {
   activityId: string;
 }
 
+// Soft, distinct color themes cycled by sport index so each card is visually
+// differentiated (Futsal vs Pickleball vs ...). Tailwind classes are listed
+// statically so the JIT compiler picks them up.
+const SPORT_THEMES = [
+  {
+    card: "bg-sky-50 border-sky-200",
+    date: "bg-sky-600 text-white hover:bg-sky-600",
+    title: "text-sky-900",
+  },
+  {
+    card: "bg-emerald-50 border-emerald-200",
+    date: "bg-emerald-600 text-white hover:bg-emerald-600",
+    title: "text-emerald-900",
+  },
+  {
+    card: "bg-amber-50 border-amber-200",
+    date: "bg-amber-600 text-white hover:bg-amber-600",
+    title: "text-amber-900",
+  },
+  {
+    card: "bg-rose-50 border-rose-200",
+    date: "bg-rose-600 text-white hover:bg-rose-600",
+    title: "text-rose-900",
+  },
+  {
+    card: "bg-violet-50 border-violet-200",
+    date: "bg-violet-600 text-white hover:bg-violet-600",
+    title: "text-violet-900",
+  },
+  {
+    card: "bg-cyan-50 border-cyan-200",
+    date: "bg-cyan-600 text-white hover:bg-cyan-600",
+    title: "text-cyan-900",
+  },
+] as const;
+
 interface SportRow {
   activityId: string;
   name: string;
@@ -155,11 +191,13 @@ export function SportsPanel({ activityId }: Props) {
 
   return (
     <div className="space-y-3">
-      {rows.map((r) => (
-        <Card key={r.activityId} className="overflow-hidden">
+      {rows.map((r, idx) => {
+        const theme = SPORT_THEMES[idx % SPORT_THEMES.length];
+        return (
+        <Card key={r.activityId} className={cn("overflow-hidden border", theme.card)}>
           <CardContent className="p-4 space-y-3">
             <div className="flex items-start justify-between gap-2">
-              <h3 className="text-base font-semibold text-foreground">{r.name}</h3>
+              <h3 className={cn("text-base font-semibold", theme.title)}>{r.name}</h3>
               {r.maxParticipants != null && (
                 <Badge variant="outline" className="text-xs gap-1 shrink-0">
                   <UsersIcon className="h-3 w-3" />
@@ -178,7 +216,11 @@ export function SportsPanel({ activityId }: Props) {
             {r.sessionDates.length > 0 && (
               <div className="flex flex-wrap gap-1.5">
                 {r.sessionDates.map((d) => (
-                  <Badge key={d} variant="secondary" className="text-[11px] font-normal">
+                  <Badge
+                    key={d}
+                    variant="secondary"
+                    className={cn("text-[11px] font-normal border-0", theme.date)}
+                  >
                     {format(parseISO(d), "EEE, d MMM")}
                   </Badge>
                 ))}
@@ -223,7 +265,8 @@ export function SportsPanel({ activityId }: Props) {
             </div>
           </CardContent>
         </Card>
-      ))}
+        );
+      })}
     </div>
   );
 }
