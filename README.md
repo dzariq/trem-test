@@ -330,14 +330,21 @@ Add as `IOS_KEYCHAIN_PASSWORD`.
 
 After all 8 secrets are configured:
 
-- **GitHub → Actions → "Build iOS & Deploy to TestFlight" → Run workflow**
-- Pick build mode (`production` or `staging`)
+- **GitHub → Actions → "Build iOS & Deploy to TestFlight (live wrapper for collinz.app)" → Run workflow**
 - Toggle `upload_to_testflight` on/off (off = just produce an IPA artifact for inspection)
 - Click **Run workflow**
 
 The first run takes ~15-25 minutes (macOS runner + Xcode + CocoaPods are slower
 than Linux). After upload, the build appears in App Store Connect → TestFlight →
 iOS Builds in 5-15 minutes (Apple processing).
+
+Like the Android workflow, the iOS build is a **pure live wrapper**: no Vite
+output, no React, no env vars. The IPA loads `https://collinz.app` on every
+launch via `server.url` in `capacitor.config.ts`, and `AppDelegate.swift` is
+patched to wipe `WKWebsiteDataStore` + `URLCache` on every cold start so users
+never see stale content. **Apple App Store review may reject this under
+guideline 4.2.7** — be prepared to switch to a bundled iOS build if rejection
+happens.
 
 ### Build number management
 

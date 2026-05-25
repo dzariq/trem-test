@@ -1,36 +1,16 @@
-name: Build iOS & Deploy to TestFlight
+name: Build iOS & Deploy to TestFlight (live wrapper for collinz.app)
 
-# This workflow is gated behind workflow_dispatch only by default.
-# Enable the `push` trigger below once secrets are configured and the
-# first manual run has succeeded.
+# Pure-LIVE iOS build that mirrors the Android workflow: the IPA is a thin
+# native shell loading https://collinz.app on every launch, with no bundled
+# web code. Manual trigger only.
 on:
   workflow_dispatch:
     inputs:
-      build_mode:
-        description: "Vite build mode (production / staging)"
-        required: true
-        default: "production"
-        type: choice
-        options:
-          - production
-          - staging
       upload_to_testflight:
         description: "Upload the built IPA to TestFlight"
         required: true
         default: true
         type: boolean
-  # Uncomment after first successful manual run:
-  # push:
-  #   branches: [main]
-  #   paths:
-  #     - "src/**"
-  #     - "public/**"
-  #     - "resources/**"
-  #     - "ios/**"
-  #     - "capacitor.config.ts"
-  #     - "package.json"
-  #     - "package-lock.json"
-  #     - ".github/workflows/build-ios-testflight.yml"
 
 concurrency:
   group: ios-testflight-${{ github.ref }}
@@ -57,17 +37,32 @@ jobs:
           node-version: "22"
           cache: "npm"
 
-      - name: Install dependencies
+      - name: Install dependencies (Capacitor CLI + assets only)
         run: npm install --no-audit --no-fund --legacy-peer-deps
 
-      - name: Build web app (${{ github.event.inputs.build_mode }})
-        run: npm run build:${{ github.event.inputs.build_mode }}
-
-      - name: Configure live server URL (staging only)
-        if: github.event.inputs.build_mode == 'staging'
+      - name: Write minimal redirect placeholder into dist/
+        # No Vite build -- the IPA carries no React code, no Supabase
+        # keys, no UI. Every byte rendered comes from https://collinz.app.
         run: |
-          echo "CAP_SERVER_URL=https://collinz.app" >> "$GITHUB_ENV"
-          echo "App will load UI live from https://collinz.app on every launch."
+          mkdir -p dist
+          cat > dist/index.html << 'EOF'
+          <!DOCTYPE html>
+          <html lang="en">
+          <head>
+            <meta charset="utf-8" />
+            <meta name="viewport" content="width=device-width, initial-scale=1" />
+            <meta http-equiv="refresh" content="0; url=https://collinz.app" />
+            <title>Collinz School</title>
+            <style>html,body{margin:0;padding:0;height:100%;background:#fff;font-family:system-ui,sans-serif}</style>
+          </head>
+          <body>
+            <div style="display:flex;align-items:center;justify-content:center;height:100%">
+              <p style="color:#666">Loading Collinz School…</p>
+            </div>
+            <script>window.location.replace('https://collinz.app');</script>
+          </body>
+          </html>
+          EOF
 
       - name: Select Xcode 16
         run: sudo xcode-select -s /Applications/Xcode_16.app/Contents/Developer
@@ -118,8 +113,83 @@ jobs:
           echo "Splash files:"
           ls -la "$ASSETS_DIR/Splash.imageset"
 
-      - name: Sync web build into iOS project
+      - name: Patch AppDelegate to disable WKWebView cache
+        # Mirror the Android MainActivity patch: clear WKWebView website data
+        # on every app launch so users never see stale https://collinz.app
+        # HTML/JS/CSS after a deploy.
+        run: |
+          set -e
+          APP_DELEGATE="ios/App/App/AppDelegate.swift"
+          if [ ! -f "$APP_DELEGATE" ]; then
+            echo "Expected AppDelegate at $APP_DELEGATE"
+            find ios -name "AppDelegate.swift"
+            exit 1
+          fi
+          cat > "$APP_DELEGATE" << 'EOF'
+          import UIKit
+          import Capacitor
+          import WebKit
+
+          @UIApplicationMain
+          class AppDelegate: UIResponder, UIApplicationDelegate {
+
+              var window: UIWindow?
+
+              func application(_ application: UIApplication,
+                               didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
+                  // Wipe all WKWebView caches (disk + memory + cookies + local
+                  // storage) on every cold start so the live wrapper always
+                  // pulls fresh HTML/JS/CSS from https://collinz.app.
+                  let dataStore = WKWebsiteDataStore.default()
+                  let dataTypes = WKWebsiteDataStore.allWebsiteDataTypes()
+                  dataStore.removeData(ofTypes: dataTypes,
+                                       modifiedSince: Date(timeIntervalSince1970: 0)) {
+                      NSLog("Collinz: cleared WKWebView website data on launch")
+                  }
+                  // Also disable the URLCache so HTTP responses never hit the
+                  // shared cache.
+                  URLCache.shared.removeAllCachedResponses()
+                  URLCache.shared.diskCapacity = 0
+                  URLCache.shared.memoryCapacity = 0
+                  return true
+              }
+
+              func applicationWillResignActive(_ application: UIApplication) {}
+              func applicationDidEnterBackground(_ application: UIApplication) {}
+              func applicationWillEnterForeground(_ application: UIApplication) {}
+              func applicationDidBecomeActive(_ application: UIApplication) {}
+              func applicationWillTerminate(_ application: UIApplication) {}
+
+              func application(_ application: UIApplication,
+                               open url: URL,
+                               options: [UIApplication.OpenURLOptionsKey: Any] = [:]) -> Bool {
+                  return ApplicationDelegateProxy.shared.application(application, open: url, options: options)
+              }
+
+              func application(_ application: UIApplication,
+                               continue userActivity: NSUserActivity,
+                               restorationHandler: @escaping ([UIUserActivityRestoring]?) -> Void) -> Bool {
+                  return ApplicationDelegateProxy.shared.application(application,
+                                                                     continue: userActivity,
+                                                                     restorationHandler: restorationHandler)
+              }
+          }
+          EOF
+          echo "Patched AppDelegate.swift:"
+          cat "$APP_DELEGATE"
+
+      - name: Sync placeholder webDir into iOS project
         run: npx cap sync ios
+
+      - name: Verify AppDelegate cache patch survived sync
+        run: |
+          set -e
+          if ! grep -q "WKWebsiteDataStore" ios/App/App/AppDelegate.swift; then
+            echo "FATAL: WKWebView cache patch missing from AppDelegate after sync"
+            cat ios/App/App/AppDelegate.swift
+            exit 1
+          fi
+          echo "WKWebView cache-busting patch verified in AppDelegate.swift"
 
       - name: Bump iOS build number to GitHub run number
         working-directory: ios/App
@@ -221,7 +291,7 @@ jobs:
       - name: Upload IPA as artifact
         uses: actions/upload-artifact@v4
         with:
-          name: collinz-school-ios-${{ github.event.inputs.build_mode }}-ipa
+          name: collinz-school-ios-LIVE-ipa
           path: ${{ env.IPA_PATH }}
           if-no-files-found: error
           retention-days: 30
@@ -270,7 +340,7 @@ jobs:
           {
             echo "## iOS TestFlight Build"
             echo ""
-            echo "- **Mode:** \`${{ github.event.inputs.build_mode }}\`"
+            echo "- **Loads:** \`https://collinz.app\` (live wrapper, every launch)"
             echo "- **Bundle ID:** \`${{ env.IOS_BUNDLE_ID }}\`"
             echo "- **Build number:** \`${{ github.run_number }}\`"
             echo "- **Upload to TestFlight:** \`${{ github.event.inputs.upload_to_testflight }}\`"
