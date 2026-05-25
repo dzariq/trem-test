@@ -31,6 +31,7 @@ type AuthContextType = {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
+  const queryClient = useQueryClient();
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [profile, setProfile] = useState<UserProfile | null>(null);
@@ -93,10 +94,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setSession(currentSession);
         setUser(currentSession?.user ?? null);
 
+        // Invalidate any cached roles/profile data so a freshly signed-in
+        // user (especially in the Android WebView) always re-fetches from
+        // the network rather than reusing a stale react-query cache.
+        if (event === "SIGNED_IN" || event === "SIGNED_OUT" || event === "TOKEN_REFRESHED") {
+          queryClient.invalidateQueries({ queryKey: ["user-roles"] });
+        }
+
         // When user signs out, clear profile
         if (event === "SIGNED_OUT") {
           setProfile(null);
           void removeMirrored(SESSION_START_KEY);
+          queryClient.clear();
           setLoading(false);
           return;
         }
@@ -146,7 +155,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       isMounted = false;
       subscription.unsubscribe();
     };
-  }, [fetchProfile]);
+  }, [fetchProfile, queryClient]);
 
   const signOut = useCallback(async () => {
     try {
