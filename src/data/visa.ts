@@ -104,14 +104,9 @@ export async function fetchMyFamilyParentsVisa(): Promise<ParentVisaBundle[]> {
   const parents = (parentsRes.data ?? []) as ParentInfo[];
   if (!parents.length) return [];
 
-  const parentIds = parents.map((p) => p.id);
   const [recordsRes, periodsRes] = await Promise.all([
-    supabase.from("parent_visa_records").select("*").in("parent_id", parentIds),
-    supabase
-      .from("parent_visa_periods")
-      .select("*")
-      .in("parent_id", parentIds)
-      .order("issue_date", { ascending: false, nullsFirst: false }),
+    supabase.rpc("get_my_family_parent_visa"),
+    supabase.rpc("get_my_family_parent_visa_periods"),
   ]);
   if (recordsRes.error) throw new Error(recordsRes.error.message);
   if (periodsRes.error) throw new Error(periodsRes.error.message);
@@ -160,14 +155,9 @@ export async function fetchMyChildrenVisa(): Promise<StudentVisaBundle[]> {
   }>;
   if (!students.length) return [];
 
-  const studentIds = students.map((s) => s.id);
   const [recordsRes, periodsRes] = await Promise.all([
-    supabase.from("student_visa_records").select("*").in("student_id", studentIds),
-    supabase
-      .from("student_visa_periods")
-      .select("*")
-      .in("student_id", studentIds)
-      .order("issue_date", { ascending: false, nullsFirst: false }),
+    supabase.rpc("get_my_family_student_visa"),
+    supabase.rpc("get_my_family_student_visa_periods"),
   ]);
   if (recordsRes.error) throw new Error(recordsRes.error.message);
   if (periodsRes.error) throw new Error(periodsRes.error.message);
