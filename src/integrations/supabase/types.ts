@@ -3464,112 +3464,34 @@ export type Database = {
       }
       inquiries: {
         Row: {
-          attempt_count: number | null
-          campus: string | null
-          consideration_deadline: string | null
-          contact_number: string | null
-          contacted_at: string | null
-          created_at: string
-          current_school: string | null
-          current_study_year: string | null
-          enquiry_source: string | null
-          enquiry_type: string | null
-          entrance_test: boolean | null
-          followup_attempt_count: number | null
-          how_did_you_know: string | null
+          admin_id: string | null
           id: string
           inquiry_id: string | null
-          intended_year_level: string | null
-          intended_year_of_admission: string | null
-          is_starred: boolean | null
-          message: string | null
           new_status: string | null
-          parent_email: string | null
-          parent_name: string
-          phone_call: boolean | null
-          remarks: string | null
-          school_visit: boolean | null
-          status: string
-          status_change_log: string | null
+          status: string | null
           status_changed_at: string | null
-          student_age: number | null
           student_name: string | null
-          submission_location: string | null
-          updated_at: string
-          whatsapp_contact: boolean | null
-          year_of_study: string | null
+          timestamp: string | null
         }
         Insert: {
-          attempt_count?: number | null
-          campus?: string | null
-          consideration_deadline?: string | null
-          contact_number?: string | null
-          contacted_at?: string | null
-          created_at?: string
-          current_school?: string | null
-          current_study_year?: string | null
-          enquiry_source?: string | null
-          enquiry_type?: string | null
-          entrance_test?: boolean | null
-          followup_attempt_count?: number | null
-          how_did_you_know?: string | null
+          admin_id?: string | null
           id?: string
           inquiry_id?: string | null
-          intended_year_level?: string | null
-          intended_year_of_admission?: string | null
-          is_starred?: boolean | null
-          message?: string | null
           new_status?: string | null
-          parent_email?: string | null
-          parent_name: string
-          phone_call?: boolean | null
-          remarks?: string | null
-          school_visit?: boolean | null
-          status?: string
-          status_change_log?: string | null
+          status?: string | null
           status_changed_at?: string | null
-          student_age?: number | null
           student_name?: string | null
-          submission_location?: string | null
-          updated_at?: string
-          whatsapp_contact?: boolean | null
-          year_of_study?: string | null
+          timestamp?: string | null
         }
         Update: {
-          attempt_count?: number | null
-          campus?: string | null
-          consideration_deadline?: string | null
-          contact_number?: string | null
-          contacted_at?: string | null
-          created_at?: string
-          current_school?: string | null
-          current_study_year?: string | null
-          enquiry_source?: string | null
-          enquiry_type?: string | null
-          entrance_test?: boolean | null
-          followup_attempt_count?: number | null
-          how_did_you_know?: string | null
+          admin_id?: string | null
           id?: string
           inquiry_id?: string | null
-          intended_year_level?: string | null
-          intended_year_of_admission?: string | null
-          is_starred?: boolean | null
-          message?: string | null
           new_status?: string | null
-          parent_email?: string | null
-          parent_name?: string
-          phone_call?: boolean | null
-          remarks?: string | null
-          school_visit?: boolean | null
-          status?: string
-          status_change_log?: string | null
+          status?: string | null
           status_changed_at?: string | null
-          student_age?: number | null
           student_name?: string | null
-          submission_location?: string | null
-          updated_at?: string
-          whatsapp_contact?: boolean | null
-          year_of_study?: string | null
+          timestamp?: string | null
         }
         Relationships: []
       }
