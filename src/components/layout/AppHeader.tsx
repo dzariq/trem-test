@@ -48,11 +48,6 @@ export function AppHeader({
           </div>
           
           <div className="flex items-center gap-2">
-            {/* Child selector dropdown for parent routes */}
-            {showChildSelector && !isTeacherPortal && (
-              <ChildSelectorDropdown />
-            )}
-            
             {rightContent}
             
             {showNotifications && (
@@ -84,6 +79,12 @@ export function AppHeader({
             )}
           </div>
         </div>
+        {/* Prominent child selector row below the header (parent routes only) */}
+        {showChildSelector && !isTeacherPortal && (
+          <div className="px-4 pb-3 pt-1 border-t border-border/60 bg-card/95">
+            <ChildSelectorDropdown variant="bar" />
+          </div>
+        )}
       </header>
 
       <NotificationsDrawer 
