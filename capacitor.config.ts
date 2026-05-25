@@ -32,6 +32,15 @@ const config: CapacitorConfig = {
       "*.supabase.co",
       "*.supabase.in",
     ],
+    // Mask the Android WebView identity. By default Capacitor's WebView
+    // sends a UA containing "; wv)" which some hosting platforms
+    // (Lovable / Vercel / CDN edges) use to serve cached or feature-gated
+    // responses different from the regular Chrome experience. Pretending
+    // to be a normal Mobile Chrome avoids any such UA-based routing or
+    // caching layer.
+    overrideUserAgent:
+      "Mozilla/5.0 (Linux; Android 14; Pixel 8) AppleWebKit/537.36 " +
+      "(KHTML, like Gecko) Chrome/131.0.6778.135 Mobile Safari/537.36",
   },
   plugins: {
     SplashScreen: {
