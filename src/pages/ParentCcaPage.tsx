@@ -44,10 +44,12 @@ export default function ParentCcaPage() {
           >
             <ChevronLeft className="h-5 w-5" />
           </Button>
-          <h1 className="text-base font-semibold text-foreground truncate flex-1">
+          <h1 className="text-base font-semibold text-foreground truncate">
             My CCAs
           </h1>
-          <ChildSelectorDropdown className="shrink-0" />
+        </div>
+        <div className="px-4 pb-3 pt-1 border-t border-border/60 bg-card/95">
+          <ChildSelectorDropdown variant="bar" />
         </div>
       </header>
 
