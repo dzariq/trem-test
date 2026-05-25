@@ -33,6 +33,11 @@ import {
   Stamp
 } from "lucide-react";
 import { useState, useMemo, useEffect } from "react";
+import {
+  parsePublicationIdFromSourceKey,
+  getViewedPublicationId,
+  markPublicationViewed,
+} from "@/lib/notifications/examPublishViewed";
 
 // Format a date relative to today, e.g. "today", "in 3 days", "2 days ago".
 function formatRelativeDays(date: Date): string {
@@ -72,6 +77,7 @@ type NotificationType =
   | "attendance" 
   | "grade"
   | "report_card"
+  | "exam_results_published"
   | "award"
   | "payment"
   | "transport"
@@ -155,6 +161,7 @@ export function NotificationsDrawer({ open, onOpenChange }: NotificationsDrawerP
       case "attendance": return Users;
       case "grade": return BookOpen;
       case "report_card": return FileText;
+      case "exam_results_published": return FileText;
       case "award": return Trophy;
       case "payment": return CreditCard;
       case "transport": return Bus;
@@ -185,6 +192,7 @@ export function NotificationsDrawer({ open, onOpenChange }: NotificationsDrawerP
       case "attendance": return "bg-emerald-500 text-white";
       case "grade": return "bg-purple-500 text-white";
       case "report_card": return "bg-amber-500 text-white";
+      case "exam_results_published": return "bg-amber-500 text-white";
       case "award": return "bg-yellow-500 text-white";
       case "payment": return "bg-rose-500 text-white";
       case "transport": return "bg-cyan-500 text-white";
