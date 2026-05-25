@@ -87,17 +87,30 @@ jobs:
             --splashBackgroundColor "#ffffff" \
             --splashBackgroundColorDark "#1a1a1a"
 
-      - name: Verify generated iOS splash assets
+      - name: Verify generated iOS splash & app icon assets
         run: |
           set -e
           ASSETS_DIR="ios/App/App/Assets.xcassets"
-          if [ ! -d "$ASSETS_DIR/Splash.imageset" ] && [ ! -d "$ASSETS_DIR/AppIcon.appiconset" ]; then
-            echo "FATAL: capacitor-assets did not generate iOS asset catalogs"
+
+          if [ ! -d "$ASSETS_DIR/AppIcon.appiconset" ]; then
+            echo "FATAL: AppIcon.appiconset missing -- the Collinz logo will not be the app icon."
             ls -la "$ASSETS_DIR" || true
             exit 1
           fi
-          echo "Generated iOS asset catalogs:"
+          if [ ! -d "$ASSETS_DIR/Splash.imageset" ]; then
+            echo "FATAL: Splash.imageset missing -- the Collinz logo will not be the launch image."
+            ls -la "$ASSETS_DIR" || true
+            exit 1
+          fi
+
+          echo "iOS Assets.xcassets contents:"
           ls -la "$ASSETS_DIR"
+          echo ""
+          echo "AppIcon files:"
+          ls -la "$ASSETS_DIR/AppIcon.appiconset"
+          echo ""
+          echo "Splash files:"
+          ls -la "$ASSETS_DIR/Splash.imageset"
 
       - name: Sync web build into iOS project
         run: npx cap sync ios

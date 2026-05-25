@@ -88,19 +88,38 @@ jobs:
             --splashBackgroundColor "#ffffff" \
             --splashBackgroundColorDark "#1a1a1a"
 
-      - name: Verify generated Android splash resources
+      - name: Verify generated Android splash & launcher icon resources
         run: |
           set -e
-          SPLASH_DIR="android/app/src/main/res"
-          echo "--- Generated drawable folders ---"
-          ls -la "$SPLASH_DIR" | grep -E "drawable|mipmap" || true
+          RES_DIR="android/app/src/main/res"
+          echo "--- Generated resource folders ---"
+          ls -la "$RES_DIR" | grep -E "drawable|mipmap" || true
+
           # The SplashScreen plugin reads from androidSplashResourceName="splash"
-          if ! find "$SPLASH_DIR" -name "splash.png" | grep -q .; then
+          if ! find "$RES_DIR" -name "splash.png" | grep -q .; then
             echo "FATAL: No splash.png was generated in android/app/src/main/res/drawable-*"
             exit 1
           fi
+          echo ""
           echo "Splash drawable files:"
-          find "$SPLASH_DIR" -name "splash.png" -exec ls -la {} \;
+          find "$RES_DIR" -name "splash.png" -exec ls -la {} \;
+
+          # Launcher icons (the home-screen / app drawer icon)
+          # Capacitor-assets writes these to mipmap-*/ic_launcher*.png
+          MISSING_ICONS=0
+          for NAME in ic_launcher.png ic_launcher_round.png ic_launcher_foreground.png; do
+            if ! find "$RES_DIR" -name "$NAME" | grep -q .; then
+              echo "FATAL: $NAME not generated in mipmap-*"
+              MISSING_ICONS=1
+            fi
+          done
+          if [ "$MISSING_ICONS" -ne 0 ]; then
+            echo "Launcher icon generation failed -- the APK would ship with the default Capacitor icon."
+            exit 1
+          fi
+          echo ""
+          echo "Launcher icon files (Collinz crest):"
+          find "$RES_DIR" -name "ic_launcher.png" -exec ls -la {} \;
 
       - name: Sync web build into Android project
         run: npx cap sync android
