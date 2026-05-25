@@ -103,10 +103,7 @@ jobs:
             --splashBackgroundColor "#ffffff" \
             --splashBackgroundColorDark "#1a1a1a"
 
-      - name: Patch MainActivity to disable WebView cache
-        # Force the WebView to bypass HTTP cache and clear any prior cache
-        # on every launch. Without this, Android's WebView happily serves
-        # stale assets after a collinz.app deploy.
+      - name: Patch MainActivity with no-cache + debug URL bar
         run: |
           set -e
           APP_PKG_DIR="android/app/src/main/java/com/collinz/school"
@@ -118,28 +115,101 @@ jobs:
           cat > "$APP_PKG_DIR/MainActivity.java" << 'EOF'
           package com.collinz.school;
 
+          import android.graphics.Color;
           import android.os.Bundle;
+          import android.os.Handler;
+          import android.os.Looper;
+          import android.util.Log;
+          import android.view.Gravity;
+          import android.view.ViewGroup;
           import android.webkit.WebSettings;
+          import android.webkit.WebView;
+          import android.widget.FrameLayout;
+          import android.widget.TextView;
 
           import com.getcapacitor.BridgeActivity;
 
           /**
-           * Thin live-wrapper activity. Configures the embedded WebView so it
-           * never serves stale HTML/JS/CSS after a deploy of https://collinz.app.
+           * Thin live-wrapper activity for https://collinz.app.
+           *
+           * Responsibilities:
+           *   1. Disable WebView caching so users never see stale HTML/JS/CSS
+           *      after a deploy.
+           *   2. Enable chrome://inspect remote DevTools debugging for the
+           *      embedded WebView.
+           *   3. Render a tappable sticky overlay at the top of the screen
+           *      showing the current WebView URL in real time -- so we can
+           *      see exactly where the WebView lands after, e.g., a Supabase
+           *      login redirect that should send the user to /portal.
+           *   4. Mirror every URL change to logcat under tag "CollinzNav".
            */
           public class MainActivity extends BridgeActivity {
+
+              private static final String TAG = "CollinzNav";
+
               @Override
               public void onCreate(Bundle savedInstanceState) {
                   super.onCreate(savedInstanceState);
 
-                  if (this.bridge != null && this.bridge.getWebView() != null) {
-                      WebSettings settings = this.bridge.getWebView().getSettings();
-                      // Always go to the network, never use the HTTP cache.
-                      settings.setCacheMode(WebSettings.LOAD_NO_CACHE);
-                      // Wipe any previously-cached resources on every cold start.
-                      this.bridge.getWebView().clearCache(true);
-                      this.bridge.getWebView().clearHistory();
+                  WebView webView = (this.bridge != null) ? this.bridge.getWebView() : null;
+                  if (webView == null) {
+                      return;
                   }
+
+                  // --- Cache busting ---
+                  WebSettings settings = webView.getSettings();
+                  settings.setCacheMode(WebSettings.LOAD_NO_CACHE);
+                  webView.clearCache(true);
+                  webView.clearHistory();
+
+                  // --- chrome://inspect remote DevTools ---
+                  WebView.setWebContentsDebuggingEnabled(true);
+
+                  // --- Sticky URL overlay (debug aid) ---
+                  final TextView urlBar = new TextView(this);
+                  urlBar.setText("Loading…");
+                  urlBar.setTextColor(Color.WHITE);
+                  urlBar.setBackgroundColor(0xCC0F172A); // semi-transparent slate-900
+                  float density = getResources().getDisplayMetrics().density;
+                  int paddingPx = (int) (10 * density);
+                  urlBar.setPadding(paddingPx, paddingPx, paddingPx, paddingPx);
+                  urlBar.setTextSize(11);
+                  urlBar.setMaxLines(3);
+                  urlBar.setEllipsize(android.text.TextUtils.TruncateAt.MIDDLE);
+
+                  FrameLayout.LayoutParams urlBarParams = new FrameLayout.LayoutParams(
+                      ViewGroup.LayoutParams.MATCH_PARENT,
+                      ViewGroup.LayoutParams.WRAP_CONTENT,
+                      Gravity.TOP
+                  );
+                  urlBarParams.topMargin = (int) (28 * density); // under status bar
+                  addContentView(urlBar, urlBarParams);
+
+                  // Tap once = collapse to a thin line; tap again = expand.
+                  urlBar.setOnClickListener(v -> {
+                      if (urlBar.getMaxLines() == 0) {
+                          urlBar.setMaxLines(3);
+                      } else {
+                          urlBar.setMaxLines(0);
+                      }
+                  });
+
+                  // --- Poll the WebView URL every 400 ms ---
+                  final Handler handler = new Handler(Looper.getMainLooper());
+                  final String[] lastUrl = {""};
+                  handler.post(new Runnable() {
+                      @Override
+                      public void run() {
+                          String currentUrl = webView.getUrl();
+                          String title = webView.getTitle();
+                          if (currentUrl != null && !currentUrl.equals(lastUrl[0])) {
+                              lastUrl[0] = currentUrl;
+                              Log.i(TAG, "URL: " + currentUrl + "  |  title: " + title);
+                              urlBar.setText("URL  " + currentUrl + "\nTITLE  " + (title == null ? "" : title));
+                          }
+                          handler.postDelayed(this, 400);
+                      }
+                  });
               }
           }
           EOF
@@ -165,15 +235,18 @@ jobs:
       - name: Sync placeholder webDir into Android project
         run: npx cap sync android
 
-      - name: Verify MainActivity cache patch survived sync
+      - name: Verify MainActivity patches survived sync
         run: |
           set -e
-          if ! grep -q "LOAD_NO_CACHE" android/app/src/main/java/com/collinz/school/MainActivity.java; then
-            echo "FATAL: WebView cache patch missing from MainActivity after sync"
-            cat android/app/src/main/java/com/collinz/school/MainActivity.java
-            exit 1
-          fi
-          echo "Cache-busting patch verified in MainActivity.java"
+          MA="android/app/src/main/java/com/collinz/school/MainActivity.java"
+          for NEEDLE in "LOAD_NO_CACHE" "setWebContentsDebuggingEnabled" "CollinzNav"; do
+            if ! grep -q "$NEEDLE" "$MA"; then
+              echo "FATAL: '$NEEDLE' missing from MainActivity.java after sync"
+              cat "$MA"
+              exit 1
+            fi
+          done
+          echo "Cache-busting + debug overlay patches verified in MainActivity.java"
 
       - name: Make gradlew executable
         working-directory: android

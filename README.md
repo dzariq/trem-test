@@ -133,6 +133,34 @@ Every workflow run produces **two** APK artifacts:
 The release APK is unsigned and is only useful once a release keystore +
 signing step is wired into the workflow.
 
+### Debugging what URL the app is on (debug bar + Chrome DevTools)
+
+The patched `MainActivity` adds a **dark sticky bar at the top of the
+screen** that displays the current WebView URL and document `<title>`,
+polled every 400ms. Tap the bar once to collapse it to a thin sliver;
+tap again to expand. Use this to confirm exactly where the WebView
+lands after a Supabase login redirect, an OAuth callback, or any
+React Router navigation.
+
+The same URL transitions are also logged to **logcat** under tag
+`CollinzNav`, so if you have ADB available you can stream them with:
+
+```sh
+adb logcat -s CollinzNav
+```
+
+For full DevTools (network panel, console, DOM inspector, breakpoints),
+the debug APK already has `setWebContentsDebuggingEnabled(true)`. To
+connect:
+
+1. Enable **Developer options → USB debugging** on the phone.
+2. Plug the phone into your PC via USB. Approve the RSA prompt.
+3. On the PC, open Chrome → `chrome://inspect/#devices`.
+4. Under "Remote Target", you should see "Collinz School / WebView".
+5. Click **inspect** — full DevTools opens with the URL bar visible,
+   the JavaScript console live, and the Network tab capturing every
+   request the WebView is making to `https://collinz.app` and Supabase.
+
 ### How "no cache" is enforced
 
 The CI workflow patches `MainActivity.java` after `npx cap add android`:
