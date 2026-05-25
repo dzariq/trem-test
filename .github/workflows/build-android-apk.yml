@@ -103,7 +103,7 @@ jobs:
             --splashBackgroundColor "#ffffff" \
             --splashBackgroundColorDark "#1a1a1a"
 
-      - name: Patch MainActivity with aggressive no-cache + debug URL bar
+      - name: Patch MainActivity with NUCLEAR no-cache + debug URL bar
         run: |
           set -e
           APP_PKG_DIR="android/app/src/main/java/com/collinz/school"
@@ -116,12 +116,16 @@ jobs:
           package com.collinz.school;
 
           import android.graphics.Color;
+          import android.os.Build;
           import android.os.Bundle;
           import android.os.Handler;
           import android.os.Looper;
           import android.util.Log;
           import android.view.Gravity;
           import android.view.ViewGroup;
+          import android.webkit.CookieManager;
+          import android.webkit.ServiceWorkerController;
+          import android.webkit.ServiceWorkerWebSettings;
           import android.webkit.WebSettings;
           import android.webkit.WebStorage;
           import android.webkit.WebView;
@@ -133,23 +137,30 @@ jobs:
           /**
            * Thin live-wrapper activity for https://collinz.app.
            *
-           * Responsibilities:
-           *   1. Aggressive cache busting across every WebView layer:
-           *        - HTTP cache (LOAD_NO_CACHE + clearCache)
-           *        - History
-           *        - Form data
-           *        - Application Cache (legacy)
-           *        - On-page: service workers + Cache Storage API caches,
-           *          purged via injected JavaScript after first paint, then
-           *          the page is hard-reloaded if anything was found.
-           *   2. Enable chrome://inspect remote DevTools debugging.
-           *   3. Sticky URL overlay so the actual URL is always visible.
+           * THIS IS THE NUCLEAR DEBUG VARIANT. Every cache layer the Android
+           * WebView has is wiped on every cold start, including cookies and
+           * DOM storage. The user WILL be logged out every time the app is
+           * fully closed -- this is the trade-off for guaranteed-fresh UI.
            *
-           * NOTE: cookies and localStorage are intentionally NOT cleared --
-           * Supabase stores the auth session in localStorage, and wiping it
-           * would log users out on every cold start. If after all this you
-           * still see stale UI, the cache lives further upstream (CDN edge
-           * cache on collinz.app, or the deploy itself hasn't promoted yet).
+           * Layers nuked on each onCreate:
+           *   - HTTP cache  : WebSettings LOAD_NO_CACHE + clearCache(true)
+           *   - History     : clearHistory
+           *   - Form data   : clearFormData / clearMatches
+           *   - SSL prefs   : clearSslPreferences
+           *   - DOM storage : WebStorage.deleteAllData (localStorage,
+           *                   IndexedDB, WebSQL, AppCache, Service Worker
+           *                   registration DB)
+           *   - Cookies     : CookieManager.removeAllCookies + flush
+           *                   (this is why login is lost every cold start)
+           *   - SW HTTP cache: ServiceWorkerController set to LOAD_NO_CACHE
+           *   - On-page SW  : Periodic JS that calls .unregister() on every
+           *                   navigator.serviceWorker registration and
+           *                   caches.delete() on every Cache Storage entry
+           *
+           * Also enables chrome://inspect and renders a sticky URL overlay.
+           *
+           * Reload the URL with a millisecond cache-buster query string so
+           * any URL-keyed CDN cache also misses.
            */
           public class MainActivity extends BridgeActivity {
 
@@ -164,16 +175,57 @@ jobs:
                       return;
                   }
 
-                  // --- WebView-level cache busting ---
+                  // ===== STEP 1: HTTP cache + form/history/SSL state =====
                   WebSettings settings = webView.getSettings();
                   settings.setCacheMode(WebSettings.LOAD_NO_CACHE);
                   webView.clearCache(true);
                   webView.clearHistory();
                   webView.clearFormData();
                   webView.clearMatches();
+                  webView.clearSslPreferences();
 
-                  // --- chrome://inspect remote DevTools ---
+                  // ===== STEP 2: All DOM storage =====
+                  // This includes localStorage, IndexedDB, WebSQL, AppCache,
+                  // and the Service Worker registration database -- so the
+                  // SW is unregistered on the storage layer before the page
+                  // even gets a chance to re-register it.
+                  WebStorage.getInstance().deleteAllData();
+
+                  // ===== STEP 3: All cookies =====
+                  // This logs the user out every cold start. Acceptable for
+                  // a debug build that prioritises freshness over UX.
+                  CookieManager cookieManager = CookieManager.getInstance();
+                  cookieManager.removeAllCookies(null);
+                  cookieManager.removeSessionCookies(null);
+                  cookieManager.flush();
+
+                  // ===== STEP 4: Service Worker controller no-cache =====
+                  // Forces any Service Worker that re-registers during this
+                  // session to also bypass the HTTP cache for its own fetches.
+                  if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                      ServiceWorkerController swController = ServiceWorkerController.getInstance();
+                      ServiceWorkerWebSettings swSettings = swController.getServiceWorkerWebSettings();
+                      swSettings.setCacheMode(WebSettings.LOAD_NO_CACHE);
+                  }
+
+                  // ===== STEP 5: chrome://inspect remote DevTools =====
                   WebView.setWebContentsDebuggingEnabled(true);
+
+                  // ===== STEP 6: Force-reload with cache-busted URL =====
+                  // Capacitor's BridgeActivity has already queued a loadUrl
+                  // for server.url. We replace that with a URL carrying a
+                  // millisecond cache-busting query, so any URL-keyed
+                  // intermediate cache (CDN edge, proxy, WebView memory)
+                  // misses on cold start.
+                  webView.post(new Runnable() {
+                      @Override
+                      public void run() {
+                          long ts = System.currentTimeMillis();
+                          String url = "https://collinz.app/?_cb=" + ts;
+                          Log.i(TAG, "Force-loading cache-busted URL: " + url);
+                          webView.loadUrl(url);
+                      }
+                  });
 
                   // --- Sticky URL overlay (debug aid) ---
                   final TextView urlBar = new TextView(this);
@@ -205,14 +257,14 @@ jobs:
 
                   final Handler handler = new Handler(Looper.getMainLooper());
 
-                  // --- One-shot service-worker + cache-storage purge ---
-                  //
-                  // Runs ~1.5 s after first paint so the page has had a
-                  // chance to register navigator.serviceWorker. If any
-                  // SW or Cache Storage entry is found, it is purged and
-                  // the WebView is hard-reloaded so the next paint comes
-                  // from the network rather than the SW's offline copy.
-                  handler.postDelayed(new Runnable() {
+                  // ===== STEP 7: Periodic SW + Cache Storage assassin =====
+                  // Runs every 3 seconds for the entire app lifetime. If a
+                  // page (or any future deploy that adds vite-plugin-pwa)
+                  // registers a Service Worker, this kills it on the next
+                  // tick. The result is logged so we can confirm from
+                  // logcat (`adb logcat -s CollinzNav`) whether any SW
+                  // ever appears.
+                  final Runnable swAssassin = new Runnable() {
                       @Override
                       public void run() {
                           String purgeJs =
@@ -234,17 +286,13 @@ jobs:
                               int purged = 0;
                               try { purged = Integer.parseInt(value); } catch (Exception e) {}
                               if (purged > 0) {
-                                  Log.i(TAG, "Purged " + purged + " SW/cache entries; hard-reloading WebView");
-                                  // Clear WebStorage on the next loop so the
-                                  // reload picks up fresh DOM storage too.
-                                  WebStorage.getInstance().deleteAllData();
-                                  webView.reload();
-                              } else {
-                                  Log.i(TAG, "No service workers or Cache Storage entries found");
+                                  Log.i(TAG, "[SW assassin] Killed " + purged + " SW/cache entries");
                               }
                           });
+                          handler.postDelayed(this, 3000);
                       }
-                  }, 1500);
+                  };
+                  handler.postDelayed(swAssassin, 1500);
 
                   // --- URL polling overlay (every 400 ms) ---
                   final String[] lastUrl = {""};
@@ -286,18 +334,27 @@ jobs:
       - name: Sync placeholder webDir into Android project
         run: npx cap sync android
 
-      - name: Verify MainActivity patches survived sync
+      - name: Verify MainActivity NUCLEAR patches survived sync
         run: |
           set -e
           MA="android/app/src/main/java/com/collinz/school/MainActivity.java"
-          for NEEDLE in "LOAD_NO_CACHE" "setWebContentsDebuggingEnabled" "CollinzNav" "serviceWorker" "WebStorage.getInstance"; do
+          for NEEDLE in \
+              "LOAD_NO_CACHE" \
+              "setWebContentsDebuggingEnabled" \
+              "CollinzNav" \
+              "serviceWorker" \
+              "WebStorage.getInstance" \
+              "CookieManager.getInstance" \
+              "ServiceWorkerController" \
+              "_cb=" \
+              "swAssassin"; do
             if ! grep -q "$NEEDLE" "$MA"; then
               echo "FATAL: '$NEEDLE' missing from MainActivity.java after sync"
               cat "$MA"
               exit 1
             fi
           done
-          echo "All cache-busting + debug overlay patches verified in MainActivity.java"
+          echo "All nuclear cache-busting patches verified in MainActivity.java"
 
       - name: Make gradlew executable
         working-directory: android
