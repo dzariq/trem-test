@@ -45,7 +45,6 @@ import {
   Upload,
   Trash2,
   BookOpen,
-  Utensils,
   Flag,
   CalendarDays,
   School,
