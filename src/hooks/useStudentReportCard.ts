@@ -218,7 +218,39 @@ export function useStudentReportCard(
           throw periodsError;
         }
 
-        const mappedPeriods = (periods || []).map((p) => ({
+        // Gate parent-visible report-card periods on the existence of an
+        // exam_period_publications row. The sibling (admin/web) project
+        // creates these rows when results are officially published.
+        // If the table is not yet readable by parents (RLS), fall back to
+        // showing all periods and log a warning so we know to add an RPC.
+        let publishedPeriodIds: Set<string> | null = null;
+        try {
+          const { data: pubs, error: pubsError } = await supabase
+            .from("exam_period_publications")
+            .select("academic_period_id")
+            .in("academic_period_id", uniquePeriodIds);
+
+          if (pubsError) {
+            console.warn(
+              "[useStudentReportCard] exam_period_publications not readable by parent — falling back to all periods. Add a parent-readable view/RPC on the sibling project.",
+              pubsError
+            );
+          } else {
+            publishedPeriodIds = new Set(
+              (pubs || [])
+                .map((row: any) => row.academic_period_id)
+                .filter((id: any): id is string => typeof id === "string")
+            );
+          }
+        } catch (e) {
+          console.warn("[useStudentReportCard] exam_period_publications query threw — falling back.", e);
+        }
+
+        const filteredPeriods = publishedPeriodIds
+          ? (periods || []).filter((p) => publishedPeriodIds!.has(p.id))
+          : periods || [];
+
+        const mappedPeriods = filteredPeriods.map((p) => ({
           id: p.id,
           name: p.name,
           code: p.code || "",
