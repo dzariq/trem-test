@@ -77,49 +77,61 @@ export type StudentVisaPeriod = {
   notes: string | null;
 };
 
-export type ParentSelfInfo = {
+export type ParentInfo = {
   id: string;
   name: string | null;
   nationality: string | null;
   passport_number: string | null;
   passport_expiry_date: string | null;
+  parent_user_id: string | null;
+  family_id: string | null;
+  is_primary_contact: boolean | null;
 };
 
-export async function fetchMyParentVisa(): Promise<{
-  self: ParentSelfInfo | null;
+export type ParentVisaBundle = {
+  parent: ParentInfo;
+  isSelf: boolean;
   records: ParentVisaRecord[];
   periods: ParentVisaPeriod[];
-}> {
-  const [recordsRes, periodsRes, selfRes] = await Promise.all([
-    supabase.from("parent_visa_records").select("*"),
+};
+
+export async function fetchMyFamilyParentsVisa(): Promise<ParentVisaBundle[]> {
+  const { data: userData } = await supabase.auth.getUser();
+  const myUid = userData.user?.id ?? null;
+
+  const parentsRes = await supabase.rpc("get_my_family_parents");
+  if (parentsRes.error) throw new Error(parentsRes.error.message);
+  const parents = (parentsRes.data ?? []) as ParentInfo[];
+  if (!parents.length) return [];
+
+  const parentIds = parents.map((p) => p.id);
+  const [recordsRes, periodsRes] = await Promise.all([
+    supabase.from("parent_visa_records").select("*").in("parent_id", parentIds),
     supabase
       .from("parent_visa_periods")
       .select("*")
+      .in("parent_id", parentIds)
       .order("issue_date", { ascending: false, nullsFirst: false }),
-    supabase
-      .from("parents")
-      .select("id, name, nationality, passport_number, passport_expiry_date, is_primary_contact")
-      .order("is_primary_contact", { ascending: false, nullsFirst: false })
-      .limit(1)
-      .maybeSingle(),
   ]);
   if (recordsRes.error) throw new Error(recordsRes.error.message);
   if (periodsRes.error) throw new Error(periodsRes.error.message);
-  const selfRow = selfRes.data as any;
-  const self: ParentSelfInfo | null = selfRow
-    ? {
-        id: String(selfRow.id),
-        name: selfRow.name ?? null,
-        nationality: selfRow.nationality ?? null,
-        passport_number: selfRow.passport_number ?? null,
-        passport_expiry_date: selfRow.passport_expiry_date ?? null,
-      }
-    : null;
-  return {
-    self,
-    records: (recordsRes.data ?? []) as ParentVisaRecord[],
-    periods: (periodsRes.data ?? []) as ParentVisaPeriod[],
-  };
+  const records = (recordsRes.data ?? []) as ParentVisaRecord[];
+  const periods = (periodsRes.data ?? []) as ParentVisaPeriod[];
+
+  return parents
+    .map((p) => ({
+      parent: p,
+      isSelf: !!myUid && p.parent_user_id === myUid,
+      records: records.filter((r) => r.parent_id === p.id),
+      periods: periods.filter((pe) => pe.parent_id === p.id),
+    }))
+    .sort((a, b) => {
+      if (a.isSelf !== b.isSelf) return a.isSelf ? -1 : 1;
+      const ap = a.parent.is_primary_contact ? 0 : 1;
+      const bp = b.parent.is_primary_contact ? 0 : 1;
+      if (ap !== bp) return ap - bp;
+      return (a.parent.name ?? "").localeCompare(b.parent.name ?? "");
+    });
 }
 
 export type StudentVisaBundle = {
@@ -135,11 +147,9 @@ export type StudentVisaBundle = {
 };
 
 export async function fetchMyChildrenVisa(): Promise<StudentVisaBundle[]> {
-  // Use the parent's linked children (RLS-scoped) as source of truth so even
-  // kids without visa records still show with their passport info.
-  const studentsRes = await supabase
-    .from("students")
-    .select("id, name, nationality, passport_number, passport_expiry_date");
+  // RPC returns kids across ALL families linked to the signed-in parent,
+  // not only those backfilled into student_guardians.
+  const studentsRes = await supabase.rpc("get_my_family_students");
   if (studentsRes.error) throw new Error(studentsRes.error.message);
   const students = (studentsRes.data ?? []) as Array<{
     id: string;
