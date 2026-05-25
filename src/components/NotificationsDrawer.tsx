@@ -214,16 +214,35 @@ export function NotificationsDrawer({ open, onOpenChange }: NotificationsDrawerP
     }
   };
 
-  const handleNotificationClick = (notification: { id: string; link_to: string | null; is_read: boolean }) => {
+  const handleNotificationClick = (notification: {
+    id: string;
+    link_to: string | null;
+    is_read: boolean;
+    type?: string;
+    source_key?: string | null;
+  }) => {
     // Mark as read if not already
     if (!notification.is_read) {
       markAsRead(notification.id);
     }
-    
+
+    // Exam-result publish: remap shared backend link (/report-cards) to the
+    // parent app's actual report-card route, and remember the viewed
+    // publication so we can flag future re-publishes as "Updated results".
+    let targetLink = notification.link_to;
+    if (notification.type === "exam_results_published") {
+      const pubId = parsePublicationIdFromSourceKey(notification.source_key ?? null);
+      if (pubId) {
+        markPublicationViewed(pubId, pubId);
+      }
+      const query = pubId ? `?section=report-card&publication=${pubId}` : "?section=report-card";
+      targetLink = `/parent/academic${query}`;
+    }
+
     // Navigate if there's a link
-    if (notification.link_to) {
+    if (targetLink) {
       onOpenChange(false);
-      navigate(notification.link_to);
+      navigate(targetLink);
     }
   };
 
