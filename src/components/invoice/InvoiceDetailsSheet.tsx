@@ -22,6 +22,8 @@ export function InvoiceDetailsSheet({ invoice, open, onOpenChange }: Props) {
     <BottomSheet
       open={open}
       onOpenChange={onOpenChange}
+      snapPoints={[0, 0.9, 1]}
+      defaultSnapPoint={0.9}
       title={
         <div className="flex items-center gap-2">
           <Receipt className="h-4 w-4 text-primary" />
@@ -39,6 +41,16 @@ export function InvoiceDetailsSheet({ invoice, open, onOpenChange }: Props) {
             <span className="text-xs text-muted-foreground">{invoice.periodKey}</span>
           )}
         </div>
+
+        {invoice.bukkuUrl && (
+          <Button
+            className="w-full"
+            onClick={() => window.open(invoice.bukkuUrl!, "_blank", "noopener,noreferrer")}
+          >
+            <ExternalLink className="h-4 w-4 mr-2" />
+            View full invoice
+          </Button>
+        )}
 
         {/* Amounts */}
         <div className="rounded-xl border border-border bg-muted/40 p-4 space-y-2 bg-slate-100">
@@ -109,16 +121,6 @@ export function InvoiceDetailsSheet({ invoice, open, onOpenChange }: Props) {
               ))}
             </div>
           </div>
-        )}
-
-        {invoice.bukkuUrl && (
-          <Button
-            className="w-full"
-            onClick={() => window.open(invoice.bukkuUrl!, "_blank", "noopener,noreferrer")}
-          >
-            <ExternalLink className="h-4 w-4 mr-2" />
-            View full invoice
-          </Button>
         )}
       </div>
     </BottomSheet>
