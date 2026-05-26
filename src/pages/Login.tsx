@@ -14,7 +14,8 @@ import {
 import schoolBadge from "@/assets/school-badge.png";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/contexts/AuthContext";
-import { Loader2, Phone, ArrowLeft, Mail } from "lucide-react";
+import { Loader2, Phone, ArrowLeft, Mail, AlertCircle } from "lucide-react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { allCountries } from "country-telephone-data";
 import { useUserRoles } from "@/hooks/useUserRoles";
