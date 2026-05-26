@@ -363,7 +363,7 @@ export function MonthGridCalendar({
                     onClick={(e) => handleChipClick(e, item)}
                     aria-label={item.title}
                     className={cn(
-                      "h-[16px] text-[9px] sm:text-[10px] leading-[14px] font-medium truncate no-callout",
+                      "min-h-[12px] text-[8px] sm:text-[9px] leading-[10px] sm:leading-[11px] font-medium no-callout",
                       item.kind === "cca"
                         ? "flex items-center gap-1 px-1 rounded-full border"
                         : "px-1 rounded-[3px] border",
@@ -375,7 +375,7 @@ export function MonthGridCalendar({
                       const Icon = getCcaBucketIcon((item.payload as CcaCalendarSession).category);
                       return <Icon className="h-2.5 w-2.5 shrink-0 opacity-80" aria-hidden />;
                     })()}
-                    <span className="truncate">{item.title}</span>
+                    <span className="break-words">{item.title}</span>
                   </div>
                 ))}
               </div>
