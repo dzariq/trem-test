@@ -375,7 +375,16 @@ export function MonthGridCalendar({
                       const Icon = getCcaBucketIcon((item.payload as CcaCalendarSession).category);
                       return <Icon className="h-2.5 w-2.5 shrink-0 opacity-80" aria-hidden />;
                     })()}
-                    <span className="break-words">{item.title}</span>
+                    <span
+                      className="break-words overflow-hidden"
+                      style={{
+                        display: "-webkit-box",
+                        WebkitLineClamp: 2,
+                        WebkitBoxOrient: "vertical",
+                      }}
+                    >
+                      {item.title}
+                    </span>
                   </div>
                 ))}
               </div>
