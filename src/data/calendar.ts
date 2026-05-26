@@ -25,6 +25,7 @@ export type UpcomingEvent = {
   campusId?: string | null;
   schoolLevel?: string | null;
   categoryColor?: string | null;
+  campusCode?: string | null;
 };
 
 export type ListUpcomingEventsParams = {
