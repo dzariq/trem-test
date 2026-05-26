@@ -1,4 +1,4 @@
-import { useMemo, useState, type MouseEvent } from "react";
+import { useMemo, useRef, useState, type MouseEvent, type TouchEvent } from "react";
 import { ChevronLeft, ChevronRight, SlidersHorizontal, ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -151,6 +151,28 @@ export function MonthGridCalendar({
   const goPrev = () => onMonthChange(new Date(month.getFullYear(), month.getMonth() - 1, 1));
   const goNext = () => onMonthChange(new Date(month.getFullYear(), month.getMonth() + 1, 1));
 
+  // Swipe-to-change-month gesture
+  const swipeRef = useRef<{ x: number; y: number; t: number } | null>(null);
+  const handleTouchStart = (e: TouchEvent<HTMLDivElement>) => {
+    const t = e.touches[0];
+    if (!t) return;
+    swipeRef.current = { x: t.clientX, y: t.clientY, t: Date.now() };
+  };
+  const handleTouchEnd = (e: TouchEvent<HTMLDivElement>) => {
+    const start = swipeRef.current;
+    swipeRef.current = null;
+    if (!start) return;
+    const t = e.changedTouches[0];
+    if (!t) return;
+    const dx = t.clientX - start.x;
+    const dy = t.clientY - start.y;
+    const dt = Date.now() - start.t;
+    // Require predominantly horizontal, fast-enough swipe
+    if (Math.abs(dx) < 50 || Math.abs(dx) < Math.abs(dy) * 1.5 || dt > 600) return;
+    if (dx < 0) goNext();
+    else goPrev();
+  };
+
   const handleMonthStripClick = (idx: number) => {
     onMonthChange(new Date(month.getFullYear(), idx, 1));
     setMonthPickerOpen(false);
@@ -256,7 +278,11 @@ export function MonthGridCalendar({
       </div>
 
       {/* Grid cells */}
-      <div className="grid grid-cols-7">
+      <div
+        className="grid grid-cols-7 [touch-action:pan-y]"
+        onTouchStart={handleTouchStart}
+        onTouchEnd={handleTouchEnd}
+      >
         {days.map(({ date, ymd, inMonth }, idx) => {
           const bucket = buckets.get(ymd) || [];
           const isToday = ymd === todayYmd;
