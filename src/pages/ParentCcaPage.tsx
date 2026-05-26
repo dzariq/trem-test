@@ -48,7 +48,13 @@ export default function ParentCcaPage() {
             My CCAs
           </h1>
         </div>
-        <div className="px-4 pb-3 pt-1 border-t border-border/60 bg-gradient-to-r from-primary/15 via-primary/5 to-background">
+        <div
+          className="px-4 pb-3 pt-1 border-t border-border/60"
+          style={{
+            backgroundImage:
+              "linear-gradient(to right, hsl(45 85% 58% / 0.22), hsl(45 85% 58% / 0.08), hsl(var(--background)))",
+          }}
+        >
           <ChildSelectorDropdown variant="bar" />
         </div>
       </header>

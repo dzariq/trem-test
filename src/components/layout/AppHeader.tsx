@@ -82,7 +82,13 @@ export function AppHeader({
         </div>
         {/* Prominent child selector row below the header (parent routes only) */}
         {showChildSelector && !isTeacherPortal && (
-          <div className="px-4 py-3 border-t border-border/60 bg-gradient-to-r from-primary/15 via-primary/5 to-background">
+          <div
+            className="px-4 py-3 border-t border-border/60"
+            style={{
+              backgroundImage:
+                "linear-gradient(to right, hsl(45 85% 58% / 0.22), hsl(45 85% 58% / 0.08), hsl(var(--background)))",
+            }}
+          >
             <ChildSelectorDropdown variant="bar" />
           </div>
         )}
