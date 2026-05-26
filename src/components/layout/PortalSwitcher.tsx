@@ -11,7 +11,9 @@ interface PortalSwitcherProps {
   className?: string;
 }
 
-const ACTIVE_STYLE = "bg-primary/10 text-primary border-primary/40";
+const PARENT_ACTIVE_STYLE =
+  "bg-[hsl(45_85%_58%/0.25)] text-[hsl(35_85%_28%)] border-[hsl(38_78%_42%/0.6)]";
+const TEACHER_ACTIVE_STYLE = "bg-primary/15 text-primary border-primary/50";
 const INACTIVE_STYLE =
   "bg-transparent text-muted-foreground border-transparent hover:text-foreground";
 
@@ -67,7 +69,7 @@ export function PortalSwitcher({ size = "sm", className }: PortalSwitcherProps) 
         className={cn(
           "inline-flex items-center gap-1 rounded-sm border-2 font-semibold transition-colors",
           sizeClasses,
-          !isTeacher ? ACTIVE_STYLE : INACTIVE_STYLE
+          !isTeacher ? PARENT_ACTIVE_STYLE : INACTIVE_STYLE
         )}
       >
         <Users className={iconSize} />
@@ -81,7 +83,7 @@ export function PortalSwitcher({ size = "sm", className }: PortalSwitcherProps) 
         className={cn(
           "inline-flex items-center gap-1 rounded-sm border-2 font-semibold transition-colors",
           sizeClasses,
-          isTeacher ? ACTIVE_STYLE : INACTIVE_STYLE
+          isTeacher ? TEACHER_ACTIVE_STYLE : INACTIVE_STYLE
         )}
       >
         <GraduationCap className={iconSize} />
