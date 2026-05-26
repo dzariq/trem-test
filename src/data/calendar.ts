@@ -25,6 +25,7 @@ export type UpcomingEvent = {
   campusId?: string | null;
   schoolLevel?: string | null;
   categoryColor?: string | null;
+  campusCode?: string | null;
 };
 
 export type ListUpcomingEventsParams = {
@@ -145,6 +146,7 @@ const mapCalendarRow = (row: any): UpcomingEvent => {
     campusId: row.campus_id ?? null,
     schoolLevel: row.school_level ?? null,
     categoryColor: row.event_categories?.color ?? null,
+    campusCode: row.campus_code ?? null,
   };
 };
 
@@ -222,14 +224,35 @@ const filterEventsByVisibility = (
   return events.filter((event) => isEventVisibleToUser(event, profile, linkedStudentIds));
 };
 
-const dedupeRows = (events: UpcomingEvent[]): UpcomingEvent[] => {
-  const map = new Map<string | number, UpcomingEvent>();
+const dedupeRows = (
+  events: UpcomingEvent[],
+  preferredCampusCode?: string | null,
+): UpcomingEvent[] => {
+  // First pass: drop exact-id duplicates.
+  const byId = new Map<string | number, UpcomingEvent>();
   events.forEach((event) => {
-    if (!map.has(event.id)) {
-      map.set(event.id, event);
+    if (!byId.has(event.id)) byId.set(event.id, event);
+  });
+
+  // Second pass: collapse rows that are the same event duplicated per campus
+  // (admin portal sometimes stores one row per campus with identical title +
+  // date range). Prefer the row matching the active campus, then a global
+  // (null) row, then the first seen.
+  const byContent = new Map<string, UpcomingEvent>();
+  const score = (event: UpcomingEvent) => {
+    if (preferredCampusCode && event.campusCode === preferredCampusCode) return 2;
+    if (!event.campusCode) return 1;
+    return 0;
+  };
+  Array.from(byId.values()).forEach((event) => {
+    const title = (event.title ?? "").trim().toLowerCase();
+    const key = `${title}__${event.startDay ?? ""}__${event.endDay ?? ""}`;
+    const existing = byContent.get(key);
+    if (!existing || score(event) > score(existing)) {
+      byContent.set(key, event);
     }
   });
-  return Array.from(map.values());
+  return Array.from(byContent.values());
 };
 
 const sortByStartDate = (events: UpcomingEvent[]): UpcomingEvent[] =>
@@ -355,7 +378,7 @@ export async function listCalendarEvents(
     role,
   });
 
-  return sortByStartDate(dedupeRows(filteredEvents));
+  return sortByStartDate(dedupeRows(filteredEvents, params.campusCode ?? null));
 }
 
 export async function listUpcomingEvents(
@@ -389,7 +412,7 @@ export async function listUpcomingEvents(
 
   // Apply client-side visibility filtering
   const filteredEvents = filterEventsByVisibility(allEvents, profile, studentIds);
-  const mapped = sortByStartDate(dedupeRows(filteredEvents));
+  const mapped = sortByStartDate(dedupeRows(filteredEvents, params.campusCode ?? null));
 
   return getUpcomingEvents({ events: mapped, fromDate, limit, role });
 }
