@@ -438,8 +438,9 @@ export default function Login() {
     );
   }
 
-  // If already logged in, show loading (redirect is happening)
-  if (user && profile) {
+  // As soon as we have a session, swap the form for a loader so the user
+  // doesn't see the login UI flash while profile + roles resolve.
+  if (user) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
