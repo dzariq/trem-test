@@ -1,63 +1,57 @@
 import { useState, useEffect } from "react";
 
-const parentQuotes = [
-  "Every child learns at their own pace, and that's perfectly okay.",
-  "Your encouragement at home is your child's greatest advantage.",
-  "Small moments of attention shape big confidence in children.",
-  "Children grow best where they feel safe, seen, and supported.",
-  "Learning happens everywhere, not just in the classroom.",
-  "Your interest in their day means more than you know.",
-  "Reading together today builds thinkers for tomorrow.",
-  "Asking 'how was school?' is the start of real connection.",
-  "Progress, not perfection, is the goal worth celebrating.",
-  "Mistakes are how children learn to try again.",
-  "Praise effort, and effort will follow.",
-  "A calm home is a strong foundation for learning.",
-  "Your child watches how you handle hard things.",
-  "Curiosity grows when questions are welcomed at home.",
-  "Sleep, food, and routine quietly power great school days.",
-  "Every child shines in their own way.",
-  "Listening is one of the kindest things you can do.",
-  "Celebrate small wins; they add up to big growth.",
-  "Your child's character matters more than any score.",
-  "Encouragement today builds confidence for life.",
-  "Behind every confident student is a supportive family.",
-  "Time spent talking is never time wasted.",
-  "Your patience teaches more than any lesson plan.",
-  "Children learn best when they feel believed in.",
-  "A simple 'I'm proud of you' goes a long way.",
-  "Habits formed at home travel to school every day.",
-  "Curiosity is a gift you can nurture every day.",
-  "Routines bring comfort, focus, and confidence.",
-  "Asking about their friends shows you care about their world.",
-  "Reading 10 minutes a day changes a child's future.",
-  "Your example is the lesson they remember most.",
-  "Effort, kindness, and honesty matter more than grades.",
-  "Children rise to the expectations we set with love.",
-  "Take a breath; parenting is a long, beautiful journey.",
-  "Your child is learning, growing, and becoming.",
-  "Mistakes today are stepping stones for tomorrow.",
-  "Great parents don't have all the answers — they keep showing up.",
-  "A warm home is the best classroom there is.",
-  "Every conversation is a chance to connect.",
-  "Your support is the wind beneath their progress.",
-  "Help them try; let them learn; watch them grow.",
-  "Confidence is built one kind word at a time.",
-  "Today's small effort becomes tomorrow's strong habit.",
-  "Children remember moments, not lectures.",
-  "Your love is the safety net that lets them climb.",
-  "Encourage questions; they are the seeds of learning.",
-  "Be the calm in their busy school day.",
-  "Curiosity, kindness, and courage — the lessons that last.",
-  "Cheer effort louder than results.",
-  "Thank you for being your child's biggest supporter.",
+const quotesAboutChild = [
+  "Your child is becoming someone wonderful.",
+  "There's a spark in your child that the world needs.",
+  "Your child carries pieces of your kindness wherever they go.",
+  "Every child blooms in their own season — yours is blooming beautifully.",
+  "The way your child smiles started with the love you gave.",
+  "Your child is learning the world by watching how you love them.",
+  "Small as they are, your child is doing big, brave things.",
+  "Your child's confidence is built on the quiet 'I believe in you' from home.",
+  "There's no one your child would rather be cheered on by than you.",
+  "The curiosity in your child's eyes is a gift you helped create.",
+  "Your child is writing a story only they can tell.",
+  "The world sees what you first believed in your child.",
+  "Your child's laughter is proof that love lives at home.",
+  "Every question your child asks is a sign of a mind growing freely.",
+  "Your child is capable of more than they know — and you're there to show them.",
 ];
+
+const quotesAboutParenting = [
+  "You're doing better than you think.",
+  "Parenting isn't about being perfect — it's about being present.",
+  "The love you give today becomes strength they carry tomorrow.",
+  "Your patience is shaping a kinder world, one child at a time.",
+  "Some of your best parenting happens in the quietest moments.",
+  "You don't need all the answers — you just need to be there.",
+  "Showing up is half the magic of being a parent.",
+  "Your child doesn't need a perfect parent — they need a real one.",
+  "Even on the hard days, you're exactly who they need.",
+  "The little things you do every day matter more than you'll ever see.",
+  "Trust yourself — your instincts know more than you realize.",
+  "Rest is part of parenting too. You can't pour from an empty cup.",
+  "Your child won't remember a perfect house, but they will remember a present parent.",
+  "Comparison steals joy. Your family journey is uniquely yours.",
+  "Being your child's safe place is the greatest job in the world.",
+];
+
+function getDailyQuote() {
+  const now = new Date();
+  const dayOfYear = Math.floor(
+    (now.getTime() - new Date(now.getFullYear(), 0, 0).getTime()) / (1000 * 60 * 60 * 24)
+  );
+  const isChildQuote = dayOfYear % 2 === 0;
+  const pool = isChildQuote ? quotesAboutChild : quotesAboutParenting;
+  const index = dayOfYear % pool.length;
+  return pool[index];
+}
 
 const ParentWelcomeQuote = () => {
   const [displayedText, setDisplayedText] = useState("");
   const [isComplete, setIsComplete] = useState(false);
   const [isVisible, setIsVisible] = useState(true);
-  const [quote] = useState(() => parentQuotes[Math.floor(Math.random() * parentQuotes.length)]);
+  const [quote] = useState(() => getDailyQuote());
 
   useEffect(() => {
     let currentIndex = 0;
