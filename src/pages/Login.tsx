@@ -406,12 +406,9 @@ export default function Login() {
         throw new Error(verifyErr.message || "Failed to create session.");
       }
 
-      // Proactively ensure the new session is on the client before relying on
-      // the auth listener — avoids a race where the listener fires after the
-      // redirect effect has already evaluated with profile=null.
-      const { data: sess } = await supabase.auth.getSession();
-      console.log("[auth-debug] post-verify getSession", { hasSession: !!sess?.session, userId: sess?.session?.user?.id });
-      // AuthContext listener will pick up the session and the redirect effect will fire.
+      // AuthContext's onAuthStateChange listener picks up the new session
+      // automatically and the redirect effect fires once profile + roles
+      // resolve. No extra getSession() call needed here.
     } catch (err) {
       console.error("[Login] OTP verify failed:", err);
       const raw = err instanceof Error ? err.message : "Invalid OTP. Please try again.";
