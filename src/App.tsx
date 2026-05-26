@@ -57,7 +57,16 @@ import TeacherVenueDetailPage from "./pages/teacher/TeacherVenueDetailPage";
 
 import NotFound from "./pages/NotFound";
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 60_000,
+      gcTime: 5 * 60_000,
+      refetchOnWindowFocus: false,
+      retry: 1,
+    },
+  },
+});
 
 function NativeBindings() {
   useAndroidBackButton();

@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect, useMemo, useState, useCallback, ReactNode } from "react";
-import { useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { listMyLinkedStudents, type LinkedStudent } from "@/data/students";
 import { useAuth } from "@/contexts/AuthContext";
 
@@ -25,37 +25,25 @@ const StudentSelectionContext = createContext<StudentSelectionContextType | unde
 export function StudentSelectionProvider({ children }: { children: ReactNode }) {
   const queryClient = useQueryClient();
   const { loading: authLoading, user } = useAuth();
-  const [linkedStudents, setLinkedStudents] = useState<LinkedStudent[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [selectedStudentId, setSelectedStudentIdState] = useState<string>(() => readStoredStudentId());
 
-  const loadStudents = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const data = await listMyLinkedStudents();
-      setLinkedStudents(data);
-    } catch (err) {
-      const message = err instanceof Error ? err.message : "Failed to load linked students.";
-      setError(message);
-      setLinkedStudents([]);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+  const {
+    data: linkedStudents = [],
+    isLoading,
+    isFetching,
+    error: queryError,
+    refetch,
+  } = useQuery({
+    queryKey: ["linked-students", user?.id],
+    queryFn: () => listMyLinkedStudents(),
+    enabled: !authLoading && !!user,
+    staleTime: 5 * 60_000,
+    gcTime: 10 * 60_000,
+  });
 
-  // Only fetch students after auth is initialized and user exists
-  useEffect(() => {
-    if (authLoading) return; // Still initializing auth — don't query yet
-    if (!user) {
-      // Auth done but no user — clear students, not an error
-      setLinkedStudents([]);
-      setLoading(false);
-      return;
-    }
-    loadStudents();
-  }, [authLoading, user, loadStudents]);
+  // While auth is initializing, treat as loading so consumers don't render an empty state.
+  const loading = authLoading || (!!user && (isLoading || isFetching));
+  const error = queryError ? (queryError instanceof Error ? queryError.message : "Failed to load linked students.") : null;
 
   // Persist to localStorage
   useEffect(() => {
@@ -89,7 +77,8 @@ export function StudentSelectionProvider({ children }: { children: ReactNode }) 
 
     // Only invalidate if the ID actually changed
     if (id && id !== previousId) {
-      // Invalidate all student-related queries to force refetch
+      // Invalidate only student-scoped queries. notifications/calendarEvents
+      // are not keyed by student and were being needlessly refetched.
       queryClient.invalidateQueries({ queryKey: ["attendanceSummary"] });
       queryClient.invalidateQueries({ queryKey: ["studentReportCard"] });
       queryClient.invalidateQueries({ queryKey: ["studentGrades"] });
@@ -98,8 +87,6 @@ export function StudentSelectionProvider({ children }: { children: ReactNode }) 
       queryClient.invalidateQueries({ queryKey: ["studentCocurricular"] });
       queryClient.invalidateQueries({ queryKey: ["gradeAnalysis"] });
       queryClient.invalidateQueries({ queryKey: ["upcomingCcaSessions"] });
-      queryClient.invalidateQueries({ queryKey: ["notifications"] });
-      queryClient.invalidateQueries({ queryKey: ["calendarEvents"] });
     }
   }, [selectedStudentId, queryClient]);
 
@@ -109,8 +96,8 @@ export function StudentSelectionProvider({ children }: { children: ReactNode }) 
   }, [linkedStudents, selectedStudentId]);
 
   const refreshStudents = useCallback(async () => {
-    await loadStudents();
-  }, [loadStudents]);
+    await refetch();
+  }, [refetch]);
 
   return (
     <StudentSelectionContext.Provider
