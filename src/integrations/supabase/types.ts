@@ -582,6 +582,59 @@ export type Database = {
           },
         ]
       }
+      audit_findings: {
+        Row: {
+          check_key: string
+          count: number | null
+          created_at: string
+          detail: Json
+          dimension: string
+          file_path: string | null
+          id: string
+          module_key: string
+          scan_id: string
+          severity: string
+          table_name: string | null
+          title: string
+        }
+        Insert: {
+          check_key: string
+          count?: number | null
+          created_at?: string
+          detail?: Json
+          dimension: string
+          file_path?: string | null
+          id?: string
+          module_key: string
+          scan_id: string
+          severity: string
+          table_name?: string | null
+          title: string
+        }
+        Update: {
+          check_key?: string
+          count?: number | null
+          created_at?: string
+          detail?: Json
+          dimension?: string
+          file_path?: string | null
+          id?: string
+          module_key?: string
+          scan_id?: string
+          severity?: string
+          table_name?: string | null
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "audit_findings_scan_id_fkey"
+            columns: ["scan_id"]
+            isOneToOne: false
+            referencedRelation: "audit_scans"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       audit_log: {
         Row: {
           action: string
@@ -627,6 +680,127 @@ export type Database = {
           entity_type?: string
           id?: string
           summary?: string | null
+        }
+        Relationships: []
+      }
+      audit_module_relationships: {
+        Row: {
+          created_at: string
+          detail: Json
+          id: string
+          kind: string
+          scan_id: string
+          source_module: string
+          target_module: string
+          weight: number
+        }
+        Insert: {
+          created_at?: string
+          detail?: Json
+          id?: string
+          kind: string
+          scan_id: string
+          source_module: string
+          target_module: string
+          weight?: number
+        }
+        Update: {
+          created_at?: string
+          detail?: Json
+          id?: string
+          kind?: string
+          scan_id?: string
+          source_module?: string
+          target_module?: string
+          weight?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "audit_module_relationships_scan_id_fkey"
+            columns: ["scan_id"]
+            isOneToOne: false
+            referencedRelation: "audit_scans"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      audit_module_scores: {
+        Row: {
+          code_score: number | null
+          created_at: string
+          data_score: number | null
+          finding_counts: Json
+          id: string
+          module_key: string
+          overall_score: number | null
+          runtime_score: number | null
+          scan_id: string
+        }
+        Insert: {
+          code_score?: number | null
+          created_at?: string
+          data_score?: number | null
+          finding_counts?: Json
+          id?: string
+          module_key: string
+          overall_score?: number | null
+          runtime_score?: number | null
+          scan_id: string
+        }
+        Update: {
+          code_score?: number | null
+          created_at?: string
+          data_score?: number | null
+          finding_counts?: Json
+          id?: string
+          module_key?: string
+          overall_score?: number | null
+          runtime_score?: number | null
+          scan_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "audit_module_scores_scan_id_fkey"
+            columns: ["scan_id"]
+            isOneToOne: false
+            referencedRelation: "audit_scans"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      audit_scans: {
+        Row: {
+          created_at: string
+          error_message: string | null
+          finished_at: string | null
+          id: string
+          started_at: string
+          status: string
+          summary: Json
+          triggered_by: string
+          triggered_by_user: string | null
+        }
+        Insert: {
+          created_at?: string
+          error_message?: string | null
+          finished_at?: string | null
+          id?: string
+          started_at?: string
+          status?: string
+          summary?: Json
+          triggered_by?: string
+          triggered_by_user?: string | null
+        }
+        Update: {
+          created_at?: string
+          error_message?: string | null
+          finished_at?: string | null
+          id?: string
+          started_at?: string
+          status?: string
+          summary?: Json
+          triggered_by?: string
+          triggered_by_user?: string | null
         }
         Relationships: []
       }
