@@ -52,25 +52,32 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     });
   }, []);
 
-  // Function to fetch user profile
-  const fetchProfile = useCallback(async (userId: string) => {
-    try {
-      const { data, error } = await supabase
-        .from("user_profiles")
-        .select("*")
-        .eq("user_id", userId)
-        .maybeSingle();
+  // Fetch profile + warm the user-roles cache in parallel so the login
+  // redirect effect (which waits on both) doesn't pay two sequential RTTs.
+  const fetchProfileAndRoles = useCallback(async (userId: string) => {
+    const profilePromise = supabase
+      .from("user_profiles")
+      .select("*")
+      .eq("user_id", userId)
+      .maybeSingle();
+    const rolesPromise = supabase
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", userId);
 
-      if (error) {
-        console.error("Error fetching profile:", error);
-        return null;
-      }
-      return data as UserProfile | null;
-    } catch (err) {
-      console.error("Profile fetch error:", err);
-      return null;
+    const [profileRes, rolesRes] = await Promise.all([profilePromise, rolesPromise]);
+
+    if (profileRes.error) console.error("Error fetching profile:", profileRes.error);
+    if (rolesRes.error) console.error("Error fetching roles:", rolesRes.error);
+
+    // Prime react-query so useUserRoles resolves instantly.
+    if (!rolesRes.error) {
+      const roles = (rolesRes.data ?? []).map((r: any) => r.role);
+      queryClient.setQueryData(["user-roles", userId], roles);
     }
-  }, []);
+
+    return (profileRes.data as UserProfile | null) ?? null;
+  }, [queryClient]);
 
   // Set portal with localStorage persistence
   const setPortal = useCallback((newPortal: PortalType) => {
@@ -115,7 +122,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         // When user signs in, fetch profile (using setTimeout to avoid deadlock)
         if (currentSession?.user) {
           setTimeout(() => {
-            fetchProfile(currentSession.user.id).then((p) => {
+            fetchProfileAndRoles(currentSession.user.id).then((p) => {
               if (isMounted) {
                 console.log("[auth-debug] fetchProfile(listener) result", { userId: currentSession.user.id, profileRole: p?.role ?? null, isActive: p?.is_active ?? null });
                 setProfile(p);
@@ -138,7 +145,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setUser(currentSession?.user ?? null);
 
       if (currentSession?.user) {
-        fetchProfile(currentSession.user.id).then((p) => {
+        fetchProfileAndRoles(currentSession.user.id).then((p) => {
           if (isMounted) {
             console.log("[auth-debug] fetchProfile(initial) result", { userId: currentSession.user.id, profileRole: p?.role ?? null, isActive: p?.is_active ?? null });
             setProfile(p);
@@ -155,7 +162,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       isMounted = false;
       subscription.unsubscribe();
     };
-  }, [fetchProfile, queryClient]);
+  }, [fetchProfileAndRoles, queryClient]);
 
   const signOut = useCallback(async () => {
     try {
