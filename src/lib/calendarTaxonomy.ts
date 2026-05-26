@@ -204,8 +204,8 @@ export const getReadableTextColor = (hex: string): string => {
 export const getEventChipStyle = (hex: string): React.CSSProperties => {
   const safe = hex || DEFAULT_EVENT_COLOR;
   return {
-    backgroundColor: `${safe}26`, // ~15% alpha fill
-    color: safe,
-    borderColor: `${safe}66`, // ~40% alpha border
+    backgroundColor: safe,
+    color: "#ffffff",
+    borderColor: safe,
   };
 };
