@@ -47,10 +47,10 @@ Deno.serve(async (req) => {
     const portalProvided = rawPortal === "teacher" || rawPortal === "family";
     const portal = portalProvided ? rawPortal : "any";
     const allowedRoles = portal === "teacher"
-      ? ["teacher", "admin", "super_admin"]
+      ? ["teacher", "admin", "super_admin", "school_leader"]
       : portal === "family"
         ? ["parent", "student"]
-        : ["parent", "student", "teacher", "admin", "super_admin"];
+        : ["parent", "student", "teacher", "admin", "super_admin", "school_leader"];
 
     if (!emailInput && (!phone || !countryCodeRaw)) {
       return new Response(
@@ -379,7 +379,7 @@ Deno.serve(async (req) => {
         );
       }
       const isTeacherSide = otherRoles.some((r) =>
-        ["teacher", "admin", "super_admin"].includes(r),
+        ["teacher", "admin", "super_admin", "school_leader"].includes(r),
       );
       const correctPortal = isTeacherSide ? "Teacher" : "Parent / Student";
       return new Response(
