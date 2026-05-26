@@ -146,6 +146,7 @@ const mapCalendarRow = (row: any): UpcomingEvent => {
     campusId: row.campus_id ?? null,
     schoolLevel: row.school_level ?? null,
     categoryColor: row.event_categories?.color ?? null,
+    campusCode: row.campus_code ?? null,
   };
 };
 
