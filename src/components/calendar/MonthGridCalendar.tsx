@@ -381,6 +381,7 @@ export function MonthGridCalendar({
                         display: "-webkit-box",
                         WebkitLineClamp: 2,
                         WebkitBoxOrient: "vertical",
+                        textOverflow: "clip",
                       }}
                     >
                       {item.title}
