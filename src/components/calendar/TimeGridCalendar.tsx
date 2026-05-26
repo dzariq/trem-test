@@ -548,10 +548,10 @@ export function TimeGridCalendar({
                         onClick={(e) => handleBlockClick(e, b, d.ymd)}
                         aria-label={b.title}
                         className={cn(
-                          "h-[26px] text-[9px] font-medium truncate text-left no-callout [touch-action:manipulation]",
+                          "min-h-[20px] text-[8px] font-medium text-left no-callout [touch-action:manipulation]",
                           b.kind === "cca"
                             ? "flex items-center gap-1 px-1.5 rounded-full border leading-none"
-                            : "px-1.5 rounded-md leading-[26px] border",
+                            : "px-1.5 rounded-md leading-[20px] border",
                           b.kind === "cca" ? b.colorClass : undefined,
                         )}
                         style={b.kind === "event" ? getEventChipStyle(b.colorHex) : undefined}
@@ -560,7 +560,7 @@ export function TimeGridCalendar({
                           const Icon = getCcaBucketIcon((b.payload as any).category);
                           return <Icon className="h-3 w-3 shrink-0 opacity-80" aria-hidden />;
                         })()}
-                        <span className="truncate">{b.title}</span>
+                        <span className="break-words">{b.title}</span>
                       </button>
                     ))}
                     {overflow > 0 && (
@@ -571,7 +571,7 @@ export function TimeGridCalendar({
                           onSelectDay(d.ymd);
                         }}
                         aria-label={`Show ${overflow} more event${overflow === 1 ? "" : "s"} on ${d.ymd}`}
-                        className="h-[20px] px-1 rounded-md text-[9px] leading-[20px] font-semibold text-muted-foreground bg-muted/70 hover:bg-muted truncate text-left no-callout [touch-action:manipulation]"
+                        className="h-[20px] px-1 rounded-md text-[8px] leading-[20px] font-semibold text-muted-foreground bg-muted/70 hover:bg-muted text-left no-callout [touch-action:manipulation]"
                       >
                         +{overflow} more
                       </button>
@@ -651,7 +651,7 @@ export function TimeGridCalendar({
                         onClick={(e) => handleBlockClick(e, b, d.ymd)}
                         aria-label={b.title}
                         className={cn(
-                          "absolute px-1.5 py-0.5 text-[10px] font-medium text-left overflow-hidden shadow-sm z-10 no-callout",
+                          "absolute px-1.5 py-0.5 text-[9px] font-medium text-left shadow-sm z-10 no-callout",
                           b.kind === "cca"
                             ? "rounded-2xl border-2"
                             : "rounded-md border",
@@ -666,12 +666,12 @@ export function TimeGridCalendar({
                           ...(b.kind === "event" ? getEventChipStyle(b.colorHex) : {}),
                         }}
                       >
-                        <div className="truncate flex items-center gap-1">
+                        <div className="flex items-center gap-1 flex-wrap">
                           {b.kind === "cca" && (() => {
                             const Icon = getCcaBucketIcon((b.payload as any).category);
                             return <Icon className="h-3 w-3 shrink-0 opacity-80" aria-hidden />;
                           })()}
-                          <span className="truncate">{b.title}</span>
+                          <span className="break-words">{b.title}</span>
                         </div>
                       </button>
                     );
