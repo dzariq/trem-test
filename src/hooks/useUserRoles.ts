@@ -12,18 +12,16 @@ export function useUserRoles() {
   const query = useQuery({
     queryKey: ["user-roles", user?.id],
     enabled: !!user?.id,
-    // Always refetch on mount / window focus so the mobile WebView
-    // never reuses a stale roles list after a role is added in the DB.
-    staleTime: 0,
-    gcTime: 0,
-    refetchOnMount: "always",
-    refetchOnWindowFocus: true,
+    // AuthContext invalidates ["user-roles"] on SIGNED_IN/OUT/TOKEN_REFRESHED,
+    // so we can safely cache for a few minutes instead of refetching on every
+    // mount/focus (which was adding ~300-500ms to every navigation).
+    staleTime: 5 * 60_000,
+    gcTime: 10 * 60_000,
+    refetchOnMount: false,
+    refetchOnWindowFocus: false,
     refetchOnReconnect: true,
     retry: 2,
     queryFn: async (): Promise<AppRole[]> => {
-      // Ensure the auth session is hydrated (important on Android WebView,
-      // where Capacitor Preferences storage is async) before querying.
-      await supabase.auth.getSession();
       let { data, error } = await supabase
         .from("user_roles")
         .select("role")
