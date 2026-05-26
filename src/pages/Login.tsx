@@ -450,7 +450,7 @@ export default function Login() {
   }
 
   return (
-    <div className="min-h-screen bg-background flex flex-col items-center justify-center p-6">
+    <div className="h-[100dvh] overflow-hidden bg-background flex flex-col items-center justify-center p-6">
       <div className="text-center mb-10">
         <img src={schoolBadge} alt="School Badge" className="h-24 w-auto mx-auto mb-4" />
         <h1 className="text-2xl font-bold text-foreground whitespace-pre-line">
