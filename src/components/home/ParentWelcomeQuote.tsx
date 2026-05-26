@@ -51,7 +51,7 @@ const ParentWelcomeQuote = () => {
   const [displayedText, setDisplayedText] = useState("");
   const [isComplete, setIsComplete] = useState(false);
   const [isVisible, setIsVisible] = useState(true);
-  const [quote] = useState(() => parentQuotes[Math.floor(Math.random() * parentQuotes.length)]);
+  const [quote] = useState(() => getDailyQuote());
 
   useEffect(() => {
     let currentIndex = 0;
