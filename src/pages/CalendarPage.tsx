@@ -269,12 +269,11 @@ export default function CalendarPage() {
     (event) => selectedDay >= event.startDay && selectedDay <= event.endDay
   );
 
-  const showCcaSessions = isAllSelected || activeCategories.includes("events");
-  const ccaSessionsForSelectedDate = showCcaSessions
-    ? ccaSessions.filter((session) => session.sessionDate === selectedDay)
-    : [];
-
-  const gridCcaSessions = showCcaSessions ? ccaSessions : [];
+  // CCA sessions always show alongside normal events for anyone they're assigned to.
+  const ccaSessionsForSelectedDate = ccaSessions.filter(
+    (session) => session.sessionDate === selectedDay,
+  );
+  const gridCcaSessions = ccaSessions;
 
   useEffect(() => {
     let isMounted = true;

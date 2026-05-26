@@ -219,10 +219,6 @@ export default function TeacherCalendarPage() {
   );
 
   // Show CCA sessions when viewing all or event-related filters.
-  const showCcaSessions = isAllSelected || activeCategories.includes("events");
-  const ccaSessionsOnSelectedDate = showCcaSessions
-    ? ccaSessions.filter((session) => session.sessionDate === selectedDay)
-    : [];
 
   const formatSessionTime = (startTime: string | null, endTime: string | null) => {
     if (!startTime && !endTime) return "All Day";
@@ -233,7 +229,11 @@ export default function TeacherCalendarPage() {
 
   const getCcaCategoryColor = getCcaTypeColor;
 
-  const gridCcaSessions = showCcaSessions ? ccaSessions : [];
+  // CCA sessions always show alongside normal events for anyone they're assigned to.
+  const ccaSessionsOnSelectedDate = ccaSessions.filter(
+    (session) => session.sessionDate === selectedDay,
+  );
+  const gridCcaSessions = ccaSessions;
 
   useEffect(() => {
     let isMounted = true;
