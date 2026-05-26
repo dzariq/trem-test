@@ -1,30 +1,23 @@
-## Grant `school_leader` Teacher-Portal Access (Mobile App)
+## Goal
+Swap the subtle gradient colors on the secondary nav strip: Parent → light gold, Teacher → light green. Make the active side of the Parent/Teacher pill reflect the same color (gold when Parent active, green when Teacher active), at a visible (not washed-out) intensity.
 
-Treat `school_leader` the same as teacher/admin/super_admin everywhere on the mobile app — routing, role hooks, and CCA "principal-tier" permissions. The DB enum already includes `school_leader` (types regenerated), so this is a frontend-only change.
+## Changes
 
-### Files to update
+**1. `src/components/layout/SecondaryNavBar.tsx`**
+Swap the two `linear-gradient(...)` values:
+- Parent (was green) → gold: `hsl(45 85% 58% / 0.18) → /0.06 → background`
+- Teacher (was gold) → green (primary): `hsl(var(--primary) / 0.18) → /0.06 → background`
 
-1. **`src/hooks/useUserRoles.ts`**
-   - Extend `AppRole` type: `"parent" | "teacher" | "admin" | "super_admin" | "school_leader"`.
-   - Add `"school_leader"` to the `TEACHER_SIDE` array so `hasTeacherRole` returns true for school leaders.
+**2. `src/components/layout/PortalSwitcher.tsx`**
+Replace the single `ACTIVE_STYLE` constant with a per-side active style so the highlighted pill matches its color:
+- Parent active → gold tint: `bg-[hsl(45_85%_58%/0.22)] text-[hsl(38_78%_30%)] border-[hsl(38_78%_42%/0.55)]`
+- Teacher active → green tint: `bg-primary/15 text-primary border-primary/50`
 
-2. **`src/pages/Login.tsx`**
-   - In the post-login redirect effect, add `"school_leader"` to the `["teacher","admin","super_admin"]` profile-role fallback check so a school_leader-only user routes to `/teacher`.
+Inactive stays as today (muted, transparent).
 
-3. **`src/pages/RoleSelectionPage.tsx`**
-   - Same addition to the `["teacher","admin","super_admin"]` array.
+**3. Child selector strips (subpages)**
+Keep these green — the user only asked to swap the home secondary nav and pill, and previously confirmed green for student-dropdown strips. No change to `AppHeader.tsx` or `ParentCcaPage.tsx`.
 
-4. **CCA permission hooks — replace `role === "principal"` with `role === "school_leader"`** (keeping the variable name `isPrincipal` for now to minimize churn; it just means "top-tier school manager"):
-   - `src/hooks/useCcaActivityPermissions.ts`
-   - `src/hooks/useCcaActivityFilter.ts`
-   - (`useCcaBusPermissions.ts` already derives from `useCcaActivityPermissions`, so it inherits the fix.)
-
-### Out of scope (will not change)
-
-- RLS, DB functions, edge functions — already handled in the sibling project's rename. `is_principal()` still exists as a DB fallback.
-- Renaming the `isPrincipal` variable/flag throughout the codebase — pure cosmetic, can be a follow-up.
-- Teacher app project (separate Lovable project) — needs its own mirrored update.
-
-### Verification
-
-After build: log in (or simulate) as a `school_leader`-only user → should land on `/teacher`, see all CCAs in the activity filter, and have `canEdit`/`canManageBus` true on all CCA activities/buses.
+## Out of scope
+- No token changes in `index.css` / `tailwind.config.ts`.
+- No logic, routing, or data changes.
