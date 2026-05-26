@@ -43,11 +43,11 @@ export function SecondaryNavBar() {
 
   return (
     <div
-      className="sticky top-0 z-30 w-full border-y border-black/30 shadow-sm"
+      className="sticky top-0 z-30 w-full border-b border-border/60"
       style={{
         backgroundImage: isTeacherPortal
-          ? "linear-gradient(135deg, hsl(150 35% 18%) 0%, hsl(155 40% 12%) 100%)"
-          : "linear-gradient(135deg, hsl(45 85% 58%) 0%, hsl(38 78% 42%) 50%, hsl(33 72% 32%) 100%)",
+          ? "linear-gradient(to right, hsl(45 85% 58% / 0.18), hsl(45 85% 58% / 0.06), hsl(var(--background)))"
+          : "linear-gradient(to right, hsl(var(--primary) / 0.18), hsl(var(--primary) / 0.06), hsl(var(--background)))",
       }}
     >
       <div className="flex items-center justify-between px-4 py-2">

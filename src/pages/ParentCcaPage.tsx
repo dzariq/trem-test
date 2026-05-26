@@ -48,7 +48,7 @@ export default function ParentCcaPage() {
             My CCAs
           </h1>
         </div>
-        <div className="px-4 pb-3 pt-1 border-t border-border/60 bg-card/95">
+        <div className="px-4 pb-3 pt-1 border-t border-border/60 bg-gradient-to-r from-primary/15 via-primary/5 to-background">
           <ChildSelectorDropdown variant="bar" />
         </div>
       </header>
