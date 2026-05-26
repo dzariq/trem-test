@@ -549,7 +549,12 @@ export default function Login() {
               </TabsContent>
             </Tabs>
 
-            {error && <p className="text-sm text-destructive">{error}</p>}
+            {error && (
+              <Alert variant="destructive">
+                <AlertCircle className="h-4 w-4" />
+                <AlertDescription>{error}</AlertDescription>
+              </Alert>
+            )}
 
             <Button className="w-full" onClick={handleRequestOtp} disabled={loading}>
               {loading ? (
@@ -610,7 +615,12 @@ export default function Login() {
                 </div>
               </div>
 
-              {error && <p className="text-sm text-destructive">{error}</p>}
+              {error && (
+                <Alert variant="destructive">
+                  <AlertCircle className="h-4 w-4" />
+                  <AlertDescription>{error}</AlertDescription>
+                </Alert>
+              )}
 
               <Button
                 className="w-full"
