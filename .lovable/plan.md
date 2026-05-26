@@ -1,23 +1,28 @@
 ## Goal
-Swap the subtle gradient colors on the secondary nav strip: Parent → light gold, Teacher → light green. Make the active side of the Parent/Teacher pill reflect the same color (gold when Parent active, green when Teacher active), at a visible (not washed-out) intensity.
 
-## Changes
+Make non-CCA calendar event chips render as a **solid color block with white text**, using the exact hex palette already mirrored from the admin web project (`collinz-app-school`). CCA chips stay untouched.
 
-**1. `src/components/layout/SecondaryNavBar.tsx`**
-Swap the two `linear-gradient(...)` values:
-- Parent (was green) → gold: `hsl(45 85% 58% / 0.18) → /0.06 → background`
-- Teacher (was gold) → green (primary): `hsl(var(--primary) / 0.18) → /0.06 → background`
+## Current state
 
-**2. `src/components/layout/PortalSwitcher.tsx`**
-Replace the single `ACTIVE_STYLE` constant with a per-side active style so the highlighted pill matches its color:
-- Parent active → gold tint: `bg-[hsl(45_85%_58%/0.22)] text-[hsl(38_78%_30%)] border-[hsl(38_78%_42%/0.55)]`
-- Teacher active → green tint: `bg-primary/15 text-primary border-primary/50`
+- Event chips currently render translucent (15% alpha bg, colored text, 40% alpha border) via `getEventChipStyle(hex)` in `src/lib/calendarTaxonomy.ts`.
+- Colors already come from `resolveEventHex` which mirrors the admin project's taxonomy hex values (Exams `#dc2626`, Holidays `#22c55e`, Events `#8b5cf6`, Staff/Admin `#f97316`, Due `#f43f5e`, Students `#06b6d4`, Parents `#ec4899`, plus subtype variants). So the palette is already correct — only the chip rendering needs to change.
+- CCA chips use a separate `colorClass` (Tailwind class from `getCcaTypePillColor`) — they will be left alone.
 
-Inactive stays as today (muted, transparent).
+## Change
 
-**3. Child selector strips (subpages)**
-Keep these green — the user only asked to swap the home secondary nav and pill, and previously confirmed green for student-dropdown strips. No change to `AppHeader.tsx` or `ParentCcaPage.tsx`.
+Update `getEventChipStyle` in `src/lib/calendarTaxonomy.ts`:
 
-## Out of scope
-- No token changes in `index.css` / `tailwind.config.ts`.
-- No logic, routing, or data changes.
+```ts
+export const getEventChipStyle = (hex: string): React.CSSProperties => {
+  const safe = hex || DEFAULT_EVENT_COLOR;
+  return {
+    backgroundColor: safe,
+    color: "#ffffff",
+    borderColor: safe,
+  };
+};
+```
+
+This automatically applies to all three places that consume it (MonthGridCalendar chips, TimeGridCalendar all-day + timed blocks, UpcomingEventsSection pills) — all of which already gate on `kind === "event"`, so CCA chips are unaffected.
+
+No other files need to change.
