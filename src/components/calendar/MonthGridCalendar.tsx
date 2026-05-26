@@ -376,12 +376,12 @@ export function MonthGridCalendar({
                       return <Icon className="h-2.5 w-2.5 shrink-0 opacity-80" aria-hidden />;
                     })()}
                     <span
-                      className="break-words overflow-hidden"
+                      className="break-words overflow-hidden block"
                       style={{
-                        display: "-webkit-box",
-                        WebkitLineClamp: 2,
-                        WebkitBoxOrient: "vertical",
+                        maxHeight: "22px",
+                        lineHeight: "11px",
                         textOverflow: "clip",
+                        wordBreak: "break-word",
                       }}
                     >
                       {item.title}
