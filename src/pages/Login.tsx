@@ -14,7 +14,8 @@ import {
 import schoolBadge from "@/assets/school-badge.png";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/contexts/AuthContext";
-import { Loader2, Phone, ArrowLeft, Mail } from "lucide-react";
+import { Loader2, Phone, ArrowLeft, Mail, AlertCircle } from "lucide-react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { allCountries } from "country-telephone-data";
 import { useUserRoles } from "@/hooks/useUserRoles";
@@ -548,7 +549,12 @@ export default function Login() {
               </TabsContent>
             </Tabs>
 
-            {error && <p className="text-sm text-destructive">{error}</p>}
+            {error && (
+              <Alert variant="destructive">
+                <AlertCircle className="h-4 w-4" />
+                <AlertDescription>{error}</AlertDescription>
+              </Alert>
+            )}
 
             <Button className="w-full" onClick={handleRequestOtp} disabled={loading}>
               {loading ? (
@@ -609,7 +615,12 @@ export default function Login() {
                 </div>
               </div>
 
-              {error && <p className="text-sm text-destructive">{error}</p>}
+              {error && (
+                <Alert variant="destructive">
+                  <AlertCircle className="h-4 w-4" />
+                  <AlertDescription>{error}</AlertDescription>
+                </Alert>
+              )}
 
               <Button
                 className="w-full"
