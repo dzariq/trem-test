@@ -498,9 +498,9 @@ export default function Login() {
               <Label htmlFor="phone">Phone number</Label>
               <div className="flex gap-2">
                 <Select value={countryIso2} onValueChange={setCountryIso2}>
-                  <SelectTrigger className="w-[130px] shrink-0" aria-label="Country code">
+                  <SelectTrigger className="w-[92px] shrink-0 px-2" aria-label="Country code">
                     <SelectValue>
-                      <span className="flex items-center gap-1.5">
+                      <span className="flex items-center gap-1">
                         <span className="text-base leading-none">
                           {isoToFlag(selectedCountry.iso2)}
                         </span>
@@ -508,15 +508,15 @@ export default function Login() {
                       </span>
                     </SelectValue>
                   </SelectTrigger>
-                  <SelectContent className="max-h-72">
+                  <SelectContent className="max-h-72 w-[min(92vw,360px)]">
                     {COUNTRIES.map((c) => (
-                      <SelectItem key={c.iso2} value={c.iso2}>
-                        <span className="flex items-center gap-2">
+                      <SelectItem key={c.iso2} value={c.iso2} className="pr-2">
+                        <span className="flex items-center gap-2 w-full min-w-0">
                           <span className="text-base leading-none">
                             {isoToFlag(c.iso2)}
                           </span>
-                          <span className="truncate">{c.name}</span>
-                          <span className="text-muted-foreground ml-auto">
+                          <span className="truncate flex-1 min-w-0">{c.name}</span>
+                          <span className="text-muted-foreground ml-auto shrink-0">
                             +{c.dialCode}
                           </span>
                         </span>
