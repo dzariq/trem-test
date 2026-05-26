@@ -3515,33 +3515,51 @@ export type Database = {
       inquiries: {
         Row: {
           admin_id: string | null
+          campus: string | null
+          contact_number: string | null
+          current_school: string | null
           id: string
           inquiry_id: string | null
           new_status: string | null
+          parent_email: string | null
+          parent_name: string | null
           status: string | null
           status_changed_at: string | null
           student_name: string | null
           timestamp: string | null
+          year_level: string | null
         }
         Insert: {
           admin_id?: string | null
+          campus?: string | null
+          contact_number?: string | null
+          current_school?: string | null
           id?: string
           inquiry_id?: string | null
           new_status?: string | null
+          parent_email?: string | null
+          parent_name?: string | null
           status?: string | null
           status_changed_at?: string | null
           student_name?: string | null
           timestamp?: string | null
+          year_level?: string | null
         }
         Update: {
           admin_id?: string | null
+          campus?: string | null
+          contact_number?: string | null
+          current_school?: string | null
           id?: string
           inquiry_id?: string | null
           new_status?: string | null
+          parent_email?: string | null
+          parent_name?: string | null
           status?: string | null
           status_changed_at?: string | null
           student_name?: string | null
           timestamp?: string | null
+          year_level?: string | null
         }
         Relationships: []
       }
@@ -4465,6 +4483,54 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      rsvp_inquiries: {
+        Row: {
+          admin_id: string | null
+          campus: string | null
+          contact_number: string | null
+          current_school: string | null
+          id: string
+          inquiry_id: string | null
+          new_status: string | null
+          parent_name: string | null
+          preferred_date: string | null
+          status: string | null
+          student_name: string | null
+          timestamp: string
+          year_level: string | null
+        }
+        Insert: {
+          admin_id?: string | null
+          campus?: string | null
+          contact_number?: string | null
+          current_school?: string | null
+          id?: string
+          inquiry_id?: string | null
+          new_status?: string | null
+          parent_name?: string | null
+          preferred_date?: string | null
+          status?: string | null
+          student_name?: string | null
+          timestamp?: string
+          year_level?: string | null
+        }
+        Update: {
+          admin_id?: string | null
+          campus?: string | null
+          contact_number?: string | null
+          current_school?: string | null
+          id?: string
+          inquiry_id?: string | null
+          new_status?: string | null
+          parent_name?: string | null
+          preferred_date?: string | null
+          status?: string | null
+          student_name?: string | null
+          timestamp?: string
+          year_level?: string | null
+        }
+        Relationships: []
       }
       school_documents: {
         Row: {
@@ -7066,6 +7132,13 @@ export type Database = {
           currency: string
           outstanding: number
           overpayment: number
+          student_id: string
+        }[]
+      }
+      get_student_parents_map: {
+        Args: { _campus_code?: string }
+        Returns: {
+          parents: Json
           student_id: string
         }[]
       }
