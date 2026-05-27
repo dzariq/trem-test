@@ -78,7 +78,9 @@ jobs:
         run: |
           set -e
           test -f resources/icon.png || { echo "Missing resources/icon.png"; exit 1; }
-          test -f resources/splash.png || { echo "Missing resources/splash.png"; exit 1; }
+          test -f resources/splash_screen.mp4 || { echo "Missing resources/splash_screen.mp4"; exit 1; }
+          # capacitor-assets still needs a static splash.png; use the app icon.
+          cp resources/icon.png resources/splash.png
 
       - name: Setup JDK 21 (Temurin)
         uses: actions/setup-java@v4
@@ -103,7 +105,14 @@ jobs:
             --splashBackgroundColor "#ffffff" \
             --splashBackgroundColorDark "#1a1a1a"
 
-      - name: Patch MainActivity with NUCLEAR no-cache (URL overlay removed)
+      - name: Bundle splash video for Android
+        run: |
+          set -e
+          mkdir -p android/app/src/main/res/raw
+          cp resources/splash_screen.mp4 android/app/src/main/res/raw/splash_screen.mp4
+          ls -la android/app/src/main/res/raw/
+
+      - name: Patch MainActivity with NUCLEAR no-cache + video splash
         run: |
           set -e
           APP_PKG_DIR="android/app/src/main/java/com/collinz/school"
@@ -115,17 +124,23 @@ jobs:
           cat > "$APP_PKG_DIR/MainActivity.java" << 'EOF'
           package com.collinz.school;
 
+          import android.graphics.Color;
+          import android.net.Uri;
           import android.os.Build;
           import android.os.Bundle;
           import android.os.Handler;
           import android.os.Looper;
           import android.util.Log;
+          import android.view.Gravity;
+          import android.view.ViewGroup;
           import android.webkit.CookieManager;
           import android.webkit.ServiceWorkerController;
           import android.webkit.ServiceWorkerWebSettings;
           import android.webkit.WebSettings;
           import android.webkit.WebStorage;
           import android.webkit.WebView;
+          import android.widget.FrameLayout;
+          import android.widget.VideoView;
 
           import com.getcapacitor.BridgeActivity;
 
@@ -160,10 +175,13 @@ jobs:
           public class MainActivity extends BridgeActivity {
 
               private static final String TAG = "CollinzNav";
+              private FrameLayout splashOverlay;
+              private VideoView splashVideo;
 
               @Override
               public void onCreate(Bundle savedInstanceState) {
                   super.onCreate(savedInstanceState);
+                  playSplashVideo();
 
                   final WebView webView = (this.bridge != null) ? this.bridge.getWebView() : null;
                   if (webView == null) {
@@ -246,6 +264,52 @@ jobs:
                   };
                   handler.postDelayed(swAssassin, 1500);
               }
+
+              private void playSplashVideo() {
+                  ViewGroup root = findViewById(android.R.id.content);
+                  if (root == null) {
+                      return;
+                  }
+
+                  splashOverlay = new FrameLayout(this);
+                  splashOverlay.setBackgroundColor(Color.WHITE);
+                  splashVideo = new VideoView(this);
+                  FrameLayout.LayoutParams videoParams = new FrameLayout.LayoutParams(
+                      ViewGroup.LayoutParams.MATCH_PARENT,
+                      ViewGroup.LayoutParams.MATCH_PARENT,
+                      Gravity.CENTER
+                  );
+                  splashOverlay.addView(splashVideo, videoParams);
+
+                  FrameLayout.LayoutParams overlayParams = new FrameLayout.LayoutParams(
+                      ViewGroup.LayoutParams.MATCH_PARENT,
+                      ViewGroup.LayoutParams.MATCH_PARENT
+                  );
+                  root.addView(splashOverlay, overlayParams);
+
+                  Uri uri = Uri.parse(
+                      "android.resource://" + getPackageName() + "/" + R.raw.splash_screen
+                  );
+                  splashVideo.setVideoURI(uri);
+                  splashVideo.setOnCompletionListener(mp -> dismissSplashVideo());
+                  splashVideo.setOnErrorListener((mp, what, extra) -> {
+                      Log.w(TAG, "Splash video error: " + what + "," + extra);
+                      dismissSplashVideo();
+                      return true;
+                  });
+                  splashVideo.start();
+              }
+
+              private void dismissSplashVideo() {
+                  if (splashOverlay != null) {
+                      ViewGroup root = findViewById(android.R.id.content);
+                      if (root != null) {
+                          root.removeView(splashOverlay);
+                      }
+                      splashOverlay = null;
+                      splashVideo = null;
+                  }
+              }
           }
           EOF
           echo "Patched MainActivity.java:"
@@ -270,6 +334,11 @@ jobs:
       - name: Sync placeholder webDir into Android project
         run: npx cap sync android
 
+      - name: Re-bundle splash video after sync
+        run: |
+          mkdir -p android/app/src/main/res/raw
+          cp resources/splash_screen.mp4 android/app/src/main/res/raw/splash_screen.mp4
+
       - name: Verify MainActivity NUCLEAR patches survived sync
         run: |
           set -e
@@ -283,7 +352,9 @@ jobs:
               "CookieManager.getInstance" \
               "ServiceWorkerController" \
               "_cb=" \
-              "swAssassin"; do
+              "swAssassin" \
+              "playSplashVideo" \
+              "splash_screen"; do
             if ! grep -q "$NEEDLE" "$MA"; then
               echo "FATAL: '$NEEDLE' missing from MainActivity.java after sync"
               cat "$MA"
@@ -291,6 +362,10 @@ jobs:
             fi
           done
           echo "All nuclear cache-busting patches verified in MainActivity.java"
+          test -f android/app/src/main/res/raw/splash_screen.mp4 || {
+            echo "FATAL: splash_screen.mp4 missing from Android res/raw after sync"
+            exit 1
+          }
 
       - name: Make gradlew executable
         working-directory: android

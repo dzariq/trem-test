@@ -44,7 +44,9 @@ const config: CapacitorConfig = {
   },
   plugins: {
     SplashScreen: {
-      launchShowDuration: 2000,
+      // Static drawable is a white fallback only; the real splash is
+      // resources/splash_screen.mp4 played natively in MainActivity / AppDelegate.
+      launchShowDuration: 0,
       launchAutoHide: true,
       backgroundColor: "#ffffff",
       androidSplashResourceName: "splash",

@@ -77,7 +77,8 @@ jobs:
         run: |
           set -e
           test -f resources/icon.png || { echo "Missing resources/icon.png"; exit 1; }
-          test -f resources/splash.png || { echo "Missing resources/splash.png"; exit 1; }
+          test -f resources/splash_screen.mp4 || { echo "Missing resources/splash_screen.mp4"; exit 1; }
+          cp resources/icon.png resources/splash.png
 
       - name: Generate iOS icons & splash from Collinz logo
         run: |
@@ -113,10 +114,13 @@ jobs:
           echo "Splash files:"
           ls -la "$ASSETS_DIR/Splash.imageset"
 
-      - name: Patch AppDelegate to disable WKWebView cache
-        # Mirror the Android MainActivity patch: clear WKWebView website data
-        # on every app launch so users never see stale https://collinz.app
-        # HTML/JS/CSS after a deploy.
+      - name: Bundle splash video into iOS app target
+        run: |
+          set -e
+          gem install xcodeproj --no-document
+          ruby scripts/ios-add-splash-video.rb
+
+      - name: Patch AppDelegate for WKWebView cache wipe + video splash
         run: |
           set -e
           APP_DELEGATE="ios/App/App/AppDelegate.swift"
@@ -129,29 +133,79 @@ jobs:
           import UIKit
           import Capacitor
           import WebKit
+          import AVFoundation
 
           @UIApplicationMain
           class AppDelegate: UIResponder, UIApplicationDelegate {
 
               var window: UIWindow?
+              private var splashContainer: UIView?
+              private var splashPlayer: AVPlayer?
 
               func application(_ application: UIApplication,
                                didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
-                  // Wipe all WKWebView caches (disk + memory + cookies + local
-                  // storage) on every cold start so the live wrapper always
-                  // pulls fresh HTML/JS/CSS from https://collinz.app.
+                  // Wipe all WKWebView caches on every cold start.
                   let dataStore = WKWebsiteDataStore.default()
                   let dataTypes = WKWebsiteDataStore.allWebsiteDataTypes()
                   dataStore.removeData(ofTypes: dataTypes,
                                        modifiedSince: Date(timeIntervalSince1970: 0)) {
                       NSLog("Collinz: cleared WKWebView website data on launch")
                   }
-                  // Also disable the URLCache so HTTP responses never hit the
-                  // shared cache.
                   URLCache.shared.removeAllCachedResponses()
                   URLCache.shared.diskCapacity = 0
                   URLCache.shared.memoryCapacity = 0
+
+                  DispatchQueue.main.async {
+                      self.showSplashVideo()
+                  }
                   return true
+              }
+
+              private func showSplashVideo() {
+                  guard let path = Bundle.main.path(forResource: "splash_screen", ofType: "mp4") else {
+                      NSLog("Collinz: splash_screen.mp4 not found in bundle")
+                      return
+                  }
+
+                  let url = URL(fileURLWithPath: path)
+                  let player = AVPlayer(url: url)
+                  splashPlayer = player
+
+                  let layer = AVPlayerLayer(player: player)
+                  layer.videoGravity = .resizeAspectFill
+
+                  guard let hostWindow = self.window ?? UIApplication.shared.connectedScenes
+                      .compactMap({ $0 as? UIWindowScene })
+                      .flatMap({ $0.windows })
+                      .first(where: { $0.isKeyWindow }) else {
+                      NSLog("Collinz: no UIWindow for splash video")
+                      return
+                  }
+
+                  let container = UIView(frame: hostWindow.bounds)
+                  container.backgroundColor = .white
+                  container.autoresizingMask = [.flexibleWidth, .flexibleHeight]
+                  layer.frame = container.bounds
+                  container.layer.addSublayer(layer)
+                  hostWindow.addSubview(container)
+                  splashContainer = container
+
+                  NotificationCenter.default.addObserver(
+                      forName: .AVPlayerItemDidPlayToEndTime,
+                      object: player.currentItem,
+                      queue: .main
+                  ) { [weak self] _ in
+                      self?.dismissSplashVideo()
+                  }
+
+                  player.play()
+              }
+
+              private func dismissSplashVideo() {
+                  splashPlayer?.pause()
+                  splashPlayer = nil
+                  splashContainer?.removeFromSuperview()
+                  splashContainer = nil
               }
 
               func applicationWillResignActive(_ application: UIApplication) {}
@@ -181,7 +235,12 @@ jobs:
       - name: Sync placeholder webDir into iOS project
         run: npx cap sync ios
 
-      - name: Verify AppDelegate cache patch survived sync
+      - name: Re-bundle splash video after sync
+        run: |
+          gem install xcodeproj --no-document
+          ruby scripts/ios-add-splash-video.rb
+
+      - name: Verify AppDelegate patches and splash video survived sync
         run: |
           set -e
           if ! grep -q "WKWebsiteDataStore" ios/App/App/AppDelegate.swift; then
@@ -189,7 +248,15 @@ jobs:
             cat ios/App/App/AppDelegate.swift
             exit 1
           fi
-          echo "WKWebView cache-busting patch verified in AppDelegate.swift"
+          if ! grep -q "showSplashVideo" ios/App/App/AppDelegate.swift; then
+            echo "FATAL: video splash patch missing from AppDelegate after sync"
+            exit 1
+          fi
+          test -f ios/App/App/splash_screen.mp4 || {
+            echo "FATAL: splash_screen.mp4 missing from iOS app bundle"
+            exit 1
+          }
+          echo "WKWebView cache + video splash verified"
 
       - name: Bump iOS build number to GitHub run number
         working-directory: ios/App

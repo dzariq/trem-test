@@ -74,8 +74,10 @@ What's inside the APK:
 - A custom `MainActivity` that disables the WebView HTTP cache
   (`WebSettings.LOAD_NO_CACHE`) and clears any prior cached resources on
   every cold start, so users never see stale assets.
-- Collinz crest icons and splash drawables generated from
-  `resources/icon.png` and `resources/splash.png`.
+- Collinz crest app icon from `resources/icon.png`.
+- Launch splash video from `resources/splash_screen.mp4` (played natively
+  on Android and iOS). A static `resources/splash.png` is generated at
+  build time from the icon for Capacitor's white fallback drawable only.
 - A 30-line `dist/index.html` redirect-to-`https://collinz.app` page
   that only exists as a defensive fallback for the (extremely unlikely)
   case where the WebView fails to honour `server.url`.
