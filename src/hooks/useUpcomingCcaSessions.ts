@@ -160,13 +160,23 @@ export function useUpcomingCcaSessions(options: UseUpcomingCcaSessionsOptions = 
 
         // 2. Event activities matching any student's class
         let eventIds: string[] = [];
-        if (classes.length > 0) {
+        {
+          // Include school-wide events (empty classes_involved) for everyone,
+          // plus events whose classes_involved overlaps any student's class.
+          const orParts: string[] = [
+            "classes_involved.is.null",
+            "classes_involved.eq.{}",
+          ];
+          if (classes.length > 0) {
+            const arrLiteral = `{${classes.map((c) => `"${c}"`).join(",")}}`;
+            orParts.push(`classes_involved.ov.${arrLiteral}`);
+          }
           const { data: eventRows, error: eventErr } = await supabase
             .from("cca_activities")
             .select("id")
             .eq("kind", "event")
             .eq("is_active", true)
-            .overlaps("classes_involved", classes);
+            .or(orParts.join(","));
           if (eventErr) throw eventErr;
           eventIds = (eventRows || []).map((r: any) => r.id);
         }
