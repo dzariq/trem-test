@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useQueryClient } from "@tanstack/react-query";
 import { AppLayout } from "@/components/layout/AppLayout";
@@ -78,6 +78,12 @@ import {
   deleteStudentAvatar,
   compressImageFile,
 } from "@/lib/studentAvatars";
+import {
+  resolveUserAvatar,
+  uploadUserAvatar,
+  deleteUserAvatar,
+  getCachedUserAvatar,
+} from "@/lib/userAvatars";
 
 const sportsHouseColors: Record<string, { bg: string; text: string; label: string }> = {
   red: { bg: "bg-red-500", text: "text-white", label: "Red House" },
@@ -135,6 +141,68 @@ export default function ProfilePage() {
   const [studentPhotos, setStudentPhotos] = useState<Record<string, string | null>>({});
   const [pendingFile, setPendingFile] = useState<File | null>(null);
   const [isSavingPhoto, setIsSavingPhoto] = useState(false);
+
+  // Own (parent/user) avatar
+  const ownUserId = profile?.user_id ?? null;
+  const [ownAvatarUrl, setOwnAvatarUrl] = useState<string | null>(
+    () => (profile?.user_id ? getCachedUserAvatar(profile.user_id) : null)
+  );
+  const [isUploadingOwn, setIsUploadingOwn] = useState(false);
+  const ownFileInputRef = useRef<HTMLInputElement | null>(null);
+
+  useEffect(() => {
+    if (!ownUserId) return;
+    setOwnAvatarUrl(getCachedUserAvatar(ownUserId));
+    let cancelled = false;
+    resolveUserAvatar(ownUserId)
+      .then((url) => {
+        if (!cancelled) setOwnAvatarUrl(url);
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, [ownUserId]);
+
+  const handleOwnPhotoChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file || !ownUserId) return;
+    if (!file.type.startsWith("image/")) {
+      toast.error("Please choose an image file.");
+      return;
+    }
+    if (file.size > 8 * 1024 * 1024) {
+      toast.error("Image too large. Max 8 MB.");
+      return;
+    }
+    try {
+      setIsUploadingOwn(true);
+      const url = await uploadUserAvatar(ownUserId, file);
+      setOwnAvatarUrl(url);
+      toast.success("Profile photo updated.");
+    } catch (err) {
+      console.error("[profile] upload own avatar failed", err);
+      toast.error("Could not upload photo. Please try again.");
+    } finally {
+      setIsUploadingOwn(false);
+    }
+  };
+
+  const handleOwnPhotoRemove = async () => {
+    if (!ownUserId) return;
+    try {
+      setIsUploadingOwn(true);
+      await deleteUserAvatar(ownUserId);
+      setOwnAvatarUrl(null);
+      toast.success("Profile photo removed.");
+    } catch (err) {
+      console.error("[profile] delete own avatar failed", err);
+      toast.error("Could not remove photo.");
+    } finally {
+      setIsUploadingOwn(false);
+    }
+  };
 
   // Load saved photos from Supabase storage when students load
   useEffect(() => {
@@ -325,16 +393,57 @@ export default function ProfilePage() {
         <Card className="bg-card border-border shadow-sm">
           <CardContent className="p-6">
             <div className="flex items-center gap-4">
-              <Avatar className="h-20 w-20 border-2 border-primary/20">
-                <AvatarFallback className="bg-primary/10 text-primary text-2xl font-semibold">
-                  {displayInitials}
-                </AvatarFallback>
-              </Avatar>
+              <div className="relative">
+                <button
+                  type="button"
+                  onClick={() => ownFileInputRef.current?.click()}
+                  disabled={isUploadingOwn || !ownUserId}
+                  className="block rounded-full focus:outline-none focus:ring-2 focus:ring-primary/40"
+                  aria-label="Change profile photo"
+                >
+                  <Avatar className="h-20 w-20 border-2 border-primary/20">
+                    {ownAvatarUrl ? (
+                      <AvatarImage
+                        src={ownAvatarUrl}
+                        alt={displayName}
+                        className="object-cover"
+                      />
+                    ) : null}
+                    <AvatarFallback className="bg-primary/10 text-primary text-2xl font-semibold">
+                      {displayInitials}
+                    </AvatarFallback>
+                  </Avatar>
+                  <span className="absolute bottom-0 right-0 flex h-7 w-7 items-center justify-center rounded-full bg-primary text-primary-foreground shadow ring-2 ring-card">
+                    {isUploadingOwn ? (
+                      <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                    ) : (
+                      <Camera className="h-3.5 w-3.5" />
+                    )}
+                  </span>
+                </button>
+                <input
+                  ref={ownFileInputRef}
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={handleOwnPhotoChange}
+                />
+              </div>
               <div>
                 <h2 className="text-xl font-semibold text-foreground">
                   {displayName}
                 </h2>
                 <p className="text-sm text-muted-foreground">{displayRoleWithRelationship}</p>
+                {ownAvatarUrl && (
+                  <button
+                    type="button"
+                    onClick={handleOwnPhotoRemove}
+                    disabled={isUploadingOwn}
+                    className="mt-1 text-xs text-muted-foreground underline disabled:opacity-50"
+                  >
+                    Remove photo
+                  </button>
+                )}
               </div>
             </div>
           </CardContent>
