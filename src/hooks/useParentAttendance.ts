@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo, useCallback } from "react";
 import { supabase } from "@/lib/supabase";
 import { format } from "date-fns";
+import { useRefetchOnResume, useResumeTick } from "@/hooks/useRefreshOnAppResume";
 
 type AttendanceStatus = "present" | "absent" | "late" | "excused";
 
@@ -146,6 +147,8 @@ export function useParentAttendance(studentId: StudentIdInput, selectedYear: str
     fetchAttendance();
   }, [fetchAttendance]);
 
+  useRefetchOnResume(fetchAttendance);
+
   // Calculate monthly chart data - normalize status to lowercase
   const chartData = useMemo<MonthlyChartData[]>(() => {
     const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
@@ -235,6 +238,7 @@ export function useRollingAttendance(studentId: StudentIdInput, months: 3 | 6 | 
   const [records, setRecords] = useState<AttendanceRecord[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const resumeTick = useResumeTick();
   const [debugInfo, setDebugInfo] = useState<DebugInfo>({
     selectedStudentId: null,
     queryStart: "",
@@ -295,7 +299,7 @@ export function useRollingAttendance(studentId: StudentIdInput, months: 3 | 6 | 
 
     fetchRollingAttendance();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [idsKey, months]);
+  }, [idsKey, months, resumeTick]);
 
   // Group records by YYYY-MM for chart
   const chartData = useMemo<MonthlyChartData[]>(() => {
