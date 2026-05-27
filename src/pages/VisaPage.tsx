@@ -49,11 +49,84 @@ function ValidityLine({ issueDate, expiryDate, strike }: { issueDate: string | n
   );
 }
 
-const BACKFILL_NOTE = "backfilled from student record";
+const BACKFILL_PATTERNS = [
+  /^backfilled from student record\.?$/i,
+  /^backfilled from legacy record\b.*$/i,
+];
 function cleanNotes(notes: string | null): string | null {
   if (!notes) return null;
-  if (notes.trim().toLowerCase() === BACKFILL_NOTE) return null;
+  const trimmed = notes.trim();
+  if (!trimmed) return null;
+  if (BACKFILL_PATTERNS.some((re) => re.test(trimmed))) return null;
   return notes;
+}
+
+function ExpiryProgress({
+  issueDate,
+  expiryDate,
+  fallbackTotalDays = 365 * 10,
+}: {
+  issueDate?: string | null;
+  expiryDate: string | null;
+  fallbackTotalDays?: number;
+}) {
+  if (!expiryDate) return null;
+  const exp = new Date(expiryDate);
+  if (isNaN(exp.getTime())) return null;
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  const DAY = 1000 * 60 * 60 * 24;
+  const daysLeft = Math.round((exp.getTime() - today.getTime()) / DAY);
+
+  let totalDays: number;
+  let elapsed: number;
+  if (issueDate) {
+    const iss = new Date(issueDate);
+    if (!isNaN(iss.getTime())) {
+      totalDays = Math.max(1, Math.round((exp.getTime() - iss.getTime()) / DAY));
+      elapsed = Math.max(0, Math.round((today.getTime() - iss.getTime()) / DAY));
+    } else {
+      totalDays = fallbackTotalDays;
+      elapsed = Math.max(0, totalDays - Math.max(0, daysLeft));
+    }
+  } else {
+    totalDays = fallbackTotalDays;
+    elapsed = Math.max(0, totalDays - Math.max(0, daysLeft));
+  }
+
+  const pct = Math.min(100, Math.max(0, (elapsed / totalDays) * 100));
+
+  // Subtle color based on time remaining
+  let barColor = "bg-emerald-400/70";
+  if (daysLeft < 0) barColor = "bg-destructive/70";
+  else if (daysLeft <= 90) barColor = "bg-amber-400/80";
+  else if (daysLeft <= 180) barColor = "bg-sky-400/70";
+
+  const remainingLabel =
+    daysLeft < 0
+      ? `Expired ${Math.abs(daysLeft)}d ago`
+      : daysLeft === 0
+        ? "Expires today"
+        : daysLeft < 60
+          ? `${daysLeft}d left`
+          : daysLeft < 365
+            ? `${Math.round(daysLeft / 30)}mo left`
+            : `${Math.floor(daysLeft / 365)}y ${Math.round((daysLeft % 365) / 30)}mo left`;
+
+  return (
+    <div className="mt-2 space-y-1">
+      <div className="h-1 w-full rounded-full bg-muted/60 overflow-hidden">
+        <div
+          className={cn("h-full rounded-full transition-all", barColor)}
+          style={{ width: `${pct}%` }}
+        />
+      </div>
+      <div className="text-[10px] text-muted-foreground text-right">
+        {remainingLabel}
+      </div>
+    </div>
+  );
 }
 
 function passportExpiryMeta(dateStr: string | null) {
@@ -118,6 +191,7 @@ function PassportSummary({
             </div>
           )}
         </div>
+        {passportExpiry && <ExpiryProgress expiryDate={passportExpiry} fallbackTotalDays={365 * 10} />}
       </CardContent>
     </Card>
   );
@@ -192,6 +266,9 @@ function PeriodCard({
           insuranceExpiry={insuranceExpiry}
         />
         {cleanedNotes && <div className="text-xs text-muted-foreground mt-1 whitespace-pre-wrap">{cleanedNotes}</div>}
+        {!strike && expiryDate && (
+          <ExpiryProgress issueDate={issueDate} expiryDate={expiryDate} fallbackTotalDays={365 * 2} />
+        )}
       </CardContent>
     </Card>
   );
