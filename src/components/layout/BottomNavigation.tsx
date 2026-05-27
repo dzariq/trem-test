@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { Home, UserCheck, Calendar, Menu, LucideIcon } from "lucide-react";
 import { NavLink, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
-import academicOwlIcon from "@/assets/academic-owl-icon.png";
+import academicOwlIcon from "@/assets/academic-owl-icon.webp";
 import { ParentMoreSheet, useParentMoreRoutes } from "./ParentMoreSheet";
 
 type NavItem = {

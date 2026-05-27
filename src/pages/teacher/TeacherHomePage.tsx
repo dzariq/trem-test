@@ -14,7 +14,7 @@ import { GeometricBackgroundPattern } from "@/components/home/GeometricBackgroun
 import { SecondaryNavBar } from "@/components/layout/SecondaryNavBar";
 import { BookOpen, Users, Clock, FileText, Calendar, AlertTriangle, ClipboardList, ChevronDown, ChevronUp } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
-import schoolBadge from "@/assets/school-badge.png";
+import schoolBadge from "@/assets/school-badge.webp";
 import heroBanner from "@/assets/teacher-hero-banner.webp";
 import { teacherProfile } from "@/data/teacherMockData";
 import {

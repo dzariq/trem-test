@@ -1,5 +1,5 @@
 // Mock data for the parent portal
-import sportsDayBanner from "@/assets/sports-day-banner.png";
+import sportsDayBanner from "@/assets/sports-day-banner.webp";
 
 export const announcements = [
   {

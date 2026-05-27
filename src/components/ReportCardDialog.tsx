@@ -3,7 +3,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Button } from "@/components/ui/button";
 import { Printer, Star, BookOpen, MessageSquare, Trophy, Award, BookMarked, Target, Loader2 } from "lucide-react";
 import collinzLogo from "@/assets/collinz-school-logo.png";
-import schoolBadge from "@/assets/school-badge.png";
+import schoolBadge from "@/assets/school-badge.webp";
 import cambridgeLogo from "@/assets/cambridge-logo.jpg";
 import { exportElementToPdf } from "@/lib/pdf/exportToPdf";
 import { exportSectionBasedPdf } from "@/lib/pdf/exportSectionBasedPdf";

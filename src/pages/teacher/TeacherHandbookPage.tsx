@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { useCampus } from "@/contexts/CampusContext";
 import { useSchoolDocument } from "@/hooks/useSchoolDocument";
 import { PDFViewerDialog } from "@/components/PDFViewerDialog";
-import schoolBadge from "@/assets/school-badge.png";
+import schoolBadge from "@/assets/school-badge.webp";
 import { FileText, Loader2, FileX } from "lucide-react";
 
 export default function TeacherHandbookPage() {

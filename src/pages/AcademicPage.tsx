@@ -14,7 +14,7 @@ import { cn } from "@/lib/utils";
 import { Download, FileText, Award, Trophy, BookOpen, TrendingUp, TrendingDown, Check, ArrowUp, ArrowDown, Minus, BarChart3, GitCompare, Target, AlertTriangle, Star, Goal, CheckCircle2, Circle, Edit2, ChevronDown, MessageSquare, Calendar, Sparkles, Printer, FileSpreadsheet, ArrowRightLeft, Loader2, Lightbulb, Users, User } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import schoolLogo from "@/assets/school-badge.png";
+import schoolLogo from "@/assets/school-badge.webp";
 import { CertificateDialog } from "@/components/CertificateDialog";
 import { ReportCardDialog } from "@/components/ReportCardDialog";
 import { EnvelopeAwardCard } from "@/components/EnvelopeAwardCard";

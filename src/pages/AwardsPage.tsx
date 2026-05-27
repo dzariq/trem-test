@@ -2,7 +2,7 @@ import { AppLayout } from "@/components/layout/AppLayout";
 import { AppHeader } from "@/components/layout/AppHeader";
 import { Badge } from "@/components/ui/badge";
 import { Award, Calendar, ChevronLeft } from "lucide-react";
-import dnaBanner from "@/assets/dna-banner.png";
+import dnaBanner from "@/assets/dna-banner.webp";
 import { students } from "@/data/mockData";
 import { awardTypes, awardColors, getStudentAwards } from "@/data/awardsData";
 import { cn } from "@/lib/utils";
