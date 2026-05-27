@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { AppHeader } from "@/components/layout/AppHeader";
 import { Button } from "@/components/ui/button";
@@ -9,6 +9,7 @@ import { listAnnouncements, markAnnouncementRead, type Announcement } from "@/da
 import { useStudentSelection } from "@/hooks/useStudentSelection";
 import { categorizeAnnouncements } from "@/lib/announcements/categorize";
 import { AnnouncementCard } from "@/components/announcements/AnnouncementCard";
+import { ChildSelectorDropdown } from "@/components/home/ChildSelectorDropdown";
 import {
   Select,
   SelectContent,
@@ -31,10 +32,41 @@ export default function AnnouncementsPage() {
   const [error, setError] = useState<string | null>(null);
   const [unreadOnly, setUnreadOnly] = useState(false);
   const {
+    linkedStudents,
     selectedStudentId,
     selectedStudent,
   } = useStudentSelection();
-  const parentCampusCode = selectedStudent?.campus_code ?? null;
+
+  const isMultiChild = linkedStudents.length > 1;
+  const [scope, setScope] = useState<string>(isMultiChild ? "all" : selectedStudentId || "");
+
+  // Keep scope in sync when linked students load / change.
+  useEffect(() => {
+    if (isMultiChild) {
+      setScope((prev) =>
+        prev === "all" || linkedStudents.some((s) => s.id === prev) ? prev : "all"
+      );
+    } else {
+      setScope(selectedStudentId || "");
+    }
+  }, [isMultiChild, linkedStudents, selectedStudentId]);
+
+  const isAllScope = isMultiChild && scope === "all";
+
+  // Campus filter: in "all" mode use union — if all children share one campus use it,
+  // otherwise drop the filter so announcements from multiple campuses appear.
+  const scopeCampusCode = useMemo(() => {
+    if (!isAllScope) {
+      const child = linkedStudents.find((s) => s.id === scope) ?? selectedStudent;
+      return child?.campus_code ?? null;
+    }
+    const codes = Array.from(
+      new Set(linkedStudents.map((s) => s.campus_code).filter((c): c is string => !!c))
+    );
+    return codes.length === 1 ? codes[0] : null;
+  }, [isAllScope, linkedStudents, scope, selectedStudent]);
+
+  const queryStudentId = isAllScope ? "" : scope;
 
   useEffect(() => {
     let isMounted = true;
@@ -42,7 +74,7 @@ export default function AnnouncementsPage() {
       setLoading(true);
       setError(null);
       try {
-        const data = await listAnnouncements({ limit: 50, studentId: selectedStudentId, campusCode: parentCampusCode });
+        const data = await listAnnouncements({ limit: 50, studentId: queryStudentId, campusCode: scopeCampusCode });
         if (isMounted) setAnnouncements(data);
       } catch (err) {
         const message = err instanceof Error ? err.message : "Failed to load announcements.";
@@ -53,7 +85,7 @@ export default function AnnouncementsPage() {
     };
     loadAnnouncements();
     return () => { isMounted = false; };
-  }, [selectedStudentId, parentCampusCode]);
+  }, [queryStudentId, scopeCampusCode]);
 
   const filteredAnnouncements = announcements
     .filter(a => {
@@ -112,7 +144,6 @@ export default function AnnouncementsPage() {
   return (
     <AppLayout>
       <AppHeader
-        showChildSelector
         leftContent={
           <div className="flex items-center gap-2">
             <Button variant="ghost" size="icon" onClick={() => navigate(-1)}>
@@ -122,6 +153,21 @@ export default function AnnouncementsPage() {
           </div>
         }
       />
+
+      <div
+        className="px-4 py-3 border-b border-border/60"
+        style={{
+          backgroundImage:
+            "linear-gradient(to right, hsl(45 85% 58% / 0.22), hsl(45 85% 58% / 0.08), hsl(var(--background)))",
+        }}
+      >
+        <ChildSelectorDropdown
+          variant="bar"
+          scopeValue={isMultiChild ? scope : selectedStudentId}
+          onScopeChange={setScope}
+          showAllOption={isMultiChild}
+        />
+      </div>
 
       <section className="px-4 py-4">
         {/* Filters */}
