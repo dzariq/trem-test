@@ -1,71 +1,36 @@
-## Goal
 
-Make Announcements, Calendar, and My CCAs default to "All Children (N)" view for multi-child parents, with bracket count, de-duped aggregation, latest-first sort, and per-child tagging on CCA cards.
+## Lottie file check
 
-## Scope (parent portal only)
+The uploaded `.lottie` is a valid dotLottie bundle (4.2 KB, contains `manifest.json` + 1 animation JSON, ~45 KB uncompressed). Safe to ship as an app asset — small enough to import directly.
 
-- `src/pages/AnnouncementsPage.tsx`
-- `src/pages/CalendarPage.tsx` (label only)
-- `src/pages/ParentCcaPage.tsx`
-- `src/hooks/useStudentCcaEnrollments.ts` (extend to accept multiple student IDs)
-- `src/components/home/ChildSelectorDropdown.tsx` (extend with optional "All Children (N)" mode)
+## Plan
 
-No DB / RLS / schema changes. No teacher-portal changes. Home page widgets untouched.
+### 1. Add the asset
+- Copy the uploaded file to `src/assets/lottie/app-loader.lottie` so it gets bundled & hashed by Vite.
 
-## Changes
+### 2. Install dotLottie player
+- Add `@lottiefiles/dotlottie-react` (official renderer for `.lottie` files, ~30 KB gzip, supports autoplay/loop).
 
-### 1. ChildSelectorDropdown — add multi-child "All" mode
+### 3. Create a reusable component
+- New `src/components/common/LottieLoader.tsx` exporting:
+  - `<LottieLoader size={32|48|64|...} className?="" />` — renders the dotLottie player at the given size, autoplay + loop, with `aria-label="Loading"`.
+  - `<FullScreenLottieLoader />` — centers the loader in a `min-h-screen` container with the app background (drop-in for the current `Loader2` full-screen blocks in `ParentStudentGuard`, `TeacherGuard`, `App.tsx` Suspense fallback, route error/loading states).
 
-Add optional controlled props so pages can drive their own local scope without touching the global `StudentSelectionContext`:
+### 4. Replace existing spinners
+Swap every `Loader2 … animate-spin` usage to the new component. Two flavors:
 
-- `scopeValue?: string` ("all" | studentId)
-- `onScopeChange?: (v: string) => void`
-- `showAllOption?: boolean` (default false → keeps current single-child behaviour)
-- `showCount?: boolean` (default true when `showAllOption` is on)
+- **Full-screen / route-level loaders** → `<FullScreenLottieLoader />`
+  Files: `src/App.tsx` (Suspense fallback), `src/components/auth/ParentStudentGuard.tsx`, `src/components/auth/TeacherGuard.tsx`, page-level loading blocks in `TeacherHandbookPage`, `TeacherTimetablePage`, `ParentTimetablePage`, etc.
 
-When `showAllOption` is on and the parent has >1 child:
-- Default trigger label: `All Children (N)` where N = `linkedStudents.length`.
-- Specific child label keeps existing single-name format.
-- Dropdown items: `All Children (N)` first, then each child.
-- Single-child parents still get the existing read-only name pill (no dropdown).
+- **Inline loaders** (buttons, small cards, sheets) → `<LottieLoader size={20} />` (or 16/24 to match the previous icon size). Applies to all the dialogs/sheets/forms in the ripgrep list (CCA sheets, lesson plan forms, notifications drawer, etc.).
 
-Existing call sites (compact header variant) keep working unchanged because the new props are opt-in.
+A search-and-replace pass over the ~30 files that import `Loader2` from `lucide-react` for spinner purposes. `Loader2` imports used as static icons (not spinning) — if any — are left alone.
 
-### 2. Calendar page — bracket count on "All Children"
+### 5. Verify
+- Typecheck.
+- Visually confirm on `/parent/profile` and `/login` that the loader animates.
 
-The local `Select` already exists. Update the trigger to show `All Children (N)` instead of plain `All Children`, and prefix the item label the same way. No logic change — multi-child aggregation + de-dup already implemented in earlier work via `scopeStudentIds` / `scopeCampusCode`.
-
-### 3. Announcements page — all-children default
-
-- Add local `scope` state (`"all"` | studentId), default `"all"`. Hide the global `showChildSelector` and render `ChildSelectorDropdown` in `variant="bar"` with `showAllOption`, the same gold-gradient bar used on CCA / Calendar / Attendance.
-- Resolve a `scopeCampusCode` the same way Calendar does:
-  - All scope: if every linked child shares one campus → use it; otherwise pass `null` (so multi-campus parents see both).
-  - Specific child: that child's `campus_code`.
-- Call `listAnnouncements({ limit, studentId: scope === "all" ? null : scope, campusCode: scopeCampusCode })`. `listAnnouncements` already orders by `created_at DESC` so "latest first" is preserved; keep the existing `sortOrder` chip default of `newest`.
-- Since announcements are not per-student (school + campus scoped), de-duplication is naturally handled by the single DB query — no client-side dedupe needed.
-- Single-child parents: behaviour unchanged (no "All" option shown).
-
-### 4. My CCAs page — all-children default + per-child tag
-
-Hook (`useStudentCcaEnrollments`):
-- Accept `studentId: string | string[] | null`. Normalise to an ID array; when empty, return `[]`.
-- Replace `.eq("student_id", studentId)` with `.in("student_id", ids)` and select `student_id` as well so we can map back to a child.
-- Fetch linked-student names once (lightweight: caller passes a `studentNameById` map, or the hook fetches names via `students` table keyed on the IDs) so each enrollment row can carry `enrolledStudents: { id; name }[]`.
-- De-dup by `activityId`: if two children are in the same activity, merge into one entry whose `enrolledStudents` array contains both names.
-- Keep existing sort: soonest `nextSessionDate` first (latest upcoming), then by name — which matches the user's "sort by latest upcoming CCA" requirement.
-
-Page (`ParentCcaPage`):
-- Add local `scope` state (`"all"` | studentId), default `"all"` for multi-child, otherwise the single child.
-- Use `ChildSelectorDropdown` with `showAllOption` + `showCount` in the existing gold-gradient bar.
-- Pass `studentId={scope === "all" ? linkedStudents.map(s => s.id) : scope}` to the hook.
-- On each card, when scope is `all` AND the activity has `enrolledStudents`, render a small child-name chip row under the title:
-  - 1 child: a single muted pill `<UsersIcon/> {firstName}`.
-  - 2+ children: comma-separated first names, truncating to 2 with `+N` overflow if needed.
-- When scope is a specific child, hide the child chip (it's implicit).
-- Empty state copy: `"None of your children are enrolled in any CCAs yet."` in all-mode; existing per-child copy otherwise.
-
-## Out of scope
-
-- No changes to `useStudentSelection` global context, home page, attendance page, or teacher screens.
-- No changes to CCA details / sessions / enrollment mutation flows.
-- Announcement read-state remains per-user (already correct for all-children mode).
+## Technical notes
+- dotLottie format requires `@lottiefiles/dotlottie-react`, not `lottie-react` (the latter only handles `.json`). Using the official package keeps file size minimal and avoids extracting the JSON manually.
+- Asset imported as `import loaderSrc from "@/assets/lottie/app-loader.lottie?url"` so Vite serves it with a hashed URL; the player loads it via `src={loaderSrc}`.
+- No design-token changes; loader inherits surrounding background. Default size 48px to roughly match current `h-8 w-8` spinner footprint.
