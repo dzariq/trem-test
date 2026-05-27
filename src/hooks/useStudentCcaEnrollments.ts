@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
+import { useRefetchOnResume } from "@/hooks/useRefreshOnAppResume";
 import { supabase } from "@/lib/supabase";
 
 export interface EnrolledCcaActivity {
@@ -234,6 +235,8 @@ export function useStudentCcaEnrollments({ studentId }: UseStudentCcaEnrollments
   useEffect(() => {
     fetchEnrollments();
   }, [fetchEnrollments]);
+
+  useRefetchOnResume(fetchEnrollments);
 
   const filterByCategory = useCallback(
     (category: string) => {

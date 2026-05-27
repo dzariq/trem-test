@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
+import { useResumeTick } from "@/hooks/useRefreshOnAppResume";
 
 export interface StudentGradeRow {
   id: string;
@@ -33,6 +34,7 @@ export function useStudentGradesByPeriods(
   const [grades, setGrades] = useState<StudentGradeRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const resumeTick = useResumeTick();
 
   useEffect(() => {
     const fetchGrades = async () => {
@@ -82,6 +84,7 @@ export function useStudentGradesByPeriods(
     studentId,
     subjectIds.join(","),
     periodIds.join(","),
+    resumeTick,
   ]);
 
   return { grades, loading, error };

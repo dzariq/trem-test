@@ -3,6 +3,7 @@ import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "@/hooks/use-toast";
 import type { LessonDetail } from "@/hooks/useTeacherLessonPlans";
+import { useResumeTick } from "@/hooks/useRefreshOnAppResume";
 
 export interface StudentInfo {
   id: string;
@@ -36,6 +37,7 @@ export function useClassStudents(classYearId: number | undefined) {
   const [students, setStudents] = useState<StudentInfo[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const resumeTick = useResumeTick();
 
   useEffect(() => {
     const fetchStudents = async () => {
@@ -73,7 +75,7 @@ export function useClassStudents(classYearId: number | undefined) {
     };
 
     fetchStudents();
-  }, [classYearId]);
+  }, [classYearId, resumeTick]);
 
   return { students, loading, error };
 }
@@ -94,6 +96,7 @@ export function useHomeworkSubmissions(
   const [assignmentMap, setAssignmentMap] = useState<Map<string, string>>(new Map());
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
+  const resumeTick = useResumeTick();
 
   useEffect(() => {
     const fetchSubmissions = async () => {
@@ -211,7 +214,7 @@ export function useHomeworkSubmissions(
     };
 
     fetchSubmissions();
-  }, [lessonPlanId, classYearId]);
+  }, [lessonPlanId, classYearId, resumeTick]);
 
   // Toggle submission status for a student
   const toggleSubmission = useCallback(

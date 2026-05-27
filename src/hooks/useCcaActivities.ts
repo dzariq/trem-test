@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo, useCallback } from "react";
+import { useRefetchOnResume } from "@/hooks/useRefreshOnAppResume";
 import { supabase } from "@/lib/supabase";
 import { isStudentEligibleForCca } from "@/lib/yearLevelMapping";
 // Types
@@ -338,6 +339,8 @@ export function useCcaActivities(options: UseCcaActivitiesOptions = {}) {
   useEffect(() => {
     fetchActivities();
   }, [fetchActivities]);
+
+  useRefetchOnResume(fetchActivities);
 
   // Filter by category (legacy) or type ID
   const filterByCategory = useCallback(

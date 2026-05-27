@@ -4,6 +4,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "@/hooks/use-toast";
 import { normalizeLessonFlow } from "@/lib/lessonplan/normalizeLessonFlow";
 import { normalizeSubtopics } from "@/lib/lessonplan/normalizeSubtopics";
+import { useResumeTick } from "@/hooks/useRefreshOnAppResume";
 
 // Types for Teacher's view of Master Lesson Plans
 export interface TeacherMLP {
@@ -72,6 +73,7 @@ export function useTeacherAssignedPlans(academicYear?: number, yearLevel?: strin
   const [plans, setPlans] = useState<TeacherMLP[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const resumeTick = useResumeTick();
 
   useEffect(() => {
     const fetchAssignedPlans = async () => {
@@ -156,7 +158,7 @@ export function useTeacherAssignedPlans(academicYear?: number, yearLevel?: strin
     };
 
     fetchAssignedPlans();
-  }, [user?.id, academicYear, yearLevel, subject]);
+  }, [user?.id, academicYear, yearLevel, subject, resumeTick]);
 
   return { plans, loading, error };
 }
@@ -172,6 +174,7 @@ export function useMLPContent(lessonPlanId: string | undefined) {
   const [planInfo, setPlanInfo] = useState<{ subject: string; yearLevel: string; academicYear: number } | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const resumeTick = useResumeTick();
 
   // Fetch topics and plan info
   useEffect(() => {
@@ -264,7 +267,7 @@ export function useMLPContent(lessonPlanId: string | undefined) {
     };
 
     fetchPlanContent();
-  }, [lessonPlanId]);
+  }, [lessonPlanId, resumeTick]);
 
   // Lazy load lessons for a specific week
   const loadLessonsForWeek = useCallback(async (weekId: string) => {
@@ -354,6 +357,7 @@ export function useLessonReflections(lessonPlanId: string | undefined, classYear
   const [reflections, setReflections] = useState<Map<string, LessonReflection>>(new Map());
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
+  const resumeTick = useResumeTick();
 
   // Fetch reflections when class changes
   useEffect(() => {
@@ -447,7 +451,7 @@ export function useLessonReflections(lessonPlanId: string | undefined, classYear
     };
 
     fetchReflections();
-  }, [lessonPlanId, classYearId, user?.id]);
+  }, [lessonPlanId, classYearId, user?.id, resumeTick]);
 
   // Save or update a reflection
   const saveReflection = useCallback(async (

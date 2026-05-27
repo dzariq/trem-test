@@ -11,6 +11,7 @@ import {
 } from "@/data/lessonPlanData";
 import { normalizeSubtopics } from "@/lib/lessonplan/normalizeSubtopics";
 import { normalizeLessonFlow } from "@/lib/lessonplan/normalizeLessonFlow";
+import { useRefetchOnResume, useResumeTick } from "@/hooks/useRefreshOnAppResume";
 
 // Hook to load subjects from Supabase (same source as Academic module)
 export function useLessonPlanSubjects() {
@@ -18,6 +19,7 @@ export function useLessonPlanSubjects() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const { activeCampus } = useCampus();
+  const resumeTick = useResumeTick();
 
   useEffect(() => {
     const fetchSubjects = async () => {
@@ -46,7 +48,7 @@ export function useLessonPlanSubjects() {
     };
 
     fetchSubjects();
-  }, [activeCampus]);
+  }, [activeCampus, resumeTick]);
 
   // Get just the subject names for dropdown display
   const subjectNames = useMemo(() => subjects.map(s => s.name), [subjects]);
@@ -268,6 +270,8 @@ export function useLessonPlans(
   useEffect(() => {
     fetchLessonPlan();
   }, [fetchLessonPlan]);
+
+  useRefetchOnResume(fetchLessonPlan);
 
   // Update week number
   const updateWeekNumber = useCallback(
@@ -519,6 +523,7 @@ export function useLessonPlanDetail(lessonPlanDetailId: string | undefined) {
   const [lessonPlan, setLessonPlan] = useState<LessonPlan | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const resumeTick = useResumeTick();
 
   useEffect(() => {
     async function fetchDetail() {
@@ -616,7 +621,7 @@ export function useLessonPlanDetail(lessonPlanDetailId: string | undefined) {
     }
 
     fetchDetail();
-  }, [lessonPlanDetailId]);
+  }, [lessonPlanDetailId, resumeTick]);
 
   const updateLessonPlan = useCallback(
     async (updates: Partial<LessonPlan>) => {

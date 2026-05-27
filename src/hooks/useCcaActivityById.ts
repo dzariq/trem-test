@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
+import { useRefetchOnResume } from "@/hooks/useRefreshOnAppResume";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/contexts/AuthContext";
 import type {
@@ -235,6 +236,8 @@ export function useCcaActivityById(
   useEffect(() => {
     fetchOne();
   }, [fetchOne]);
+
+  useRefetchOnResume(fetchOne);
 
   return { activity, status, error, refetch: fetchOne };
 }

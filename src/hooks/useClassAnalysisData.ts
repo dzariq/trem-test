@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { toast } from "@/hooks/use-toast";
+import { useResumeTick } from "@/hooks/useRefreshOnAppResume";
 
 export interface ClassAnalysisRosterStudent {
   id: string;
@@ -85,6 +86,7 @@ export function useClassAnalysisData(
   const [loadingRoster, setLoadingRoster] = useState(false);
   const [loadingGrades, setLoadingGrades] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const resumeTick = useResumeTick();
 
   const rosterStudentIds = useMemo(
     () => rosterStudents.map((student) => student.id),
@@ -139,7 +141,7 @@ export function useClassAnalysisData(
     return () => {
       isMounted = false;
     };
-  }, [classId]);
+  }, [classId, resumeTick]);
 
   useEffect(() => {
     let isMounted = true;
@@ -258,6 +260,7 @@ export function useClassAnalysisData(
     studentId,
     yearRange?.start,
     yearRange?.end,
+    resumeTick,
   ]);
 
   return {
