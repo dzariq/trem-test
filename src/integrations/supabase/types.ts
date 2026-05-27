@@ -7067,6 +7067,10 @@ export type Database = {
         }
         Returns: string
       }
+      count_announcement_recipients: {
+        Args: { p_announcement_id: string }
+        Returns: number
+      }
       create_next_academic_year: {
         Args: {
           p_new_year: number
