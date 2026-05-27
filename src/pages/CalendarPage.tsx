@@ -21,6 +21,14 @@ import {
 import { listCalendarEvents, listUpcomingEvents, type UpcomingEvent } from "@/data/calendar";
 import { useMyProfile } from "@/hooks/useMyProfile";
 import { useStudentSelection } from "@/hooks/useStudentSelection";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Users } from "lucide-react";
 import { useEligibleCcaActivities, type CcaActivity } from "@/hooks/useEligibleCcaActivities";
 import { useStudentCcaEnrollments, type EnrolledCcaActivity } from "@/hooks/useStudentCcaEnrollments";
 import { useCcaClubEnrollment } from "@/hooks/useCcaClubEnrollment";
@@ -97,6 +105,35 @@ export default function CalendarPage() {
     selectedStudent,
   } = useStudentSelection();
 
+  // Calendar-local viewing scope. Defaults to "all" so parents see every
+  // child's events aggregated. Selecting a specific child narrows the view.
+  const [calendarScope, setCalendarScope] = useState<string>("all");
+
+  // If a parent has only one child, keep behaviour identical to before.
+  const effectiveScope = linkedStudents.length <= 1 ? (selectedStudentId || "all") : calendarScope;
+  const isAllChildrenScope = effectiveScope === "all" && linkedStudents.length > 1;
+
+  // Campus code used for calendar/event queries. In "all" mode we use the
+  // union of campuses: if every child shares one campus we keep that filter
+  // (plus globals); if they span multiple campuses we drop the campus filter
+  // entirely so events from both campuses appear.
+  const scopeCampusCode = useMemo(() => {
+    if (!isAllChildrenScope) {
+      const child = linkedStudents.find((s) => s.id === effectiveScope) ?? selectedStudent;
+      return child?.campus_code ?? null;
+    }
+    const codes = Array.from(new Set(
+      linkedStudents.map((s) => s.campus_code).filter((c): c is string => !!c),
+    ));
+    return codes.length === 1 ? codes[0] : null;
+  }, [isAllChildrenScope, linkedStudents, effectiveScope, selectedStudent]);
+
+  // Student IDs used for CCA session scoping.
+  const scopeStudentIds = useMemo(() => {
+    if (isAllChildrenScope) return linkedStudents.map((s) => s.id);
+    return effectiveScope && effectiveScope !== "all" ? [effectiveScope] : [];
+  }, [isAllChildrenScope, linkedStudents, effectiveScope]);
+
   useEffect(() => {
     if (!selectedStudentId) {
       setStudentYearLevel(null);
@@ -168,8 +205,9 @@ export default function CalendarPage() {
   } = useCcaSessionsCalendar({
     year: currentMonth.getFullYear(),
     month: currentMonth.getMonth() + 1,
-    campusCode: selectedStudent?.campus_code ?? null,
-    studentId: selectedStudentId,
+    campusCode: scopeCampusCode,
+    studentId: isAllChildrenScope ? null : selectedStudentId,
+    studentIds: isAllChildrenScope ? scopeStudentIds : undefined,
     scopeToStudent: true,
   });
 
@@ -281,7 +319,7 @@ export default function CalendarPage() {
       try {
         const year = currentMonth.getFullYear();
         const month = currentMonth.getMonth() + 1;
-        const data = await listCalendarEvents(year, month, { role: profile?.role, campusCode: selectedStudent?.campus_code ?? null });
+        const data = await listCalendarEvents(year, month, { role: profile?.role, campusCode: scopeCampusCode });
         if (isMounted) {
           setEvents(data);
         }
@@ -296,7 +334,7 @@ export default function CalendarPage() {
     return () => {
       isMounted = false;
     };
-  }, [currentMonth, profile?.role, selectedStudent?.campus_code]);
+  }, [currentMonth, profile?.role, scopeCampusCode]);
 
   useEffect(() => {
     let isMounted = true;
@@ -305,7 +343,7 @@ export default function CalendarPage() {
         const data = await listUpcomingEvents({
           role: profile?.role,
           limit: 50,
-          campusCode: selectedStudent?.campus_code ?? null,
+          campusCode: scopeCampusCode,
         });
         if (isMounted) {
           setUpcomingEvents(data);
@@ -321,7 +359,7 @@ export default function CalendarPage() {
     return () => {
       isMounted = false;
     };
-  }, [profile?.role, selectedStudent?.campus_code]);
+  }, [profile?.role, scopeCampusCode]);
 
   const filteredCCA = useMemo(() => {
     // Filter by kind, then exclude already-enrolled activities
@@ -407,10 +445,10 @@ export default function CalendarPage() {
     const year = currentMonth.getFullYear();
     const month = currentMonth.getMonth() + 1;
     await Promise.all([
-      listCalendarEvents(year, month, { role: profile?.role, campusCode: selectedStudent?.campus_code ?? null })
+      listCalendarEvents(year, month, { role: profile?.role, campusCode: scopeCampusCode })
         .then(setEvents)
         .catch(() => {}),
-      listUpcomingEvents({ role: profile?.role, limit: 50, campusCode: selectedStudent?.campus_code ?? null })
+      listUpcomingEvents({ role: profile?.role, limit: 50, campusCode: scopeCampusCode })
         .then(setUpcomingEvents)
         .catch(() => {}),
       Promise.resolve(refetchCcaSessions()),
@@ -426,7 +464,7 @@ export default function CalendarPage() {
     <RouteErrorBoundary fallbackLabel="Calendar">
     <AppLayout>
       <AppHeader
-        showChildSelector
+        showChildSelector={linkedStudents.length <= 1}
         leftContent={
           <div className="flex items-center gap-2">
             <img src={schoolLogo} alt="School Logo" className="h-16 w-auto -my-3 drop-shadow-md" />
@@ -434,6 +472,27 @@ export default function CalendarPage() {
           </div>
         }
       />
+
+      {linkedStudents.length > 1 && (
+        <div className="px-4 pt-3 pb-2 bg-secondary/30 border-b border-border">
+          <Select value={calendarScope} onValueChange={setCalendarScope}>
+            <SelectTrigger className="h-10 w-full text-sm bg-card">
+              <div className="flex items-center gap-2 min-w-0">
+                <Users className="h-4 w-4 text-muted-foreground shrink-0" />
+                <SelectValue placeholder="All Children" />
+              </div>
+            </SelectTrigger>
+            <SelectContent className="bg-card border-border">
+              <SelectItem value="all">All Children</SelectItem>
+              {linkedStudents.map((student) => (
+                <SelectItem key={student.id} value={student.id}>
+                  <span className="truncate">{student.name}</span>
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      )}
 
       <section className="px-4 pt-3" ref={pullRef}>
         <PullToRefreshIndicator pullDistance={pullDistance} refreshing={refreshing} />

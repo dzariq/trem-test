@@ -28,6 +28,12 @@ interface UseCcaSessionsCalendarOptions {
    * - event: student's class must be in cca_activities.classes_involved[]
    */
   studentId?: string | null;
+  /**
+   * Optional multi-student scoping. When provided alongside scopeToStudent
+   * the visibility check is the UNION across all listed students. Takes
+   * precedence over studentId when non-empty.
+   */
+  studentIds?: string[];
   /** Apply parent scoping when true and studentId provided */
   scopeToStudent?: boolean;
   /**
@@ -50,6 +56,7 @@ export function useCcaSessionsCalendar({
   month,
   campusCode,
   studentId,
+  studentIds,
   scopeToStudent,
   scopeToTeacher,
   teacherYearLevels,
@@ -74,34 +81,41 @@ export function useCcaSessionsCalendar({
       const startStr = startDate.toISOString().split("T")[0];
       const endStr = endDate.toISOString().split("T")[0];
 
-      // Parent scoping: limit to activities the student is enrolled in (club/outdoor)
-      // or events whose classes_involved contains the student's class.
+      // Parent scoping: limit to activities the student(s) are enrolled in
+      // (club/outdoor) or events whose classes_involved contains the
+      // student's class. Supports a single studentId or many via studentIds.
       let scopedActivityIds: string[] | null = null;
-      if (scopeToStudent && studentId) {
-        const { data: studentRow } = await supabase
+      const effectiveStudentIds = (studentIds && studentIds.length > 0)
+        ? studentIds
+        : (studentId ? [studentId] : []);
+      if (scopeToStudent && effectiveStudentIds.length > 0) {
+        const { data: studentRows } = await supabase
           .from("students")
           .select("class")
-          .eq("id", studentId)
-          .maybeSingle();
-        const studentClass = (studentRow as any)?.class || null;
+          .in("id", effectiveStudentIds);
+        const studentClasses = Array.from(new Set(
+          (studentRows || [])
+            .map((r: any) => r?.class)
+            .filter(Boolean),
+        ));
 
         const { data: enrollRows } = await supabase
           .from("student_cca_enrollments")
           .select("cca_activity_id")
-          .eq("student_id", studentId)
+          .in("student_id", effectiveStudentIds)
           .eq("status", "active");
         const enrolledIds = (enrollRows || [])
           .map((r: any) => r.cca_activity_id)
           .filter(Boolean);
 
         let eventIds: string[] = [];
-        if (studentClass) {
+        if (studentClasses.length > 0) {
           const { data: eventRows } = await supabase
             .from("cca_activities")
             .select("id")
             .eq("kind", "event")
             .eq("is_active", true)
-            .contains("classes_involved", [studentClass]);
+            .overlaps("classes_involved", studentClasses);
           eventIds = (eventRows || []).map((r: any) => r.id);
         }
 
@@ -242,6 +256,7 @@ export function useCcaSessionsCalendar({
     month,
     campusCode,
     studentId,
+    (studentIds || []).join(","),
     scopeToStudent,
     scopeToTeacher,
     (teacherYearLevels || []).join(","),
