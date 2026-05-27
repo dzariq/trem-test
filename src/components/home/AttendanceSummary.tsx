@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ChevronRight, ChevronDown } from "lucide-react";
@@ -24,21 +24,30 @@ export function AttendanceSummary() {
   const {
     linkedStudents,
     loading: studentsLoading,
-    selectedStudentId,
-    setSelectedStudentId,
-    selectedStudent,
   } = useStudentSelection();
 
   const [selectedPeriod, setSelectedPeriod] = useState(PERIOD_OPTIONS[0]);
+
+  const studentIds = useMemo(
+    () => linkedStudents.map((s) => s.id),
+    [linkedStudents],
+  );
 
   const {
     totals,
     loading: attendanceLoading,
     error: attendanceError,
-  } = useStudentAttendanceSummary(selectedStudentId, selectedPeriod.days);
+  } = useStudentAttendanceSummary(studentIds, selectedPeriod.days);
 
   const loading = studentsLoading || attendanceLoading;
   const total = totals.total;
+  const childCount = linkedStudents.length;
+  const childLabel =
+    childCount === 0
+      ? ""
+      : childCount === 1
+        ? linkedStudents[0].name
+        : `All ${childCount} children`;
 
   const chartData = total > 0 ? [
     { name: "Present", value: Math.round((totals.present / total) * 100), color: "hsl(160, 84%, 39%)" },
@@ -54,33 +63,11 @@ export function AttendanceSummary() {
           <CardTitle className="flex items-start justify-between gap-3">
             <div className="text-base font-semibold">Attendance Overview</div>
             <div className="flex flex-col items-end">
-              {/* Student Selector */}
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="text-sm font-medium text-muted-foreground h-auto py-1 px-2"
-                    disabled={studentsLoading || linkedStudents.length === 0}
-                  >
-                    <span className="truncate max-w-[160px] sm:max-w-[240px] pr-1">
-                      {selectedStudent?.name ?? "Select Student"}
-                    </span>
-                    <ChevronDown className="h-3 w-3 ml-1" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="bg-card border-border">
-                  {linkedStudents.map((student) => (
-                    <DropdownMenuItem
-                      key={student.id}
-                      onClick={() => setSelectedStudentId(student.id)}
-                      className={selectedStudentId === student.id ? "bg-muted" : ""}
-                    >
-                      {student.name}
-                    </DropdownMenuItem>
-                  ))}
-                </DropdownMenuContent>
-              </DropdownMenu>
+              {childLabel && (
+                <span className="text-sm font-medium text-muted-foreground px-2 py-1 truncate max-w-[200px]">
+                  {childLabel}
+                </span>
+              )}
               <div className="mt-1 relative z-10">
                 {/* Period Selector */}
                 <DropdownMenu>
@@ -122,12 +109,12 @@ export function AttendanceSummary() {
               {attendanceError}
             </p>
           )}
-          {!loading && !attendanceError && !selectedStudentId && (
+          {!loading && !attendanceError && studentIds.length === 0 && (
             <p className="text-sm text-muted-foreground text-center py-6">
               No linked students found.
             </p>
           )}
-          {!loading && !attendanceError && selectedStudentId && chartData.length === 0 && (
+          {!loading && !attendanceError && studentIds.length > 0 && chartData.length === 0 && (
             <p className="text-sm text-muted-foreground text-center py-6">
               No attendance records for this period.
             </p>
