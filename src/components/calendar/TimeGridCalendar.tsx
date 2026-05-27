@@ -520,7 +520,7 @@ export function TimeGridCalendar({
           ref={scrollRef}
           className={cn(
             mode === "week"
-              ? "overflow-x-auto overflow-y-hidden [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden snap-x snap-mandatory [overscroll-behavior-x:contain]"
+              ? "overflow-x-auto overflow-y-hidden [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden [overscroll-behavior-x:contain]"
               : undefined,
           )}
         >
