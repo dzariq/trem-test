@@ -68,6 +68,7 @@ import { HandbookReportDialog } from "@/components/HandbookReportDialog";
 import { studentHandbookData } from "@/data/studentHandbookData";
 import { cn } from "@/lib/utils";
 import { useMyProfile } from "@/hooks/useMyProfile";
+import { EditContactDialog } from "@/components/profile/EditContactDialog";
 import { useUserRoles } from "@/hooks/useUserRoles";
 import { type LinkedStudent } from "@/data/students";
 import { updateMyProfile } from "@/data/profile";
