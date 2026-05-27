@@ -3,7 +3,7 @@ import { Outlet, useLocation, useNavigate } from "react-router-dom";
 import { toast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
 import { useUserRoles } from "@/hooks/useUserRoles";
-import { Loader2 } from "lucide-react";
+import { LottieLoader } from "@/components/common/LottieLoader";
 
 export default function TeacherGuard() {
   const { loading, user, profile, portal } = useAuth();
@@ -50,7 +50,7 @@ export default function TeacherGuard() {
   if (loading || profileStillLoading || rolesLoading || !rolesFetched) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        <LottieLoader size={120} />
       </div>
     );
   }

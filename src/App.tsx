@@ -9,6 +9,7 @@ import { CampusProvider } from "@/contexts/CampusContext";
 import { StudentSelectionProvider } from "@/contexts/StudentSelectionContext";
 import { useAndroidBackButton } from "@/hooks/useAndroidBackButton";
 import { RouteErrorBoundary } from "@/components/common/RouteErrorBoundary";
+import { LottieLoader } from "@/components/common/LottieLoader";
 
 // Login - kept eager since it's the landing page
 import Login from "./pages/Login";
@@ -61,7 +62,7 @@ const PdfViewPage = lazy(() => import("./pages/PdfViewPage"));
 function RouteFallback() {
   return (
     <div className="flex items-center justify-center min-h-[60vh]">
-      <div className="h-8 w-8 rounded-full border-2 border-muted border-t-primary animate-spin" />
+      <LottieLoader size={96} />
     </div>
   );
 }
