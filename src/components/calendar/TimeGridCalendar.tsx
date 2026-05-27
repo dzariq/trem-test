@@ -607,6 +607,38 @@ export function TimeGridCalendar({
             {days.map((d) => {
               const items = timedByDay.get(d.ymd) || [];
               const isToday = d.ymd === todayYmd;
+              // Compute overlap lanes so concurrent blocks sit side-by-side
+              // instead of stacking on top of each other.
+              const sorted = [...items].sort((a, b) =>
+                a.startMin !== b.startMin ? a.startMin - b.startMin : a.endMin - b.endMin,
+              );
+              const laneEnds: number[] = [];
+              const itemLane = new Map<string, number>();
+              const itemCluster = new Map<string, number>();
+              const clusterLanes = new Map<number, number>();
+              const clusterMembers = new Map<string, number>();
+              let clusterId = -1;
+              let clusterEnd = -Infinity;
+              sorted.forEach((b) => {
+                const key = `${b.kind}-${b.id}`;
+                if (b.startMin >= clusterEnd) {
+                  clusterId++;
+                  clusterEnd = b.endMin;
+                  laneEnds.length = 0;
+                } else {
+                  clusterEnd = Math.max(clusterEnd, b.endMin);
+                }
+                let lane = laneEnds.findIndex((end) => end <= b.startMin);
+                if (lane === -1) {
+                  lane = laneEnds.length;
+                  laneEnds.push(b.endMin);
+                } else {
+                  laneEnds[lane] = b.endMin;
+                }
+                itemLane.set(key, lane);
+                itemCluster.set(key, clusterId);
+                clusterLanes.set(clusterId, Math.max(clusterLanes.get(clusterId) || 1, lane + 1));
+              });
               return (
                 <div
                   key={d.ymd}
@@ -644,6 +676,15 @@ export function TimeGridCalendar({
                       ((b.endMin - b.startMin) / 60) * HOUR_PX - 2,
                     );
                     const clampedTop = Math.max(0, top);
+                    const key = `${b.kind}-${b.id}`;
+                    const lane = itemLane.get(key) ?? 0;
+                    const lanes = clusterLanes.get(itemCluster.get(key) ?? 0) || 1;
+                    const insetPx = mode === "day" ? 6 : 2;
+                    const gapPx = lanes > 1 ? 2 : 0;
+                    const laneStyle: { left: string; width: string } = {
+                      left: `calc(${insetPx}px + ((100% - ${insetPx * 2}px - ${gapPx * (lanes - 1)}px) / ${lanes}) * ${lane} + ${gapPx * lane}px)`,
+                      width: `calc((100% - ${insetPx * 2}px - ${gapPx * (lanes - 1)}px) / ${lanes})`,
+                    };
                     return (
                       <button
                         key={`${b.kind}-${b.id}`}
@@ -651,18 +692,19 @@ export function TimeGridCalendar({
                         onClick={(e) => handleBlockClick(e, b, d.ymd)}
                         aria-label={b.title}
                         className={cn(
-                          "absolute px-1.5 py-0.5 text-[9px] font-medium text-left shadow-sm z-10 no-callout",
+                          "absolute px-1.5 py-0.5 text-[9px] font-medium text-left shadow-sm z-10 no-callout overflow-hidden",
                           b.kind === "cca"
                             ? "rounded-2xl border-2"
                             : "rounded-md border",
                           mode === "day"
-                            ? cn("left-1.5 right-1.5", b.kind === "cca" ? "rounded-2xl" : "rounded-lg")
-                            : "left-0.5 right-0.5",
+                            ? cn(b.kind === "cca" ? "rounded-2xl" : "rounded-lg")
+                            : "",
                           b.kind === "cca" ? b.colorClass : undefined,
                         )}
                         style={{
                           top: clampedTop,
                           height,
+                          ...laneStyle,
                           ...(b.kind === "event" ? getEventChipStyle(b.colorHex) : {}),
                         }}
                       >
