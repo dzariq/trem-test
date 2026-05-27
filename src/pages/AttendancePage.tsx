@@ -667,21 +667,52 @@ export default function AttendancePage() {
                           boxShadow: "0 4px 12px rgba(0,0,0,0.15)"
                         }}
                         cursor={{ fill: 'hsl(var(--muted)/0.3)' }}
-                        active={activeTooltip !== null}
-                        payload={activeTooltip ? chartData.filter(d => d.month === activeTooltip).map(d => [
-                          { name: 'Attendance', value: d.pct == null ? '—' : `${d.pct}% (${d.attended}/${d.totalDays} days)`, color: 'hsl(160, 84%, 39%)' },
-                          { name: 'Present', value: String(d.present), color: 'hsl(160, 84%, 39%)' },
-                          { name: 'Late', value: String(d.late), color: 'hsl(38, 92%, 50%)' },
-                          { name: 'Absent', value: String(d.absent), color: 'hsl(var(--destructive))' },
-                          { name: 'Excused', value: String(d.excused), color: 'hsl(271, 91%, 65%)' }
-                        ]).flat() : undefined}
-                        label={activeTooltip || undefined}
+                        content={({ active, payload, label }) => {
+                          if (!active || !payload || payload.length === 0) return null;
+                          const d = payload[0].payload as typeof chartData[number];
+                          return (
+                            <div style={{
+                              backgroundColor: "hsl(var(--card))",
+                              border: "1px solid hsl(var(--border))",
+                              borderRadius: 8,
+                              boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
+                              padding: "8px 12px",
+                              fontSize: 12,
+                            }}>
+                              <div style={{ fontWeight: 600, marginBottom: 4 }}>{label}</div>
+                              <div style={{ color: "hsl(160, 84%, 39%)", fontWeight: 600 }}>
+                                {d.pct == null ? "No records" : `${d.pct}% (${d.attended}/${d.totalDays} days)`}
+                              </div>
+                              {d.pct != null && (
+                                <div style={{ color: "hsl(var(--muted-foreground))", marginTop: 4 }}>
+                                  Present {d.present} · Late {d.late} · Absent {d.absent} · Excused {d.excused}
+                                </div>
+                              )}
+                            </div>
+                          );
+                        }}
                       />
                       <Bar dataKey="pct" fill="hsl(160, 84%, 39%)" name="Attendance %" radius={[6, 6, 0, 0]}>
                         <LabelList
                           dataKey="pct"
                           position="top"
-                          formatter={(v: number | null) => (v == null ? "" : `${v}%`)}
+                          content={(props: any) => {
+                            const { x, y, width, index } = props;
+                            const d = chartData[index];
+                            if (!d || d.pct == null) return null;
+                            return (
+                              <text
+                                x={Number(x) + Number(width) / 2}
+                                y={Number(y) - 6}
+                                textAnchor="middle"
+                                fill="hsl(var(--foreground))"
+                                fontSize={11}
+                                fontWeight={600}
+                              >
+                                {`${d.pct}% (${d.attended}/${d.totalDays})`}
+                              </text>
+                            );
+                          }}
                           style={{ fontSize: 11, fill: "hsl(var(--foreground))", fontWeight: 600 }}
                         />
                       </Bar>
