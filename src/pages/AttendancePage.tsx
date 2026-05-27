@@ -378,11 +378,21 @@ export default function AttendancePage() {
 
   const isLoading = studentsLoading || attendanceLoading || (zoomLevel !== 12 && rollingLoading);
 
-  // Empty-state detection: no records returned for this student after loading completes
+  // Empty-state detection: no records returned for this scope after loading completes
   const hasAnyData = records.length > 0;
-  const selectedStudent = linkedStudents.find((s) => s.id === selectedStudentId);
-  const selectedStudentName = selectedStudent?.name?.split(" ")[0] ?? "your child";
-  const showEmptyState = !isLoading && !!selectedStudentId && !hasAnyData;
+  const scopeStudent = isMultiChild
+    ? (scope !== "all" ? linkedStudents.find((s) => s.id === scope) : null)
+    : linkedStudents.find((s) => s.id === selectedStudentId);
+  const scopeStudentName = scopeStudent?.name?.split(" ")[0] ?? "your child";
+  const hasAnyStudent = isMultiChild ? allStudentIds.length > 0 : !!selectedStudentId;
+  const showEmptyState = !isLoading && hasAnyStudent && !hasAnyData;
+
+  // Build per-student lookup for multi-child views
+  const studentNameById = useMemo(() => {
+    const map: Record<string, string> = {};
+    linkedStudents.forEach((s) => { map[s.id] = s.name; });
+    return map;
+  }, [linkedStudents]);
 
   const EmptyStateBlock = ({ compact = false }: { compact?: boolean }) => (
     <div className={`flex flex-col items-center justify-center text-center ${compact ? "py-6" : "py-10"} px-4`}>
@@ -391,9 +401,11 @@ export default function AttendancePage() {
       </div>
       <p className="text-sm font-semibold text-foreground">No attendance recorded yet</p>
       <p className="text-xs text-muted-foreground mt-1 max-w-xs">
-        {selectedStudent
-          ? `${selectedStudentName}'s teacher hasn't marked any attendance yet. Records will appear here once class attendance starts being taken.`
-          : "Records will appear here once class attendance starts being taken."}
+        {isAggregated
+          ? "Your children's teachers haven't marked any attendance yet. Records will appear here once class attendance starts being taken."
+          : scopeStudent
+            ? `${scopeStudentName}'s teacher hasn't marked any attendance yet. Records will appear here once class attendance starts being taken.`
+            : "Records will appear here once class attendance starts being taken."}
       </p>
     </div>
   );
