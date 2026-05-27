@@ -63,6 +63,7 @@ import {
 } from "./academic/helpers";
 
 import { OverviewTab } from "./academic/tabs/OverviewTab";
+import { BandsTab } from "./academic/tabs/BandsTab";
 
 // Use centralized subjects list
 const subjects = allSubjects;
