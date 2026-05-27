@@ -20,9 +20,9 @@ export function LottieLoader({ size = 48, className }: LottieLoaderProps) {
   );
 }
 
-export function FullScreenLottieLoader({ size = 120 }: { size?: number }) {
+export function FullScreenLottieLoader({ size = 180 }: { size?: number }) {
   return (
-    <div className="min-h-screen bg-background flex items-center justify-center">
+    <div className="fixed inset-0 bg-background flex items-center justify-center z-50">
       <LottieLoader size={size} />
     </div>
   );
