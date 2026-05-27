@@ -8,9 +8,7 @@ import { AnnouncementDrawer } from "@/components/AnnouncementDrawer";
 import { listAnnouncements, markAnnouncementRead, type Announcement } from "@/data/announcements";
 import { useStudentSelection } from "@/hooks/useStudentSelection";
 import { categorizeAnnouncements } from "@/lib/announcements/categorize";
-import { FeaturedAnnouncementCard } from "@/components/announcements/FeaturedAnnouncementCard";
-import { PinnedAnnouncementCard } from "@/components/announcements/PinnedAnnouncementCard";
-import { AnnouncementListCard } from "@/components/announcements/AnnouncementListCard";
+import { AnnouncementCard } from "@/components/announcements/AnnouncementCard";
 import {
   Select,
   SelectContent,
@@ -73,8 +71,17 @@ export default function AnnouncementsPage() {
 
   const { featured, pinned, regular } = categorizeAnnouncements(filteredAnnouncements);
 
+  // Group strictly by read state so featured/pinned that are already read
+  // collapse into the compact "Earlier" list instead of dominating the page.
+  const unreadFeatured = featured && !featured.is_read ? featured : null;
+  const readFeatured = featured && featured.is_read ? featured : null;
+  const unreadPinned = pinned.filter(a => !a.is_read);
+  const readPinned = pinned.filter(a => a.is_read);
   const unreadRegular = regular.filter(a => !a.is_read);
   const readRegular = regular.filter(a => a.is_read);
+  const earlier = [...(readFeatured ? [{ ...readFeatured, _v: "featured" as const }] : []),
+    ...readPinned.map(a => ({ ...a, _v: "pinned" as const })),
+    ...readRegular.map(a => ({ ...a, _v: "regular" as const }))];
 
   // Build a flat list for the drawer navigation from the FULL (unfiltered) list
   // so prev/next navigation isn't broken when items get marked read while
@@ -182,57 +189,61 @@ export default function AnnouncementsPage() {
 
         {!loading && !error && (
           <div className="space-y-4">
-            {/* Featured */}
-            {featured && (
-              <FeaturedAnnouncementCard
-                announcement={featured}
-                onClick={() => handleAnnouncementClick(featured)}
+            {/* Featured (only when unread) */}
+            {unreadFeatured && (
+              <AnnouncementCard
+                announcement={unreadFeatured}
+                variant="featured"
+                onClick={() => handleAnnouncementClick(unreadFeatured)}
               />
             )}
 
-            {/* Pinned */}
-            {pinned.length > 0 && (
+            {/* Pinned (only unread shown expanded) */}
+            {unreadPinned.length > 0 && (
               <div className="space-y-2">
                 <div className="flex items-center gap-2 text-xs font-medium text-muted-foreground uppercase tracking-wider">
                   <Pin className="h-3 w-3 rotate-45" />
                   Pinned
                 </div>
-                {pinned.map((a) => (
-                  <PinnedAnnouncementCard
+                {unreadPinned.map((a) => (
+                  <AnnouncementCard
                     key={a.id}
                     announcement={a}
+                    variant="pinned"
                     onClick={() => handleAnnouncementClick(a)}
                   />
                 ))}
               </div>
             )}
 
-            {/* Regular */}
+            {/* Unread regular */}
             {unreadRegular.length > 0 && (
               <div className="space-y-2">
                 <div className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                  Unread
+                  New
                 </div>
                 {unreadRegular.map((a) => (
-                  <AnnouncementListCard
+                  <AnnouncementCard
                     key={a.id}
                     announcement={a}
+                    variant="regular"
                     onClick={() => handleAnnouncementClick(a)}
                   />
                 ))}
               </div>
             )}
-            {readRegular.length > 0 && (
-              <div className="space-y-2">
-                {unreadRegular.length > 0 && (
-                  <div className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                    Earlier
-                  </div>
-                )}
-                {readRegular.map((a) => (
-                  <AnnouncementListCard
+
+            {/* Earlier: compact rows for everything already read */}
+            {earlier.length > 0 && (
+              <div className="space-y-1.5">
+                <div className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                  Earlier
+                </div>
+                {earlier.map((a) => (
+                  <AnnouncementCard
                     key={a.id}
                     announcement={a}
+                    variant={a._v}
                     onClick={() => handleAnnouncementClick(a)}
                   />
                 ))}
