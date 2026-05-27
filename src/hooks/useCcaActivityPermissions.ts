@@ -1,6 +1,5 @@
 import { useMemo } from "react";
 import { useAuth } from "@/contexts/AuthContext";
-import { useTeacherScope } from "@/hooks/useTeacherScope";
 import type { CcaActivity } from "@/hooks/useCcaActivities";
 
 /**
@@ -47,26 +46,6 @@ export function useCcaActivityPermissions(
   activity: CcaActivity | null | undefined
 ): CcaActivityPermissions {
   const { user, profile } = useAuth();
-  const scope = useTeacherScope();
-
-  const teacherYearLevels = useMemo(
-    () =>
-      new Set(
-        (scope.allowedClassYears || [])
-          .map((c) => c.year_level)
-          .filter(Boolean) as string[]
-      ),
-    [scope.allowedClassYears]
-  );
-  const teacherClassNames = useMemo(
-    () =>
-      new Set(
-        (scope.allowedClassYears || [])
-          .map((c) => c.class_name)
-          .filter(Boolean) as string[]
-      ),
-    [scope.allowedClassYears]
-  );
 
   return useMemo<CcaActivityPermissions>(() => {
     if (!activity || !profile) return NO_PERMS;
@@ -81,23 +60,14 @@ export function useCcaActivityPermissions(
       !!uid &&
       (activity.picTeachers || []).some((t) => t.teacherUserId === uid);
 
-    const isTeacher = role === "teacher";
-    let hasYearOverlap = false;
-    if (isTeacher && !isPrincipal && !isActivityPIC) {
-      const kind = (activity.kind || "").toLowerCase();
-      if (kind === "event") {
-        const involved = activity.classesInvolved || [];
-        hasYearOverlap = involved.some((c) => teacherClassNames.has(c));
-      } else {
-        // club / outdoor / unknown -> match by year levels
-        const yls = activity.yearLevels || [];
-        hasYearOverlap = yls.some((y) => teacherYearLevels.has(y));
-      }
-    }
+    // Year-level / class-name overlap is no longer used for teachers.
+    // Teachers must be Main/Sub PIC (or Bus PIC — augmented in the detail
+    // page via useIsBusPicForActivity) to view a CCA.
+    const hasYearOverlap = false;
 
     // Parents always have read-only view because upstream eligibility hooks
     // already restrict which activities a parent can reach.
-    const canView = isPrincipal || isActivityPIC || hasYearOverlap || isParent;
+    const canView = isPrincipal || isActivityPIC || isParent;
     const canEdit = isPrincipal || isActivityPIC;
 
     return {
@@ -107,7 +77,7 @@ export function useCcaActivityPermissions(
       canView,
       canEdit,
       canEditBuses: canEdit,
-      canViewBuses: isPrincipal || isActivityPIC || hasYearOverlap,
+      canViewBuses: isPrincipal || isActivityPIC,
     };
-  }, [activity, profile, user?.id, teacherYearLevels, teacherClassNames]);
+  }, [activity, profile, user?.id]);
 }

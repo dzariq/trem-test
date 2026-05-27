@@ -1,36 +1,42 @@
+## Goal
 
-## Lottie file check
+Teachers should only see CCA activities (and their sessions in the Calendar) where they have actionable access:
+- Main or Sub PIC on the activity (`cca_activity_teachers`)
+- Bus PIC on an outdoor CCA (`cca_outdoor_buses.teacher_pic_main` / `_sub`)
+- Principals (super_admin / admin / school_leader) continue to see everything
 
-The uploaded `.lottie` is a valid dotLottie bundle (4.2 KB, contains `manifest.json` + 1 animation JSON, ~45 KB uncompressed). Safe to ship as an app asset — small enough to import directly.
+The existing year-level / class-name overlap fallback is removed for teachers.
 
-## Plan
+## Changes
 
-### 1. Add the asset
-- Copy the uploaded file to `src/assets/lottie/app-loader.lottie` so it gets bundled & hashed by Vite.
+### 1. `src/hooks/useCcaActivityFilter.ts`
+- Drop `teacherYearLevels` / `teacherClassNames` matching.
+- Add a query to load activity IDs where the teacher is a bus PIC (one fetch per session via a small new hook `useTeacherBusPicActivityIds`).
+- `canSee` becomes: principal → true; teacher → PIC on activity OR activity id is in the bus-PIC id set; else false.
+- Applies to Teacher CCA list page automatically (already consumes this hook).
 
-### 2. Install dotLottie player
-- Add `@lottiefiles/dotlottie-react` (official renderer for `.lottie` files, ~30 KB gzip, supports autoplay/loop).
+### 2. `src/hooks/useCcaSessionsCalendar.ts`
+- In the `scopeToTeacher` branch, remove the year_levels / classes_involved overlap fetches.
+- Keep only the two existing PIC sources:
+  - `cca_activity_teachers` (Main/Sub PIC)
+  - `cca_outdoor_buses` (Bus PIC)
+- Result: calendar grid + day list only show sessions for activities the teacher PICs.
 
-### 3. Create a reusable component
-- New `src/components/common/LottieLoader.tsx` exporting:
-  - `<LottieLoader size={32|48|64|...} className?="" />` — renders the dotLottie player at the given size, autoplay + loop, with `aria-label="Loading"`.
-  - `<FullScreenLottieLoader />` — centers the loader in a `min-h-screen` container with the app background (drop-in for the current `Loader2` full-screen blocks in `ParentStudentGuard`, `TeacherGuard`, `App.tsx` Suspense fallback, route error/loading states).
+### 3. `src/hooks/useCcaActivityPermissions.ts`
+- Remove `hasYearOverlap` from the canView calculation for teachers. `canView` for teachers = `isActivityPIC || isBusPic` (bus-PIC handled via existing `useIsBusPicForActivity` already used in detail page).
+- Keep `canEdit` semantics unchanged (principal or activity PIC).
+- Principals still see / edit all.
 
-### 4. Replace existing spinners
-Swap every `Loader2 … animate-spin` usage to the new component. Two flavors:
+### 4. `src/pages/teacher/TeacherCalendarPage.tsx`
+- No longer needs to pass `teacherYearLevels` / `teacherClassNames` to `useCcaSessionsCalendar`. Clean up the unused memos.
 
-- **Full-screen / route-level loaders** → `<FullScreenLottieLoader />`
-  Files: `src/App.tsx` (Suspense fallback), `src/components/auth/ParentStudentGuard.tsx`, `src/components/auth/TeacherGuard.tsx`, page-level loading blocks in `TeacherHandbookPage`, `TeacherTimetablePage`, `ParentTimetablePage`, etc.
+## Out of scope
+- Parent calendar / parent CCA logic — unchanged.
+- RLS policies — unchanged (server still permits broader read; this is a client-side visibility tightening matching what the user can act on).
+- CCA detail page guards — already PIC/bus-PIC gated; nothing to change.
 
-- **Inline loaders** (buttons, small cards, sheets) → `<LottieLoader size={20} />` (or 16/24 to match the previous icon size). Applies to all the dialogs/sheets/forms in the ripgrep list (CCA sheets, lesson plan forms, notifications drawer, etc.).
-
-A search-and-replace pass over the ~30 files that import `Loader2` from `lucide-react` for spinner purposes. `Loader2` imports used as static icons (not spinning) — if any — are left alone.
-
-### 5. Verify
-- Typecheck.
-- Visually confirm on `/parent/profile` and `/login` that the loader animates.
-
-## Technical notes
-- dotLottie format requires `@lottiefiles/dotlottie-react`, not `lottie-react` (the latter only handles `.json`). Using the official package keeps file size minimal and avoids extracting the JSON manually.
-- Asset imported as `import loaderSrc from "@/assets/lottie/app-loader.lottie?url"` so Vite serves it with a hashed URL; the player loads it via `src={loaderSrc}`.
-- No design-token changes; loader inherits surrounding background. Default size 48px to roughly match current `h-8 w-8` spinner footprint.
+## Verification
+- Login as a teacher who is NOT a PIC of any CCA → Calendar shows no CCA sessions; Teacher CCA list shows none.
+- Login as a teacher who is Main PIC of one club → only that club's sessions appear on Calendar.
+- Login as a teacher who is Sub PIC of an outdoor CCA bus only → that outdoor CCA appears on Calendar + CCA list.
+- Login as admin / school_leader → sees all CCAs as before.

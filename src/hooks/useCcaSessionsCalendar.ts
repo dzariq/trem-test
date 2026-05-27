@@ -127,52 +127,34 @@ export function useCcaSessionsCalendar({
         }
       }
 
-      // Teacher scoping: limit to activities tied to the teacher's assigned
-      // year groups (clubs/outdoors via year_levels, events via classes_involved).
+      // Teacher scoping: limit to activities the teacher actually PICs.
+      // Only Main/Sub PIC on the activity OR Bus PIC on an outdoor CCA are
+      // included. Year-level / class-name overlap is intentionally NOT used.
       if (scopeToTeacher) {
-        const yls = (teacherYearLevels || []).filter(Boolean);
-        const cns = (teacherClassNames || []).filter(Boolean);
-        if (yls.length === 0 && cns.length === 0 && !teacherUserId) {
+        if (!teacherUserId) {
           setSessions([]);
           setLoading(false);
           return;
         }
 
         const ids = new Set<string>();
-        // Activities where the teacher is PIC / co-PIC (any activity kind)
-        if (teacherUserId) {
-          const { data: picRows } = await supabase
-            .from("cca_activity_teachers")
-            .select("activity_id")
-            .eq("teacher_user_id", teacherUserId);
-          (picRows || []).forEach((r: any) => r?.activity_id && ids.add(r.activity_id));
-          // Activities where teacher is bus PIC (outdoor)
-          const { data: busRows } = await supabase
-            .from("cca_outdoor_buses")
-            .select("activity_id")
-            .eq("pic_teacher_user_id", teacherUserId);
-          (busRows || []).forEach((r: any) => r?.activity_id && ids.add(r.activity_id));
-        }
-        // Clubs / outdoors via year_levels overlap
-        if (yls.length > 0) {
-          const { data: coRows } = await supabase
-            .from("cca_activities")
-            .select("id")
-            .in("kind", ["club", "outdoor"])
-            .eq("is_active", true)
-            .overlaps("year_levels", yls);
-          (coRows || []).forEach((r: any) => r?.id && ids.add(r.id));
-        }
-        // Events via classes_involved overlap
-        if (cns.length > 0) {
-          const { data: evRows } = await supabase
-            .from("cca_activities")
-            .select("id")
-            .eq("kind", "event")
-            .eq("is_active", true)
-            .overlaps("classes_involved", cns);
-          (evRows || []).forEach((r: any) => r?.id && ids.add(r.id));
-        }
+        const { data: picRows } = await supabase
+          .from("cca_activity_teachers")
+          .select("activity_id")
+          .eq("teacher_user_id", teacherUserId);
+        (picRows || []).forEach(
+          (r: any) => r?.activity_id && ids.add(r.activity_id)
+        );
+
+        const { data: busRows } = await supabase
+          .from("cca_outdoor_buses")
+          .select("activity_id")
+          .or(
+            `teacher_pic_main.eq.${teacherUserId},teacher_pic_sub.eq.${teacherUserId}`
+          );
+        (busRows || []).forEach(
+          (r: any) => r?.activity_id && ids.add(r.activity_id)
+        );
 
         scopedActivityIds = Array.from(ids);
         if (scopedActivityIds.length === 0) {
