@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo, useCallback, useRef } from "react";
 import { useRefetchOnResume } from "@/hooks/useRefreshOnAppResume";
 import { supabase } from "@/lib/supabase";
+import { buildParentAwards } from "@/lib/buildParentAwards";
 
 export interface AcademicPeriod {
   id: string;
@@ -56,6 +57,16 @@ export interface CocurricularActivity {
   eventsRole: string | null;
   achievementsEvent: string | null;
   achievementsAward: string | null;
+  outdoorOrg?: string | null;
+  outdoorRole?: string | null;
+  additionalAward?: string | null;
+  additionalLevel?: string | null;
+  additionalRemarks?: string | null;
+  clubs?: { name: string; role: string }[];
+  events?: { name: string; role: string }[];
+  outdoor?: { name: string; role: string }[];
+  awardsList?: { event: string; award: string; type?: string | null }[];
+  additional?: { award_title: string; award_level: string; remarks: string | null }[];
 }
 
 export interface StudentReportCardData {
@@ -444,42 +455,55 @@ export function useStudentReportCard(
           }
         : null;
 
-      // Fetch cocurricular activities for this student and academic period
-      console.log("[useStudentReportCard] Fetching cocurricular activities:", {
-        selectedStudentId: studentId,
-        selectedAcademicPeriodId: examPeriodId,
-      });
-
-      const { data: cocurricularData, error: cocurricularError } = await supabase
-        .from("student_cocurricular_activities")
-        .select("*")
-        .eq("student_id", studentId)
-        .eq("academic_period_id", examPeriodId);
-
-      console.log("[useStudentReportCard] Cocurricular query result:", {
-        cocurricularData,
-        cocurricularError,
-        rowCount: cocurricularData?.length ?? 0,
-      });
-
-      if (cocurricularError) {
-        console.error("[useStudentReportCard] student_cocurricular_activities query FAILED:", cocurricularError);
+      // Aggregate awards/cocurricular on the fly from source tables.
+      // The legacy `student_cocurricular_activities` flat table is no
+      // longer used in this Supabase instance; the school admin app
+      // edits the source tables directly (sport_house_roles,
+      // student_cca_enrollments, cca_activity_roles, cca_event_awards,
+      // student_additional_achievements).
+      let cocurricular: CocurricularActivity[] = [];
+      try {
+        const agg = await buildParentAwards(studentId, examPeriodId);
+        const hasAny =
+          !!agg.sports_house_org ||
+          agg.clubs.length > 0 ||
+          agg.events.length > 0 ||
+          agg.outdoor.length > 0 ||
+          agg.awards.length > 0 ||
+          agg.additional.length > 0;
+        if (hasAny) {
+          cocurricular = [
+            {
+              id: `${studentId}:${examPeriodId}`,
+              academicPeriodId: examPeriodId,
+              sportsHouseOrg: agg.sports_house_org,
+              sportsHouseRole: agg.sports_house_role,
+              clubOrg: agg.club_org,
+              clubRole: agg.club_role,
+              // No separate "leadership" source table — keep nullable for backward compatibility.
+              leadershipOrg: null,
+              leadershipRole: null,
+              eventsOrg: agg.events_org,
+              eventsRole: agg.events_role,
+              achievementsEvent: agg.achievements_event,
+              achievementsAward: agg.achievements_award,
+              outdoorOrg: agg.outdoor_org,
+              outdoorRole: agg.outdoor_role,
+              additionalAward: agg.additional_award,
+              additionalLevel: agg.additional_level,
+              additionalRemarks: agg.additional_remarks,
+              clubs: agg.clubs,
+              events: agg.events,
+              outdoor: agg.outdoor,
+              awardsList: agg.awards,
+              additional: agg.additional,
+            },
+          ];
+        }
+        console.log("[useStudentReportCard] Aggregated awards:", agg);
+      } catch (e) {
+        console.error("[useStudentReportCard] buildParentAwards failed:", e);
       }
-
-      const cocurricular: CocurricularActivity[] = (cocurricularData || []).map((c: any) => ({
-        id: c.id,
-        academicPeriodId: c.academic_period_id,
-        sportsHouseOrg: c.sports_house_org,
-        sportsHouseRole: c.sports_house_role,
-        clubOrg: c.club_org,
-        clubRole: c.club_role,
-        leadershipOrg: c.leadership_org,
-        leadershipRole: c.leadership_role,
-        eventsOrg: c.events_org,
-        eventsRole: c.events_role,
-        achievementsEvent: c.achievements_event,
-        achievementsAward: c.achievements_award,
-      }));
 
       console.log("[useStudentReportCard] Mapped cocurricular activities:", cocurricular);
 
