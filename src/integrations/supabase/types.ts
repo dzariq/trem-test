@@ -4732,6 +4732,48 @@ export type Database = {
           },
         ]
       }
+      push_notifications: {
+        Row: {
+          created_at: string
+          id: string
+          is_read: boolean
+          item_id: string | null
+          link_to: string | null
+          message: string
+          push_sent: boolean
+          title: string
+          topics: string[]
+          type: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_read?: boolean
+          item_id?: string | null
+          link_to?: string | null
+          message: string
+          push_sent?: boolean
+          title: string
+          topics?: string[]
+          type?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_read?: boolean
+          item_id?: string | null
+          link_to?: string | null
+          message?: string
+          push_sent?: boolean
+          title?: string
+          topics?: string[]
+          type?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       rsvp_inquiries: {
         Row: {
           admin_id: string | null
