@@ -87,7 +87,11 @@ export function AttendanceSummary() {
                       <DropdownMenuItem
                         key={option.days}
                         onClick={() => setSelectedPeriod(option)}
-                        className={selectedPeriod.days === option.days ? "bg-muted" : ""}
+                        className={
+                          selectedPeriod.days === option.days
+                            ? "bg-emerald-500 text-white focus:bg-emerald-500 focus:text-white data-[highlighted]:bg-emerald-500 data-[highlighted]:text-white"
+                            : ""
+                        }
                       >
                         {option.label}
                       </DropdownMenuItem>
