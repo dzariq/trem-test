@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
+import { useRefetchOnResume } from "@/hooks/useRefreshOnAppResume";
 import { supabase } from "@/lib/supabase";
 
 interface SubjectGoal {
@@ -301,6 +302,8 @@ export function useStudentGradeGoals(studentId: string | null, goalYear: number)
   useEffect(() => {
     fetchGoalsData();
   }, [fetchGoalsData]);
+
+  useRefetchOnResume(fetchGoalsData);
 
   // Upsert a single goal
   const upsertGoal = useCallback(async (subjectId: number, targetPercentage: number) => {
