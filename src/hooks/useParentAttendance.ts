@@ -21,6 +21,9 @@ type MonthlyChartData = {
   absent: number;
   late: number;
   excused: number;
+  attended: number;
+  totalDays: number;
+  pct: number | null;
 };
 
 type DailyBreakdown = {
@@ -170,10 +173,13 @@ export function useParentAttendance(studentId: StudentIdInput, selectedYear: str
       }
     });
 
-    return monthNames.map((month) => ({
-      month,
-      ...monthCounts[month],
-    }));
+    return monthNames.map((month) => {
+      const c = monthCounts[month];
+      const attended = c.present + c.late;
+      const totalDays = c.present + c.absent + c.late + c.excused;
+      const pct = totalDays > 0 ? Math.round((attended / totalDays) * 100) : null;
+      return { month, ...c, attended, totalDays, pct };
+    });
   }, [records]);
 
   // Calculate monthly summary for selected month
@@ -326,9 +332,15 @@ export function useRollingAttendance(studentId: StudentIdInput, months: 3 | 6 | 
       .map(([key, counts]) => {
         const [year, month] = key.split("-");
         const date = new Date(parseInt(year), parseInt(month) - 1);
+        const attended = counts.present + counts.late;
+        const totalDays = counts.present + counts.absent + counts.late + counts.excused;
+        const pct = totalDays > 0 ? Math.round((attended / totalDays) * 100) : null;
         return {
           month: date.toLocaleDateString("en-US", { month: "short" }),
           ...counts,
+          attended,
+          totalDays,
+          pct,
         };
       });
   }, [records]);
