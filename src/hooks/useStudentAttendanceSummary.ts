@@ -13,7 +13,10 @@ function normalizeStatus(status: string): "present" | "absent" | "late" | "excus
   return null;
 }
 
-export function useStudentAttendanceSummary(studentId: string | null, days: number = 30) {
+export function useStudentAttendanceSummary(
+  studentId: string | string[] | null,
+  days: number = 30,
+) {
   const [rows, setRows] = useState<AttendanceRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -21,8 +24,14 @@ export function useStudentAttendanceSummary(studentId: string | null, days: numb
   const startDate = useMemo(() => format(subDays(new Date(), days), "yyyy-MM-dd"), [days]);
   const endDate = useMemo(() => format(new Date(), "yyyy-MM-dd"), []);
 
+  const studentIds = useMemo(() => {
+    if (!studentId) return [];
+    return Array.isArray(studentId) ? studentId.filter(Boolean) : [studentId];
+  }, [studentId]);
+  const studentIdsKey = studentIds.join(",");
+
   useEffect(() => {
-    if (!studentId) {
+    if (studentIds.length === 0) {
       setRows([]);
       setLoading(false);
       setError(null);
@@ -38,7 +47,7 @@ export function useStudentAttendanceSummary(studentId: string | null, days: numb
       const { data, error: queryError } = await supabase
         .from("attendance")
         .select("date, status")
-        .eq("student_id", studentId)
+        .in("student_id", studentIds)
         .gte("date", startDate)
         .lte("date", endDate)
         .order("date", { ascending: true });
@@ -58,7 +67,7 @@ export function useStudentAttendanceSummary(studentId: string | null, days: numb
     return () => {
       cancelled = true;
     };
-  }, [studentId, startDate, endDate]);
+  }, [studentIdsKey, startDate, endDate]);
 
   const totals = useMemo(() => {
     const result = { present: 0, absent: 0, late: 0, excused: 0, total: 0 };
