@@ -125,6 +125,7 @@ jobs:
           package com.collinz.school;
 
           import android.graphics.Color;
+          import android.media.MediaPlayer;
           import android.net.Uri;
           import android.os.Build;
           import android.os.Bundle;
@@ -271,6 +272,19 @@ jobs:
                       return;
                   }
 
+                  // Fullscreen/immersive while the splash video is visible.
+                  if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                      getWindow().setDecorFitsSystemWindows(false);
+                  }
+                  root.setSystemUiVisibility(
+                      android.view.View.SYSTEM_UI_FLAG_LAYOUT_STABLE
+                          | android.view.View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
+                          | android.view.View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
+                          | android.view.View.SYSTEM_UI_FLAG_FULLSCREEN
+                          | android.view.View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
+                          | android.view.View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
+                  );
+
                   splashOverlay = new FrameLayout(this);
                   splashOverlay.setBackgroundColor(Color.WHITE);
                   splashVideo = new VideoView(this);
@@ -291,6 +305,12 @@ jobs:
                       "android.resource://" + getPackageName() + "/" + R.raw.splash_screen
                   );
                   splashVideo.setVideoURI(uri);
+                  splashVideo.setOnPreparedListener(mp -> {
+                      // Crop-to-fill (cover) instead of letterboxing.
+                      try {
+                          mp.setVideoScalingMode(MediaPlayer.VIDEO_SCALING_MODE_SCALE_TO_FIT_WITH_CROPPING);
+                      } catch (Exception ignored) {}
+                  });
                   splashVideo.setOnCompletionListener(mp -> dismissSplashVideo());
                   splashVideo.setOnErrorListener((mp, what, extra) -> {
                       Log.w(TAG, "Splash video error: " + what + "," + extra);
@@ -305,6 +325,8 @@ jobs:
                       ViewGroup root = findViewById(android.R.id.content);
                       if (root != null) {
                           root.removeView(splashOverlay);
+                          // Restore system UI to normal after splash.
+                          root.setSystemUiVisibility(android.view.View.SYSTEM_UI_FLAG_LAYOUT_STABLE);
                       }
                       splashOverlay = null;
                       splashVideo = null;
