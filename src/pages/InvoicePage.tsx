@@ -321,8 +321,7 @@ export default function InvoicePage() {
                     No invoices yet
                   </h3>
                   <p className="text-sm text-muted-foreground">
-                    Billing for {selectedStudent?.name || "this student"} hasn't been
-                    set up, or no invoices have been issued.
+                    Billing for {scopeLabel} hasn't been set up, or no invoices have been issued.
                   </p>
                 </CardContent>
               </Card>
