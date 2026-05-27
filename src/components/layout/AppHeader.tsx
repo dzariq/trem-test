@@ -15,6 +15,11 @@ interface AppHeaderProps {
   showBack?: boolean;
   /** Show child selector dropdown in header (parent routes) */
   showChildSelector?: boolean;
+  /** Optional controlled scope for the child selector ("all" | studentId). */
+  childSelectorScope?: string;
+  onChildSelectorScopeChange?: (value: string) => void;
+  /** Show an "All Children (N)" option in the selector. */
+  childSelectorShowAllOption?: boolean;
   rightContent?: React.ReactNode;
   leftContent?: React.ReactNode;
 }
@@ -25,6 +30,9 @@ export function AppHeader({
   showProfile = false,
   showBack = false,
   showChildSelector = false,
+  childSelectorScope,
+  onChildSelectorScopeChange,
+  childSelectorShowAllOption = false,
   rightContent,
   leftContent
 }: AppHeaderProps) {
@@ -89,7 +97,12 @@ export function AppHeader({
                 "linear-gradient(to right, hsl(45 85% 58% / 0.22), hsl(45 85% 58% / 0.08), hsl(var(--background)))",
             }}
           >
-            <ChildSelectorDropdown variant="bar" />
+            <ChildSelectorDropdown
+              variant="bar"
+              scopeValue={childSelectorScope}
+              onScopeChange={onChildSelectorScopeChange}
+              showAllOption={childSelectorShowAllOption}
+            />
           </div>
         )}
       </header>
