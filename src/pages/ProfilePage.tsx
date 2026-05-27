@@ -393,16 +393,57 @@ export default function ProfilePage() {
         <Card className="bg-card border-border shadow-sm">
           <CardContent className="p-6">
             <div className="flex items-center gap-4">
-              <Avatar className="h-20 w-20 border-2 border-primary/20">
-                <AvatarFallback className="bg-primary/10 text-primary text-2xl font-semibold">
-                  {displayInitials}
-                </AvatarFallback>
-              </Avatar>
+              <div className="relative">
+                <button
+                  type="button"
+                  onClick={() => ownFileInputRef.current?.click()}
+                  disabled={isUploadingOwn || !ownUserId}
+                  className="block rounded-full focus:outline-none focus:ring-2 focus:ring-primary/40"
+                  aria-label="Change profile photo"
+                >
+                  <Avatar className="h-20 w-20 border-2 border-primary/20">
+                    {ownAvatarUrl ? (
+                      <AvatarImage
+                        src={ownAvatarUrl}
+                        alt={displayName}
+                        className="object-cover"
+                      />
+                    ) : null}
+                    <AvatarFallback className="bg-primary/10 text-primary text-2xl font-semibold">
+                      {displayInitials}
+                    </AvatarFallback>
+                  </Avatar>
+                  <span className="absolute bottom-0 right-0 flex h-7 w-7 items-center justify-center rounded-full bg-primary text-primary-foreground shadow ring-2 ring-card">
+                    {isUploadingOwn ? (
+                      <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                    ) : (
+                      <Camera className="h-3.5 w-3.5" />
+                    )}
+                  </span>
+                </button>
+                <input
+                  ref={ownFileInputRef}
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={handleOwnPhotoChange}
+                />
+              </div>
               <div>
                 <h2 className="text-xl font-semibold text-foreground">
                   {displayName}
                 </h2>
                 <p className="text-sm text-muted-foreground">{displayRoleWithRelationship}</p>
+                {ownAvatarUrl && (
+                  <button
+                    type="button"
+                    onClick={handleOwnPhotoRemove}
+                    disabled={isUploadingOwn}
+                    className="mt-1 text-xs text-muted-foreground underline disabled:opacity-50"
+                  >
+                    Remove photo
+                  </button>
+                )}
               </div>
             </div>
           </CardContent>
