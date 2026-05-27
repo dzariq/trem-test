@@ -367,6 +367,8 @@ export default function AttendancePage() {
 
   const multiDailyBreakdown = useMemo<MultiDay[]>(() => {
     if (!isAggregated) return [];
+    const nameMap: Record<string, string> = {};
+    linkedStudents.forEach((s) => { nameMap[s.id] = s.name; });
     const monthRecords = records.filter((r) => new Date(r.date).getMonth() === currentMonthIndex);
     const byDate: Record<string, ChildEntry[]> = {};
     monthRecords.forEach((r) => {
@@ -374,7 +376,7 @@ export default function AttendancePage() {
       if (statusFilter !== "all" && status !== statusFilter) return;
       const entry: ChildEntry = {
         studentId: r.student_id,
-        studentName: studentNameById[r.student_id] ?? r.student_name ?? "Student",
+        studentName: nameMap[r.student_id] ?? r.student_name ?? "Student",
         status,
         reason: status !== "present" && r.remarks ? r.remarks : null,
         remarks: r.remarks,
@@ -387,7 +389,7 @@ export default function AttendancePage() {
         date,
         entries: entries.sort((a, b) => a.studentName.localeCompare(b.studentName)),
       }));
-  }, [isAggregated, records, currentMonthIndex, statusFilter, studentNameById]);
+  }, [isAggregated, records, currentMonthIndex, statusFilter, linkedStudents]);
 
   const multiWeeklyBreakdown = useMemo(() => {
     if (!isAggregated) return [] as { weekStart: string; days: MultiDay[] }[];
