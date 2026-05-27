@@ -142,6 +142,68 @@ export default function ProfilePage() {
   const [pendingFile, setPendingFile] = useState<File | null>(null);
   const [isSavingPhoto, setIsSavingPhoto] = useState(false);
 
+  // Own (parent/user) avatar
+  const ownUserId = profile?.user_id ?? null;
+  const [ownAvatarUrl, setOwnAvatarUrl] = useState<string | null>(
+    () => (profile?.user_id ? getCachedUserAvatar(profile.user_id) : null)
+  );
+  const [isUploadingOwn, setIsUploadingOwn] = useState(false);
+  const ownFileInputRef = useRef<HTMLInputElement | null>(null);
+
+  useEffect(() => {
+    if (!ownUserId) return;
+    setOwnAvatarUrl(getCachedUserAvatar(ownUserId));
+    let cancelled = false;
+    resolveUserAvatar(ownUserId)
+      .then((url) => {
+        if (!cancelled) setOwnAvatarUrl(url);
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, [ownUserId]);
+
+  const handleOwnPhotoChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file || !ownUserId) return;
+    if (!file.type.startsWith("image/")) {
+      toast.error("Please choose an image file.");
+      return;
+    }
+    if (file.size > 8 * 1024 * 1024) {
+      toast.error("Image too large. Max 8 MB.");
+      return;
+    }
+    try {
+      setIsUploadingOwn(true);
+      const url = await uploadUserAvatar(ownUserId, file);
+      setOwnAvatarUrl(url);
+      toast.success("Profile photo updated.");
+    } catch (err) {
+      console.error("[profile] upload own avatar failed", err);
+      toast.error("Could not upload photo. Please try again.");
+    } finally {
+      setIsUploadingOwn(false);
+    }
+  };
+
+  const handleOwnPhotoRemove = async () => {
+    if (!ownUserId) return;
+    try {
+      setIsUploadingOwn(true);
+      await deleteUserAvatar(ownUserId);
+      setOwnAvatarUrl(null);
+      toast.success("Profile photo removed.");
+    } catch (err) {
+      console.error("[profile] delete own avatar failed", err);
+      toast.error("Could not remove photo.");
+    } finally {
+      setIsUploadingOwn(false);
+    }
+  };
+
   // Load saved photos from Supabase storage when students load
   useEffect(() => {
     if (linkedStudents.length === 0) return;
