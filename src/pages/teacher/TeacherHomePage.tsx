@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { formatClassDisplay } from "@/lib/utils";
 import { TeacherAppLayout } from "@/components/layout/TeacherAppLayout";
 import { AppHeader } from "@/components/layout/AppHeader";
@@ -43,6 +43,7 @@ import {
 } from "@/data/gradeEntry";
 import { useUpcomingDeadlines } from "@/hooks/useUpcomingDeadlines";
 import { useUpcomingCcaSessions } from "@/hooks/useUpcomingCcaSessions";
+import { useRefreshOnAppResume } from "@/hooks/useRefreshOnAppResume";
 
 type PendingGradeSummary = {
   class: string;
@@ -316,61 +317,48 @@ export default function TeacherHomePage() {
     [events, profile?.user_id]
   );
 
-  useEffect(() => {
-    let isMounted = true;
-    const loadAnnouncements = async () => {
-      setAnnouncementsLoading(true);
-      setAnnouncementsError(null);
-      try {
-        const data = await listAnnouncements({ limit: 10, campusCode: activeCampus });
-        if (isMounted) {
-          setAnnouncements(data);
-        }
-      } catch (error) {
-        if (isMounted) {
-          const message = error instanceof Error ? error.message : "Failed to load announcements.";
-          setAnnouncementsError(message);
-        }
-      } finally {
-        if (isMounted) {
-          setAnnouncementsLoading(false);
-        }
-      }
-    };
+  const loadAnnouncements = useCallback(async () => {
+    setAnnouncementsLoading(true);
+    setAnnouncementsError(null);
+    try {
+      const data = await listAnnouncements({ limit: 10, campusCode: activeCampus });
+      setAnnouncements(data);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Failed to load announcements.";
+      setAnnouncementsError(message);
+    } finally {
+      setAnnouncementsLoading(false);
+    }
+  }, [activeCampus]);
 
+  useEffect(() => {
     loadAnnouncements();
-    return () => {
-      isMounted = false;
-    };
+  }, [loadAnnouncements]);
+
+  const loadEvents = useCallback(async () => {
+    setEventsLoading(true);
+    setEventsError(null);
+    try {
+      const data = await listUpcomingEvents({ role: "teacher", limit: 10, campusCode: activeCampus });
+      setEvents(data);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Failed to load events.";
+      setEventsError(message);
+    } finally {
+      setEventsLoading(false);
+    }
   }, [activeCampus]);
 
   useEffect(() => {
-    let isMounted = true;
-    const loadEvents = async () => {
-      setEventsLoading(true);
-      setEventsError(null);
-      try {
-        const data = await listUpcomingEvents({ role: "teacher", limit: 10, campusCode: activeCampus });
-        if (isMounted) {
-          setEvents(data);
-        }
-      } catch (error) {
-        if (isMounted) {
-          const message = error instanceof Error ? error.message : "Failed to load events.";
-          setEventsError(message);
-        }
-      } finally {
-        if (isMounted) {
-          setEventsLoading(false);
-        }
-      }
-    };
-
     loadEvents();
-    return () => {
-      isMounted = false;
-    };
-  }, [activeCampus]);
+  }, [loadEvents]);
+
+  // Auto-refresh on app resume / tab focus so the installed app doesn't show
+  // stale announcements & events after being backgrounded.
+  useRefreshOnAppResume(() => {
+    loadAnnouncements();
+    loadEvents();
+  });
 
   const handleMarkAnnouncementRead = async (id: Announcement["id"]) => {
     try {
