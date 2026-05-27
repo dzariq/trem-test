@@ -485,11 +485,15 @@ export default function CalendarPage() {
             <SelectTrigger className="h-10 w-full text-sm bg-card">
               <div className="flex items-center gap-2 min-w-0">
                 <Users className="h-4 w-4 text-muted-foreground shrink-0" />
-                <SelectValue placeholder="All Children" />
+                <SelectValue placeholder={`All Children (${linkedStudents.length})`}>
+                  {calendarScope === "all"
+                    ? `All Children (${linkedStudents.length})`
+                    : linkedStudents.find((s) => s.id === calendarScope)?.name || "Select"}
+                </SelectValue>
               </div>
             </SelectTrigger>
             <SelectContent className="bg-card border-border">
-              <SelectItem value="all">All Children</SelectItem>
+              <SelectItem value="all">{`All Children (${linkedStudents.length})`}</SelectItem>
               {linkedStudents.map((student) => (
                 <SelectItem key={student.id} value={student.id}>
                   <span className="truncate">{student.name}</span>
