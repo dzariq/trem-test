@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo, useCallback, useRef } from "react";
 import { useRefetchOnResume } from "@/hooks/useRefreshOnAppResume";
 import { supabase } from "@/lib/supabase";
+import { buildParentAwards } from "@/lib/buildParentAwards";
 
 export interface AcademicPeriod {
   id: string;
@@ -56,6 +57,16 @@ export interface CocurricularActivity {
   eventsRole: string | null;
   achievementsEvent: string | null;
   achievementsAward: string | null;
+  outdoorOrg?: string | null;
+  outdoorRole?: string | null;
+  additionalAward?: string | null;
+  additionalLevel?: string | null;
+  additionalRemarks?: string | null;
+  clubs?: { name: string; role: string }[];
+  events?: { name: string; role: string }[];
+  outdoor?: { name: string; role: string }[];
+  awardsList?: { event: string; award: string; type?: string | null }[];
+  additional?: { award_title: string; award_level: string; remarks: string | null }[];
 }
 
 export interface StudentReportCardData {
