@@ -15,6 +15,7 @@ import {
   Legend,
   Tooltip,
 } from "recharts";
+import { LabelList } from "recharts";
 import {
   Select,
   SelectContent,
