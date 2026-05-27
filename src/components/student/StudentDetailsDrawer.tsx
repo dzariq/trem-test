@@ -263,7 +263,7 @@ export function StudentDetailsDrawer({ studentId, onOpenChange }: StudentDetails
                     <div className="flex items-center justify-between">
                       <span className="font-medium text-foreground">Visa & Passport</span>
                       {selectedStudent.nationality && (
-                        <Badge variant="outline" className="text-xs font-medium px-2 py-0.5 bg-muted/40 border-border text-foreground/80 gap-1">
+                        <Badge variant="outline" className="text-xs font-medium px-2 py-0.5 bg-white border-border text-foreground gap-1 shadow-sm">
                           <Globe className="w-3 h-3" />
                           {selectedStudent.nationality}
                         </Badge>
