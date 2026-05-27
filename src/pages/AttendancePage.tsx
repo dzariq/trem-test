@@ -458,13 +458,6 @@ export default function AttendancePage() {
   const hasAnyStudent = isMultiChild ? allStudentIds.length > 0 : !!selectedStudentId;
   const showEmptyState = !isLoading && hasAnyStudent && !hasAnyData;
 
-  // Build per-student lookup for multi-child views
-  const studentNameById = useMemo(() => {
-    const map: Record<string, string> = {};
-    linkedStudents.forEach((s) => { map[s.id] = s.name; });
-    return map;
-  }, [linkedStudents]);
-
   const EmptyStateBlock = ({ compact = false }: { compact?: boolean }) => (
     <div className={`flex flex-col items-center justify-center text-center ${compact ? "py-6" : "py-10"} px-4`}>
       <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center mb-3">
