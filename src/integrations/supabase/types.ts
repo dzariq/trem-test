@@ -407,6 +407,32 @@ export type Database = {
           },
         ]
       }
+      announcement_recipients: {
+        Row: {
+          announcement_id: string
+          created_at: string
+          user_id: string
+        }
+        Insert: {
+          announcement_id: string
+          created_at?: string
+          user_id: string
+        }
+        Update: {
+          announcement_id?: string
+          created_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "announcement_recipients_announcement_id_fkey"
+            columns: ["announcement_id"]
+            isOneToOne: false
+            referencedRelation: "announcements"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       announcement_targets: {
         Row: {
           announcement_id: string
@@ -7500,6 +7526,10 @@ export type Database = {
       }
       show_limit: { Args: never; Returns: number }
       show_trgm: { Args: { "": string }; Returns: string[] }
+      snapshot_announcement_recipients: {
+        Args: { p_announcement_id: string }
+        Returns: number
+      }
       submit_club_applications: {
         Args: {
           p_campus: string
