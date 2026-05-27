@@ -237,11 +237,11 @@ export default function InvoicePage() {
 
             {/* Filters */}
             {invoices.length > 0 && (
-              <div className="flex items-center gap-2 flex-wrap">
+              <div className="flex items-center gap-1.5">
                 {(
                   [
                     { key: "all", label: "All" },
-                    { key: "outstanding", label: "Outstanding" },
+                    { key: "outstanding", label: "Overdue" },
                     { key: "paid", label: "Paid" },
                   ] as { key: Filter; label: string }[]
                 ).map((opt) => (
@@ -263,7 +263,7 @@ export default function InvoicePage() {
                     )}
                   >
                     <CalendarIcon className="h-3.5 w-3.5" />
-                    <SelectValue placeholder="Month" />
+                    <SelectValue placeholder="Months" />
                   </SelectTrigger>
                   <SelectContent align="end">
                     <SelectItem value="all">All months</SelectItem>
