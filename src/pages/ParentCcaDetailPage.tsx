@@ -4,6 +4,7 @@ import {
   ChevronLeft,
   Image as ImageIcon,
   MapPin,
+  Users as UsersIcon,
 } from "lucide-react";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { Button } from "@/components/ui/button";
@@ -17,6 +18,7 @@ import { useCcaActivityById } from "@/hooks/useCcaActivityById";
 import { useCcaSessions } from "@/hooks/useCcaSessions";
 import { useStudentCcaEnrollments } from "@/hooks/useStudentCcaEnrollments";
 import { useStudentSelection } from "@/contexts/StudentSelectionContext";
+import { buildChildColorMap, getChildColor } from "@/lib/childColors";
 
 import { CcaActivityImage } from "@/components/cca/CcaActivityImage";
 import {
@@ -90,14 +92,49 @@ function ParentVenuePanel({ activity }: { activity: InvolvedCcaActivity }) {
 export default function ParentCcaDetailPage() {
   const { activityId } = useParams<{ activityId: string }>();
   const navigate = useNavigate();
-  const { selectedStudentId, selectedStudent } = useStudentSelection();
-  const { enrollments } = useStudentCcaEnrollments({
-    studentId: selectedStudentId || null,
+  const { linkedStudents, selectedStudentId, selectedStudent } = useStudentSelection();
+
+  // Fetch enrollments across ALL linked children so the detail view works
+  // regardless of which child is "selected" in the global header. The card
+  // the user tapped may belong to a sibling, not the active child.
+  const linkedIds = useMemo(
+    () => linkedStudents.map((s) => s.id),
+    [linkedStudents],
+  );
+  const { enrollments, loading: enrollmentsLoading } = useStudentCcaEnrollments({
+    studentId: linkedIds.length > 0 ? linkedIds : null,
   });
 
-  const isEnrolled = useMemo(
-    () => enrollments.some((e) => e.activityId === activityId),
+  const enrollmentForActivity = useMemo(
+    () => enrollments.find((e) => e.activityId === activityId) ?? null,
     [enrollments, activityId],
+  );
+  const enrolledChildren = enrollmentForActivity?.enrolledStudents ?? [];
+  const isEnrolled = enrolledChildren.length > 0;
+
+  // Which child's attendance to show. Prefer the globally selected child if
+  // they are actually enrolled; otherwise fall back to the first enrolled
+  // sibling. Parent can switch with the chips below when multiple are enrolled.
+  const [attendanceChildId, setAttendanceChildId] = useState<string | null>(null);
+  useEffect(() => {
+    if (enrolledChildren.length === 0) {
+      setAttendanceChildId(null);
+      return;
+    }
+    setAttendanceChildId((prev) => {
+      if (prev && enrolledChildren.some((c) => c.id === prev)) return prev;
+      if (selectedStudentId && enrolledChildren.some((c) => c.id === selectedStudentId)) {
+        return selectedStudentId;
+      }
+      return enrolledChildren[0].id;
+    });
+  }, [enrolledChildren, selectedStudentId]);
+
+  const activeAttendanceChild =
+    enrolledChildren.find((c) => c.id === attendanceChildId) ?? null;
+  const childColorMap = useMemo(
+    () => buildChildColorMap(linkedStudents),
+    [linkedStudents],
   );
 
   const { activity, status, refetch } = useCcaActivityById(activityId ?? null);
@@ -169,13 +206,21 @@ export default function ParentCcaDetailPage() {
     );
   }
 
-  if (selectedStudentId && enrollments.length > 0 && !isEnrolled) {
+  if (
+    linkedIds.length > 0 &&
+    !enrollmentsLoading &&
+    !isEnrolled
+  ) {
+    const childrenLabel =
+      linkedStudents.length > 1
+        ? "None of your children are"
+        : `${selectedStudent?.name || linkedStudents[0]?.name || "This child"} isn't`;
     return (
       <AppLayout>
         <DetailHeader onBack={() => navigate("/parent/cca")} title={activity.name} />
         <div className="p-6 text-center text-sm text-muted-foreground">
           <p>
-            {selectedStudent?.name || "This child"} isn't enrolled in{" "}
+            {childrenLabel} enrolled in{" "}
             <span className="font-medium text-foreground">{activity.name}</span>.
           </p>
           <Button className="mt-4" onClick={() => navigate("/parent/cca")}>
@@ -233,6 +278,24 @@ export default function ParentCcaDetailPage() {
             {bucketLabel}
           </Badge>
         </div>
+        {enrolledChildren.length > 0 && (
+          <div className="flex flex-wrap gap-1 mt-2">
+            {enrolledChildren.map((child) => {
+              const color = getChildColor(child.id, childColorMap);
+              const firstName = child.name.split(" ")[0];
+              return (
+                <Badge
+                  key={child.id}
+                  variant="outline"
+                  className={cn("gap-1 text-[10px] border w-fit", color.badge)}
+                >
+                  <UsersIcon className="h-3 w-3" />
+                  {firstName}
+                </Badge>
+              );
+            })}
+          </div>
+        )}
         {activity.typeName && activity.typeName !== bucketLabel && (
           <p className="text-xs text-muted-foreground mt-1">{activity.typeName}</p>
         )}
@@ -275,11 +338,37 @@ export default function ParentCcaDetailPage() {
           />
         )}
         {tab === "attendance" && (
-          <ParentAttendancePanel
-            activityId={activity.id}
-            studentId={selectedStudentId || null}
-            studentName={selectedStudent?.name ?? null}
-          />
+          <>
+            {enrolledChildren.length > 1 && (
+              <div className="flex flex-wrap gap-2 mb-3">
+                {enrolledChildren.map((child) => {
+                  const color = getChildColor(child.id, childColorMap);
+                  const active = child.id === attendanceChildId;
+                  const firstName = child.name.split(" ")[0];
+                  return (
+                    <button
+                      key={child.id}
+                      type="button"
+                      onClick={() => setAttendanceChildId(child.id)}
+                      className={cn(
+                        "rounded-full px-3 py-1 text-xs font-medium border transition",
+                        active
+                          ? cn(color.badge, "ring-2 ring-offset-1 ring-primary/40")
+                          : "bg-card text-muted-foreground border-border hover:text-foreground",
+                      )}
+                    >
+                      {firstName}
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+            <ParentAttendancePanel
+              activityId={activity.id}
+              studentId={activeAttendanceChild?.id ?? null}
+              studentName={activeAttendanceChild?.name ?? null}
+            />
+          </>
         )}
         {tab === "venue" && <ParentVenuePanel activity={activity} />}
       </div>
