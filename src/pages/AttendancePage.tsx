@@ -420,7 +420,7 @@ export default function AttendancePage() {
       />
       
       <AppHeader
-        showChildSelector
+        showChildSelector={!isMultiChild}
         leftContent={
           <div className="flex items-center gap-2">
             <img src={schoolLogo} alt="School Logo" className="h-16 w-auto -my-3 drop-shadow-md" />
@@ -428,13 +428,30 @@ export default function AttendancePage() {
           </div>
         }
       />
-      
+
+      {/* Local scope selector for multi-child parents */}
+      {isMultiChild && (
+        <section className="px-4 pt-3">
+          <Select value={scope} onValueChange={setScope}>
+            <SelectTrigger className="w-full h-10 bg-card">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent className="bg-card z-[100]">
+              <SelectItem value="all">All Children ({linkedStudents.length})</SelectItem>
+              {linkedStudents.map((s) => (
+                <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </section>
+      )}
+
       {/* Attendance Chart */}
       <section className="px-4 pt-4">
         <Card className="bg-card border-border shadow-sm">
           <CardHeader className="pb-2">
             <div className="flex items-center justify-between">
-              <CardTitle className="text-lg font-semibold">Yearly Overview</CardTitle>
+              <CardTitle className="text-lg font-semibold">Attendance Overview</CardTitle>
               <Select value={selectedYear} onValueChange={setSelectedYear}>
                 <SelectTrigger className="w-24 h-8 text-sm">
                   <SelectValue />
