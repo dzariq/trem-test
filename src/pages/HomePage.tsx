@@ -22,8 +22,19 @@ import { useStudentSelection } from "@/hooks/useStudentSelection";
 export default function HomePage() {
   const navigate = useNavigate();
   const { profile, loading: profileLoading } = useMyProfile();
-  const { selectedStudent } = useStudentSelection();
-  const parentCampusCode = selectedStudent?.campus_code ?? null;
+  const { linkedStudents } = useStudentSelection();
+  // Aggregate view: if all children share one campus, scope to it (plus globals).
+  // If children span multiple campuses, don't filter by campus so all are included.
+  const parentCampusCode = useMemo(() => {
+    const codes = Array.from(
+      new Set(
+        linkedStudents
+          .map((s) => s.campus_code)
+          .filter((c): c is string => !!c),
+      ),
+    );
+    return codes.length === 1 ? codes[0] : null;
+  }, [linkedStudents]);
   const [announcements, setAnnouncements] = useState<Announcement[]>([]);
   const [announcementsLoading, setAnnouncementsLoading] = useState(true);
   const [announcementsError, setAnnouncementsError] = useState<string | null>(null);
