@@ -52,6 +52,8 @@ export default function ParentCcaPage() {
     studentId: hookStudentId,
   });
 
+  const childColorMap = buildChildColorMap(linkedStudents);
+
   return (
     <AppLayout>
       <header className="sticky top-0 z-40 bg-card/95 backdrop-blur-sm border-b border-border safe-pt">
@@ -111,14 +113,10 @@ export default function ParentCcaPage() {
               const bucketLabel = CCA_BUCKET_LABEL[bucket];
               const pill = getCcaTypePillColor(e.kind ?? e.category);
               const upcoming = isUpcomingDate(e.nextSessionDate);
-              const childNames = (e.enrolledStudents || [])
-                .map((s) => s.name?.split(" ")[0] || "")
-                .filter(Boolean);
-              const showChildTag = isAllScope && childNames.length > 0;
-              const childLabel =
-                childNames.length <= 2
-                  ? childNames.join(", ")
-                  : `${childNames.slice(0, 2).join(", ")} +${childNames.length - 2}`;
+              const enrolledChildren = (e.enrolledStudents || []).filter(
+                (s) => s.name?.trim()
+              );
+              const showChildTag = isAllScope && enrolledChildren.length > 0;
               return (
                 <li key={e.enrollmentId}>
                   <Link
@@ -151,13 +149,25 @@ export default function ParentCcaPage() {
                         </Badge>
                       </div>
                       {showChildTag && (
-                        <Badge
-                          variant="outline"
-                          className="gap-1 text-[10px] border-border bg-secondary/40 text-foreground w-fit"
-                        >
-                          <UsersIcon className="h-3 w-3" />
-                          {childLabel}
-                        </Badge>
+                        <div className="flex flex-wrap gap-1">
+                          {enrolledChildren.map((child) => {
+                            const color = getChildColor(child.id, childColorMap);
+                            const firstName = child.name.split(" ")[0];
+                            return (
+                              <Badge
+                                key={child.id}
+                                variant="outline"
+                                className={cn(
+                                  "gap-1 text-[10px] border w-fit",
+                                  color.badge
+                                )}
+                              >
+                                <UsersIcon className="h-3 w-3" />
+                                {firstName}
+                              </Badge>
+                            );
+                          })}
+                        </div>
                       )}
                       <div className="flex flex-wrap gap-x-3 gap-y-1 text-xs text-muted-foreground">
                         {(e.meetingDay || e.meetingTime) && (
