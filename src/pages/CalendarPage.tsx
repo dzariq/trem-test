@@ -474,7 +474,13 @@ export default function CalendarPage() {
       />
 
       {linkedStudents.length > 1 && (
-        <div className="px-4 pt-3 pb-2 bg-secondary/30 border-b border-border">
+        <div
+          className="px-4 py-3 border-b border-border/60"
+          style={{
+            backgroundImage:
+              "linear-gradient(to right, hsl(45 85% 58% / 0.22), hsl(45 85% 58% / 0.08), hsl(var(--background)))",
+          }}
+        >
           <Select value={calendarScope} onValueChange={setCalendarScope}>
             <SelectTrigger className="h-10 w-full text-sm bg-card">
               <div className="flex items-center gap-2 min-w-0">
