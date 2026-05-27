@@ -350,23 +350,24 @@ export function MonthGridCalendar({
 
       {/* Grid cells */}
       <div
-        className="grid grid-cols-7 [touch-action:pan-y]"
+        className="[touch-action:pan-y]"
         onTouchStart={handleTouchStart}
         onTouchEnd={handleTouchEnd}
       >
-        {days.map(({ date, ymd, inMonth }, idx) => {
-          const bucket = buckets.get(ymd) || [];
+        {weeks.map((week, wIdx) => {
+          const { segments, laneCount } = weekSpans[wIdx];
+          const barsTotalHeight = laneCount > 0 ? laneCount * (BAR_HEIGHT + BAR_GAP) : 0;
+          return (
+            <div key={wIdx} className="relative grid grid-cols-7">
+              {week.map(({ date, ymd, inMonth }, col) => {
+                const bucket = buckets.get(ymd) || [];
           const isToday = ymd === todayYmd;
           const isSelected = ymd === selectedDay;
-          const overflowing = bucket.length > maxChipsPerDay;
-          const visibleCount = Math.min(bucket.length, maxChipsPerDay);
+                const chipCapacity = Math.max(1, maxChipsPerDay - laneCount);
+                const overflowing = bucket.length > chipCapacity;
+                const visibleCount = Math.min(bucket.length, chipCapacity);
           const visible = bucket.slice(0, visibleCount);
           const extra = bucket.length - visibleCount;
-
-          const col = idx % 7;
-          const row = Math.floor(idx / 7);
-          const isLastCol = col === 6;
-          const isLastRow = row === totalRows - 1;
 
           const handleCellClick = () => {
             if (!inMonth) {
@@ -425,7 +426,10 @@ export function MonthGridCalendar({
                   </span>
                 )}
               </div>
-              <div className="flex flex-col gap-0.5">
+                    <div
+                      className="flex flex-col gap-0.5"
+                      style={{ marginTop: barsTotalHeight }}
+                    >
                 {visible.map((item) => (
                   <div
                     key={`${item.kind}-${item.id}`}
@@ -460,6 +464,52 @@ export function MonthGridCalendar({
                 ))}
               </div>
             </button>
+          );
+              })}
+              {/* Multi-day spanning bars overlay */}
+              {segments.length > 0 && (
+                <div
+                  className="pointer-events-none absolute inset-x-0"
+                  style={{ top: HEADER_OFFSET }}
+                >
+                  {segments.map((seg) => {
+                    const leftPct = (seg.startCol * 100) / 7;
+                    const widthPct = (seg.spanCols * 100) / 7;
+                    return (
+                      <div
+                        key={`${seg.id}-${wIdx}-${seg.startCol}`}
+                        role="button"
+                        tabIndex={-1}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          const ymd = toYmd(week[seg.startCol].date);
+                          onSelectDay(ymd);
+                          onZoomToDay?.(ymd);
+                        }}
+                        aria-label={seg.title}
+                        title={seg.title}
+                        className={cn(
+                          "pointer-events-auto absolute px-1.5 text-[9px] sm:text-[10px] leading-[13px] font-medium overflow-hidden no-callout",
+                          seg.continuesLeft ? "rounded-l-none" : "rounded-l-[3px]",
+                          seg.continuesRight ? "rounded-r-none" : "rounded-r-[3px]",
+                        )}
+                        style={{
+                          left: `calc(${leftPct}% + 3px)`,
+                          width: `calc(${widthPct}% - 6px)`,
+                          top: seg.lane * (BAR_HEIGHT + BAR_GAP),
+                          height: BAR_HEIGHT,
+                          backgroundColor: seg.colorHex,
+                          color: "#ffffff",
+                          whiteSpace: "nowrap",
+                        }}
+                      >
+                        {!seg.continuesLeft && seg.title}
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
           );
         })}
       </div>
