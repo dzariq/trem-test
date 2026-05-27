@@ -78,6 +78,12 @@ import {
   deleteStudentAvatar,
   compressImageFile,
 } from "@/lib/studentAvatars";
+import {
+  resolveUserAvatar,
+  uploadUserAvatar,
+  deleteUserAvatar,
+  getCachedUserAvatar,
+} from "@/lib/userAvatars";
 
 const sportsHouseColors: Record<string, { bg: string; text: string; label: string }> = {
   red: { bg: "bg-red-500", text: "text-white", label: "Red House" },
