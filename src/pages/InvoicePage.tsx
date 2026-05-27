@@ -263,7 +263,11 @@ export default function InvoicePage() {
                     )}
                   >
                     <CalendarIcon className="h-3.5 w-3.5" />
-                    <SelectValue placeholder="Months" />
+                    {monthFilter === "all" ? (
+                      <span>Months</span>
+                    ) : (
+                      <SelectValue placeholder="Months" />
+                    )}
                   </SelectTrigger>
                   <SelectContent align="end">
                     <SelectItem value="all">All months</SelectItem>
