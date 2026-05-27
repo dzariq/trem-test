@@ -1,61 +1,54 @@
-## Goal
-Make all data screens stay fresh in the installed mobile app — when the user backgrounds and reopens the app (or switches tab in the browser), the visible page silently re-fetches its data. Today only the Home screens do this.
+## What's actually wrong
 
-## Approach
-One global "app resume" signal, applied at the data-layer (hooks) so every page that uses those hooks gets refresh for free. Pages that load data directly in their own `useEffect` get a one-line opt-in.
+Nothing was deleted from Supabase. The `announcements` table has 3 active, published rows:
 
-### 1. Promote the resume detector to a tiny app-wide bus
-Refactor `src/hooks/useRefreshOnAppResume.ts` so the listener for `visibilitychange` / `window.focus` / Capacitor `App.appStateChange` runs **once globally** and fans out to subscribers:
+| id (short) | Title | Campus |
+|---|---|---|
+| 960e7d54 | Subject: End-of-Term Staff Meeting — Jun 12 | BO |
+| 22a25869 | Collinz DNA | BO |
+| b2463d88 | Collinz DNA | GL |
 
-```text
-src/lib/appResumeBus.ts        // subscribe(cb) / emit() with single listener
-src/hooks/useRefreshOnAppResume.ts  // thin React wrapper that subscribes
+- The **web admin screenshot** shows only 1 because it's filtered to campus **GL** — the other 2 are on **BO**, not deleted.
+- The **mobile app** correctly shows the 2 BO rows for that BO parent.
+
+There is no `deleted_at` / soft-delete column on `announcements`, and `is_active = true` on all three. So the web admin's "Delete" button is not actually issuing a `DELETE` (or it's silently failing under RLS) — it only looked deleted on the web because the campus filter hid the BO rows.
+
+## Plan
+
+### 1. Hard-delete the one stale row (per your answer)
+
+Run a migration that deletes id `960e7d54-31df-4fea-b150-f3027e1e6dba` (End-of-Term Staff Meeting, BO) plus its related child rows so we don't hit FK errors:
+
+```sql
+DELETE FROM public.announcement_reads        WHERE announcement_id = '960e7d54-...';
+DELETE FROM public.announcement_acknowledgements WHERE announcement_id = '960e7d54-...';
+DELETE FROM public.announcement_attachments  WHERE announcement_id = '960e7d54-...';
+DELETE FROM public.announcement_targets      WHERE announcement_id = '960e7d54-...';
+DELETE FROM public.announcements             WHERE id = '960e7d54-...';
 ```
 
-Add a "minimum away time" gate (default 30 s) so quickly tabbing away and back doesn't fire refetches.
+(Exact child-table list will be verified against the schema before running; only tables that exist are touched.)
 
-### 2. New small hook `useRefetchOnResume(fn)`
-A two-line hook used inside data hooks (calls `fn()` when the bus fires). Keeps data hooks tidy and avoids importing React lifecycles into every fetcher.
+Keep the two "Collinz DNA" rows — you confirmed they stay.
 
-### 3. Wire into the data hooks (one-line each)
-Add `useRefetchOnResume(refetch)` to:
+### 2. Flag the real bug, which lives in the sibling web-admin project
 
-- **CCA**: `useUpcomingCcaSessions`, `useCcaSessionsCalendar`, `useCcaActivities`, `useStudentCcaEnrollments`, `useCcaSessions`, `useCcaActivityById`
-- **Academic**: `useStudentGradesByPeriods`, `useStudentReportCard`, `useStudentGradeGoals`, `useGradeEntry` (teacher), `useClassAnalysisData`
-- **Attendance**: `useParentAttendance`, `useStudentAttendanceSummary`, `useTeacherAttendance`, `useAttendanceStatistics`
-- **Homework / Lesson plans**: `useStudentHomework`, `useHomeworkTracking`, `useLessonPlans`, `useTeacherLessonPlans`
-- **Invoice**: `useStudentInvoices`
-- **Notifications**: `useNotifications` (also keep its realtime channel)
-- **PDF / docs**: `useSchoolDocument` (timetable, handbook PDFs)
+This Lovable project is the **parent mobile app**. The admin web UI in your screenshot is the **sibling project** (`57f7d946-02ac-4a33-a37a-37b7bec9402a`) on the same Supabase. I can't edit its code from here.
 
-### 4. Page-level opt-in for screens that fetch in their own `useEffect`
-Add `useRefreshOnAppResume(loader)` to:
+Likely cause of the failed delete on web admin (to fix in that project):
+- Delete handler probably calls `supabase.from('announcements').update({ is_active: false })` or similar instead of `.delete()`, **or**
+- It calls `.delete()` but RLS on `announcements` blocks the admin role, and the error is swallowed (no toast).
 
-- `CalendarPage` + `TeacherCalendarPage` (announcements / calendar events / CCA sessions)
-- `AnnouncementsPage` + `TeacherAnnouncementsPage`
-- `ParentTimetablePage`, `TeacherTimetablePage` (PDFs)
-- `StudentHandbookPage`, `TeacherHandbookPage`
-- `VisaPage`
-- `AcademicPage`, `TeacherAcademicPage` (period / class context loaders)
-- `AttendancePage`, `TeacherAttendancePage`
-- `HomeworkPage`
-- `InvoicePage`
-- `ParentCcaPage` + detail, `TeacherCcaPage` + detail
-- `NotificationsPage` + `TeacherNotificationsPage`
+I will write a follow-up note recommending you ask the web-admin project to:
+- Verify the Delete button calls `.delete().eq('id', …)` and surfaces errors via toast.
+- Confirm the admin's RLS DELETE policy on `announcements` allows `is_admin_like(auth.uid())`.
 
-Existing `HomePage` and `TeacherHomePage` keep their per-page wiring (already shipped).
+### 3. Nothing to change in this (mobile) project
 
-### 5. Cache-bust strategy for PDFs / images
-- Use `import.meta.env` for static assets (unchanged).
-- For Supabase Storage URLs that may be replaced (announcement banners, CCA hero images, timetable PDFs), append a cache-busting query param using the row's `updated_at` so the OS WebView doesn't serve stale binaries. Apply where we already build signed/public URLs (`useSchoolDocument`, announcement attachment resolver, CCA image hook).
+Mobile is showing the truth of the database. Once the row is gone, mobile will stop showing it on next refresh.
 
-## Out of scope
-- No realtime Postgres channels added (would change RLS load profile).
-- No global React Query migration.
-- No DB / RLS / edge function changes — purely client.
+## Technical notes
 
-## Verification
-- Background the installed app for >30 s on each module, return, and confirm fresh data without a manual reload.
-- Quick app-switch (<30 s) does **not** trigger refetches (verify in network tab).
-- Pull-to-refresh continues to work where it already exists.
-- Web tab focus also re-fetches.
+- Migration is a pure data delete on the `public` schema, no schema/RLS changes.
+- Child-table cascade depends on existing FKs; if `ON DELETE CASCADE` is already in place, the child DELETEs are redundant but harmless.
+- After the migration: mobile will show only **Collinz DNA (BO)** for BO parents; the GL "Collinz DNA" stays for GL users.
