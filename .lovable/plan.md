@@ -1,51 +1,41 @@
 ## Goal
+Make the announcement detail view header consistent regardless of entry point (Home featured carousel vs. Announcements list page), and add a clear top-of-screen label so users always know they're in an announcement.
 
-Switch the **Attendance Overview** chart on `AttendancePage` from raw day counts (stacked bars 0–12) to an **attendance percentage** per month, with the raw days shown in brackets (e.g. `92% (11/12 days)`).
+## Current inconsistency
+- From **Home → featured announcement**: header shows **Back** (left) + **See All** (right). See All takes the user to the full Announcements page.
+- From **Announcements page → tapping a card**: header shows only **Back** (left). No See All, because the parent already is the list.
 
-The "Monthly Summary" card below (Present / Absent / Late / Excused tiles) stays unchanged — it still shows raw counts for the selected month.
+This makes the chrome shift depending on entry path, which feels broken.
 
-## Formula
+## Proposed design (recommended)
 
-For each month bucket:
+Single standardized header for `AnnouncementDrawer`, always rendered the same way:
 
 ```text
-attended   = present + late
-totalDays  = present + absent + late + excused   // recorded school days
-pct        = totalDays > 0 ? round(attended / totalDays * 100) : 0
+[ ‹ Back ]       Announcements         [ ⊟ See All ]
 ```
 
-Months with no records render as an empty bar (no label, no tooltip).
+- **Left:** Back pill (existing) — pops the drawer.
+- **Center:** Small section label **"Announcements"** (uppercase tracked, muted foreground). This is the section/context label — not the post title. The post title (e.g. "Collinz DNA") stays where it is today, directly under the hero image, so it keeps its visual weight as the headline of the content.
+- **Right:** **See All** pill, always visible. Behaviour:
+  - If opened from Home → navigates to `/parent/announcements` (current behavior).
+  - If opened from the Announcements list → closes the drawer (returns to the list, which *is* See All). Same destination semantically, zero dead-ends.
 
-## Changes
+This keeps the header symmetric, removes the conditional chrome, and gives users a consistent "escape to the full list" affordance from anywhere.
 
-### 1. `src/hooks/useParentAttendance.ts`
+### Why label "Announcements", not the post title
+- Header chrome should describe **where you are**, content area should describe **what you're reading**. Duplicating the post title in the header competes with the H1 directly below the image and adds no info.
+- The post title can be long (truncation in the header looks bad on 390px width, especially sandwiched between two pills).
+- "Announcements" mirrors the pattern used elsewhere in the app for section context.
 
-In both `chartData` memos (yearly hook + rolling hook), enrich each month entry with:
-
-- `attended` (present + late)
-- `totalDays` (sum of the four statuses)
-- `pct` (rounded 0–100, or `null` when totalDays === 0)
-
-Keep `present / absent / late / excused` on the entry too — the tooltip will still show the breakdown.
-
-### 2. `src/pages/AttendancePage.tsx` — Attendance Overview chart only
-
-- Replace the four stacked `<Bar>` elements with a **single** `<Bar dataKey="pct" />` filled with the primary green (`hsl(160, 84%, 39%)`), rounded top corners.
-- `<YAxis domain={[0, 100]} ticks={[0,25,50,75,100]} tickFormatter={(v) => \`${v}%\`} />`.
-- Remove the `<Legend>` (no longer meaningful with one series).
-- Add a `<LabelList>` on the bar showing `{pct}%` above each bar (hidden when `pct === null`).
-- Update the custom tooltip payload so the active month shows:
-  - Title: month name
-  - Big line: `92% (11/12 days)`
-  - Breakdown lines: Present 9 · Late 2 · Absent 1 · Excused 0
-- Empty-state check (`showEmptyState`) stays as-is.
-
-### 3. No DB / RLS / business-logic changes
-
-Pure presentation refactor in the parent attendance page and its data hook.
+## Technical changes
+- `src/components/AnnouncementDrawer.tsx`
+  - Always render the See All button; remove the `{onSeeAll && …}` gate.
+  - Add a centered "ANNOUNCEMENTS" label in the header row (small caps, `text-muted-foreground`, `tracking-wide`).
+  - When `onSeeAll` is not provided, See All falls back to `onClose()` so the list-page entry point gracefully returns to the list.
+- `src/pages/AnnouncementsPage.tsx` (and any other consumer that omits `onSeeAll`): no change required — the drawer handles the fallback. Optionally pass an explicit `onSeeAll={onClose}` for clarity.
+- No backend or data changes.
 
 ## Out of scope
-
-- Home page `AttendanceSummary` pie (unchanged).
-- The "May 2026" four-tile summary card below the chart (unchanged — still raw counts).
-- Teacher attendance views.
+- Restyling the post title, date/page pills, or PDF attachments block.
+- Changing navigation outside the announcement detail view.

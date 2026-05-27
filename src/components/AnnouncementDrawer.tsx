@@ -282,7 +282,7 @@ export function AnnouncementDrawer({
         className="fixed inset-0 z-[200] flex flex-col bg-background pt-[env(safe-area-inset-top)] pb-[var(--safe-bottom)] animate-in fade-in slide-in-from-right-2 duration-200"
       >
           {/* Header Bar */}
-          <div className="flex items-center justify-between px-3 py-3 border-b border-border/50">
+          <div className="relative flex items-center justify-between px-3 py-3 border-b border-border/50">
             <div className="flex items-center gap-2 min-w-0">
               <Button
                 variant="outline"
@@ -303,18 +303,19 @@ export function AnnouncementDrawer({
                 </Badge>
               ) : null}
             </div>
+            <div className="pointer-events-none absolute left-1/2 -translate-x-1/2 text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
+              Announcements
+            </div>
             <div className="flex items-center gap-2 flex-shrink-0">
-              {onSeeAll && (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="text-xs rounded-full px-4 gap-1.5 border-2 border-primary/60 bg-primary/10 text-primary hover:bg-primary/20 hover:text-primary shadow-sm font-semibold"
-                  onClick={handleSeeAll}
-                >
-                  <Inbox className="h-3.5 w-3.5" />
-                  See All
-                </Button>
-              )}
+              <Button
+                variant="outline"
+                size="sm"
+                className="text-xs rounded-full px-4 gap-1.5 border-2 border-primary/60 bg-primary/10 text-primary hover:bg-primary/20 hover:text-primary shadow-sm font-semibold"
+                onClick={handleSeeAll}
+              >
+                <Inbox className="h-3.5 w-3.5" />
+                See All
+              </Button>
             </div>
           </div>
 
