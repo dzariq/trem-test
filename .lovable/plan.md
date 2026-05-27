@@ -1,54 +1,51 @@
-## What's actually wrong
+## Goal
 
-Nothing was deleted from Supabase. The `announcements` table has 3 active, published rows:
+Switch the **Attendance Overview** chart on `AttendancePage` from raw day counts (stacked bars 0–12) to an **attendance percentage** per month, with the raw days shown in brackets (e.g. `92% (11/12 days)`).
 
-| id (short) | Title | Campus |
-|---|---|---|
-| 960e7d54 | Subject: End-of-Term Staff Meeting — Jun 12 | BO |
-| 22a25869 | Collinz DNA | BO |
-| b2463d88 | Collinz DNA | GL |
+The "Monthly Summary" card below (Present / Absent / Late / Excused tiles) stays unchanged — it still shows raw counts for the selected month.
 
-- The **web admin screenshot** shows only 1 because it's filtered to campus **GL** — the other 2 are on **BO**, not deleted.
-- The **mobile app** correctly shows the 2 BO rows for that BO parent.
+## Formula
 
-There is no `deleted_at` / soft-delete column on `announcements`, and `is_active = true` on all three. So the web admin's "Delete" button is not actually issuing a `DELETE` (or it's silently failing under RLS) — it only looked deleted on the web because the campus filter hid the BO rows.
+For each month bucket:
 
-## Plan
-
-### 1. Hard-delete the one stale row (per your answer)
-
-Run a migration that deletes id `960e7d54-31df-4fea-b150-f3027e1e6dba` (End-of-Term Staff Meeting, BO) plus its related child rows so we don't hit FK errors:
-
-```sql
-DELETE FROM public.announcement_reads        WHERE announcement_id = '960e7d54-...';
-DELETE FROM public.announcement_acknowledgements WHERE announcement_id = '960e7d54-...';
-DELETE FROM public.announcement_attachments  WHERE announcement_id = '960e7d54-...';
-DELETE FROM public.announcement_targets      WHERE announcement_id = '960e7d54-...';
-DELETE FROM public.announcements             WHERE id = '960e7d54-...';
+```text
+attended   = present + late
+totalDays  = present + absent + late + excused   // recorded school days
+pct        = totalDays > 0 ? round(attended / totalDays * 100) : 0
 ```
 
-(Exact child-table list will be verified against the schema before running; only tables that exist are touched.)
+Months with no records render as an empty bar (no label, no tooltip).
 
-Keep the two "Collinz DNA" rows — you confirmed they stay.
+## Changes
 
-### 2. Flag the real bug, which lives in the sibling web-admin project
+### 1. `src/hooks/useParentAttendance.ts`
 
-This Lovable project is the **parent mobile app**. The admin web UI in your screenshot is the **sibling project** (`57f7d946-02ac-4a33-a37a-37b7bec9402a`) on the same Supabase. I can't edit its code from here.
+In both `chartData` memos (yearly hook + rolling hook), enrich each month entry with:
 
-Likely cause of the failed delete on web admin (to fix in that project):
-- Delete handler probably calls `supabase.from('announcements').update({ is_active: false })` or similar instead of `.delete()`, **or**
-- It calls `.delete()` but RLS on `announcements` blocks the admin role, and the error is swallowed (no toast).
+- `attended` (present + late)
+- `totalDays` (sum of the four statuses)
+- `pct` (rounded 0–100, or `null` when totalDays === 0)
 
-I will write a follow-up note recommending you ask the web-admin project to:
-- Verify the Delete button calls `.delete().eq('id', …)` and surfaces errors via toast.
-- Confirm the admin's RLS DELETE policy on `announcements` allows `is_admin_like(auth.uid())`.
+Keep `present / absent / late / excused` on the entry too — the tooltip will still show the breakdown.
 
-### 3. Nothing to change in this (mobile) project
+### 2. `src/pages/AttendancePage.tsx` — Attendance Overview chart only
 
-Mobile is showing the truth of the database. Once the row is gone, mobile will stop showing it on next refresh.
+- Replace the four stacked `<Bar>` elements with a **single** `<Bar dataKey="pct" />` filled with the primary green (`hsl(160, 84%, 39%)`), rounded top corners.
+- `<YAxis domain={[0, 100]} ticks={[0,25,50,75,100]} tickFormatter={(v) => \`${v}%\`} />`.
+- Remove the `<Legend>` (no longer meaningful with one series).
+- Add a `<LabelList>` on the bar showing `{pct}%` above each bar (hidden when `pct === null`).
+- Update the custom tooltip payload so the active month shows:
+  - Title: month name
+  - Big line: `92% (11/12 days)`
+  - Breakdown lines: Present 9 · Late 2 · Absent 1 · Excused 0
+- Empty-state check (`showEmptyState`) stays as-is.
 
-## Technical notes
+### 3. No DB / RLS / business-logic changes
 
-- Migration is a pure data delete on the `public` schema, no schema/RLS changes.
-- Child-table cascade depends on existing FKs; if `ON DELETE CASCADE` is already in place, the child DELETEs are redundant but harmless.
-- After the migration: mobile will show only **Collinz DNA (BO)** for BO parents; the GL "Collinz DNA" stays for GL users.
+Pure presentation refactor in the parent attendance page and its data hook.
+
+## Out of scope
+
+- Home page `AttendanceSummary` pie (unchanged).
+- The "May 2026" four-tile summary card below the chart (unchanged — still raw counts).
+- Teacher attendance views.
