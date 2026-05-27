@@ -431,6 +431,45 @@ export default function AttendancePage() {
     return today.toDateString() === date.toDateString();
   };
 
+  type FilterTone = {
+    activeBtn: string;
+    activeBadge: string;
+    inactiveBtn: string;
+    inactiveBadge: string;
+  };
+  const TONES: Record<StatusFilter, FilterTone> = {
+    all: {
+      activeBtn: "bg-slate-500 border-slate-500 text-white",
+      activeBadge: "bg-white/25 text-white",
+      inactiveBtn: "bg-slate-100 border-slate-200 text-slate-400",
+      inactiveBadge: "bg-white/70 text-slate-400",
+    },
+    present: {
+      activeBtn: "bg-emerald-500 border-emerald-500 text-white",
+      activeBadge: "bg-white/25 text-white",
+      inactiveBtn: "bg-emerald-50 border-emerald-100 text-emerald-300",
+      inactiveBadge: "bg-white/70 text-emerald-300",
+    },
+    absent: {
+      activeBtn: "bg-red-500 border-red-500 text-white",
+      activeBadge: "bg-white/25 text-white",
+      inactiveBtn: "bg-red-50 border-red-100 text-red-300",
+      inactiveBadge: "bg-white/70 text-red-300",
+    },
+    late: {
+      activeBtn: "bg-amber-500 border-amber-500 text-white",
+      activeBadge: "bg-white/25 text-white",
+      inactiveBtn: "bg-amber-50 border-amber-100 text-amber-300",
+      inactiveBadge: "bg-white/70 text-amber-300",
+    },
+    excused: {
+      activeBtn: "bg-violet-500 border-violet-500 text-white",
+      activeBadge: "bg-white/25 text-white",
+      inactiveBtn: "bg-violet-50 border-violet-100 text-violet-300",
+      inactiveBadge: "bg-white/70 text-violet-300",
+    },
+  };
+
   const filterOptions: { value: StatusFilter; label: string; count: number; Icon: LucideIcon }[] = isAggregated
     ? [
         { value: "all", label: "All", count: monthRecordsAll.length, Icon: List },
@@ -704,6 +743,7 @@ export default function AttendancePage() {
             <div className="flex flex-nowrap items-center gap-1.5 pb-1 overflow-x-auto">
               {filterOptions.map(({ value, label, count, Icon }) => {
                 const active = statusFilter === value;
+                const tone = TONES[value];
                 return (
                   <button
                     key={value}
@@ -711,18 +751,16 @@ export default function AttendancePage() {
                     onClick={() => setStatusFilter(value)}
                     aria-label={`${label} (${count})`}
                     title={`${label} · ${count}`}
-                    className={`shrink-0 inline-flex items-center gap-1 h-8 pl-2 pr-1.5 rounded-full border text-xs font-medium transition-colors ${
-                      active
-                        ? "bg-primary/10 border-primary/30 text-primary"
-                        : "bg-white border-border text-foreground/80 hover:bg-muted/50"
+                    aria-pressed={active}
+                    className={`shrink-0 inline-flex items-center gap-1 h-8 pl-2 pr-1.5 rounded-full border text-xs font-semibold transition-all ${
+                      active ? tone.activeBtn + " shadow-sm" : tone.inactiveBtn
                     }`}
                   >
-                    <Icon className="h-3.5 w-3.5" strokeWidth={2.2} />
+                    <Icon className="h-3.5 w-3.5" strokeWidth={2.4} />
+                    {active && <span className="px-0.5">{label}</span>}
                     <span
-                      className={`inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 rounded-full text-[11px] leading-none ${
-                        active
-                          ? "bg-primary/15 text-primary"
-                          : "bg-muted text-muted-foreground"
+                      className={`inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 rounded-full text-[11px] leading-none font-semibold ${
+                        active ? tone.activeBadge : tone.inactiveBadge
                       }`}
                     >
                       {count}
