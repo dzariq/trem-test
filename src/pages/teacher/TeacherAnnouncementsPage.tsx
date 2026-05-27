@@ -7,9 +7,7 @@ import { Megaphone, Pin } from "lucide-react";
 import { listAnnouncements, markAnnouncementRead, type Announcement } from "@/data/announcements";
 import { AnnouncementDrawer } from "@/components/AnnouncementDrawer";
 import { categorizeAnnouncements } from "@/lib/announcements/categorize";
-import { FeaturedAnnouncementCard } from "@/components/announcements/FeaturedAnnouncementCard";
-import { PinnedAnnouncementCard } from "@/components/announcements/PinnedAnnouncementCard";
-import { AnnouncementListCard } from "@/components/announcements/AnnouncementListCard";
+import { AnnouncementCard } from "@/components/announcements/AnnouncementCard";
 
 export default function TeacherAnnouncementsPage() {
   const { activeCampus } = useCampus();
@@ -42,8 +40,17 @@ export default function TeacherAnnouncementsPage() {
 
   const { featured, pinned, regular } = categorizeAnnouncements(announcements);
 
+  const unreadFeatured = featured && !featured.is_read ? featured : null;
+  const readFeatured = featured && featured.is_read ? featured : null;
+  const unreadPinned = pinned.filter(a => !a.is_read);
+  const readPinned = pinned.filter(a => a.is_read);
   const unreadRegular = regular.filter(a => !a.is_read);
   const readRegular = regular.filter(a => a.is_read);
+  const earlier = [
+    ...(readFeatured ? [{ ...readFeatured, _v: "featured" as const }] : []),
+    ...readPinned.map(a => ({ ...a, _v: "pinned" as const })),
+    ...readRegular.map(a => ({ ...a, _v: "regular" as const })),
+  ];
 
   const drawerList = [
     ...(featured ? [featured] : []),
@@ -98,57 +105,57 @@ export default function TeacherAnnouncementsPage() {
 
         {!loading && !error && announcements.length > 0 && (
           <>
-            {/* Featured */}
-            {featured && (
-              <FeaturedAnnouncementCard
-                announcement={featured}
-                onClick={() => handleAnnouncementClick(featured)}
+            {unreadFeatured && (
+              <AnnouncementCard
+                announcement={unreadFeatured}
+                variant="featured"
+                onClick={() => handleAnnouncementClick(unreadFeatured)}
               />
             )}
 
-            {/* Pinned */}
-            {pinned.length > 0 && (
+            {unreadPinned.length > 0 && (
               <div className="space-y-2">
                 <div className="flex items-center gap-2 text-xs font-medium text-muted-foreground uppercase tracking-wider">
                   <Pin className="h-3 w-3 rotate-45" />
                   Pinned
                 </div>
-                {pinned.map((a) => (
-                  <PinnedAnnouncementCard
+                {unreadPinned.map((a) => (
+                  <AnnouncementCard
                     key={a.id}
                     announcement={a}
+                    variant="pinned"
                     onClick={() => handleAnnouncementClick(a)}
                   />
                 ))}
               </div>
             )}
 
-            {/* Regular */}
             {unreadRegular.length > 0 && (
               <div className="space-y-2">
                 <div className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                  Unread
+                  New
                 </div>
                 {unreadRegular.map((a) => (
-                  <AnnouncementListCard
+                  <AnnouncementCard
                     key={a.id}
                     announcement={a}
+                    variant="regular"
                     onClick={() => handleAnnouncementClick(a)}
                   />
                 ))}
               </div>
             )}
-            {readRegular.length > 0 && (
-              <div className="space-y-2">
-                {unreadRegular.length > 0 && (
-                  <div className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                    Earlier
-                  </div>
-                )}
-                {readRegular.map((a) => (
-                  <AnnouncementListCard
+
+            {earlier.length > 0 && (
+              <div className="space-y-1.5">
+                <div className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                  Earlier
+                </div>
+                {earlier.map((a) => (
+                  <AnnouncementCard
                     key={a.id}
                     announcement={a}
+                    variant={a._v}
                     onClick={() => handleAnnouncementClick(a)}
                   />
                 ))}
