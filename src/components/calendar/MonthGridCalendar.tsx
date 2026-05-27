@@ -365,23 +365,22 @@ export function MonthGridCalendar({
                     className={cn(
                       "min-h-[12px] text-[8px] sm:text-[9px] leading-[10px] sm:leading-[11px] font-medium no-callout",
                       item.kind === "cca"
-                        ? "flex items-center gap-1 px-1 rounded-full border"
-                        : "px-1 rounded-[3px] border",
+                        ? "flex items-center gap-0.5 px-1 rounded-full border overflow-hidden"
+                        : "px-1 rounded-[3px] border overflow-hidden",
                       item.kind === "cca" ? item.colorClass : undefined,
                     )}
                     style={item.kind === "event" ? getEventChipStyle(item.colorHex) : undefined}
                   >
                     {item.kind === "cca" && (() => {
                       const Icon = getCcaBucketIcon((item.payload as CcaCalendarSession).category);
-                      return <Icon className="h-2.5 w-2.5 shrink-0 opacity-80" aria-hidden />;
+                      return <Icon className="h-2 w-2 shrink-0 opacity-80" aria-hidden />;
                     })()}
                     <span
-                      className="break-words overflow-hidden block"
+                      className="block"
                       style={{
-                        maxHeight: "22px",
-                        lineHeight: "11px",
+                        whiteSpace: "nowrap",
+                        overflow: "hidden",
                         textOverflow: "clip",
-                        wordBreak: "break-word",
                       }}
                     >
                       {item.title}

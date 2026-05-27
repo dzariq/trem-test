@@ -1,28 +1,23 @@
 ## Goal
+In the month grid calendar, CCA chips currently show an oversized icon that pushes the title onto a 2nd row. Make the icon match the text size (single row), and let chip text run to the cell edge — clipping mid-letter if needed — instead of wrapping.
 
-Make non-CCA calendar event chips render as a **solid color block with white text**, using the exact hex palette already mirrored from the admin web project (`collinz-app-school`). CCA chips stay untouched.
+## Changes (single file: `src/components/calendar/MonthGridCalendar.tsx`)
 
-## Current state
+1. **Smaller CCA icon**
+   - Change `<Icon className="h-2.5 w-2.5 ...">` to `h-2 w-2` (≈8px, same as chip text).
+   - Tighten the chip flex container (`gap-0.5` instead of `gap-1`) so icon + text fit on one line.
 
-- Event chips currently render translucent (15% alpha bg, colored text, 40% alpha border) via `getEventChipStyle(hex)` in `src/lib/calendarTaxonomy.ts`.
-- Colors already come from `resolveEventHex` which mirrors the admin project's taxonomy hex values (Exams `#dc2626`, Holidays `#22c55e`, Events `#8b5cf6`, Staff/Admin `#f97316`, Due `#f43f5e`, Students `#06b6d4`, Parents `#ec4899`, plus subtype variants). So the palette is already correct — only the chip rendering needs to change.
-- CCA chips use a separate `colorClass` (Tailwind class from `getCcaTypePillColor`) — they will be left alone.
+2. **Single-row, hard-clip text for ALL chips (CCA + events)**
+   - Replace the current `maxHeight: 22px / lineHeight: 11px / wordBreak: break-word` (which still wraps to 2 lines) with a true single-line clip:
+     - `whiteSpace: "nowrap"`
+     - `overflow: "hidden"`
+     - `textOverflow: "clip"` (no ellipsis)
+   - Remove `break-words` class on the title span.
+   - Allow the chip itself to clip past its visual edge by keeping `overflow-hidden` on the chip wrapper so half-letters get cut cleanly at the cell boundary.
 
-## Change
+3. **Chip height**
+   - Reduce `min-h-[12px]` chip min-height is already fine; ensure only 1 line renders (~11px line-height), so each day cell can fit more chips within the existing `maxChipsPerDay`.
 
-Update `getEventChipStyle` in `src/lib/calendarTaxonomy.ts`:
-
-```ts
-export const getEventChipStyle = (hex: string): React.CSSProperties => {
-  const safe = hex || DEFAULT_EVENT_COLOR;
-  return {
-    backgroundColor: safe,
-    color: "#ffffff",
-    borderColor: safe,
-  };
-};
-```
-
-This automatically applies to all three places that consume it (MonthGridCalendar chips, TimeGridCalendar all-day + timed blocks, UpcomingEventsSection pills) — all of which already gate on `kind === "event"`, so CCA chips are unaffected.
-
-No other files need to change.
+## Out of scope
+- No color changes, no event-chip-style changes, no logic/data changes.
+- CCA Connect (separate cards elsewhere) untouched.
