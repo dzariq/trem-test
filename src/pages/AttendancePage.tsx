@@ -778,7 +778,7 @@ export default function AttendancePage() {
           </CardHeader>
           <CardContent className="space-y-4">
             {/* Filter Chips — icon + count, single row */}
-            <div className="flex flex-nowrap items-center justify-between gap-1">
+            <div className="flex flex-nowrap items-center gap-1.5">
               {filterOptions.map(({ value, label, count, Icon }) => {
                 const active = statusFilter === value;
                 const tone = TONES[value];
