@@ -77,18 +77,26 @@ export function PDFViewerDialog({
     ? pdfUrl
     : window.location.origin + pdfUrl;
 
+  // Wrap the underlying (e.g. Supabase storage) URL behind our own
+  // /pdf route so the browser address bar shows our domain instead of
+  // the storage provider's hostname.
+  const wrappedPdfUrl = `${window.location.origin}/pdf?url=${encodeURIComponent(
+    resolvedPdfUrl,
+  )}&title=${encodeURIComponent(title)}`;
+
   const handleOpenInBrowser = useCallback(async () => {
+    const externalUrl = isNative ? resolvedPdfUrl : wrappedPdfUrl;
     if (isNative) {
       try {
         const { Browser } = await import("@capacitor/browser");
-        await Browser.open({ url: resolvedPdfUrl });
+        await Browser.open({ url: externalUrl });
       } catch {
-        window.open(resolvedPdfUrl, "_blank");
+        window.open(externalUrl, "_blank");
       }
     } else {
-      window.open(resolvedPdfUrl, "_blank");
+      window.open(externalUrl, "_blank");
     }
-  }, [resolvedPdfUrl, isNative]);
+  }, [resolvedPdfUrl, wrappedPdfUrl, isNative]);
 
   const handleDownload = useCallback(async () => {
     if (isNative) {
@@ -213,7 +221,10 @@ export function PDFViewerDialog({
         </div>
 
         {numPages > 1 && !loadError && (
-          <div className="flex items-center justify-between gap-3 border-t border-border bg-background px-4 py-3">
+          <div
+            className="flex items-center justify-between gap-3 border-t border-border bg-background px-4 py-3"
+            style={{ paddingBottom: "calc(env(safe-area-inset-bottom) + 0.75rem)" }}
+          >
             <Button
               type="button"
               variant="outline"
@@ -267,7 +278,10 @@ export function PDFViewerDialog({
         )}
 
         {numPages === 1 && !loadError && (
-          <div className="flex items-center justify-center gap-2 border-t border-border bg-background px-4 py-2">
+          <div
+            className="flex items-center justify-center gap-2 border-t border-border bg-background px-4 py-2"
+            style={{ paddingBottom: "calc(env(safe-area-inset-bottom) + 0.5rem)" }}
+          >
             <Button
               type="button"
               variant="outline"
