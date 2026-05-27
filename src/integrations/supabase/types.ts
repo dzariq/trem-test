@@ -480,6 +480,7 @@ export type Database = {
       }
       announcements: {
         Row: {
+          acknowledged_count: number
           campus_code: string | null
           campus_id: string | null
           category: string
@@ -496,6 +497,8 @@ export type Database = {
           pinned_at: string | null
           priority: string
           published_at: string | null
+          read_count: number
+          recipients_count: number
           requires_acknowledgement: boolean
           scheduled_at: string | null
           status: string
@@ -504,6 +507,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          acknowledged_count?: number
           campus_code?: string | null
           campus_id?: string | null
           category?: string
@@ -520,6 +524,8 @@ export type Database = {
           pinned_at?: string | null
           priority?: string
           published_at?: string | null
+          read_count?: number
+          recipients_count?: number
           requires_acknowledgement?: boolean
           scheduled_at?: string | null
           status?: string
@@ -528,6 +534,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          acknowledged_count?: number
           campus_code?: string | null
           campus_id?: string | null
           category?: string
@@ -544,6 +551,8 @@ export type Database = {
           pinned_at?: string | null
           priority?: string
           published_at?: string | null
+          read_count?: number
+          recipients_count?: number
           requires_acknowledgement?: boolean
           scheduled_at?: string | null
           status?: string
