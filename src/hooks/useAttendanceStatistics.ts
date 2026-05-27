@@ -3,6 +3,7 @@ import { supabase } from "@/lib/supabase";
 import { format, startOfMonth, endOfMonth, startOfWeek, endOfWeek, parseISO } from "date-fns";
 import { toast } from "@/hooks/use-toast";
 import { useCampus } from "@/contexts/CampusContext";
+import { useResumeTick } from "@/hooks/useRefreshOnAppResume";
 
 export type AttendanceStatus = "present" | "absent" | "late" | "excused";
 
@@ -77,6 +78,7 @@ export function useAttendanceStatistics({
   concernsCustomEndDate,
 }: UseAttendanceStatisticsProps) {
   const { activeCampus } = useCampus();
+  const resumeTick = useResumeTick();
   // Resolve the class filter: prefer selectedClasses, fallback to selectedClass
   const effectiveClasses = useMemo(() => {
     if (selectedClasses && selectedClasses.length > 0) return selectedClasses;
@@ -151,7 +153,7 @@ export function useAttendanceStatistics({
     };
 
     fetchYearlyData();
-  }, [effectiveClasses, selectedYear, activeCampus]);
+  }, [effectiveClasses, selectedYear, activeCampus, resumeTick]);
 
   // Fetch monthly data for daily breakdown
   useEffect(() => {
@@ -242,7 +244,7 @@ export function useAttendanceStatistics({
     };
 
     fetchMonthlyData();
-  }, [effectiveClasses, selectedYear, selectedMonth, activeCampus]);
+  }, [effectiveClasses, selectedYear, selectedMonth, activeCampus, resumeTick]);
 
   // Fetch concerns data based on time range
   useEffect(() => {
@@ -341,7 +343,7 @@ export function useAttendanceStatistics({
     };
 
     fetchConcernsData();
-  }, [effectiveClasses, concernsTimeRange, concernsCustomStartDate, concernsCustomEndDate, activeCampus]);
+  }, [effectiveClasses, concernsTimeRange, concernsCustomStartDate, concernsCustomEndDate, activeCampus, resumeTick]);
 
   // Compute yearly chart data (grouped by month)
   const chartData = useMemo<MonthlyChartData[]>(() => {
