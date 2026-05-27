@@ -4281,6 +4281,7 @@ export type Database = {
           source_key: string | null
           target_audience: string
           title: string
+          topics: string[] | null
           type: string
           updated_at: string
           user_id: string
@@ -4296,6 +4297,7 @@ export type Database = {
           source_key?: string | null
           target_audience?: string
           title: string
+          topics?: string[] | null
           type?: string
           updated_at?: string
           user_id: string
@@ -4311,6 +4313,7 @@ export type Database = {
           source_key?: string | null
           target_audience?: string
           title?: string
+          topics?: string[] | null
           type?: string
           updated_at?: string
           user_id?: string
@@ -6639,6 +6642,7 @@ export type Database = {
           passport_expiry_date: string | null
           phone: string | null
           role: string
+          topic_subscribed: string[]
           updated_at: string
           user_id: string
           visa_expiry_date: string | null
@@ -6667,6 +6671,7 @@ export type Database = {
           passport_expiry_date?: string | null
           phone?: string | null
           role?: string
+          topic_subscribed?: string[]
           updated_at?: string
           user_id: string
           visa_expiry_date?: string | null
@@ -6695,6 +6700,7 @@ export type Database = {
           passport_expiry_date?: string | null
           phone?: string | null
           role?: string
+          topic_subscribed?: string[]
           updated_at?: string
           user_id?: string
           visa_expiry_date?: string | null
