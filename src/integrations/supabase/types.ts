@@ -4279,6 +4279,39 @@ export type Database = {
         }
         Relationships: []
       }
+      parent_citizenship_audit: {
+        Row: {
+          after_is_malaysian: boolean | null
+          after_nationality: string | null
+          applied_at: string
+          before_is_malaysian: boolean | null
+          before_nationality: string | null
+          id: string
+          parent_id: string
+          reason: string
+        }
+        Insert: {
+          after_is_malaysian?: boolean | null
+          after_nationality?: string | null
+          applied_at?: string
+          before_is_malaysian?: boolean | null
+          before_nationality?: string | null
+          id?: string
+          parent_id: string
+          reason: string
+        }
+        Update: {
+          after_is_malaysian?: boolean | null
+          after_nationality?: string | null
+          applied_at?: string
+          before_is_malaysian?: boolean | null
+          before_nationality?: string | null
+          id?: string
+          parent_id?: string
+          reason?: string
+        }
+        Relationships: []
+      }
       parent_passport_records: {
         Row: {
           created_at: string
