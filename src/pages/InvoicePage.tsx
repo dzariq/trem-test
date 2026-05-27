@@ -1,10 +1,17 @@
 import { useEffect, useMemo, useState } from "react";
-import { Receipt } from "lucide-react";
+import { Receipt, Calendar as CalendarIcon } from "lucide-react";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { AppHeader } from "@/components/layout/AppHeader";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { useStudentSelection } from "@/hooks/useStudentSelection";
 import { useStudentInvoices } from "@/hooks/useStudentInvoices";
 import { InvoiceCard } from "@/components/invoice/InvoiceCard";
@@ -16,10 +23,29 @@ import schoolLogo from "@/assets/school-badge.png";
 
 type Filter = "all" | "outstanding" | "paid";
 
+const MONTH_NAMES = [
+  "January", "February", "March", "April", "May", "June",
+  "July", "August", "September", "October", "November", "December",
+];
+
+const invoiceRefDate = (inv: ParentInvoice): Date | null => {
+  const src = inv.dueDate || inv.invoiceDate;
+  if (!src) return null;
+  const d = new Date(src);
+  return Number.isNaN(d.getTime()) ? null : d;
+};
+
+const monthKey = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+const monthLabel = (key: string) => {
+  const [y, m] = key.split("-");
+  return `${MONTH_NAMES[Number(m) - 1]} ${y}`;
+};
+
 export default function InvoicePage() {
   const { selectedStudentId, selectedStudent } = useStudentSelection();
   const { invoices, isLoading, error } = useStudentInvoices(selectedStudentId);
   const [filter, setFilter] = useState<Filter>("all");
+  const [monthFilter, setMonthFilter] = useState<string>("all");
   const [active, setActive] = useState<ParentInvoice | null>(null);
 
   useEffect(() => {
@@ -57,26 +83,66 @@ export default function InvoicePage() {
   }, [invoices]);
 
   const filtered = useMemo(() => {
-    if (filter === "outstanding") return invoices.filter((i) => i.status === "pending_payment");
-    if (filter === "paid") return invoices.filter((i) => i.status === "paid");
+    const byMonth = (i: ParentInvoice) => {
+      if (monthFilter === "all") return true;
+      const d = invoiceRefDate(i);
+      return d ? monthKey(d) === monthFilter : false;
+    };
+    if (filter === "outstanding")
+      return invoices.filter((i) => i.status === "pending_payment" && byMonth(i));
+    if (filter === "paid")
+      return invoices.filter((i) => i.status === "paid" && byMonth(i));
     // "All": outstanding first (longest overdue → most recent due),
     // then paid (most recently paid → oldest), then everything else.
     const dateVal = (s: string | null) => (s ? new Date(s).getTime() : 0);
     const outstanding = invoices
-      .filter((i) => i.status === "pending_payment")
+      .filter((i) => i.status === "pending_payment" && byMonth(i))
       .sort((a, b) => {
         const ad = dateVal(a.dueDate || a.invoiceDate);
         const bd = dateVal(b.dueDate || b.invoiceDate);
         return ad - bd; // oldest due first = longest overdue
       });
     const paid = invoices
-      .filter((i) => i.status === "paid")
+      .filter((i) => i.status === "paid" && byMonth(i))
       .sort((a, b) => dateVal(b.invoiceDate) - dateVal(a.invoiceDate));
     const others = invoices.filter(
-      (i) => i.status !== "pending_payment" && i.status !== "paid"
+      (i) => i.status !== "pending_payment" && i.status !== "paid" && byMonth(i)
     );
     return [...outstanding, ...paid, ...others];
-  }, [invoices, filter]);
+  }, [invoices, filter, monthFilter]);
+
+  // Available months (for the dropdown) — from full invoice list, newest first
+  const monthOptions = useMemo(() => {
+    const set = new Map<string, number>();
+    for (const inv of invoices) {
+      const d = invoiceRefDate(inv);
+      if (!d) continue;
+      const key = monthKey(d);
+      set.set(key, (set.get(key) ?? 0) + 1);
+    }
+    return Array.from(set.entries())
+      .sort((a, b) => (a[0] < b[0] ? 1 : -1))
+      .map(([key, count]) => ({ key, label: monthLabel(key), count }));
+  }, [invoices]);
+
+  // Group filtered invoices by month, preserving filtered order
+  const groupedByMonth = useMemo(() => {
+    const groups: { key: string; label: string; items: ParentInvoice[] }[] = [];
+    const indexMap = new Map<string, number>();
+    for (const inv of filtered) {
+      const d = invoiceRefDate(inv);
+      const key = d ? monthKey(d) : "unknown";
+      const label = d ? monthLabel(key) : "Undated";
+      let idx = indexMap.get(key);
+      if (idx === undefined) {
+        idx = groups.length;
+        indexMap.set(key, idx);
+        groups.push({ key, label, items: [] });
+      }
+      groups[idx].items.push(inv);
+    }
+    return groups;
+  }, [filtered]);
 
   const currency = invoices[0]?.currency || "MYR";
 
@@ -169,9 +235,9 @@ export default function InvoicePage() {
               </CardContent>
             </Card>
 
-            {/* Filter pills */}
+            {/* Filters */}
             {invoices.length > 0 && (
-              <div className="flex gap-2">
+              <div className="flex items-center gap-2 flex-wrap">
                 {(
                   [
                     { key: "all", label: "All" },
@@ -189,6 +255,25 @@ export default function InvoicePage() {
                     {opt.label}
                   </Button>
                 ))}
+                <Select value={monthFilter} onValueChange={setMonthFilter}>
+                  <SelectTrigger
+                    className={cn(
+                      "h-8 w-auto gap-1.5 rounded-full px-3 text-xs",
+                      monthFilter !== "all" && "border-primary text-primary"
+                    )}
+                  >
+                    <CalendarIcon className="h-3.5 w-3.5" />
+                    <SelectValue placeholder="Month" />
+                  </SelectTrigger>
+                  <SelectContent align="end">
+                    <SelectItem value="all">All months</SelectItem>
+                    {monthOptions.map((m) => (
+                      <SelectItem key={m.key} value={m.key}>
+                        {m.label} ({m.count})
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
             )}
 
@@ -211,13 +296,28 @@ export default function InvoicePage() {
                 No invoices match this filter.
               </p>
             ) : (
-              <div className="space-y-3">
-                {filtered.map((inv) => (
-                  <InvoiceCard
-                    key={inv.id}
-                    invoice={inv}
-                    onClick={() => setActive(inv)}
-                  />
+              <div className="space-y-5">
+                {groupedByMonth.map((group) => (
+                  <section key={group.key} className="space-y-2">
+                    <div className="flex items-center gap-3 px-1">
+                      <h2 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                        {group.label}
+                      </h2>
+                      <span className="text-[10px] font-medium text-muted-foreground/70">
+                        {group.items.length} {group.items.length === 1 ? "invoice" : "invoices"}
+                      </span>
+                      <div className="flex-1 h-px bg-border" />
+                    </div>
+                    <div className="space-y-3">
+                      {group.items.map((inv) => (
+                        <InvoiceCard
+                          key={inv.id}
+                          invoice={inv}
+                          onClick={() => setActive(inv)}
+                        />
+                      ))}
+                    </div>
+                  </section>
                 ))}
               </div>
             )}
