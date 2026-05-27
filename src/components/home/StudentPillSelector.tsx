@@ -204,5 +204,10 @@ export function StudentPillSelector({ onStudentChange }: StudentPillSelectorProp
         </div>
       </DrawerContent>
     </Drawer>
+    <StudentDetailsDrawer
+      studentId={detailsStudentId}
+      onOpenChange={(o) => { if (!o) setDetailsStudentId(null); }}
+    />
+    </>
   );
 }
