@@ -2,7 +2,7 @@ import { useEffect, useRef } from "react";
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useUserRoles } from "@/hooks/useUserRoles";
-import { LottieLoader } from "@/components/common/LottieLoader";
+import { FullScreenLottieLoader } from "@/components/common/LottieLoader";
 
 const allowedRoles = new Set(["parent", "student", "user"]);
 
@@ -13,11 +13,7 @@ export default function ParentStudentGuard() {
   const location = useLocation();
   const didRedirect = useRef(false);
 
-  const loadingScreen = (
-    <div className="min-h-screen bg-background flex items-center justify-center">
-      <LottieLoader size={120} />
-    </div>
-  );
+  const loadingScreen = <FullScreenLottieLoader />;
 
   useEffect(() => {
     if (loading || rolesLoading || !rolesFetched) return;
