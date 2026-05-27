@@ -1,52 +1,23 @@
 import { useEffect, useRef } from "react";
+import { subscribeAppResume } from "@/lib/appResumeBus";
 
 /**
- * Fires `onResume` whenever the app/tab regains visibility or window focus.
- * Useful for refreshing data on the home screen after the user backgrounds
- * the installed app and returns to it (Capacitor / mobile browsers).
+ * Fires `onResume` whenever the app/tab returns from being backgrounded
+ * for at least ~30s (Capacitor / mobile browsers / desktop tab focus).
  *
- * - Debounced so a single resume doesn't fire twice (visibilitychange +
- *   focus often fire back-to-back on mobile).
- * - Skips the very first mount; the page's own initial fetch handles that.
+ * Backed by a single global bus (`appResumeBus`) so listeners are cheap
+ * and we never double-attach native handlers.
  */
-export function useRefreshOnAppResume(onResume: () => void, debounceMs = 800) {
+export function useRefreshOnAppResume(onResume: () => void) {
   const cbRef = useRef(onResume);
   cbRef.current = onResume;
 
   useEffect(() => {
-    let lastFired = 0;
-    const trigger = () => {
-      const now = Date.now();
-      if (now - lastFired < debounceMs) return;
-      lastFired = now;
-      cbRef.current?.();
-    };
+    return subscribeAppResume(() => cbRef.current?.());
+  }, []);
+}
 
-    const onVisibility = () => {
-      if (document.visibilityState === "visible") trigger();
-    };
-
-    document.addEventListener("visibilitychange", onVisibility);
-    window.addEventListener("focus", trigger);
-
-    // Capacitor: app comes back to foreground
-    let capCleanup: (() => void) | null = null;
-    (async () => {
-      try {
-        const { App } = await import("@capacitor/app");
-        const sub = await App.addListener("appStateChange", (state) => {
-          if (state.isActive) trigger();
-        });
-        capCleanup = () => sub.remove();
-      } catch {
-        // @capacitor/app not available (web build) — ignore
-      }
-    })();
-
-    return () => {
-      document.removeEventListener("visibilitychange", onVisibility);
-      window.removeEventListener("focus", trigger);
-      capCleanup?.();
-    };
-  }, [debounceMs]);
+/** Same as `useRefreshOnAppResume` — semantic alias for use inside data hooks. */
+export function useRefetchOnResume(refetch: () => void) {
+  useRefreshOnAppResume(refetch);
 }
