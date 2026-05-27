@@ -104,14 +104,26 @@ export function AnnouncementCard({ announcement, variant, onClick }: Props) {
           "active:scale-[0.99] transition-transform hover:bg-muted/40"
         )}
       >
-        <div
-          className={cn(
-            "h-9 w-9 rounded-lg flex items-center justify-center flex-shrink-0",
-            cfg.accentSoft
-          )}
-        >
-          <Icon className={cn("h-4 w-4", cfg.accent, variant === "pinned" && "rotate-45")} />
-        </div>
+        {announcement.image ? (
+          <div className="h-11 w-11 rounded-lg overflow-hidden flex-shrink-0 bg-muted">
+            <img
+              src={announcement.image}
+              alt={announcement.title}
+              className="w-full h-full object-cover"
+            />
+          </div>
+        ) : (
+          <div
+            className="h-11 w-11 rounded-lg flex items-center justify-center flex-shrink-0 bg-gradient-to-br from-amber-300 via-yellow-400 to-amber-600 shadow-sm"
+          >
+            <Icon
+              className={cn(
+                "h-5 w-5 text-white drop-shadow-sm",
+                variant === "pinned" && "rotate-45"
+              )}
+            />
+          </div>
+        )}
         <div className="flex-1 min-w-0">
           <p className="text-sm font-medium text-foreground truncate">
             {announcement.title}
