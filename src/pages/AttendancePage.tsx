@@ -495,7 +495,13 @@ export default function AttendancePage() {
 
       {/* Local scope selector for multi-child parents */}
       {isMultiChild && (
-        <section className="px-4 pt-3">
+        <div
+          className="px-4 py-3 border-b border-border/60"
+          style={{
+            backgroundImage:
+              "linear-gradient(to right, hsl(45 85% 58% / 0.22), hsl(45 85% 58% / 0.08), hsl(var(--background)))",
+          }}
+        >
           <Select value={scope} onValueChange={setScope}>
             <SelectTrigger className="w-full h-10 bg-card">
               <SelectValue />
@@ -507,7 +513,7 @@ export default function AttendancePage() {
               ))}
             </SelectContent>
           </Select>
-        </section>
+        </div>
       )}
 
       {/* Attendance Chart */}
