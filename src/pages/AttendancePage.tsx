@@ -744,24 +744,27 @@ export default function AttendancePage() {
             {showEmptyState ? (
               <EmptyStateBlock compact />
             ) : (
-            <div className="grid grid-cols-4 gap-3">
-              <div className="flex flex-col items-center justify-center p-3 rounded-xl bg-emerald-50 dark:bg-emerald-950/30 min-h-[72px]">
-                <p className="text-2xl font-bold leading-none" style={{ color: "hsl(160, 84%, 39%)" }}>{monthlySummary.present}</p>
-                <p className="text-xs text-muted-foreground mt-1.5">Present</p>
-              </div>
-              <div className="flex flex-col items-center justify-center p-3 rounded-xl bg-destructive/10 min-h-[72px]">
-                <p className="text-2xl font-bold leading-none text-destructive">{monthlySummary.absent}</p>
-                <p className="text-xs text-muted-foreground mt-1.5">Absent</p>
-              </div>
-              <div className="flex flex-col items-center justify-center p-3 rounded-xl bg-amber-50 dark:bg-amber-950/30 min-h-[72px]">
-                <p className="text-2xl font-bold leading-none" style={{ color: "hsl(38, 92%, 40%)" }}>{monthlySummary.late}</p>
-                <p className="text-xs text-muted-foreground mt-1.5">Late</p>
-              </div>
-              <div className="flex flex-col items-center justify-center p-3 rounded-xl bg-purple-50 dark:bg-purple-950/30 min-h-[72px]">
-                <p className="text-2xl font-bold leading-none" style={{ color: "hsl(271, 91%, 55%)" }}>{monthlySummary.excused}</p>
-                <p className="text-xs text-muted-foreground mt-1.5">Excused</p>
-              </div>
-            </div>
+            (() => {
+              const totalDays = monthlySummary.present + monthlySummary.absent + monthlySummary.late + monthlySummary.excused;
+              const pct = (n: number) => totalDays > 0 ? Math.round((n / totalDays) * 100) : 0;
+              const tiles = [
+                { label: "Present", count: monthlySummary.present, bg: "bg-emerald-50 dark:bg-emerald-950/30", color: "hsl(160, 84%, 39%)" },
+                { label: "Absent", count: monthlySummary.absent, bg: "bg-destructive/10", color: "hsl(var(--destructive))" },
+                { label: "Late", count: monthlySummary.late, bg: "bg-amber-50 dark:bg-amber-950/30", color: "hsl(38, 92%, 40%)" },
+                { label: "Excused", count: monthlySummary.excused, bg: "bg-purple-50 dark:bg-purple-950/30", color: "hsl(271, 91%, 55%)" },
+              ];
+              return (
+                <div className="grid grid-cols-4 gap-3">
+                  {tiles.map((t) => (
+                    <div key={t.label} className={`flex flex-col items-center justify-center p-3 rounded-xl ${t.bg} min-h-[88px]`}>
+                      <p className="text-2xl font-bold leading-none" style={{ color: t.color }}>{pct(t.count)}%</p>
+                      <p className="text-xs text-muted-foreground mt-1.5">{t.label}</p>
+                      <p className="text-[10px] text-muted-foreground/80 mt-0.5">{t.count}/{totalDays} days</p>
+                    </div>
+                  ))}
+                </div>
+              );
+            })()
             )}
           </CardContent>
         </Card>
