@@ -12,6 +12,7 @@ import { CCA_BUCKET_LABEL } from "@/lib/ccaSessionFormat";
 import { useStudentCcaEnrollments } from "@/hooks/useStudentCcaEnrollments";
 import { useStudentSelection } from "@/contexts/StudentSelectionContext";
 import { ChildSelectorDropdown } from "@/components/home/ChildSelectorDropdown";
+import { buildChildColorMap, getChildColor } from "@/lib/childColors";
 import { cn } from "@/lib/utils";
 
 const UPCOMING_WINDOW_DAYS = 7;
