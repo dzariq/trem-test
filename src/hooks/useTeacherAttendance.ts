@@ -13,6 +13,7 @@ import {
 import { useTeacherScope } from "@/hooks/useTeacherScope";
 import { sortClasses } from "@/lib/classSorting";
 import { useCampus } from "@/contexts/CampusContext";
+import { useResumeTick } from "@/hooks/useRefreshOnAppResume";
 
 export type StudentAttendanceState = {
   student_id: string;
@@ -24,6 +25,7 @@ export type StudentAttendanceState = {
 export function useTeacherAttendance() {
   const teacherScope = useTeacherScope();
   const { activeCampus } = useCampus();
+  const resumeTick = useResumeTick();
   const isTeacher = teacherScope.isTeacher;
   const allowedClassNames = useMemo(
     () => sortClasses(teacherScope.allowedClassYears.map((cls) => cls.class_name)),
@@ -112,7 +114,7 @@ export function useTeacherAttendance() {
     };
     loadClasses();
     return () => { mounted = false; };
-  }, [allowedClassNames, isTeacher, teacherScope.loading, activeCampus]);
+  }, [allowedClassNames, isTeacher, teacherScope.loading, activeCampus, resumeTick]);
 
   // Load students when class changes
   useEffect(() => {
@@ -159,7 +161,7 @@ export function useTeacherAttendance() {
     };
     loadStudents();
     return () => { mounted = false; };
-  }, [selectedClass, activeCampus]);
+  }, [selectedClass, activeCampus, resumeTick]);
 
   // Load existing attendance when class or date changes
   useEffect(() => {
@@ -209,7 +211,7 @@ export function useTeacherAttendance() {
     };
     loadAttendance();
     return () => { mounted = false; };
-  }, [selectedClass, dateString, students, activeCampus]);
+  }, [selectedClass, dateString, students, activeCampus, resumeTick]);
 
   // Update status for a student
   const setStudentStatus = useCallback((studentId: string, status: AttendanceStatus | null) => {
