@@ -740,7 +740,7 @@ export default function AttendancePage() {
           </CardHeader>
           <CardContent className="space-y-4">
             {/* Filter Chips — icon + count, single row */}
-            <div className="flex flex-nowrap items-center gap-1.5 pb-1 overflow-x-auto">
+            <div className="flex flex-nowrap items-center justify-between gap-1">
               {filterOptions.map(({ value, label, count, Icon }) => {
                 const active = statusFilter === value;
                 const tone = TONES[value];
@@ -752,14 +752,14 @@ export default function AttendancePage() {
                     aria-label={`${label} (${count})`}
                     title={`${label} · ${count}`}
                     aria-pressed={active}
-                    className={`shrink-0 inline-flex items-center gap-1 h-8 pl-2 pr-1.5 rounded-full border text-xs font-semibold transition-all ${
+                    className={`shrink-0 inline-flex items-center gap-0.5 h-7 pl-1.5 pr-1 rounded-full border text-[11px] font-semibold transition-all ${
                       active ? tone.activeBtn + " shadow-sm" : tone.inactiveBtn
                     }`}
                   >
-                    <Icon className="h-3.5 w-3.5" strokeWidth={2.4} />
+                    <Icon className="h-3 w-3" strokeWidth={2.4} />
                     {active && <span className="px-0.5">{label}</span>}
                     <span
-                      className={`inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 rounded-full text-[11px] leading-none font-semibold ${
+                      className={`inline-flex items-center justify-center min-w-[16px] h-4 px-1 rounded-full text-[10px] leading-none font-semibold ${
                         active ? tone.activeBadge : tone.inactiveBadge
                       }`}
                     >
