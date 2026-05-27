@@ -1,11 +1,15 @@
 import { useQuery } from "@tanstack/react-query";
-import { listInvoicesForStudent, type ParentInvoice } from "@/data/invoices";
+import { listInvoicesForStudents, type ParentInvoice } from "@/data/invoices";
 
-export function useStudentInvoices(studentId: string | null | undefined) {
+type StudentInput = { id: string; name: string | null }[] | null | undefined;
+
+export function useStudentInvoices(students: StudentInput) {
+  const list = students ?? [];
+  const key = list.map((s) => s.id).sort().join(",");
   const query = useQuery({
-    queryKey: ["studentInvoices", studentId],
-    queryFn: () => listInvoicesForStudent(studentId as string),
-    enabled: !!studentId,
+    queryKey: ["studentInvoices", key],
+    queryFn: () => listInvoicesForStudents(list),
+    enabled: list.length > 0,
     staleTime: 60_000,
   });
 

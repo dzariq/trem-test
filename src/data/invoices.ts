@@ -9,6 +9,8 @@ export interface InvoiceLineItem {
 
 export interface ParentInvoice {
   id: string;
+  studentId: string;
+  studentName: string | null;
   invoiceNumber: string | null;
   periodKey: string | null;
   invoiceDate: string | null;
@@ -39,6 +41,7 @@ type InvoiceRow = {
   url: string | null;
   credit_note: boolean | null;
   content: JsonRecord | null;
+  bukku_contact_id?: unknown;
 };
 
 const asRecord = (value: unknown): JsonRecord =>
@@ -64,7 +67,11 @@ function toDateString(v: unknown): string | null {
   return trimmed && !Number.isNaN(new Date(trimmed).getTime()) ? trimmed : null;
 }
 
-function normalize(row: InvoiceRow): ParentInvoice {
+function normalize(
+  row: InvoiceRow,
+  studentId: string,
+  studentName: string | null,
+): ParentInvoice {
   const content = asRecord(row.content);
   const amount = toNumber(content.amount);
   const balance = toNumber(content.balance);
@@ -86,6 +93,8 @@ function normalize(row: InvoiceRow): ParentInvoice {
 
   return {
     id: row.id,
+    studentId,
+    studentName,
     invoiceNumber: typeof content.number === "string" ? content.number : null,
     periodKey: row.period_key ?? null,
     invoiceDate: toDateString(row.invoice_date),
@@ -104,36 +113,59 @@ function normalize(row: InvoiceRow): ParentInvoice {
 }
 
 /**
- * Fetch invoices for a single student.
+ * Fetch invoices for one or more students in a single batched query.
+ * Each invoice carries the owning studentId/studentName so the UI can
+ * display whose invoice it is when viewing "All Children".
  * Drafts and cancelled invoices are filtered out for parent view.
  */
-export async function listInvoicesForStudent(studentId: string): Promise<ParentInvoice[]> {
-  if (!studentId) return [];
+export async function listInvoicesForStudents(
+  students: { id: string; name: string | null }[],
+): Promise<ParentInvoice[]> {
+  const ids = students.map((s) => s.id).filter(Boolean);
+  if (ids.length === 0) return [];
+
+  const nameById = new Map(students.map((s) => [s.id, s.name ?? null]));
 
   const { data: contacts, error: cErr } = await supabase
     .from("bukku_contacts")
-    .select("bukku_contact_id")
-    .eq("student_id", studentId);
+    .select("bukku_contact_id, student_id")
+    .in("student_id", ids);
 
   if (cErr) throw cErr;
 
-  const contactIds = ((contacts || []) as { bukku_contact_id: unknown }[])
-    .map((c) => c.bukku_contact_id)
-    .filter(Boolean);
+  // contactId (number) → studentId mapping
+  const contactToStudent = new Map<number, string>();
+  for (const row of (contacts || []) as { bukku_contact_id: unknown; student_id: string }[]) {
+    const n = Number(row.bukku_contact_id);
+    if (Number.isFinite(n) && row.student_id) contactToStudent.set(n, row.student_id);
+  }
 
-  if (contactIds.length === 0) return [];
+  if (contactToStudent.size === 0) return [];
 
   const { data, error } = await supabase
     .from("student_invoices")
     .select(
-      "id, type, status, invoice_date, due_date, period_key, payment_amount, outstanding_amount, url, credit_note, content, bukku_contact_id"
+      "id, type, status, invoice_date, due_date, period_key, payment_amount, outstanding_amount, url, credit_note, content, bukku_contact_id",
     )
-    .in("bukku_contact_id", contactIds.map((v) => Number(v)).filter((n) => Number.isFinite(n)))
+    .in("bukku_contact_id", Array.from(contactToStudent.keys()))
     .order("invoice_date", { ascending: false, nullsFirst: false });
 
   if (error) throw error;
 
   return (data || [])
-    .map((row) => normalize(row as InvoiceRow))
-    .filter((inv) => inv.status !== "draft" && inv.status !== "cancelled");
+    .map((row) => {
+      const r = row as InvoiceRow;
+      const sid = contactToStudent.get(Number(r.bukku_contact_id)) ?? "";
+      return normalize(r, sid, nameById.get(sid) ?? null);
+    })
+    .filter((inv) => inv.studentId && inv.status !== "draft" && inv.status !== "cancelled");
+}
+
+/** Convenience wrapper for single-student callers. */
+export async function listInvoicesForStudent(
+  studentId: string,
+  studentName?: string | null,
+): Promise<ParentInvoice[]> {
+  if (!studentId) return [];
+  return listInvoicesForStudents([{ id: studentId, name: studentName ?? null }]);
 }
