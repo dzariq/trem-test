@@ -1,65 +1,130 @@
-# Performance refactor — safe, staged
+# Academic pages refactor — conservative, staged
 
-The profile of the current `/parent/calendar` route shows:
+Two files, both with one giant default-export component:
 
-- DOM Content Loaded **7.6s**, First Contentful Paint **7.7s**
-- 248 script requests, 2.87 MB total JS
-- Top offenders (loaded even though unused on this route):
-  - `TeacherAcademicPage.tsx` — 320 KB, 8003 lines, 1.77 s
-  - `AcademicPage.tsx` — 190 KB, 5596 lines, 1.76 s
-  - `TeacherAttendancePage.tsx` — 70 KB, 1789 lines, 1.50 s
-  - `TimeGridCalendar.tsx` — 29 KB, 742 lines, 1.37 s
+- **`TeacherAcademicPage.tsx`** — 8003 lines, 1 component, 18 useState/useCallback handlers, many helpers defined inside the component.
+- **`AcademicPage.tsx`** — 5596 lines, same shape.
 
-Root cause: every page is imported eagerly at the top of `App.tsx`, so visiting any route forces every other route's JS to load. This is the dominant problem — no behavior changes needed to fix it.
+Both share the same overall pattern: a top-level `<Tabs>` with 2 sections, and one of those sections contains a nested `<Tabs>` with 3–5 sub-tabs. Each sub-tab is a large self-contained JSX block. That's our seam.
 
-The plan is two stages. Only Stage 1 is required now — it's low risk, no behavior change, and will deliver the biggest win. Stages 2 are optional follow-ups we can do later.
+The goal is **maintainability, not performance** (Stage 1 lazy-loading already solved perf). We will not change a single line of logic — only move blocks of JSX into separate files and pass the values they already use as props.
 
 ---
 
-## Stage 1 — Route-level code splitting (low risk, high payoff)
+## Confirmed structure
 
-Convert page imports in `src/App.tsx` to `React.lazy()` and wrap the routed area in a single `<Suspense>` fallback. Pages keep working identically; they just load on demand.
+### TeacherAcademicPage (lines)
 
-What gets touched:
+| Section | Range | Approx lines |
+|---|---|---|
+| Imports, constants, helpers | 1–213 | 213 |
+| Component start, state, hooks | 214–1535 | 1300 |
+| `<Tabs>` shell | 1536–1540 | 5 |
+| Tab: **Grade Entry** | 1542–2428 | 886 |
+| Tab: **Class Analysis** wrapper | 2430–2456 | 26 |
+| Sub-tab: Overview | 2466–2911 | 445 |
+| Sub-tab: Bands/Distribution | 2914–3435 | 521 |
+| Performance Dialog (modal) | 3437–~3700 | ~260 |
+| Sub-tab: Trends | ~3700–~4800 | ~1100 |
+| Sub-tab: Comparison | ~4800–~6300 | ~1500 |
+| Sub-tab: Box Plot | ~6300–~7900 | ~1600 |
+| Closing JSX + extras | 7900–7995 | 95 |
+| Trailing `GRADE_COLORS` constant | 7996–end | 7 |
 
-1. `src/App.tsx` — replace ~30 `import Page from "@/pages/..."` with `const Page = lazy(() => import("@/pages/..."))`.
-2. Wrap `<Routes>` in `<Suspense fallback={<RouteFallback />}>` — a tiny spinner that matches the app shell (no layout shift).
-3. Add `RouteFallback` component (just the existing skeleton/spinner style used elsewhere).
+### AcademicPage (lines)
 
-Safety:
-- Pure structural change. No props, no hooks, no Supabase touched.
-- Route guards (`ParentStudentGuard`, `TeacherGuard`) keep working — they wrap the lazy-loaded component the same way.
-- Each route is tested independently; any failure is isolated to one page.
-- Eagerly-loaded shared components (layout, header, providers) stay eager.
+| Section | Range |
+|---|---|
+| Imports, types, helpers | 1–95 |
+| Component start, state, hooks | 96–1521 |
+| Top `<Tabs>` (Report Card / Grade Analysis) | 1522–1527 |
+| Report Card section + nested Tabs (Grades / Behavior / Awards) | 1607–~2070 |
+| Existing extracted modals already in use: `CertificateDialog`, `ReportCardDialog` |  |
+| Grade Analysis section with 4 sub-tabs (Overview / Distribution / Trends / Comparison) | ~2100–~5590 |
 
-Expected result on this profile:
-- Initial JS drops by ~60–70% (the 320 KB + 190 KB Academic pages stop loading on Calendar).
-- First Contentful Paint should drop from ~7.7 s to roughly 2–3 s.
-- Each route pays a small, one-time load cost on first navigation (cached afterwards).
-
-## Stage 2 — Cleanup (still low risk, smaller wins)
-
-A. **Remove unused announcement components** — `FeaturedAnnouncementCard.tsx`, `PinnedAnnouncementCard.tsx`, `AnnouncementListCard.tsx` were superseded by the unified `AnnouncementCard.tsx`. Verify no remaining imports, then delete. ~3 files removed.
-
-B. **`lucide-react` import audit** — `lucide-react` deps file is 156 KB. If anywhere we import the whole library (rare in this codebase but worth grepping), switch to named imports. Most likely already fine, but cheap to verify.
-
-C. **Split `VisaPage.tsx`** (525 lines) into a folder of small components under `src/components/visa/`. Pure file move, no behavior change. Optional — only do if maintainability is the goal, won't affect perf.
-
----
-
-## Out of scope (deliberately deferred)
-
-- **Splitting `TeacherAcademicPage.tsx` (8003 lines) and `AcademicPage.tsx` (5596 lines).** These deserve a refactor, but breaking them apart safely requires understanding every state interaction inside them. After Stage 1, they no longer hurt other routes, so the urgency drops. We can tackle them as a focused follow-up where the only goal is splitting that one page, with you testing after each section is extracted.
-- **`TimeGridCalendar.tsx` rewrite.** It's heavy but functional and recently audited. Lazy-loading the calendar route alone will give us most of the benefit.
-- **Replacing the React Query staleTimes / data hooks.** Not the bottleneck.
+So both pages already have well-defined sub-tab boundaries we can lift.
 
 ---
 
-## Validation checklist (after Stage 1)
+## Refactor plan (sequential, one PR per stage — you test between each)
 
-1. Hard-refresh `/parent/home`, `/parent/calendar`, `/parent/academic`, `/parent/cca`, `/parent/announcements`, `/parent/invoices`, `/parent/support`, `/parent/visa` — each loads, shows its fallback briefly, then renders normally.
-2. Same checks for the teacher portal main routes.
-3. Re-run the perf profile on `/parent/calendar` — confirm FCP drops and the Academic pages are no longer in the network waterfall.
-4. Confirm no console errors on route transitions.
+### Stage A — Safety net first
 
-If anything regresses on a specific page, we revert that page back to eager import — the rest stays lazy.
+1. Move the file-top constants (icons, color helpers, formatters, `calculateTotal`, `getLetterGrade`, `formatSavedAt`, `getSelectionColor`, `SELECTION_COLORS`, `GRADE_COLORS`, types) out of `TeacherAcademicPage.tsx` and into:
+   - `src/pages/teacher/academic/constants.ts`
+   - `src/pages/teacher/academic/helpers.ts`
+   - `src/pages/teacher/academic/icons.tsx`
+2. Same for `AcademicPage.tsx` → `src/pages/academic/{constants,helpers}.ts`.
+3. **No JSX changes yet.** Pure extraction of pure-function helpers and constants. Trivial to review.
+
+Expected result: ~300 lines removed from each page. No behavior change. You verify nothing broke.
+
+### Stage B — TeacherAcademicPage: extract the 5 analysis sub-tabs
+
+One sub-tab at a time, in this order (smallest/most isolated first):
+
+1. **OverviewTab** → `src/pages/teacher/academic/tabs/OverviewTab.tsx`
+2. **BandsTab** → `BandsTab.tsx` (plus the Performance Dialog moves with it since they're tightly coupled)
+3. **TrendsTab** → `TrendsTab.tsx`
+4. **ComparisonTab** → `ComparisonTab.tsx`
+5. **BoxPlotTab** → `BoxPlotTab.tsx`
+
+Each extraction follows the exact same recipe:
+
+```text
+1. Cut the <TabsContent value="..."> JSX block.
+2. Identify every variable/handler/state setter it reads.
+3. Create the new component file with a props interface listing exactly those values.
+4. In TeacherAcademicPage, replace the JSX with <OverviewTab {...overviewProps} />.
+5. You reload the page and click through that tab to confirm it renders identically.
+```
+
+We do NOT lift state into the sub-components. State stays in the parent. Sub-components are dumb render targets receiving already-computed values. This is the safest shape.
+
+After Stage B: TeacherAcademicPage drops from ~8000 to roughly ~3000 lines.
+
+### Stage C — TeacherAcademicPage: extract Grade Entry
+
+Same recipe applied to the Grade Entry tab (~900 lines) → `src/pages/teacher/academic/tabs/GradeEntryTab.tsx`. After this, the page itself is roughly ~2000 lines: state, data loading, derived values, and a small JSX shell that just composes the sub-tabs.
+
+### Stage D — Optional: extract the data hook
+
+If Stage B/C goes smoothly, we can move the large block of `useEffect`/data-loading/derived-state out of the component into `useTeacherAcademicData()`. **Riskier** — touches data flow rather than JSX. Worth doing only if maintenance pain remains.
+
+### Stage E — AcademicPage (parent side), same pattern
+
+Apply Stages A–C to the parent `AcademicPage.tsx`:
+- `src/pages/academic/tabs/ReportCardTab.tsx`
+- `src/pages/academic/tabs/GradesTab.tsx` / `BehaviorTab.tsx` / `AwardsTab.tsx`
+- `src/pages/academic/tabs/AnalysisOverviewTab.tsx`, `AnalysisDistributionTab.tsx`, `AnalysisTrendsTab.tsx`, `AnalysisComparisonTab.tsx`
+
+---
+
+## What we explicitly will NOT do
+
+- **No logic changes.** No "while we're here, this useEffect could be simplified." Pure cut-and-paste of JSX with prop wiring.
+- **No deduplication across teacher/parent pages.** They look similar but their data shapes and permissions differ; merging them is a separate, riskier project.
+- **No state lifted into sub-components.** Parent retains all `useState`, `useQuery`, and handlers.
+- **No prop drilling cleanup** (e.g. context, reducers). That's optimisation, not refactor.
+
+---
+
+## Risk controls
+
+- **One stage per round.** I finish Stage A, you test, you say continue. Then Stage B sub-tab 1, you test, continue. We do not batch.
+- **Diff verification per extraction**: after each cut, I'll re-read the new file and the surrounding parent to confirm every referenced symbol is in the props list. Missing references show up as TypeScript errors on save — caught instantly.
+- **Suspense fallback already in place** from the earlier lazy-loading work, so a broken sub-tab won't blank the whole app.
+- **If any stage misbehaves, we revert just that stage.** Each is independent.
+
+---
+
+## How long this takes
+
+- Stage A (both pages): one round.
+- Stage B (5 sub-tabs): five rounds.
+- Stage C: one round.
+- Stage E (parent page): three rounds.
+
+Total ~10 careful rounds. We can stop at any point — even just Stage A + Stage B sub-tab 1 already substantially improves readability.
+
+I recommend starting with Stage A on both pages in this round, since it's the lowest-risk and gives us cleaner files to navigate for everything that follows.

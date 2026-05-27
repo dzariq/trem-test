@@ -36,53 +36,21 @@ import { exportElementToPdf } from "@/lib/pdf/exportToPdf";
 import { saveAndShareBlob } from "@/lib/export/nativeDownload";
 import { toast } from "@/hooks/use-toast";
 import { OverviewReportPrintDocument } from "@/components/reports/OverviewReportPrintDocument";
-type YearKey = "2022" | "2023" | "2024" | "2025";
-type ExamType = "midYear" | "yearEnd";
-type AnalysisPeriod = {
-  id: string;
-  name: string;
-  code: string;
-  sortOrder: number;
-  yearLabel: string;
-  periodLabel: string;
-  displayLabel: string;
-  academicPeriodId: string | null;
-  academicPeriodName: string | null;
-  academicYear: number | null;
-};
-
-const PERIOD_ORDER: readonly string[] = [
-  "Mid Year Exam",
-  "Trial (Checkpoint)",
-  "Final Year Exam"
-];
-
-const ANALYSIS_TAB_VALUES = ["overview", "trends", "comparison", "goals"] as const;
-type AnalysisTabValue = (typeof ANALYSIS_TAB_VALUES)[number];
-
-const getPeriodOrderIndex = (name: string) => {
-  const index = PERIOD_ORDER.indexOf(name);
-  return index === -1 ? PERIOD_ORDER.length : index;
-};
-
-const safeNumber = (value: number | null | undefined, fallback = 0) => {
-  return Number.isFinite(value) ? value : fallback;
-};
-
-const safePercent = (value: number | null | undefined, fallback = 0) => {
-  const safe = safeNumber(value, fallback);
-  return Math.min(100, Math.max(0, safe));
-};
-
-const safeText = (value: number | null | undefined, fallback = "—") => {
-  return Number.isFinite(value) ? String(value) : fallback;
-};
-
-// Helper to get score from data structure
-const getScore = (subject: typeof academicData.subjects[0], year: YearKey, examType: ExamType) => {
-  const yearData = subject.scores[year];
-  return yearData ? yearData[examType] : null;
-};
+import {
+  type YearKey,
+  type ExamType,
+  type AnalysisPeriod,
+  type AnalysisTabValue,
+  PERIOD_ORDER,
+  ANALYSIS_TAB_VALUES,
+} from "./academic/constants";
+import {
+  getPeriodOrderIndex,
+  safeNumber,
+  safePercent,
+  safeText,
+  getScore,
+} from "./academic/helpers";
 
 // Import centralized subjects config
 import { getShortSubjectName, getTinySubjectCode, subjectGroups, getSubjectColor } from "@/data/subjectsConfig";
