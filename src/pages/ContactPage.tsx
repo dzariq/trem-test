@@ -4,7 +4,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { MapPin, Phone, Mail, Clock, ExternalLink, ChevronLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
-import schoolLogo from "@/assets/school-badge.png";
+import schoolLogo from "@/assets/school-badge.webp";
 import { useScrollToTopOnMount } from "@/hooks/useScrollToTopOnMount";
 import { openExternal, callTel } from "@/lib/native/openExternal";
 

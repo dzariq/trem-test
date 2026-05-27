@@ -2,7 +2,7 @@ import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
 import { Users, GraduationCap, Loader2 } from "lucide-react";
-import schoolBadge from "@/assets/school-badge.png";
+import schoolBadge from "@/assets/school-badge.webp";
 import { useAuth } from "@/contexts/AuthContext";
 
 export default function RoleSelectionPage() {

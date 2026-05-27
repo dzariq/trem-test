@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ChevronLeft, ChevronRight, Check, X, Clock, CalendarOff, Bug, Inbox, List, FileText, type LucideIcon } from "lucide-react";
-import schoolLogo from "@/assets/school-badge.png";
+import schoolLogo from "@/assets/school-badge.webp";
 import {
   BarChart,
   Bar,

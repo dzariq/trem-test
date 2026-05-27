@@ -3,8 +3,8 @@ import { AppHeader } from "@/components/layout/AppHeader";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { dnaCoreValues, valueColors, DNAValue } from "@/data/dnaCoreValues";
 import { cn } from "@/lib/utils";
-import dnaBanner from "@/assets/dna-banner.png";
-import schoolBadge from "@/assets/school-badge.png";
+import dnaBanner from "@/assets/dna-banner.webp";
+import schoolBadge from "@/assets/school-badge.webp";
 import {
   Heart, 
   Flame, 

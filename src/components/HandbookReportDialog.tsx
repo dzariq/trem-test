@@ -8,7 +8,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Printer, Loader2, X, Download } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
-import schoolBadgeSrc from "@/assets/school-badge.png";
+import schoolBadgeSrc from "@/assets/school-badge.webp";
 import { Capacitor } from "@capacitor/core";
 
 interface HandbookSection {

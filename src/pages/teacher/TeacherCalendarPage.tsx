@@ -11,7 +11,7 @@ import { TimeGridCalendar } from "@/components/calendar/TimeGridCalendar";
 import { CalendarViewSwitcher, type CalendarViewMode } from "@/components/calendar/CalendarViewSwitcher";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { MapPin, Clock, User, Loader2, Eye, SlidersHorizontal, X } from "lucide-react";
-import schoolLogo from "@/assets/school-badge.png";
+import schoolLogo from "@/assets/school-badge.webp";
 
 import { format } from "date-fns";
 import { TAG_CATEGORIES, type TagCategory, type CalendarTag } from "@/types/calendarTags";

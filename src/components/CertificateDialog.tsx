@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Download, X, Loader2 } from "lucide-react";
 import html2canvas from "html2canvas";
 import { jsPDF } from "jspdf";
-import schoolLogo from "@/assets/school-badge.png";
+import schoolLogo from "@/assets/school-badge.webp";
 
 interface CertificateDialogProps {
   open: boolean;
