@@ -361,6 +361,67 @@ export default function AttendancePage() {
 
   const weeklyBreakdown = groupByWeek(filteredBreakdown);
 
+  // Multi-child daily breakdown: group records by date, list per-child status entries
+  type ChildEntry = { studentId: string; studentName: string; status: string; reason: string | null; remarks: string | null };
+  type MultiDay = { date: string; entries: ChildEntry[] };
+
+  const multiDailyBreakdown = useMemo<MultiDay[]>(() => {
+    if (!isAggregated) return [];
+    const monthRecords = records.filter((r) => new Date(r.date).getMonth() === currentMonthIndex);
+    const byDate: Record<string, ChildEntry[]> = {};
+    monthRecords.forEach((r) => {
+      const status = r.status.toLowerCase();
+      if (statusFilter !== "all" && status !== statusFilter) return;
+      const entry: ChildEntry = {
+        studentId: r.student_id,
+        studentName: studentNameById[r.student_id] ?? r.student_name ?? "Student",
+        status,
+        reason: status !== "present" && r.remarks ? r.remarks : null,
+        remarks: r.remarks,
+      };
+      (byDate[r.date] ||= []).push(entry);
+    });
+    return Object.entries(byDate)
+      .sort(([a], [b]) => (a < b ? 1 : -1))
+      .map(([date, entries]) => ({
+        date,
+        entries: entries.sort((a, b) => a.studentName.localeCompare(b.studentName)),
+      }));
+  }, [isAggregated, records, currentMonthIndex, statusFilter, studentNameById]);
+
+  const multiWeeklyBreakdown = useMemo(() => {
+    if (!isAggregated) return [] as { weekStart: string; days: MultiDay[] }[];
+    const sorted = [...multiDailyBreakdown].sort((a, b) => (a.date < b.date ? -1 : 1));
+    const weeks: { weekStart: string; days: MultiDay[] }[] = [];
+    let cur: MultiDay[] = [];
+    let curStart = "";
+    sorted.forEach((d, idx) => {
+      const date = new Date(d.date);
+      const dow = date.getDay();
+      if (dow === 1 || idx === 0) {
+        if (cur.length > 0) weeks.push({ weekStart: curStart, days: cur });
+        cur = [d];
+        curStart = date.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+      } else {
+        cur.push(d);
+      }
+    });
+    if (cur.length > 0) weeks.push({ weekStart: curStart, days: cur });
+    return weeks.reverse();
+  }, [isAggregated, multiDailyBreakdown]);
+
+  // Filter chip counts — in aggregated mode use full record totals for the month
+  const monthRecordsAll = useMemo(
+    () => records.filter((r) => new Date(r.date).getMonth() === currentMonthIndex),
+    [records, currentMonthIndex]
+  );
+  const aggregatedCounts = useMemo(() => ({
+    present: monthRecordsAll.filter((r) => r.status.toLowerCase() === "present").length,
+    absent: monthRecordsAll.filter((r) => r.status.toLowerCase() === "absent").length,
+    late: monthRecordsAll.filter((r) => r.status.toLowerCase() === "late").length,
+    excused: monthRecordsAll.filter((r) => r.status.toLowerCase() === "excused").length,
+  }), [monthRecordsAll]);
+
   // Check if date is today
   const isToday = (dateStr: string) => {
     const today = new Date();
