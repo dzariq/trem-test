@@ -1,6 +1,5 @@
 import { useMemo } from "react";
 import { useAuth } from "@/contexts/AuthContext";
-import { useTeacherScope } from "@/hooks/useTeacherScope";
 import type { CcaActivity } from "@/hooks/useCcaActivities";
 
 /**
@@ -47,7 +46,6 @@ export function useCcaActivityPermissions(
   activity: CcaActivity | null | undefined
 ): CcaActivityPermissions {
   const { user, profile } = useAuth();
-  const scope = useTeacherScope();
 
   return useMemo<CcaActivityPermissions>(() => {
     if (!activity || !profile) return NO_PERMS;
