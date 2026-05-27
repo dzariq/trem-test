@@ -449,7 +449,7 @@ export default function Login() {
   }
 
   return (
-    <div className="h-[100dvh] overflow-hidden bg-background flex flex-col items-center justify-center p-6">
+    <div className="fixed inset-0 h-[100dvh] overflow-hidden overscroll-none bg-background flex flex-col items-center justify-center p-6">
       <div className="text-center mb-10">
         <img src={schoolBadge} alt="School Badge" className="h-24 w-auto mx-auto mb-4" />
         <h1 className="text-2xl font-bold text-foreground whitespace-pre-line">
@@ -525,7 +525,6 @@ export default function Login() {
                 </Select>
 
                 <div className="relative flex-1">
-                  <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                   <Input
                     id="phone"
                     type="tel"
@@ -537,7 +536,6 @@ export default function Login() {
                       if (e.key === "Enter") handleRequestOtp();
                     }}
                     placeholder="Phone number"
-                    className="pl-10"
                   />
                 </div>
               </div>
