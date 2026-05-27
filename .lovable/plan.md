@@ -1,42 +1,61 @@
 ## Goal
+Make all data screens stay fresh in the installed mobile app — when the user backgrounds and reopens the app (or switches tab in the browser), the visible page silently re-fetches its data. Today only the Home screens do this.
 
-Teachers should only see CCA activities (and their sessions in the Calendar) where they have actionable access:
-- Main or Sub PIC on the activity (`cca_activity_teachers`)
-- Bus PIC on an outdoor CCA (`cca_outdoor_buses.teacher_pic_main` / `_sub`)
-- Principals (super_admin / admin / school_leader) continue to see everything
+## Approach
+One global "app resume" signal, applied at the data-layer (hooks) so every page that uses those hooks gets refresh for free. Pages that load data directly in their own `useEffect` get a one-line opt-in.
 
-The existing year-level / class-name overlap fallback is removed for teachers.
+### 1. Promote the resume detector to a tiny app-wide bus
+Refactor `src/hooks/useRefreshOnAppResume.ts` so the listener for `visibilitychange` / `window.focus` / Capacitor `App.appStateChange` runs **once globally** and fans out to subscribers:
 
-## Changes
+```text
+src/lib/appResumeBus.ts        // subscribe(cb) / emit() with single listener
+src/hooks/useRefreshOnAppResume.ts  // thin React wrapper that subscribes
+```
 
-### 1. `src/hooks/useCcaActivityFilter.ts`
-- Drop `teacherYearLevels` / `teacherClassNames` matching.
-- Add a query to load activity IDs where the teacher is a bus PIC (one fetch per session via a small new hook `useTeacherBusPicActivityIds`).
-- `canSee` becomes: principal → true; teacher → PIC on activity OR activity id is in the bus-PIC id set; else false.
-- Applies to Teacher CCA list page automatically (already consumes this hook).
+Add a "minimum away time" gate (default 30 s) so quickly tabbing away and back doesn't fire refetches.
 
-### 2. `src/hooks/useCcaSessionsCalendar.ts`
-- In the `scopeToTeacher` branch, remove the year_levels / classes_involved overlap fetches.
-- Keep only the two existing PIC sources:
-  - `cca_activity_teachers` (Main/Sub PIC)
-  - `cca_outdoor_buses` (Bus PIC)
-- Result: calendar grid + day list only show sessions for activities the teacher PICs.
+### 2. New small hook `useRefetchOnResume(fn)`
+A two-line hook used inside data hooks (calls `fn()` when the bus fires). Keeps data hooks tidy and avoids importing React lifecycles into every fetcher.
 
-### 3. `src/hooks/useCcaActivityPermissions.ts`
-- Remove `hasYearOverlap` from the canView calculation for teachers. `canView` for teachers = `isActivityPIC || isBusPic` (bus-PIC handled via existing `useIsBusPicForActivity` already used in detail page).
-- Keep `canEdit` semantics unchanged (principal or activity PIC).
-- Principals still see / edit all.
+### 3. Wire into the data hooks (one-line each)
+Add `useRefetchOnResume(refetch)` to:
 
-### 4. `src/pages/teacher/TeacherCalendarPage.tsx`
-- No longer needs to pass `teacherYearLevels` / `teacherClassNames` to `useCcaSessionsCalendar`. Clean up the unused memos.
+- **CCA**: `useUpcomingCcaSessions`, `useCcaSessionsCalendar`, `useCcaActivities`, `useStudentCcaEnrollments`, `useCcaSessions`, `useCcaActivityById`
+- **Academic**: `useStudentGradesByPeriods`, `useStudentReportCard`, `useStudentGradeGoals`, `useGradeEntry` (teacher), `useClassAnalysisData`
+- **Attendance**: `useParentAttendance`, `useStudentAttendanceSummary`, `useTeacherAttendance`, `useAttendanceStatistics`
+- **Homework / Lesson plans**: `useStudentHomework`, `useHomeworkTracking`, `useLessonPlans`, `useTeacherLessonPlans`
+- **Invoice**: `useStudentInvoices`
+- **Notifications**: `useNotifications` (also keep its realtime channel)
+- **PDF / docs**: `useSchoolDocument` (timetable, handbook PDFs)
+
+### 4. Page-level opt-in for screens that fetch in their own `useEffect`
+Add `useRefreshOnAppResume(loader)` to:
+
+- `CalendarPage` + `TeacherCalendarPage` (announcements / calendar events / CCA sessions)
+- `AnnouncementsPage` + `TeacherAnnouncementsPage`
+- `ParentTimetablePage`, `TeacherTimetablePage` (PDFs)
+- `StudentHandbookPage`, `TeacherHandbookPage`
+- `VisaPage`
+- `AcademicPage`, `TeacherAcademicPage` (period / class context loaders)
+- `AttendancePage`, `TeacherAttendancePage`
+- `HomeworkPage`
+- `InvoicePage`
+- `ParentCcaPage` + detail, `TeacherCcaPage` + detail
+- `NotificationsPage` + `TeacherNotificationsPage`
+
+Existing `HomePage` and `TeacherHomePage` keep their per-page wiring (already shipped).
+
+### 5. Cache-bust strategy for PDFs / images
+- Use `import.meta.env` for static assets (unchanged).
+- For Supabase Storage URLs that may be replaced (announcement banners, CCA hero images, timetable PDFs), append a cache-busting query param using the row's `updated_at` so the OS WebView doesn't serve stale binaries. Apply where we already build signed/public URLs (`useSchoolDocument`, announcement attachment resolver, CCA image hook).
 
 ## Out of scope
-- Parent calendar / parent CCA logic — unchanged.
-- RLS policies — unchanged (server still permits broader read; this is a client-side visibility tightening matching what the user can act on).
-- CCA detail page guards — already PIC/bus-PIC gated; nothing to change.
+- No realtime Postgres channels added (would change RLS load profile).
+- No global React Query migration.
+- No DB / RLS / edge function changes — purely client.
 
 ## Verification
-- Login as a teacher who is NOT a PIC of any CCA → Calendar shows no CCA sessions; Teacher CCA list shows none.
-- Login as a teacher who is Main PIC of one club → only that club's sessions appear on Calendar.
-- Login as a teacher who is Sub PIC of an outdoor CCA bus only → that outdoor CCA appears on Calendar + CCA list.
-- Login as admin / school_leader → sees all CCAs as before.
+- Background the installed app for >30 s on each module, return, and confirm fresh data without a manual reload.
+- Quick app-switch (<30 s) does **not** trigger refetches (verify in network tab).
+- Pull-to-refresh continues to work where it already exists.
+- Web tab focus also re-fetches.

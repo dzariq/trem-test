@@ -7552,6 +7552,14 @@ export type Database = {
       }
       teacher_allowed_class_year_ids: { Args: never; Returns: number[] }
       teacher_assigned_to_cca: { Args: { _cca_id: string }; Returns: boolean }
+      toggle_announcement_feature: {
+        Args: { p_id: string; p_value: boolean }
+        Returns: undefined
+      }
+      toggle_announcement_pin: {
+        Args: { p_id: string; p_order?: number; p_value: boolean }
+        Returns: undefined
+      }
       track_user_login: { Args: never; Returns: undefined }
       transfer_student_campus: {
         Args: {
