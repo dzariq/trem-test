@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type MouseEvent } from "react";
+import { useEffect, useMemo, useRef, useState, type MouseEvent } from "react";
 import { ChevronLeft, ChevronRight, ArrowLeft, SlidersHorizontal, ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -94,6 +94,21 @@ export function TimeGridCalendar({
   const totalHours = endHour - startHour;
   const totalHeight = totalHours * HOUR_PX;
   const [monthPickerOpen, setMonthPickerOpen] = useState(false);
+
+  // Measure body width so we can render exactly 3 day columns at a time in
+  // week mode and let the rest scroll horizontally.
+  const bodyRef = useRef<HTMLDivElement | null>(null);
+  const scrollRef = useRef<HTMLDivElement | null>(null);
+  const [bodyWidth, setBodyWidth] = useState(0);
+  useEffect(() => {
+    const el = bodyRef.current;
+    if (!el) return;
+    const update = () => setBodyWidth(el.clientWidth);
+    update();
+    const ro = new ResizeObserver(update);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, []);
 
   // Live "now" time in minutes since midnight, refreshed every 60s
   const [nowMin, setNowMin] = useState(() => {
@@ -303,11 +318,39 @@ export function TimeGridCalendar({
     if (mode === "day") onSelectDay(toYmd(nextDate));
   };
 
-  // Layout: time gutter + N day columns. Use minmax(0,1fr) so columns always
-  // fit the viewport (no horizontal scroll on small phones).
+  // Layout: time gutter + N day columns.
+  // - Day mode: single column fills width.
+  // - Week mode: show exactly 3 day columns within the visible width; the
+  //   remaining 4 days are reachable by swiping horizontally. This keeps
+  //   each column wide enough to read titles and avoid overlap on phones.
   const GUTTER = mode === "week" ? 36 : 44;
-  const colMinWidth = mode === "day" ? "1fr" : "minmax(0, 1fr)";
-  const gridTemplate = `${GUTTER}px repeat(${days.length}, ${colMinWidth})`;
+  const VISIBLE_WEEK_COLS = 3;
+  const weekColPx = bodyWidth > 0 ? Math.max(96, (bodyWidth - GUTTER) / VISIBLE_WEEK_COLS) : 0;
+  const gridTemplate =
+    mode === "day"
+      ? `${GUTTER}px 1fr`
+      : weekColPx > 0
+        ? `${GUTTER}px repeat(${days.length}, ${weekColPx}px)`
+        : `${GUTTER}px repeat(${days.length}, minmax(0, 1fr))`;
+
+  // On week-mode mount (or when switching to a new week / view), scroll the
+  // horizontal pane so the selected day — or today — is visible.
+  useEffect(() => {
+    if (mode !== "week" || weekColPx <= 0) return;
+    const el = scrollRef.current;
+    if (!el) return;
+    const targetYmd = days.find((d) => d.ymd === selectedDay)
+      ? selectedDay
+      : days.find((d) => d.ymd === todayYmd)?.ymd ?? days[0]?.ymd;
+    const idx = Math.max(0, days.findIndex((d) => d.ymd === targetYmd));
+    // Center the target column within the 3-visible window when possible.
+    const desiredFirst = Math.min(
+      Math.max(0, idx - 1),
+      Math.max(0, days.length - VISIBLE_WEEK_COLS),
+    );
+    el.scrollTo({ left: desiredFirst * weekColPx, behavior: "smooth" });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [mode, weekColPx, days[0]?.ymd, selectedDay]);
 
   // Cap all-day rows; remember overflow per-day to render "+N more"
   const ALL_DAY_CAP = 2;
@@ -471,9 +514,16 @@ export function TimeGridCalendar({
         </div>
       </div>
 
-      {/* Calendar body — fits viewport, no horizontal scroll */}
-      <div className="overflow-visible">
-        <div>
+      {/* Calendar body — week view scrolls horizontally (3 days visible) */}
+      <div className="overflow-visible" ref={bodyRef}>
+        <div
+          ref={scrollRef}
+          className={cn(
+            mode === "week"
+              ? "overflow-x-auto overflow-y-hidden [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden snap-x snap-mandatory [overscroll-behavior-x:contain]"
+              : undefined,
+          )}
+        >
           {/* Day header row — floating, no background, today inside filled circle */}
           <div
             className="grid pt-2 pb-3"
