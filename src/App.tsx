@@ -2,7 +2,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
-import { useEffect } from "react";
+import { useEffect, lazy, Suspense } from "react";
 import { FEATURES } from "@/config/featureFlags";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { CampusProvider } from "@/contexts/CampusContext";
@@ -10,52 +10,60 @@ import { StudentSelectionProvider } from "@/contexts/StudentSelectionContext";
 import { useAndroidBackButton } from "@/hooks/useAndroidBackButton";
 import { RouteErrorBoundary } from "@/components/common/RouteErrorBoundary";
 
-// Login
+// Login - kept eager since it's the landing page
 import Login from "./pages/Login";
-
-// Parent/Student Pages
-import HomePage from "./pages/HomePage";
-import AttendancePage from "./pages/AttendancePage";
-import AcademicPage from "./pages/AcademicPage";
-import CalendarPage from "./pages/CalendarPage";
-import SupportPage from "./pages/SupportPage";
-import ProfilePage from "./pages/ProfilePage";
-import NotificationsPage from "./pages/NotificationsPage";
-import AnnouncementsPage from "./pages/AnnouncementsPage";
-import AnnouncementDetailPage from "./pages/AnnouncementDetailPage";
-import SecurityPrivacyPage from "./pages/SecurityPrivacyPage";
-import PrivacyPolicyPage from "./pages/PrivacyPolicyPage";
-import ContactPage from "./pages/ContactPage";
-import AwardsPage from "./pages/AwardsPage";
-import StudentHandbookPage from "./pages/StudentHandbookPage";
-import HomeworkPage from "./pages/HomeworkPage";
-import InvoicePage from "./pages/InvoicePage";
-import VisaPage from "./pages/VisaPage";
-import ParentTimetablePage from "./pages/ParentTimetablePage";
-import ParentCcaPage from "./pages/ParentCcaPage";
-import ParentCcaDetailPage from "./pages/ParentCcaDetailPage";
 import ParentStudentGuard from "./components/auth/ParentStudentGuard";
-
-// Teacher Pages
-import TeacherHomePage from "./pages/teacher/TeacherHomePage";
-import TeacherAttendancePage from "./pages/teacher/TeacherAttendancePage";
-import TeacherAcademicPage from "./pages/teacher/TeacherAcademicPage";
-import TeacherCalendarPage from "./pages/teacher/TeacherCalendarPage";
-import TeacherProfilePage from "./pages/teacher/TeacherProfilePage";
-import TeacherNotificationsPage from "./pages/teacher/TeacherNotificationsPage";
-import TeacherDNAPage from "./pages/teacher/TeacherDNAPage";
-import TeacherTimetablePage from "./pages/teacher/TeacherTimetablePage";
-import TeacherHandbookPage from "./pages/teacher/TeacherHandbookPage";
-import TeacherAnnouncementsPage from "./pages/teacher/TeacherAnnouncementsPage";
-import TeacherLessonPlansListPage from "./pages/teacher/TeacherLessonPlansListPage";
-import TeacherMLPDetailPage from "./pages/teacher/TeacherMLPDetailPage";
-import WeekConfigPage from "./pages/teacher/WeekConfigPage";
 import TeacherGuard from "./components/auth/TeacherGuard";
-import TeacherCcaPage from "./pages/teacher/TeacherCcaPage";
-import TeacherCcaDetailPage from "./pages/teacher/TeacherCcaDetailPage";
-import TeacherVenueDetailPage from "./pages/teacher/TeacherVenueDetailPage";
 
-import NotFound from "./pages/NotFound";
+// Parent/Student Pages - lazy loaded for route-level code splitting
+const HomePage = lazy(() => import("./pages/HomePage"));
+const AttendancePage = lazy(() => import("./pages/AttendancePage"));
+const AcademicPage = lazy(() => import("./pages/AcademicPage"));
+const CalendarPage = lazy(() => import("./pages/CalendarPage"));
+const SupportPage = lazy(() => import("./pages/SupportPage"));
+const ProfilePage = lazy(() => import("./pages/ProfilePage"));
+const NotificationsPage = lazy(() => import("./pages/NotificationsPage"));
+const AnnouncementsPage = lazy(() => import("./pages/AnnouncementsPage"));
+const AnnouncementDetailPage = lazy(() => import("./pages/AnnouncementDetailPage"));
+const SecurityPrivacyPage = lazy(() => import("./pages/SecurityPrivacyPage"));
+const PrivacyPolicyPage = lazy(() => import("./pages/PrivacyPolicyPage"));
+const ContactPage = lazy(() => import("./pages/ContactPage"));
+const AwardsPage = lazy(() => import("./pages/AwardsPage"));
+const StudentHandbookPage = lazy(() => import("./pages/StudentHandbookPage"));
+const HomeworkPage = lazy(() => import("./pages/HomeworkPage"));
+const InvoicePage = lazy(() => import("./pages/InvoicePage"));
+const VisaPage = lazy(() => import("./pages/VisaPage"));
+const ParentTimetablePage = lazy(() => import("./pages/ParentTimetablePage"));
+const ParentCcaPage = lazy(() => import("./pages/ParentCcaPage"));
+const ParentCcaDetailPage = lazy(() => import("./pages/ParentCcaDetailPage"));
+
+// Teacher Pages - lazy loaded
+const TeacherHomePage = lazy(() => import("./pages/teacher/TeacherHomePage"));
+const TeacherAttendancePage = lazy(() => import("./pages/teacher/TeacherAttendancePage"));
+const TeacherAcademicPage = lazy(() => import("./pages/teacher/TeacherAcademicPage"));
+const TeacherCalendarPage = lazy(() => import("./pages/teacher/TeacherCalendarPage"));
+const TeacherProfilePage = lazy(() => import("./pages/teacher/TeacherProfilePage"));
+const TeacherNotificationsPage = lazy(() => import("./pages/teacher/TeacherNotificationsPage"));
+const TeacherDNAPage = lazy(() => import("./pages/teacher/TeacherDNAPage"));
+const TeacherTimetablePage = lazy(() => import("./pages/teacher/TeacherTimetablePage"));
+const TeacherHandbookPage = lazy(() => import("./pages/teacher/TeacherHandbookPage"));
+const TeacherAnnouncementsPage = lazy(() => import("./pages/teacher/TeacherAnnouncementsPage"));
+const TeacherLessonPlansListPage = lazy(() => import("./pages/teacher/TeacherLessonPlansListPage"));
+const TeacherMLPDetailPage = lazy(() => import("./pages/teacher/TeacherMLPDetailPage"));
+const WeekConfigPage = lazy(() => import("./pages/teacher/WeekConfigPage"));
+const TeacherCcaPage = lazy(() => import("./pages/teacher/TeacherCcaPage"));
+const TeacherCcaDetailPage = lazy(() => import("./pages/teacher/TeacherCcaDetailPage"));
+const TeacherVenueDetailPage = lazy(() => import("./pages/teacher/TeacherVenueDetailPage"));
+
+const NotFound = lazy(() => import("./pages/NotFound"));
+
+function RouteFallback() {
+  return (
+    <div className="flex items-center justify-center min-h-[60vh]">
+      <div className="h-8 w-8 rounded-full border-2 border-muted border-t-primary animate-spin" />
+    </div>
+  );
+}
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -110,6 +118,7 @@ const App = () => (
               <NativeBindings />
               <RouteScrollRestoration />
               <RouteErrorBoundary>
+              <Suspense fallback={<RouteFallback />}>
               <Routes>
                 {/* Unified Login - Landing Page */}
                 <Route path="/" element={<Login />} />
@@ -216,6 +225,7 @@ const App = () => (
 
                 <Route path="*" element={<NotFound />} />
               </Routes>
+              </Suspense>
               </RouteErrorBoundary>
             </BrowserRouter>
           </div>
