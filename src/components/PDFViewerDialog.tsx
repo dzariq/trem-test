@@ -77,18 +77,26 @@ export function PDFViewerDialog({
     ? pdfUrl
     : window.location.origin + pdfUrl;
 
+  // Wrap the underlying (e.g. Supabase storage) URL behind our own
+  // /pdf route so the browser address bar shows our domain instead of
+  // the storage provider's hostname.
+  const wrappedPdfUrl = `${window.location.origin}/pdf?url=${encodeURIComponent(
+    resolvedPdfUrl,
+  )}&title=${encodeURIComponent(title)}`;
+
   const handleOpenInBrowser = useCallback(async () => {
+    const externalUrl = isNative ? resolvedPdfUrl : wrappedPdfUrl;
     if (isNative) {
       try {
         const { Browser } = await import("@capacitor/browser");
-        await Browser.open({ url: resolvedPdfUrl });
+        await Browser.open({ url: externalUrl });
       } catch {
-        window.open(resolvedPdfUrl, "_blank");
+        window.open(externalUrl, "_blank");
       }
     } else {
-      window.open(resolvedPdfUrl, "_blank");
+      window.open(externalUrl, "_blank");
     }
-  }, [resolvedPdfUrl, isNative]);
+  }, [resolvedPdfUrl, wrappedPdfUrl, isNative]);
 
   const handleDownload = useCallback(async () => {
     if (isNative) {
