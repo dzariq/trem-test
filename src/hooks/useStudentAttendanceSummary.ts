@@ -1,6 +1,7 @@
 import { useEffect, useState, useMemo } from "react";
 import { supabase } from "@/lib/supabase";
 import { format, subDays, eachMonthOfInterval } from "date-fns";
+import { useResumeTick } from "@/hooks/useRefreshOnAppResume";
 
 type AttendanceRow = { date: string; status: string };
 
@@ -20,6 +21,7 @@ export function useStudentAttendanceSummary(
   const [rows, setRows] = useState<AttendanceRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const resumeTick = useResumeTick();
 
   const startDate = useMemo(() => format(subDays(new Date(), days), "yyyy-MM-dd"), [days]);
   const endDate = useMemo(() => format(new Date(), "yyyy-MM-dd"), []);
@@ -67,7 +69,7 @@ export function useStudentAttendanceSummary(
     return () => {
       cancelled = true;
     };
-  }, [studentIdsKey, startDate, endDate]);
+  }, [studentIdsKey, startDate, endDate, resumeTick]);
 
   const totals = useMemo(() => {
     const result = { present: 0, absent: 0, late: 0, excused: 0, total: 0 };
