@@ -868,6 +868,12 @@ export default function AttendancePage() {
       >
         {selectedDay && (
           <div className="px-5 py-5 space-y-4">
+            {/* Child name (when in multi-child view) */}
+            {selectedDay.studentName && (
+              <p className="text-sm font-semibold text-primary uppercase tracking-wide">
+                {selectedDay.studentName}
+              </p>
+            )}
             {/* Date - full width, larger */}
             <p className="text-xl font-bold text-foreground">
               {new Date(selectedDay.date).toLocaleDateString("en-US", {
