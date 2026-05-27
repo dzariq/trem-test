@@ -4,7 +4,7 @@ import { AppHeader } from "@/components/layout/AppHeader";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { ChevronLeft, ChevronRight, Check, X, Clock, CalendarOff, Bug, Inbox } from "lucide-react";
+import { ChevronLeft, ChevronRight, Check, X, Clock, CalendarOff, Bug, Inbox, List, FileText, type LucideIcon } from "lucide-react";
 import schoolLogo from "@/assets/school-badge.png";
 import {
   BarChart,
@@ -431,20 +431,20 @@ export default function AttendancePage() {
     return today.toDateString() === date.toDateString();
   };
 
-  const filterOptions: { value: StatusFilter; label: string; count: number }[] = isAggregated
+  const filterOptions: { value: StatusFilter; label: string; count: number; Icon: LucideIcon }[] = isAggregated
     ? [
-        { value: "all", label: "All", count: monthRecordsAll.length },
-        { value: "present", label: "Present", count: aggregatedCounts.present },
-        { value: "absent", label: "Absent", count: aggregatedCounts.absent },
-        { value: "late", label: "Late", count: aggregatedCounts.late },
-        { value: "excused", label: "Excused", count: aggregatedCounts.excused },
+        { value: "all", label: "All", count: monthRecordsAll.length, Icon: List },
+        { value: "present", label: "Present", count: aggregatedCounts.present, Icon: Check },
+        { value: "absent", label: "Absent", count: aggregatedCounts.absent, Icon: X },
+        { value: "late", label: "Late", count: aggregatedCounts.late, Icon: Clock },
+        { value: "excused", label: "Excused", count: aggregatedCounts.excused, Icon: FileText },
       ]
     : [
-        { value: "all", label: "All", count: dailyBreakdown.length },
-        { value: "present", label: "Present", count: monthlySummary.present },
-        { value: "absent", label: "Absent", count: monthlySummary.absent },
-        { value: "late", label: "Late", count: monthlySummary.late },
-        { value: "excused", label: "Excused", count: monthlySummary.excused },
+        { value: "all", label: "All", count: dailyBreakdown.length, Icon: List },
+        { value: "present", label: "Present", count: monthlySummary.present, Icon: Check },
+        { value: "absent", label: "Absent", count: monthlySummary.absent, Icon: X },
+        { value: "late", label: "Late", count: monthlySummary.late, Icon: Clock },
+        { value: "excused", label: "Excused", count: monthlySummary.excused, Icon: FileText },
       ];
 
   const isLoading = studentsLoading || attendanceLoading || (zoomLevel !== 12 && rollingLoading);
@@ -700,31 +700,36 @@ export default function AttendancePage() {
             <CardTitle className="text-lg font-semibold">Daily Breakdown</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            {/* Filter Chips */}
-            <div className="flex flex-wrap gap-1 pb-1">
-              {filterOptions.map((option) => (
-                <button
-                  key={option.value}
-                  type="button"
-                  onClick={() => setStatusFilter(option.value)}
-                  className={`inline-flex items-center gap-1 h-7 px-compact rounded-full border text-xs font-medium transition-colors ${
-                    statusFilter === option.value
-                      ? "bg-primary/10 border-primary/30 text-primary"
-                      : "bg-white border-border text-foreground/80 hover:bg-muted/50"
-                  }`}
-                >
-                  <span>{option.label}</span>
-                  <span
-                    className={`ml-0.5 inline-flex items-center justify-center h-5 px-1.5 rounded-full text-[11px] leading-none ${
-                      statusFilter === option.value
-                        ? "bg-primary/15 text-primary"
-                        : "bg-muted text-muted-foreground"
+            {/* Filter Chips — icon + count, single row */}
+            <div className="flex flex-nowrap items-center gap-1.5 pb-1 overflow-x-auto">
+              {filterOptions.map(({ value, label, count, Icon }) => {
+                const active = statusFilter === value;
+                return (
+                  <button
+                    key={value}
+                    type="button"
+                    onClick={() => setStatusFilter(value)}
+                    aria-label={`${label} (${count})`}
+                    title={`${label} · ${count}`}
+                    className={`shrink-0 inline-flex items-center gap-1 h-8 pl-2 pr-1.5 rounded-full border text-xs font-medium transition-colors ${
+                      active
+                        ? "bg-primary/10 border-primary/30 text-primary"
+                        : "bg-white border-border text-foreground/80 hover:bg-muted/50"
                     }`}
                   >
-                    {option.count}
-                  </span>
-                </button>
-              ))}
+                    <Icon className="h-3.5 w-3.5" strokeWidth={2.2} />
+                    <span
+                      className={`inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 rounded-full text-[11px] leading-none ${
+                        active
+                          ? "bg-primary/15 text-primary"
+                          : "bg-muted text-muted-foreground"
+                      }`}
+                    >
+                      {count}
+                    </span>
+                  </button>
+                );
+              })}
             </div>
 
             {/* Loading / Empty State */}
