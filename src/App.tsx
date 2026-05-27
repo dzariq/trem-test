@@ -10,6 +10,7 @@ import { StudentSelectionProvider } from "@/contexts/StudentSelectionContext";
 import { useAndroidBackButton } from "@/hooks/useAndroidBackButton";
 import { RouteErrorBoundary } from "@/components/common/RouteErrorBoundary";
 import { LottieLoader } from "@/components/common/LottieLoader";
+import { subscribeAppResume } from "@/lib/appResumeBus";
 
 // Login - kept eager since it's the landing page
 import Login from "./pages/Login";
@@ -77,6 +78,15 @@ const queryClient = new QueryClient({
     },
   },
 });
+
+// On app resume from background (>30s), invalidate all React Query caches so
+// any mounted page silently refetches its data. Manual (non-React-Query)
+// hooks subscribe to the bus separately.
+if (typeof window !== "undefined") {
+  subscribeAppResume(() => {
+    queryClient.invalidateQueries();
+  });
+}
 
 function NativeBindings() {
   useAndroidBackButton();
