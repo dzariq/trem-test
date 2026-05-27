@@ -62,6 +62,8 @@ import {
   formatSavedAt,
 } from "./academic/helpers";
 
+import { OverviewTab } from "./academic/tabs/OverviewTab";
+
 // Use centralized subjects list
 const subjects = allSubjects;
 const groupedSubjectNames = subjectGroups.flatMap(g => g.variants?.map(v => v.name) || []);
