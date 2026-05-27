@@ -214,6 +214,7 @@ export default function CalendarPage() {
   const { sessions: upcomingCcaSessions } = useUpcomingCcaSessions({
     role: "parent",
     limit: 20,
+    studentIds: isAllChildrenScope ? scopeStudentIds : undefined,
   });
 
   const visibleEvents = filterEventsByRole(events, roleForFilters);

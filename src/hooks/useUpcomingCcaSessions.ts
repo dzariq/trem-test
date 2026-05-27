@@ -22,6 +22,13 @@ export interface UpcomingCcaSession {
 interface UseUpcomingCcaSessionsOptions {
   limit?: number;
   role?: "teacher" | "parent";
+  /**
+   * Optional explicit set of student IDs to scope the parent query to.
+   * When provided (and non-empty), overrides the globally `selectedStudentId`
+   * from context so callers can render an aggregated "All Children" view.
+   * Ignored for the teacher role.
+   */
+  studentIds?: string[];
 }
 
 /**
@@ -39,6 +46,9 @@ export function useUpcomingCcaSessions(options: UseUpcomingCcaSessionsOptions = 
 
   const limit = options.limit ?? 10;
   const role = options.role ?? (profile?.role === "teacher" ? "teacher" : "parent");
+  // Stable key so the callback doesn't re-fire on every render when a fresh
+  // array reference is passed in.
+  const studentIdsKey = (options.studentIds ?? []).slice().sort().join(",");
 
   const fetchSessions = useCallback(async () => {
     if (!user?.id) return;
@@ -108,39 +118,54 @@ export function useUpcomingCcaSessions(options: UseUpcomingCcaSessionsOptions = 
         // For parents: scope by actual linkage.
         // - club/outdoor: student must be enrolled (student_cca_enrollments, status='active')
         // - event: student's class must be in cca_activities.classes_involved[]
-        if (!selectedStudentId) {
+        // Use explicit studentIds when provided (All Children scope); fall back
+        // to the globally selected single student for legacy callers.
+        const explicitIds = (options.studentIds ?? []).filter(Boolean);
+        const targetIds =
+          explicitIds.length > 0
+            ? explicitIds
+            : selectedStudentId
+              ? [selectedStudentId]
+              : [];
+        if (targetIds.length === 0) {
           setSessions([]);
           return;
         }
 
-        // Get student's class
-        const { data: studentData, error: studentError } = await supabase
+        // Get each student's class so we can resolve event eligibility.
+        const { data: studentRows, error: studentError } = await supabase
           .from("students")
-          .select("class")
-          .eq("id", selectedStudentId)
-          .maybeSingle();
-
+          .select("id, class")
+          .in("id", targetIds);
         if (studentError) throw studentError;
-        const studentClass = studentData?.class || null;
+        const classes = Array.from(
+          new Set(
+            (studentRows || [])
+              .map((r: any) => r.class)
+              .filter((c: string | null): c is string => !!c)
+          )
+        );
 
-        // 1. Enrolled activity IDs (clubs + outdoor) — direct tagging
+        // 1. Enrolled activity IDs (clubs + outdoor) across all target students
         const { data: enrollRows, error: enrollErr } = await supabase
           .from("student_cca_enrollments")
           .select("cca_activity_id")
-          .eq("student_id", selectedStudentId)
+          .in("student_id", targetIds)
           .eq("status", "active");
         if (enrollErr) throw enrollErr;
-        const enrolledIds = (enrollRows || []).map((r: any) => r.cca_activity_id).filter(Boolean);
+        const enrolledIds = (enrollRows || [])
+          .map((r: any) => r.cca_activity_id)
+          .filter(Boolean);
 
-        // 2. Event activities matching student's class
+        // 2. Event activities matching any student's class
         let eventIds: string[] = [];
-        if (studentClass) {
+        if (classes.length > 0) {
           const { data: eventRows, error: eventErr } = await supabase
             .from("cca_activities")
             .select("id")
             .eq("kind", "event")
             .eq("is_active", true)
-            .contains("classes_involved", [studentClass]);
+            .overlaps("classes_involved", classes);
           if (eventErr) throw eventErr;
           eventIds = (eventRows || []).map((r: any) => r.id);
         }
@@ -199,7 +224,7 @@ export function useUpcomingCcaSessions(options: UseUpcomingCcaSessionsOptions = 
     } finally {
       setLoading(false);
     }
-  }, [user?.id, role, selectedStudentId, limit]);
+  }, [user?.id, role, selectedStudentId, limit, studentIdsKey]);
 
   useEffect(() => {
     fetchSessions();
