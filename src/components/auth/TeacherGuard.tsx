@@ -6,8 +6,8 @@ import { useUserRoles } from "@/hooks/useUserRoles";
 import { Loader2 } from "lucide-react";
 
 export default function TeacherGuard() {
-  const { loading, user, profile } = useAuth();
-  const { hasTeacherRole, isLoading: rolesLoading, isFetched: rolesFetched } = useUserRoles();
+  const { loading, user, profile, portal } = useAuth();
+  const { hasTeacherRole, hasParentRole, hasStudentRole, isLoading: rolesLoading, isFetched: rolesFetched } = useUserRoles();
   const navigate = useNavigate();
   const location = useLocation();
   const didRedirect = useRef(false);
@@ -23,7 +23,14 @@ export default function TeacherGuard() {
       navigate("/login?portal=teacher", { replace: true, state: { from: location.pathname } });
       return;
     }
-    
+
+    // Dual-role users: if the active portal preference is "family",
+    // bounce to the parent portal so the UI matches the user's choice.
+    if (portal === "family" && (hasParentRole || hasStudentRole)) {
+      navigate("/portal", { replace: true });
+      return;
+    }
+
     // Profile loaded but wrong role — redirect with error.
     // Treat admin-like roles (admin, super_admin) as teacher for portal access.
     const teacherLike = new Set(["teacher", "admin", "super_admin"]);
@@ -37,7 +44,7 @@ export default function TeacherGuard() {
       console.log("[auth-debug] TeacherGuard -> redirect /");
       navigate("/", { replace: true, state: { from: location.pathname } });
     }
-  }, [loading, profileStillLoading, rolesLoading, rolesFetched, hasTeacherRole, user, profile, navigate, location.pathname]);
+  }, [loading, profileStillLoading, rolesLoading, rolesFetched, hasTeacherRole, hasParentRole, hasStudentRole, user, profile, portal, navigate, location.pathname]);
 
   // Show loading spinner while checking auth or profile
   if (loading || profileStillLoading || rolesLoading || !rolesFetched) {

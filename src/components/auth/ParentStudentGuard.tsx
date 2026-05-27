@@ -7,7 +7,7 @@ import { Loader2 } from "lucide-react";
 const allowedRoles = new Set(["parent", "student", "user"]);
 
 export default function ParentStudentGuard() {
-  const { loading, user, profile } = useAuth();
+  const { loading, user, profile, portal } = useAuth();
   const { hasParentRole, hasStudentRole, isLoading: rolesLoading, isFetched: rolesFetched } = useUserRoles();
   const navigate = useNavigate();
   const location = useLocation();
@@ -31,7 +31,14 @@ export default function ParentStudentGuard() {
     // Profile can briefly be null while Supabase restores/refreshes the session.
     // Do not blank or redirect the parent portal until the role is actually known.
     if (!profile) return;
-    
+
+    // Dual-role users: if the active portal preference is "teacher",
+    // bounce to the teacher portal so the UI matches the user's choice.
+    if (portal === "teacher") {
+      navigate("/teacher", { replace: true });
+      return;
+    }
+
     // Allow access if the user has the parent role in user_roles
     // OR a legacy parent/student/user role on user_profiles.
     const allowed = hasParentRole || hasStudentRole || allowedRoles.has(profile.role);
@@ -43,7 +50,7 @@ export default function ParentStudentGuard() {
       console.log("[auth-debug] ParentStudentGuard -> redirect /");
       navigate("/", { replace: true, state: { from: location.pathname } });
     }
-  }, [loading, rolesLoading, rolesFetched, hasParentRole, hasStudentRole, user, profile, navigate, location.pathname]);
+  }, [loading, rolesLoading, rolesFetched, hasParentRole, hasStudentRole, user, profile, portal, navigate, location.pathname]);
 
   // Show loading spinner while checking auth
   if (loading || rolesLoading || !rolesFetched || !user || !profile) return loadingScreen;
