@@ -68,6 +68,7 @@ import { HandbookReportDialog } from "@/components/HandbookReportDialog";
 import { studentHandbookData } from "@/data/studentHandbookData";
 import { cn } from "@/lib/utils";
 import { useMyProfile } from "@/hooks/useMyProfile";
+import { EditContactDialog } from "@/components/profile/EditContactDialog";
 import { useUserRoles } from "@/hooks/useUserRoles";
 import { type LinkedStudent } from "@/data/students";
 import { updateMyProfile } from "@/data/profile";
@@ -340,6 +341,12 @@ export default function ProfilePage() {
       toast.error("Failed to update profile.");
     }
   };
+
+  const handleEmailChangedRequiresRelogin = useCallback(async () => {
+    await signOut();
+    queryClient.clear();
+    navigate("/", { replace: true });
+  }, [signOut, queryClient, navigate]);
 
   const handleOpenEdit = () => {
     setEditForm(formProfile);
@@ -697,93 +704,20 @@ export default function ProfilePage() {
       </section>
 
       {/* Edit Profile Dialog */}
-      <Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>Edit Contact Information</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4 py-4">
-            <div className="space-y-2">
-              <Label htmlFor="name">Full Name</Label>
-              <Input
-                id="name"
-                value={editForm.name}
-                onChange={(e) => setEditForm({ ...editForm, name: e.target.value })}
-                placeholder="Enter your full name"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
-              <Input
-                id="email"
-                type="email"
-                value={profile?.email ?? editForm.email}
-                disabled
-                readOnly
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="phone">Phone Number</Label>
-              <Input
-                id="phone"
-                type="tel"
-                inputMode="numeric"
-                value={editForm.phone}
-                onChange={(e) => {
-                  const sanitized = e.target.value.replace(/[^0-9+ ]/g, "");
-                  setEditForm({ ...editForm, phone: sanitized });
-                }}
-                placeholder="Enter your phone number"
-              />
-            </div>
-            {isParent && (
-              <>
-                <div className="space-y-2">
-                  <Label htmlFor="relationship">Relationship to Student</Label>
-                  <Select
-                    value={editForm.parentRelationship || undefined}
-                    onValueChange={(v) =>
-                      setEditForm({ ...editForm, parentRelationship: v })
-                    }
-                  >
-                    <SelectTrigger id="relationship">
-                      <SelectValue placeholder="Select relationship" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="Father">Father</SelectItem>
-                      <SelectItem value="Mother">Mother</SelectItem>
-                      <SelectItem value="Legal Guardian">Legal Guardian</SelectItem>
-                      <SelectItem value="Other">Other</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                {editForm.parentRelationship === "Other" && (
-                  <div className="space-y-2">
-                    <Label htmlFor="relationship-other">Please specify</Label>
-                    <Input
-                      id="relationship-other"
-                      value={editForm.parentRelationshipOther}
-                      onChange={(e) =>
-                        setEditForm({
-                          ...editForm,
-                          parentRelationshipOther: e.target.value,
-                        })
-                      }
-                      placeholder="e.g. Grandparent, Aunt, Uncle"
-                    />
-                  </div>
-                )}
-              </>
-            )}
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIsEditOpen(false)}>
-              Cancel
-            </Button>
-            <Button onClick={handleSave}>Save Changes</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <EditContactDialog
+        open={isEditOpen}
+        onOpenChange={setIsEditOpen}
+        currentName={profile?.full_name ?? ""}
+        currentEmail={profile?.email ?? ""}
+        currentPhone={profile?.phone ?? null}
+        currentRelationship={profile?.parent_relationship ?? null}
+        currentRelationshipOther={profile?.parent_relationship_other ?? null}
+        isParent={isParent}
+        onSaved={() => {
+          refetch();
+        }}
+        onEmailChangedRequiresRelogin={() => handleEmailChangedRequiresRelogin()}
+      />
 
       {/* Handbook & Timetable Report Dialogs */}
       <HandbookReportDialog

@@ -3233,6 +3233,8 @@ export type Database = {
       }
       event_rsvp_links: {
         Row: {
+          background_image_url: string | null
+          banner_image_url: string | null
           close_at: string | null
           created_at: string
           created_by: string | null
@@ -3241,10 +3243,13 @@ export type Database = {
           is_active: boolean
           mode: string
           short_code: string
+          template: string
           token: string
           updated_at: string
         }
         Insert: {
+          background_image_url?: string | null
+          banner_image_url?: string | null
           close_at?: string | null
           created_at?: string
           created_by?: string | null
@@ -3253,10 +3258,13 @@ export type Database = {
           is_active?: boolean
           mode: string
           short_code?: string
+          template?: string
           token?: string
           updated_at?: string
         }
         Update: {
+          background_image_url?: string | null
+          banner_image_url?: string | null
           close_at?: string | null
           created_at?: string
           created_by?: string | null
@@ -3265,6 +3273,7 @@ export type Database = {
           is_active?: boolean
           mode?: string
           short_code?: string
+          template?: string
           token?: string
           updated_at?: string
         }
