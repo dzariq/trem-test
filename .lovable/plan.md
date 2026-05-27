@@ -1,46 +1,71 @@
-## Parent Attendance — Multi-Child Aggregation
+## Goal
 
-Mirror the calendar-page pattern on `AttendancePage.tsx` so parents see an aggregated view of all their children by default, with a dropdown to drill into one child.
+Make Announcements, Calendar, and My CCAs default to "All Children (N)" view for multi-child parents, with bracket count, de-duped aggregation, latest-first sort, and per-child tagging on CCA cards.
 
-### Changes
+## Scope (parent portal only)
 
-**1. Header / scope selector**
-- Rename card title `Yearly Overview` → `Attendance Overview`.
-- Change default chart zoom from `12` (Yearly) to `3` (3 Months).
-- For parents with >1 child: hide the shared `showChildSelector` bar and render a local `Select` directly under the header with options `All Children` + each child. Default = `all`. Parents with only 1 child keep the existing header selector.
+- `src/pages/AnnouncementsPage.tsx`
+- `src/pages/CalendarPage.tsx` (label only)
+- `src/pages/ParentCcaPage.tsx`
+- `src/hooks/useStudentCcaEnrollments.ts` (extend to accept multiple student IDs)
+- `src/components/home/ChildSelectorDropdown.tsx` (extend with optional "All Children (N)" mode)
 
-**2. Data hooks (`src/hooks/useParentAttendance.ts`)**
-Extend both `useParentAttendance` and `useRollingAttendance` to accept `string | string[] | null`:
-- When an array is passed, query with `.in("student_id", ids)` instead of `.eq`.
-- Aggregation logic for monthly/rolling chart buckets is already a sum per day — keep summing across all returned rows (no change beyond the query filter). The chart automatically reflects combined totals.
-- Keep `student_id` and `student_name` in the returned records so the UI can branch on single vs. multi.
+No DB / RLS / schema changes. No teacher-portal changes. Home page widgets untouched.
 
-**3. Monthly Summary tiles**
-- Continue using `getMonthlySummary()` totals; in multi-child mode they become the combined count for that month. No structural change.
+## Changes
 
-**4. Daily Breakdown — smart rendering**
-Branch on the active scope:
+### 1. ChildSelectorDropdown — add multi-child "All" mode
 
-- **Single child (current behaviour):** one tile per day with status icon + label, exactly as today.
-- **All children:** group records by date, then by child. Each day tile becomes a card containing:
-  - Date header (e.g. `Mon 12`, with optional "Today" pill).
-  - A compact row per child showing the child's first name + a small coloured status pill (Present / Absent / Late / Excused), tapping the row opens the existing day detail sheet pre-filled for that child.
-  - If a child has no record for that date (school day with no entry yet), show a muted `—` instead of a pill.
+Add optional controlled props so pages can drive their own local scope without touching the global `StudentSelectionContext`:
 
-Filter chips (All / Present / Absent / Late / Excused) keep working — counts become the union across all children, and the chip filter hides child rows that don't match the selected status (whole-day card hidden if no child rows remain).
+- `scopeValue?: string` ("all" | studentId)
+- `onScopeChange?: (v: string) => void`
+- `showAllOption?: boolean` (default false → keeps current single-child behaviour)
+- `showCount?: boolean` (default true when `showAllOption` is on)
 
-**5. Day detail bottom sheet**
-- When opened from the multi-child view, show the child's name at the top of the sheet and use that child's record (status, remarks, reason).
-- Single-child view behaves exactly as today.
+When `showAllOption` is on and the parent has >1 child:
+- Default trigger label: `All Children (N)` where N = `linkedStudents.length`.
+- Specific child label keeps existing single-name format.
+- Dropdown items: `All Children (N)` first, then each child.
+- Single-child parents still get the existing read-only name pill (no dropdown).
 
-**6. Empty-state copy**
-- Multi-child mode: replace "Your child…" wording with "Your children…" / generic copy when no records exist for any of them.
+Existing call sites (compact header variant) keep working unchanged because the new props are opt-in.
 
-### Out of scope
-- No DB / RLS / schema changes — parents already have RLS read access for every linked student.
-- No changes to teacher attendance pages or to the home `AttendanceSummary` widget (already aggregated separately).
-- No new chart breakdown per-child (chart stays as a combined stacked bar — per-child slicing happens only in Daily Breakdown).
+### 2. Calendar page — bracket count on "All Children"
 
-### Files touched
-- `src/pages/AttendancePage.tsx` — title, default zoom, local scope selector, daily breakdown branching, sheet child label.
-- `src/hooks/useParentAttendance.ts` — accept array input for both hooks, switch query to `.in()` when array supplied.
+The local `Select` already exists. Update the trigger to show `All Children (N)` instead of plain `All Children`, and prefix the item label the same way. No logic change — multi-child aggregation + de-dup already implemented in earlier work via `scopeStudentIds` / `scopeCampusCode`.
+
+### 3. Announcements page — all-children default
+
+- Add local `scope` state (`"all"` | studentId), default `"all"`. Hide the global `showChildSelector` and render `ChildSelectorDropdown` in `variant="bar"` with `showAllOption`, the same gold-gradient bar used on CCA / Calendar / Attendance.
+- Resolve a `scopeCampusCode` the same way Calendar does:
+  - All scope: if every linked child shares one campus → use it; otherwise pass `null` (so multi-campus parents see both).
+  - Specific child: that child's `campus_code`.
+- Call `listAnnouncements({ limit, studentId: scope === "all" ? null : scope, campusCode: scopeCampusCode })`. `listAnnouncements` already orders by `created_at DESC` so "latest first" is preserved; keep the existing `sortOrder` chip default of `newest`.
+- Since announcements are not per-student (school + campus scoped), de-duplication is naturally handled by the single DB query — no client-side dedupe needed.
+- Single-child parents: behaviour unchanged (no "All" option shown).
+
+### 4. My CCAs page — all-children default + per-child tag
+
+Hook (`useStudentCcaEnrollments`):
+- Accept `studentId: string | string[] | null`. Normalise to an ID array; when empty, return `[]`.
+- Replace `.eq("student_id", studentId)` with `.in("student_id", ids)` and select `student_id` as well so we can map back to a child.
+- Fetch linked-student names once (lightweight: caller passes a `studentNameById` map, or the hook fetches names via `students` table keyed on the IDs) so each enrollment row can carry `enrolledStudents: { id; name }[]`.
+- De-dup by `activityId`: if two children are in the same activity, merge into one entry whose `enrolledStudents` array contains both names.
+- Keep existing sort: soonest `nextSessionDate` first (latest upcoming), then by name — which matches the user's "sort by latest upcoming CCA" requirement.
+
+Page (`ParentCcaPage`):
+- Add local `scope` state (`"all"` | studentId), default `"all"` for multi-child, otherwise the single child.
+- Use `ChildSelectorDropdown` with `showAllOption` + `showCount` in the existing gold-gradient bar.
+- Pass `studentId={scope === "all" ? linkedStudents.map(s => s.id) : scope}` to the hook.
+- On each card, when scope is `all` AND the activity has `enrolledStudents`, render a small child-name chip row under the title:
+  - 1 child: a single muted pill `<UsersIcon/> {firstName}`.
+  - 2+ children: comma-separated first names, truncating to 2 with `+N` overflow if needed.
+- When scope is a specific child, hide the child chip (it's implicit).
+- Empty state copy: `"None of your children are enrolled in any CCAs yet."` in all-mode; existing per-child copy otherwise.
+
+## Out of scope
+
+- No changes to `useStudentSelection` global context, home page, attendance page, or teacher screens.
+- No changes to CCA details / sessions / enrollment mutation flows.
+- Announcement read-state remains per-user (already correct for all-children mode).

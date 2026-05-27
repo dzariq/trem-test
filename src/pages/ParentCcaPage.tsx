@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { ChevronLeft, Users as UsersIcon, MapPin, Clock } from "lucide-react";
 import { AppLayout } from "@/components/layout/AppLayout";
@@ -27,9 +28,27 @@ function isUpcomingDate(dateStr: string | null | undefined): boolean {
 
 export default function ParentCcaPage() {
   const navigate = useNavigate();
-  const { selectedStudentId, selectedStudent } = useStudentSelection();
+  const { linkedStudents, selectedStudentId, selectedStudent } = useStudentSelection();
+  const isMultiChild = linkedStudents.length > 1;
+  const [scope, setScope] = useState<string>(isMultiChild ? "all" : selectedStudentId || "");
+
+  useEffect(() => {
+    if (isMultiChild) {
+      setScope((prev) =>
+        prev === "all" || linkedStudents.some((s) => s.id === prev) ? prev : "all"
+      );
+    } else {
+      setScope(selectedStudentId || "");
+    }
+  }, [isMultiChild, linkedStudents, selectedStudentId]);
+
+  const isAllScope = isMultiChild && scope === "all";
+  const hookStudentId: string | string[] | null = isAllScope
+    ? linkedStudents.map((s) => s.id)
+    : scope || null;
+
   const { enrollments, loading } = useStudentCcaEnrollments({
-    studentId: selectedStudentId || null,
+    studentId: hookStudentId,
   });
 
   return (
@@ -55,7 +74,12 @@ export default function ParentCcaPage() {
               "linear-gradient(to right, hsl(45 85% 58% / 0.22), hsl(45 85% 58% / 0.08), hsl(var(--background)))",
           }}
         >
-          <ChildSelectorDropdown variant="bar" />
+          <ChildSelectorDropdown
+            variant="bar"
+            scopeValue={isMultiChild ? scope : selectedStudentId}
+            onScopeChange={setScope}
+            showAllOption={isMultiChild}
+          />
         </div>
       </header>
 
@@ -71,7 +95,9 @@ export default function ParentCcaPage() {
           <Card className="rounded-xl">
             <CardContent className="p-6 text-center text-sm text-muted-foreground">
               <UsersIcon className="h-10 w-10 mx-auto mb-2 opacity-30" />
-              {selectedStudent?.name || "This student"} isn't enrolled in any CCAs yet.
+              {isAllScope
+                ? "None of your children are enrolled in any CCAs yet."
+                : `${selectedStudent?.name || "This student"} isn't enrolled in any CCAs yet.`}
             </CardContent>
           </Card>
         )}
@@ -84,6 +110,14 @@ export default function ParentCcaPage() {
               const bucketLabel = CCA_BUCKET_LABEL[bucket];
               const pill = getCcaTypePillColor(e.kind ?? e.category);
               const upcoming = isUpcomingDate(e.nextSessionDate);
+              const childNames = (e.enrolledStudents || [])
+                .map((s) => s.name?.split(" ")[0] || "")
+                .filter(Boolean);
+              const showChildTag = isAllScope && childNames.length > 0;
+              const childLabel =
+                childNames.length <= 2
+                  ? childNames.join(", ")
+                  : `${childNames.slice(0, 2).join(", ")} +${childNames.length - 2}`;
               return (
                 <li key={e.enrollmentId}>
                   <Link
@@ -115,6 +149,15 @@ export default function ParentCcaPage() {
                           {bucketLabel}
                         </Badge>
                       </div>
+                      {showChildTag && (
+                        <Badge
+                          variant="outline"
+                          className="gap-1 text-[10px] border-border bg-secondary/40 text-foreground w-fit"
+                        >
+                          <UsersIcon className="h-3 w-3" />
+                          {childLabel}
+                        </Badge>
+                      )}
                       <div className="flex flex-wrap gap-x-3 gap-y-1 text-xs text-muted-foreground">
                         {(e.meetingDay || e.meetingTime) && (
                           <span className="flex items-center gap-1">
