@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
 import { useStudentSelection } from "@/hooks/useStudentSelection";
 import { cn } from "@/lib/utils";
 import { ChevronRight } from "lucide-react";
@@ -11,6 +10,7 @@ import {
   DrawerTrigger,
 } from "@/components/ui/drawer";
 import { resolveStudentAvatars } from "@/lib/studentAvatars";
+import { StudentDetailsDrawer } from "@/components/student/StudentDetailsDrawer";
 
 interface StudentPillSelectorProps {
   onStudentChange?: (studentId: string) => void;
@@ -26,7 +26,7 @@ const avatarColors = [
 
 export function StudentPillSelector({ onStudentChange }: StudentPillSelectorProps) {
   const [open, setOpen] = useState(false);
-  const navigate = useNavigate();
+  const [detailsStudentId, setDetailsStudentId] = useState<string | null>(null);
   const {
     linkedStudents: students,
     loading,
@@ -71,7 +71,9 @@ export function StudentPillSelector({ onStudentChange }: StudentPillSelectorProp
     setSelectedStudentId(studentId);
     onStudentChange?.(studentId);
     setOpen(false);
-    navigate(`/parent/profile?studentId=${encodeURIComponent(studentId)}`);
+    // Open the details drawer inline so the user doesn't see the
+    // profile page flash underneath ("double-load" UX).
+    setDetailsStudentId(studentId);
   };
 
   const getInitials = (name: string) =>
@@ -88,6 +90,7 @@ export function StudentPillSelector({ onStudentChange }: StudentPillSelectorProp
   const overflowCount = Math.max(0, students.length - maxVisible);
 
   return (
+    <>
     <Drawer open={open} onOpenChange={setOpen}>
       <DrawerTrigger asChild>
         <button className="flex items-center -space-x-2 hover:opacity-90 transition-opacity">
@@ -201,5 +204,10 @@ export function StudentPillSelector({ onStudentChange }: StudentPillSelectorProp
         </div>
       </DrawerContent>
     </Drawer>
+    <StudentDetailsDrawer
+      studentId={detailsStudentId}
+      onOpenChange={(o) => { if (!o) setDetailsStudentId(null); }}
+    />
+    </>
   );
 }
