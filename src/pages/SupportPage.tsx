@@ -305,9 +305,7 @@ export default function SupportPage() {
     : "Loading parent details...";
 
   const summaryStudent = selectedStudent
-    ? [selectedStudent.name, selectedStudent.className ?? selectedStudent.grade, selectedStudent.campus]
-        .filter(Boolean)
-        .join(" - ")
+    ? selectedStudent.name
     : studentsLoading
     ? "Loading student..."
     : "No linked students";
@@ -326,7 +324,7 @@ export default function SupportPage() {
           <CardContent className="space-y-4">
             <div className="space-y-2">
               <Label>Summary</Label>
-              <div className="rounded-lg border border-border bg-muted/30 p-3 text-sm text-muted-foreground space-y-2">
+              <div className="rounded-lg border border-amber-200 bg-amber-50 dark:border-amber-900/40 dark:bg-amber-950/30 p-3 text-sm text-foreground/80 space-y-2">
                 <div>
                   <span className="font-medium text-foreground">Parent:</span>{" "}
                   {summaryParent}
