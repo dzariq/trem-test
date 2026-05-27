@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useMemo } from "react";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { AppHeader } from "@/components/layout/AppHeader";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -31,7 +31,7 @@ const months = ["January", "February", "March", "April", "May", "June", "July", 
 
 type StatusFilter = "all" | "present" | "absent" | "late" | "excused";
 type ZoomLevel = 3 | 6 | 12;
-type DayRecord = { date: string; status: string; reason: string | null; remarks: string | null };
+type DayRecord = { date: string; status: string; reason: string | null; remarks: string | null; studentName?: string };
 
 // DEV Debug Panel Component - only visible if import.meta.env.DEV && localStorage.dev_debug === '1'
 function DebugPanel({ 
@@ -77,7 +77,7 @@ export default function AttendancePage() {
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
   const currentYear = new Date().getFullYear();
   const [selectedYear, setSelectedYear] = useState(String(currentYear));
-  const [zoomLevel, setZoomLevel] = useState<ZoomLevel>(12); // Default to yearly view
+  const [zoomLevel, setZoomLevel] = useState<ZoomLevel>(3); // Default to 3-month view
   const chartContainerRef = useRef<HTMLDivElement>(null);
   const [isPinching, setIsPinching] = useState(false);
   const lastPinchDistance = useRef<number | null>(null);
@@ -92,6 +92,16 @@ export default function AttendancePage() {
     setSelectedStudentId,
   } = useStudentSelection();
 
+  // Local scope: "all" for aggregated view across all linked children, or a specific student id
+  const [scope, setScope] = useState<string>("all");
+  const isMultiChild = linkedStudents.length > 1;
+  const allStudentIds = useMemo(() => linkedStudents.map((s) => s.id), [linkedStudents]);
+  const effectiveScope: string | string[] | null = useMemo(() => {
+    if (!isMultiChild) return selectedStudentId;
+    return scope === "all" ? allStudentIds : scope;
+  }, [isMultiChild, scope, allStudentIds, selectedStudentId]);
+  const isAggregated = isMultiChild && scope === "all";
+
   // Use yearly attendance data (for 12-month view and monthly breakdown)
   const {
     records,
@@ -101,14 +111,14 @@ export default function AttendancePage() {
     getMonthlySummary,
     getDailyBreakdown,
     debugInfo,
-  } = useParentAttendance(selectedStudentId, selectedYear);
+  } = useParentAttendance(effectiveScope, selectedYear);
 
   // Use rolling window attendance (for 3/6 month views)
   const {
     chartData: rollingChartData,
     loading: rollingLoading,
     debugInfo: rollingDebugInfo,
-  } = useRollingAttendance(selectedStudentId, zoomLevel === 12 ? 12 : zoomLevel);
+  } = useRollingAttendance(effectiveScope, zoomLevel === 12 ? 12 : zoomLevel);
   
   // Swipe navigation state
   const [monthOffset, setMonthOffset] = useState(0); // 0 = most recent months
@@ -351,6 +361,69 @@ export default function AttendancePage() {
 
   const weeklyBreakdown = groupByWeek(filteredBreakdown);
 
+  // Multi-child daily breakdown: group records by date, list per-child status entries
+  type ChildEntry = { studentId: string; studentName: string; status: string; reason: string | null; remarks: string | null };
+  type MultiDay = { date: string; entries: ChildEntry[] };
+
+  const multiDailyBreakdown = useMemo<MultiDay[]>(() => {
+    if (!isAggregated) return [];
+    const nameMap: Record<string, string> = {};
+    linkedStudents.forEach((s) => { nameMap[s.id] = s.name; });
+    const monthRecords = records.filter((r) => new Date(r.date).getMonth() === currentMonthIndex);
+    const byDate: Record<string, ChildEntry[]> = {};
+    monthRecords.forEach((r) => {
+      const status = r.status.toLowerCase();
+      if (statusFilter !== "all" && status !== statusFilter) return;
+      const entry: ChildEntry = {
+        studentId: r.student_id,
+        studentName: nameMap[r.student_id] ?? r.student_name ?? "Student",
+        status,
+        reason: status !== "present" && r.remarks ? r.remarks : null,
+        remarks: r.remarks,
+      };
+      (byDate[r.date] ||= []).push(entry);
+    });
+    return Object.entries(byDate)
+      .sort(([a], [b]) => (a < b ? 1 : -1))
+      .map(([date, entries]) => ({
+        date,
+        entries: entries.sort((a, b) => a.studentName.localeCompare(b.studentName)),
+      }));
+  }, [isAggregated, records, currentMonthIndex, statusFilter, linkedStudents]);
+
+  const multiWeeklyBreakdown = useMemo(() => {
+    if (!isAggregated) return [] as { weekStart: string; days: MultiDay[] }[];
+    const sorted = [...multiDailyBreakdown].sort((a, b) => (a.date < b.date ? -1 : 1));
+    const weeks: { weekStart: string; days: MultiDay[] }[] = [];
+    let cur: MultiDay[] = [];
+    let curStart = "";
+    sorted.forEach((d, idx) => {
+      const date = new Date(d.date);
+      const dow = date.getDay();
+      if (dow === 1 || idx === 0) {
+        if (cur.length > 0) weeks.push({ weekStart: curStart, days: cur });
+        cur = [d];
+        curStart = date.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+      } else {
+        cur.push(d);
+      }
+    });
+    if (cur.length > 0) weeks.push({ weekStart: curStart, days: cur });
+    return weeks.reverse();
+  }, [isAggregated, multiDailyBreakdown]);
+
+  // Filter chip counts — in aggregated mode use full record totals for the month
+  const monthRecordsAll = useMemo(
+    () => records.filter((r) => new Date(r.date).getMonth() === currentMonthIndex),
+    [records, currentMonthIndex]
+  );
+  const aggregatedCounts = useMemo(() => ({
+    present: monthRecordsAll.filter((r) => r.status.toLowerCase() === "present").length,
+    absent: monthRecordsAll.filter((r) => r.status.toLowerCase() === "absent").length,
+    late: monthRecordsAll.filter((r) => r.status.toLowerCase() === "late").length,
+    excused: monthRecordsAll.filter((r) => r.status.toLowerCase() === "excused").length,
+  }), [monthRecordsAll]);
+
   // Check if date is today
   const isToday = (dateStr: string) => {
     const today = new Date();
@@ -358,21 +431,32 @@ export default function AttendancePage() {
     return today.toDateString() === date.toDateString();
   };
 
-  const filterOptions: { value: StatusFilter; label: string; count: number }[] = [
-    { value: "all", label: "All", count: dailyBreakdown.length },
-    { value: "present", label: "Present", count: monthlySummary.present },
-    { value: "absent", label: "Absent", count: monthlySummary.absent },
-    { value: "late", label: "Late", count: monthlySummary.late },
-    { value: "excused", label: "Excused", count: monthlySummary.excused },
-  ];
+  const filterOptions: { value: StatusFilter; label: string; count: number }[] = isAggregated
+    ? [
+        { value: "all", label: "All", count: monthRecordsAll.length },
+        { value: "present", label: "Present", count: aggregatedCounts.present },
+        { value: "absent", label: "Absent", count: aggregatedCounts.absent },
+        { value: "late", label: "Late", count: aggregatedCounts.late },
+        { value: "excused", label: "Excused", count: aggregatedCounts.excused },
+      ]
+    : [
+        { value: "all", label: "All", count: dailyBreakdown.length },
+        { value: "present", label: "Present", count: monthlySummary.present },
+        { value: "absent", label: "Absent", count: monthlySummary.absent },
+        { value: "late", label: "Late", count: monthlySummary.late },
+        { value: "excused", label: "Excused", count: monthlySummary.excused },
+      ];
 
   const isLoading = studentsLoading || attendanceLoading || (zoomLevel !== 12 && rollingLoading);
 
-  // Empty-state detection: no records returned for this student after loading completes
+  // Empty-state detection: no records returned for this scope after loading completes
   const hasAnyData = records.length > 0;
-  const selectedStudent = linkedStudents.find((s) => s.id === selectedStudentId);
-  const selectedStudentName = selectedStudent?.name?.split(" ")[0] ?? "your child";
-  const showEmptyState = !isLoading && !!selectedStudentId && !hasAnyData;
+  const scopeStudent = isMultiChild
+    ? (scope !== "all" ? linkedStudents.find((s) => s.id === scope) : null)
+    : linkedStudents.find((s) => s.id === selectedStudentId);
+  const scopeStudentName = scopeStudent?.name?.split(" ")[0] ?? "your child";
+  const hasAnyStudent = isMultiChild ? allStudentIds.length > 0 : !!selectedStudentId;
+  const showEmptyState = !isLoading && hasAnyStudent && !hasAnyData;
 
   const EmptyStateBlock = ({ compact = false }: { compact?: boolean }) => (
     <div className={`flex flex-col items-center justify-center text-center ${compact ? "py-6" : "py-10"} px-4`}>
@@ -381,9 +465,11 @@ export default function AttendancePage() {
       </div>
       <p className="text-sm font-semibold text-foreground">No attendance recorded yet</p>
       <p className="text-xs text-muted-foreground mt-1 max-w-xs">
-        {selectedStudent
-          ? `${selectedStudentName}'s teacher hasn't marked any attendance yet. Records will appear here once class attendance starts being taken.`
-          : "Records will appear here once class attendance starts being taken."}
+        {isAggregated
+          ? "Your children's teachers haven't marked any attendance yet. Records will appear here once class attendance starts being taken."
+          : scopeStudent
+            ? `${scopeStudentName}'s teacher hasn't marked any attendance yet. Records will appear here once class attendance starts being taken.`
+            : "Records will appear here once class attendance starts being taken."}
       </p>
     </div>
   );
@@ -398,7 +484,7 @@ export default function AttendancePage() {
       />
       
       <AppHeader
-        showChildSelector
+        showChildSelector={!isMultiChild}
         leftContent={
           <div className="flex items-center gap-2">
             <img src={schoolLogo} alt="School Logo" className="h-16 w-auto -my-3 drop-shadow-md" />
@@ -406,13 +492,30 @@ export default function AttendancePage() {
           </div>
         }
       />
-      
+
+      {/* Local scope selector for multi-child parents */}
+      {isMultiChild && (
+        <section className="px-4 pt-3">
+          <Select value={scope} onValueChange={setScope}>
+            <SelectTrigger className="w-full h-10 bg-card">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent className="bg-card z-[100]">
+              <SelectItem value="all">All Children ({linkedStudents.length})</SelectItem>
+              {linkedStudents.map((s) => (
+                <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </section>
+      )}
+
       {/* Attendance Chart */}
       <section className="px-4 pt-4">
         <Card className="bg-card border-border shadow-sm">
           <CardHeader className="pb-2">
             <div className="flex items-center justify-between">
-              <CardTitle className="text-lg font-semibold">Yearly Overview</CardTitle>
+              <CardTitle className="text-lg font-semibold">Attendance Overview</CardTitle>
               <Select value={selectedYear} onValueChange={setSelectedYear}>
                 <SelectTrigger className="w-24 h-8 text-sm">
                   <SelectValue />
@@ -625,7 +728,7 @@ export default function AttendancePage() {
               </div>
             )}
 
-            {!isLoading && weeklyBreakdown.length === 0 && (
+            {!isLoading && (isAggregated ? multiWeeklyBreakdown.length === 0 : weeklyBreakdown.length === 0) && (
               showEmptyState ? (
                 <EmptyStateBlock compact />
               ) : (
@@ -639,8 +742,8 @@ export default function AttendancePage() {
               )
             )}
 
-            {/* Weekly Groups */}
-            {weeklyBreakdown.map((week, weekIndex) => (
+            {/* Weekly Groups — single child mode */}
+            {!isAggregated && weeklyBreakdown.map((week, weekIndex) => (
               <div key={weekIndex} className="space-y-1">
                 {/* Week Separator */}
                 <div className="flex items-center gap-3 mt-3 mb-2">
@@ -686,6 +789,64 @@ export default function AttendancePage() {
                 </div>
               </div>
             ))}
+
+            {/* Weekly Groups — multi-child aggregated mode */}
+            {isAggregated && multiWeeklyBreakdown.map((week, weekIndex) => (
+              <div key={`m-${weekIndex}`} className="space-y-2">
+                <div className="flex items-center gap-3 mt-3 mb-2">
+                  <span className="text-xs font-semibold text-muted-foreground">
+                    Week of {week.weekStart}
+                  </span>
+                  <div className="h-px flex-1 bg-border/70" />
+                </div>
+
+                <div className="space-y-2">
+                  {week.days.map((day) => {
+                    const date = new Date(day.date);
+                    const today = isToday(day.date);
+                    return (
+                      <div
+                        key={day.date}
+                        className={`rounded-xl border p-3 bg-card ${today ? "ring-1 ring-primary/40" : ""}`}
+                      >
+                        <div className="flex items-center justify-between mb-2">
+                          <p className="font-semibold text-foreground text-sm">
+                            {date.toLocaleDateString("en-US", { weekday: "short", day: "numeric", month: "short" })}
+                          </p>
+                          {today && (
+                            <span className="text-[10px] font-semibold text-primary">Today</span>
+                          )}
+                        </div>
+                        <div className="grid grid-cols-1 gap-1.5">
+                          {day.entries.map((entry) => (
+                            <button
+                              key={`${day.date}-${entry.studentId}`}
+                              type="button"
+                              onClick={() => setSelectedDay({
+                                date: day.date,
+                                status: entry.status,
+                                reason: entry.reason,
+                                remarks: entry.remarks,
+                                studentName: entry.studentName,
+                              })}
+                              className={`flex items-center justify-between gap-2 px-3 h-9 rounded-lg border text-left transition-colors active:scale-[0.98] ${getStatusTileClasses(entry.status)}`}
+                            >
+                              <span className="text-sm font-medium text-foreground truncate">
+                                {entry.studentName.split(" ")[0]}
+                              </span>
+                              <span className={`inline-flex items-center gap-1 px-2 h-6 rounded-full text-[11px] font-semibold ${getStatusColor(entry.status)}`}>
+                                {getStatusIcon(entry.status)}
+                                {getStatusLabel(entry.status)}
+                              </span>
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            ))}
           </CardContent>
         </Card>
       </section>
@@ -700,6 +861,12 @@ export default function AttendancePage() {
       >
         {selectedDay && (
           <div className="px-5 py-5 space-y-4">
+            {/* Child name (when in multi-child view) */}
+            {selectedDay.studentName && (
+              <p className="text-sm font-semibold text-primary uppercase tracking-wide">
+                {selectedDay.studentName}
+              </p>
+            )}
             {/* Date - full width, larger */}
             <p className="text-xl font-bold text-foreground">
               {new Date(selectedDay.date).toLocaleDateString("en-US", {

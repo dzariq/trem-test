@@ -63,7 +63,15 @@ function getRollingMonthsRange(months: number): { start: string; end: string } {
   };
 }
 
-export function useParentAttendance(studentId: string | null, selectedYear: string) {
+type StudentIdInput = string | string[] | null;
+
+function normalizeIds(input: StudentIdInput): string[] {
+  if (!input) return [];
+  if (Array.isArray(input)) return input.filter(Boolean);
+  return [input];
+}
+
+export function useParentAttendance(studentId: StudentIdInput, selectedYear: string) {
   const [records, setRecords] = useState<AttendanceRecord[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -76,9 +84,12 @@ export function useParentAttendance(studentId: string | null, selectedYear: stri
     lastFetchTime: "",
   });
 
+  const ids = useMemo(() => normalizeIds(studentId), [studentId]);
+  const idsKey = ids.join(",");
+
   // Fetch attendance data with proper date range filtering
   const fetchAttendance = useCallback(async () => {
-    if (!studentId) {
+    if (ids.length === 0) {
       setRecords([]);
       setDebugInfo((prev) => ({
         ...prev,
@@ -95,19 +106,19 @@ export function useParentAttendance(studentId: string | null, selectedYear: stri
     try {
       const { start, end } = getYearDateRange(selectedYear);
 
-      console.log(`[attendance] Fetching for student=${studentId}, range=${start} to ${end}`);
+      console.log(`[attendance] Fetching for students=${idsKey}, range=${start} to ${end}`);
 
       const { data, error: fetchError } = await supabase
         .from("attendance")
         .select("id, student_id, student_name, class, date, status, remarks")
-        .eq("student_id", studentId)
+        .in("student_id", ids)
         .gte("date", start)
         .lt("date", end)
         .order("date", { ascending: false });
 
       // Update debug info
       setDebugInfo({
-        selectedStudentId: studentId,
+        selectedStudentId: idsKey,
         queryStart: start,
         queryEnd: end,
         rowsReturned: data?.length ?? 0,
@@ -128,7 +139,8 @@ export function useParentAttendance(studentId: string | null, selectedYear: stri
     } finally {
       setLoading(false);
     }
-  }, [studentId, selectedYear]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [idsKey, selectedYear]);
 
   useEffect(() => {
     fetchAttendance();
@@ -219,7 +231,7 @@ export function useParentAttendance(studentId: string | null, selectedYear: stri
 /**
  * Hook for rolling window attendance (3/6/12 months from TODAY)
  */
-export function useRollingAttendance(studentId: string | null, months: 3 | 6 | 12) {
+export function useRollingAttendance(studentId: StudentIdInput, months: 3 | 6 | 12) {
   const [records, setRecords] = useState<AttendanceRecord[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -232,8 +244,11 @@ export function useRollingAttendance(studentId: string | null, months: 3 | 6 | 1
     lastFetchTime: "",
   });
 
+  const ids = useMemo(() => normalizeIds(studentId), [studentId]);
+  const idsKey = ids.join(",");
+
   useEffect(() => {
-    if (!studentId) {
+    if (ids.length === 0) {
       setRecords([]);
       return;
     }
@@ -245,18 +260,18 @@ export function useRollingAttendance(studentId: string | null, months: 3 | 6 | 1
       try {
         const { start, end } = getRollingMonthsRange(months);
 
-        console.log(`[attendance-rolling] Fetching for student=${studentId}, months=${months}, range=${start} to ${end}`);
+        console.log(`[attendance-rolling] Fetching for students=${idsKey}, months=${months}, range=${start} to ${end}`);
 
         const { data, error: fetchError } = await supabase
           .from("attendance")
           .select("id, student_id, student_name, class, date, status, remarks")
-          .eq("student_id", studentId)
+          .in("student_id", ids)
           .gte("date", start)
           .lt("date", end)
           .order("date", { ascending: true });
 
         setDebugInfo({
-          selectedStudentId: studentId,
+          selectedStudentId: idsKey,
           queryStart: start,
           queryEnd: end,
           rowsReturned: data?.length ?? 0,
@@ -279,7 +294,8 @@ export function useRollingAttendance(studentId: string | null, months: 3 | 6 | 1
     };
 
     fetchRollingAttendance();
-  }, [studentId, months]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [idsKey, months]);
 
   // Group records by YYYY-MM for chart
   const chartData = useMemo<MonthlyChartData[]>(() => {
