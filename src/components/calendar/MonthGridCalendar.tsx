@@ -61,7 +61,7 @@ export function MonthGridCalendar({
   ccaSessions,
   onEventClick,
   onSessionClick,
-  maxChipsPerDay = 3,
+  maxChipsPerDay = 6,
   view = "month",
   onViewChange,
   onZoomToDay,
@@ -365,7 +365,7 @@ export function MonthGridCalendar({
                     className={cn(
                       "min-h-[12px] text-[8px] sm:text-[9px] leading-[10px] sm:leading-[11px] font-medium no-callout",
                       item.kind === "cca"
-                        ? "flex items-center gap-0.5 px-1 rounded-full border overflow-hidden"
+                        ? "flex items-center gap-0.5 px-1 rounded-[3px] border overflow-hidden"
                         : "px-1 rounded-[3px] border overflow-hidden",
                       item.kind === "cca" ? item.colorClass : undefined,
                     )}
