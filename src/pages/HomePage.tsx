@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { AppHeader } from "@/components/layout/AppHeader";
 import { AnnouncementCarousel } from "@/components/home/AnnouncementCarousel";
@@ -18,6 +18,7 @@ import { useNavigate } from "react-router-dom";
 import { useMyProfile } from "@/hooks/useMyProfile";
 import { useUpcomingCcaSessions } from "@/hooks/useUpcomingCcaSessions";
 import { useStudentSelection } from "@/hooks/useStudentSelection";
+import { useRefreshOnAppResume } from "@/hooks/useRefreshOnAppResume";
 
 export default function HomePage() {
   const navigate = useNavigate();
@@ -43,72 +44,58 @@ export default function HomePage() {
   const [eventsError, setEventsError] = useState<string | null>(null);
 
   // Fetch upcoming CCA sessions for parents
-  const { sessions: ccaSessions, loading: ccaLoading } = useUpcomingCcaSessions({
+  const { sessions: ccaSessions, loading: ccaLoading, refetch: refetchCcaSessions } = useUpcomingCcaSessions({
     role: "parent",
     limit: 10,
   });
 
-  useEffect(() => {
-    let isMounted = true;
-    const loadAnnouncements = async () => {
-      setAnnouncementsLoading(true);
-      setAnnouncementsError(null);
-      try {
-        const data = await listAnnouncements({ limit: 10, campusCode: parentCampusCode });
-        if (isMounted) {
-          setAnnouncements(data);
-        }
-      } catch (error) {
-        if (isMounted) {
-          const message = error instanceof Error ? error.message : "Failed to load announcements.";
-          setAnnouncementsError(message);
-        }
-      } finally {
-        if (isMounted) {
-          setAnnouncementsLoading(false);
-        }
-      }
-    };
-
-    loadAnnouncements();
-    return () => {
-      isMounted = false;
-    };
+  const loadAnnouncements = useCallback(async () => {
+    setAnnouncementsLoading(true);
+    setAnnouncementsError(null);
+    try {
+      const data = await listAnnouncements({ limit: 10, campusCode: parentCampusCode });
+      setAnnouncements(data);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Failed to load announcements.";
+      setAnnouncementsError(message);
+    } finally {
+      setAnnouncementsLoading(false);
+    }
   }, [parentCampusCode]);
 
   useEffect(() => {
-    let isMounted = true;
-    const loadEvents = async () => {
-      setEventsLoading(true);
-      setEventsError(null);
-      try {
-        const data = await listUpcomingEvents({
-          role: profile?.role,
-          limit: 10,
-          campusCode: parentCampusCode,
-        });
-        if (isMounted) {
-          setEvents(data);
-        }
-      } catch (error) {
-        if (isMounted) {
-          const message = error instanceof Error ? error.message : "Failed to load events.";
-          setEventsError(message);
-        }
-      } finally {
-        if (isMounted) {
-          setEventsLoading(false);
-        }
-      }
-    };
+    loadAnnouncements();
+  }, [loadAnnouncements]);
 
-    if (!profileLoading) {
-      loadEvents();
+  const loadEvents = useCallback(async () => {
+    setEventsLoading(true);
+    setEventsError(null);
+    try {
+      const data = await listUpcomingEvents({
+        role: profile?.role,
+        limit: 10,
+        campusCode: parentCampusCode,
+      });
+      setEvents(data);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Failed to load events.";
+      setEventsError(message);
+    } finally {
+      setEventsLoading(false);
     }
-    return () => {
-      isMounted = false;
-    };
-  }, [profileLoading, profile?.role, parentCampusCode]);
+  }, [profile?.role, parentCampusCode]);
+
+  useEffect(() => {
+    if (!profileLoading) loadEvents();
+  }, [profileLoading, loadEvents]);
+
+  // Auto-refresh home data when the installed app comes back to the foreground
+  // or the browser tab regains visibility.
+  useRefreshOnAppResume(() => {
+    loadAnnouncements();
+    if (!profileLoading) loadEvents();
+    refetchCcaSessions();
+  });
 
   const handleMarkAnnouncementRead = async (id: Announcement["id"]) => {
     try {
