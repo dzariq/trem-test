@@ -37,180 +37,36 @@ import { SubjectGroupPill } from "@/components/SubjectGroupPill";
 import { SubjectPerformanceChart } from "@/components/SubjectPerformanceChart";
 import { exportElementToPdf } from "@/lib/pdf/exportToPdf";
 import { saveAndShareBlob } from "@/lib/export/nativeDownload";
-
-// SVG icons for print compatibility (inline SVGs render properly in print)
-const IconBook = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
-    <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
-  </svg>
-);
-
-const IconTrophy = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6" />
-    <path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18" />
-    <path d="M4 22h16" />
-    <path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22" />
-    <path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22" />
-    <path d="M18 2H6v7a6 6 0 0 0 12 0V2Z" />
-  </svg>
-);
-
-const IconTarget = () => (
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    width="14"
-    height="14"
-    viewBox="-1 -1 26 26"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="2"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-  >
-    <circle cx="12" cy="12" r="10" />
-    <circle cx="12" cy="12" r="6" />
-    <circle cx="12" cy="12" r="2" />
-  </svg>
-);
-
-const IconStar = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
-  </svg>
-);
-
-const IconBarChart = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <line x1="12" y1="20" x2="12" y2="10" />
-    <line x1="18" y1="20" x2="18" y2="4" />
-    <line x1="6" y1="20" x2="6" y2="16" />
-  </svg>
-);
-
-const IconTrendingUp = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <polyline points="22 7 13.5 15.5 8.5 10.5 2 17" />
-    <polyline points="16 7 22 7 22 13" />
-  </svg>
-);
-
-const IconScale = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <path d="m16 16 3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1Z" />
-    <path d="m2 16 3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1Z" />
-    <path d="M7 21h10" />
-    <path d="M12 3v18" />
-    <path d="M3 7h2c2 0 5-1 7-2 2 1 5 2 7 2h2" />
-  </svg>
-);
-
-// Grade categories with max scores
-const gradeCategories = [{
-  key: "attitude",
-  label: "Attitude",
-  max: 10
-}, {
-  key: "homework",
-  label: "Homework",
-  max: 10
-}, {
-  key: "quiz",
-  label: "Quiz",
-  max: 10
-}, {
-  key: "exam",
-  label: "Exam",
-  max: 70
-}];
-
-// Import centralized subjects config  
+import {
+  IconBook,
+  IconTrophy,
+  IconTarget,
+  IconStar,
+  IconBarChart,
+  IconTrendingUp,
+  IconScale,
+} from "./academic/icons";
+import {
+  gradeCategories,
+  academicYears,
+  SELECTION_COLORS,
+  SUBJECT_COLORS,
+  GRADE_COLORS,
+} from "./academic/constants";
+import {
+  type StudentGrades,
+  getSelectionColor,
+  getNextSelectionId,
+  calculateTotal,
+  getLetterGrade,
+  formatSavedAt,
+} from "./academic/helpers";
 
 // Use centralized subjects list
 const subjects = allSubjects;
-
-// Get subjects that are not part of any variant group (standalone subjects)
 const groupedSubjectNames = subjectGroups.flatMap(g => g.variants?.map(v => v.name) || []);
 const standaloneSubjects = allSubjects.filter(s => !groupedSubjectNames.includes(s));
-
-// Academic years (past 6 years)
-const academicYears = ["2026", "2025", "2024", "2023", "2022", "2021"];
-
-// Selection colors for multiple comparisons
-const SELECTION_COLORS = [
-  { id: "A", bg: "bg-blue-50/50", border: "border-blue-200", dot: "bg-blue-500", text: "text-blue-700", hex: "#3b82f6", bgHex: "rgba(59, 130, 246, 0.08)", borderHex: "rgba(59, 130, 246, 0.25)" },
-  { id: "B", bg: "bg-amber-50/50", border: "border-amber-200", dot: "bg-amber-500", text: "text-amber-700", hex: "#f59e0b", bgHex: "rgba(245, 158, 11, 0.08)", borderHex: "rgba(245, 158, 11, 0.25)" },
-  { id: "C", bg: "bg-emerald-50/50", border: "border-emerald-200", dot: "bg-emerald-500", text: "text-emerald-700", hex: "#10b981", bgHex: "rgba(16, 185, 129, 0.08)", borderHex: "rgba(16, 185, 129, 0.25)" },
-  { id: "D", bg: "bg-purple-50/50", border: "border-purple-200", dot: "bg-purple-500", text: "text-purple-700", hex: "#8b5cf6", bgHex: "rgba(139, 92, 246, 0.08)", borderHex: "rgba(139, 92, 246, 0.25)" },
-  { id: "E", bg: "bg-rose-50/50", border: "border-rose-200", dot: "bg-rose-500", text: "text-rose-700", hex: "#f43f5e", bgHex: "rgba(244, 63, 94, 0.08)", borderHex: "rgba(244, 63, 94, 0.25)" },
-  { id: "F", bg: "bg-cyan-50/50", border: "border-cyan-200", dot: "bg-cyan-500", text: "text-cyan-700", hex: "#06b6d4", bgHex: "rgba(6, 182, 212, 0.08)", borderHex: "rgba(6, 182, 212, 0.25)" },
-];
-
-const getSelectionColor = (index: number) => SELECTION_COLORS[index % SELECTION_COLORS.length];
-const getNextSelectionId = (existingIds: string[]) => {
-  const letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-  for (let i = 0; i < letters.length; i++) {
-    if (!existingIds.includes(letters[i])) return letters[i];
-  }
-  return `${letters.length + 1}`;
-};
-
-// Use centralized short name function
 const shortenSubjectName = getShortSubjectName;
-interface StudentGrades {
-  attitude: string;
-  homework: string;
-  quiz: string;
-  exam: string;
-  comment: string;
-  reportComment: string;
-  studyRecommendation: string;
-}
-const calculateTotal = (grades: StudentGrades): number => {
-  return (parseInt(grades.attitude) || 0) + (parseInt(grades.homework) || 0) + (parseInt(grades.quiz) || 0) + (parseInt(grades.exam) || 0);
-};
-const getLetterGrade = (total: number): {
-  grade: string;
-  color: string;
-} => {
-  if (total >= 90) return {
-    grade: "A*",
-    color: "bg-emerald-100 text-emerald-700 border-emerald-300"
-  };
-  if (total >= 80) return {
-    grade: "A",
-    color: "bg-emerald-50 text-emerald-600 border-emerald-200"
-  };
-  if (total >= 70) return {
-    grade: "B",
-    color: "bg-blue-100 text-blue-700 border-blue-300"
-  };
-  if (total >= 60) return {
-    grade: "C",
-    color: "bg-amber-100 text-amber-700 border-amber-300"
-  };
-  if (total >= 50) return {
-    grade: "D",
-    color: "bg-orange-100 text-orange-700 border-orange-300"
-  };
-  return {
-    grade: "E",
-    color: "bg-red-100 text-red-700 border-red-300"
-  };
-};
-const formatSavedAt = (value?: string | null): string | null => {
-  if (!value) return null;
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return null;
-  const day = date.getDate();
-  const month = date.toLocaleString("en-GB", { month: "short" });
-  const hours = date.getHours();
-  const minutes = date.getMinutes().toString().padStart(2, "0");
-  const period = hours >= 12 ? "pm" : "am";
-  const hour12 = hours % 12 || 12;
-  return `${day} ${month}, ${hour12}:${minutes}${period}`;
-};
 export default function TeacherAcademicPage() {
   const isMobile = useIsMobile();
   const teacherScope = useTeacherScope();
@@ -7977,27 +7833,3 @@ export default function TeacherAcademicPage() {
       </Dialog>
     </TeacherAppLayout>;
 }
-
-// Subject colors for charts
-const SUBJECT_COLORS = ["#8b5cf6",
-// violet
-"#06b6d4",
-// cyan
-"#10b981",
-// emerald
-"#f59e0b",
-// amber
-"#ef4444",
-// red
-"#ec4899" // pink
-];
-
-// Grade colors for charts
-const GRADE_COLORS: Record<string, string> = {
-  "A*": "#059669",
-  A: "#10b981",
-  B: "#3b82f6",
-  C: "#f59e0b",
-  D: "#f97316",
-  E: "#ef4444"
-};
