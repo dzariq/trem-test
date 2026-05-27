@@ -110,13 +110,23 @@ export function useCcaSessionsCalendar({
           .filter(Boolean);
 
         let eventIds: string[] = [];
-        if (studentClasses.length > 0) {
+        {
+          // Include school-wide events (empty/null classes_involved) plus
+          // events whose classes_involved overlaps the student's class.
+          const orParts: string[] = [
+            "classes_involved.is.null",
+            "classes_involved.eq.{}",
+          ];
+          if (studentClasses.length > 0) {
+            const arrLiteral = `{${studentClasses.map((c) => `"${c}"`).join(",")}}`;
+            orParts.push(`classes_involved.ov.${arrLiteral}`);
+          }
           const { data: eventRows } = await supabase
             .from("cca_activities")
             .select("id")
             .eq("kind", "event")
             .eq("is_active", true)
-            .overlaps("classes_involved", studentClasses);
+            .or(orParts.join(","));
           eventIds = (eventRows || []).map((r: any) => r.id);
         }
 
