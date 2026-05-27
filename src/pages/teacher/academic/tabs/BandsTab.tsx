@@ -1,3 +1,4 @@
+import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -107,7 +108,6 @@ export function BandsTab({
 }: BandsTabProps) {
   return (
     <>
-              <TabsContent value="distribution" className="space-y-4">
                 {/* Comparison Mode Toggle */}
                 <div className="flex items-center justify-between p-3 rounded-lg bg-accent/30 border border-border">
                   <div className="flex items-center gap-2">
