@@ -670,10 +670,10 @@ export default function AttendancePage() {
                         active={activeTooltip !== null}
                         payload={activeTooltip ? chartData.filter(d => d.month === activeTooltip).map(d => [
                           { name: 'Attendance', value: d.pct == null ? '—' : `${d.pct}% (${d.attended}/${d.totalDays} days)`, color: 'hsl(160, 84%, 39%)' },
-                          { name: 'Present', value: d.present, color: 'hsl(160, 84%, 39%)' },
-                          { name: 'Late', value: d.late, color: 'hsl(38, 92%, 50%)' },
-                          { name: 'Absent', value: d.absent, color: 'hsl(var(--destructive))' },
-                          { name: 'Excused', value: d.excused, color: 'hsl(271, 91%, 65%)' }
+                          { name: 'Present', value: String(d.present), color: 'hsl(160, 84%, 39%)' },
+                          { name: 'Late', value: String(d.late), color: 'hsl(38, 92%, 50%)' },
+                          { name: 'Absent', value: String(d.absent), color: 'hsl(var(--destructive))' },
+                          { name: 'Excused', value: String(d.excused), color: 'hsl(271, 91%, 65%)' }
                         ]).flat() : undefined}
                         label={activeTooltip || undefined}
                       />
