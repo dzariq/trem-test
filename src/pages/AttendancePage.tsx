@@ -431,13 +431,21 @@ export default function AttendancePage() {
     return today.toDateString() === date.toDateString();
   };
 
-  const filterOptions: { value: StatusFilter; label: string; count: number }[] = [
-    { value: "all", label: "All", count: dailyBreakdown.length },
-    { value: "present", label: "Present", count: monthlySummary.present },
-    { value: "absent", label: "Absent", count: monthlySummary.absent },
-    { value: "late", label: "Late", count: monthlySummary.late },
-    { value: "excused", label: "Excused", count: monthlySummary.excused },
-  ];
+  const filterOptions: { value: StatusFilter; label: string; count: number }[] = isAggregated
+    ? [
+        { value: "all", label: "All", count: monthRecordsAll.length },
+        { value: "present", label: "Present", count: aggregatedCounts.present },
+        { value: "absent", label: "Absent", count: aggregatedCounts.absent },
+        { value: "late", label: "Late", count: aggregatedCounts.late },
+        { value: "excused", label: "Excused", count: aggregatedCounts.excused },
+      ]
+    : [
+        { value: "all", label: "All", count: dailyBreakdown.length },
+        { value: "present", label: "Present", count: monthlySummary.present },
+        { value: "absent", label: "Absent", count: monthlySummary.absent },
+        { value: "late", label: "Late", count: monthlySummary.late },
+        { value: "excused", label: "Excused", count: monthlySummary.excused },
+      ];
 
   const isLoading = studentsLoading || attendanceLoading || (zoomLevel !== 12 && rollingLoading);
 
