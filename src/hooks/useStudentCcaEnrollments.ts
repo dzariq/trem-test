@@ -24,10 +24,12 @@ export interface EnrolledCcaActivity {
   }[];
   /** Soonest upcoming non-cancelled session date (YYYY-MM-DD) or null. */
   nextSessionDate: string | null;
+  /** Children (out of the requested set) enrolled in this activity. */
+  enrolledStudents: { id: string; name: string }[];
 }
 
 interface UseStudentCcaEnrollmentsOptions {
-  studentId: string | null;
+  studentId: string | string[] | null;
 }
 
 /**
@@ -39,8 +41,15 @@ export function useStudentCcaEnrollments({ studentId }: UseStudentCcaEnrollments
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const normalizedIds = useMemo(() => {
+    if (!studentId) return [] as string[];
+    const arr = Array.isArray(studentId) ? studentId : [studentId];
+    return Array.from(new Set(arr.filter((id): id is string => !!id)));
+  }, [studentId]);
+  const idsKey = normalizedIds.join(",");
+
   const fetchEnrollments = useCallback(async () => {
-    if (!studentId) {
+    if (normalizedIds.length === 0) {
       setEnrollments([]);
       return;
     }
@@ -54,6 +63,7 @@ export function useStudentCcaEnrollments({ studentId }: UseStudentCcaEnrollments
         .from("student_cca_enrollments")
         .select(`
           id,
+          student_id,
           cca_activity_id,
           status,
           cca_activities(
@@ -71,7 +81,7 @@ export function useStudentCcaEnrollments({ studentId }: UseStudentCcaEnrollments
             image_url
           )
         `)
-        .eq("student_id", studentId)
+        .in("student_id", normalizedIds)
         .eq("status", "active");
 
       if (fetchError) throw fetchError;
@@ -86,6 +96,15 @@ export function useStudentCcaEnrollments({ studentId }: UseStudentCcaEnrollments
         setLoading(false);
         return;
       }
+
+      // Fetch student names (for tagging in multi-child mode).
+      const { data: studentRows } = await supabase
+        .from("students")
+        .select("id, name")
+        .in("id", normalizedIds);
+      const studentNameById = new Map<string, string>(
+        (studentRows || []).map((s: any) => [s.id, s.name as string])
+      );
 
       // Fetch PIC teachers for these activities
       const { data: teachersData } = await supabase
@@ -156,27 +175,42 @@ export function useStudentCcaEnrollments({ studentId }: UseStudentCcaEnrollments
         }
       });
 
-      // Map enrollments to our shape
-      const mapped: EnrolledCcaActivity[] = (data || [])
+      // Map + de-dup by activity (merge children enrolled in the same activity).
+      const byActivity = new Map<string, EnrolledCcaActivity>();
+      (data || [])
         .filter((e: any) => e.cca_activities?.is_active !== false)
-        .map((e: any) => ({
-          id: e.cca_activities?.id || e.cca_activity_id,
-          enrollmentId: e.id,
-          activityId: e.cca_activity_id,
-          name: e.cca_activities?.name || "Unknown Activity",
-          category: e.cca_activities?.category || null,
-          typeId: e.cca_activities?.type_id || null,
-          typeName: e.cca_activities?.cca_activity_types?.name || null,
-          kind: e.cca_activities?.kind || null,
-          meetingDay: e.cca_activities?.meeting_day || null,
-          meetingTime: e.cca_activities?.meeting_time || null,
-          location: e.cca_activities?.location || null,
-          publicDescription: e.cca_activities?.public_description || null,
-          enrollmentStatus: e.status,
-          imageUrl: e.cca_activities?.image_url || null,
-          picTeachers: teachersByActivity[e.cca_activity_id] || [],
-          nextSessionDate: nextByActivity[e.cca_activity_id] || null,
-        }));
+        .forEach((e: any) => {
+          const actId = e.cca_activity_id;
+          const childId = e.student_id as string;
+          const childName = studentNameById.get(childId) || "";
+          const existing = byActivity.get(actId);
+          if (existing) {
+            if (!existing.enrolledStudents.some((s) => s.id === childId)) {
+              existing.enrolledStudents.push({ id: childId, name: childName });
+            }
+            return;
+          }
+          byActivity.set(actId, {
+            id: e.cca_activities?.id || actId,
+            enrollmentId: e.id,
+            activityId: actId,
+            name: e.cca_activities?.name || "Unknown Activity",
+            category: e.cca_activities?.category || null,
+            typeId: e.cca_activities?.type_id || null,
+            typeName: e.cca_activities?.cca_activity_types?.name || null,
+            kind: e.cca_activities?.kind || null,
+            meetingDay: e.cca_activities?.meeting_day || null,
+            meetingTime: e.cca_activities?.meeting_time || null,
+            location: e.cca_activities?.location || null,
+            publicDescription: e.cca_activities?.public_description || null,
+            enrollmentStatus: e.status,
+            imageUrl: e.cca_activities?.image_url || null,
+            picTeachers: teachersByActivity[actId] || [],
+            nextSessionDate: nextByActivity[actId] || null,
+            enrolledStudents: [{ id: childId, name: childName }],
+          });
+        });
+      const mapped: EnrolledCcaActivity[] = Array.from(byActivity.values());
 
       // Sort: soonest upcoming first (nulls last), then by name
       mapped.sort((a, b) => {
@@ -194,7 +228,8 @@ export function useStudentCcaEnrollments({ studentId }: UseStudentCcaEnrollments
     } finally {
       setLoading(false);
     }
-  }, [studentId]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [idsKey]);
 
   useEffect(() => {
     fetchEnrollments();
