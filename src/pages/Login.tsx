@@ -500,7 +500,7 @@ export default function Login() {
                   <SelectTrigger className="w-[92px] shrink-0 px-2" aria-label="Country code">
                     <SelectValue>
                       <span className="flex items-center gap-1">
-                        <span className="text-base leading-none">
+                        <span className="text-lg leading-none">
                           {isoToFlag(selectedCountry.iso2)}
                         </span>
                         <span className="text-sm">+{selectedCountry.dialCode}</span>
