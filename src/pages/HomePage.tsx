@@ -67,39 +67,35 @@ export default function HomePage() {
     loadAnnouncements();
   }, [loadAnnouncements]);
 
-  useEffect(() => {
-    let isMounted = true;
-    const loadEvents = async () => {
-      setEventsLoading(true);
-      setEventsError(null);
-      try {
-        const data = await listUpcomingEvents({
-          role: profile?.role,
-          limit: 10,
-          campusCode: parentCampusCode,
-        });
-        if (isMounted) {
-          setEvents(data);
-        }
-      } catch (error) {
-        if (isMounted) {
-          const message = error instanceof Error ? error.message : "Failed to load events.";
-          setEventsError(message);
-        }
-      } finally {
-        if (isMounted) {
-          setEventsLoading(false);
-        }
-      }
-    };
-
-    if (!profileLoading) {
-      loadEvents();
+  const loadEvents = useCallback(async () => {
+    setEventsLoading(true);
+    setEventsError(null);
+    try {
+      const data = await listUpcomingEvents({
+        role: profile?.role,
+        limit: 10,
+        campusCode: parentCampusCode,
+      });
+      setEvents(data);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Failed to load events.";
+      setEventsError(message);
+    } finally {
+      setEventsLoading(false);
     }
-    return () => {
-      isMounted = false;
-    };
-  }, [profileLoading, profile?.role, parentCampusCode]);
+  }, [profile?.role, parentCampusCode]);
+
+  useEffect(() => {
+    if (!profileLoading) loadEvents();
+  }, [profileLoading, loadEvents]);
+
+  // Auto-refresh home data when the installed app comes back to the foreground
+  // or the browser tab regains visibility.
+  useRefreshOnAppResume(() => {
+    loadAnnouncements();
+    if (!profileLoading) loadEvents();
+    refetchCcaSessions();
+  });
 
   const handleMarkAnnouncementRead = async (id: Announcement["id"]) => {
     try {
