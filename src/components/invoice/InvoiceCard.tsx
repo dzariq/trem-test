@@ -1,3 +1,4 @@
+import { Users } from "lucide-react";
 import { format, parseISO } from "date-fns";
 import { Calendar, ChevronRight } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
@@ -8,9 +9,11 @@ import { formatMoney, statusLabel } from "./invoiceUtils";
 interface Props {
   invoice: ParentInvoice;
   onClick: () => void;
+  /** When true, render the child's first name as a small chip on the card. */
+  showChildName?: boolean;
 }
 
-export function InvoiceCard({ invoice, onClick }: Props) {
+export function InvoiceCard({ invoice, onClick, showChildName = false }: Props) {
   const status = statusLabel(invoice.status);
   const displayDate = invoice.dueDate || invoice.invoiceDate;
   const isOverdue =
@@ -42,6 +45,13 @@ export function InvoiceCard({ invoice, onClick }: Props) {
             {isOverdue ? "Overdue" : status.label}
           </Badge>
         </div>
+
+        {showChildName && invoice.studentName && (
+          <div className="flex items-center gap-1 text-[11px] text-muted-foreground">
+            <Users className="h-3 w-3" />
+            <span className="truncate">{invoice.studentName.split(" ")[0]}</span>
+          </div>
+        )}
 
         <div className="flex items-center justify-between gap-3">
           <div className="flex items-center gap-1 text-xs text-muted-foreground">
