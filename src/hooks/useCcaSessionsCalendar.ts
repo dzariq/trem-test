@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
+import { useRefetchOnResume } from "@/hooks/useRefreshOnAppResume";
 import { supabase } from "@/lib/supabase";
 
 export interface CcaCalendarSession {
@@ -249,6 +250,8 @@ export function useCcaSessionsCalendar({
   useEffect(() => {
     fetchSessions();
   }, [fetchSessions]);
+
+  useRefetchOnResume(fetchSessions);
 
   return {
     sessions,
