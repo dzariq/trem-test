@@ -3,6 +3,7 @@ import { toast } from "@/hooks/use-toast";
 import { useTeacherScope } from "@/hooks/useTeacherScope";
 import { supabase } from "@/lib/supabase";
 import { useCampus } from "@/contexts/CampusContext";
+import { useResumeTick } from "@/hooks/useRefreshOnAppResume";
 import {
   fetchAvailableClasses,
   fetchStudentsByClass,
@@ -78,6 +79,7 @@ export function useGradeEntry(): UseGradeEntryReturn {
   const teacherScope = useTeacherScope();
   const isTeacher = teacherScope.isTeacher;
   const { activeCampus } = useCampus();
+  const resumeTick = useResumeTick();
   const allowedClassNames = useMemo(
     () => teacherScope.allowedClassYears.map((cls) => cls.class_name),
     [teacherScope.allowedClassYears]
@@ -469,6 +471,7 @@ export function useGradeEntry(): UseGradeEntryReturn {
     selectedSubject,
     selectedPeriod,
     students,
+    resumeTick,
   ]);
 
   // Update grade input
