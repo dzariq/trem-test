@@ -3240,6 +3240,7 @@ export type Database = {
           id: string
           is_active: boolean
           mode: string
+          short_code: string
           token: string
           updated_at: string
         }
@@ -3251,6 +3252,7 @@ export type Database = {
           id?: string
           is_active?: boolean
           mode: string
+          short_code?: string
           token?: string
           updated_at?: string
         }
@@ -3262,6 +3264,7 @@ export type Database = {
           id?: string
           is_active?: boolean
           mode?: string
+          short_code?: string
           token?: string
           updated_at?: string
         }
@@ -7324,6 +7327,7 @@ export type Database = {
           student_name: string
         }[]
       }
+      get_rsvp_link_by_code: { Args: { p_code: string }; Returns: Json }
       get_rsvp_link_by_token: { Args: { p_token: string }; Returns: Json }
       get_session_enrollment_count: {
         Args: { p_session_id: string }
@@ -7504,6 +7508,20 @@ export type Database = {
           p_notes: string
           p_relationship: string
           p_token: string
+        }
+        Returns: Json
+      }
+      submit_rsvp_response_by_code: {
+        Args: {
+          p_attending: string
+          p_child_info: Json
+          p_code: string
+          p_email: string
+          p_full_name: string
+          p_guest_count: number
+          p_mobile: string
+          p_notes: string
+          p_relationship: string
         }
         Returns: Json
       }
