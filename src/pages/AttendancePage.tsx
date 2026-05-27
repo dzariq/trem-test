@@ -735,7 +735,7 @@ export default function AttendancePage() {
               </div>
             )}
 
-            {!isLoading && weeklyBreakdown.length === 0 && (
+            {!isLoading && (isAggregated ? multiWeeklyBreakdown.length === 0 : weeklyBreakdown.length === 0) && (
               showEmptyState ? (
                 <EmptyStateBlock compact />
               ) : (
@@ -749,8 +749,8 @@ export default function AttendancePage() {
               )
             )}
 
-            {/* Weekly Groups */}
-            {weeklyBreakdown.map((week, weekIndex) => (
+            {/* Weekly Groups — single child mode */}
+            {!isAggregated && weeklyBreakdown.map((week, weekIndex) => (
               <div key={weekIndex} className="space-y-1">
                 {/* Week Separator */}
                 <div className="flex items-center gap-3 mt-3 mb-2">
@@ -790,6 +790,64 @@ export default function AttendancePage() {
                         {today && (
                           <span className="text-[9px] font-semibold text-primary shrink-0">Today</span>
                         )}
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            ))}
+
+            {/* Weekly Groups — multi-child aggregated mode */}
+            {isAggregated && multiWeeklyBreakdown.map((week, weekIndex) => (
+              <div key={`m-${weekIndex}`} className="space-y-2">
+                <div className="flex items-center gap-3 mt-3 mb-2">
+                  <span className="text-xs font-semibold text-muted-foreground">
+                    Week of {week.weekStart}
+                  </span>
+                  <div className="h-px flex-1 bg-border/70" />
+                </div>
+
+                <div className="space-y-2">
+                  {week.days.map((day) => {
+                    const date = new Date(day.date);
+                    const today = isToday(day.date);
+                    return (
+                      <div
+                        key={day.date}
+                        className={`rounded-xl border p-3 bg-card ${today ? "ring-1 ring-primary/40" : ""}`}
+                      >
+                        <div className="flex items-center justify-between mb-2">
+                          <p className="font-semibold text-foreground text-sm">
+                            {date.toLocaleDateString("en-US", { weekday: "short", day: "numeric", month: "short" })}
+                          </p>
+                          {today && (
+                            <span className="text-[10px] font-semibold text-primary">Today</span>
+                          )}
+                        </div>
+                        <div className="grid grid-cols-1 gap-1.5">
+                          {day.entries.map((entry) => (
+                            <button
+                              key={`${day.date}-${entry.studentId}`}
+                              type="button"
+                              onClick={() => setSelectedDay({
+                                date: day.date,
+                                status: entry.status,
+                                reason: entry.reason,
+                                remarks: entry.remarks,
+                                studentName: entry.studentName,
+                              })}
+                              className={`flex items-center justify-between gap-2 px-3 h-9 rounded-lg border text-left transition-colors active:scale-[0.98] ${getStatusTileClasses(entry.status)}`}
+                            >
+                              <span className="text-sm font-medium text-foreground truncate">
+                                {entry.studentName.split(" ")[0]}
+                              </span>
+                              <span className={`inline-flex items-center gap-1 px-2 h-6 rounded-full text-[11px] font-semibold ${getStatusColor(entry.status)}`}>
+                                {getStatusIcon(entry.status)}
+                                {getStatusLabel(entry.status)}
+                              </span>
+                            </button>
+                          ))}
+                        </div>
                       </div>
                     );
                   })}
