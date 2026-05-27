@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
+import { useRefetchOnResume } from "@/hooks/useRefreshOnAppResume";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/contexts/AuthContext";
 import { useMyProfile } from "@/hooks/useMyProfile";
@@ -229,6 +230,8 @@ export function useUpcomingCcaSessions(options: UseUpcomingCcaSessionsOptions = 
   useEffect(() => {
     fetchSessions();
   }, [fetchSessions]);
+
+  useRefetchOnResume(fetchSessions);
 
   return {
     sessions,
