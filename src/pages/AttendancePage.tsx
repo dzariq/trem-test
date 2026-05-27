@@ -31,7 +31,7 @@ const months = ["January", "February", "March", "April", "May", "June", "July", 
 
 type StatusFilter = "all" | "present" | "absent" | "late" | "excused";
 type ZoomLevel = 3 | 6 | 12;
-type DayRecord = { date: string; status: string; reason: string | null; remarks: string | null };
+type DayRecord = { date: string; status: string; reason: string | null; remarks: string | null; studentName?: string };
 
 // DEV Debug Panel Component - only visible if import.meta.env.DEV && localStorage.dev_debug === '1'
 function DebugPanel({ 
