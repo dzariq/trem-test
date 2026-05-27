@@ -77,7 +77,7 @@ export default function AttendancePage() {
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
   const currentYear = new Date().getFullYear();
   const [selectedYear, setSelectedYear] = useState(String(currentYear));
-  const [zoomLevel, setZoomLevel] = useState<ZoomLevel>(12); // Default to yearly view
+  const [zoomLevel, setZoomLevel] = useState<ZoomLevel>(3); // Default to 3-month view
   const chartContainerRef = useRef<HTMLDivElement>(null);
   const [isPinching, setIsPinching] = useState(false);
   const lastPinchDistance = useRef<number | null>(null);
@@ -92,6 +92,16 @@ export default function AttendancePage() {
     setSelectedStudentId,
   } = useStudentSelection();
 
+  // Local scope: "all" for aggregated view across all linked children, or a specific student id
+  const [scope, setScope] = useState<string>("all");
+  const isMultiChild = linkedStudents.length > 1;
+  const allStudentIds = useMemo(() => linkedStudents.map((s) => s.id), [linkedStudents]);
+  const effectiveScope: string | string[] | null = useMemo(() => {
+    if (!isMultiChild) return selectedStudentId;
+    return scope === "all" ? allStudentIds : scope;
+  }, [isMultiChild, scope, allStudentIds, selectedStudentId]);
+  const isAggregated = isMultiChild && scope === "all";
+
   // Use yearly attendance data (for 12-month view and monthly breakdown)
   const {
     records,
@@ -101,14 +111,14 @@ export default function AttendancePage() {
     getMonthlySummary,
     getDailyBreakdown,
     debugInfo,
-  } = useParentAttendance(selectedStudentId, selectedYear);
+  } = useParentAttendance(effectiveScope, selectedYear);
 
   // Use rolling window attendance (for 3/6 month views)
   const {
     chartData: rollingChartData,
     loading: rollingLoading,
     debugInfo: rollingDebugInfo,
-  } = useRollingAttendance(selectedStudentId, zoomLevel === 12 ? 12 : zoomLevel);
+  } = useRollingAttendance(effectiveScope, zoomLevel === 12 ? 12 : zoomLevel);
   
   // Swipe navigation state
   const [monthOffset, setMonthOffset] = useState(0); // 0 = most recent months
