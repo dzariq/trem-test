@@ -654,7 +654,10 @@ export default function AttendancePage() {
                         tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }}
                         axisLine={false}
                         tickLine={false}
-                        width={30}
+                        width={36}
+                        domain={[0, 100]}
+                        ticks={[0, 25, 50, 75, 100]}
+                        tickFormatter={(v) => `${v}%`}
                       />
                       <Tooltip 
                         contentStyle={{ 
@@ -666,22 +669,22 @@ export default function AttendancePage() {
                         cursor={{ fill: 'hsl(var(--muted)/0.3)' }}
                         active={activeTooltip !== null}
                         payload={activeTooltip ? chartData.filter(d => d.month === activeTooltip).map(d => [
+                          { name: 'Attendance', value: d.pct == null ? '—' : `${d.pct}% (${d.attended}/${d.totalDays} days)`, color: 'hsl(160, 84%, 39%)' },
                           { name: 'Present', value: d.present, color: 'hsl(160, 84%, 39%)' },
-                          { name: 'Absent', value: d.absent, color: 'hsl(var(--destructive))' },
                           { name: 'Late', value: d.late, color: 'hsl(38, 92%, 50%)' },
+                          { name: 'Absent', value: d.absent, color: 'hsl(var(--destructive))' },
                           { name: 'Excused', value: d.excused, color: 'hsl(271, 91%, 65%)' }
                         ]).flat() : undefined}
                         label={activeTooltip || undefined}
                       />
-                      <Legend 
-                        wrapperStyle={{ fontSize: 10, paddingTop: 8 }}
-                        iconType="circle"
-                        iconSize={6}
-                      />
-                      <Bar dataKey="present" stackId="a" fill="hsl(160, 84%, 39%)" name="Present" radius={[0, 0, 0, 0]} />
-                      <Bar dataKey="absent" stackId="a" fill="hsl(var(--destructive))" name="Absent" radius={[0, 0, 0, 0]} />
-                      <Bar dataKey="late" stackId="a" fill="hsl(38, 92%, 50%)" name="Late" radius={[0, 0, 0, 0]} />
-                      <Bar dataKey="excused" stackId="a" fill="hsl(271, 91%, 65%)" name="Excused" radius={[4, 4, 0, 0]} />
+                      <Bar dataKey="pct" fill="hsl(160, 84%, 39%)" name="Attendance %" radius={[6, 6, 0, 0]}>
+                        <LabelList
+                          dataKey="pct"
+                          position="top"
+                          formatter={(v: number | null) => (v == null ? "" : `${v}%`)}
+                          style={{ fontSize: 11, fill: "hsl(var(--foreground))", fontWeight: 600 }}
+                        />
+                      </Bar>
                     </BarChart>
                   </ResponsiveContainer>
                 </div>
