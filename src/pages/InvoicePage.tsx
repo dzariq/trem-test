@@ -42,8 +42,38 @@ const monthLabel = (key: string) => {
 };
 
 export default function InvoicePage() {
-  const { selectedStudentId, selectedStudent } = useStudentSelection();
-  const { invoices, isLoading, error } = useStudentInvoices(selectedStudentId);
+  const { linkedStudents, selectedStudentId, selectedStudent } = useStudentSelection();
+  const isMultiChild = linkedStudents.length > 1;
+  const [scope, setScope] = useState<string>(
+    isMultiChild ? "all" : selectedStudentId || "",
+  );
+
+  useEffect(() => {
+    if (isMultiChild) {
+      setScope((prev) =>
+        prev === "all" || linkedStudents.some((s) => s.id === prev) ? prev : "all",
+      );
+    } else {
+      setScope(selectedStudentId || "");
+    }
+  }, [isMultiChild, linkedStudents, selectedStudentId]);
+
+  const isAllScope = isMultiChild && scope === "all";
+  const studentsForHook = useMemo(() => {
+    if (isAllScope) {
+      return linkedStudents.map((s) => ({ id: s.id, name: s.name }));
+    }
+    const sid = scope || selectedStudentId;
+    if (!sid) return [];
+    const match = linkedStudents.find((s) => s.id === sid);
+    return match ? [{ id: match.id, name: match.name }] : [{ id: sid, name: null }];
+  }, [isAllScope, linkedStudents, scope, selectedStudentId]);
+
+  const { invoices, isLoading, error } = useStudentInvoices(studentsForHook);
+  const hasAnyScope = studentsForHook.length > 0;
+  const scopeLabel = isAllScope
+    ? `your ${linkedStudents.length} children`
+    : studentsForHook[0]?.name || selectedStudent?.name || "this child";
   const [filter, setFilter] = useState<Filter>("all");
   const [monthFilter, setMonthFilter] = useState<string>("all");
   const [active, setActive] = useState<ParentInvoice | null>(null);
@@ -150,6 +180,9 @@ export default function InvoicePage() {
     <AppLayout>
       <AppHeader
         showChildSelector
+        childSelectorScope={isMultiChild ? scope : selectedStudentId || undefined}
+        onChildSelectorScopeChange={setScope}
+        childSelectorShowAllOption={isMultiChild}
         leftContent={
           <div className="flex items-center gap-2">
             <img src={schoolLogo} alt="School Logo" className="h-16 w-auto -my-3 drop-shadow-md" />
@@ -178,7 +211,7 @@ export default function InvoicePage() {
         )}
 
         {/* No student linked yet */}
-        {!isLoading && !error && !selectedStudentId && (
+        {!isLoading && !error && !hasAnyScope && (
           <Card className="border-dashed border-2 border-muted">
             <CardContent className="p-8 text-center">
               <Receipt className="h-12 w-12 mx-auto text-muted-foreground/50 mb-4" />
@@ -188,7 +221,7 @@ export default function InvoicePage() {
         )}
 
         {/* Loaded */}
-        {!isLoading && !error && selectedStudentId && (
+        {!isLoading && !error && hasAnyScope && (
           <>
             {/* Summary */}
             <Card className="border-border bg-gradient-to-br from-card to-accent/30">
@@ -205,11 +238,9 @@ export default function InvoicePage() {
                   >
                     {formatMoney(summary.outstanding, currency)}
                   </p>
-                  {selectedStudent && (
-                    <p className="text-xs text-muted-foreground mt-0.5">
-                      for {selectedStudent.name}
-                    </p>
-                  )}
+                  <p className="text-xs text-muted-foreground mt-0.5">
+                    for {scopeLabel}
+                  </p>
                 </div>
                 <div className="grid grid-cols-2 gap-3 pt-2 border-t border-border">
                   <div>
@@ -318,6 +349,7 @@ export default function InvoicePage() {
                           key={inv.id}
                           invoice={inv}
                           onClick={() => setActive(inv)}
+                          showChildName={isAllScope}
                         />
                       ))}
                     </div>
