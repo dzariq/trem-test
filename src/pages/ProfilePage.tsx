@@ -342,6 +342,12 @@ export default function ProfilePage() {
     }
   };
 
+  const handleEmailChangedRequiresRelogin = useCallback(async () => {
+    await signOut();
+    queryClient.clear();
+    navigate("/", { replace: true });
+  }, [signOut, queryClient, navigate]);
+
   const handleOpenEdit = () => {
     setEditForm(formProfile);
     setIsEditOpen(true);
