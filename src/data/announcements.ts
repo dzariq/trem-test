@@ -104,6 +104,18 @@ export async function listAnnouncements(
 
   let baseQuery = supabase.from("announcements").select("*");
 
+  // Only surface announcements that are live for end users.
+  // - is_active=false  -> soft-deleted / hidden by admin
+  // - status!=published -> draft, scheduled, archived
+  // - expires_at in the past -> expired
+  // - published_at in the future -> scheduled, not yet live
+  baseQuery = baseQuery
+    .eq("is_active", true)
+    .eq("status", "published");
+  const nowIso = new Date().toISOString();
+  baseQuery = baseQuery.or(`expires_at.is.null,expires_at.gt.${nowIso}`);
+  baseQuery = baseQuery.or(`published_at.is.null,published_at.lte.${nowIso}`);
+
   // Apply campus filter if provided
   if (params.campusCode) {
     baseQuery = baseQuery.or(`campus_code.eq.${params.campusCode},campus_code.is.null`);
