@@ -12,6 +12,18 @@ type ChipItem =
   | { kind: "event"; id: string; title: string; colorHex: string; sortKey: string; payload: UpcomingEvent }
   | { kind: "cca"; id: string; title: string; colorClass: string; sortKey: string; payload: CcaCalendarSession };
 
+type SpanSegment = {
+  id: string;
+  title: string;
+  colorHex: string;
+  startCol: number;
+  spanCols: number;
+  lane: number;
+  continuesLeft: boolean;
+  continuesRight: boolean;
+  payload: UpcomingEvent;
+};
+
 interface MonthGridCalendarProps {
   month: Date;
   selectedDay: string;
@@ -85,6 +97,9 @@ export function MonthGridCalendar({
       const start = parseYmd(event.startDay);
       const end = event.endDay ? parseYmd(event.endDay) : start;
       if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) return;
+      // Multi-day events render as continuous spanning bars (see weekSpans),
+      // not per-day chips.
+      if (end.getTime() > start.getTime()) return;
       const cursor = new Date(start);
       const sortKey = `${event.allDay ? "0" : "1"}_${event.time || ""}_${event.title || ""}`;
       while (cursor <= end) {
@@ -124,7 +139,7 @@ export function MonthGridCalendar({
   }, [events, ccaSessions]);
 
   // Build grid cells (Mon-first, always 6 weeks)
-  const days = useMemo(() => {
+  const weeks = useMemo(() => {
     const year = month.getFullYear();
     const m = month.getMonth();
     const firstOfMonth = new Date(year, m, 1);
@@ -138,15 +153,71 @@ export function MonthGridCalendar({
       cells.push({ date: d, ymd: toYmd(d), inMonth: d.getMonth() === m });
     }
     // Trim trailing all-outside weeks
-    const weeks: typeof cells[] = [];
-    for (let i = 0; i < 6; i++) weeks.push(cells.slice(i * 7, i * 7 + 7));
-    while (weeks.length > 4 && weeks[weeks.length - 1].every((c) => !c.inMonth)) {
-      weeks.pop();
+    const ws: typeof cells[] = [];
+    for (let i = 0; i < 6; i++) ws.push(cells.slice(i * 7, i * 7 + 7));
+    while (ws.length > 4 && ws[ws.length - 1].every((c) => !c.inMonth)) {
+      ws.pop();
     }
-    return weeks.flat();
+    return ws;
   }, [month]);
 
-  const totalRows = days.length / 7;
+  // Build spanning bar segments per week for multi-day events
+  const weekSpans = useMemo(() => {
+    return weeks.map((week) => {
+      const weekStart = week[0].date;
+      const weekEnd = week[6].date;
+      type Seg = SpanSegment;
+      const segs: Seg[] = [];
+      events.forEach((event) => {
+        if (!event.startDay || !event.endDay) return;
+        const start = parseYmd(event.startDay);
+        const end = parseYmd(event.endDay);
+        if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) return;
+        if (end.getTime() <= start.getTime()) return;
+        if (end < weekStart || start > weekEnd) return;
+        const segStart = start < weekStart ? weekStart : start;
+        const segEnd = end > weekEnd ? weekEnd : end;
+        const startCol = Math.round(
+          (segStart.getTime() - weekStart.getTime()) / 86400000,
+        );
+        const endCol = Math.round(
+          (segEnd.getTime() - weekStart.getTime()) / 86400000,
+        );
+        segs.push({
+          id: String(event.id),
+          title: event.title || "Event",
+          colorHex: getEventBadgeHex(
+            event.tags?.[0] != null ? String(event.tags[0]) : undefined,
+            event.category,
+            (event as any).eventType,
+            (event as any).categoryColor,
+            event.title,
+          ),
+          startCol,
+          spanCols: endCol - startCol + 1,
+          lane: 0,
+          continuesLeft: start < weekStart,
+          continuesRight: end > weekEnd,
+          payload: event,
+        });
+      });
+      // Lane assignment: sort by startCol asc, longer span first
+      segs.sort((a, b) => a.startCol - b.startCol || b.spanCols - a.spanCols);
+      const laneEnds: number[] = []; // last endCol used per lane
+      segs.forEach((seg) => {
+        let lane = 0;
+        while (lane < laneEnds.length && laneEnds[lane] >= seg.startCol) lane++;
+        seg.lane = lane;
+        laneEnds[lane] = seg.startCol + seg.spanCols - 1;
+      });
+      const laneCount = laneEnds.length;
+      return { segments: segs, laneCount };
+    });
+  }, [weeks, events]);
+
+  const BAR_HEIGHT = 13; // px
+  const BAR_GAP = 2; // px
+  const HEADER_OFFSET = 24; // px — below date number row
 
   const goPrev = () => onMonthChange(new Date(month.getFullYear(), month.getMonth() - 1, 1));
   const goNext = () => onMonthChange(new Date(month.getFullYear(), month.getMonth() + 1, 1));
@@ -279,23 +350,24 @@ export function MonthGridCalendar({
 
       {/* Grid cells */}
       <div
-        className="grid grid-cols-7 [touch-action:pan-y]"
+        className="[touch-action:pan-y]"
         onTouchStart={handleTouchStart}
         onTouchEnd={handleTouchEnd}
       >
-        {days.map(({ date, ymd, inMonth }, idx) => {
-          const bucket = buckets.get(ymd) || [];
+        {weeks.map((week, wIdx) => {
+          const { segments, laneCount } = weekSpans[wIdx];
+          const barsTotalHeight = laneCount > 0 ? laneCount * (BAR_HEIGHT + BAR_GAP) : 0;
+          return (
+            <div key={wIdx} className="relative grid grid-cols-7">
+              {week.map(({ date, ymd, inMonth }, col) => {
+                const bucket = buckets.get(ymd) || [];
           const isToday = ymd === todayYmd;
           const isSelected = ymd === selectedDay;
-          const overflowing = bucket.length > maxChipsPerDay;
-          const visibleCount = Math.min(bucket.length, maxChipsPerDay);
+                const chipCapacity = Math.max(1, maxChipsPerDay - laneCount);
+                const overflowing = bucket.length > chipCapacity;
+                const visibleCount = Math.min(bucket.length, chipCapacity);
           const visible = bucket.slice(0, visibleCount);
           const extra = bucket.length - visibleCount;
-
-          const col = idx % 7;
-          const row = Math.floor(idx / 7);
-          const isLastCol = col === 6;
-          const isLastRow = row === totalRows - 1;
 
           const handleCellClick = () => {
             if (!inMonth) {
@@ -354,7 +426,10 @@ export function MonthGridCalendar({
                   </span>
                 )}
               </div>
-              <div className="flex flex-col gap-0.5">
+                    <div
+                      className="flex flex-col gap-0.5"
+                      style={{ marginTop: barsTotalHeight }}
+                    >
                 {visible.map((item) => (
                   <div
                     key={`${item.kind}-${item.id}`}
@@ -389,6 +464,52 @@ export function MonthGridCalendar({
                 ))}
               </div>
             </button>
+          );
+              })}
+              {/* Multi-day spanning bars overlay */}
+              {segments.length > 0 && (
+                <div
+                  className="pointer-events-none absolute inset-x-0"
+                  style={{ top: HEADER_OFFSET }}
+                >
+                  {segments.map((seg) => {
+                    const leftPct = (seg.startCol * 100) / 7;
+                    const widthPct = (seg.spanCols * 100) / 7;
+                    return (
+                      <div
+                        key={`${seg.id}-${wIdx}-${seg.startCol}`}
+                        role="button"
+                        tabIndex={-1}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          const ymd = toYmd(week[seg.startCol].date);
+                          onSelectDay(ymd);
+                          onZoomToDay?.(ymd);
+                        }}
+                        aria-label={seg.title}
+                        title={seg.title}
+                        className={cn(
+                          "pointer-events-auto absolute px-1.5 text-[9px] sm:text-[10px] leading-[13px] font-medium overflow-hidden no-callout",
+                          seg.continuesLeft ? "rounded-l-none" : "rounded-l-[3px]",
+                          seg.continuesRight ? "rounded-r-none" : "rounded-r-[3px]",
+                        )}
+                        style={{
+                          left: `calc(${leftPct}% + 3px)`,
+                          width: `calc(${widthPct}% - 6px)`,
+                          top: seg.lane * (BAR_HEIGHT + BAR_GAP),
+                          height: BAR_HEIGHT,
+                          backgroundColor: seg.colorHex,
+                          color: "#ffffff",
+                          whiteSpace: "nowrap",
+                        }}
+                      >
+                        {!seg.continuesLeft && seg.title}
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
           );
         })}
       </div>
