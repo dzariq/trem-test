@@ -1,19 +1,18 @@
-import { useCallback, useMemo } from "react";
+import { useCallback, useEffect, useState } from "react";
+import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/contexts/AuthContext";
-import { useTeacherScope } from "@/hooks/useTeacherScope";
 import type { CcaActivity } from "@/hooks/useCcaActivities";
 
 /**
- * Returns a predicate filter for CCA activity list pages, matching the
- * unified permission model.
+ * Predicate filter for CCA activity list pages.
  *
- *  Principal -> show all.
- *  Teacher   -> show activities they PIC OR year-overlap.
+ *  Principal (super_admin / admin / school_leader) -> show all.
+ *  Teacher   -> show activities they are Main/Sub PIC of
+ *               OR activities where they are a bus PIC (outdoor).
  *  Other     -> empty (parents use the eligibility hook).
  */
 export function useCcaActivityFilter() {
   const { user, profile } = useAuth();
-  const scope = useTeacherScope();
 
   const role = profile?.role ?? "";
   const isPrincipal =
@@ -21,45 +20,51 @@ export function useCcaActivityFilter() {
   const isTeacher = role === "teacher";
   const uid = user?.id ?? null;
 
-  const teacherYearLevels = useMemo(
-    () =>
-      new Set(
-        (scope.allowedClassYears || [])
-          .map((c) => c.year_level)
-          .filter(Boolean) as string[]
-      ),
-    [scope.allowedClassYears]
+  const [busPicActivityIds, setBusPicActivityIds] = useState<Set<string>>(
+    new Set()
   );
-  const teacherClassNames = useMemo(
-    () =>
-      new Set(
-        (scope.allowedClassYears || [])
-          .map((c) => c.class_name)
-          .filter(Boolean) as string[]
-      ),
-    [scope.allowedClassYears]
-  );
+
+  useEffect(() => {
+    let cancelled = false;
+    if (!isTeacher || !uid) {
+      setBusPicActivityIds(new Set());
+      return;
+    }
+    (async () => {
+      const { data, error } = await supabase
+        .from("cca_outdoor_buses")
+        .select("activity_id")
+        .or(`teacher_pic_main.eq.${uid},teacher_pic_sub.eq.${uid}`);
+      if (cancelled) return;
+      if (error) {
+        console.error("[useCcaActivityFilter] bus PIC lookup failed:", error);
+        setBusPicActivityIds(new Set());
+        return;
+      }
+      setBusPicActivityIds(
+        new Set((data || []).map((r: any) => r.activity_id).filter(Boolean))
+      );
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [isTeacher, uid]);
 
   const canSee = useCallback(
     (activity: CcaActivity): boolean => {
       if (isPrincipal) return true;
       if (!isTeacher) return false;
+      if (!uid) return false;
 
-      // PIC always visible
-      if (uid && (activity.picTeachers || []).some((t) => t.teacherUserId === uid)) {
+      if (
+        (activity.picTeachers || []).some((t) => t.teacherUserId === uid)
+      ) {
         return true;
       }
-
-      // Year-overlap fallback
-      const kind = (activity.kind || "").toLowerCase();
-      if (kind === "event") {
-        const involved = activity.classesInvolved || [];
-        return involved.some((c) => teacherClassNames.has(c));
-      }
-      const yls = activity.yearLevels || [];
-      return yls.some((y) => teacherYearLevels.has(y));
+      if (busPicActivityIds.has(activity.id)) return true;
+      return false;
     },
-    [isPrincipal, isTeacher, uid, teacherYearLevels, teacherClassNames]
+    [isPrincipal, isTeacher, uid, busPicActivityIds]
   );
 
   const apply = useCallback(
