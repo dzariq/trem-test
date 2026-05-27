@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo, useCallback, useRef } from "react";
+import { useRefetchOnResume } from "@/hooks/useRefreshOnAppResume";
 import { supabase } from "@/lib/supabase";
 
 export interface AcademicPeriod {
@@ -496,6 +497,8 @@ export function useStudentReportCard(
   useEffect(() => {
     fetchReportCardData();
   }, [fetchReportCardData]);
+
+  useRefetchOnResume(fetchReportCardData);
 
   // Computed: behavior items for UI - derive from grades if no behavioral_assessments
   const behaviorItems = useMemo(() => {
