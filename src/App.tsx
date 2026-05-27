@@ -56,6 +56,7 @@ const TeacherCcaDetailPage = lazy(() => import("./pages/teacher/TeacherCcaDetail
 const TeacherVenueDetailPage = lazy(() => import("./pages/teacher/TeacherVenueDetailPage"));
 
 const NotFound = lazy(() => import("./pages/NotFound"));
+const PdfViewPage = lazy(() => import("./pages/PdfViewPage"));
 
 function RouteFallback() {
   return (
@@ -183,6 +184,7 @@ const App = () => (
                   )}
                 </Route>
                 <Route path="/privacy-policy" element={<PrivacyPolicyPage />} />
+                <Route path="/pdf" element={<PdfViewPage />} />
 
                 {/* Teacher Routes - Protected */}
                 <Route element={<TeacherGuard />}>
