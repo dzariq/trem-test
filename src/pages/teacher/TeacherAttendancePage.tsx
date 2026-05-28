@@ -539,6 +539,7 @@ export default function TeacherAttendancePage() {
                       classNames={{
                         day_today: "rdp-day_today font-semibold text-foreground",
                       }}
+                      disabled={isPickerDateBlocked}
                       modifiers={{
                         complete: (date) => completeDates.has(format(date, "yyyy-MM-dd")),
                         partial: (date) => partialDates.has(format(date, "yyyy-MM-dd")),
@@ -554,6 +555,7 @@ export default function TeacherAttendancePage() {
                       <div className="flex items-center gap-3 text-[11px] text-muted-foreground">
                         <span className="inline-flex items-center gap-1.5"><span className="h-1.5 w-1.5 rounded-full bg-primary" />Complete</span>
                         <span className="inline-flex items-center gap-1.5"><span className="h-1.5 w-1.5 rounded-full bg-destructive" />Partial</span>
+                        <span className="inline-flex items-center gap-1.5"><span className="h-1.5 w-1.5 rounded-full bg-muted-foreground/40" />Weekend / Holiday</span>
                       </div>
                       <button
                         type="button"
