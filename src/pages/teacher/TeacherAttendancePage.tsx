@@ -161,6 +161,22 @@ export default function TeacherAttendancePage() {
   const [selectedYear, setSelectedYear] = useState(String(currentYear));
   const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth());
   const [selectedDayStats, setSelectedDayStats] = useState<DailyBreakdown | null>(null);
+
+  // Holiday set covering the take-attendance picker window (±3 months of today
+  // — same window the marked-dates fetch uses).
+  const pickerHolidayRange = useMemo(() => {
+    const today = new Date();
+    return {
+      start: subMonths(today, 3),
+      end: addWeeks(today, 13),
+    };
+  }, []);
+  const { holidaySet: pickerHolidaySet } = useAttendanceHolidaySet(
+    pickerHolidayRange.start,
+    pickerHolidayRange.end,
+  );
+  const isPickerDateBlocked = (date: Date) =>
+    isBlockedAttendanceDate(date, pickerHolidaySet);
   
   // Scope filter for statistics
   const scopeFilter = useAttendanceScopeFilter();
