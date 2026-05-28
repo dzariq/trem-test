@@ -220,6 +220,12 @@ jobs:
           ROOT_GRADLE="android/build.gradle"
           APP_GRADLE="android/app/build.gradle"
 
+          # Ensure Google Maven repo is available.
+          # Capacitor templates usually include it, but enforce to avoid missing artifacts.
+          if ! grep -qE '(^|\\s)google\\(\\)' "$ROOT_GRADLE"; then
+            perl -0777 -i -pe 's/(allprojects\\s*\\{[\\s\\S]*?repositories\\s*\\{)/$1\\n        google()\\n        mavenCentral()/;' "$ROOT_GRADLE"
+          fi
+
           # 1) Ensure google-services Gradle plugin classpath exists
           if ! grep -q "com.google.gms:google-services" "$ROOT_GRADLE"; then
             perl -0777 -i -pe 's/(buildscript\\s*\\{[\\s\\S]*?dependencies\\s*\\{)/$1\\n        classpath \x27com.google.gms:google-services:4.4.2\x27/;' "$ROOT_GRADLE"
@@ -234,6 +240,19 @@ jobs:
           if ! grep -q "firebase-messaging" "$APP_GRADLE"; then
             perl -0777 -i -pe 's/(dependencies\\s*\\{)/$1\\n    implementation platform(\x27com.google.firebase:firebase-bom:34.0.0\x27)\\n    implementation \x27com.google.firebase:firebase-messaging\x27/;' "$APP_GRADLE"
           fi
+
+      - name: Verify Firebase Gradle wiring
+        run: |
+          set -e
+          echo "---- android/build.gradle (firebase snippets) ----"
+          grep -n "google()" -n android/build.gradle || true
+          grep -n "google-services" -n android/build.gradle || true
+          echo "---- android/app/build.gradle (firebase snippets) ----"
+          grep -n "google-services" -n android/app/build.gradle || true
+          grep -n "firebase-bom" -n android/app/build.gradle || true
+          grep -n "firebase-messaging" -n android/app/build.gradle || true
+          # Hard fail if dependency isn't present (otherwise app runs without FirebaseMessaging).
+          grep -q "firebase-messaging" android/app/build.gradle
 
       - name: Verify MainActivity patch survived sync
         run: |
