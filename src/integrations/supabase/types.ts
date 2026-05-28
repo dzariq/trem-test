@@ -4749,6 +4749,7 @@ export type Database = {
           item_id: string | null
           link_to: string | null
           message: string
+          notification_date: string | null
           push_sent: boolean
           title: string
           topics: string[]
@@ -4762,6 +4763,7 @@ export type Database = {
           item_id?: string | null
           link_to?: string | null
           message: string
+          notification_date?: string | null
           push_sent?: boolean
           title: string
           topics?: string[]
@@ -4775,6 +4777,7 @@ export type Database = {
           item_id?: string | null
           link_to?: string | null
           message?: string
+          notification_date?: string | null
           push_sent?: boolean
           title?: string
           topics?: string[]
