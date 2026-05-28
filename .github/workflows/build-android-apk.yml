@@ -146,6 +146,18 @@ jobs:
                   lastPushError = error;
               }
 
+              private void emitLog(String message) {
+                  try {
+                      if (this.bridge == null || this.bridge.getWebView() == null) return;
+                      String safeMsg = (message == null) ? "" : message.replace("\\", "\\\\").replace("\"", "\\\"");
+                      String js =
+                          "window.__tremLogs = window.__tremLogs || [];" +
+                          "window.__tremLogs.push({ ts: Date.now(), msg: \"" + safeMsg + "\" });" +
+                          "window.dispatchEvent(new CustomEvent('tremLog', { detail: { ts: Date.now(), msg: \"" + safeMsg + "\" } }));";
+                      this.bridge.getWebView().post(() -> this.bridge.getWebView().evaluateJavascript(js, null));
+                  } catch (Throwable ignored) {}
+              }
+
               private void emitPushStatus(String topic, boolean ok, String error) {
                   try {
                       if (this.bridge == null || this.bridge.getWebView() == null) return;
@@ -200,6 +212,7 @@ jobs:
                   new Handler(Looper.getMainLooper()).postDelayed(() -> {
                       if (lastPushOk == null) {
                           rememberPushResult("trem_test", false, "Waiting for subscribe result");
+                          emitLog("Timeout waiting for subscribe completion; emitting fallback status");
                           emitPushStatusWhenReady();
                       }
                   }, 2500);
@@ -208,6 +221,7 @@ jobs:
                   // firebase-messaging symbol isn't on the app module's
                   // compile classpath.
                   try {
+                      emitLog("Attempting subscribeToTopic(trem_test) …");
                       Class<?> cls = Class.forName("com.google.firebase.messaging.FirebaseMessaging");
                       Object inst = cls.getMethod("getInstance").invoke(null);
                       Object task = cls.getMethod("subscribeToTopic", String.class).invoke(inst, "trem_test");
@@ -226,11 +240,13 @@ jobs:
                                           boolean ok = (boolean) t.getClass().getMethod("isSuccessful").invoke(t);
                                           if (ok) {
                                               Log.i(TAG, "Subscribed to topic trem_test");
+                                              emitLog("Subscribed to topic trem_test (native)");
                                               rememberPushResult("trem_test", true, null);
                                               emitPushStatusWhenReady();
                                           } else {
                                               Object ex = t.getClass().getMethod("getException").invoke(t);
                                               Log.w(TAG, "Subscribe to topic trem_test failed: " + ex);
+                                              emitLog("Subscribe failed: " + ex);
                                               rememberPushResult("trem_test", false, String.valueOf(ex));
                                               emitPushStatusWhenReady();
                                           }
@@ -241,6 +257,7 @@ jobs:
                           );
                   } catch (Throwable e) {
                       Log.w(TAG, "FirebaseMessaging not available; skipped topic subscribe", e);
+                      emitLog("FirebaseMessaging not available: " + e);
                       rememberPushResult("trem_test", false, "FirebaseMessaging not available");
                       emitPushStatusWhenReady();
                   }
