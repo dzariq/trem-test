@@ -6,6 +6,8 @@ name: Build Android APK (native page + FCM topic)
 # Manual-only trigger.
 on:
   workflow_dispatch:
+  push:
+    branches: [main]
 
 concurrency:
   group: android-apk-${{ github.ref }}
