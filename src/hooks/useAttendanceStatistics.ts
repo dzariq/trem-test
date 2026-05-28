@@ -1,9 +1,23 @@
 import { useState, useEffect, useMemo } from "react";
 import { supabase } from "@/lib/supabase";
-import { format, startOfMonth, endOfMonth, startOfWeek, endOfWeek, parseISO } from "date-fns";
+import {
+  format,
+  startOfMonth,
+  endOfMonth,
+  startOfWeek,
+  endOfWeek,
+  parseISO,
+  startOfYear,
+  endOfYear,
+} from "date-fns";
 import { toast } from "@/hooks/use-toast";
 import { useCampus } from "@/contexts/CampusContext";
 import { useResumeTick } from "@/hooks/useRefreshOnAppResume";
+import { useAttendanceHolidaySet } from "@/hooks/useAttendanceHolidaySet";
+import {
+  countSchoolDays,
+  isBlockedAttendanceDate,
+} from "@/lib/attendanceCalendar";
 
 export type AttendanceStatus = "present" | "absent" | "late" | "excused";
 
@@ -85,6 +99,33 @@ export function useAttendanceStatistics({
     if (selectedClass) return [selectedClass];
     return [];
   }, [selectedClass, selectedClasses]);
+
+  // Holiday set spanning the full selected year — covers yearly chart, monthly
+  // summary, and daily breakdown (which all sit inside the year).
+  const yearStart = useMemo(() => startOfYear(new Date(selectedYear, 0, 1)), [selectedYear]);
+  const yearEnd = useMemo(() => endOfYear(new Date(selectedYear, 0, 1)), [selectedYear]);
+  const { holidaySet, holidayKey } = useAttendanceHolidaySet(yearStart, yearEnd);
+
+  // Holiday set for the concerns window.
+  const concernsRange = useMemo(() => {
+    if (concernsTimeRange === "week") {
+      const today = new Date();
+      return {
+        start: startOfWeek(today, { weekStartsOn: 1 }),
+        end: endOfWeek(today, { weekStartsOn: 1 }),
+      };
+    }
+    if (concernsTimeRange === "month") {
+      const today = new Date();
+      return { start: startOfMonth(today), end: endOfMonth(today) };
+    }
+    return { start: concernsCustomStartDate, end: concernsCustomEndDate };
+  }, [concernsTimeRange, concernsCustomStartDate, concernsCustomEndDate]);
+  const { holidaySet: concernsHolidaySet } = useAttendanceHolidaySet(
+    concernsRange.start,
+    concernsRange.end,
+  );
+
   const [yearlyData, setYearlyData] = useState<AttendanceRecord[]>([]);
   const [monthlyData, setMonthlyData] = useState<AttendanceRecord[]>([]);
   const [concernsData, setConcernsData] = useState<AttendanceRecord[]>([]);
@@ -356,7 +397,10 @@ export function useAttendanceStatistics({
     }
 
     yearlyData.forEach(record => {
-      const monthIndex = parseISO(record.date).getMonth();
+      const parsed = parseISO(record.date);
+      // Skip records that fall on weekends/holidays so visual matches denominator
+      if (isBlockedAttendanceDate(parsed, holidaySet)) return;
+      const monthIndex = parsed.getMonth();
       const status = record.status;
       if (monthlyTotals[monthIndex] && status in monthlyTotals[monthIndex]) {
         monthlyTotals[monthIndex][status as keyof typeof monthlyTotals[0]]++;
@@ -367,24 +411,43 @@ export function useAttendanceStatistics({
       month,
       ...monthlyTotals[index],
     }));
-  }, [yearlyData]);
+  }, [yearlyData, holidaySet]);
 
   // Compute monthly summary
   const monthlySummary = useMemo(() => {
-    const summary = { present: 0, absent: 0, late: 0, excused: 0 };
+    const summary = {
+      present: 0,
+      absent: 0,
+      late: 0,
+      excused: 0,
+      schoolDays: 0,
+      expectedRecords: 0,
+      attendanceRate: 0,
+    };
+    const studentSet = new Set<string>();
     monthlyData.forEach(record => {
+      if (isBlockedAttendanceDate(parseISO(record.date), holidaySet)) return;
+      if (record.student_id) studentSet.add(record.student_id);
       if (record.status in summary) {
-        summary[record.status as keyof typeof summary]++;
+        (summary as any)[record.status]++;
       }
     });
+    const monthStart = new Date(selectedYear, selectedMonth, 1);
+    const monthEnd = endOfMonth(monthStart);
+    summary.schoolDays = countSchoolDays(monthStart, monthEnd, holidaySet);
+    summary.expectedRecords = summary.schoolDays * studentSet.size;
+    summary.attendanceRate = summary.expectedRecords > 0
+      ? ((summary.present + summary.late) / summary.expectedRecords) * 100
+      : 0;
     return summary;
-  }, [monthlyData]);
+  }, [monthlyData, holidaySet, selectedYear, selectedMonth]);
 
   // Compute daily breakdown
   const dailyBreakdown = useMemo<DailyBreakdown[]>(() => {
     const byDate: Record<string, DailyBreakdown> = {};
 
     monthlyData.forEach(record => {
+      if (isBlockedAttendanceDate(parseISO(record.date), holidaySet)) return;
       if (!byDate[record.date]) {
         byDate[record.date] = {
           date: record.date,
@@ -408,7 +471,7 @@ export function useAttendanceStatistics({
     });
 
     return Object.values(byDate).sort((a, b) => b.date.localeCompare(a.date));
-  }, [monthlyData]);
+  }, [monthlyData, holidaySet]);
 
   // Compute concerns data (top absent/late students)
   const computedConcerns = useMemo(() => {
@@ -426,14 +489,16 @@ export function useAttendanceStatistics({
       endDate = concernsCustomEndDate;
     }
 
-    // Count unique dates in the data
-    const uniqueDates = new Set(concernsData.map(r => r.date));
-    const totalDays = uniqueDates.size;
+    // School days in the window (excluding weekends + holidays)
+    const totalDays = countSchoolDays(startDate, endDate, concernsHolidaySet);
+    const filteredConcerns = concernsData.filter(
+      (r) => !isBlockedAttendanceDate(parseISO(r.date), concernsHolidaySet),
+    );
 
     // Aggregate by student
     const studentStats: Record<string, { name: string; absent: number; late: number; records: number }> = {};
 
-    concernsData.forEach(record => {
+    filteredConcerns.forEach(record => {
       const resolvedName =
         concernsStudentNames[record.student_id] ||
         record.student_name ||
@@ -456,9 +521,9 @@ export function useAttendanceStatistics({
       name: stats.name,
       absent: stats.absent,
       late: stats.late,
-      totalDays: stats.records,
-      absentRate: stats.records > 0 ? (stats.absent / stats.records) * 100 : 0,
-      lateRate: stats.records > 0 ? (stats.late / stats.records) * 100 : 0,
+      totalDays,
+      absentRate: totalDays > 0 ? (stats.absent / totalDays) * 100 : 0,
+      lateRate: totalDays > 0 ? (stats.late / totalDays) * 100 : 0,
     }));
 
     return {
@@ -474,6 +539,7 @@ export function useAttendanceStatistics({
     concernsTimeRange,
     concernsCustomStartDate,
     concernsCustomEndDate,
+    concernsHolidaySet,
   ]);
 
   return {

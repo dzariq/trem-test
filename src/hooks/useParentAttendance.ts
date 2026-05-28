@@ -1,7 +1,9 @@
 import { useState, useEffect, useMemo, useCallback } from "react";
 import { supabase } from "@/lib/supabase";
-import { format } from "date-fns";
+import { format, parseISO, startOfYear, endOfYear, subMonths } from "date-fns";
 import { useRefetchOnResume, useResumeTick } from "@/hooks/useRefreshOnAppResume";
+import { useAttendanceHolidaySet } from "@/hooks/useAttendanceHolidaySet";
+import { isBlockedAttendanceDate } from "@/lib/attendanceCalendar";
 
 type AttendanceStatus = "present" | "absent" | "late" | "excused";
 
@@ -91,6 +93,22 @@ export function useParentAttendance(studentId: StudentIdInput, selectedYear: str
   const ids = useMemo(() => normalizeIds(studentId), [studentId]);
   const idsKey = ids.join(",");
 
+  const yearStart = useMemo(
+    () => startOfYear(new Date(parseInt(selectedYear, 10), 0, 1)),
+    [selectedYear],
+  );
+  const yearEnd = useMemo(
+    () => endOfYear(new Date(parseInt(selectedYear, 10), 0, 1)),
+    [selectedYear],
+  );
+  const { holidaySet } = useAttendanceHolidaySet(yearStart, yearEnd);
+
+  // Drop weekend/holiday rows up-front so all derived stats are consistent.
+  const filteredRecords = useMemo(
+    () => records.filter((r) => !isBlockedAttendanceDate(parseISO(r.date), holidaySet)),
+    [records, holidaySet],
+  );
+
   // Fetch attendance data with proper date range filtering
   const fetchAttendance = useCallback(async () => {
     if (ids.length === 0) {
@@ -163,7 +181,7 @@ export function useParentAttendance(studentId: StudentIdInput, selectedYear: str
     });
 
     // Count records by month - NORMALIZE status to lowercase
-    records.forEach((record) => {
+    filteredRecords.forEach((record) => {
       const date = new Date(record.date);
       const monthName = monthNames[date.getMonth()];
       const status = record.status.toLowerCase() as AttendanceStatus;
@@ -180,12 +198,12 @@ export function useParentAttendance(studentId: StudentIdInput, selectedYear: str
       const pct = totalDays > 0 ? Math.round((attended / totalDays) * 100) : null;
       return { month, ...c, attended, totalDays, pct };
     });
-  }, [records]);
+  }, [filteredRecords]);
 
   // Calculate monthly summary for selected month
   const getMonthlySummary = useCallback(
     (monthIndex: number) => {
-      const monthRecords = records.filter((r) => {
+      const monthRecords = filteredRecords.filter((r) => {
         const date = new Date(r.date);
         return date.getMonth() === monthIndex;
       });
@@ -197,13 +215,13 @@ export function useParentAttendance(studentId: StudentIdInput, selectedYear: str
         excused: monthRecords.filter((r) => r.status.toLowerCase() === "excused").length,
       };
     },
-    [records]
+    [filteredRecords]
   );
 
   // Get daily breakdown for selected month
   const getDailyBreakdown = useCallback(
     (monthIndex: number): DailyBreakdown[] => {
-      return records
+      return filteredRecords
         .filter((r) => {
           const date = new Date(r.date);
           return date.getMonth() === monthIndex;
@@ -217,7 +235,7 @@ export function useParentAttendance(studentId: StudentIdInput, selectedYear: str
         }))
         .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
     },
-    [records]
+    [filteredRecords]
   );
 
   // Refetch function for external use
@@ -256,6 +274,15 @@ export function useRollingAttendance(studentId: StudentIdInput, months: 3 | 6 | 
 
   const ids = useMemo(() => normalizeIds(studentId), [studentId]);
   const idsKey = ids.join(",");
+
+  const rollingStart = useMemo(() => subMonths(new Date(), months), [months]);
+  const rollingEnd = useMemo(() => new Date(), []);
+  const { holidaySet } = useAttendanceHolidaySet(rollingStart, rollingEnd);
+
+  const filteredRecords = useMemo(
+    () => records.filter((r) => !isBlockedAttendanceDate(parseISO(r.date), holidaySet)),
+    [records, holidaySet],
+  );
 
   useEffect(() => {
     if (ids.length === 0) {
@@ -311,7 +338,7 @@ export function useRollingAttendance(studentId: StudentIdInput, months: 3 | 6 | 
   const chartData = useMemo<MonthlyChartData[]>(() => {
     const monthMap: Record<string, { present: number; absent: number; late: number; excused: number }> = {};
 
-    records.forEach((record) => {
+    filteredRecords.forEach((record) => {
       const date = new Date(record.date);
       const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
       const monthLabel = date.toLocaleDateString("en-US", { month: "short", year: "2-digit" });
@@ -343,17 +370,17 @@ export function useRollingAttendance(studentId: StudentIdInput, months: 3 | 6 | 
           pct,
         };
       });
-  }, [records]);
+  }, [filteredRecords]);
 
   // Total summary for the rolling period
   const summary = useMemo(() => {
     return {
-      present: records.filter((r) => r.status.toLowerCase() === "present").length,
-      absent: records.filter((r) => r.status.toLowerCase() === "absent").length,
-      late: records.filter((r) => r.status.toLowerCase() === "late").length,
-      excused: records.filter((r) => r.status.toLowerCase() === "excused").length,
+      present: filteredRecords.filter((r) => r.status.toLowerCase() === "present").length,
+      absent: filteredRecords.filter((r) => r.status.toLowerCase() === "absent").length,
+      late: filteredRecords.filter((r) => r.status.toLowerCase() === "late").length,
+      excused: filteredRecords.filter((r) => r.status.toLowerCase() === "excused").length,
     };
-  }, [records]);
+  }, [filteredRecords]);
 
   return {
     records,

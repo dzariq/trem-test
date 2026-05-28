@@ -23,6 +23,8 @@ import { type AttendanceStatus } from "@/data/teacherAttendance";
 import { useTeacherScope } from "@/hooks/useTeacherScope";
 import { useAttendanceScopeFilter } from "@/hooks/useAttendanceScopeFilter";
 import { useCampus } from "@/contexts/CampusContext";
+import { useAttendanceHolidaySet } from "@/hooks/useAttendanceHolidaySet";
+import { isBlockedAttendanceDate } from "@/lib/attendanceCalendar";
 import { AttendanceScopeFilterSheet, AttendanceScopeFilterPill } from "@/components/attendance/AttendanceScopeFilterSheet";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -159,6 +161,22 @@ export default function TeacherAttendancePage() {
   const [selectedYear, setSelectedYear] = useState(String(currentYear));
   const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth());
   const [selectedDayStats, setSelectedDayStats] = useState<DailyBreakdown | null>(null);
+
+  // Holiday set covering the take-attendance picker window (±3 months of today
+  // — same window the marked-dates fetch uses).
+  const pickerHolidayRange = useMemo(() => {
+    const today = new Date();
+    return {
+      start: subMonths(today, 3),
+      end: addWeeks(today, 13),
+    };
+  }, []);
+  const { holidaySet: pickerHolidaySet } = useAttendanceHolidaySet(
+    pickerHolidayRange.start,
+    pickerHolidayRange.end,
+  );
+  const isPickerDateBlocked = (date: Date) =>
+    isBlockedAttendanceDate(date, pickerHolidaySet);
   
   // Scope filter for statistics
   const scopeFilter = useAttendanceScopeFilter();
@@ -521,6 +539,7 @@ export default function TeacherAttendancePage() {
                       classNames={{
                         day_today: "rdp-day_today font-semibold text-foreground",
                       }}
+                      disabled={isPickerDateBlocked}
                       modifiers={{
                         complete: (date) => completeDates.has(format(date, "yyyy-MM-dd")),
                         partial: (date) => partialDates.has(format(date, "yyyy-MM-dd")),
@@ -536,6 +555,7 @@ export default function TeacherAttendancePage() {
                       <div className="flex items-center gap-3 text-[11px] text-muted-foreground">
                         <span className="inline-flex items-center gap-1.5"><span className="h-1.5 w-1.5 rounded-full bg-primary" />Complete</span>
                         <span className="inline-flex items-center gap-1.5"><span className="h-1.5 w-1.5 rounded-full bg-destructive" />Partial</span>
+                        <span className="inline-flex items-center gap-1.5"><span className="h-1.5 w-1.5 rounded-full bg-muted-foreground/40" />Weekend / Holiday</span>
                       </div>
                       <button
                         type="button"
