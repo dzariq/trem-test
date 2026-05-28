@@ -1,9 +1,23 @@
 import { useState, useEffect, useMemo } from "react";
 import { supabase } from "@/lib/supabase";
-import { format, startOfMonth, endOfMonth, startOfWeek, endOfWeek, parseISO } from "date-fns";
+import {
+  format,
+  startOfMonth,
+  endOfMonth,
+  startOfWeek,
+  endOfWeek,
+  parseISO,
+  startOfYear,
+  endOfYear,
+} from "date-fns";
 import { toast } from "@/hooks/use-toast";
 import { useCampus } from "@/contexts/CampusContext";
 import { useResumeTick } from "@/hooks/useRefreshOnAppResume";
+import { useAttendanceHolidaySet } from "@/hooks/useAttendanceHolidaySet";
+import {
+  countSchoolDays,
+  isBlockedAttendanceDate,
+} from "@/lib/attendanceCalendar";
 
 export type AttendanceStatus = "present" | "absent" | "late" | "excused";
 
@@ -85,6 +99,33 @@ export function useAttendanceStatistics({
     if (selectedClass) return [selectedClass];
     return [];
   }, [selectedClass, selectedClasses]);
+
+  // Holiday set spanning the full selected year — covers yearly chart, monthly
+  // summary, and daily breakdown (which all sit inside the year).
+  const yearStart = useMemo(() => startOfYear(new Date(selectedYear, 0, 1)), [selectedYear]);
+  const yearEnd = useMemo(() => endOfYear(new Date(selectedYear, 0, 1)), [selectedYear]);
+  const { holidaySet, holidayKey } = useAttendanceHolidaySet(yearStart, yearEnd);
+
+  // Holiday set for the concerns window.
+  const concernsRange = useMemo(() => {
+    if (concernsTimeRange === "week") {
+      const today = new Date();
+      return {
+        start: startOfWeek(today, { weekStartsOn: 1 }),
+        end: endOfWeek(today, { weekStartsOn: 1 }),
+      };
+    }
+    if (concernsTimeRange === "month") {
+      const today = new Date();
+      return { start: startOfMonth(today), end: endOfMonth(today) };
+    }
+    return { start: concernsCustomStartDate, end: concernsCustomEndDate };
+  }, [concernsTimeRange, concernsCustomStartDate, concernsCustomEndDate]);
+  const { holidaySet: concernsHolidaySet } = useAttendanceHolidaySet(
+    concernsRange.start,
+    concernsRange.end,
+  );
+
   const [yearlyData, setYearlyData] = useState<AttendanceRecord[]>([]);
   const [monthlyData, setMonthlyData] = useState<AttendanceRecord[]>([]);
   const [concernsData, setConcernsData] = useState<AttendanceRecord[]>([]);
