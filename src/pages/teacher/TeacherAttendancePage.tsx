@@ -23,6 +23,8 @@ import { type AttendanceStatus } from "@/data/teacherAttendance";
 import { useTeacherScope } from "@/hooks/useTeacherScope";
 import { useAttendanceScopeFilter } from "@/hooks/useAttendanceScopeFilter";
 import { useCampus } from "@/contexts/CampusContext";
+import { useAttendanceHolidaySet } from "@/hooks/useAttendanceHolidaySet";
+import { isBlockedAttendanceDate } from "@/lib/attendanceCalendar";
 import { AttendanceScopeFilterSheet, AttendanceScopeFilterPill } from "@/components/attendance/AttendanceScopeFilterSheet";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
