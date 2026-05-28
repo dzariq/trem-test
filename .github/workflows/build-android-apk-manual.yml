@@ -212,7 +212,7 @@ jobs:
                           .invoke(task,
                               java.util.concurrent.Executors.newSingleThreadExecutor(),
                               java.lang.reflect.Proxy.newProxyInstance(
-                                  ClassLoader.getSystemClassLoader(),
+                                  Class.forName("com.google.android.gms.tasks.OnCompleteListener").getClassLoader(),
                                   new Class[] { Class.forName("com.google.android.gms.tasks.OnCompleteListener") },
                                   (proxy, method, args) -> {
                                       if ("onComplete".equals(method.getName()) && args != null && args.length == 1) {
