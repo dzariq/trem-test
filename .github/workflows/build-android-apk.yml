@@ -250,7 +250,13 @@ jobs:
 
           # 3) Ensure firebase-messaging dependency exists
           if ! grep -q "firebase-messaging" "$APP_GRADLE"; then
-            perl -0777 -i -pe 's/(dependencies\\s*\\{)/$1\\n    implementation platform(\x27com.google.firebase:firebase-bom:34.0.0\x27)\\n    implementation \x27com.google.firebase:firebase-messaging\x27/;' "$APP_GRADLE"
+            cat >> "$APP_GRADLE" <<'EOF'
+
+dependencies {
+    implementation platform('com.google.firebase:firebase-bom:34.0.0')
+    implementation 'com.google.firebase:firebase-messaging'
+}
+EOF
           fi
 
       - name: Verify Firebase Gradle wiring
@@ -264,6 +270,8 @@ jobs:
           grep -n "google-services" -n android/app/build.gradle || true
           grep -n "firebase-bom" -n android/app/build.gradle || true
           grep -n "firebase-messaging" -n android/app/build.gradle || true
+          echo "---- android/app/build.gradle (tail) ----"
+          tail -n 60 android/app/build.gradle || true
           # Hard fail if dependency isn't present (otherwise app runs without FirebaseMessaging).
           grep -q "firebase-messaging" android/app/build.gradle
 
