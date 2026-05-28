@@ -111,6 +111,14 @@
             <div class="label">Last update</div>
             <div class="value muted" id="topicTs">—</div>
           </div>
+          <div class="row">
+            <div class="label">Notif permission</div>
+            <div class="value" id="notifPerm"><span class="pill muted">pending</span></div>
+          </div>
+          <div class="row">
+            <div class="label">FCM token</div>
+            <div class="value muted" id="fcmToken" style="font-size:10px;max-width:200px;word-break:break-all">—</div>
+          </div>
 
           <div class="row" style="margin-top:10px">
             <div class="label">Logs</div>
@@ -125,6 +133,8 @@
       const elStatus = document.getElementById("topicStatus");
       const elErr = document.getElementById("topicErr");
       const elTs = document.getElementById("topicTs");
+      const elNotifPerm = document.getElementById("notifPerm");
+      const elFcmToken = document.getElementById("fcmToken");
       const logBox = document.getElementById("logBox");
 
       function addLog(ts, msg) {
@@ -146,6 +156,22 @@
         elTs.textContent = ts ? new Date(ts).toLocaleString() : new Date().toLocaleString();
       }
 
+      function setNotifPerm(granted) {
+        const pill = document.createElement("span");
+        pill.className = "pill " + (granted ? "ok" : "bad");
+        pill.textContent = granted ? "granted" : "denied";
+        elNotifPerm.innerHTML = "";
+        elNotifPerm.appendChild(pill);
+      }
+
+      function setFcmToken(token) {
+        if (!token) return;
+        const short =
+          token.length > 24 ? token.slice(0, 12) + "…" + token.slice(-8) : token;
+        elFcmToken.textContent = short;
+        elFcmToken.title = token;
+      }
+
       // Android native sends CustomEvent('tremPush', {detail:{topic,ok,error,ts}})
       window.addEventListener("tremPush", (e) => {
         const d = (e && e.detail) || {};
@@ -158,6 +184,16 @@
         if (d && d.msg) addLog(d.ts, d.msg);
       });
 
+      window.addEventListener("tremNotifPerm", (e) => {
+        const d = (e && e.detail) || {};
+        if (typeof d.granted === "boolean") setNotifPerm(d.granted);
+      });
+
+      window.addEventListener("tremToken", (e) => {
+        const d = (e && e.detail) || {};
+        if (d && d.token) setFcmToken(d.token);
+      });
+
       // If native already set window.__tremPush before JS loaded
       if (window.__tremPush && typeof window.__tremPush.ok === "boolean") {
         setStatus(window.__tremPush.ok, window.__tremPush.error, window.__tremPush.ts);
@@ -165,6 +201,12 @@
       // If native logs were set before JS loaded
       if (Array.isArray(window.__tremLogs)) {
         window.__tremLogs.slice(-50).forEach((l) => addLog(l.ts, l.msg));
+      }
+      if (typeof window.__tremNotifPerm === "boolean") {
+        setNotifPerm(window.__tremNotifPerm);
+      }
+      if (window.__tremFcmToken) {
+        setFcmToken(window.__tremFcmToken);
       }
 
       // Fallback: if nothing arrives after 5s, mark as failed to avoid "pending" forever.

@@ -110,163 +110,6 @@ jobs:
             --splashBackgroundColor "#ffffff" \
             --splashBackgroundColorDark "#1a1a1a"
 
-      - name: Patch MainActivity (subscribe topic trem_test)
-        run: |
-          set -e
-          APP_PKG_DIR="android/app/src/main/java/com/tremendousinc/trem"
-          if [ ! -d "$APP_PKG_DIR" ]; then
-            echo "Expected MainActivity dir at $APP_PKG_DIR"
-            find android/app/src/main/java -type d
-            exit 1
-          fi
-          cat > "$APP_PKG_DIR/MainActivity.java" << 'EOF'
-          package com.tremendousinc.trem;
-
-          import android.os.Handler;
-          import android.os.Bundle;
-          import android.os.Looper;
-          import android.util.Log;
-
-          import com.getcapacitor.BridgeActivity;
-
-          /**
-           * Trem wrapper: loads bundled dist/index.html.
-           * Subscribes to FCM topic "trem_test" on every cold start.
-           */
-          public class MainActivity extends BridgeActivity {
-              private static final String TAG = "TremNav";
-
-              private volatile String lastPushTopic = "trem_test";
-              private volatile Boolean lastPushOk = null;
-              private volatile String lastPushError = null;
-
-              private void rememberPushResult(String topic, Boolean ok, String error) {
-                  lastPushTopic = topic;
-                  lastPushOk = ok;
-                  lastPushError = error;
-              }
-
-              private void emitLog(String message) {
-                  try {
-                      if (this.bridge == null || this.bridge.getWebView() == null) return;
-                      String safeMsg = (message == null) ? "" : message.replace("\\", "\\\\").replace("\"", "\\\"");
-                      String js =
-                          "window.__tremLogs = window.__tremLogs || [];" +
-                          "window.__tremLogs.push({ ts: Date.now(), msg: \"" + safeMsg + "\" });" +
-                          "window.dispatchEvent(new CustomEvent('tremLog', { detail: { ts: Date.now(), msg: \"" + safeMsg + "\" } }));";
-                      this.bridge.getWebView().post(() -> this.bridge.getWebView().evaluateJavascript(js, null));
-                  } catch (Throwable ignored) {}
-              }
-
-              private void emitPushStatus(String topic, boolean ok, String error) {
-                  try {
-                      if (this.bridge == null || this.bridge.getWebView() == null) return;
-                      String safeError = (error == null) ? "" : error.replace("\\", "\\\\").replace("\"", "\\\"");
-                      String js =
-                          "window.__tremPush = {" +
-                          "topic: \"" + topic + "\"," +
-                          "ok: " + (ok ? "true" : "false") + "," +
-                          "error: \"" + safeError + "\"," +
-                          "ts: Date.now()" +
-                          "};" +
-                          "window.dispatchEvent(new CustomEvent('tremPush', { detail: window.__tremPush }));";
-                      this.bridge.getWebView().post(() -> this.bridge.getWebView().evaluateJavascript(js, null));
-                  } catch (Throwable ignored) {}
-              }
-
-              private void emitPushStatusWhenReady() {
-                  // WebView may not have navigated to dist/index.html yet during onCreate.
-                  // Retry a few times until URL exists, then emit the last known status.
-                  try {
-                      if (this.bridge == null || this.bridge.getWebView() == null) return;
-                      final com.getcapacitor.BridgeActivity self = this;
-                      final int[] tries = {0};
-                      final Runnable r = new Runnable() {
-                          @Override public void run() {
-                              tries[0]++;
-                              try {
-                                  if (bridge == null || bridge.getWebView() == null) return;
-                                  String url = bridge.getWebView().getUrl();
-                                  if (url == null || url.length() == 0) {
-                                      if (tries[0] < 15) bridge.getWebView().postDelayed(this, 400);
-                                      return;
-                                  }
-                                  // If we don't have a result yet, emit a soft failure so UI isn't stuck.
-                                  if (lastPushOk == null) {
-                                      emitPushStatus(lastPushTopic, false, "Subscribe not completed yet");
-                                  } else {
-                                      emitPushStatus(lastPushTopic, lastPushOk.booleanValue(), lastPushError);
-                                  }
-                              } catch (Throwable ignored) {}
-                          }
-                      };
-                      bridge.getWebView().postDelayed(r, 400);
-                  } catch (Throwable ignored) {}
-              }
-
-              @Override
-              public void onCreate(Bundle savedInstanceState) {
-                  super.onCreate(savedInstanceState);
-
-                  // Always emit some status shortly after launch so the UI never stays "pending".
-                  new Handler(Looper.getMainLooper()).postDelayed(() -> {
-                      if (lastPushOk == null) {
-                          rememberPushResult("trem_test", false, "Waiting for subscribe result");
-                          emitLog("Timeout waiting for subscribe completion; emitting fallback status");
-                          emitPushStatusWhenReady();
-                      }
-                  }, 2500);
-
-                  // Use reflection so the app still compiles even if the
-                  // firebase-messaging symbol isn't on the app module's
-                  // compile classpath.
-                  try {
-                      emitLog("Attempting subscribeToTopic(trem_test) …");
-                      Class<?> cls = Class.forName("com.google.firebase.messaging.FirebaseMessaging");
-                      Object inst = cls.getMethod("getInstance").invoke(null);
-                      Object task = cls.getMethod("subscribeToTopic", String.class).invoke(inst, "trem_test");
-
-                      // Avoid depending on gms-tasks types at compile time.
-                      task.getClass().getMethod("addOnCompleteListener", java.util.concurrent.Executor.class,
-                              Class.forName("com.google.android.gms.tasks.OnCompleteListener"))
-                          .invoke(task,
-                              java.util.concurrent.Executors.newSingleThreadExecutor(),
-                              java.lang.reflect.Proxy.newProxyInstance(
-                                  Class.forName("com.google.android.gms.tasks.OnCompleteListener").getClassLoader(),
-                                  new Class[] { Class.forName("com.google.android.gms.tasks.OnCompleteListener") },
-                                  (proxy, method, args) -> {
-                                      if ("onComplete".equals(method.getName()) && args != null && args.length == 1) {
-                                          Object t = args[0];
-                                          boolean ok = (boolean) t.getClass().getMethod("isSuccessful").invoke(t);
-                                          if (ok) {
-                                              Log.i(TAG, "Subscribed to topic trem_test");
-                                              emitLog("Subscribed to topic trem_test (native)");
-                                              rememberPushResult("trem_test", true, null);
-                                              emitPushStatusWhenReady();
-                                          } else {
-                                              Object ex = t.getClass().getMethod("getException").invoke(t);
-                                              Log.w(TAG, "Subscribe to topic trem_test failed: " + ex);
-                                              emitLog("Subscribe failed: " + ex);
-                                              rememberPushResult("trem_test", false, String.valueOf(ex));
-                                              emitPushStatusWhenReady();
-                                          }
-                                      }
-                                      return null;
-                                  }
-                              )
-                          );
-                  } catch (Throwable e) {
-                      Log.w(TAG, "FirebaseMessaging not available; skipped topic subscribe", e);
-                      emitLog("FirebaseMessaging not available: " + e);
-                      rememberPushResult("trem_test", false, "FirebaseMessaging not available");
-                      emitPushStatusWhenReady();
-                  }
-              }
-          }
-          EOF
-          echo "Patched MainActivity.java:"
-          cat "$APP_PKG_DIR/MainActivity.java"
-
       - name: Verify generated Android splash & launcher icon resources
         run: |
           set -e
@@ -347,21 +190,33 @@ EOF
           # Hard fail if dependency isn't present (otherwise app runs without FirebaseMessaging).
           grep -q "firebase-messaging" android/app/build.gradle
 
-      - name: Verify MainActivity patch survived sync
+      - name: Patch AndroidManifest (notification permission + channel)
+        run: bash native-android/patch-android-manifest.sh
+
+      - name: Patch MainActivity (subscribe, permission, FCM token)
+        run: |
+          set -e
+          APP_PKG_DIR="android/app/src/main/java/com/tremendousinc/trem"
+          mkdir -p "$APP_PKG_DIR"
+          cp native-android/MainActivity.java "$APP_PKG_DIR/MainActivity.java"
+
+      - name: Verify MainActivity push patch
         run: |
           set -e
           MA="android/app/src/main/java/com/tremendousinc/trem/MainActivity.java"
           for NEEDLE in \
               "TremNav" \
-              "Class.forName(\"com.google.firebase.messaging.FirebaseMessaging\")" \
+              "POST_NOTIFICATIONS" \
+              "trem_default" \
               "trem_test"; do
             if ! grep -q "$NEEDLE" "$MA"; then
-              echo "FATAL: '$NEEDLE' missing from MainActivity.java after sync"
+              echo "FATAL: '$NEEDLE' missing from MainActivity.java"
               cat "$MA"
               exit 1
             fi
           done
-          echo "MainActivity FCM topic subscribe patch verified."
+          grep -q "POST_NOTIFICATIONS" android/app/src/main/AndroidManifest.xml
+          echo "MainActivity + manifest push patch verified."
 
       - name: Make gradlew executable
         working-directory: android
