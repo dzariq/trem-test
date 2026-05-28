@@ -132,6 +132,22 @@ jobs:
           public class MainActivity extends BridgeActivity {
               private static final String TAG = "TremNav";
 
+              private void emitPushStatus(String topic, boolean ok, String error) {
+                  try {
+                      if (this.bridge == null || this.bridge.getWebView() == null) return;
+                      String safeError = (error == null) ? "" : error.replace("\\", "\\\\").replace("\"", "\\\"");
+                      String js =
+                          "window.__tremPush = {" +
+                          "topic: \"" + topic + "\"," +
+                          "ok: " + (ok ? "true" : "false") + "," +
+                          "error: \"" + safeError + "\"," +
+                          "ts: Date.now()" +
+                          "};" +
+                          "window.dispatchEvent(new CustomEvent('tremPush', { detail: window.__tremPush }));";
+                      this.bridge.getWebView().post(() -> this.bridge.getWebView().evaluateJavascript(js, null));
+                  } catch (Throwable ignored) {}
+              }
+
               @Override
               public void onCreate(Bundle savedInstanceState) {
                   super.onCreate(savedInstanceState);
@@ -158,9 +174,11 @@ jobs:
                                           boolean ok = (boolean) t.getClass().getMethod("isSuccessful").invoke(t);
                                           if (ok) {
                                               Log.i(TAG, "Subscribed to topic trem_test");
+                                              emitPushStatus("trem_test", true, null);
                                           } else {
                                               Object ex = t.getClass().getMethod("getException").invoke(t);
                                               Log.w(TAG, "Subscribe to topic trem_test failed: " + ex);
+                                              emitPushStatus("trem_test", false, String.valueOf(ex));
                                           }
                                       }
                                       return null;
@@ -169,6 +187,7 @@ jobs:
                           );
                   } catch (Throwable e) {
                       Log.w(TAG, "FirebaseMessaging not available; skipped topic subscribe", e);
+                      emitPushStatus("trem_test", false, "FirebaseMessaging not available");
                   }
               }
           }
