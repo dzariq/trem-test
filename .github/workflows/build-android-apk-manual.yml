@@ -1,0 +1,145 @@
+name: Build Android APK (manual, Trem)
+
+on:
+  workflow_dispatch:
+
+concurrency:
+  group: trem-android-manual-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Build Trem debug APK
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm install --no-audit --no-fund --legacy-peer-deps
+
+      - name: Verify bundled dist/ exists
+        run: |
+          set -e
+          test -f dist/index.html || { echo "Missing dist/index.html"; exit 1; }
+
+      - name: Setup JDK 21 (Temurin)
+        uses: actions/setup-java@v4
+        with:
+          distribution: "temurin"
+          java-version: "21"
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Add Capacitor Android platform (if missing)
+        run: npx cap add android || echo "android already added"
+
+      - name: Inject Firebase config (google-services.json)
+        env:
+          GOOGLE_SERVICES_JSON_BASE64: ${{ secrets.GOOGLE_SERVICES_JSON_BASE64 }}
+        run: |
+          set -e
+          if [ -z "$GOOGLE_SERVICES_JSON_BASE64" ]; then
+            echo "FATAL: Missing secret GOOGLE_SERVICES_JSON_BASE64"
+            exit 1
+          fi
+          echo "$GOOGLE_SERVICES_JSON_BASE64" | tr -d '\r\n ' | base64 --decode > android/app/google-services.json
+          test -s android/app/google-services.json
+
+      - name: Generate Android icons & splash
+        run: |
+          npx capacitor-assets generate \
+            --android \
+            --iconBackgroundColor "#ffffff" \
+            --iconBackgroundColorDark "#1a1a1a" \
+            --splashBackgroundColor "#ffffff" \
+            --splashBackgroundColorDark "#1a1a1a"
+
+      - name: Sync web assets into Android
+        run: npx cap sync android
+
+      - name: Re-inject google-services.json after sync
+        env:
+          GOOGLE_SERVICES_JSON_BASE64: ${{ secrets.GOOGLE_SERVICES_JSON_BASE64 }}
+        run: |
+          set -e
+          echo "$GOOGLE_SERVICES_JSON_BASE64" | tr -d '\r\n ' | base64 --decode > android/app/google-services.json
+          test -s android/app/google-services.json
+
+      - name: Ensure Firebase messaging Gradle deps
+        run: |
+          set -e
+          ROOT_GRADLE="android/build.gradle"
+          APP_GRADLE="android/app/build.gradle"
+
+          # Ensure repos contain google()
+          if ! grep -qE '(^|\\s)google\\(\\)' "$ROOT_GRADLE"; then
+            perl -0777 -i -pe 's/(allprojects\\s*\\{[\\s\\S]*?repositories\\s*\\{)/$1\\n        google()\\n        mavenCentral()/;' "$ROOT_GRADLE"
+          fi
+
+          # Ensure google-services plugin classpath
+          if ! grep -q "com.google.gms:google-services" "$ROOT_GRADLE"; then
+            perl -0777 -i -pe 's/(buildscript\\s*\\{[\\s\\S]*?dependencies\\s*\\{)/$1\\n        classpath \x27com.google.gms:google-services:4.4.4\x27/;' "$ROOT_GRADLE"
+          fi
+
+          # Ensure app applies google-services
+          if ! grep -q "com.google.gms.google-services" "$APP_GRADLE"; then
+            printf "\napply plugin: 'com.google.gms.google-services'\n" >> "$APP_GRADLE"
+          fi
+
+          # Ensure firebase-messaging dependency exists
+          if ! grep -q "firebase-messaging" "$APP_GRADLE"; then
+            cat >> "$APP_GRADLE" <<'EOF'
+
+dependencies {
+  implementation platform('com.google.firebase:firebase-bom:34.0.0')
+  implementation 'com.google.firebase:firebase-messaging'
+}
+EOF
+          fi
+
+          echo "---- android/app/build.gradle (firebase lines) ----"
+          grep -n "google-services" android/app/build.gradle || true
+          grep -n "firebase-bom" android/app/build.gradle || true
+          grep -n "firebase-messaging" android/app/build.gradle || true
+          test -s android/app/google-services.json
+          grep -q "firebase-messaging" android/app/build.gradle
+
+      - name: Make gradlew executable
+        working-directory: android
+        run: chmod +x ./gradlew
+
+      - name: Build debug APK
+        working-directory: android
+        run: ./gradlew assembleDebug --no-daemon --stacktrace
+
+      - name: Locate debug APK
+        id: locate_debug
+        run: |
+          APK_PATH=$(find android/app/build/outputs/apk/debug -name "*.apk" | head -n 1)
+          if [ -z "$APK_PATH" ]; then
+            echo "No debug APK was produced."
+            ls -la android/app/build/outputs/apk/debug || true
+            exit 1
+          fi
+          SIZE=$(du -h "$APK_PATH" | cut -f1)
+          echo "apk_path=$APK_PATH" >> "$GITHUB_OUTPUT"
+          echo "apk_size=$SIZE" >> "$GITHUB_OUTPUT"
+
+      - name: Upload debug APK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: trem-test-DEBUG-apk
+          path: ${{ steps.locate_debug.outputs.apk_path }}
+          if-no-files-found: error
+          retention-days: 30
+
