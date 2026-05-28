@@ -1,9 +1,7 @@
-name: Build Android APK (live wrapper for collinz.app)
+name: Build Android APK (native page + FCM topic)
 
-# Pure-LIVE build: the APK is a thin native shell that loads
-# https://collinz.app on every launch. There is no bundled web build,
-# no env vars baked in, and no local UI. WebView caching is disabled
-# so users always see the latest deploy.
+# Loads bundled `dist/index.html` (no remote server.url).
+# Subscribes to FCM topic `trem_test` on each cold start.
 #
 # Manual-only trigger.
 on:
@@ -13,12 +11,9 @@ concurrency:
   group: android-apk-${{ github.ref }}
   cancel-in-progress: true
 
-env:
-  LIVE_URL: https://collinz.app
-
 jobs:
   build:
-    name: Build live-wrapper APK
+    name: Build Trem APK
     runs-on: ubuntu-latest
     timeout-minutes: 30
 
@@ -35,50 +30,18 @@ jobs:
       - name: Install dependencies (Capacitor CLI + assets only)
         # The full dependency tree is still installed so capacitor-assets,
         # @capacitor/cli, and @capacitor/android can run. The actual app
-        # source tree is *not* compiled because the app is a live wrapper.
+        # source tree is *not* compiled (no Vite build needed).
         run: npm install --no-audit --no-fund --legacy-peer-deps
 
-      - name: Write minimal redirect placeholder into dist/
-        # capacitor sync requires webDir to exist. We intentionally do NOT
-        # run `npm run build` -- no React, no Vite output, no env vars
-        # land in the APK. This file only exists as a defensive fallback
-        # in case server.url ever fails to load.
+      - name: Verify bundled dist/ exists
         run: |
-          mkdir -p dist
-          cat > dist/index.html << 'EOF'
-          <!DOCTYPE html>
-          <html lang="en">
-          <head>
-            <meta charset="utf-8" />
-            <meta name="viewport" content="width=device-width, initial-scale=1" />
-            <meta http-equiv="refresh" content="0; url=https://collinz.app" />
-            <title>Trem</title>
-            <style>
-              html, body { margin: 0; padding: 0; height: 100%; background: #ffffff; font-family: system-ui, sans-serif; }
-              .wrap { display: flex; align-items: center; justify-content: center; height: 100%; flex-direction: column; }
-              .wrap p { color: #666; font-size: 14px; margin-top: 12px; }
-            </style>
-          </head>
-          <body>
-            <div class="wrap">
-              <p>Loading Trem…</p>
-              <noscript>
-                Please enable JavaScript and ensure you have an internet connection.
-                <a href="https://collinz.app">Open in browser</a>.
-              </noscript>
-            </div>
-            <script>window.location.replace('https://collinz.app');</script>
-          </body>
-          </html>
-          EOF
-          echo "Placeholder webDir contents:"
-          ls -la dist/
+          set -e
+          test -f dist/index.html || { echo "Missing dist/index.html"; exit 1; }
 
-      - name: Verify Collinz brand assets exist
+      - name: Verify brand assets exist
         run: |
           set -e
           test -f resources/icon.png || { echo "Missing resources/icon.png"; exit 1; }
-          test -f resources/splash_screen.mp4 || { echo "Missing resources/splash_screen.mp4"; exit 1; }
           # capacitor-assets still needs a static splash.png; use the app icon.
           cp resources/icon.png resources/splash.png
 
@@ -109,7 +72,7 @@ jobs:
           echo "$GOOGLE_SERVICES_JSON_BASE64" | tr -d '\r\n ' | base64 --decode > android/app/google-services.json
           test -s android/app/google-services.json
 
-      - name: Generate Android icons & splash from Collinz logo
+      - name: Generate Android icons & splash
         run: |
           npx capacitor-assets generate \
             --android \
@@ -118,14 +81,7 @@ jobs:
             --splashBackgroundColor "#ffffff" \
             --splashBackgroundColorDark "#1a1a1a"
 
-      - name: Bundle splash video for Android
-        run: |
-          set -e
-          mkdir -p android/app/src/main/res/raw
-          cp resources/splash_screen.mp4 android/app/src/main/res/raw/splash_screen.mp4
-          ls -la android/app/src/main/res/raw/
-
-      - name: Patch MainActivity with NUCLEAR no-cache + video splash
+      - name: Patch MainActivity (subscribe topic trem_test)
         run: |
           set -e
           APP_PKG_DIR="android/app/src/main/java/com/tremendousinc/trem"
@@ -137,213 +93,32 @@ jobs:
           cat > "$APP_PKG_DIR/MainActivity.java" << 'EOF'
           package com.tremendousinc.trem;
 
-          import android.graphics.Color;
-          import android.media.MediaPlayer;
-          import android.net.Uri;
-          import android.os.Build;
           import android.os.Bundle;
-          import android.os.Handler;
-          import android.os.Looper;
           import android.util.Log;
-          import android.view.Gravity;
-          import android.view.ViewGroup;
-          import android.webkit.CookieManager;
-          import android.webkit.ServiceWorkerController;
-          import android.webkit.ServiceWorkerWebSettings;
-          import android.webkit.WebSettings;
-          import android.webkit.WebStorage;
-          import android.webkit.WebView;
-          import android.widget.FrameLayout;
-          import android.widget.VideoView;
 
           import com.getcapacitor.BridgeActivity;
+          import com.google.firebase.messaging.FirebaseMessaging;
 
           /**
-           * Thin live-wrapper activity for https://collinz.app.
-           *
-           * Every cache layer the Android WebView has is wiped on every cold
-           * start, including cookies and DOM storage. The user WILL be
-           * logged out every time the app is fully closed -- this is the
-           * trade-off for guaranteed-fresh UI.
-           *
-           * Layers nuked on each onCreate:
-           *   - HTTP cache  : WebSettings LOAD_NO_CACHE + clearCache(true)
-           *   - History     : clearHistory
-           *   - Form data   : clearFormData / clearMatches
-           *   - SSL prefs   : clearSslPreferences
-           *   - DOM storage : WebStorage.deleteAllData (localStorage,
-           *                   IndexedDB, WebSQL, AppCache, Service Worker
-           *                   registration DB)
-           *   - Cookies     : CookieManager.removeAllCookies + flush
-           *                   (this is why login is lost every cold start)
-           *   - SW HTTP cache: ServiceWorkerController set to LOAD_NO_CACHE
-           *   - On-page SW  : Periodic JS that calls .unregister() on every
-           *                   navigator.serviceWorker registration and
-           *                   caches.delete() on every Cache Storage entry
-           *
-           * Also enables chrome://inspect for remote DevTools.
-           *
-           * Reload the URL with a millisecond cache-buster query string so
-           * any URL-keyed CDN cache also misses.
+           * Trem wrapper: loads bundled dist/index.html.
+           * Subscribes to FCM topic "trem_test" on every cold start.
            */
           public class MainActivity extends BridgeActivity {
-
               private static final String TAG = "TremNav";
-              private FrameLayout splashOverlay;
-              private VideoView splashVideo;
 
               @Override
               public void onCreate(Bundle savedInstanceState) {
                   super.onCreate(savedInstanceState);
-                  playSplashVideo();
 
-                  final WebView webView = (this.bridge != null) ? this.bridge.getWebView() : null;
-                  if (webView == null) {
-                      return;
-                  }
-
-                  // ===== STEP 1: HTTP cache + form/history/SSL state =====
-                  WebSettings settings = webView.getSettings();
-                  settings.setCacheMode(WebSettings.LOAD_NO_CACHE);
-                  webView.clearCache(true);
-                  webView.clearHistory();
-                  webView.clearFormData();
-                  webView.clearMatches();
-                  webView.clearSslPreferences();
-
-                  // ===== STEP 2: All DOM storage =====
-                  WebStorage.getInstance().deleteAllData();
-
-                  // ===== STEP 3: All cookies =====
-                  CookieManager cookieManager = CookieManager.getInstance();
-                  cookieManager.removeAllCookies(null);
-                  cookieManager.removeSessionCookies(null);
-                  cookieManager.flush();
-
-                  // ===== STEP 4: Service Worker controller no-cache =====
-                  if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                      ServiceWorkerController swController = ServiceWorkerController.getInstance();
-                      ServiceWorkerWebSettings swSettings = swController.getServiceWorkerWebSettings();
-                      swSettings.setCacheMode(WebSettings.LOAD_NO_CACHE);
-                  }
-
-                  // ===== STEP 5: chrome://inspect remote DevTools =====
-                  WebView.setWebContentsDebuggingEnabled(true);
-
-                  // ===== STEP 6: Force-reload with cache-busted URL =====
-                  webView.post(new Runnable() {
-                      @Override
-                      public void run() {
-                          long ts = System.currentTimeMillis();
-                          String url = "https://collinz.app/?_cb=" + ts;
-                          Log.i(TAG, "Force-loading cache-busted URL: " + url);
-                          webView.loadUrl(url);
-                      }
-                  });
-
-                  final Handler handler = new Handler(Looper.getMainLooper());
-
-                  // ===== STEP 7: Periodic SW + Cache Storage assassin =====
-                  // Runs every 3 seconds for the entire app lifetime. Kills
-                  // any Service Worker that re-registers, and deletes every
-                  // Cache Storage entry. Logged to logcat via:
-                  //   adb logcat -s CollinzNav
-                  final Runnable swAssassin = new Runnable() {
-                      @Override
-                      public void run() {
-                          String purgeJs =
-                              "(async () => {" +
-                              "  let purged = 0;" +
-                              "  try {" +
-                              "    if (navigator && navigator.serviceWorker) {" +
-                              "      const regs = await navigator.serviceWorker.getRegistrations();" +
-                              "      for (const r of regs) { try { await r.unregister(); purged++; } catch(e) {} }" +
-                              "    }" +
-                              "    if (typeof caches !== 'undefined') {" +
-                              "      const names = await caches.keys();" +
-                              "      for (const n of names) { try { await caches.delete(n); purged++; } catch(e) {} }" +
-                              "    }" +
-                              "  } catch(e) {}" +
-                              "  return purged;" +
-                              "})()";
-                          webView.evaluateJavascript(purgeJs, value -> {
-                              int purged = 0;
-                              try { purged = Integer.parseInt(value); } catch (Exception e) {}
-                              if (purged > 0) {
-                                  Log.i(TAG, "[SW assassin] Killed " + purged + " SW/cache entries");
-                              }
-                          });
-                          handler.postDelayed(this, 3000);
-                      }
-                  };
-                  handler.postDelayed(swAssassin, 1500);
-              }
-
-              private void playSplashVideo() {
-                  ViewGroup root = findViewById(android.R.id.content);
-                  if (root == null) {
-                      return;
-                  }
-
-                  // Fullscreen/immersive while the splash video is visible.
-                  if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-                      getWindow().setDecorFitsSystemWindows(false);
-                  }
-                  root.setSystemUiVisibility(
-                      android.view.View.SYSTEM_UI_FLAG_LAYOUT_STABLE
-                          | android.view.View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
-                          | android.view.View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
-                          | android.view.View.SYSTEM_UI_FLAG_FULLSCREEN
-                          | android.view.View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
-                          | android.view.View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY
-                  );
-
-                  splashOverlay = new FrameLayout(this);
-                  splashOverlay.setBackgroundColor(Color.WHITE);
-                  splashVideo = new VideoView(this);
-                  FrameLayout.LayoutParams videoParams = new FrameLayout.LayoutParams(
-                      ViewGroup.LayoutParams.MATCH_PARENT,
-                      ViewGroup.LayoutParams.MATCH_PARENT,
-                      Gravity.CENTER
-                  );
-                  splashOverlay.addView(splashVideo, videoParams);
-
-                  FrameLayout.LayoutParams overlayParams = new FrameLayout.LayoutParams(
-                      ViewGroup.LayoutParams.MATCH_PARENT,
-                      ViewGroup.LayoutParams.MATCH_PARENT
-                  );
-                  root.addView(splashOverlay, overlayParams);
-
-                  Uri uri = Uri.parse(
-                      "android.resource://" + getPackageName() + "/" + R.raw.splash_screen
-                  );
-                  splashVideo.setVideoURI(uri);
-                  splashVideo.setOnPreparedListener(mp -> {
-                      // Crop-to-fill (cover) instead of letterboxing.
-                      try {
-                          mp.setVideoScalingMode(MediaPlayer.VIDEO_SCALING_MODE_SCALE_TO_FIT_WITH_CROPPING);
-                      } catch (Exception ignored) {}
-                  });
-                  splashVideo.setOnCompletionListener(mp -> dismissSplashVideo());
-                  splashVideo.setOnErrorListener((mp, what, extra) -> {
-                      Log.w(TAG, "Splash video error: " + what + "," + extra);
-                      dismissSplashVideo();
-                      return true;
-                  });
-                  splashVideo.start();
-              }
-
-              private void dismissSplashVideo() {
-                  if (splashOverlay != null) {
-                      ViewGroup root = findViewById(android.R.id.content);
-                      if (root != null) {
-                          root.removeView(splashOverlay);
-                          // Restore system UI to normal after splash.
-                          root.setSystemUiVisibility(android.view.View.SYSTEM_UI_FLAG_LAYOUT_STABLE);
-                      }
-                      splashOverlay = null;
-                      splashVideo = null;
-                  }
+                  FirebaseMessaging.getInstance()
+                      .subscribeToTopic("trem_test")
+                      .addOnCompleteListener(task -> {
+                          if (task.isSuccessful()) {
+                              Log.i(TAG, "Subscribed to topic trem_test");
+                          } else {
+                              Log.w(TAG, "Subscribe to topic trem_test failed", task.getException());
+                          }
+                      });
               }
           }
           EOF
@@ -364,43 +139,26 @@ jobs:
               exit 1
             fi
           done
-          echo "Splash + launcher icons (Collinz crest) verified."
+          echo "Splash + launcher icons verified."
 
       - name: Sync placeholder webDir into Android project
         run: npx cap sync android
 
-      - name: Re-bundle splash video after sync
-        run: |
-          mkdir -p android/app/src/main/res/raw
-          cp resources/splash_screen.mp4 android/app/src/main/res/raw/splash_screen.mp4
-
-      - name: Verify MainActivity NUCLEAR patches survived sync
+      - name: Verify MainActivity patch survived sync
         run: |
           set -e
           MA="android/app/src/main/java/com/tremendousinc/trem/MainActivity.java"
           for NEEDLE in \
-              "LOAD_NO_CACHE" \
-              "setWebContentsDebuggingEnabled" \
               "TremNav" \
-              "serviceWorker" \
-              "WebStorage.getInstance" \
-              "CookieManager.getInstance" \
-              "ServiceWorkerController" \
-              "_cb=" \
-              "swAssassin" \
-              "playSplashVideo" \
-              "splash_screen"; do
+              "FirebaseMessaging" \
+              "trem_test"; do
             if ! grep -q "$NEEDLE" "$MA"; then
               echo "FATAL: '$NEEDLE' missing from MainActivity.java after sync"
               cat "$MA"
               exit 1
             fi
           done
-          echo "All nuclear cache-busting patches verified in MainActivity.java"
-          test -f android/app/src/main/res/raw/splash_screen.mp4 || {
-            echo "FATAL: splash_screen.mp4 missing from Android res/raw after sync"
-            exit 1
-          }
+          echo "MainActivity FCM topic subscribe patch verified."
 
       - name: Make gradlew executable
         working-directory: android
@@ -428,7 +186,7 @@ jobs:
       - name: Upload debug APK artifact
         uses: actions/upload-artifact@v4
         with:
-          name: collinz-school-LIVE-DEBUG-apk
+          name: trem-test-DEBUG-apk
           path: ${{ steps.locate_debug.outputs.apk_path }}
           if-no-files-found: error
           retention-days: 30
@@ -453,7 +211,7 @@ jobs:
       - name: Upload unsigned release APK artifact
         uses: actions/upload-artifact@v4
         with:
-          name: collinz-school-LIVE-unsigned-release-apk
+          name: trem-test-unsigned-release-apk
           path: ${{ steps.locate_release.outputs.apk_path }}
           if-no-files-found: error
           retention-days: 30
@@ -462,21 +220,19 @@ jobs:
         if: always()
         run: |
           {
-            echo "## Android APK Build — live wrapper"
+            echo "## Android APK Build — Trem"
             echo ""
-            echo "- **Loads:** \`${{ env.LIVE_URL }}\` (every launch, every time)"
-            echo "- **Web cache:** disabled at WebView level (LOAD_NO_CACHE + clearCache on start)"
-            echo "- **Bundled web code:** none — only a redirect placeholder in case the URL ever fails"
+            echo "- **Loads:** bundled \`dist/index.html\`"
+            echo "- **Push:** subscribes to topic \`trem_test\` on cold start"
             echo "- **Status:** ${{ job.status }}"
             echo ""
             echo "### Artifacts"
             echo ""
             if [ -n "${{ steps.locate_debug.outputs.apk_path }}" ]; then
-              echo "- **\`collinz-school-LIVE-DEBUG-apk\`** (${{ steps.locate_debug.outputs.apk_size }}) — install this on phones."
+              echo "- **\`trem-test-DEBUG-apk\`** (${{ steps.locate_debug.outputs.apk_size }}) — install this on phones."
             fi
             if [ -n "${{ steps.locate_release.outputs.apk_path }}" ]; then
-              echo "- \`collinz-school-LIVE-unsigned-release-apk\` (${{ steps.locate_release.outputs.apk_size }}) — keep for Play Store signing later."
+              echo "- \`trem-test-unsigned-release-apk\` (${{ steps.locate_release.outputs.apk_size }}) — keep for Play Store signing later."
             fi
             echo ""
-            echo "Pushing changes to https://collinz.app is now sufficient to update every installed device on next launch — no rebuild required."
           } >> "$GITHUB_STEP_SUMMARY"

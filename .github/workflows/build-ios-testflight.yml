@@ -1,8 +1,7 @@
-name: Build iOS & Deploy to TestFlight (live wrapper for collinz.app)
+name: Build iOS & Deploy to TestFlight (native page + FCM topic)
 
-# Pure-LIVE iOS build that mirrors the Android workflow: the IPA is a thin
-# native shell loading https://collinz.app on every launch, with no bundled
-# web code. Manual trigger only.
+# Builds the iOS app which loads bundled `dist/index.html`.
+# On cold start it subscribes the device to FCM topic `trem_test`.
 on:
   workflow_dispatch:
     inputs:
@@ -40,29 +39,10 @@ jobs:
       - name: Install dependencies (Capacitor CLI + assets only)
         run: npm install --no-audit --no-fund --legacy-peer-deps
 
-      - name: Write minimal redirect placeholder into dist/
-        # No Vite build -- the IPA carries no React code, no Supabase
-        # keys, no UI. Every byte rendered comes from https://collinz.app.
+      - name: Verify bundled dist/ exists
         run: |
-          mkdir -p dist
-          cat > dist/index.html << 'EOF'
-          <!DOCTYPE html>
-          <html lang="en">
-          <head>
-            <meta charset="utf-8" />
-            <meta name="viewport" content="width=device-width, initial-scale=1" />
-            <meta http-equiv="refresh" content="0; url=https://collinz.app" />
-            <title>Collinz School</title>
-            <style>html,body{margin:0;padding:0;height:100%;background:#fff;font-family:system-ui,sans-serif}</style>
-          </head>
-          <body>
-            <div style="display:flex;align-items:center;justify-content:center;height:100%">
-              <p style="color:#666">Loading Collinz School…</p>
-            </div>
-            <script>window.location.replace('https://collinz.app');</script>
-          </body>
-          </html>
-          EOF
+          set -e
+          test -f dist/index.html || { echo "Missing dist/index.html"; exit 1; }
 
       - name: Select Xcode 16
         run: sudo xcode-select -s /Applications/Xcode_16.app/Contents/Developer
@@ -85,11 +65,10 @@ jobs:
           echo "$GOOGLE_SERVICE_INFO_PLIST_BASE64" | base64 --decode > ios/App/App/GoogleService-Info.plist
           test -s ios/App/App/GoogleService-Info.plist
 
-      - name: Verify Collinz brand assets exist
+      - name: Verify brand assets exist
         run: |
           set -e
           test -f resources/icon.png || { echo "Missing resources/icon.png"; exit 1; }
-          test -f resources/splash_screen.mp4 || { echo "Missing resources/splash_screen.mp4"; exit 1; }
           cp resources/icon.png resources/splash.png
 
       - name: Generate iOS icons & splash from Collinz logo
@@ -126,12 +105,6 @@ jobs:
           echo "Splash files:"
           ls -la "$ASSETS_DIR/Splash.imageset"
 
-      - name: Bundle splash video into iOS app target
-        run: |
-          set -e
-          gem install xcodeproj --no-document
-          ruby scripts/ios-add-splash-video.rb
-
       - name: Enable Firebase Messaging (CocoaPods)
         run: |
           set -e
@@ -146,7 +119,7 @@ jobs:
             perl -0777 -i -pe 's/target\\s+\\x27App\\x27\\s+do\\n/target \x27App\x27 do\\n  pod \x27Firebase\\/Messaging\x27\\n/' "$PODFILE"
           fi
 
-      - name: Patch AppDelegate for WKWebView cache wipe + video splash
+      - name: Patch AppDelegate (Firebase + subscribe topic trem_test)
         run: |
           set -e
           APP_DELEGATE="ios/App/App/AppDelegate.swift"
@@ -158,80 +131,25 @@ jobs:
           cat > "$APP_DELEGATE" << 'EOF'
           import UIKit
           import Capacitor
-          import WebKit
-          import AVFoundation
+          import FirebaseCore
+          import FirebaseMessaging
 
           @UIApplicationMain
           class AppDelegate: UIResponder, UIApplicationDelegate {
-
               var window: UIWindow?
-              private var splashContainer: UIView?
-              private var splashPlayer: AVPlayer?
 
               func application(_ application: UIApplication,
                                didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
-                  // Wipe all WKWebView caches on every cold start.
-                  let dataStore = WKWebsiteDataStore.default()
-                  let dataTypes = WKWebsiteDataStore.allWebsiteDataTypes()
-                  dataStore.removeData(ofTypes: dataTypes,
-                                       modifiedSince: Date(timeIntervalSince1970: 0)) {
-                      NSLog("Collinz: cleared WKWebView website data on launch")
-                  }
-                  URLCache.shared.removeAllCachedResponses()
-                  URLCache.shared.diskCapacity = 0
-                  URLCache.shared.memoryCapacity = 0
+                  FirebaseApp.configure()
 
-                  DispatchQueue.main.async {
-                      self.showSplashVideo()
+                  Messaging.messaging().subscribe(toTopic: "trem_test") { error in
+                      if let error = error {
+                          NSLog("Trem: subscribe trem_test failed: \(error)")
+                      } else {
+                          NSLog("Trem: subscribed to trem_test")
+                      }
                   }
                   return true
-              }
-
-              private func showSplashVideo() {
-                  guard let path = Bundle.main.path(forResource: "splash_screen", ofType: "mp4") else {
-                      NSLog("Collinz: splash_screen.mp4 not found in bundle")
-                      return
-                  }
-
-                  let url = URL(fileURLWithPath: path)
-                  let player = AVPlayer(url: url)
-                  splashPlayer = player
-
-                  let layer = AVPlayerLayer(player: player)
-                  layer.videoGravity = .resizeAspectFill
-
-                  guard let hostWindow = self.window ?? UIApplication.shared.connectedScenes
-                      .compactMap({ $0 as? UIWindowScene })
-                      .flatMap({ $0.windows })
-                      .first(where: { $0.isKeyWindow }) else {
-                      NSLog("Collinz: no UIWindow for splash video")
-                      return
-                  }
-
-                  let container = UIView(frame: hostWindow.bounds)
-                  container.backgroundColor = .white
-                  container.autoresizingMask = [.flexibleWidth, .flexibleHeight]
-                  layer.frame = container.bounds
-                  container.layer.addSublayer(layer)
-                  hostWindow.addSubview(container)
-                  splashContainer = container
-
-                  NotificationCenter.default.addObserver(
-                      forName: .AVPlayerItemDidPlayToEndTime,
-                      object: player.currentItem,
-                      queue: .main
-                  ) { [weak self] _ in
-                      self?.dismissSplashVideo()
-                  }
-
-                  player.play()
-              }
-
-              private func dismissSplashVideo() {
-                  splashPlayer?.pause()
-                  splashPlayer = nil
-                  splashContainer?.removeFromSuperview()
-                  splashContainer = nil
               }
 
               func applicationWillResignActive(_ application: UIApplication) {}
@@ -261,28 +179,18 @@ jobs:
       - name: Sync placeholder webDir into iOS project
         run: npx cap sync ios
 
-      - name: Re-bundle splash video after sync
-        run: |
-          gem install xcodeproj --no-document
-          ruby scripts/ios-add-splash-video.rb
-
-      - name: Verify AppDelegate patches and splash video survived sync
+      - name: Verify AppDelegate patch survived sync
         run: |
           set -e
-          if ! grep -q "WKWebsiteDataStore" ios/App/App/AppDelegate.swift; then
-            echo "FATAL: WKWebView cache patch missing from AppDelegate after sync"
-            cat ios/App/App/AppDelegate.swift
+          if ! grep -q "FirebaseApp.configure" ios/App/App/AppDelegate.swift; then
+            echo "FATAL: Firebase configure missing"
             exit 1
           fi
-          if ! grep -q "showSplashVideo" ios/App/App/AppDelegate.swift; then
-            echo "FATAL: video splash patch missing from AppDelegate after sync"
+          if ! grep -q "trem_test" ios/App/App/AppDelegate.swift; then
+            echo "FATAL: trem_test subscribe missing"
             exit 1
           fi
-          test -f ios/App/App/splash_screen.mp4 || {
-            echo "FATAL: splash_screen.mp4 missing from iOS app bundle"
-            exit 1
-          }
-          echo "WKWebView cache + video splash verified"
+          echo "Firebase topic subscribe verified"
 
       - name: Bump iOS build number to GitHub run number
         working-directory: ios/App
@@ -384,7 +292,7 @@ jobs:
       - name: Upload IPA as artifact
         uses: actions/upload-artifact@v4
         with:
-          name: collinz-school-ios-LIVE-ipa
+          name: trem-test-ios-ipa
           path: ${{ env.IPA_PATH }}
           if-no-files-found: error
           retention-days: 30
@@ -433,7 +341,7 @@ jobs:
           {
             echo "## iOS TestFlight Build"
             echo ""
-            echo "- **Loads:** \`https://collinz.app\` (live wrapper, every launch)"
+            echo "- **Loads:** bundled \`dist/index.html\`"
             echo "- **Bundle ID:** \`${{ env.IOS_BUNDLE_ID }}\`"
             echo "- **Build number:** \`${{ github.run_number }}\`"
             echo "- **Upload to TestFlight:** \`${{ github.event.inputs.upload_to_testflight }}\`"
