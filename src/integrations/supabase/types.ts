@@ -1868,6 +1868,50 @@ export type Database = {
           },
         ]
       }
+      cca_activity_attachments: {
+        Row: {
+          activity_id: string
+          created_at: string
+          file_name: string
+          file_size: number | null
+          file_type: string | null
+          file_url: string | null
+          id: string
+          storage_path: string
+          uploaded_by: string | null
+        }
+        Insert: {
+          activity_id: string
+          created_at?: string
+          file_name: string
+          file_size?: number | null
+          file_type?: string | null
+          file_url?: string | null
+          id?: string
+          storage_path: string
+          uploaded_by?: string | null
+        }
+        Update: {
+          activity_id?: string
+          created_at?: string
+          file_name?: string
+          file_size?: number | null
+          file_type?: string | null
+          file_url?: string | null
+          id?: string
+          storage_path?: string
+          uploaded_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cca_activity_attachments_activity_id_fkey"
+            columns: ["activity_id"]
+            isOneToOne: false
+            referencedRelation: "cca_activities"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       cca_activity_roles: {
         Row: {
           academic_period_id: string | null
