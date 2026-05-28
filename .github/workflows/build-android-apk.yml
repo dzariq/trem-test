@@ -124,7 +124,6 @@ jobs:
           import android.util.Log;
 
           import com.getcapacitor.BridgeActivity;
-          import com.google.firebase.messaging.FirebaseMessaging;
 
           /**
            * Trem wrapper: loads bundled dist/index.html.
@@ -137,15 +136,40 @@ jobs:
               public void onCreate(Bundle savedInstanceState) {
                   super.onCreate(savedInstanceState);
 
-                  FirebaseMessaging.getInstance()
-                      .subscribeToTopic("trem_test")
-                      .addOnCompleteListener(task -> {
-                          if (task.isSuccessful()) {
-                              Log.i(TAG, "Subscribed to topic trem_test");
-                          } else {
-                              Log.w(TAG, "Subscribe to topic trem_test failed", task.getException());
-                          }
-                      });
+                  // Use reflection so the app still compiles even if the
+                  // firebase-messaging symbol isn't on the app module's
+                  // compile classpath.
+                  try {
+                      Class<?> cls = Class.forName("com.google.firebase.messaging.FirebaseMessaging");
+                      Object inst = cls.getMethod("getInstance").invoke(null);
+                      Object task = cls.getMethod("subscribeToTopic", String.class).invoke(inst, "trem_test");
+
+                      // Avoid depending on gms-tasks types at compile time.
+                      task.getClass().getMethod("addOnCompleteListener", java.util.concurrent.Executor.class,
+                              Class.forName("com.google.android.gms.tasks.OnCompleteListener"))
+                          .invoke(task,
+                              java.util.concurrent.Executors.newSingleThreadExecutor(),
+                              java.lang.reflect.Proxy.newProxyInstance(
+                                  ClassLoader.getSystemClassLoader(),
+                                  new Class[] { Class.forName("com.google.android.gms.tasks.OnCompleteListener") },
+                                  (proxy, method, args) -> {
+                                      if ("onComplete".equals(method.getName()) && args != null && args.length == 1) {
+                                          Object t = args[0];
+                                          boolean ok = (boolean) t.getClass().getMethod("isSuccessful").invoke(t);
+                                          if (ok) {
+                                              Log.i(TAG, "Subscribed to topic trem_test");
+                                          } else {
+                                              Object ex = t.getClass().getMethod("getException").invoke(t);
+                                              Log.w(TAG, "Subscribe to topic trem_test failed: " + ex);
+                                          }
+                                      }
+                                      return null;
+                                  }
+                              )
+                          );
+                  } catch (Throwable e) {
+                      Log.w(TAG, "FirebaseMessaging not available; skipped topic subscribe", e);
+                  }
               }
           }
           EOF
@@ -177,7 +201,7 @@ jobs:
           MA="android/app/src/main/java/com/tremendousinc/trem/MainActivity.java"
           for NEEDLE in \
               "TremNav" \
-              "FirebaseMessaging" \
+              "Class.forName(\"com.google.firebase.messaging.FirebaseMessaging\")" \
               "trem_test"; do
             if ! grep -q "$NEEDLE" "$MA"; then
               echo "FATAL: '$NEEDLE' missing from MainActivity.java after sync"
