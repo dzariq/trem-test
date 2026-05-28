@@ -275,6 +275,15 @@ export function useRollingAttendance(studentId: StudentIdInput, months: 3 | 6 | 
   const ids = useMemo(() => normalizeIds(studentId), [studentId]);
   const idsKey = ids.join(",");
 
+  const rollingStart = useMemo(() => subMonths(new Date(), months), [months]);
+  const rollingEnd = useMemo(() => new Date(), []);
+  const { holidaySet } = useAttendanceHolidaySet(rollingStart, rollingEnd);
+
+  const filteredRecords = useMemo(
+    () => records.filter((r) => !isBlockedAttendanceDate(parseISO(r.date), holidaySet)),
+    [records, holidaySet],
+  );
+
   useEffect(() => {
     if (ids.length === 0) {
       setRecords([]);
@@ -329,7 +338,7 @@ export function useRollingAttendance(studentId: StudentIdInput, months: 3 | 6 | 
   const chartData = useMemo<MonthlyChartData[]>(() => {
     const monthMap: Record<string, { present: number; absent: number; late: number; excused: number }> = {};
 
-    records.forEach((record) => {
+    filteredRecords.forEach((record) => {
       const date = new Date(record.date);
       const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
       const monthLabel = date.toLocaleDateString("en-US", { month: "short", year: "2-digit" });
@@ -361,17 +370,17 @@ export function useRollingAttendance(studentId: StudentIdInput, months: 3 | 6 | 
           pct,
         };
       });
-  }, [records]);
+  }, [filteredRecords]);
 
   // Total summary for the rolling period
   const summary = useMemo(() => {
     return {
-      present: records.filter((r) => r.status.toLowerCase() === "present").length,
-      absent: records.filter((r) => r.status.toLowerCase() === "absent").length,
-      late: records.filter((r) => r.status.toLowerCase() === "late").length,
-      excused: records.filter((r) => r.status.toLowerCase() === "excused").length,
+      present: filteredRecords.filter((r) => r.status.toLowerCase() === "present").length,
+      absent: filteredRecords.filter((r) => r.status.toLowerCase() === "absent").length,
+      late: filteredRecords.filter((r) => r.status.toLowerCase() === "late").length,
+      excused: filteredRecords.filter((r) => r.status.toLowerCase() === "excused").length,
     };
-  }, [records]);
+  }, [filteredRecords]);
 
   return {
     records,
