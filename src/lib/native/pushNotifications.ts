@@ -53,6 +53,18 @@ export async function registerPushAndSyncToken(userId: string) {
       // Non-fatal: app still works without push.
       console.warn("[push] failed to upsert token", error);
     }
+
+    // Subscribe this device token to the user's FCM topics
+    // (from user_profiles.topic_subscribed).
+    try {
+      const { error: fnError } = await supabase.functions.invoke(
+        "fcm-subscribe-topics",
+        { body: { token: t } },
+      );
+      if (fnError) console.warn("[push] topic subscribe failed", fnError);
+    } catch (e) {
+      console.warn("[push] topic subscribe threw", e);
+    }
   });
 
   PushNotifications.addListener("registrationError", (err) => {
