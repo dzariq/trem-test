@@ -214,6 +214,18 @@ jobs:
       - name: Sync placeholder webDir into Android project
         run: npx cap sync android
 
+      - name: Re-inject google-services.json after sync
+        env:
+          GOOGLE_SERVICES_JSON_BASE64: ${{ secrets.GOOGLE_SERVICES_JSON_BASE64 }}
+        run: |
+          set -e
+          if [ -z "$GOOGLE_SERVICES_JSON_BASE64" ]; then
+            echo "FATAL: Missing secret GOOGLE_SERVICES_JSON_BASE64 (base64 of google-services.json)"
+            exit 1
+          fi
+          echo "$GOOGLE_SERVICES_JSON_BASE64" | tr -d '\r\n ' | base64 --decode > android/app/google-services.json
+          test -s android/app/google-services.json
+
       - name: Re-enable Firebase Messaging (Gradle) after sync
         run: |
           set -e
@@ -244,6 +256,7 @@ jobs:
       - name: Verify Firebase Gradle wiring
         run: |
           set -e
+          test -s android/app/google-services.json
           echo "---- android/build.gradle (firebase snippets) ----"
           grep -n "google()" -n android/build.gradle || true
           grep -n "google-services" -n android/build.gradle || true
