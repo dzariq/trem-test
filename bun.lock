@@ -16,6 +16,7 @@
         "@capacitor/ios": "^8.0.2",
         "@capacitor/local-notifications": "^7",
         "@capacitor/preferences": "^8.0.0",
+        "@capacitor/push-notifications": "^7",
         "@capacitor/share": "^7.0.1",
         "@capacitor/splash-screen": "^7",
         "@capacitor/status-bar": "^7.0.1",
@@ -131,6 +132,8 @@
     "@capacitor/local-notifications": ["@capacitor/local-notifications@7.0.6", "https://europe-west1-npm.pkg.dev/lovable-core-prod/sandbox-npm-cache/@capacitor/local-notifications/-/local-notifications-7.0.6.tgz", { "peerDependencies": { "@capacitor/core": ">=7.0.0" } }, "sha512-RuZQ9P5aAlw6VU2i0i6g4i1XYZbbeDE9oaBg87gggHaUUscX7b1lltTlC1t11/JCPoyjECnZ/N8xfDNZ26hKhw=="],
 
     "@capacitor/preferences": ["@capacitor/preferences@8.0.0", "", { "peerDependencies": { "@capacitor/core": ">=8.0.0" } }, "sha512-NsE7Srk9Zr0SxiVelHGiAJR7M238eyCD6dI/sDhu3ckKwFrXn8/GRyGr+SZcnGLlQKy948li8Pfcfr0dqxNf1g=="],
+
+    "@capacitor/push-notifications": ["@capacitor/push-notifications@7.0.6", "https://europe-west4-npm.pkg.dev/lovable-core-prod/sandbox-npm-cache/@capacitor/push-notifications/-/push-notifications-7.0.6.tgz", { "peerDependencies": { "@capacitor/core": ">=7.0.0" } }, "sha512-zAhbHpdbc15ImuVGgoFwUZsKI+jjGxy/oO5mgfYKUx8Xl2OskndzhL79PYsCPjyGLbqUR9NRUZJthV9auVT3nw=="],
 
     "@capacitor/share": ["@capacitor/share@7.0.3", "", { "peerDependencies": { "@capacitor/core": ">=7.0.0" } }, "sha512-KYWFzHJRG8+tpMzgwQZOxhrXrWbqZOkkwb01DKq2E5p6jBNJFA1YZ95NHlvMnci4TG5QPzldjjpxwP2PEq+3Wg=="],
 
