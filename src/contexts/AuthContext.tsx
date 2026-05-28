@@ -3,6 +3,7 @@ import { Session, User } from "@supabase/supabase-js";
 import { supabase } from "@/lib/supabase";
 import { useQueryClient } from "@tanstack/react-query";
 import { setMirrored, removeMirrored, restoreMirrored } from "@/lib/native/storage";
+import { registerPushAndSyncToken, unregisterPushTokenForUser } from "@/lib/native/pushNotifications";
 
 const PORTAL_KEY = "selected_portal";
 const SESSION_START_KEY = "session_started_at";
@@ -110,6 +111,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
         // When user signs out, clear profile
         if (event === "SIGNED_OUT") {
+          // Best-effort: prevent previous user from receiving pushes.
+          const prevUserId = user?.id;
+          if (prevUserId) {
+            void unregisterPushTokenForUser(prevUserId);
+          }
           setProfile(null);
           void removeMirrored(SESSION_START_KEY);
           queryClient.clear();
@@ -121,6 +127,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
         // When user signs in, fetch profile (using setTimeout to avoid deadlock)
         if (currentSession?.user) {
+          // Register push token for this user on native builds.
+          void registerPushAndSyncToken(currentSession.user.id);
           setTimeout(() => {
             fetchProfileAndRoles(currentSession.user.id).then((p) => {
               if (isMounted) {
@@ -145,6 +153,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setUser(currentSession?.user ?? null);
 
       if (currentSession?.user) {
+        void registerPushAndSyncToken(currentSession.user.id);
         fetchProfileAndRoles(currentSession.user.id).then((p) => {
           if (isMounted) {
             console.log("[auth-debug] fetchProfile(initial) result", { userId: currentSession.user.id, profileRole: p?.role ?? null, isActive: p?.is_active ?? null });

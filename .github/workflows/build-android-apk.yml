@@ -96,6 +96,38 @@ jobs:
       - name: Add Capacitor Android platform
         run: npx cap add android
 
+      - name: Inject Firebase config (google-services.json)
+        env:
+          GOOGLE_SERVICES_JSON_BASE64: ${{ secrets.GOOGLE_SERVICES_JSON_BASE64 }}
+        run: |
+          set -e
+          if [ -z "$GOOGLE_SERVICES_JSON_BASE64" ]; then
+            echo "FATAL: Missing secret GOOGLE_SERVICES_JSON_BASE64 (base64 of google-services.json)"
+            exit 1
+          fi
+          echo "$GOOGLE_SERVICES_JSON_BASE64" | base64 --decode > android/app/google-services.json
+          test -s android/app/google-services.json
+
+      - name: Enable Firebase Messaging (Gradle)
+        run: |
+          set -e
+          ROOT_GRADLE="android/build.gradle"
+          APP_GRADLE="android/app/build.gradle"
+
+          if ! grep -q "com.google.gms:google-services" "$ROOT_GRADLE"; then
+            sed -i 's/dependencies {/dependencies {\\n        classpath \"com.google.gms:google-services:4.4.2\"/g' "$ROOT_GRADLE"
+          fi
+
+          if ! grep -q "com.google.gms.google-services" "$APP_GRADLE"; then
+            # apply plugin line near other apply plugin lines
+            sed -i '1s/^/apply plugin: \"com.google.gms.google-services\"\\n/' "$APP_GRADLE"
+          fi
+
+          if ! grep -q "firebase-bom" "$APP_GRADLE"; then
+            # add dependencies for FCM
+            sed -i 's/dependencies {/dependencies {\\n    implementation platform(\"com.google.firebase:firebase-bom:34.0.0\")\\n    implementation \"com.google.firebase:firebase-messaging\"/g' "$APP_GRADLE"
+          fi
+
       - name: Generate Android icons & splash from Collinz logo
         run: |
           npx capacitor-assets generate \
