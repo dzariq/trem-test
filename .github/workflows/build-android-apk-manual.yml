@@ -98,13 +98,7 @@ jobs:
 
           # Ensure firebase-messaging dependency exists
           if ! grep -q "firebase-messaging" "$APP_GRADLE"; then
-            cat >> "$APP_GRADLE" <<'EOF'
-
-dependencies {
-  implementation platform('com.google.firebase:firebase-bom:34.0.0')
-  implementation 'com.google.firebase:firebase-messaging'
-}
-EOF
+            printf "\n\ndependencies {\n  implementation platform('com.google.firebase:firebase-bom:34.0.0')\n  implementation 'com.google.firebase:firebase-messaging'\n}\n" >> "$APP_GRADLE"
           fi
 
           echo "---- android/app/build.gradle (firebase lines) ----"
