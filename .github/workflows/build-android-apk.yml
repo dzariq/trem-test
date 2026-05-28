@@ -122,7 +122,9 @@ jobs:
           cat > "$APP_PKG_DIR/MainActivity.java" << 'EOF'
           package com.tremendousinc.trem;
 
+          import android.os.Handler;
           import android.os.Bundle;
+          import android.os.Looper;
           import android.util.Log;
 
           import com.getcapacitor.BridgeActivity;
@@ -193,6 +195,14 @@ jobs:
               @Override
               public void onCreate(Bundle savedInstanceState) {
                   super.onCreate(savedInstanceState);
+
+                  // Always emit some status shortly after launch so the UI never stays "pending".
+                  new Handler(Looper.getMainLooper()).postDelayed(() -> {
+                      if (lastPushOk == null) {
+                          rememberPushResult("trem_test", false, "Waiting for subscribe result");
+                          emitPushStatusWhenReady();
+                      }
+                  }, 2500);
 
                   // Use reflection so the app still compiles even if the
                   // firebase-messaging symbol isn't on the app module's
