@@ -52,7 +52,7 @@ jobs:
             <meta charset="utf-8" />
             <meta name="viewport" content="width=device-width, initial-scale=1" />
             <meta http-equiv="refresh" content="0; url=https://collinz.app" />
-            <title>Collinz School</title>
+            <title>Trem</title>
             <style>
               html, body { margin: 0; padding: 0; height: 100%; background: #ffffff; font-family: system-ui, sans-serif; }
               .wrap { display: flex; align-items: center; justify-content: center; height: 100%; flex-direction: column; }
@@ -61,7 +61,7 @@ jobs:
           </head>
           <body>
             <div class="wrap">
-              <p>Loading Collinz School…</p>
+              <p>Loading Trem…</p>
               <noscript>
                 Please enable JavaScript and ensure you have an internet connection.
                 <a href="https://collinz.app">Open in browser</a>.
@@ -128,14 +128,14 @@ jobs:
       - name: Patch MainActivity with NUCLEAR no-cache + video splash
         run: |
           set -e
-          APP_PKG_DIR="android/app/src/main/java/com/collinz/school"
+          APP_PKG_DIR="android/app/src/main/java/com/tremendousinc/trem"
           if [ ! -d "$APP_PKG_DIR" ]; then
             echo "Expected MainActivity dir at $APP_PKG_DIR"
             find android/app/src/main/java -type d
             exit 1
           fi
           cat > "$APP_PKG_DIR/MainActivity.java" << 'EOF'
-          package com.collinz.school;
+          package com.tremendousinc.trem;
 
           import android.graphics.Color;
           import android.media.MediaPlayer;
@@ -188,7 +188,7 @@ jobs:
            */
           public class MainActivity extends BridgeActivity {
 
-              private static final String TAG = "CollinzNav";
+              private static final String TAG = "TremNav";
               private FrameLayout splashOverlay;
               private VideoView splashVideo;
 
@@ -377,11 +377,11 @@ jobs:
       - name: Verify MainActivity NUCLEAR patches survived sync
         run: |
           set -e
-          MA="android/app/src/main/java/com/collinz/school/MainActivity.java"
+          MA="android/app/src/main/java/com/tremendousinc/trem/MainActivity.java"
           for NEEDLE in \
               "LOAD_NO_CACHE" \
               "setWebContentsDebuggingEnabled" \
-              "CollinzNav" \
+              "TremNav" \
               "serviceWorker" \
               "WebStorage.getInstance" \
               "CookieManager.getInstance" \

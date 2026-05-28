@@ -12,8 +12,8 @@ import type { CapacitorConfig } from "@capacitor/cli";
 const LIVE_URL = "https://collinz.app";
 
 const config: CapacitorConfig = {
-  appId: "com.collinz.school",
-  appName: "Collinz School",
+  appId: "com.tremendousinc.trem",
+  appName: "Trem",
   // `webDir` still needs to point at something for `cap sync` to succeed,
   // but the contents are effectively ignored at runtime because `server.url`
   // takes precedence. The CI workflow writes a one-line redirect placeholder

@@ -19,7 +19,7 @@ concurrency:
 env:
   # The bundle identifier registered on Apple Developer Portal.
   # Must match `appId` in capacitor.config.ts.
-  IOS_BUNDLE_ID: com.collinz.school
+  IOS_BUNDLE_ID: com.tremendousinc.trem
 
 jobs:
   build:
