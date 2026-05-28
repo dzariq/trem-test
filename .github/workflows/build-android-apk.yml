@@ -214,6 +214,27 @@ jobs:
       - name: Sync placeholder webDir into Android project
         run: npx cap sync android
 
+      - name: Re-enable Firebase Messaging (Gradle) after sync
+        run: |
+          set -e
+          ROOT_GRADLE="android/build.gradle"
+          APP_GRADLE="android/app/build.gradle"
+
+          # 1) Ensure google-services Gradle plugin classpath exists
+          if ! grep -q "com.google.gms:google-services" "$ROOT_GRADLE"; then
+            perl -0777 -i -pe 's/(buildscript\\s*\\{[\\s\\S]*?dependencies\\s*\\{)/$1\\n        classpath \x27com.google.gms:google-services:4.4.2\x27/;' "$ROOT_GRADLE"
+          fi
+
+          # 2) Ensure app applies the google-services plugin
+          if ! grep -q "com.google.gms.google-services" "$APP_GRADLE"; then
+            printf "\napply plugin: 'com.google.gms.google-services'\n" >> "$APP_GRADLE"
+          fi
+
+          # 3) Ensure firebase-messaging dependency exists
+          if ! grep -q "firebase-messaging" "$APP_GRADLE"; then
+            perl -0777 -i -pe 's/(dependencies\\s*\\{)/$1\\n    implementation platform(\x27com.google.firebase:firebase-bom:34.0.0\x27)\\n    implementation \x27com.google.firebase:firebase-messaging\x27/;' "$APP_GRADLE"
+          fi
+
       - name: Verify MainActivity patch survived sync
         run: |
           set -e
