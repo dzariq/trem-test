@@ -75,7 +75,32 @@ export async function registerPushAndSyncToken(userId: string) {
 export async function unregisterPushTokenForUser(userId: string) {
   if (!Capacitor.isNativePlatform()) return;
 
-  // Best-effort: delete all tokens for user on sign out.
+  // 1) Fetch this user's device tokens so we can pass them to the
+  //    unsubscribe edge function (the JWT is still valid at this point).
+  let tokens: string[] = [];
+  try {
+    const { data, error } = await supabase
+      .from("user_push_tokens")
+      .select("token")
+      .eq("user_id", userId);
+    if (error) console.warn("[push] fetch tokens for unsubscribe failed", error);
+    tokens = (data ?? []).map((r: { token: string }) => r.token).filter(Boolean);
+  } catch (e) {
+    console.warn("[push] fetch tokens for unsubscribe threw", e);
+  }
+
+  // 2) Unsubscribe from all FCM topics in user_profiles.topic_subscribed.
+  try {
+    const { error: fnError } = await supabase.functions.invoke(
+      "fcm-unsubscribe-topics",
+      { body: { tokens } },
+    );
+    if (fnError) console.warn("[push] topic unsubscribe failed", fnError);
+  } catch (e) {
+    console.warn("[push] topic unsubscribe threw", e);
+  }
+
+  // 3) Delete tokens for this user.
   const { error } = await supabase.from("user_push_tokens").delete().eq("user_id", userId);
   if (error) {
     console.warn("[push] failed to delete tokens on sign out", error);
