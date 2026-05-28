@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Loader2, X, Camera, Upload, Trash2, BookOpen, Flag, CalendarDays, School, GraduationCap, Plane, BookMarked, Globe } from "lucide-react";
 import {
   Drawer,
@@ -53,6 +54,7 @@ interface StudentDetailsDrawerProps {
 
 export function StudentDetailsDrawer({ studentId, onOpenChange }: StudentDetailsDrawerProps) {
   const { linkedStudents } = useStudentSelection();
+  const navigate = useNavigate();
   const selectedStudent = useMemo(
     () => (studentId ? linkedStudents.find((s) => s.id === studentId) ?? null : null),
     [studentId, linkedStudents],
@@ -374,7 +376,15 @@ export function StudentDetailsDrawer({ studentId, onOpenChange }: StudentDetails
                 ) : selectedStudentEnrollments.length > 0 ? (
                   <div className="space-y-3">
                     {selectedStudentEnrollments.map((activity) => (
-                      <CcaActivityCard key={activity.enrollmentId} activity={activity} variant="enrolled" />
+                      <CcaActivityCard
+                        key={activity.enrollmentId}
+                        activity={activity}
+                        variant="enrolled"
+                        onClick={() => {
+                          onOpenChange(false);
+                          navigate(`/parent/cca/${activity.activityId}`);
+                        }}
+                      />
                     ))}
                   </div>
                 ) : selectedStudent.ccaActivities && selectedStudent.ccaActivities.length > 0 ? (
