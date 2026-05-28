@@ -61,6 +61,8 @@ import { SessionNotesSheet } from "@/components/cca/SessionNotesSheet";
 import { SessionAttendanceList } from "@/components/cca/SessionAttendanceList";
 import { BusAttendanceList } from "@/components/cca/BusAttendanceList";
 import { SportsPanel } from "@/components/cca/SportsPanel";
+import { EventDateRow } from "@/components/cca/EventDateRow";
+import { EventNotesTab } from "@/components/cca/EventNotesTab";
 import { getCcaBucket, getCcaBucketIcon, getCcaTypePillColor } from "@/components/cca/CcaTypeTabs";
 import { CCA_BUCKET_LABEL } from "@/lib/ccaSessionFormat";
 import { usePullToRefresh } from "@/hooks/usePullToRefresh";
@@ -76,7 +78,7 @@ async function lightHaptic() {
   }
 }
 
-type TabId = "overview" | "schedule" | "members" | "attendance" | "venue" | "sports";
+type TabId = "overview" | "schedule" | "notes" | "members" | "attendance" | "venue" | "sports";
 
 interface RosterStudent {
   id: string;
@@ -183,6 +185,7 @@ export default function TeacherCcaDetailPage() {
 
   const basePerms = useCcaActivityPermissions(activity);
   const isOutdoor = (activity?.kind || "").toLowerCase() === "outdoor";
+  const isEvent = (activity?.kind || "").toLowerCase() === "event";
   const isBusPicForActivity = useIsBusPicForActivity(activityId, isOutdoor);
   const isSportPicForActivity = useIsSportPicForActivity(activityId, isOutdoor);
   // Outdoor: bus PICs and sport PICs always get full view + read-only bus list,
@@ -311,6 +314,14 @@ export default function TeacherCcaDetailPage() {
         { id: "venue", label: "Venue" },
         { id: "members", label: "Buses" },
       ]
+    : isEvent
+    ? [
+        { id: "overview", label: "Overview" },
+        { id: "notes", label: "Notes" },
+        { id: "members", label: "Members" },
+        { id: "attendance", label: "Attendance" },
+        { id: "venue", label: "Venue" },
+      ]
     : [
         { id: "overview", label: "Overview" },
         { id: "schedule", label: "Schedule" },
@@ -407,7 +418,20 @@ export default function TeacherCcaDetailPage() {
       <div className="px-4 py-4 pb-[calc(6rem+env(safe-area-inset-bottom))]">
         {tab === "overview" && (
           <div className="space-y-6">
-            <OverviewPanel activity={activity} />
+            <OverviewPanel
+              activity={activity}
+              eventDateSlot={
+                isEvent ? (
+                  <EventDateRow
+                    activityId={activity.id}
+                    activityName={activity.name}
+                    allowFreeText={activity.allowFreeText}
+                    canEdit={canEdit}
+                    sessionsHook={sessionsHook}
+                  />
+                ) : null
+              }
+            />
             {isOutdoor && (
               <div className="space-y-3">
                 <div className="flex items-center gap-2">
@@ -421,11 +445,19 @@ export default function TeacherCcaDetailPage() {
             )}
           </div>
         )}
-        {tab === "schedule" && (
+        {tab === "schedule" && !isEvent && (
           <SchedulePanel
             activity={activity}
             canEdit={canEdit}
             sessionsHook={sessionsHook}
+          />
+        )}
+        {tab === "notes" && isEvent && (
+          <EventNotesTab
+            activityId={activity.id}
+            initialBody={activity.publicDescription ?? null}
+            canEdit={canEdit}
+            onSaved={() => refetch()}
           />
         )}
         {tab === "members" && !isOutdoor && (
