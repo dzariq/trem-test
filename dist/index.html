@@ -69,6 +69,23 @@
       .ok { background: rgba(16, 185, 129, 0.14); color: rgb(5, 120, 84); }
       .bad { background: rgba(239, 68, 68, 0.14); color: rgb(185, 28, 28); }
       .muted { color: #666; }
+      .logs {
+        margin-top: 10px;
+        max-height: 180px;
+        overflow: auto;
+        padding: 10px;
+        background: rgba(0, 0, 0, 0.045);
+        border: 1px solid rgba(0, 0, 0, 0.08);
+        border-radius: 10px;
+      }
+      .logline {
+        font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+        font-size: 11px;
+        color: #111;
+        margin: 6px 0;
+        white-space: pre-wrap;
+        word-break: break-word;
+      }
     </style>
   </head>
   <body>
@@ -94,6 +111,12 @@
             <div class="label">Last update</div>
             <div class="value muted" id="topicTs">—</div>
           </div>
+
+          <div class="row" style="margin-top:10px">
+            <div class="label">Logs</div>
+            <div class="value muted" id="logHint">native → UI</div>
+          </div>
+          <div class="logs" id="logBox"></div>
         </div>
       </div>
     </div>
@@ -102,6 +125,16 @@
       const elStatus = document.getElementById("topicStatus");
       const elErr = document.getElementById("topicErr");
       const elTs = document.getElementById("topicTs");
+      const logBox = document.getElementById("logBox");
+
+      function addLog(ts, msg) {
+        const line = document.createElement("div");
+        line.className = "logline";
+        const t = ts ? new Date(ts).toLocaleTimeString() : new Date().toLocaleTimeString();
+        line.textContent = `[${t}] ${msg}`;
+        logBox.appendChild(line);
+        logBox.scrollTop = logBox.scrollHeight;
+      }
 
       function setStatus(ok, error, ts) {
         const pill = document.createElement("span");
@@ -119,9 +152,19 @@
         if (typeof d.ok === "boolean") setStatus(d.ok, d.error, d.ts);
       });
 
+      // Native log stream
+      window.addEventListener("tremLog", (e) => {
+        const d = (e && e.detail) || {};
+        if (d && d.msg) addLog(d.ts, d.msg);
+      });
+
       // If native already set window.__tremPush before JS loaded
       if (window.__tremPush && typeof window.__tremPush.ok === "boolean") {
         setStatus(window.__tremPush.ok, window.__tremPush.error, window.__tremPush.ts);
+      }
+      // If native logs were set before JS loaded
+      if (Array.isArray(window.__tremLogs)) {
+        window.__tremLogs.slice(-50).forEach((l) => addLog(l.ts, l.msg));
       }
 
       // Fallback: if nothing arrives after 5s, mark as failed to avoid "pending" forever.
