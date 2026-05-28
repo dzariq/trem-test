@@ -166,9 +166,13 @@ export function AnnouncementCarousel({
             )}
             {/* Featured Badge & Read Status */}
             <div className="absolute top-3 left-3 right-3 flex items-center justify-between">
-              <Badge className={featuredBadgeClass} aria-label="Featured">
-                <Star className="h-3.5 w-3.5 fill-current" />
-              </Badge>
+              {mainAnnouncement.is_featured ? (
+                <Badge className={featuredBadgeClass} aria-label="Featured">
+                  <Star className="h-3.5 w-3.5 fill-current" />
+                </Badge>
+              ) : (
+                <span />
+              )}
               {isAcknowledged(mainAnnouncement) ? (
                 <Badge className={ackBadgeClass}>
                   <ShieldCheck className="h-3 w-3" />
