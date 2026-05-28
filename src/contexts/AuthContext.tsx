@@ -4,6 +4,7 @@ import { supabase } from "@/lib/supabase";
 import { useQueryClient } from "@tanstack/react-query";
 import { setMirrored, removeMirrored, restoreMirrored } from "@/lib/native/storage";
 import { registerPushAndSyncToken, unregisterPushTokenForUser } from "@/lib/native/pushNotifications";
+import { supabase as supabaseClient } from "@/lib/supabase";
 
 const PORTAL_KEY = "selected_portal";
 const SESSION_START_KEY = "session_started_at";
@@ -129,6 +130,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (currentSession?.user) {
           // Register push token for this user on native builds.
           void registerPushAndSyncToken(currentSession.user.id);
+          // Subscribe this user's existing device tokens to their FCM topics
+          // (runs on web too; no-op server-side if there are no tokens/topics).
+          if (event === "SIGNED_IN" || event === "TOKEN_REFRESHED") {
+            void supabaseClient.functions
+              .invoke("fcm-subscribe-topics", { body: {} })
+              .then(({ error }) => {
+                if (error) console.warn("[auth] fcm-subscribe-topics failed", error);
+              });
+          }
           setTimeout(() => {
             fetchProfileAndRoles(currentSession.user.id).then((p) => {
               if (isMounted) {
@@ -154,6 +164,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       if (currentSession?.user) {
         void registerPushAndSyncToken(currentSession.user.id);
+        void supabaseClient.functions
+          .invoke("fcm-subscribe-topics", { body: {} })
+          .then(({ error }) => {
+            if (error) console.warn("[auth] fcm-subscribe-topics failed", error);
+          });
         fetchProfileAndRoles(currentSession.user.id).then((p) => {
           if (isMounted) {
             console.log("[auth-debug] fetchProfile(initial) result", { userId: currentSession.user.id, profileRole: p?.role ?? null, isActive: p?.is_active ?? null });
