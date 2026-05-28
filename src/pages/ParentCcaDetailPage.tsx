@@ -29,9 +29,11 @@ import {
 import { CCA_BUCKET_LABEL } from "@/lib/ccaSessionFormat";
 import { OverviewPanel, SchedulePanel } from "@/pages/teacher/TeacherCcaDetailPage";
 import { ParentAttendancePanel } from "@/components/cca/ParentAttendancePanel";
+import { EventDateRow } from "@/components/cca/EventDateRow";
+import { EventNotesTab } from "@/components/cca/EventNotesTab";
 import type { InvolvedCcaActivity } from "@/hooks/useTeacherInvolvedCcas";
 
-type TabId = "overview" | "schedule" | "attendance" | "venue";
+type TabId = "overview" | "schedule" | "notes" | "attendance" | "venue";
 
 function DetailHeader({ onBack, title }: { onBack: () => void; title: string }) {
   return (
@@ -238,10 +240,14 @@ export default function ParentCcaDetailPage() {
 
   const tabs: { id: TabId; label: string }[] = [
     { id: "overview", label: "Overview" },
-    { id: "schedule", label: "Schedule" },
+    ...((activity.kind || "").toLowerCase() === "event"
+      ? ([{ id: "notes", label: "Notes" }] as { id: TabId; label: string }[])
+      : ([{ id: "schedule", label: "Schedule" }] as { id: TabId; label: string }[])),
     { id: "attendance", label: "Attendance" },
     { id: "venue", label: "Venue" },
   ];
+
+  const isEvent = (activity.kind || "").toLowerCase() === "event";
 
   return (
     <AppLayout>
@@ -329,12 +335,34 @@ export default function ParentCcaDetailPage() {
       </div>
 
       <div className="px-4 py-4 pb-[calc(6rem+env(safe-area-inset-bottom))]">
-        {tab === "overview" && <OverviewPanel activity={activity} />}
-        {tab === "schedule" && (
+        {tab === "overview" && (
+          <OverviewPanel
+            activity={activity}
+            eventDateSlot={
+              isEvent ? (
+                <EventDateRow
+                  activityId={activity.id}
+                  activityName={activity.name}
+                  allowFreeText={activity.allowFreeText}
+                  canEdit={false}
+                  sessionsHook={sessionsHook}
+                />
+              ) : null
+            }
+          />
+        )}
+        {tab === "schedule" && !isEvent && (
           <SchedulePanel
             activity={activity}
             canEdit={false}
             sessionsHook={sessionsHook}
+          />
+        )}
+        {tab === "notes" && isEvent && (
+          <EventNotesTab
+            activityId={activity.id}
+            initialBody={activity.publicDescription ?? null}
+            canEdit={false}
           />
         )}
         {tab === "attendance" && (
