@@ -123,6 +123,12 @@
       if (window.__tremPush && typeof window.__tremPush.ok === "boolean") {
         setStatus(window.__tremPush.ok, window.__tremPush.error, window.__tremPush.ts);
       }
+
+      // Fallback: if nothing arrives after 5s, mark as failed to avoid "pending" forever.
+      setTimeout(() => {
+        const has = window.__tremPush && typeof window.__tremPush.ok === "boolean";
+        if (!has) setStatus(false, "No native status received", Date.now());
+      }, 5000);
     </script>
   </body>
 </html>
