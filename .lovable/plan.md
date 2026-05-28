@@ -1,41 +1,60 @@
-## Goal
-Make the announcement detail view header consistent regardless of entry point (Home featured carousel vs. Announcements list page), and add a clear top-of-screen label so users always know they're in an announcement.
+# Mirror Web App: Exclude Weekends & Holidays From Attendance
 
-## Current inconsistency
-- From **Home → featured announcement**: header shows **Back** (left) + **See All** (right). See All takes the user to the full Announcements page.
-- From **Announcements page → tapping a card**: header shows only **Back** (left). No See All, because the parent already is the list.
+Bring the mobile app in sync with the web app so that attendance dates and percentages exclude weekends and main-calendar holidays. Pure client-side filtering — no DB changes.
 
-This makes the chrome shift depending on entry path, which feels broken.
+## 1. New shared utility — `src/lib/attendanceCalendar.ts`
 
-## Proposed design (recommended)
+- `HOLIDAY_CATEGORY_NAMES = ['Public Holiday', 'Replacement Public Holiday', 'School Holiday (Term Break)']`
+- `buildHolidayDateSet(events, rangeStart?, rangeEnd?) → Set<string>` of `YYYY-MM-DD` keys.
+  - A calendar event counts as a holiday if its category name OR any tag (from `event_tags`) matches `HOLIDAY_CATEGORY_NAMES`.
+  - Iterate `start_date → end_date` inclusive, compare as date-only strings (avoids timezone drift on `timestamptz`).
+  - Optional `rangeStart`/`rangeEnd` clip iteration to the visible window.
+- `isBlockedAttendanceDate(date, holidaySet)` → true when `date.getDay() === 0 || 6`, or `format(date,'yyyy-MM-dd')` is in the set.
+- Uses `date-fns` (already in the project) — not dayjs, to match existing conventions.
+- Small helper `fetchHolidayEventsForRange(start, end, campusCode)` that pulls rows from `calendar_events` filtered to the holiday categories/tags only (used by attendance views without going through `listCalendarEvents`'s role visibility filter, which would otherwise hide events from teachers/parents).
 
-Single standardized header for `AnnouncementDrawer`, always rendered the same way:
+## 2. Teacher Attendance — date picker
 
-```text
-[ ‹ Back ]       Announcements         [ ⊟ See All ]
+File: `src/pages/teacher/TeacherAttendancePage.tsx` (+ `useTeacherAttendance` if needed).
+
+- On the date picker (`Calendar` component) used for "select attendance date":
+  - Fetch holidays for the visible month range, build `holidaySet`.
+  - Pass `disabled={(d) => isBlockedAttendanceDate(d, holidaySet)}` so weekends + holidays are visually un-selectable.
+- Also block them in any inline list of dates (e.g. quick-pick rows).
+- Add a tiny legend hint ("Weekends & school holidays unavailable") under the picker.
+
+## 3. Attendance Statistics — `src/hooks/useAttendanceStatistics.ts`
+
+For every percentage/denominator (yearly chart, monthly summary KPIs, daily breakdown, concerns):
+
+```
+schoolDays = eachDayOfInterval({start, end})
+  .filter(d => !isBlockedAttendanceDate(d, holidaySet)).length
+expectedRecords = schoolDays * distinctStudentCount
+attendanceRate = (present + late) / expectedRecords * 100
 ```
 
-- **Left:** Back pill (existing) — pops the drawer.
-- **Center:** Small section label **"Announcements"** (uppercase tracked, muted foreground). This is the section/context label — not the post title. The post title (e.g. "Collinz DNA") stays where it is today, directly under the hero image, so it keeps its visual weight as the headline of the content.
-- **Right:** **See All** pill, always visible. Behaviour:
-  - If opened from Home → navigates to `/parent/announcements` (current behavior).
-  - If opened from the Announcements list → closes the drawer (returns to the list, which *is* See All). Same destination semantically, zero dead-ends.
+- Fetch holidays for the relevant range (year for yearly, month for monthly, custom window for concerns).
+- Filter raw attendance rows to drop any record whose `date` lands on a blocked day (defensive — keeps charts clean even if a stray weekend record exists).
+- Recompute `chartData`, `monthlySummary`, `dailyBreakdown`, and `computedConcerns.totalDays` against the blocked-aware school-day count.
+- Include a `holidayKey` (sorted serialized set) in the dependency array / future React Query key so cache invalidates when holidays change.
 
-This keeps the header symmetric, removes the conditional chrome, and gives users a consistent "escape to the full list" affordance from anywhere.
+## 4. Parent / homepage attendance summary
 
-### Why label "Announcements", not the post title
-- Header chrome should describe **where you are**, content area should describe **what you're reading**. Duplicating the post title in the header competes with the H1 directly below the image and adds no info.
-- The post title can be long (truncation in the header looks bad on 390px width, especially sandwiched between two pills).
-- "Announcements" mirrors the pattern used elsewhere in the app for section context.
+- `src/hooks/useStudentAttendanceSummary.ts` and `src/components/home/AttendanceSummary.tsx`:
+  - Fetch holidays for the rolling 30/60/90-day window.
+  - Drop blocked-day records from totals and use blocked-aware denominators when computing percentages displayed in the donut.
+- `src/hooks/useParentAttendance.ts` + `src/pages/AttendancePage.tsx`: apply the same filter so parent-side stats match teacher-side numbers.
 
-## Technical changes
-- `src/components/AnnouncementDrawer.tsx`
-  - Always render the See All button; remove the `{onSeeAll && …}` gate.
-  - Add a centered "ANNOUNCEMENTS" label in the header row (small caps, `text-muted-foreground`, `tracking-wide`).
-  - When `onSeeAll` is not provided, See All falls back to `onClose()` so the list-page entry point gracefully returns to the list.
-- `src/pages/AnnouncementsPage.tsx` (and any other consumer that omits `onSeeAll`): no change required — the drawer handles the fallback. Optionally pass an explicit `onSeeAll={onClose}` for clarity.
-- No backend or data changes.
+## 5. QA
 
-## Out of scope
-- Restyling the post title, date/page pills, or PDF attachments block.
-- Changing navigation outside the announcement detail view.
+- `tsc --noEmit` clean.
+- Manual check: open Teacher Attendance → weekends greyed out, a known public holiday greyed out.
+- Statistics: pick a month with a known holiday and verify denominator drops by that day × student count, and that the displayed % matches `(present+late) / expected`.
+- Homepage donut and parent attendance page show identical % for the same window.
+
+## Technical notes
+
+- Reuse existing `mapCalendarRow` shape (`category`, `tags`, `start_date`, `end_date`) — no new types needed beyond the utility's input contract.
+- Keep the utility framework-agnostic (no React/Supabase imports) so it can be unit-tested and reused by both teacher and parent flows.
+- No schema changes; no migrations; no edge functions.
