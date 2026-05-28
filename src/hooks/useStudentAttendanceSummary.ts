@@ -1,7 +1,9 @@
 import { useEffect, useState, useMemo } from "react";
 import { supabase } from "@/lib/supabase";
-import { format, subDays, eachMonthOfInterval } from "date-fns";
+import { format, subDays, eachMonthOfInterval, parseISO } from "date-fns";
 import { useResumeTick } from "@/hooks/useRefreshOnAppResume";
+import { useAttendanceHolidaySet } from "@/hooks/useAttendanceHolidaySet";
+import { isBlockedAttendanceDate } from "@/lib/attendanceCalendar";
 
 type AttendanceRow = { date: string; status: string };
 
@@ -25,6 +27,10 @@ export function useStudentAttendanceSummary(
 
   const startDate = useMemo(() => format(subDays(new Date(), days), "yyyy-MM-dd"), [days]);
   const endDate = useMemo(() => format(new Date(), "yyyy-MM-dd"), []);
+
+  const rangeStartDate = useMemo(() => subDays(new Date(), days), [days]);
+  const rangeEndDate = useMemo(() => new Date(), []);
+  const { holidaySet } = useAttendanceHolidaySet(rangeStartDate, rangeEndDate);
 
   const studentIds = useMemo(() => {
     if (!studentId) return [];
@@ -74,6 +80,7 @@ export function useStudentAttendanceSummary(
   const totals = useMemo(() => {
     const result = { present: 0, absent: 0, late: 0, excused: 0, total: 0 };
     for (const row of rows) {
+      if (isBlockedAttendanceDate(parseISO(row.date), holidaySet)) continue;
       const normalized = normalizeStatus(row.status);
       if (normalized) {
         result[normalized]++;
@@ -81,7 +88,7 @@ export function useStudentAttendanceSummary(
       }
     }
     return result;
-  }, [rows]);
+  }, [rows, holidaySet]);
 
   const monthlyBuckets = useMemo(() => {
     if (rows.length === 0) return [];
@@ -104,6 +111,7 @@ export function useStudentAttendanceSummary(
     }
 
     for (const row of rows) {
+      if (isBlockedAttendanceDate(parseISO(row.date), holidaySet)) continue;
       const monthKey = row.date.substring(0, 7);
       const bucket = bucketMap.get(monthKey);
       if (!bucket) continue;
@@ -113,7 +121,7 @@ export function useStudentAttendanceSummary(
     }
 
     return Array.from(bucketMap.values());
-  }, [rows, days]);
+  }, [rows, days, holidaySet]);
 
   const chartData = useMemo(
     () =>
