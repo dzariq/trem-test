@@ -4788,12 +4788,14 @@ export type Database = {
       push_notifications: {
         Row: {
           created_at: string
+          email: string[] | null
           id: string
           is_read: boolean
           item_id: string | null
           link_to: string | null
           message: string
           notification_date: string | null
+          phone: string[] | null
           push_sent: boolean
           title: string
           topics: string[]
@@ -4802,12 +4804,14 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          email?: string[] | null
           id?: string
           is_read?: boolean
           item_id?: string | null
           link_to?: string | null
           message: string
           notification_date?: string | null
+          phone?: string[] | null
           push_sent?: boolean
           title: string
           topics?: string[]
@@ -4816,12 +4820,14 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          email?: string[] | null
           id?: string
           is_read?: boolean
           item_id?: string | null
           link_to?: string | null
           message?: string
           notification_date?: string | null
+          phone?: string[] | null
           push_sent?: boolean
           title?: string
           topics?: string[]
