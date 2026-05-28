@@ -509,10 +509,17 @@ function DetailHeader({ onBack, title }: { onBack: () => void; title: string }) 
 }
 
 /* -------- Overview -------- */
-export function OverviewPanel({ activity }: { activity: InvolvedCcaActivity }) {
+export function OverviewPanel({
+  activity,
+  eventDateSlot,
+}: {
+  activity: InvolvedCcaActivity;
+  eventDateSlot?: React.ReactNode;
+}) {
   const isEvent = (activity.kind || "").toLowerCase() === "event";
   return (
     <div className="space-y-4">
+      {eventDateSlot}
       {activity.publicDescription && (
         <p className="text-sm text-muted-foreground leading-relaxed">
           {activity.publicDescription}
