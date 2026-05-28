@@ -11,6 +11,8 @@ export interface CcaSessionFormData {
   customTitle: string | null;
   description: string | null;
   requirements: string | null;
+  /** Optional discriminator for event-kind activities. */
+  sessionType?: string | null;
 }
 
 export interface CcaSession {
@@ -107,6 +109,7 @@ export function useCcaSessions({ activityId }: UseCcaSessionsOptions) {
             description: formData.description || null,
             requirements: formData.requirements || null,
             is_cancelled: false,
+            session_type: formData.sessionType ?? null,
           })
           .select()
           .single();
@@ -167,6 +170,9 @@ export function useCcaSessions({ activityId }: UseCcaSessionsOptions) {
             custom_title: formData.customTitle || null,
             description: formData.description || null,
             requirements: formData.requirements || null,
+            ...(formData.sessionType !== undefined
+              ? { session_type: formData.sessionType ?? null }
+              : {}),
           })
           .eq("id", sessionId);
 

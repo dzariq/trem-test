@@ -30,6 +30,11 @@ interface SessionFormDialogProps {
   allowFreeText?: boolean;
   /** Parent activity name; used to suppress redundant custom titles. */
   activityName?: string;
+  /**
+   * Layout mode. "event" hides Custom Title + Requirements and uses
+   * event-flavoured copy. Defaults to the existing session UI.
+   */
+  mode?: "session" | "event";
 }
 
 export function SessionFormDialog({
@@ -40,6 +45,7 @@ export function SessionFormDialog({
   onSave,
   allowFreeText = false,
   activityName,
+  mode = "session",
 }: SessionFormDialogProps) {
   const { locations, loading: locationsLoading } = useSchoolLocations();
   
@@ -111,9 +117,10 @@ export function SessionFormDialog({
       endTime: formData.endTime || null,
       locationId,
       location: locationText || null,
-      customTitle: cleanedTitle,
+      customTitle: mode === "event" ? null : cleanedTitle,
       description: formData.description || null,
-      requirements: formData.requirements || null,
+      requirements: mode === "event" ? null : formData.requirements || null,
+      ...(mode === "event" ? { sessionType: "event" } : {}),
     });
 
     if (success) {
@@ -133,7 +140,13 @@ export function SessionFormDialog({
       <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>
-            {isEditing ? "Edit Session" : "Create Session"}
+            {mode === "event"
+              ? isEditing
+                ? "Edit Event Date"
+                : "Set Event Date"
+              : isEditing
+                ? "Edit Session"
+                : "Create Session"}
           </DialogTitle>
         </DialogHeader>
 
@@ -227,7 +240,8 @@ export function SessionFormDialog({
             )}
           </div>
 
-          {/* Custom Title */}
+          {/* Custom Title (hidden in event mode) */}
+          {mode !== "event" && (
           <div className="space-y-2">
             <Label htmlFor="customTitle">Custom Title (optional)</Label>
             <p className="text-xs text-muted-foreground">
@@ -244,6 +258,7 @@ export function SessionFormDialog({
               }
             />
           </div>
+          )}
 
           {/* Description */}
           <div className="space-y-2">
@@ -259,7 +274,8 @@ export function SessionFormDialog({
             />
           </div>
 
-          {/* Requirements */}
+          {/* Requirements (hidden in event mode) */}
+          {mode !== "event" && (
           <div className="space-y-2">
             <Label htmlFor="requirements">Requirements / Notes</Label>
             <Textarea
@@ -272,6 +288,7 @@ export function SessionFormDialog({
               rows={2}
             />
           </div>
+          )}
 
           <DialogFooter className="gap-2 pt-4">
             <Button
@@ -284,7 +301,13 @@ export function SessionFormDialog({
             </Button>
             <Button type="submit" disabled={saving || !formData.sessionDate}>
               {saving && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
-              {isEditing ? "Save Changes" : "Create Session"}
+              {mode === "event"
+                ? isEditing
+                  ? "Save Date"
+                  : "Set Date"
+                : isEditing
+                  ? "Save Changes"
+                  : "Create Session"}
             </Button>
           </DialogFooter>
         </form>
